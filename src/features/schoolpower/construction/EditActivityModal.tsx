@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download } from 'lucide-react';
@@ -83,7 +82,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     setIsGenerating(true);
     try {
       const { generateActivity, validateFormData } = await import('./activityGeneratorService');
-      
+
       // Validar dados do formulário
       const errors = validateFormData(formData);
       if (errors.length > 0) {
@@ -165,7 +164,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
                     Informações da Atividade
                   </h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="title">Título da Atividade</Label>
