@@ -42,7 +42,8 @@ export function ConstructionCard({
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onEdit?.(id);
+    console.log('🔧 Clique no botão Editar Materiais detectado!');
+    onEdit?.();
   };
 
 

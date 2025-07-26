@@ -132,8 +132,15 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
         {activities.map((activity) => (
           <ConstructionCard
             key={activity.id}
-            activity={activity}
-            onEdit={openModal}
+            id={activity.id}
+            title={activity.title}
+            description={activity.description}
+            progress={activity.progress}
+            type={activity.type}
+            status={activity.status}
+            onEdit={() => openModal(activity)}
+            onView={handleView}
+            onShare={handleShare}
           />
         ))}
       </div>
