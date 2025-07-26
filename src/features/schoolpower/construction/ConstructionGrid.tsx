@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -151,14 +150,13 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
         ))}
       </div>
 
-      {selectedActivity && (
-        <EditActivityModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          activity={selectedActivity}
-          onSave={handleSaveActivity}
-        />
-      )}
+      {/* Modal de Edição */}
+      <EditActivityModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        activity={selectedActivity}
+        onSave={handleSaveActivity}
+      />
     </motion.div>
   );
 }
