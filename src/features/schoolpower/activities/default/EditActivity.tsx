@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -75,17 +74,17 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full">
       {/* Informações Básicas */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="w-5 h-5 mr-2" />
             Informações da Atividade
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
+        <CardContent className="space-y-4 overflow-hidden">
+          <div className="w-full">
             <Label htmlFor="activity-title">Título</Label>
             <Input
               id="activity-title"
@@ -95,7 +94,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
             />
           </div>
 
-          <div>
+          <div className="w-full">
             <Label htmlFor="activity-description">Descrição</Label>
             <Textarea
               id="activity-description"
@@ -106,8 +105,8 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="w-full">
               <Label htmlFor="difficulty">Dificuldade</Label>
               <Select
                 value={formData.difficulty}
@@ -124,7 +123,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
               </Select>
             </div>
 
-            <div>
+            <div className="w-full">
               <Label htmlFor="time-limit">Tempo Limite (minutos)</Label>
               <Input
                 id="time-limit"
@@ -136,7 +135,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
             </div>
           </div>
 
-          <div>
+          <div className="w-full">
             <Label htmlFor="instructions">Instruções</Label>
             <Textarea
               id="instructions"
@@ -150,7 +149,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
       </Card>
 
       {/* Materiais */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Materiais Necessários</span>
@@ -160,7 +159,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-hidden">
           <div className="space-y-2">
             {formData.materials.map((material: string, index: number) => (
               <div key={index} className="flex items-center space-x-2">
@@ -188,7 +187,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
       </Card>
 
       {/* Questões */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Questões da Atividade</span>
@@ -198,7 +197,7 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-hidden">
           <div className="space-y-4">
             {formData.questions.map((question: any, index: number) => (
               <Card key={question.id || index} className="border-dashed">
@@ -297,11 +296,11 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
       </Card>
 
       {/* Rubrica de Avaliação */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Critérios de Avaliação</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-hidden">
           <Textarea
             value={formData.rubric}
             onChange={(e) => handleChange('rubric', e.target.value)}

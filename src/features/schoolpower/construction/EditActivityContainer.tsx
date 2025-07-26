@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -99,16 +98,16 @@ export function EditActivityContainer({
         // Verificar se a atividade está registrada
         if (!isActivityRegistered(activityId)) {
           console.log('⚠️ Atividade não registrada, usando componentes padrão');
-          
+
           // Importar componentes padrão
           const { default: DefaultEditor } = await import('../activities/default/EditActivity');
           const { default: DefaultPreview } = await import('../activities/default/ActivityPreview');
-          
+
           setActivityEditor(() => DefaultEditor);
           setActivityPreview(() => DefaultPreview);
         } else {
           console.log('✅ Atividade registrada, carregando componentes específicos');
-          
+
           try {
             const components = getActivityComponents(activityId);
             if (!components) {
@@ -123,11 +122,11 @@ export function EditActivityContainer({
             console.log('✅ Componentes específicos carregados com sucesso');
           } catch (componentError) {
             console.error('❌ Erro ao carregar componentes específicos:', componentError);
-            
+
             // Fallback para componentes padrão
             const { default: DefaultEditor } = await import('../activities/default/EditActivity');
             const { default: DefaultPreview } = await import('../activities/default/ActivityPreview');
-            
+
             setActivityEditor(() => DefaultEditor);
             setActivityPreview(() => DefaultPreview);
           }
@@ -573,7 +572,7 @@ export function EditActivityContainer({
               </h2>
             </div>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
