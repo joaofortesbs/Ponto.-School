@@ -28,7 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ConstructionGrid } from './ConstructionGrid';
-import { EditActivityContainer } from './EditActivityContainer';
+
 import { 
   Wrench, CheckSquare, Filter, 
   Trophy, Zap, Brain, Heart, 
@@ -104,8 +104,6 @@ export function CardDeConstrucao({
 
   const [actionPlanItems, setActionPlanItems] = useState<ActionPlanItem[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
-  const [editingActivity, setEditingActivity] = useState<{id: string, data: any} | null>(null);
-
   // Form data for contextualization
   const [formData, setFormData] = useState<ContextualizationData>({
     materias: "",
@@ -588,36 +586,7 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-  const handleEditActivity = (id: string, data: any) => {
-    setEditingActivity({ id, data });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingActivity(null);
-  };
-
-  const handleSaveActivity = (id: string, newData: any) => {
-    // Lógica para salvar a atividade editada
-    console.log(`Salvando atividade ${id} com os dados:`, newData);
-    setEditingActivity(null);
-  };
-
-    // Estado para controlar qual atividade está sendo editada
-  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
-
-  const activities = getCombinedActivities();
-  // Função para lidar com a edição
-  const handleEdit = useCallback((activityId: string) => {
-    console.log('🔧 Editando atividade:', activityId);
-    console.log('🔧 Activities available:', activities.map(a => a.id));
-    setEditingActivityId(activityId);
-  }, [activities]);
-
-  // Função para fechar a edição
-  const handleCloseEdit = useCallback(() => {
-    console.log('❌ Fechando edição');
-    setEditingActivityId(null);
-  }, []);
+  
 
   return (
     <motion.div
@@ -1303,17 +1272,7 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-      {/* Edit Activity Interface */}
-      {editingActivityId && (
-        <EditActivityContainer
-          activityId={editingActivityId}
-          onClose={handleCloseEdit}
-          onSave={(updatedActivity) => {
-            console.log('💾 Atividade salva:', updatedActivity);
-            handleCloseEdit();
-          }}
-        />
-      )}
+      
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
