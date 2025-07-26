@@ -1,39 +1,33 @@
 import { useState, useCallback } from 'react';
-import { ConstructionActivity } from '../../api/models/constructionTypes';
+import { ConstructionActivity } from './types';
 
-interface UseEditActivityModal {
-  isModalOpen: boolean;
-  selectedActivity: ConstructionActivity | null;
-  openModal: (activity: ConstructionActivity) => void;
-  closeModal: () => void;
-  handleSaveActivity: (updatedActivity: ConstructionActivity) => void;
-}
-
-export function useEditActivityModal(): UseEditActivityModal {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export const useEditActivityModal = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
 
-  const openModal = (activity: ConstructionActivity) => {
+  const openModal = useCallback((activity: ConstructionActivity) => {
+    console.log('Opening modal for activity:', activity.id);
     setSelectedActivity(activity);
-    setIsModalOpen(true);
-  };
+    setIsOpen(true);
+  }, []);
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const closeModal = useCallback(() => {
+    console.log('Closing modal');
+    setIsOpen(false);
     setSelectedActivity(null);
-  };
+  }, []);
 
-  const handleSaveActivity = (updatedActivity: ConstructionActivity) => {
-    console.log('💾 Salvando atividade editada:', updatedActivity);
-    // Aqui você pode adicionar lógica para salvar a atividade
+  const handleSave = useCallback((updatedActivity: ConstructionActivity) => {
+    console.log('Saving activity:', updatedActivity);
+    // TODO: Implement save logic here
     closeModal();
-  };
+  }, [closeModal]);
 
   return {
-    isModalOpen,
+    isOpen,
     selectedActivity,
     openModal,
     closeModal,
-    handleSaveActivity,
+    handleSave,
   };
-}
+};

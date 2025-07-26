@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -129,35 +128,22 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity, index) => (
-          <motion.div
-            key={activity.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <ConstructionCard
-              id={activity.id}
-              title={activity.title}
-              description={activity.description}
-              progress={activity.progress}
-              type={activity.type}
-              status={activity.status}
-              onView={handleView}
-              onShare={handleShare}
-              onEdit={handleEdit}
-              onEditActivity={handleEditActivity}
-            />
-          </motion.div>
-        ))}
-      </div>
+        {activities.map((activity) => (
+        <ConstructionCard
+          key={activity.id}
+          activity={activity}
+          onEdit={openModal}
+        />
+      ))}
 
-      <EditActivityModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        activity={selectedActivity}
-        onSave={handleSaveActivity}
-      />
+      {selectedActivity && (
+        <EditActivityModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          activity={selectedActivity}
+          onSave={handleSaveActivity}
+        />
+      )}
     </motion.div>
   );
 }

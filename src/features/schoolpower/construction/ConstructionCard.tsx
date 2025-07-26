@@ -39,6 +39,11 @@ export function ConstructionCard({
     }
   };
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit?.(id);
+  };
 
 
   return (
@@ -99,7 +104,7 @@ export function ConstructionCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onEdit?.(id)}
+                    onClick={handleEditClick}
                     className="h-7 px-2 text-xs bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600"
                   >
                     <PenTool className="w-3 h-3" />
