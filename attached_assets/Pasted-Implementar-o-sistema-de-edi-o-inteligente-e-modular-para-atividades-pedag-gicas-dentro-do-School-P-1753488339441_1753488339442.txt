@@ -1,0 +1,130 @@
+Implementar o sistema de edição inteligente e modular para atividades pedagógicas dentro do School Power. Ao clicar no botão “Editar” de cada card de atividade (na interface de “Construção de Atividades”), o usuário será direcionado para uma interface de edição dinâmica, com campos personalizados para cada tipo de atividade, e um painel de pré-visualização ao vivo da atividade construída.
+
+🧠 Contexto Estratégico:
+
+Cada card de atividade representa um item aprovado para construção dentro de um Plano de Ação Educacional.
+
+Cada atividade possui um ID único e será construída de forma independente.
+
+Ao clicar no botão “Editar” de um card, o sistema deve abrir uma tela de edição específica, com:
+
+📝 Painel Esquerdo: Formulário com campos únicos da atividade.
+
+👁️‍🗨️ Painel Direito: Visualização ao vivo da atividade construída.
+
+📁 Estrutura Técnica a Ser Criada:
+
+Criar a seguinte estrutura de pastas e arquivos:
+
+css
+Copiar
+Editar
+src/features/schoolpower/
+  construction/
+    ConstructionActivities.tsx              ← Lista com os cards
+    CardDeConstrucao.tsx                    ← Componente individual de card
+    EditActivityContainer.tsx               ← Container que decide qual atividade carregar
+  activities/
+    [activity-id]/                          ← Um diretório por tipo de atividade
+      EditActivity.tsx                      ← Componente com os campos únicos (formulário)
+      ActivityPreview.tsx                   ← Visualização ao vivo da atividade
+      schema.ts                             ← JSON ou Zod schema com a definição dos campos
+⚙️ Comportamento esperado:
+
+Quando o usuário clicar em “Editar” dentro de qualquer card de atividade:
+
+O sistema deve usar o ID da atividade (ex: "atividade-funcao-1grau") para carregar o módulo correspondente em src/features/schoolpower/activities/[activity-id]/EditActivity.tsx.
+
+A tela de edição será dividida horizontalmente:
+
+🔹 Esquerda (45%): Formulário dinâmico com campos definidos no schema.ts.
+
+🔸 Direita (55%): Visualização ao vivo da atividade sendo construída (ActivityPreview.tsx), atualizando em tempo real conforme os campos são preenchidos.
+
+O container EditActivityContainer.tsx será responsável por:
+
+Receber o ID da atividade selecionada via props/context.
+
+Fazer import dinâmico (lazy import) do componente EditActivity e do ActivityPreview com base no ID.
+
+Passar os dados corretos para edição e renderização da prévia.
+
+💡 Exemplo prático de atividades:
+
+Para atividade com ID função-1grau_prova:
+
+src/features/schoolpower/activities/funcao-1grau_prova/EditActivity.tsx conterá campos como:
+
+enunciado
+
+quantidade de questões
+
+tipo de resposta (múltipla escolha, dissertativa)
+
+tempo de prova
+
+Para atividade com ID funcao-1grau_jogo:
+
+src/features/schoolpower/activities/funcao-1grau_jogo/EditActivity.tsx terá campos como:
+
+tipo de jogo (quiz, drag and drop)
+
+número de fases
+
+mecânica de pontuação
+
+personagem/título do jogo
+
+🔄 Fluxo de Interface:
+
+O componente ConstructionActivities.tsx exibe os cards das atividades.
+
+Ao clicar em “Editar”, ele define um estado global/contexto chamado selectedActivityId.
+
+A interface troca para o componente EditActivityContainer.tsx, que carrega:
+
+EditActivity.tsx da pasta da atividade correspondente (baseado no ID).
+
+ActivityPreview.tsx correspondente com visualização ao vivo.
+
+📦 Tecnologias esperadas:
+
+React com Typescript
+
+State manager: Zustand ou React Context
+
+Import dinâmico via React.lazy ou dynamic()
+
+Validação de campos com Zod (opcional)
+
+Componente Preview sincronizado com debounce para performance
+
+Design system do School Power (cores, fontes, botões) preservado
+
+✅ Checkpoints obrigatórios para a IA:
+
+ Ao clicar em “Editar”, a navegação para o editor da respectiva atividade deve ser imediata.
+
+ A esquerda da tela mostra os campos únicos da atividade com base no schema.ts.
+
+ A direita da tela mostra a atividade renderizada (prévia).
+
+ Toda a estrutura é modular, e adicionar novas atividades no futuro será trivial.
+
+ Deve ser possível voltar à interface principal dos cards após edição.
+
+ Campos editáveis devem refletir imediatamente na visualização.
+
+ O sistema deve permitir salvar rascunho e/ou concluir construção.
+
+📣 Observações importantes:
+
+A IA deve se certificar de que cada atividade tem seu próprio módulo independente.
+
+A IA deve pensar na escalabilidade: o mesmo fluxo servirá futuramente para centenas de atividades diferentes.
+
+O foco é garantir uma experiência fluida, responsiva e amigável para o professor.
+
+💬 Frase de ativação final:
+
+Construa essa etapa com a máxima atenção aos detalhes, modularidade e escalabilidade. Esse é o segundo passo do nosso plano de automação total da criação de atividades pedagógicas no School Power. Entregue excelência. 🎯
