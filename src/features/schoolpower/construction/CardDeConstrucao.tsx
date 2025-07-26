@@ -586,7 +586,7 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-
+  
 
   return (
     <motion.div
@@ -754,7 +754,7 @@ export function CardDeConstrucao({
       {/* Renderização condicional baseada no step */}
       {step === "generating" || step === "generatingActivities" ? (
         <motion.div
-          className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-12"
+          className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -815,7 +815,7 @@ export function CardDeConstrucao({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative z-10 h-full flex flex-col pt-12"
+          className="relative z-10 h-full flex flex-col pt-16"
         >
           <div className="flex items-center justify-end mb-4">
             <button
@@ -834,7 +834,7 @@ export function CardDeConstrucao({
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col pt-12"
+          className="relative z-10 h-full flex flex-col pt-16"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -1272,7 +1272,7 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-
+      
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
