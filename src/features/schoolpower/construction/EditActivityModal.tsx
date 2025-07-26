@@ -401,28 +401,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex flex-col space-y-2 p-4 border-t bg-gray-50">
-            <div className="flex flex-col space-y-1">
-              <Badge variant="outline" className="self-start text-xs">Status: {activity?.status || 'Pendente'}</Badge>
-              <Badge variant="outline" className="self-start text-xs">Progresso: {activity?.progress || 0}%</Badge>
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 text-sm"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSaveChanges}
-                className="flex-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white text-sm"
-              >
-                Salvar
-              </Button>
-            </div>
-          </div>
+          
         </motion.div>
       </motion.div>
     </AnimatePresence>
