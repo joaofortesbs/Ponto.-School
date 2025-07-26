@@ -586,7 +586,7 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-  
+
 
   return (
     <motion.div
@@ -1272,7 +1272,7 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-      
+
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
