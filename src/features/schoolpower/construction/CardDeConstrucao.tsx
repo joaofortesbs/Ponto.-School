@@ -1,7 +1,34 @@
-
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  CheckCircle2, 
+  Clock, 
+  Building2, 
+  Lightbulb,
+  Target,
+  BookOpen,
+  Users,
+  Calendar,
+  AlertCircle,
+  Loader2,
+  FileText,
+  Edit3,
+  Eye,
+  Play
+} from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { ConstructionGrid } from './ConstructionGrid';
+import { EditActivityContainer } from './EditActivityContainer';
 import { 
   Wrench, Target, CheckSquare, Filter, BookOpen, Users, Calendar, 
   Lightbulb, FileText, Trophy, Zap, Brain, Heart, Clock, 
@@ -57,15 +84,27 @@ interface CardDeConstrucaoProps {
   isLoading?: boolean;
 }
 
-export function CardDeConstrucao({
-  step,
-  contextualizationData,
-  actionPlan,
-  onSubmitContextualization,
-  onApproveActionPlan,
+export function CardDeConstrucao({ 
+  step, 
+  contextualizationData, 
+  actionPlan, 
+  onSubmitContextualization, 
+  onApproveActionPlan, 
   onResetFlow,
-  isLoading = false,
-}: CardDeConstrucaoProps): JSX.Element {
+  isLoading 
+}: CardDeConstrucaoProps) {
+  const [localContextData, setLocalContextData] = useState<ContextualizationData>({
+    materias: '',
+    publicoAlvo: '',
+    restricoes: '',
+    datasImportantes: '',
+    observacoes: ''
+  });
+
+  const [actionPlanItems, setActionPlanItems] = useState<ActionPlanItem[]>([]);
+  const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
+  const [editingActivity, setEditingActivity] = useState<{id: string, data: any} | null>(null);
+
   // Form data for contextualization
   const [formData, setFormData] = useState<ContextualizationData>({
     materias: "",
@@ -76,7 +115,7 @@ export function CardDeConstrucao({
   });
 
   // Selected activities for action plan
-  const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
+  const [selectedActivities2, setSelectedActivities2] = useState<ActionPlanItem[]>([]);
 
   // Filter state for action plan
   const [filterState, setFilterState] = useState<'all' | 'selected'>('all');
@@ -127,7 +166,7 @@ export function CardDeConstrucao({
 
   // Handle activity selection toggle
   const handleActivityToggle = (activity: ActionPlanItem) => {
-    setSelectedActivities((prev) => {
+    setSelectedActivities2((prev) => {
       const isSelected = prev.some((item) => item.id === activity.id);
       if (isSelected) {
         return prev.filter((item) => item.id !== activity.id);
@@ -141,20 +180,20 @@ export function CardDeConstrucao({
     if (actionPlan) {
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
       const approved = actionPlan.filter(item => item.approved);
-      setSelectedActivities(approved);
+      setSelectedActivities2(approved);
     }
   }, [actionPlan, step]);
 
   const handleApproveActionPlan = () => {
-    console.log('🎯 CardDeConstrucao: Aprovando plano com atividades:', selectedActivities);
+    console.log('🎯 CardDeConstrucao: Aprovando plano com atividades:', selectedActivities2);
 
-    if (selectedActivities.length === 0) {
+    if (selectedActivities2.length === 0) {
       console.warn('⚠️ Nenhuma atividade selecionada para aprovação');
       return;
     }
 
     // Chamar a função de aprovação passada como prop
-    onApproveActionPlan(selectedActivities);
+    onApproveActionPlan(selectedActivities2);
   };
 
   // Handle manual activity form submission
@@ -235,9 +274,9 @@ export function CardDeConstrucao({
   };
 
   // Filter Component
-  const FilterComponent = ({ activities, selectedActivities, onFilterApply }: {
+  const FilterComponent = ({ activities, selectedActivities2, onFilterApply }: {
     activities: ActionPlanItem[];
-    selectedActivities: ActionPlanItem[];
+    selectedActivities2: ActionPlanItem[];
     onFilterApply: (filterType: string) => void;
   }) => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -379,20 +418,20 @@ export function CardDeConstrucao({
 
     switch (filterType) {
       case 'selectAll':
-        setSelectedActivities([...combinedActivities]);
+        setSelectedActivities2([...combinedActivities]);
         setFilterState('all');
         break;
       case 'selectRecommended':
         // Seleciona as 3 primeiras atividades como "recomendadas"
         const recommended = combinedActivities.slice(0, Math.min(3, combinedActivities.length));
-        setSelectedActivities(recommended);
+        setSelectedActivities2(recommended);
         setFilterState('all');
         break;
       case 'viewSelected':
         setFilterState('selected');
         break;
       case 'clearSelected':
-        setSelectedActivities([]);
+        setSelectedActivities2([]);
         setFilterState('all');
         break;
       case 'viewAll':
@@ -541,12 +580,26 @@ export function CardDeConstrucao({
       'projeto-final',
     ];
 
-    const selectedTrilhas = selectedActivities.filter(activity =>
+    const selectedTrilhas = selectedActivities2.filter(activity =>
       trilhasActivityIds.includes(activity.id)
     );
 
     setSelectedTrilhasCount(selectedTrilhas.length);
-  }, [selectedActivities]);
+  }, [selectedActivities2]);
+
+    const handleEditActivity = (id: string, data: any) => {
+        setEditingActivity({ id, data });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingActivity(null);
+    };
+
+    const handleSaveActivity = (id: string, newData: any) => {
+        // Lógica para salvar a atividade editada
+        console.log(`Salvando atividade ${id} com os dados:`, newData);
+        setEditingActivity(null);
+    };
 
   return (
     <motion.div
@@ -589,7 +642,8 @@ export function CardDeConstrucao({
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-20">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-            {step === "contextualization" ? (
+            ```python
+{step === "contextualization" ? (
               <svg
                 className="w-7 h-7 text-white"
                 fill="none"
@@ -788,7 +842,7 @@ export function CardDeConstrucao({
 
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
-            <ConstructionInterface approvedActivities={selectedActivities} />
+            <ConstructionInterface approvedActivities={selectedActivities2} />
           </div>
         </motion.div>
       ) : (
@@ -926,8 +980,8 @@ export function CardDeConstrucao({
                       </svg>
                     </button>
                     <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
-                      {selectedActivities.length} selecionada
-                      {selectedActivities.length !== 1 ? "s" : ""}
+                      {selectedActivities2.length} selecionada
+                      {selectedActivities2.length !== 1 ? "s" : ""}
                       {selectedTrilhasCount > 0 && (
                         <span className="ml-1 text-orange-600">
                           ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
@@ -940,7 +994,7 @@ export function CardDeConstrucao({
                     />
                     <FilterComponent 
                       activities={getCombinedActivities()}
-                      selectedActivities={selectedActivities}
+                      selectedActivities2={selectedActivities2}
                       onFilterApply={(filterType) => handleFilterApply(filterType)}
                     />
                   </div>
@@ -1038,10 +1092,10 @@ export function CardDeConstrucao({
                   }}
                 >
                   {(filterState === 'selected' 
-                    ? selectedActivities 
+                    ? selectedActivities2 
                     : getCombinedActivities()
                   )?.map((activity, index) => {
-                    const isSelected = selectedActivities.some(
+                    const isSelected = selectedActivities2.some(
                       (item) => item.id === activity.id,
                     );
 
@@ -1142,7 +1196,8 @@ export function CardDeConstrucao({
                                     position: 'absolute',
                                     top: '50%',
                                     left: '50%',
-                                    width: '20px',
+                                    width:```python
+ '20px',
                                     height: '20px',
                                     background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
                                     borderRadius: '50%',
@@ -1178,7 +1233,7 @@ export function CardDeConstrucao({
                     );
                   })}
 
-                  {filterState === 'selected' && selectedActivities.length === 0 && (
+                  {filterState === 'selected' && selectedActivities2.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1216,13 +1271,13 @@ export function CardDeConstrucao({
                 <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
                   <button
                     onClick={handleApproveActionPlan}
-                    disabled={selectedActivities.length === 0 || isLoading}
+                    disabled={selectedActivities2.length === 0 || isLoading}
                     className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
                   >
                     <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                     {isLoading
                       ? "Processando..."
-                      : `Aprovar Plano (${selectedActivities.length})`}
+                      : `Aprovar Plano (${selectedActivities2.length})`}
                   </button>
                 </div>
               )}
@@ -1230,6 +1285,16 @@ export function CardDeConstrucao({
           )}
         </motion.div>
       )}
+
+            {/* Edit Activity Interface */}
+            {editingActivity && (
+                <EditActivityContainer
+                    activityId={editingActivity.id}
+                    initialData={editingActivity.data}
+                    onSave={handleSaveActivity}
+                    onCancel={handleCancelEdit}
+                />
+            )}
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (

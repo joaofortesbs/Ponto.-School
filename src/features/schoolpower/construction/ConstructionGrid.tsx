@@ -8,14 +8,18 @@ import { AlertCircle, Building2 } from 'lucide-react';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
+  onEditActivity?: (activityId: string, activityData: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, onEditActivity }: ConstructionGridProps) {
   const { activities, loading } = useConstructionActivities(approvedActivities);
 
   const handleEdit = (id: string) => {
     console.log('Editando atividade:', id);
-    // TODO: Implementar abertura da tela de construção específica
+    const activity = activities.find(act => act.id === id);
+    if (activity && onEditActivity) {
+      onEditActivity(id, activity);
+    }
   };
 
   const handleView = (id: string) => {
