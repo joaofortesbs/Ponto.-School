@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,13 +31,13 @@ import { Progress } from '@/components/ui/progress';
 import { ConstructionGrid } from './ConstructionGrid';
 import { EditActivityContainer } from './EditActivityContainer';
 import { 
-  Wrench, CheckSquare, Filter, BookOpen, Users, Calendar, 
-  Lightbulb, FileText, Trophy, Zap, Brain, Heart, Clock, 
+  Wrench, CheckSquare, Filter, 
+  Trophy, Zap, Brain, Heart, 
   PenTool, Presentation, Search, MapPin, Calculator, Globe,
   Microscope, Palette, Music, Camera, Video, Headphones,
   Gamepad2, Puzzle, Award, Star, Flag, Compass, Settings,
-  Download, Upload, Share2, MessageSquare, ThumbsUp, Eye,
-  Play, Pause, SkipForward, Volume2, Wifi, Battery,
+  Download, Upload, Share2, MessageSquare, ThumbsUp,
+  Pause, SkipForward, Volume2, Wifi, Battery,
   Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
   TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle
 } from "lucide-react";
@@ -72,6 +73,7 @@ export interface ActionPlanItem {
   category: string;
   type: string;
   isManual?: boolean;
+  approved?: boolean;
 }
 
 interface CardDeConstrucaoProps {
@@ -587,19 +589,19 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-    const handleEditActivity = (id: string, data: any) => {
-        setEditingActivity({ id, data });
-    };
+  const handleEditActivity = (id: string, data: any) => {
+    setEditingActivity({ id, data });
+  };
 
-    const handleCancelEdit = () => {
-        setEditingActivity(null);
-    };
+  const handleCancelEdit = () => {
+    setEditingActivity(null);
+  };
 
-    const handleSaveActivity = (id: string, newData: any) => {
-        // Lógica para salvar a atividade editada
-        console.log(`Salvando atividade ${id} com os dados:`, newData);
-        setEditingActivity(null);
-    };
+  const handleSaveActivity = (id: string, newData: any) => {
+    // Lógica para salvar a atividade editada
+    console.log(`Salvando atividade ${id} com os dados:`, newData);
+    setEditingActivity(null);
+  };
 
   return (
     <motion.div
@@ -1195,8 +1197,7 @@ export function CardDeConstrucao({
                                     position: 'absolute',
                                     top: '50%',
                                     left: '50%',
-                                    width:```python
- '20px',
+                                    width: '20px',
                                     height: '20px',
                                     background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
                                     borderRadius: '50%',
@@ -1285,15 +1286,15 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-            {/* Edit Activity Interface */}
-            {editingActivity && (
-                <EditActivityContainer
-                    activityId={editingActivity.id}
-                    initialData={editingActivity.data}
-                    onSave={handleSaveActivity}
-                    onCancel={handleCancelEdit}
-                />
-            )}
+      {/* Edit Activity Interface */}
+      {editingActivity && (
+        <EditActivityContainer
+          activityId={editingActivity.id}
+          initialData={editingActivity.data}
+          onSave={handleSaveActivity}
+          onCancel={handleCancelEdit}
+        />
+      )}
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
