@@ -13,8 +13,8 @@ import {
   User,
   Calendar,
   Edit3,
-  ChevronLeft,
-  ChevronRight
+  Plus,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,7 +58,6 @@ export function EditActivityContainer({
 }: EditActivityContainerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [formData, setFormData] = useState<ActivityFormData>({
     title: '',
     description: '',
@@ -182,12 +181,21 @@ export function EditActivityContainer({
     }));
   };
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Fácil': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      case 'Médio': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      case 'Difícil': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Carregando editor da atividade...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#FF6B00] mx-auto mb-6"></div>
+          <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">Carregando editor da atividade...</p>
         </div>
       </div>
     );
@@ -195,14 +203,14 @@ export function EditActivityContainer({
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8 text-red-500" />
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-20 h-20 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FileText className="w-10 h-10 text-red-500" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Erro ao Carregar</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <Button onClick={onBack} variant="outline">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Erro ao Carregar</h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <Button onClick={onBack} variant="outline" size="lg">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar
           </Button>
@@ -212,166 +220,116 @@ export function EditActivityContainer({
   }
 
   return (
-    <div className="flex h-full bg-gray-50 dark:bg-gray-900">
-      {/* Main Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={onBack} className="p-2">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Construção de Atividades
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Editando: {formData.title || activityId}
-            </p>
+    <div className="h-full bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Header moderno */}
+      <div className="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50">
+        <div className="flex items-center justify-between px-8 py-4">
+          <div className="flex items-center space-x-6">
+            <Button 
+              variant="ghost" 
+              onClick={onBack} 
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Construção de Atividades
+              </h1>
+              <div className="flex items-center space-x-3 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Editando: {formData.title || activityId}
+                </p>
+                <Badge className={getDifficultyColor(formData.difficulty)}>
+                  {formData.difficulty}
+                </Badge>
+                {formData.duration && (
+                  <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formData.duration} min
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} className="bg-[#FF6B00] hover:bg-[#D65A00]">
-            <Save className="w-4 h-4 mr-2" />
-            Salvar
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button variant="outline" onClick={onClose} size="lg">
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#D65A00] hover:to-[#FF6B00] text-white shadow-lg" size="lg">
+              <Save className="w-4 h-4 mr-2" />
+              Salvar
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Content Container with fixed header offset */}
-      <div className="flex w-full pt-16">
-        {/* Left Side - Editor with Sidebar */}
-        <div className="w-1/2 flex bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-          {/* Sidebar dentro da área de edição */}
-          <motion.div
-            initial={{ width: sidebarCollapsed ? 60 : 280 }}
-            animate={{ width: sidebarCollapsed ? 60 : 280 }}
-            transition={{ duration: 0.3 }}
-            className="bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 flex-shrink-0"
-          >
-            {/* Sidebar Header */}
-            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
-              {!sidebarCollapsed && (
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Editor
-                </h2>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-1 h-8 w-8"
-              >
-                {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-              </Button>
+      {/* Content Container */}
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Left Side - Editor */}
+        <div className="w-1/2 overflow-hidden">
+          <div className="h-full flex flex-col">
+            {/* Editor Header */}
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4">
+              <div className="flex items-center space-x-2">
+                <Edit3 className="w-5 h-5 text-[#FF6B00]" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Editor</h2>
+              </div>
             </div>
 
-            {/* Sidebar Navigation */}
-            <div className="p-2 space-y-1">
-              <Button
-                variant="default"
-                className={`w-full justify-start ${sidebarCollapsed ? 'px-2' : 'px-3'}`}
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {/* Informações Básicas */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <Edit3 className="w-4 h-4" />
-                {!sidebarCollapsed && <span className="ml-2">Editor</span>}
-              </Button>
-            </div>
-
-            {!sidebarCollapsed && (
-              <>
-                <Separator className="my-4" />
-                
-                {/* Activity Info */}
-                <div className="px-4 space-y-3">
-                  <div>
-                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      ATIVIDADE
-                    </Label>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
-                      {formData.title || 'Nova Atividade'}
-                    </p>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      TIPO
-                    </Label>
-                    <Badge variant="secondary" className="mt-1">
-                      {formData.type || 'Não definido'}
-                    </Badge>
-                  </div>
-
-                  <div>
-                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      DURAÇÃO
-                    </Label>
-                    <div className="flex items-center mt-1">
-                      <Clock className="w-3 h-3 text-gray-400 mr-1" />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {formData.duration || '30'} min
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                      DIFICULDADE
-                    </Label>
-                    <Badge 
-                      variant={formData.difficulty === 'Fácil' ? 'default' : formData.difficulty === 'Médio' ? 'secondary' : 'destructive'}
-                      className="mt-1"
-                    >
-                      {formData.difficulty}
-                    </Badge>
-                  </div>
-                </div>
-              </>
-            )}
-          </motion.div>
-
-          {/* Editor Content */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <FileText className="w-5 h-5 mr-2" />
+                <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center text-lg">
+                      <FileText className="w-5 h-5 mr-3 text-[#FF6B00]" />
                       Informações Básicas
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     <div>
-                      <Label htmlFor="title">Título da Atividade</Label>
+                      <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Título da Atividade
+                      </Label>
                       <Input
                         id="title"
                         value={formData.title}
                         onChange={(e) => handleFormChange('title', e.target.value)}
                         placeholder="Digite o título da atividade"
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="description">Descrição</Label>
+                      <Label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Descrição
+                      </Label>
                       <Textarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => handleFormChange('description', e.target.value)}
                         placeholder="Descreva a atividade"
                         rows={3}
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
-                        <Label htmlFor="difficulty">Nível de Dificuldade</Label>
+                        <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Nível de Dificuldade
+                        </Label>
                         <Select
                           value={formData.difficulty}
                           onValueChange={(value) => handleFormChange('difficulty', value)}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -383,105 +341,144 @@ export function EditActivityContainer({
                       </div>
 
                       <div>
-                        <Label htmlFor="duration">Duração Estimada (minutos)</Label>
+                        <Label htmlFor="duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Duração (minutos)
+                        </Label>
                         <Input
                           id="duration"
                           type="number"
                           value={formData.duration}
                           onChange={(e) => handleFormChange('duration', e.target.value)}
                           placeholder="30"
+                          className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="type">Tipo de Atividade</Label>
+                        <Label htmlFor="type" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Tipo de Atividade
+                        </Label>
                         <Input
                           id="type"
                           value={formData.type}
                           onChange={(e) => handleFormChange('type', e.target.value)}
                           placeholder="Ex: Exercício, Prova, Jogo"
+                          className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                         />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+              </motion.div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Target className="w-5 h-5 mr-2" />
+              {/* Configurações Específicas */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+              >
+                <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center text-lg">
+                      <Target className="w-5 h-5 mr-3 text-[#FF6B00]" />
                       Configurações Específicas
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     <div>
-                      <Label htmlFor="objective">Objetivo da Atividade</Label>
+                      <Label htmlFor="objective" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Objetivo da Atividade
+                      </Label>
                       <Textarea
                         id="objective"
                         value={formData.objective}
                         onChange={(e) => handleFormChange('objective', e.target.value)}
                         placeholder="Descreva o objetivo pedagógico"
                         rows={2}
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="targetAudience">Público-Alvo</Label>
+                      <Label htmlFor="targetAudience" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Público-Alvo
+                      </Label>
                       <Input
                         id="targetAudience"
                         value={formData.targetAudience}
                         onChange={(e) => handleFormChange('targetAudience', e.target.value)}
                         placeholder="Ex: 8º ano, Ensino Médio"
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="instructions">Instruções para o Aluno</Label>
+                      <Label htmlFor="instructions" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Instruções para o Aluno
+                      </Label>
                       <Textarea
                         id="instructions"
                         value={formData.instructions}
                         onChange={(e) => handleFormChange('instructions', e.target.value)}
                         placeholder="Instruções detalhadas para realização da atividade"
                         rows={4}
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
                   </CardContent>
                 </Card>
+              </motion.div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <BookOpen className="w-5 h-5 mr-2" />
+              {/* Materiais e Recursos */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
+              >
+                <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center text-lg">
+                      <BookOpen className="w-5 h-5 mr-3 text-[#FF6B00]" />
                       Materiais e Recursos
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <Label>Materiais Necessários</Label>
-                        <Button variant="outline" size="sm" onClick={addMaterial}>
-                          Adicionar Material
+                      <div className="flex items-center justify-between mb-4">
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Materiais Necessários
+                        </Label>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={addMaterial}
+                          className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Adicionar
                         </Button>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {formData.materials.map((material, index) => (
-                          <div key={index} className="flex items-center space-x-2">
+                          <div key={index} className="flex items-center space-x-3">
                             <Input
                               value={material}
                               onChange={(e) => updateMaterial(index, e.target.value)}
                               placeholder="Ex: Calculadora, Régua, etc."
+                              className="flex-1 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                             />
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => removeMaterial(index)}
+                              className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-200"
                             >
-                              Remover
+                              <X className="w-4 h-4" />
                             </Button>
                           </div>
                         ))}
                         {formData.materials.length === 0 && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             Nenhum material adicionado
                           </p>
                         )}
@@ -489,34 +486,49 @@ export function EditActivityContainer({
                     </div>
 
                     <div>
-                      <Label htmlFor="evaluation">Critérios de Avaliação</Label>
+                      <Label htmlFor="evaluation" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Critérios de Avaliação
+                      </Label>
                       <Textarea
                         id="evaluation"
                         value={formData.evaluation}
                         onChange={(e) => handleFormChange('evaluation', e.target.value)}
                         placeholder="Como a atividade será avaliada"
                         rows={3}
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="additionalNotes">Observações Adicionais</Label>
+                      <Label htmlFor="additionalNotes" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Observações Adicionais
+                      </Label>
                       <Textarea
                         id="additionalNotes"
                         value={formData.additionalNotes}
                         onChange={(e) => handleFormChange('additionalNotes', e.target.value)}
                         placeholder="Informações extras, dicas para o professor, etc."
                         rows={2}
+                        className="mt-2 border-gray-200 dark:border-gray-600 focus:border-[#FF6B00] focus:ring-[#FF6B00]"
                       />
                     </div>
                   </CardContent>
                 </Card>
+              </motion.div>
 
-                {/* Componente específico da atividade */}
-                {ActivityEditor && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Configurações Específicas da Atividade</CardTitle>
+              {/* Componente específico da atividade */}
+              {ActivityEditor && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="flex items-center text-lg">
+                        <Settings className="w-5 h-5 mr-3 text-[#FF6B00]" />
+                        Configurações Específicas da Atividade
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ActivityEditor 
@@ -526,32 +538,43 @@ export function EditActivityContainer({
                       />
                     </CardContent>
                   </Card>
-                )}
-              </div>
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right Side - Preview */}
-        <div className="w-1/2 bg-gray-50 dark:bg-gray-900">
-          <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-6">
-            <Eye className="w-5 h-5 mr-2 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Visualização
-            </h2>
-          </div>
-          
-          <div className="h-full overflow-y-auto p-6">
-            <Card>
-              <CardContent className="p-6">
-                {ActivityPreview && (
-                  <ActivityPreview 
-                    activityData={formData}
-                    activityId={activityId}
-                  />
-                )}
-              </CardContent>
-            </Card>
+        <div className="w-1/2 border-l border-gray-200 dark:border-gray-700">
+          <div className="h-full flex flex-col">
+            {/* Preview Header */}
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-4">
+              <div className="flex items-center space-x-2">
+                <Eye className="w-5 h-5 text-[#FF6B00]" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Visualização
+                </h2>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card className="border-0 shadow-xl bg-white dark:bg-gray-800 min-h-[600px]">
+                  <CardContent className="p-8">
+                    {ActivityPreview && (
+                      <ActivityPreview 
+                        activityData={formData}
+                        activityId={activityId}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
