@@ -288,9 +288,9 @@ export function EditActivityContainer({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full"
+              className="w-full max-w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
                   <CardTitle className="flex items-center text-base">
                     <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
@@ -299,8 +299,8 @@ export function EditActivityContainer({
                     Informações Básicas
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 p-4">
-                  <div>
+                <CardContent className="space-y-4 p-4 overflow-hidden">
+                  <div className="w-full">
                     <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Título da Atividade
                     </Label>
@@ -309,11 +309,11 @@ export function EditActivityContainer({
                       value={formData.title}
                       onChange={(e) => handleFormChange('title', e.target.value)}
                       placeholder="Digite o título da atividade"
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50"
                     />
                   </div>
 
-                  <div>
+                  <div className="w-full">
                     <Label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Descrição
                     </Label>
@@ -323,12 +323,12 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('description', e.target.value)}
                       placeholder="Descreva a atividade"
                       rows={3}
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50 resize-none"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50 resize-none"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
+                  <div className="grid grid-cols-1 gap-4 w-full">
+                    <div className="w-full">
                       <Label htmlFor="difficulty" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Nível de Dificuldade
                       </Label>
@@ -336,7 +336,7 @@ export function EditActivityContainer({
                         value={formData.difficulty}
                         onValueChange={(value) => handleFormChange('difficulty', value)}
                       >
-                        <SelectTrigger className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50">
+                        <SelectTrigger className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 transition-all duration-200 rounded-lg bg-white/80 dark:bg-gray-900/50">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -347,7 +347,7 @@ export function EditActivityContainer({
                       </Select>
                     </div>
 
-                    <div>
+                    <div className="w-full">
                       <Label htmlFor="duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Duração (minutos)
                       </Label>
@@ -357,11 +357,11 @@ export function EditActivityContainer({
                         value={formData.duration}
                         onChange={(e) => handleFormChange('duration', e.target.value)}
                         placeholder="30"
-                        className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                        className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
                       />
                     </div>
 
-                    <div>
+                    <div className="w-full">
                       <Label htmlFor="type" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Tipo de Atividade
                       </Label>
@@ -370,7 +370,7 @@ export function EditActivityContainer({
                         value={formData.type}
                         onChange={(e) => handleFormChange('type', e.target.value)}
                         placeholder="Ex: Exercício, Prova, Jogo"
-                        className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                        className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
                       />
                     </div>
                   </div>
@@ -383,9 +383,9 @@ export function EditActivityContainer({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="w-full"
+              className="w-full max-w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
                   <CardTitle className="flex items-center text-base">
                     <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
@@ -394,8 +394,8 @@ export function EditActivityContainer({
                     Configurações Específicas
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 p-4">
-                  <div>
+                <CardContent className="space-y-4 p-4 overflow-hidden">
+                  <div className="w-full">
                     <Label htmlFor="objective" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Objetivo da Atividade
                     </Label>
@@ -405,11 +405,11 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('objective', e.target.value)}
                       placeholder="Descreva o objetivo pedagógico"
                       rows={2}
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
 
-                  <div>
+                  <div className="w-full">
                     <Label htmlFor="targetAudience" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Público-Alvo
                     </Label>
@@ -418,11 +418,11 @@ export function EditActivityContainer({
                       value={formData.targetAudience}
                       onChange={(e) => handleFormChange('targetAudience', e.target.value)}
                       placeholder="Ex: 8º ano, Ensino Médio"
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2"
                     />
                   </div>
 
-                  <div>
+                  <div className="w-full">
                     <Label htmlFor="instructions" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Instruções para o Aluno
                     </Label>
@@ -432,7 +432,7 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('instructions', e.target.value)}
                       placeholder="Instruções detalhadas para realização da atividade"
                       rows={3}
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
                 </CardContent>
@@ -444,9 +444,9 @@ export function EditActivityContainer({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.2 }}
-              className="w-full"
+              className="w-full max-w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                 <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
                   <CardTitle className="flex items-center text-base">
                     <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
@@ -455,7 +455,7 @@ export function EditActivityContainer({
                     Materiais e Recursos
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 p-4">
+                <CardContent className="space-y-4 p-4 overflow-hidden">
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -478,13 +478,13 @@ export function EditActivityContainer({
                             value={material}
                             onChange={(e) => updateMaterial(index, e.target.value)}
                             placeholder="Ex: Calculadora, Régua, etc."
-                            className="flex-1 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] text-sm"
+                            className="flex-1 max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] text-sm"
                           />
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => removeMaterial(index)}
-                            className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-200 p-2"
+                            className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-200 p-2 flex-shrink-0"
                           >
                             <X className="w-3 h-3" />
                           </Button>
@@ -498,7 +498,7 @@ export function EditActivityContainer({
                     </div>
                   </div>
 
-                  <div>
+                  <div className="w-full">
                     <Label htmlFor="evaluation" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Critérios de Avaliação
                     </Label>
@@ -508,11 +508,11 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('evaluation', e.target.value)}
                       placeholder="Como a atividade será avaliada"
                       rows={2}
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
 
-                  <div>
+                  <div className="w-full">
                     <Label htmlFor="additionalNotes" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Observações Adicionais
                     </Label>
@@ -522,7 +522,7 @@ export function EditActivityContainer({
                       onChange={(e) => handleFormChange('additionalNotes', e.target.value)}
                       placeholder="Informações extras, dicas para o professor, etc."
                       rows={2}
-                      className="mt-2 border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
+                      className="mt-2 w-full max-w-full border-orange-200 dark:border-orange-600/30 focus:border-[#FF6B00] focus:ring-[#FF6B00] focus:ring-2 resize-none"
                     />
                   </div>
                 </CardContent>
@@ -535,9 +535,9 @@ export function EditActivityContainer({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
-                className="w-full"
+                className="w-full max-w-full"
               >
-                <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+                <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
                   <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
                     <CardTitle className="flex items-center text-base">
                       <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
@@ -546,7 +546,7 @@ export function EditActivityContainer({
                       Configurações Específicas da Atividade
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4">
+                  <CardContent className="p-4 overflow-hidden">
                     <ActivityEditor 
                       activityData={formData}
                       activityId={activityId}
@@ -578,10 +578,10 @@ export function EditActivityContainer({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="h-full"
+              className="h-full max-w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm h-full">
-                <CardContent className="p-4 h-full overflow-y-auto">
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm h-full overflow-hidden">
+                <CardContent className="p-4 h-full overflow-y-auto overflow-x-hidden">
                   {ActivityPreview && (
                     <ActivityPreview 
                       activityData={formData}
