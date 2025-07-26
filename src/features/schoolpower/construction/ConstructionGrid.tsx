@@ -122,7 +122,7 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
           <Building2 className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {activities.length} {activities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
           </p>
         </div>

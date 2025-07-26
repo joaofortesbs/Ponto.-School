@@ -31,11 +31,11 @@ export function ConstructionCard({
   const getStatusColor = () => {
     switch (status) {
       case 'completed':
-        return 'border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/20';
+        return 'border-green-200 bg-green-50 dark:border-green-600 dark:bg-green-900/30';
       case 'in_progress':
-        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20';
+        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-900/30';
       default:
-        return 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800';
+        return 'border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800/80';
     }
   };
 

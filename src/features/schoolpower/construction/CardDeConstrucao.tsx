@@ -586,7 +586,7 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-  
+
 
   return (
     <motion.div
@@ -640,7 +640,7 @@ export function CardDeConstrucao({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
             ) : step === "actionPlan" ? (
@@ -866,7 +866,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("materias", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     rows={2}
                     placeholder="Descreva as matérias e temas que você quer estudar..."
                   />
@@ -882,7 +882,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("publicoAlvo", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     placeholder="Ex: Ensino Médio, 3º ano, vestibular..."
                   />
                 </div>
@@ -896,7 +896,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("restricoes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     rows={2}
                     placeholder="Descreva limitações de tempo, dificuldades específicas, etc..."
                   />
@@ -912,7 +912,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("datasImportantes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     placeholder="Ex: Prova em 2 semanas, ENEM em novembro..."
                   />
                 </div>
@@ -926,7 +926,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("observacoes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     rows={2}
                     placeholder="Informações adicionais que podem ajudar..."
                   />
@@ -1004,7 +1004,7 @@ export function CardDeConstrucao({
                         type="text"
                         value={manualActivityForm.title}
                         onChange={(e) => handleManualFormChange('title', e.target.value)}
-                        className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
                         placeholder="Ex: Lista de Exercícios sobre Funções"
                         maxLength={100}
                       />
@@ -1017,7 +1017,7 @@ export function CardDeConstrucao({
                       <select
                         value={manualActivityForm.typeId}
                         onChange={(e) => handleManualFormChange('typeId', e.target.value)}
-                        className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm"
+                        className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm"
                       >
                         <option value="">Selecione o tipo de atividade...</option>
                         {schoolPowerActivities.map((activity) => (
@@ -1035,7 +1035,7 @@ export function CardDeConstrucao({
                       <textarea
                         value={manualActivityForm.description}
                         onChange={(e) => handleManualFormChange('description', e.target.value)}
-                        className="w-full p-3 border-2 border-[#FF6B00]/30 bg-white/80 dark:bg-gray-800/50 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
                         rows={4}
                         placeholder="Descreva detalhadamente o que você quer que seja feito nesta atividade..."
                         maxLength={500}
@@ -1272,7 +1272,7 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-      
+
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (

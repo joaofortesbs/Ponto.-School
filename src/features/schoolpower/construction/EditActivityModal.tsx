@@ -184,7 +184,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
                         placeholder="Descreva a atividade..."
-                        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -258,7 +258,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.objectives}
                         onChange={(e) => handleInputChange('objectives', e.target.value)}
                         placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -269,7 +269,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.materials}
                         onChange={(e) => handleInputChange('materials', e.target.value)}
                         placeholder="Liste os materiais necessários para a atividade..."
-                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -280,7 +280,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.instructions}
                         onChange={(e) => handleInputChange('instructions', e.target.value)}
                         placeholder="Descreva como a atividade deve ser executada..."
-                        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
 
@@ -291,7 +291,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         value={formData.evaluation}
                         onChange={(e) => handleInputChange('evaluation', e.target.value)}
                         placeholder="Como a atividade será avaliada..."
-                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        className="mt-1 min-h-[50px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       />
                     </div>
                   </div>
