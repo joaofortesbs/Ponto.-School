@@ -1,131 +1,174 @@
-import React, { useState, Suspense, lazy, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save, Eye, Edit3, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { 
+  activityRegistry, 
+  isActivityRegistered, 
+  getActivityComponents 
+} from '../activities/activityRegistry';
 
 interface EditActivityContainerProps {
   activityId: string;
-  activity?: any;
   activityData?: any;
-  onSave: (data: any) => void;
-  onCancel?: () => void;
   onBack?: () => void;
+  onSave?: (data: any) => void;
+  onClose?: () => void;
 }
 
-// Cache para componentes carregados dinamicamente
-const componentCache = new Map();
-
-const schoolPowerActivities = [
-  {
-    id: 'listening',
-    name: 'Listening Activity',
-    description: 'An activity to test listening skills.',
-    // ... other properties
-  },
-  {
-    id: 'reading',
-    name: 'Reading Activity',
-    description: 'An activity to improve reading comprehension.',
-    // ... other properties
-  },
-  // ... more activities
-];
-
-export function EditActivityContainer({ 
-  activityId, 
-  activity: propActivity,
-  activityData, 
-  onBack, 
-  onSave 
+export function EditActivityContainer({
+  activityId,
+  activityData,
+  onBack,
+  onSave,
+  onClose
 }: EditActivityContainerProps) {
-  const [formData, setFormData] = useState(activityData || {});
-  const [isDraft, setIsDraft] = useState(false);
-  const [activity, setActivity] = useState<any>(propActivity || null);
-  const [loading, setLoading] = useState(!propActivity);
+  const [ActivityEditor, setActivityEditor] = useState<React.ComponentType<any> | null>(null);
+  const [ActivityPreview, setActivityPreview] = useState<React.ComponentType<any> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState(activityData || {});
+
+  console.log('🔍 Buscando atividade pelo ID:', activityId);
+  console.log('📋 Atividades registradas:', Object.keys(activityRegistry));
 
   useEffect(() => {
-    // Se a atividade não foi passada como prop, buscar pelo ID
-    if (!propActivity) {
-      console.log('🔍 Buscando atividade pelo ID:', activityId);
-      const foundActivity = schoolPowerActivities.find(a => a.id === activityId);
-      if (foundActivity) {
-        console.log('✅ Atividade encontrada:', foundActivity);
-        setActivity(foundActivity);
-      } else {
-        console.error('❌ Atividade não encontrada:', activityId);
+    const loadActivityComponents = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Verificar se a atividade está registrada
+        if (!isActivityRegistered(activityId)) {
+          console.log('⚠️ Atividade não registrada, usando componentes padrão para:', activityId);
+
+          // Tentar carregar componentes padrão
+          try {
+            const defaultEditor = await import('../activities/default/EditActivity');
+            const defaultPreview = await import('../activities/default/ActivityPreview');
+
+            setActivityEditor(() => defaultEditor.default);
+            setActivityPreview(() => defaultPreview.default);
+            console.log('✅ Componentes padrão carregados com sucesso');
+          } catch (defaultError) {
+            console.error('❌ Erro ao carregar componentes padrão:', defaultError);
+            setError(`Atividade "${activityId}" não encontrada e componentes padrão indisponíveis.`);
+            return;
+          }
+        } else {
+          console.log('✅ Atividade registrada encontrada:', activityId);
+
+          const components = getActivityComponents(activityId);
+          if (!components) {
+            setError(`Erro interno: componentes não encontrados para "${activityId}".`);
+            return;
+          }
+
+          // Carregar componentes específicos da atividade
+          try {
+            const EditorComponent = components.editor;
+            const PreviewComponent = components.preview;
+
+            setActivityEditor(() => EditorComponent);
+            setActivityPreview(() => PreviewComponent);
+            console.log('✅ Componentes específicos carregados com sucesso');
+          } catch (componentError) {
+            console.error('❌ Erro ao carregar componentes específicos:', componentError);
+            setError(`Erro ao carregar componentes da atividade "${activityId}".`);
+            return;
+          }
+        }
+      } catch (generalError) {
+        console.error('❌ Erro geral ao carregar componentes:', generalError);
+        setError(`Erro inesperado ao carregar a atividade "${activityId}".`);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
+    };
+
+    if (activityId) {
+      loadActivityComponents();
     } else {
-      console.log('✅ Atividade recebida via prop:', propActivity);
-      setActivity(propActivity);
+      setError('ID da atividade não fornecido.');
       setLoading(false);
     }
-  }, [activityId, propActivity]);
+  }, [activityId]);
 
-  // Função para carregar componentes dinamicamente
-  const loadActivityComponents = (id: string) => {
-    if (componentCache.has(id)) {
-      return componentCache.get(id);
-    }
-
-    const EditActivity = lazy(() => 
-      import(`../activities/${id}/EditActivity.tsx`)
-        .catch(() => import('../activities/default/EditActivity.tsx'))
-    );
-
-    const ActivityPreview = lazy(() => 
-      import(`../activities/${id}/ActivityPreview.tsx`)
-        .catch(() => import('../activities/default/ActivityPreview.tsx'))
-    );
-
-    const components = { EditActivity, ActivityPreview };
-    componentCache.set(id, components);
-    return components;
+  const handleSave = (data: any) => {
+    console.log('💾 Salvando dados da atividade:', activityId, data);
+    setPreviewData({ ...previewData, ...data });
+    onSave?.(data);
   };
 
-  const { EditActivity, ActivityPreview } = loadActivityComponents(activityId);
-
-  const handleFormChange = (newData: any) => {
-    setFormData({ ...formData, ...newData });
-    setIsDraft(true);
-  };
-
-  const handleSave = () => {
-    onSave(formData);
-    setIsDraft(false);
-  };
-
-  const handleSaveDraft = () => {
-    // Implementar salvamento de rascunho no localStorage ou backend
-    localStorage.setItem(`activity_draft_${activityId}`, JSON.stringify(formData));
-    setIsDraft(false);
+  const handlePreview = () => {
+    console.log('👁️ Atualizando preview com dados:', previewData);
   };
 
   if (loading) {
     return (
-      <div className="w-full h-full min-h-[400px] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Carregando atividade...</p>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+      >
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-2xl">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-[#FF6B00]" />
+            <span className="text-lg font-medium">Carregando interface de edição...</span>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">Preparando componentes para: {activityId}</p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
-  if (!activity) {
+  if (error) {
     return (
-      <div className="w-full h-full min-h-[400px] flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
-          <p className="text-sm text-red-600 dark:text-red-400">
-            Atividade não encontrada (ID: {activityId})
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+      >
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-2xl max-w-md">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertCircle className="w-6 h-6 text-red-500" />
+            <span className="text-lg font-medium text-red-600">Erro ao carregar atividade</span>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-6">
+            <p className="text-xs text-gray-500 mb-1">ID solicitado:</p>
+            <code className="text-sm font-mono">{activityId}</code>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onClose || onBack}>
+              Voltar
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (!ActivityEditor || !ActivityPreview) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center"
+      >
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-2xl max-w-md">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertCircle className="w-6 h-6 text-yellow-500" />
+            <span className="text-lg font-medium">Componentes indisponíveis</span>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Os componentes de edição e visualização não puderam ser carregados para a atividade {activityId}.
           </p>
-          <Button variant="outline" onClick={onBack} className="mt-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={onClose || onBack}>
             Voltar
           </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -134,98 +177,72 @@ export function EditActivityContainer({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-white dark:bg-gray-900 z-50 overflow-hidden"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-hidden"
     >
-      {/* Header */}
-      <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar
-          </Button>
-          <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Editando Atividade
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              ID: {activityId}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isDraft && (
+      <div className="h-full bg-white dark:bg-gray-900">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-[#FF6B00] to-[#FF9248]">
+          <div className="flex items-center gap-3">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={handleSaveDraft}
-              className="flex items-center gap-2"
+              onClick={onBack || onClose}
+              className="text-white hover:bg-white/20"
             >
-              <Save className="w-4 h-4" />
-              Salvar Rascunho
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
             </Button>
-          )}
-          <Button
-            onClick={handleSave}
-            className="flex items-center gap-2 bg-[#FF6B00] hover:bg-[#E55A00] text-white"
-          >
-            <Save className="w-4 h-4" />
-            Concluir Construção
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* Left Panel - Form */}
-        <div className="w-[45%] border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Edit3 className="w-5 h-5 text-[#FF6B00]" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Configurar Atividade
-              </h2>
-            </div>
-
-            <Suspense fallback={
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+            <div className="text-white">
+              <h1 className="text-lg font-semibold">Editando Atividade</h1>
+              <div className="flex items-center gap-2 text-sm opacity-90">
+                <span>ID: {activityId}</span>
+                {isActivityRegistered(activityId) && (
+                  <span className="px-2 py-1 bg-white/20 rounded text-xs">Registrada</span>
+                )}
               </div>
-            }>
-              <EditActivity
-                data={formData}
-                onChange={handleFormChange}
-              />
-            </Suspense>
+            </div>
           </div>
         </div>
 
-        {/* Right Panel - Preview */}
-        <div className="w-[55%] overflow-y-auto bg-gray-50 dark:bg-gray-800">
-          <div className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Eye className="w-5 h-5 text-[#FF6B00]" />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Visualização ao Vivo
+        {/* Content */}
+        <div className="flex h-[calc(100vh-80px)]">
+          {/* Editor Panel */}
+          <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+            <div className="p-4">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                ✏️ Editor
               </h2>
-            </div>
-
-            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6 min-h-96">
               <Suspense fallback={
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="ml-2 text-sm text-gray-500">Carregando editor...</span>
                 </div>
               }>
-                <ActivityPreview
-                  data={formData}
+                <ActivityEditor 
+                  activityData={previewData}
+                  onSave={handleSave}
+                  onPreview={handlePreview}
                 />
               </Suspense>
+            </div>
+          </div>
+
+          {/* Preview Panel */}
+          <div className="w-1/2 overflow-y-auto bg-gray-50 dark:bg-gray-800/50">
+            <div className="p-4">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                👁️ Visualização
+              </h2>
+              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span className="ml-2 text-sm text-gray-500">Carregando visualização...</span>
+                  </div>
+                }>
+                  <ActivityPreview activityData={previewData} />
+                </Suspense>
+              </div>
             </div>
           </div>
         </div>
