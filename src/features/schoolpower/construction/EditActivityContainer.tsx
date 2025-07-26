@@ -290,16 +290,16 @@ export function EditActivityContainer({
               transition={{ duration: 0.3 }}
               className="w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-64">
-                <CardHeader className="pb-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
-                  <CardTitle className="flex items-center text-sm">
-                    <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-2">
-                      <FileText className="w-3 h-3 text-white" />
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
+                  <CardTitle className="flex items-center text-base">
+                    <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
+                      <FileText className="w-3.5 h-3.5 text-white" />
                     </div>
                     Informações Básicas
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 p-3 overflow-hidden">{/* Force container bounds */}
+                <CardContent className="space-y-4 p-4 overflow-hidden">{/* Force container bounds */}
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -387,16 +387,16 @@ export function EditActivityContainer({
               transition={{ duration: 0.3, delay: 0.1 }}
               className="w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-56">
-                <CardHeader className="pb-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
-                  <CardTitle className="flex items-center text-sm">
-                    <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-2">
-                      <Target className="w-3 h-3 text-white" />
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
+                  <CardTitle className="flex items-center text-base">
+                    <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
+                      <Target className="w-3.5 h-3.5 text-white" />
                     </div>
                     Configurações Específicas
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 p-3 overflow-hidden">
+                <CardContent className="space-y-4 p-4 overflow-hidden">
                   <div>
                     <Label htmlFor="objective" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Objetivo da Atividade
@@ -448,16 +448,16 @@ export function EditActivityContainer({
               transition={{ duration: 0.3, delay: 0.2 }}
               className="w-full"
             >
-              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-60">
-                <CardHeader className="pb-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
-                  <CardTitle className="flex items-center text-sm">
-                    <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-2">
-                      <BookOpen className="w-3 h-3 text-white" />
+              <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
+                  <CardTitle className="flex items-center text-base">
+                    <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
+                      <BookOpen className="w-3.5 h-3.5 text-white" />
                     </div>
                     Materiais e Recursos
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2 p-3 overflow-hidden">
+                <CardContent className="space-y-4 p-4 overflow-hidden">
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -539,16 +539,16 @@ export function EditActivityContainer({
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="w-full"
               >
-                <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-72">
-                  <CardHeader className="pb-2 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
-                    <CardTitle className="flex items-center text-sm">
-                      <div className="w-6 h-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-2">
-                        <Settings className="w-3 h-3 text-white" />
+                <Card className="border border-orange-200 dark:border-orange-700/30 shadow-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C40]/10 rounded-t-lg">
+                    <CardTitle className="flex items-center text-base">
+                      <div className="w-7 h-7 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] rounded-lg flex items-center justify-center mr-3">
+                        <Settings className="w-3.5 h-3.5 text-white" />
                       </div>
                       Configurações Específicas da Atividade
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-3 overflow-hidden">
+                  <CardContent className="p-4 overflow-hidden">
                     <div className="overflow-hidden">
                       <ActivityEditor 
                         activityData={formData}

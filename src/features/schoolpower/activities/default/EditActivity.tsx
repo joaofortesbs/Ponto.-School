@@ -97,13 +97,13 @@ export default function EditActivity({ activityData, activityId, onChange }: Edi
           <div>
             <Label htmlFor="activity-description">Descrição</Label>
             <Textarea
-                id="activity-description"
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                placeholder="Descreva brevemente a atividade"
-                rows={2}
-                className="resize-none text-xs"
-              />
+              id="activity-description"
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              placeholder="Descreva brevemente a atividade"
+              rows={3}
+              className="resize-none"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
