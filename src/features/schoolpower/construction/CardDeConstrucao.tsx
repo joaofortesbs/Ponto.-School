@@ -652,3 +652,279 @@ export function CardDeConstrucao({
           `,
             }
           : {}),
+            }}
+    >
+      {step === 'contextualization' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Contextualização</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="materias">Matérias</Label>
+                <Input
+                  id="materias"
+                  value={formData.materias}
+                  onChange={(e) => handleInputChange("materias", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="publicoAlvo">Público Alvo</Label>
+                <Input
+                  id="publicoAlvo"
+                  value={formData.publicoAlvo}
+                  onChange={(e) => handleInputChange("publicoAlvo", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="restricoes">Restrições</Label>
+                <Textarea
+                  id="restricoes"
+                  value={formData.restricoes}
+                  onChange={(e) => handleInputChange("restricoes", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="datasImportantes">Datas Importantes</Label>
+                <Input
+                  id="datasImportantes"
+                  value={formData.datasImportantes}
+                  onChange={(e) => handleInputChange("datasImportantes", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="observacoes">Observações</Label>
+                <Textarea
+                  id="observacoes"
+                  value={formData.observacoes}
+                  onChange={(e) => handleInputChange("observacoes", e.target.value)}
+                />
+              </div>
+              <Button disabled={!isContextualizationValid} onClick={handleSubmitContextualization}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Aguarde...
+                  </>
+                ) : (
+                  "Gerar Plano de Ação"
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'actionPlan' && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle>Plano de Ação</CardTitle>
+            <div className="flex items-center space-x-2">
+              <GridToggleComponent
+                viewMode={viewMode}
+                onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+              />
+              <FilterComponent
+                activities={getCombinedActivities()}
+                selectedActivities2={selectedActivities2}
+                onFilterApply={handleFilterApply}
+              />
+              <Button size="sm" onClick={() => setShowAddActivityInterface(true)}>
+                Adicionar Atividade Manual
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {showTrilhasDebug && (
+              <TrilhasDebugPanel 
+                selectedActivities={selectedActivities2}
+                schoolPowerActivities={schoolPowerActivities}
+                atividadesTrilhas={atividadesTrilhas}
+              />
+            )}
+
+            {viewMode === 'list' ? (
+              <div className="space-y-4">
+                {getCombinedActivities().length > 0 ? (
+                  getCombinedActivities()
+                    .filter(activity => filterState === 'all' || (filterState === 'selected' && selectedActivities2.some(item => item.id === activity.id)))
+                    .map((activity) => (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.2 }}
+                        className="border rounded-md p-4 flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-4">
+                          {/* Ícone da atividade */}
+                          {React.createElement(getIconByActivityId(activity.id), { className: "w-6 h-6 text-[#FF6B00]" })}
+
+                          <div>
+                            <h3 className="text-lg font-semibold">{activity.title}</h3>
+                            <p className="text-sm text-gray-500">{activity.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(activity.id)}
+                              disabled={editingActivityId !== null && editingActivityId !== activity.id}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleActivityToggle(activity)}
+                            >
+                              {selectedActivities2.some((item) => item.id === activity.id) ? (
+                                <Pause className="h-4 w-4" />
+                              ) : (
+                                <Play className="h-4 w-4" />
+                              )}
+                            </Button>
+                        </div>
+                      </motion.div>
+                    ))
+                ) : (
+                  <p>Nenhuma atividade encontrada.</p>
+                )}
+              </div>
+            ) : (
+              <ConstructionGrid
+                activities={getCombinedActivities()}
+                selectedActivities={selectedActivities2}
+                onActivityToggle={handleActivityToggle}
+                onEditActivity={handleEdit}
+                editingActivityId={editingActivityId}
+              />
+            )}
+
+            {showAddActivityInterface && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 w-full max-w-md">
+                  <h2 className="text-lg font-semibold mb-4">Adicionar Atividade Manual</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="manual-title">Título</Label>
+                      <Input
+                        type="text"
+                        id="manual-title"
+                        value={manualActivityForm.title}
+                        onChange={(e) => handleManualFormChange('title', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="manual-type">Tipo</Label>
+                      <Select onValueChange={(value) => handleManualFormChange('typeId', value)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione um tipo" value={manualActivityForm.typeId} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {schoolPowerActivities.map(activity => (
+                            <SelectItem key={activity.id} value={activity.id}>{activity.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="manual-description">Descrição</Label>
+                      <Textarea
+                        id="manual-description"
+                        value={manualActivityForm.description}
+                        onChange={(e) => handleManualFormChange('description', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="ghost" onClick={() => setShowAddActivityInterface(false)}>
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleAddManualActivity}>Adicionar</Button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            <div className="flex justify-between items-center mt-4">
+              <Button variant="outline" onClick={onResetFlow}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Voltar
+              </Button>
+              <div>
+                <div className="mb-2 text-sm text-muted-foreground">
+                  {selectedTrilhasCount > 0 && (
+                    <div className="flex items-center space-x-2 mb-2">
+                      <TrilhasBadge {...getTrilhasBadgeProps(selectedTrilhasCount)} />
+                      <span>{selectedTrilhasCount} atividades da trilha selecionadas</span>
+                    </div>
+                  )}
+                  Você selecionou {selectedActivities2.length} de {getCombinedActivities().length} atividades.
+                </div>
+                <Button onClick={handleApproveActionPlan}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Aguarde...
+                    </>
+                  ) : (
+                    <>
+                      Gerar Atividades
+                      <CheckCircle2 className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'generatingActivities' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Gerando Atividades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+              <p>Gerando atividades com base no plano de ação...</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'construction' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Construção</CardTitle>
+          </CardHeader>
+          <CardContent>
+            Em construção...
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'activities' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Atividades</CardTitle>
+          </CardHeader>
+          <CardContent>
+            Atividades...
+          </CardContent>
+        </Card>
+      )}
+    </motion.div>
+  );
+}

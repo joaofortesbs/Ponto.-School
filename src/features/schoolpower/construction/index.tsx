@@ -30,6 +30,13 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
 
 export { ConstructionGrid } from './ConstructionGrid';
 export { ConstructionCard } from './ConstructionCard';
-export { ProgressCircle } from './ProgressCircle';
-export { useConstructionActivities } from './useConstructionActivities';
-export type { ConstructionActivity, ConstructionInterfaceProps } from './index';
+export { CardDeConstrucao } from './CardDeConstrucao';
+export type { ConstructionActivity } from './types';
+
+// Interface principal de construção
+export interface ConstructionInterface {
+  activities: any[];
+  selectedActivities: any[];
+  onActivitySelect: (activity: any) => void;
+  onActivityDeselect: (activityId: string) => void;
+}
