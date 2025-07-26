@@ -126,7 +126,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className="w-[1400px] h-[800px] bg-white rounded-2xl shadow-2xl overflow-hidden"
+          className="w-[1400px] h-[700px] bg-white rounded-2xl shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -155,7 +155,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="flex p-4 h-[calc(800px-120px)] gap-4">
+          <div className="flex p-4 h-[calc(800px-140px)] gap-4">
             {/* Formulário (50%) */}
             <div className="flex flex-col space-y-3 overflow-y-auto flex-1 pr-2">
               <Card>
