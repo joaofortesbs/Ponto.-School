@@ -6,6 +6,13 @@ import { ProgressCircle } from './ProgressCircle';
 import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+
+// Função para obter o nome da atividade pelo ID
+const getActivityNameById = (activityId: string): string => {
+  const activity = schoolPowerActivitiesData.find(act => act.id === activityId);
+  return activity ? activity.name : activityId;
+};
 
 export function ConstructionCard({
   id,
@@ -100,7 +107,7 @@ export function ConstructionCard({
             <div className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#FF6B00]/20 to-[#D65A00]/20 border border-[#FF6B00]/30 dark:border-[#FF6B00]/20">
               <span className="text-xs font-semibold text-[#FF6B00] dark:text-[#FF8736] flex items-center gap-1">
                 <Activity className="w-3 h-3" />
-                {title}
+                {getActivityNameById(id)}
               </span>
             </div>
           </div>
