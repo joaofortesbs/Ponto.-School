@@ -4,7 +4,7 @@ import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
-export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
+export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
 
 interface SchoolPowerFlowData {
   initialMessage: string | null;
@@ -240,19 +240,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowState('construction');
       setIsLoading(false);
 
-      console.log('✅ Transição para construction concluída'); que a interface foi atualizada
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Executa automação para todas as atividades
-      const automationResults = await controller.autoBuildMultipleActivities(activitiesData);
-
-      const successCount = automationResults.filter(r => r).length;
-      console.log(`✅ Automação concluída: ${successCount}/${activitiesData.length} atividades construídas`);
-
-      setTimeout(() => {
-        setFlowState('activities');
-        setIsLoading(false);
-      }, 2000);
+      console.log('✅ Transição para construction concluída');
 
     } catch (error) {
       console.error('❌ Erro ao aprovar plano de ação:', error);
