@@ -233,14 +233,11 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
       console.log('🎯 Dados salvos, transitioning para construction...');
 
-      // Pequena pausa para garantir que os dados sejam salvos
-      await new Promise(resolve => setTimeout(resolve, 500));
-
       // Transicionar para o estado construction
       setFlowState('construction');
-      setIsLoading(false);
 
-      console.log('✅ Transição para construction concluída');
+      console.log('✅ Transição para construction concluída - automação será iniciada pelo CardDeConstrucao');
+      setIsLoading(false);
 
     } catch (error) {
       console.error('❌ Erro ao aprovar plano de ação:', error);

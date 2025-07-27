@@ -48,6 +48,8 @@ import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
+import { automateAllApprovedActivities, diagnoseAutomationEnvironment } from './auto/completeAutomationSystem';
+import { AutomationMonitor } from './components/AutomationMonitor';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -243,7 +245,7 @@ export function CardDeConstrucao({
 
   const handleApproveActionPlan = () => {
     console.log('✅ Aprovando plano de ação:', selectedActivities2);
-    
+
     if (selectedActivities2.length === 0) {
       console.warn('⚠️ Nenhuma atividade selecionada');
       return;
@@ -787,7 +789,7 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-      
+
       {step === "generating" ? (
         <motion.div
           className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
