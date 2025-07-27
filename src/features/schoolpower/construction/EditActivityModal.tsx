@@ -15,6 +15,7 @@ import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
+import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 
 interface EditActivityModalProps {
   isOpen: boolean;
@@ -469,8 +470,14 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                           </div>
                         </div>
 
-                        <div className="border rounded-lg p-6 h-[calc(100%-100px)] overflow-y-auto bg-white dark:bg-gray-800">
-                          <ActivityPreview activityData={getActivityPreviewData()} />
+                        <div className="border rounded-lg h-[calc(100%-100px)] overflow-hidden bg-white dark:bg-gray-800">
+                          {activity?.id === 'lista-exercicios' && generatedContent ? (
+                            <ExerciseListPreview exerciseData={JSON.parse(generatedContent)} />
+                          ) : (
+                            <div className="p-6 h-full overflow-y-auto">
+                              <ActivityPreview activityData={getActivityPreviewData()} />
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -510,13 +517,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                           )}
                         </div>
 
-                        <div className="border rounded-lg p-6 h-[calc(100%-100px)] overflow-y-auto bg-white dark:bg-gray-800">
+                        <div className="border rounded-lg h-[calc(100%-100px)] overflow-hidden bg-white dark:bg-gray-800">
                           {generatedContent ? (
-                            <div className="prose prose-sm max-w-none dark:prose-invert">
-                              <pre className="whitespace-pre-wrap font-sans text-gray-900 dark:text-white leading-relaxed">
-                                {generatedContent}
-                              </pre>
-                            </div>
+                            activity?.id === 'lista-exercicios' ? (
+                              <ExerciseListPreview exerciseData={JSON.parse(generatedContent)} />
+                            ) : (
+                              <div className="p-6 h-full overflow-y-auto">
+                                <div className="prose prose-sm max-w-none dark:prose-invert">
+                                  <pre className="whitespace-pre-wrap font-sans text-gray-900 dark:text-white leading-relaxed">
+                                    {generatedContent}
+                                  </pre>
+                                </div>
+                              </div>
+                            )
                           ) : (
                             <div className="flex flex-col items-center justify-center h-full text-center">
                               <FileText className="h-16 w-16 text-gray-400 mb-4" />

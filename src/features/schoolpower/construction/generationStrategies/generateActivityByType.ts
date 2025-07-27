@@ -63,31 +63,173 @@ ${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`
 };
 
 export const generateExerciseList = (data: ActivityFormData): string => {
-  return `
-# ${data.title}
+  // Gerar questões baseadas nos dados do usuário
+  const questions = generateQuestionsBasedOnUserData(data);
+  
+  return JSON.stringify({
+    title: data.title,
+    description: data.description,
+    subject: data.subject,
+    theme: data.theme,
+    schoolYear: data.schoolYear,
+    numberOfQuestions: parseInt(data.numberOfQuestions || '10'),
+    difficultyLevel: data.difficultyLevel,
+    questionModel: data.questionModel,
+    sources: data.sources,
+    questions: questions,
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      activityType: 'lista-exercicios'
+    }
+  }, null, 2);
+};
 
-## Descrição da Atividade
-${data.description}
+// Função para gerar questões baseadas nos dados do usuário
+const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
+  const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
+  const questions = [];
+  
+  for (let i = 1; i <= numberOfQuestions; i++) {
+    let question;
+    
+    switch (data.questionModel) {
+      case 'Múltipla Escolha':
+        question = generateMultipleChoiceQuestion(i, data);
+        break;
+      case 'Dissertativa':
+        question = generateEssayQuestion(i, data);
+        break;
+      case 'Verdadeiro/Falso':
+        question = generateTrueFalseQuestion(i, data);
+        break;
+      case 'Mista':
+        // Alternar entre tipos de questão
+        const types = ['multiple-choice', 'essay', 'true-false'];
+        const selectedType = types[i % 3];
+        if (selectedType === 'multiple-choice') {
+          question = generateMultipleChoiceQuestion(i, data);
+        } else if (selectedType === 'essay') {
+          question = generateEssayQuestion(i, data);
+        } else {
+          question = generateTrueFalseQuestion(i, data);
+        }
+        break;
+      default:
+        question = generateMultipleChoiceQuestion(i, data);
+    }
+    
+    questions.push(question);
+  }
+  
+  return questions;
+};
 
-## Dados da Atividade
-- **Disciplina:** ${data.subject}
-- **Tema:** ${data.theme}
-- **Ano de Escolaridade:** ${data.schoolYear}
-- **Número de Questões:** ${data.numberOfQuestions}
-- **Nível de Dificuldade:** ${data.difficultyLevel}
+// Gerar questão de múltipla escolha
+const generateMultipleChoiceQuestion = (questionNumber: number, data: ActivityFormData) => {
+  const difficultyTemplates = {
+    'Básico': [
+      `Sobre ${data.theme} em ${data.subject}, qual das alternativas está correta?`,
+      `Em relação ao tema ${data.theme}, identifique a afirmação verdadeira:`,
+      `Considerando o conteúdo de ${data.theme}, qual opção apresenta informação correta?`
+    ],
+    'Intermediário': [
+      `Analise as características de ${data.theme} em ${data.subject} e identifique a alternativa correta:`,
+      `Com base no estudo de ${data.theme}, qual das seguintes afirmações demonstra compreensão adequada?`,
+      `Aplicando os conceitos de ${data.theme}, escolha a alternativa que melhor representa o tema:`
+    ],
+    'Avançado': [
+      `Realize uma análise crítica sobre ${data.theme} em ${data.subject} e determine qual alternativa apresenta a interpretação mais adequada:`,
+      `Considerando os aspectos complexos de ${data.theme}, qual alternativa demonstra domínio avançado do conteúdo?`,
+      `Avalie criticamente os elementos de ${data.theme} e selecione a alternativa que melhor sintetiza o conhecimento:`
+    ]
+  };
+  
+  const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
+  const questionText = templates[questionNumber % templates.length];
+  
+  return {
+    id: `q${questionNumber}`,
+    type: 'multiple-choice',
+    number: questionNumber,
+    text: questionText,
+    difficulty: data.difficultyLevel,
+    points: calculateQuestionPoints(data.difficultyLevel),
+    options: [
+      { id: 'a', text: `Primeira alternativa sobre ${data.theme}`, isCorrect: true },
+      { id: 'b', text: `Segunda alternativa sobre ${data.theme}`, isCorrect: false },
+      { id: 'c', text: `Terceira alternativa sobre ${data.theme}`, isCorrect: false },
+      { id: 'd', text: `Quarta alternativa sobre ${data.theme}`, isCorrect: false }
+    ]
+  };
+};
 
-## Objetivos de Aprendizagem
-${data.objectives || `Desenvolver habilidades específicas em ${data.subject} através de exercícios práticos sobre ${data.theme}.`}
+// Gerar questão dissertativa
+const generateEssayQuestion = (questionNumber: number, data: ActivityFormData) => {
+  const difficultyTemplates = {
+    'Básico': [
+      `Explique com suas palavras o que você entende sobre ${data.theme}.`,
+      `Descreva as principais características de ${data.theme} em ${data.subject}.`,
+      `Cite exemplos práticos relacionados ao tema ${data.theme}.`
+    ],
+    'Intermediário': [
+      `Analise a importância de ${data.theme} no contexto de ${data.subject} e apresente argumentos fundamentados.`,
+      `Compare e contraste diferentes aspectos de ${data.theme}, justificando sua resposta.`,
+      `Desenvolva uma explicação detalhada sobre como ${data.theme} se aplica na prática.`
+    ],
+    'Avançado': [
+      `Elabore uma análise crítica sobre ${data.theme}, considerando múltiplas perspectivas e fundamentando com ${data.sources || 'fontes acadêmicas'}.`,
+      `Desenvolva uma dissertação sobre os impactos e implicações de ${data.theme} em ${data.subject}, utilizando argumentação consistente.`,
+      `Construa uma reflexão aprofundada sobre ${data.theme}, estabelecendo conexões com outros temas da disciplina.`
+    ]
+  };
+  
+  const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
+  const questionText = templates[questionNumber % templates.length];
+  
+  return {
+    id: `q${questionNumber}`,
+    type: 'essay',
+    number: questionNumber,
+    text: questionText,
+    difficulty: data.difficultyLevel,
+    points: calculateQuestionPoints(data.difficultyLevel),
+    expectedLength: data.difficultyLevel === 'Básico' ? '3-5 linhas' : data.difficultyLevel === 'Intermediário' ? '5-8 linhas' : '8-12 linhas'
+  };
+};
 
-## Materiais Necessários
-${data.materials || `• Folha de exercícios\n• Material de escrita\n• Material de apoio sobre ${data.theme}`}
+// Gerar questão verdadeiro/falso
+const generateTrueFalseQuestion = (questionNumber: number, data: ActivityFormData) => {
+  const statements = [
+    `O tema ${data.theme} é fundamental para o entendimento de ${data.subject}.`,
+    `Em ${data.subject}, ${data.theme} apresenta características específicas que devem ser consideradas.`,
+    `O estudo de ${data.theme} contribui para o desenvolvimento acadêmico em ${data.subject}.`,
+    `As aplicações práticas de ${data.theme} são limitadas ao contexto teórico de ${data.subject}.`,
+    `${data.theme} pode ser compreendido completamente sem conhecimento prévio em ${data.subject}.`
+  ];
+  
+  const statement = statements[questionNumber % statements.length];
+  const isTrue = questionNumber % 2 === 1; // Alternar entre verdadeiro e falso
+  
+  return {
+    id: `q${questionNumber}`,
+    type: 'true-false',
+    number: questionNumber,
+    text: statement,
+    difficulty: data.difficultyLevel,
+    points: calculateQuestionPoints(data.difficultyLevel),
+    correctAnswer: isTrue
+  };
+};
 
-## Instruções para o Aluno
-${data.instructions || `
-1. Leia atentamente cada questão antes de responder
-2. Organize seu tempo de acordo com o número de exercícios
-3. Revise suas respostas antes de finalizar
-4. Em caso de dúvidas, consulte o material de apoio sobre ${data.theme}
+// Calcular pontos baseado na dificuldade
+const calculateQuestionPoints = (difficulty: string): number => {
+  switch (difficulty) {
+    case 'Básico': return 1;
+    case 'Intermediário': return 2;
+    case 'Avançado': return 3;
+    default: return 1;
+  }
+};erial de apoio sobre ${data.theme}
 `}
 
 ## Lista de Exercícios
