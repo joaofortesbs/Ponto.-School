@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3 } from 'lucide-react';
@@ -358,24 +357,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                           </>
                         )}
                       </Button>
-                    </div>
-
-                    {/* Preview (50%) */}
-                    <div className="flex flex-col flex-1 pl-2">
-                      <Card className="h-full">
-                        <CardContent className="p-4 h-full">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-lg flex items-center">
-                              <Eye className="h-5 w-5 mr-2 text-[#FF6B00]" />
-                              Pré-visualização em Tempo Real
-                            </h3>
-                          </div>
-
-                          <div className="border rounded-lg p-4 h-[calc(100%-60px)] overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                            <ActivityPreview activityData={getActivityPreviewData()} />
-                          </div>
-                        </CardContent>
-                      </Card>
                     </div>
                   </div>
                 </TabsContent>
