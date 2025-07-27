@@ -7,6 +7,32 @@ import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+// Função para converter ID em nome legível
+const getActivityName = (id: string): string => {
+  const idToNameMap: { [key: string]: string } = {
+    'ideias-confraternizacoes': 'Ideias para Confraternizações',
+    'plano-aula-matematica': 'Plano de Aula - Matemática',
+    'exercicios-portugues': 'Exercícios de Português',
+    'projeto-ciencias': 'Projeto de Ciências',
+    'atividade-historia': 'Atividade de História',
+    'trabalho-geografia': 'Trabalho de Geografia',
+    'lista-exercicios-fisica': 'Lista de Exercícios - Física',
+    'prova-quimica': 'Prova de Química',
+    'seminario-biologia': 'Seminário de Biologia',
+    'apresentacao-literatura': 'Apresentação de Literatura',
+    'pesquisa-sociologia': 'Pesquisa de Sociologia',
+    'estudo-filosofia': 'Estudo de Filosofia',
+    'atividade-ingles': 'Atividade de Inglês',
+    'exercicio-espanhol': 'Exercício de Espanhol',
+    'projeto-artes': 'Projeto de Artes',
+    'trabalho-educacao-fisica': 'Trabalho de Educação Física'
+  };
+
+  return idToNameMap[id] || id.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+};
+
 export function ConstructionCard({
   id,
   title,
@@ -100,7 +126,7 @@ export function ConstructionCard({
             <div className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#FF6B00]/20 to-[#D65A00]/20 border border-[#FF6B00]/30 dark:border-[#FF6B00]/20">
               <span className="text-xs font-semibold text-[#FF6B00] dark:text-[#FF8736] flex items-center gap-1">
                 <Activity className="w-3 h-3" />
-                {title}
+                {getActivityName(id)}
               </span>
             </div>
           </div>
