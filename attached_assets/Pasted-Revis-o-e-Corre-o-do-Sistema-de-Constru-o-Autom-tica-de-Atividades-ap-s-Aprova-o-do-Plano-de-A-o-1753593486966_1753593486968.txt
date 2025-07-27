@@ -1,0 +1,101 @@
+Revisão e Correção do Sistema de Construção Automática de Atividades após Aprovação do Plano de Ação
+
+🚨 CONTEXTO:
+
+O sistema da plataforma School Power já possui:
+
+Interface com mini-cards de atividades.
+
+Modais de edição únicos por tipo de atividade, com campos distintos.
+
+Um botão “Construir Atividade” dentro de cada modal, que deve ser clicado para que a atividade seja gerada.
+
+Um sistema de IA que gera as informações de cada atividade ao aprovar o Plano de Ação.
+
+O sistema de construção automática deve:
+
+✅ Pegar os dados da IA para cada atividade.
+✅ Preencher os campos do modal de forma sincronizada, campo por campo, corretamente.
+✅ Acionar o botão “Construir Atividade” automaticamente, somente após todos os campos estarem corretamente preenchidos.
+
+🔍 OBJETIVO DESTE PROMPT:
+
+Verificar, corrigir e garantir que o sistema:
+
+Colete corretamente os dados do Plano de Ação para cada atividade (por ID/tipo).
+
+Estruture esses dados de maneira 100% compatível com os campos reais de cada modal.
+
+Aguarde o carregamento e abertura completa do modal antes de preencher os campos.
+
+Preencha corretamente cada campo visível e invisível (inputs, selects, textos, etc).
+
+Valide se os campos foram realmente preenchidos.
+
+Acione o botão de “Construir Atividade” automaticamente apenas quando o preenchimento for 100% bem-sucedido.
+
+🛠️ TECNOLOGIA APLICADA (sugestões modernas para tornar o sistema robusto):
+
+🔄 Use MutationObserver para garantir que o modal foi carregado antes de tentar preencher campos.
+
+⏱️ Utilize waitForElement + verificação de DOM ReadyState para aguardar cada campo.
+
+🧩 Utilize uma camada de Field Mapper que mapeia: campo lógico (ex: "objetivo_aprendizado") ↔️ seletor real (ex: "#input-objetivo").
+
+💡 Se algum campo for "select" ou "multi-select", utilize um utilitário de triggering de eventos (dispatchEvent).
+
+💬 Use console.group para debug e logging em tempo real de cada passo: carregamento → preenchimento → validação → clique.
+
+✅ Após preenchimento, verifique valor do campo via DOM.value para garantir que foi aplicado corretamente.
+
+🔐 Faça o botão “Construir Atividade” ser clicado via click() apenas quando todos os campos estiverem preenchidos e válidos.
+
+📋 CHECKLIST PARA ANÁLISE COMPLETA:
+
+ Cada tipo de atividade possui mapeamento correto de campos?
+
+ Os dados da IA seguem o mesmo nome das chaves do mapeamento?
+
+ Existe um validador que checa se todos os campos foram preenchidos antes de clicar no botão de construção?
+
+ O modal está sendo monitorado para saber quando está 100% pronto para ser manipulado?
+
+ Os campos são preenchidos com eventos corretos (ex: input.dispatchEvent(new Event('input')))?
+
+ O clique automático do botão “Construir Atividade” está condicionado a sucesso de preenchimento?
+
+💡 MELHORIA ADICIONAL: Use uma estrutura de fallback inteligente
+
+Se por algum motivo um campo não puder ser preenchido, exiba um aviso na interface em forma de tooltip ou console.log informando o campo que falhou e por quê.
+
+📁 SUGESTÃO DE NOVO ARQUIVO PARA GERENCIAR A ORDEM E EXECUÇÃO:
+
+/src/features/schoolpower/construction/automationController.ts
+
+Função principal:
+
+const autoBuildActivity = async (activityId, type, iaData) => {
+await waitModalLoad(activityId);
+const fieldMap = getFieldMap(type);
+const success = await fillFields(fieldMap, iaData, activityId);
+if (success) {
+clickBuildButton(activityId);
+} else {
+logError(Erro ao preencher todos os campos da atividade ${activityId});
+}
+}
+
+✅ RESULTADO ESPERADO DEPOIS DESTE PROMPT:
+
+Atividades são construídas automaticamente após o Plano de Ação ser aprovado.
+
+Nenhuma intervenção do usuário é necessária.
+
+Campos são todos corretamente preenchidos.
+
+O botão "Construir Atividade" é acionado automaticamente.
+
+Logs são visíveis no console para facilitar debugging.
+
+Nenhum erro visual ou de lógica.
+
