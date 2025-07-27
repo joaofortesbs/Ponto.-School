@@ -653,8 +653,6 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -1301,17 +1299,16 @@ The code has been modified to implement automatic activity construction upon pla
 
               {!showAddActivityInterface && (
                 <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
-                  
-<Button
-                          onClick={handleApproveActionPlan}
-                          disabled={selectedActivities2.length === 0 || isLoading}
-                          className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
-                        >
-                          <Target className="w-4 h-4 sm:w-5 sm:h-5" />
-                          {isLoading
-                            ? "Processando..."
-                            : `Aprovar Plano (${selectedActivities2.length})`}
-                        </Button>
+                  <Button
+                    onClick={handleApproveActionPlan}
+                    disabled={selectedActivities2.length === 0 || isLoading}
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                  >
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                    {isLoading
+                      ? "Processando..."
+                      : `Aprovar Plano (${selectedActivities2.length})`}
+                  </Button>
                 </div>
               )}
             </motion.div>
