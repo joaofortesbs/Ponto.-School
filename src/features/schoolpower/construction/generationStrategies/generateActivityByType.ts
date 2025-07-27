@@ -230,7 +230,6 @@ const calculateQuestionPoints = (difficulty: string): number => {
     default: return 1;
   }
 };
-};
 
 export const generateGame = (data: ActivityFormData): string => {
   return `
