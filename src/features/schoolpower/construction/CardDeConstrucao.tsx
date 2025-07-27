@@ -142,7 +142,7 @@ export function CardDeConstrucao({
   const [isBuilding, setIsBuilding] = useState(false);
 
   // State for tracking building progress
-  const [progress, setProgress<{
+  const [progress, setProgress] = useState<{
     total: number;
     completed: number;
     current: string;
@@ -690,7 +690,6 @@ export function CardDeConstrucao({
         type: "spring",
         stiffness: 100,
         damping: 15,
-      ```python
       }}
       className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
       style={{
@@ -1234,7 +1233,7 @@ export function CardDeConstrucao({
                                     <path 
                                       fillRule="evenodd" 
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                                      clipRule="evenodd"/>```python
+                                      clipRule="evenodd"/>
                                   </svg>
                                 ) : (
                                   React.createElement(getIconByActivityId(activity.id), {
@@ -1365,6 +1364,14 @@ export function CardDeConstrucao({
 
 
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Settings } from "lucide-react";
 import { EditMaterialsInterface } from "./EditMaterialsInterface";
 
@@ -1373,8 +1380,8 @@ interface ConstructionInterfaceProps {
 }
 
 export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
-    const [modalStates, setModalStates<{ [activityId: string]: boolean }>({});
-    const [selectedActivity, setSelectedActivity: React.Dispatch<React.SetStateAction<ActionPlanItem | null>>] = useState<ActionPlanItem | null>(null);
+    const [modalStates, setModalStates] = useState<{ [activityId: string]: boolean }>({});
+    const [selectedActivity, setSelectedActivity] = useState<ActionPlanItem | null>(null);
 
     // Inicializa o estado do modal para cada atividade aprovada
     useEffect(() => {
