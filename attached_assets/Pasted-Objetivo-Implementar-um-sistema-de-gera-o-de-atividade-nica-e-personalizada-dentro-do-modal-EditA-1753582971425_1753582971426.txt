@@ -1,0 +1,131 @@
+Objetivo: Implementar um sistema de geração de atividade única e personalizada dentro do modal EditActivityModal.tsx, garantindo que cada atividade (identificada por ID) tenha um fluxo exclusivo de geração de conteúdo automatizado com IA, a partir dos dados preenchidos nos campos da interface "Editar Materiais", com visualização prévia em tempo real.
+
+📁 Arquivo base:
+src/features/schoolpower/construction/EditActivityModal.tsx
+
+Tarefa:
+
+Implemente as seguintes alterações dentro do arquivo EditActivityModal.tsx de forma altamente organizada, reutilizável e sem impactar a estrutura já existente da UI, conforme demonstrado na imagem enviada.
+
+✅ 1. Vincular cada modal à sua respectiva atividade pelo ID
+
+Ao abrir o modal EditActivityModal, o componente deve receber o ID da atividade como parâmetro props (ex: activityId).
+
+Usar esse ID para buscar e armazenar localmente os dados preenchidos (usando Zustand, Context API ou useState/useEffect se local).
+
+Garantir que cada instância do modal armazene separadamente os dados em edição daquele ID.
+
+Exemplo:
+const { activityId } = props;
+const [formData, setFormData] = useState(() => getInitialFormDataById(activityId));
+
+✅ 2. Arquitetura de geração única para cada tipo de atividade
+
+Crie um novo arquivo chamado:
+src/features/schoolpower/construction/generationStrategies/generateActivityByType.ts
+
+Dentro desse arquivo, implemente uma função por tipo de atividade (Prova, Jogo, Vídeo, Lista, Mapa Mental etc.). Cada função irá receber os dados preenchidos no modal e retornará a atividade completamente gerada (em formato HTML/JSX/markdown/texto estruturado).
+
+Exemplo de estrutura interna:
+
+export const generateActivityByType = (type: string, data: FormData) => {
+switch (type) {
+case 'Prova':
+return generateTest(data);
+case 'Vídeo':
+return generateVideoScript(data);
+case 'Jogo':
+return generateGame(data);
+default:
+return 'Tipo de atividade não suportado ainda.';
+}
+};
+
+✅ 3. Sistema de envio dos dados preenchidos para a IA
+
+Crie um handler que será disparado ao clicar no botão "Construir Atividade".
+
+Esse handler irá:
+
+Validar os campos obrigatórios.
+
+Enviar os dados para o endpoint de IA (já integrado).
+
+Receber a resposta gerada e armazenar localmente em estado.
+
+Atualizar a aba de pré-visualização com o conteúdo gerado pela IA.
+
+Exemplo de handler (resumido):
+
+const handleGenerate = async () => {
+const payload = {
+...formData,
+activityId,
+activityType
+};
+const generated = await fetch('/api/ai/generate-activity', {
+method: 'POST',
+body: JSON.stringify(payload)
+}).then(res => res.json());
+
+setGeneratedContent(generated.content);
+};
+
+✅ 4. Pré-visualização integrada
+
+Adicione uma nova aba chamada “Pré-visualização” ao lado de "Editar", com transição suave.
+
+Dentro dessa aba, exiba o conteúdo gerado retornado da IA.
+
+O conteúdo deve estar formatado de acordo com o tipo da atividade (PDF simulado, texto estruturado, imagens ou embed se aplicável).
+
+✅ 5. Manter consistência visual e UX
+
+Mantenha o modal com o mesmo estilo já existente conforme imagem enviada.
+
+Garanta que a renderização da atividade gerada não transborde os limites do modal.
+
+Adicione um loading spinner enquanto a IA está gerando a atividade.
+
+O botão “Construir Atividade” só deve ser clicável quando todos os campos obrigatórios forem preenchidos.
+
+✅ 6. Organização em arquivos separados
+Criar os seguintes arquivos/modulos para manter tudo modularizado:
+
+src/features/schoolpower/construction/generationStrategies/generateActivityByType.ts
+
+src/features/schoolpower/construction/types/ActivityTypes.ts
+
+src/features/schoolpower/construction/api/generateActivity.ts
+
+src/features/schoolpower/construction/hooks/useGenerateActivity.ts
+
+✅ 7. Exemplo de atividade construída (resposta esperada no Preview)
+Exemplo para Prova:
+
+Título
+
+Instruções
+
+Questões Objetivas (3 a 5)
+
+Questões Discursivas (1 ou 2)
+
+Gabarito
+
+Exemplo para Vídeo:
+
+Roteiro com introdução, tópicos principais e fechamento
+
+Sugestão de imagens/recursos visuais
+
+Sugestão de trilha sonora
+
+🧠 Extra
+
+Todos os dados gerados devem poder ser salvos localmente no state central da plataforma, garantindo persistência temporária para edição.
+
+O conteúdo gerado também pode ser exportado em PDF ou copiado para clipboard.
+
+📌 Considerações Finais
+Essa estrutura permite máxima escalabilidade, separação de responsabilidades e controle por parte do programador sobre cada tipo de atividade. Toda a lógica de geração está separada do layout visual e pode ser facilmente expandida no futuro.
