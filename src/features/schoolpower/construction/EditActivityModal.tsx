@@ -480,44 +480,38 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
                 {activeTab === 'preview' && (
                   <div className="h-full">
-                    <Card className="h-full">
-                      <CardContent className="p-6 h-full">
-                        
-
-                        <div className="border rounded-lg h-[calc(100%-100px)] overflow-hidden bg-white dark:bg-gray-800">
-                          {generatedContent ? (
-                            activity?.id === 'lista-exercicios' ? (
-                              <ExerciseListPreview exerciseData={JSON.parse(generatedContent)} />
-                            ) : (
-                              <div className="p-6 h-full overflow-y-auto">
-                                <div className="prose prose-sm max-w-none dark:prose-invert">
-                                  <pre className="whitespace-pre-wrap font-sans text-gray-900 dark:text-white leading-relaxed">
-                                    {generatedContent}
-                                  </pre>
-                                </div>
-                              </div>
-                            )
-                          ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center">
-                              <FileText className="h-16 w-16 text-gray-400 mb-4" />
-                              <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                                Nenhuma atividade gerada ainda
-                              </h4>
-                              <p className="text-gray-500 dark:text-gray-500 mb-4">
-                                Preencha os campos na aba "Editar" e clique em "Construir Atividade" para gerar o conteúdo
-                              </p>
-                              <Button
-                                variant="outline"
-                                onClick={() => setActiveTab('editar')}
-                                className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-                              >
-                                Ir para Edição
-                              </Button>
+                    <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
+                      {generatedContent ? (
+                        activity?.id === 'lista-exercicios' ? (
+                          <ExerciseListPreview exerciseData={JSON.parse(generatedContent)} />
+                        ) : (
+                          <div className="p-6 h-full overflow-y-auto">
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
+                              <pre className="whitespace-pre-wrap font-sans text-gray-900 dark:text-white leading-relaxed">
+                                {generatedContent}
+                              </pre>
                             </div>
-                          )}
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                          <FileText className="h-16 w-16 text-gray-400 mb-4" />
+                          <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                            Nenhuma atividade gerada ainda
+                          </h4>
+                          <p className="text-gray-500 dark:text-gray-500 mb-4">
+                            Preencha os campos na aba "Editar" e clique em "Construir Atividade" para gerar o conteúdo
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={() => setActiveTab('editar')}
+                            className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+                          >
+                            Ir para Edição
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
