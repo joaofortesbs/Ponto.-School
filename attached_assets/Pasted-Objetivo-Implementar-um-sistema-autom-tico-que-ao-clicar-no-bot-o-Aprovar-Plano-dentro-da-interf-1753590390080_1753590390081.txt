@@ -1,0 +1,123 @@
+Objetivo:
+Implementar um sistema automático que, ao clicar no botão “Aprovar Plano” dentro da interface de Plano de Ação (dentro do Card de Construção), realiza os seguintes passos:
+
+Identifica e localiza todos os mini-cards de atividades listados no plano aprovado.
+
+Acessa o modal de “Editar Materiais” de cada uma dessas atividades.
+
+Preenche automaticamente todos os campos do modal com base nas informações da IA que foram geradas anteriormente no próprio Plano de Ação.
+
+Aciona automaticamente o botão “Construir Atividade” dentro do modal.
+
+Garante que a atividade seja construída com sucesso (pré-visualização gerada) e salva em memória.
+
+Tudo isso de forma automática, sequencial, assíncrona e invisível para o usuário.
+
+Restrições:
+❌ Não alterar o design de nenhum Card, Modal ou Layout já existente.
+✅ Utilizar apenas as estruturas já existentes da interface atual.
+✅ Respeitar a estrutura modular e separada de lógica vs interface.
+
+📂 Estrutura Esperada dos Arquivos:
+
+src/features/schoolpower/construction/auto/autoBuildActivities.ts
+
+src/features/schoolpower/construction/api/fillActivityModalFields.ts
+
+src/features/schoolpower/construction/hooks/useAutoActivityBuilder.ts
+
+src/features/schoolpower/construction/utils/getActivityDataFromPlan.ts
+
+🧠 Fluxo Lógico Completo da Construção Automática
+
+Detecção do Evento:
+
+A função principal (autoBuildActivities) é disparada quando o botão “Aprovar Plano” é clicado dentro da interface de Plano de Ação.
+
+Esse botão já existe na UI atual, conforme imagem enviada, e está localizado dentro do Card de Construção.
+
+Coleta de Dados:
+
+A função coleta todos os dados do plano de ação aprovado, principalmente os campos gerados pela IA para cada atividade (ex: título, descrição, disciplina, formato, objetivos, materiais, dificuldade, duração etc).
+
+Esses dados estão organizados por tipo de atividade e ID.
+
+Mapeamento por ID:
+
+A cada mini-card de atividade dentro da interface de Construção de Atividades corresponde um ID exclusivo (ex: atividadeId: 'atividade-001').
+
+A função vai iterar por todos os IDs e executar os seguintes passos para cada um:
+
+Abertura virtual do Modal:
+
+Simula a abertura do modal de “Editar Materiais” para cada atividade (sem animação visível para o usuário).
+
+Internamente, o sistema carrega o componente EditActivityModal.tsx com o ID correspondente da atividade.
+
+Preenchimento Automático:
+
+Dentro do modal, o sistema usa a função fillActivityModalFields para popular todos os campos com os dados gerados pela IA (vindos do plano de ação).
+
+Disparo do Botão “Construir Atividade”:
+
+Após todos os campos estarem preenchidos, o sistema aciona automaticamente o botão “Construir Atividade”, como se o usuário clicasse manualmente.
+
+Isso chama a função que já existe dentro do modal (handleGenerate ou similar), que chama a IA e preenche a pré-visualização no lado direito do modal.
+
+Armazenamento Temporário:
+
+O conteúdo da atividade gerada é salvo localmente na Store (Zustand ou Context) e vinculado ao ID da atividade.
+
+Isso garante que, mesmo que o usuário abra o modal novamente, verá a versão já construída.
+
+🔁 Execução Sequencial com Controle de Estado
+
+A função autoBuildActivities deve ser assíncrona e aguardar a finalização de cada etapa antes de ir para a próxima.
+
+Exemplo:
+await fillActivityModalFields(activityId, generatedData);
+await triggerGenerateButton(activityId);
+
+✅ Tratamento de Erros:
+
+Se alguma atividade não tiver dados completos no plano de ação, ela deve ser ignorada e logada no console.
+
+Em caso de erro de geração, exibir fallback: "Erro ao gerar atividade. Tente novamente manualmente."
+
+✅ Status de Feedback:
+
+Adicionar uma badge discreta no canto superior direito do mini-card da atividade com o texto “✔️ Construída” assim que a atividade for gerada com sucesso.
+
+🧩 Sugestão de Código (autoBuildActivities.ts):
+
+export const autoBuildActivities = async (planData: PlanData[]) => {
+for (const activity of planData) {
+const { id, generatedFields } = activity;
+
+scss
+Copiar
+Editar
+try {
+  await openModalSilently(id);
+  await fillActivityModalFields(id, generatedFields);
+  await triggerGenerateButton(id);
+  markAsBuilt(id);
+} catch (e) {
+  console.error(`Erro ao construir atividade ${id}:`, e);
+}
+}
+};
+
+📌 Considerações Técnicas:
+
+A estrutura do modal EditActivityModal já está pronta e funcionando, portanto nenhuma modificação estrutural é necessária.
+
+A IA já está integrada ao botão de Construir Atividade.
+
+O sistema vai simular a entrada dos dados e o clique no botão, mas tudo feito via funções internas — sem manipulação visual do DOM.
+
+📦 Resultado Esperado:
+
+Ao clicar em "Aprovar Plano", todas as atividades listadas no plano serão construídas automaticamente e estarão prontas para visualização ou exportação.
+
+O sistema será modular, escalável e não irá interferir na experiência visual do usuário.
