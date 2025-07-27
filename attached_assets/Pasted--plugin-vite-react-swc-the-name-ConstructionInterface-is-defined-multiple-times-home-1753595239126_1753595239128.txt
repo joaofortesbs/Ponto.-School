@@ -1,0 +1,1353 @@
+[plugin:vite:react-swc] × the name `ConstructionInterface` is defined multiple times
+      ╭─[/home/runner/workspace/src/features/schoolpower/construction/CardDeConstrucao.tsx:46:1]
+   46 │ import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
+   47 │ import { TrilhasBadge } from "../components/TrilhasBadge";
+   48 │ import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+   49 │ import { ConstructionInterface } from './index';
+      ·          ──────────┬──────────
+      ·                    ╰── previous definition of `ConstructionInterface` here
+   50 │ import atividadesTrilhas from '../data/atividadesTrilhas.json';
+   51 │ 
+   52 │ // Convert to proper format with name field
+   53 │ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
+   54 │   ...activity,
+   55 │   name: activity.name || activity.title || activity.description
+   56 │ }));
+   57 │ 
+   58 │ export interface ContextualizationData {
+   59 │   materias: string;
+   60 │   publicoAlvo: string;
+   61 │   restricoes: string;
+   62 │   datasImportantes?: string;
+   63 │   observacoes?: string;
+   64 │ }
+   65 │ 
+   66 │ export interface ActionPlanItem {
+   67 │   id: string;
+   68 │   title: string;
+   69 │   description: string;
+   70 │   duration: string;
+   71 │   difficulty: string;
+   72 │   category: string;
+   73 │   type: string;
+   74 │   isManual?: boolean;
+   75 │   approved?: boolean;
+   76 │ }
+   77 │ 
+   78 │ interface CardDeConstrucaoProps {
+   79 │   step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
+   80 │   contextualizationData?: ContextualizationData | null;
+   81 │   actionPlan?: ActionPlanItem[] | null;
+   82 │   onSubmitContextualization: (data: ContextualizationData) => void;
+   83 │   onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
+   84 │   onResetFlow: () => void;
+   85 │   isLoading?: boolean;
+   86 │ }
+   87 │ 
+   88 │ export function CardDeConstrucao({ 
+   89 │   step, 
+   90 │   contextualizationData, 
+   91 │   actionPlan, 
+   92 │   onSubmitContextualization, 
+   93 │   onApproveActionPlan, 
+   94 │   onResetFlow,
+   95 │   isLoading 
+   96 │ }: CardDeConstrucaoProps) {
+   97 │   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
+   98 │     materias: '',
+   99 │     publicoAlvo: '',
+  100 │     restricoes: '',
+  101 │     datasImportantes: '',
+  102 │     observacoes: ''
+  103 │   });
+  104 │ 
+  105 │   const [actionPlanItems, setActionPlanItems] = useState<ActionPlanItem[]>([]);
+  106 │   const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
+  107 │   // Form data for contextualization
+  108 │   const [formData, setFormData] = useState<ContextualizationData>({
+  109 │     materias: "",
+  110 │     publicoAlvo: "",
+  111 │     restricoes: "",
+  112 │     datasImportantes: "",
+  113 │     observacoes: "",
+  114 │   });
+  115 │ 
+  116 │   // Selected activities for action plan
+  117 │   const [selectedActivities2, setSelectedActivities2] = useState<ActionPlanItem[]>([]);
+  118 │ 
+  119 │   // Filter state for action plan
+  120 │   const [filterState, setFilterState] = useState<'all' | 'selected'>('all');
+  121 │ 
+  122 │   // View mode state (list or grid)
+  123 │   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  124 │ 
+  125 │   // Debug state for trilhas system
+  126 │   const [showTrilhasDebug, setShowTrilhasDebug] = useState<boolean>(false);
+  127 │ 
+  128 │   // Estado para mostrar a interface de adicionar atividade manual
+  129 │   const [showAddActivityInterface, setShowAddActivityInterface] = useState(false);
+  130 │ 
+  131 │   // Manual activity addition state
+  132 │   const [manualActivities, setManualActivities] = useState<ActionPlanItem[]>([]);
+  133 │ 
+  134 │   // Manual activity form state
+  135 │   const [manualActivityForm, setManualActivityForm] = useState({
+  136 │     title: '',
+  137 │     typeId: '',
+  138 │     description: ''
+  139 │   });
+  140 │ 
+  141 │   // State for activity building process
+  142 │   const [isBuilding, setIsBuilding] = useState(false);
+  143 │ 
+  144 │   // State for tracking building progress
+  145 │   const [progress, setProgress] = useState<{
+  146 │     total: number;
+  147 │     completed: number;
+  148 │     current: string;
+  149 │     errors: string[];
+  150 │   } | null>(null);
+  151 │ 
+  152 │   // Function to simulate activity building
+  153 │   const buildActivities = async (activities: ActionPlanItem[]): Promise<boolean> => {
+  154 │     setIsBuilding(true);
+  155 │     setProgress({
+  156 │       total: activities.length,
+  157 │       completed: 0,
+  158 │       current: '',
+  159 │       errors: []
+  160 │     });
+  161 │ 
+  162 │     let allSuccess = true;
+  163 │ 
+  164 │     for (let i = 0; i < activities.length; i++) {
+  165 │       const activity = activities[i];
+  166 │       setProgress(prev => ({
+  167 │         ...prev,
+  168 │         current: `Construindo ${activity.title} (${i + 1}/${activities.length})`
+  169 │       }));
+  170 │ 
+  171 │       try {
+  172 │         // Simulate building
+  173 │         await new Promise(resolve => setTimeout(resolve, 1000));
+  174 │ 
+  175 │         // Simulate occasional errors
+  176 │         if (Math.random() < 0.2) {
+  177 │           throw new Error(`Falha ao construir ${activity.title}`);
+  178 │         }
+  179 │ 
+  180 │         setProgress(prev => ({
+  181 │           ...prev,
+  182 │           completed: prev.completed + 1
+  183 │         }));
+  184 │       } catch (error: any) {
+  185 │         console.error(error);
+  186 │         allSuccess = false;
+  187 │         setProgress(prev => ({
+  188 │           ...prev,
+  189 │           errors: [...prev.errors, error.message]
+  190 │         }));
+  191 │       }
+  192 │     }
+  193 │ 
+  194 │     setIsBuilding(false);
+  195 │     setProgress(prev => ({ ...prev, current: 'Finalizado!' }));
+  196 │     return allSuccess;
+  197 │   };
+  198 │ 
+  199 │   // Load existing data when component mounts
+  200 │   useEffect(() => {
+  201 │     if (contextualizationData) {
+  202 │       setFormData(contextualizationData);
+  203 │     }
+  204 │   }, [contextualizationData]);
+  205 │ 
+  206 │   // Handle form input changes
+  207 │   const handleInputChange = (
+  208 │     field: keyof ContextualizationData,
+  209 │     value: string,
+  210 │   ) => {
+  211 │     setFormData((prev) => ({
+  212 │       ...prev,
+  213 │       [field]: value,
+  214 │     }));
+  215 │   };
+  216 │ 
+  217 │   // Handle contextualization form submission
+  218 │   const handleSubmitContextualization = () => {
+  219 │     if (onSubmitContextualization) {
+  220 │       onSubmitContextualization(formData);
+  221 │     }
+  222 │   };
+  223 │ 
+  224 │   // Handle activity selection toggle
+  225 │   const handleActivityToggle = (activity: ActionPlanItem) => {
+  226 │     setSelectedActivities2((prev) => {
+  227 │       const isSelected = prev.some((item) => item.id === activity.id);
+  228 │       if (isSelected) {
+  229 │         return prev.filter((item) => item.id !== activity.id);
+  230 │       } else {
+  231 │         return [...prev, { ...activity, approved: true }];
+  232 │       }
+  233 │     });
+  234 │   };
+  235 │ 
+  236 │   useEffect(() => {
+  237 │     if (actionPlan) {
+  238 │       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
+  239 │       const approved = actionPlan.filter(item => item.approved);
+  240 │       setSelectedActivities2(approved);
+  241 │     }
+  242 │   }, [actionPlan, step]);
+  243 │ 
+  244 │   const handleApproveActionPlan = async () => {
+  245 │     console.log('✅ Plano de ação aprovado! Iniciando construção automática com ModalBinderEngine...');
+  246 │ 
+  247 │     // Aprovar plano primeiro
+  248 │     onApproveActionPlan(selectedActivities2);
+  249 │ 
+  250 │     // Construir atividades automaticamente usando o novo sistema
+  251 │     if (selectedActivities2.length > 0) {
+  252 │       try {
+  253 │         console.log('🔧 Iniciando construção automática com ModalBinderEngine...');
+  254 │         console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
+  255 │ 
+  256 │         // Usar o contexto de contextualização para enriquecer a geração
+  257 │         const contextData = {
+  258 │           materias: formData.materias,
+  259 │           publicoAlvo: formData.publicoAlvo,
+  260 │           restricoes: formData.restricoes,
+  261 │           datasImportantes: formData.datasImportantes,
+  262 │           observacoes: formData.observacoes
+  263 │         };
+  264 │ 
+  265 │         console.log('🎯 Dados de contexto para geração:', contextData);
+  266 │ 
+  267 │         const success = await buildActivities(selectedActivities2, contextData);
+  268 │ 
+  269 │         if (success) {
+  270 │           console.log('🎉 Todas as atividades foram construídas automaticamente com ModalBinderEngine!');
+  271 │ 
+  272 │           // Exibir notificação de sucesso
+  273 │           console.log('✅ Sistema de construção automática funcionando corretamente!');
+  274 │         } else {
+  275 │           console.warn('⚠️ Algumas atividades podem ter falhado na construção automática');
+  276 │         }
+  277 │       } catch (error) {
+  278 │         console.error('❌ Erro durante construção automática:', error);
+  279 │         console.error('📊 Detalhes do erro:', {
+  280 │           message: error.message,
+  281 │           stack: error.stack,
+  282 │           selectedActivities: selectedActivities2.length,
+  283 │           contextData: !!contextData
+  284 │         });
+  285 │       }
+  286 │     } else {
+  287 │       console.log('ℹ️ Nenhuma atividade selecionada para construção automática');
+  288 │     }
+  289 │   };
+  290 │ 
+  291 │   // Handle manual activity form submission
+  292 │   const handleAddManualActivity = () => {
+  293 │     if (!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()) {
+  294 │       return;
+  295 │     }
+  296 │ 
+  297 │     // Find the activity type from schoolPowerActivities
+  298 │     const activityType = schoolPowerActivities.find(activity => activity.id === manualActivityForm.typeId);
+  299 │ 
+  300 │     const newManualActivity: ActionPlanItem = {
+  301 │       id: manualActivityForm.typeId,
+  302 │       title: manualActivityForm.title,
+  303 │       description: manualActivityForm.description,
+  304 │       duration: "Personalizado",
+  305 │       difficulty: "Personalizado", 
+  306 │       category: activityType?.tags[0] || "manual",
+  307 │       type: activityType?.name || "Atividade Manual",
+  308 │       isManual: true
+  309 │     };
+  310 │ 
+  311 │     // Add to manual activities list
+  312 │     setManualActivities(prev => [...prev, newManualActivity]);
+  313 │ 
+  314 │     // Clear form
+  315 │     setManualActivityForm({
+  316 │       title: '',
+  317 │       typeId: '',
+  318 │       description: ''
+  319 │     });
+  320 │ 
+  321 │     // Return to action plan interface
+  322 │     setShowAddActivityInterface(false);
+  323 │   };
+  324 │ 
+  325 │   // Handle manual activity form changes
+  326 │   const handleManualFormChange = (field: string, value: string) => {
+  327 │     setManualActivityForm(prev => ({
+  328 │       ...prev,
+  329 │       [field]: value
+  330 │     }));
+  331 │   };
+  332 │ 
+  333 │   // Get combined activities (AI suggestions + manual)
+  334 │   const getCombinedActivities = () => {
+  335 │     const aiActivities = actionPlan || [];
+  336 │     const allActivities = [...aiActivities, ...manualActivities];
+  337 │     return allActivities;
+  338 │   };
+  339 │ 
+  340 │   // Check if contextualization form is valid
+  341 │   const isContextualizationValid =
+  342 │     formData.materias.trim() && formData.publicoAlvo.trim();
+  343 │ 
+  344 │   // Grid Toggle Component
+  345 │   const GridToggleComponent = ({ viewMode, onToggle }: {
+  346 │     viewMode: 'list' | 'grid';
+  347 │     onToggle: () => void;
+  348 │   }) => {
+  349 │     return (
+  350 │       <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:350:6" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="350" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-9%20h-9%20flex%20items-center%20justify-center%20rounded-xl%20bg-gradient-to-br%20from-gray-50%20to-gray-100%20dark%3Afrom-gray-800%20dark%3Ato-gray-750%20hover%3Afrom-%5B%23FF6B00%5D%2F5%20hover%3Ato-%5B%23FF9248%5D%2F5%20dark%3Ahover%3Afrom-%5B%23FF6B00%5D%2F10%20dark%3Ahover%3Ato-%5B%23FF9248%5D%2F10%20border%20border-gray-200%20dark%3Aborder-gray-600%20hover%3Aborder-%5B%23FF6B00%5D%2F30%20transition-all%20duration-300%20shadow-sm%20hover%3Ashadow-md%22%7D"
+  351 │         onClick={onToggle}
+  352 │         className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 hover:from-[#FF6B00]/5 hover:to-[#FF9248]/5 dark:hover:from-[#FF6B00]/10 dark:hover:to-[#FF9248]/10 border border-gray-200 dark:border-gray-600 hover:border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md"
+  353 │         title={viewMode === 'list' ? 'Visualização em Grade' : 'Visualização em Lista'}
+  354 │       >
+  355 │         {viewMode === 'list' ? (
+  356 │           <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:356:10" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="356" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-gray-600%20dark%3Atext-gray-300%20hover%3Atext-%5B%23FF6B00%5D%20transition-colors%20duration-200%22%7D" className="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-[#FF6B00] transition-colors duration-200" fill="currentColor" viewBox="0 0 20 20">
+  357 │             <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:357:12" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="357" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+  358 │           </svg>
+  359 │         ) : (
+  360 │           <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:360:10" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="360" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-gray-600%20dark%3Atext-gray-300%20hover%3Atext-%5B%23FF6B00%5D%20transition-colors%20duration-200%22%7D" className="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-[#FF6B00] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  361 │             <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:361:12" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="361" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+  362 │           </svg>
+  363 │         )}
+  364 │       </button>
+  365 │     );
+  366 │   };
+  367 │ 
+  368 │   // Filter Component
+  369 │   const FilterComponent = ({ activities, selectedActivities2, onFilterApply }: {
+  370 │     activities: ActionPlanItem[];
+  371 │     selectedActivities2: ActionPlanItem[];
+  372 │     onFilterApply: (filterType: string) => void;
+  373 │   }) => {
+  374 │     const [isFilterOpen, setIsFilterOpen] = useState(false);
+  375 │     const filterRef = useRef<HTMLDivElement>(null);
+  376 │ 
+  377 │     useEffect(() => {
+  378 │       const handleClickOutside = (event: MouseEvent) => {
+  379 │         if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+  380 │           setIsFilterOpen(false);
+  381 │         }
+  382 │       };
+  383 │ 
+  384 │       document.addEventListener('mousedown', handleClickOutside);
+  385 │       return () => document.removeEventListener('mousedown', handleClickOutside);
+  386 │     }, []);
+  387 │ 
+  388 │     return (
+  389 │       <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:389:6" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="389" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22relative%22%7D" className="relative" ref={filterRef}>
+  390 │         <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:390:8" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="390" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-9%20h-9%20flex%20items-center%20justify-center%20rounded-xl%20bg-gradient-to-br%20from-gray-50%20to-gray-100%20dark%3Afrom-gray-800%20dark%3Ato-gray-750%20hover%3Afrom-%5B%23FF6B00%5D%2F5%20hover%3Ato-%5B%23FF9248%5D%2F5%20dark%3Ahover%3Afrom-%5B%23FF6B00%5D%2F10%20dark%3Ahover%3Ato-%5B%23FF9248%5D%2F10%20border%20border-gray-200%20dark%3Aborder-gray-600%20hover%3Aborder-%5B%23FF6B00%5D%2F30%20transition-all%20duration-300%20shadow-sm%20hover%3Ashadow-md%22%7D"
+  391 │           onClick={() => setIsFilterOpen(!isFilterOpen)}
+  392 │           className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 hover:from-[#FF6B00]/5 hover:to-[#FF9248]/5 dark:hover:from-[#FF6B00]/10 dark:hover:to-[#FF9248]/10 border border-gray-200 dark:border-gray-600 hover:border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md"
+  393 │           title="Filtros e Ações"
+  394 │         >
+  395 │           <Filter data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:395:10" data-lov-name="Filter"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="395" data-component-file="CardDeConstrucao.tsx" data-component-name="Filter" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-gray-600%20dark%3Atext-gray-300%20hover%3Atext-%5B%23FF6B00%5D%20transition-colors%20duration-200%22%7D" className="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-[#FF6B00] transition-colors duration-200" />
+  396 │         </button>
+  397 │ 
+  398 │         {isFilterOpen && (
+  399 │           <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:399:10" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="399" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22absolute%20top-full%20right-0%20mt-3%20w-56%20bg-white%20dark%3Abg-gray-800%20rounded-2xl%20shadow-2xl%20border%20border-gray-200%20dark%3Aborder-gray-600%20overflow-hidden%20z-50%20backdrop-blur-sm%22%7D"
+  400 │             initial={{ opacity: 0, y: -10, scale: 0.95 }}
+  401 │             animate={{ opacity: 1, y: 0, scale: 1 }}
+  402 │             exit={{ opacity: 0, y: -10, scale: 0.95 }}
+  403 │             transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+  404 │             className="absolute top-full right-0 mt-3 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-600 overflow-hidden z-50 backdrop-blur-sm"
+  405 │             style={{
+  406 │               background: `
+  407 │                 linear-gradient(135deg, 
+  408 │                   rgba(255, 255, 255, 0.95) 0%, 
+  409 │                   rgba(248, 250, 252, 0.98) 100%
+  410 │                 )
+  411 │               `,
+  412 │               ...(typeof window !== "undefined" &&
+  413 │               window.matchMedia("(prefers-color-scheme: dark)").matches
+  414 │                 ? {
+  415 │                     background: `
+  416 │                   linear-gradient(135deg, 
+  417 │                     rgba(31, 41, 55, 0.95) 0%, 
+  418 │                     rgba(17, 24, 39, 0.98) 100%
+  419 │                   )
+  420 │                 `,
+  421 │                   }
+  422 │                 : {}),
+  423 │             }}
+  424 │           >
+  425 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:425:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="425" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22p-2%22%7D" className="p-2">
+  426 │               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:426:14" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="426" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22px-3%20py-2%20border-b%20border-gray-200%20dark%3Aborder-gray-600%22%7D" className="px-3 py-2 border-b border-gray-200 dark:border-gray-600">
+  427 │                 <h3 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:427:16" data-lov-name="h3"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="427" data-component-file="CardDeConstrucao.tsx" data-component-name="h3" data-component-content="%7B%22text%22%3A%22Filtros%20e%20A%C3%A7%C3%B5es%22%2C%22className%22%3A%22text-sm%20font-semibold%20text-gray-900%20dark%3Atext-white%20flex%20items-center%20gap-2%22%7D" className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+  428 │                   <Filter data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:428:18" data-lov-name="Filter"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="428" data-component-file="CardDeConstrucao.tsx" data-component-name="Filter" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-%5B%23FF6B00%5D%22%7D" className="w-4 h-4 text-[#FF6B00]" />
+  429 │                   Filtros e Ações
+  430 │                 </h3>
+  431 │               </div>
+  432 │ 
+  433 │               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:433:14" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="433" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22py-1%20space-y-1%22%7D" className="py-1 space-y-1">
+  434 │                 <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:434:16" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="434" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-full%20px-3%20py-2.5%20text-left%20text-sm%20text-gray-700%20dark%3Atext-gray-300%20hover%3Abg-gradient-to-r%20hover%3Afrom-%5B%23FF6B00%5D%2F10%20hover%3Ato-%5B%23FF9248%5D%2F5%20rounded-lg%20transition-all%20duration-200%20flex%20items-center%20gap-3%20group%22%7D"
+  435 │                   onClick={() => {
+  436 │                     onFilterApply('selectAll');
+  437 │                     setIsFilterOpen(false);
+  438 │                   }}
+  439 │                   className="w-full px-3 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#FF6B00]/10 hover:to-[#FF9248]/5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+  440 │                 >
+  441 │                   <CheckSquare data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:441:18" data-lov-name="CheckSquare"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="441" data-component-file="CardDeConstrucao.tsx" data-component-name="CheckSquare" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-%5B%23FF6B00%5D%20group-hover%3Ascale-110%20transition-transform%20duration-200%22%7D" className="w-4 h-4 text-[#FF6B00] group-hover:scale-110 transition-transform duration-200" />
+  442 │                   <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:442:18" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="442" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22Selecionar%20todos%22%2C%22className%22%3A%22font-medium%22%7D" className="font-medium">Selecionar todos</span>
+  443 │                 </button>
+  444 │ 
+  445 │                 <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:445:16" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="445" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-full%20px-3%20py-2.5%20text-left%20text-sm%20text-gray-700%20dark%3Atext-gray-300%20hover%3Abg-gradient-to-r%20hover%3Afrom-%5B%23FF6B00%5D%2F10%20hover%3Ato-%5B%23FF9248%5D%2F5%20rounded-lg%20transition-all%20duration-200%20flex%20items-center%20gap-3%20group%22%7D"
+  446 │                   onClick={() => {
+  447 │                     onFilterApply('selectRecommended');
+  448 │                     setIsFilterOpen(false);
+  449 │                   }}
+  450 │                   className="w-full px-3 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#FF6B00]/10 hover:to-[#FF9248]/5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+  451 │                 >
+  452 │                   <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:452:18" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="452" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-%5B%23FF6B00%5D%20group-hover%3Ascale-110%20transition-transform%20duration-200%22%7D" className="w-4 h-4 text-[#FF6B00] group-hover:scale-110 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+  453 │                     <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:453:20" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="453" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+  454 │                   </svg>
+  455 │                   <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:455:18" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="455" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22Selecionar%20recomenda%C3%A7%C3%B5es%22%2C%22className%22%3A%22font-medium%22%7D" className="font-medium">Selecionar recomendações</span>
+  456 │                 </button>
+  457 │ 
+  458 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:458:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="458" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22border-t%20border-gray-200%20dark%3Aborder-gray-600%20my-1%22%7D" className="border-t border-gray-200 dark:border-gray-600 my-1"></div>
+  459 │ 
+  460 │                 <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:460:16" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="460" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-full%20px-3%20py-2.5%20text-left%20text-sm%20text-gray-700%20dark%3Atext-gray-300%20hover%3Abg-gradient-to-r%20hover%3Afrom-blue-500%2F10%20hover%3Ato-blue-600%2F5%20rounded-lg%20transition-all%20duration-200%20flex%20items-center%20gap-3%20group%22%7D"
+  461 │                   onClick={() => {
+  462 │                     onFilterApply('viewSelected');
+  463 │                     setIsFilterOpen(false);
+  464 │                   }}
+  465 │                   className="w-full px-3 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+  466 │                 >
+  467 │                   <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:467:18" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="467" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-blue-500%20group-hover%3Ascale-110%20transition-transform%20duration-200%22%7D" className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+  468 │                     <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:468:20" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="468" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+  469 │                   </svg>
+  470 │                   <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:470:18" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="470" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22Ver%20apenas%20selecionados%22%2C%22className%22%3A%22font-medium%22%7D" className="font-medium">Ver apenas selecionados</span>
+  471 │                 </button>
+  472 │ 
+  473 │                 <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:473:16" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="473" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-full%20px-3%20py-2.5%20text-left%20text-sm%20text-gray-700%20dark%3Atext-gray-300%20hover%3Abg-gradient-to-r%20hover%3Afrom-red-500%2F10%20hover%3Ato-red-600%2F5%20rounded-lg%20transition-all%20duration-200%20flex%20items-center%20gap-3%20group%22%7D"
+  474 │                   onClick={() => {
+  475 │                     onFilterApply('clearSelected');
+  476 │                     setIsFilterOpen(false);
+  477 │                   }}
+  478 │                   className="w-full px-3 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-red-600/5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+  479 │                 >
+  480 │                   <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:480:18" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="480" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-red-500%20group-hover%3Ascale-110%20transition-transform%20duration-200%22%7D" className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+  481 │                     <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:481:20" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="481" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+  482 │                   </svg>
+  483 │                   <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:483:18" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="483" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22Tirar%20selecionados%22%2C%22className%22%3A%22font-medium%22%7D" className="font-medium">Tirar selecionados</span>
+  484 │                 </button>
+  485 │ 
+  486 │                 <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:486:16" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="486" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-full%20px-3%20py-2.5%20text-left%20text-sm%20text-gray-700%20dark%3Atext-gray-300%20hover%3Abg-gradient-to-r%20hover%3Afrom-gray-500%2F10%20hover%3Ato-gray-600%2F5%20rounded-lg%20transition-all%20duration-200%20flex%20items-center%20gap-3%20group%22%7D"
+  487 │                   onClick={() => {
+  488 │                     onFilterApply('viewAll');
+  489 │                     setIsFilterOpen(false);
+  490 │                   }}
+  491 │                   className="w-full px-3 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gray-500/10 hover:to-gray-600/5 rounded-lg transition-all duration-200 flex items-center gap-3 group"
+  492 │                 >
+  493 │                   <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:493:18" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="493" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-gray-500%20group-hover%3Ascale-110%20transition-transform%20duration-200%22%7D" className="w-4 h-4 text-gray-500 group-hover:scale-110 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20">
+  494 │                     <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:494:20" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="494" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+  495 │                   </svg>
+  496 │                   <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:496:18" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="496" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22Ver%20todas%22%2C%22className%22%3A%22font-medium%22%7D" className="font-medium">Ver todas</span>
+  497 │                 </button>
+  498 │               </div>
+  499 │             </div>
+  500 │           </motion.div>
+  501 │         )}
+  502 │       </div>
+  503 │     );
+  504 │   };
+  505 │ 
+  506 │   // Handle filter actions
+  507 │   const handleFilterApply = (filterType: string) => {
+  508 │     const combinedActivities = getCombinedActivities();
+  509 │     if (combinedActivities.length === 0) return;
+  510 │ 
+  511 │     switch (filterType) {
+  512 │       case 'selectAll':
+  513 │         setSelectedActivities2([...combinedActivities]);
+  514 │         setFilterState('all');
+  515 │         break;
+  516 │       case 'selectRecommended':
+  517 │         // Seleciona as 3 primeiras atividades como "recomendadas"
+  518 │         const recommended = combinedActivities.slice(0, Math.min(3, combinedActivities.length));
+  519 │         setSelectedActivities2(recommended);
+  520 │         setFilterState('all');
+  521 │         break;
+  522 │       case 'viewSelected':
+  523 │         setFilterState('selected');
+  524 │         break;
+  525 │       case 'clearSelected':
+  526 │         setSelectedActivities2([]);
+  527 │         setFilterState('all');
+  528 │         break;
+  529 │       case 'viewAll':
+  530 │         setFilterState('all');
+  531 │         break;
+  532 │       default:
+  533 │         break;
+  534 │     }
+  535 │   };
+  536 │ 
+  537 │   const getIconByActivityId = (activityId: string) => {
+  538 │     // Sistema de mapeamento 100% único - cada ID tem seu próprio ícone específico
+  539 │     const uniqueIconMapping: { [key: string]: any } = {
+  540 │       "atividade-adaptada": Heart,
+  541 │       "atividades-contos-infantis": BookOpen,
+  542 │       "atividades-ia": Brain,
+  543 │       "atividades-matematica": Target,
+  544 │       "atividades-ortografia-alfabeto": PenTool,
+  545 │       "aulas-eletivas": Star,
+  546 │       "bncc-descomplicada": BookOpen,
+  547 │       "caca-palavras": Puzzle,
+  548 │       "capitulo-livro": BookOpen,
+  549 │       "charadas": Puzzle,
+  550 │       "chatbot-bncc": MessageSquare,
+  551 │       "consulta-video": Video,
+  552 │       "corretor-gramatical": CheckSquare,
+  553 │       "corretor-provas-feedback": CheckSquare,
+  554 │       "corretor-provas-papel": FileText,
+  555 │       "corretor-questoes": PenTool,
+  556 │       "corretor-redacao": PenTool,
+  557 │       "criterios-avaliacao": CheckSquare,
+  558 │       "desenho-simetrico": Puzzle,
+  559 │       "desenvolvimento-caligrafia": PenTool,
+  560 │       "dinamicas-sala-aula": Users,
+  561 │       "emails-escolares": Mail,
+  562 │       "erros-comuns": Search,
+  563 │       "exemplos-contextualizados": BookOpen,
+  564 │       "experimento-cientifico": Microscope,
+  565 │       "fichamento-obra-literaria": BookOpen,
+  566 │       "gerador-tracejados": PenTool,
+  567 │       "historias-sociais": Heart,
+  568 │       "ideias-atividades": Lightbulb,
+  569 │       "ideias-aulas-acessiveis": Heart,
+  570 │       "ideias-avaliacoes-adaptadas": Heart,
+  571 │       "ideias-brincadeiras-infantis": Play,
+  572 │       "ideias-confraternizacoes": Users,
+  573 │       "ideias-datas-comemorativas": Calendar,
+  574 │       "imagem-para-colorir": Palette,
+  575 │       "instrucoes-claras": FileText,
+  576 │       "jogos-educacionais-interativos": Gamepad2,
+  577 │       "jogos-educativos": Puzzle,
+  578 │       "lista-exercicios": FileText,
+  579 │       "lista-vocabulario": BookOpen,
+  580 │       "maquete": Wrench,
+  581 │       "mapa-mental": Brain,
+  582 │       "mensagens-agradecimento": Heart,
+  583 │       "musica-engajar": Music,
+  584 │       "niveador-textos": BookOpen,
+  585 │       "objetivos-aprendizagem": Target,
+  586 │       "palavras-cruzadas": Puzzle,
+  587 │       "pei-pdi": Heart,
+  588 │       "perguntas-taxonomia-bloom": MessageSquare,
+  589 │       "pergunte-texto": MessageSquare,
+  590 │       "plano-aula": BookOpen,
+  591 │       "plano-ensino": BookOpen,
+  592 │       "plano-recuperacao": Heart,
+  593 │       "projeto": Wrench,
+  594 │       "projeto-vida": Star,
+  595 │       "proposta-redacao": PenTool,
+  596 │       "prova": CheckSquare,
+  597 │       "questoes-pdf": FileText,
+  598 │       "questoes-site": Globe,
+  599 │       "questoes-texto": FileText,
+  600 │       "questoes-video": Video,
+  601 │       "redacao": PenTool,
+  602 │       "reescritor-texto": PenTool,
+  603 │       "reflexao-incidente": MessageSquare,
+  604 │       "relatorio": FileText,
+  605 │       "relatorio-desempenho": Trophy,
+  606 │       "resposta-email": Mail,
+  607 │       "revisor-gramatical": CheckSquare,
+  608 │       "revisao-guiada": BookOpen,
+  609 │       "resumo": FileText,
+  610 │       "resumo-texto": FileText,
+  611 │       "resumo-video": Video,
+  612 │       "sequencia-didatica": BookOpen,
+  613 │       "simulado": CheckSquare,
+  614 │       "sugestoes-intervencao": Lightbulb,
+  615 │       "tabela-apoio": Puzzle,
+  616 │       "tarefa-adaptada": Heart,
+  617 │       "texto-apoio": BookOpen,
+  618 │       "gerar-questoes": PenTool,
+  619 │       "apresentacao-slides": Target,
+  620 │       "tornar-relevante": Star
+  621 │     };
+  622 │ 
+  623 │     // Verifica se existe mapeamento direto para o ID
+  624 │     if (uniqueIconMapping[activityId]) {
+  625 │       return uniqueIconMapping[activityId];
+  626 │     }
+  627 │ 
+  628 │     // Sistema de fallback com hash consistente para IDs não mapeados
+  629 │     const fallbackIcons = [
+  630 │       BookOpen, FileText, PenTool, Search, Brain,
+  631 │       Users, MessageSquare, Presentation, ThumbsUp, Heart,
+  632 │       Wrench, Target, Compass, Trophy, Edit3,
+  633 │       Calendar, Clock, CheckSquare, Star, Award,
+  634 │       Microscope, Calculator, Eye, Globe, MapPin,
+  635 │       Music, Palette, Camera, Video, Headphones,
+  636 │       Lightbulb, Zap, Flag, Key, Shield,
+  637 │       TreePine, Sun, Cloud, Home, Car
+  638 │     ];
+  639 │ 
+  640 │     // Gera hash consistente baseado no ID
+  641 │     let hash = 0;
+  642 │     for (let i = 0; i < activityId.length; i++) {
+  643 │       const char = activityId.charCodeAt(i);
+  644 │       hash = ((hash << 5) - hash) + char;
+  645 │       hash = hash & hash;
+  646 │     }
+  647 │ 
+  648 │     const iconIndex = Math.abs(hash) % fallbackIcons.length;
+  649 │     return fallbackIcons[iconIndex];
+  650 │   };
+  651 │ 
+  652 │   const [selectedTrilhasCount, setSelectedTrilhasCount] = useState(0);
+  653 │ 
+  654 │   useEffect(() => {
+  655 │     const trilhasActivityIds = [
+  656 │       'projeto-pesquisa',
+  657 │       'projeto-cientifico',
+  658 │       'projeto-criativo',
+  659 │       'projeto-colaborativo',
+  660 │       'projeto-individual',
+  661 │       'projeto-inovacao',
+  662 │       'projeto-sustentabilidade',
+  663 │       'projeto-social',
+  664 │       'projeto-tecnologico',
+  665 │       'projeto-artistico',
+  666 │       'projeto-empreendedor',
+  667 │       'projeto-interdisciplinar',
+  668 │       'projeto-experimental',
+  669 │       'projeto-aplicado',
+  670 │       'projeto-extensao',
+  671 │       'projeto-integrador',
+  672 │       'projeto-final',
+  673 │     ];
+  674 │ 
+  675 │     const selectedTrilhas = selectedActivities2.filter(activity =>
+  676 │       trilhasActivityIds.includes(activity.id)
+  677 │     );
+  678 │ 
+  679 │     setSelectedTrilhasCount(selectedTrilhas.length);
+  680 │   }, [selectedActivities2]);
+  681 │ 
+  682 │   return (
+  683 │     <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:683:4" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="683" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22relative%20rounded-2xl%20p-6%20shadow-2xl%20border%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F30%20bg-white%20dark%3Abg-%5B%23021321%5D%22%7D"
+  684 │       initial={{ opacity: 0, scale: 0.8, y: 50 }}
+  685 │       animate={{ opacity: 1, scale: 1, y: 0 }}
+  686 │       exit={{ opacity: 0, scale: 0.8, y: -50 }}
+  687 │       transition={{
+  688 │         duration: 0.6,
+  689 │         ease: [0.25, 0.1, 0.25, 1],
+  690 │         type: "spring",
+  691 │         stiffness: 100,
+  692 │         damping: 15,
+  693 │       }}
+  694 │       className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
+  695 │       style={{
+  696 │         width: "1353px",
+  697 │         height: "773px"
+  698 │       }}
+  699 │       data-theme="adaptive"
+  700 │     >
+  701 │       {/* Cabeçalho Persistente Fixo */}
+  702 │       <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:702:6" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="702" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22absolute%20top-0%20left-0%20right-0%20h-20%20bg-gradient-to-r%20from-%5B%23FF6B00%5D%20to-%5B%23FF9248%5D%20rounded-t-2xl%20flex%20items-center%20justify-between%20px-6%20z-0%22%7D" className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-0">
+  703 │         <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:703:8" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="703" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20gap-4%22%7D" className="flex items-center gap-4">
+  704 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:704:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="704" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22w-12%20h-12%20bg-white%2F20%20rounded-lg%20flex%20items-center%20justify-center%22%7D" className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+  705 │             {step === "contextualization" ? (
+  706 │               <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:706:14" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="706" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-7%20h-7%20text-white%22%7D"
+  707 │                 className="w-7 h-7 text-white"
+  708 │                 fill="none"
+  709 │                 viewBox="0 0 24 24"
+  710 │                 stroke="currentColor"
+  711 │               >
+  712 │                 <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:712:16" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="712" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D"
+  713 │                   strokeLinecap="round"
+  714 │                   strokeLinejoin="round"
+  715 │                   strokeWidth={2}
+  716 │                   d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+  717 │                 />
+  718 │               </svg>
+  719 │             ) : step === "actionPlan" ? (
+  720 │               <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:720:14" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="720" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-7%20h-7%20text-white%22%7D"
+  721 │                 className="w-7 h-7 text-white"
+  722 │                 fill="none"
+  723 │                 viewBox="0 0 24 24"
+  724 │                 stroke="currentColor"
+  725 │               >
+  726 │                 <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:726:16" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="726" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D"
+  727 │                   strokeLinecap="round"
+  728 │                   strokeLinejoin="round"
+  729 │                   strokeWidth={2}
+  730 │                   d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+  731 │                 />
+  732 │               </svg>
+  733 │             ) : (
+  734 │               <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:734:14" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="734" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-7%20h-7%20text-white%20animate-spin%22%7D"
+  735 │                 className="w-7 h-7 text-white animate-spin"
+  736 │                 fill="none"
+  737 │                 viewBox="0 0 24 24"
+  738 │                 stroke="currentColor"
+  739 │               >
+  740 │                 <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:740:16" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="740" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D"
+  741 │                   strokeLinecap="round"
+  742 │                   strokeLinejoin="round"
+  743 │                   strokeWidth={2}
+  744 │                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+  745 │                 />
+  746 │               </svg>
+  747 │             )}
+  748 │           </div>
+  749 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:749:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="749" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+  750 │             <h1 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:750:12" data-lov-name="h1"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="750" data-component-file="CardDeConstrucao.tsx" data-component-name="h1" data-component-content="%7B%22className%22%3A%22text-white%20font-bold%20text-2xl%22%7D" className="text-white font-bold text-2xl">
+  751 │               {step === "contextualization"
+  752 │                 ? "Quiz de Contextualização"
+  753 │                 : step === "actionPlan"
+  754 │                   ? "Plano de Ação"
+  755 │                   : step === "generating"
+  756 │                     ? "Gerando Conteúdo..."
+  757 │                     : step === "activities"
+  758 │                       ? "Construção de Atividades"
+  759 │                       : "School Power"}
+  760 │             </h1>
+  761 │           </div>
+  762 │         </div>
+  763 │ 
+  764 │         {/* Barra de Progresso */}
+  765 │         <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:765:8" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="765" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20gap-4%22%7D" className="flex items-center gap-4">
+  766 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:766:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="766" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22relative%20flex%20items-center%20justify-between%20w-44%22%7D" className="relative flex items-center justify-between w-44">
+  767 │             {/* Background progress line */}
+  768 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:768:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="768" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22absolute%20top-1%2F2%20transform%20-translate-y-1%2F2%20h-1.5%20bg-white%2F30%20rounded-full%20z-0%22%7D" className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white/30 rounded-full z-0" style={{ left: '16px', right: '16px' }}></div>
+  769 │ 
+  770 │             {/* Active progress line */}
+  771 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:771:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="771" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22absolute%20top-1%2F2%20transform%20-translate-y-1%2F2%20h-1.5%20bg-white%20rounded-full%20z-0%20transition-all%20duration-500%20ease-out%22%7D" 
+  772 │               className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white rounded-full z-0 transition-all duration-500 ease-out"
+  773 │               style={{ 
+  774 │                 left: '16px',
+  775 │                 width: `${
+  776 │                   step === "contextualization" ? "0%" :
+  777 │                   step === "actionPlan" ? "50%" :
+  778 │                   (step === "generating" || step === "generatingActivities" || step === "activities") ? "100%" : "0%"
+  779 │                 }`
+  780 │               }}
+  781 │             ></div>
+  782 │ 
+  783 │             {/* Step indicators */}
+  784 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:784:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="784" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D" className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+  785 │               step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
+  786 │             }`}>
+  787 │               {step === "contextualization" ? (
+  788 │                 <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:788:16" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="788" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%221%22%2C%22className%22%3A%22text-sm%20font-semibold%22%7D" className="text-sm font-semibold">1</span>
+  789 │               ) : (
+  790 │                 <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:790:16" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="790" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%22%7D" className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+  791 │                   <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:791:18" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="791" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  792 │                 </svg>
+  793 │               )}
+  794 │             </div>
+  795 │ 
+  796 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:796:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="796" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D" className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+  797 │               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
+  798 │               (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-[#FF6B00] border-white text-white' :
+  799 │               'bg-white/20 border-white/30 text-white'
+  800 │             }`}>
+  801 │               {step === "actionPlan" ? (
+  802 │                 <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:802:16" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="802" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%222%22%2C%22className%22%3A%22text-sm%20font-semibold%22%7D" className="text-sm font-semibold">2</span>
+  803 │               ) : (step === "generating" || step === "generatingActivities" || step === "activities") ? (
+  804 │                 <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:804:16" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="804" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%22%7D" className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+  805 │                   <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:805:18" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="805" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  806 │                 </svg>
+  807 │               ) : (
+  808 │                 <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:808:16" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="808" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%222%22%2C%22className%22%3A%22text-sm%20font-semibold%22%7D" className="text-sm font-semibold">2</span>
+  809 │               )}
+  810 │             </div>
+  811 │ 
+  812 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:812:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="812" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D" className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+  813 │               (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
+  814 │             }`}>
+  815 │               <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:815:14" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="815" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%223%22%2C%22className%22%3A%22text-sm%20font-semibold%22%7D" className="text-sm font-semibold">3</span>
+  816 │             </div>
+  817 │           </div>
+  818 │         </div>
+  819 │       </div>
+  820 │ 
+  821 │       {/* Renderização condicional baseada no step */}
+  822 │       {step === "generating" || step === "generatingActivities" ? (
+  823 │         <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:823:8" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="823" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22relative%20z-10%20flex%20flex-col%20items-center%20justify-center%20h-full%20text-center%20px-4%20pt-16%22%7D"
+  824 │           className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
+  825 │           initial={{ opacity: 0 }}
+  826 │           animate={{ opacity: 1 }}
+  827 │           transition={{ duration: 0.3 }}
+  828 │         >
+  829 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:829:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="829" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22relative%20mb-4%22%7D" className="relative mb-4">
+  830 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:830:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="830" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22animate-spin%20rounded-full%20h-16%20w-16%20border-4%20border-%5B%23FF6B00%5D%2F20%20border-t-%5B%23FF6B00%5D%20mx-auto%22%7D" className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
+  831 │             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:831:12" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="831" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22absolute%20inset-0%20rounded-full%20bg-gradient-to-r%20from-%5B%23FF6B00%5D%2F10%20to-transparent%20animate-pulse%22%7D" className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
+  832 │           </div>
+  833 │           <h3 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:833:10" data-lov-name="h3"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="833" data-component-file="CardDeConstrucao.tsx" data-component-name="h3" data-component-content="%7B%22className%22%3A%22text-xl%20sm%3Atext-2xl%20font-bold%20text-gray-900%20dark%3Atext-white%20mb-3%22%7D" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+  834 │             {step === "generating"
+  835 │               ? "🤖 Analisando com IA Gemini"
+  836 │               : "🎯 Gerando Atividades"}
+  837 │           </h3>
+  838 │           <p data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:838:10" data-lov-name="p"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="838" data-component-file="CardDeConstrucao.tsx" data-component-name="p" data-component-content="%7B%22className%22%3A%22text-gray-700%20dark%3Atext-gray-300%20mb-4%20max-w-lg%20text-sm%20sm%3Atext-base%22%7D" className="text-gray-700 dark:text-gray-300 mb-4 max-w-lg text-sm sm:text-base">
+  839 │             {step === "generating"
+  840 │               ? "A IA está processando sua mensagem e contexto para criar um plano de ação personalizado..."
+  841 │               : "As atividades aprovadas estão sendo geradas automaticamente pelo School Power..."}
+  842 │           </p>
+  843 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:843:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="843" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22bg-gradient-to-r%20from-%5B%23FF6B00%5D%2F10%20to-orange-100%2F20%20dark%3Ato-%5B%2329335C%5D%2F10%20rounded-lg%20p-3%20sm%3Ap-4%20mb-4%20border%20border-%5B%23FF6B00%5D%2F20%20max-w-md%20w-full%22%7D" className="bg-gradient-to-r from-[#FF6B00]/10 to-orange-100/20 dark:to-[#29335C]/10 rounded-lg p-3 sm:p-4 mb-4 border border-[#FF6B00]/20 max-w-md w-full">
+  844 │             <p data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:844:12" data-lov-name="p"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="844" data-component-file="CardDeConstrucao.tsx" data-component-name="p" data-component-content="%7B%22className%22%3A%22text-xs%20sm%3Atext-sm%20text-gray-700%20dark%3Atext-gray-300%20leading-relaxed%22%7D" className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+  845 │               {step === "generating" ? (
+  846 │                 <>
+  847 │                   ✨ Consultando 137 atividades disponíveis
+  848 │                   <br data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:848:18" data-lov-name="br"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="848" data-component-file="CardDeConstrucao.tsx" data-component-name="br" data-component-content="%7B%7D" />
+  849 │                   🎯 Personalizando para seu contexto específico
+  850 │                   <br data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:850:18" data-lov-name="br"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="850" data-component-file="CardDeConstrucao.tsx" data-component-name="br" data-component-content="%7B%7D" />
+  851 │                   📝 Gerando sugestões inteligentes
+  852 │                   <br data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:852:18" data-lov-name="br"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="852" data-component-file="CardDeConstrucao.tsx" data-component-name="br" data-component-content="%7B%7D" />
+  853 │                   🔍 Validando compatibilidade das atividades
+  854 │                 </>
+  855 │               ) : (
+  856 │                 <>
+  857 │                   ✅ Personalizando conteúdo das atividades
+  858 │                   <br data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:858:18" data-lov-name="br"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="858" data-component-file="CardDeConstrucao.tsx" data-component-name="br" data-component-content="%7B%7D" />
+  859 │                   🎨 Criando materiais visuais
+  860 │                   <br data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:860:18" data-lov-name="br"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="860" data-component-file="CardDeConstrucao.tsx" data-component-name="br" data-component-content="%7B%7D" />
+  861 │                   📝 Formatando atividades finais
+  862 │                   <br data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:862:18" data-lov-name="br"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="862" data-component-file="CardDeConstrucao.tsx" data-component-name="br" data-component-content="%7B%7D" />
+  863 │                   🚀 Preparando download
+  864 │                 </>
+  865 │               )}
+  866 │             </p>
+  867 │           </div>
+  868 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:868:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="868" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20gap-3%20justify-center%22%7D" className="flex gap-3 justify-center">
+  869 │             {onResetFlow && (
+  870 │               <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:870:14" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="870" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22text%22%3A%22Cancelar%22%2C%22className%22%3A%22px-4%20py-2%20text-sm%20text-gray-600%20dark%3Atext-gray-300%20hover%3Atext-gray-900%20dark%3Ahover%3Atext-white%20border%20border-gray-400%20dark%3Aborder-gray-600%20rounded-lg%20hover%3Abg-gray-100%20dark%3Ahover%3Abg-gray-800%20transition-colors%20duration-200%22%7D"
+  871 │                 onClick={onResetFlow}
+  872 │                 className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+  873 │               >
+  874 │                 Cancelar
+  875 │               </button>
+  876 │             )}
+  877 │           </div>
+  878 │         </motion.div>
+  879 │       ) : step === "activities" ? (
+  880 │         <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:880:8" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="880" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22relative%20z-10%20h-full%20flex%20flex-col%20pt-16%22%7D"
+  881 │           key="activities-content"
+  882 │           initial={{ opacity: 0, x: 20 }}
+  883 │           animate={{ opacity: 1, x: 0 }}
+  884 │           transition={{ duration: 0.3 }}
+  885 │           className="relative z-10 h-full flex flex-col pt-16"
+  886 │         >
+  887 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:887:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="887" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20justify-end%20mb-4%22%7D" className="flex items-center justify-end mb-4">
+  888 │             <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:888:12" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="888" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22text%22%3A%22Voltar%20ao%20in%C3%ADcio%22%2C%22className%22%3A%22px-3%20py-2%20text-sm%20text-gray-600%20hover%3Atext-gray-900%20dark%3Atext-gray-400%20dark%3Ahover%3Atext-white%20transition-colors%22%7D"
+  889 │               onClick={onResetFlow}
+  890 │               className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+  891 │             >
+  892 │               Voltar ao início
+  893 │             </button>
+  894 │           </div>
+  895 │ 
+  896 │           {/* Interface de Construção */}
+  897 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:897:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="897" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex-1%20overflow-hidden%22%7D" className="flex-1 overflow-hidden">
+  898 │             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities2)}
+  899 │             <ConstructionInterface data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:899:12" data-lov-name="ConstructionInterface"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="899" data-component-file="CardDeConstrucao.tsx" data-component-name="ConstructionInterface" data-component-content="%7B%7D" approvedActivities={selectedActivities2} />
+  900 │           </div>
+  901 │         </motion.div>
+  902 │       ) : (
+  903 │         <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:903:8" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="903" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22relative%20z-10%20h-full%20flex%20flex-col%20pt-16%22%7D"
+  904 │           className="relative z-10 h-full flex flex-col pt-16"
+  905 │           initial={{ y: 20, opacity: 0 }}
+  906 │           animate={{ y: 0, opacity: 1 }}
+  907 │           transition={{ delay: 0.2, duration: 0.5 }}
+  908 │         >
+  909 │           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:909:10" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="909" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22text-center%20mb-4%20sm%3Amb-6%22%7D" className="text-center mb-4 sm:mb-6"></div>
+  910 │ 
+  911 │           {step === "contextualization" ? (
+  912 │             <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:912:12" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="912" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22flex-1%20flex%20flex-col%20overflow-hidden%22%7D"
+  913 │               key="contextualization-content"
+  914 │               initial={{ opacity: 0, x: -20 }}
+  915 │               animate={{ opacity: 1, x: 0 }}
+  916 │               transition={{ duration: 0.3 }}
+  917 │               className="flex-1 flex flex-col overflow-hidden"
+  918 │             >
+  919 │               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:919:14" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="919" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex-1%20overflow-y-auto%20space-y-3%20sm%3Aspace-y-4%20mb-3%20sm%3Amb-4%20pr-1%20sm%3Apr-2%22%7D"
+  920 │                 className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2"
+  921 │                 style={{
+  922 │                   maxHeight: "calc(100% - 80px)",
+  923 │                   scrollbarWidth: "thin",
+  924 │                   scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
+  925 │                 }}
+  926 │               >
+  927 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:927:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="927" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+  928 │                   <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:928:18" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="928" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%93%9A%20Quais%20mat%C3%A9rias%20e%20temas%20ser%C3%A3o%20trabalhados%3F%20*%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+  929 │                     📚 Quais matérias e temas serão trabalhados? *
+  930 │                   </label>
+  931 │                   <textarea data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:931:18" data-lov-name="textarea"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="931" data-component-file="CardDeConstrucao.tsx" data-component-name="textarea" data-component-content="%7B%22placeholder%22%3A%22Descreva%20as%20mat%C3%A9rias%20e%20temas%20que%20voc%C3%AA%20quer%20estudar...%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%20text-sm%22%7D"
+  932 │                     value={formData.materias}
+  933 │                     onChange={(e) =>
+  934 │                       handleInputChange("materias", e.target.value)
+  935 │                     }
+  936 │                     className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+  937 │                     rows={2}
+  938 │                     placeholder="Descreva as matérias e temas que você quer estudar..."
+  939 │                   />
+  940 │                 </div>
+  941 │ 
+  942 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:942:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="942" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+  943 │                   <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:943:18" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="943" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%8E%AF%20Qual%20o%20p%C3%BAblico-alvo%3F%20*%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+  944 │                     🎯 Qual o público-alvo? *
+  945 │                   </label>
+  946 │                   <input data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:946:18" data-lov-name="input"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="946" data-component-file="CardDeConstrucao.tsx" data-component-name="input" data-component-content="%7B%22placeholder%22%3A%22Ex%3A%20Ensino%20M%C3%A9dio%2C%203%C2%BA%20ano%2C%20vestibular...%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%20text-sm%22%7D"
+  947 │                     type="text"
+  948 │                     value={formData.publicoAlvo}
+  949 │                     onChange={(e) =>
+  950 │                       handleInputChange("publicoAlvo", e.target.value)
+  951 │                     }
+  952 │                     className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+  953 │                     placeholder="Ex: Ensino Médio, 3º ano, vestibular..."
+  954 │                   />
+  955 │                 </div>
+  956 │ 
+  957 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:957:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="957" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+  958 │                   <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:958:18" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="958" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%E2%9A%A0%EF%B8%8F%20Quais%20restri%C3%A7%C3%B5es%20ou%20prefer%C3%AAncias%20espec%C3%ADficas%3F%20*%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+  959 │                     ⚠️ Quais restrições ou preferências específicas? *
+  960 │                   </label>
+  961 │                   <textarea data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:961:18" data-lov-name="textarea"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="961" data-component-file="CardDeConstrucao.tsx" data-component-name="textarea" data-component-content="%7B%22placeholder%22%3A%22Descreva%20limita%C3%A7%C3%B5es%20de%20tempo%2C%20dificuldades%20espec%C3%ADficas%2C%20etc...%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%20text-sm%22%7D"
+  962 │                     value={formData.restricoes}
+  963 │                     onChange={(e) =>
+  964 │                       handleInputChange("restricoes", e.target.value)
+  965 │                     }
+  966 │                     className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+  967 │                     rows={2}
+  968 │                     placeholder="Descreva limitações de tempo, dificuldades específicas, etc..."
+  969 │                   />
+  970 │                 </div>
+  971 │ 
+  972 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:972:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="972" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+  973 │                   <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:973:18" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="973" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%93%85%20Per%C3%ADodo%20de%20entrega%20ou%20datas%20importantes%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+  974 │                     📅 Período de entrega ou datas importantes
+  975 │                   </label>
+  976 │                   <input data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:976:18" data-lov-name="input"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="976" data-component-file="CardDeConstrucao.tsx" data-component-name="input" data-component-content="%7B%22placeholder%22%3A%22Ex%3A%20Prova%20em%202%20semanas%2C%20ENEM%20em%20novembro...%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%20text-sm%22%7D"
+  977 │                     type="text"
+  978 │                     value={formData.datasImportantes}
+  979 │                     onChange={(e) =>
+  980 │                       handleInputChange("datasImportantes", e.target.value)
+  981 │                     }
+  982 │                     className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+  983 │                     placeholder="Ex: Prova em 2 semanas, ENEM em novembro..."
+  984 │                   />
+  985 │                 </div>
+  986 │ 
+  987 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:987:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="987" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+  988 │                   <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:988:18" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="988" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%93%9D%20Outras%20observa%C3%A7%C3%B5es%20importantes%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+  989 │                     📝 Outras observações importantes
+  990 │                   </label>
+  991 │                   <textarea data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:991:18" data-lov-name="textarea"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="991" data-component-file="CardDeConstrucao.tsx" data-component-name="textarea" data-component-content="%7B%22placeholder%22%3A%22Informa%C3%A7%C3%B5es%20adicionais%20que%20podem%20ajudar...%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%20text-sm%22%7D"
+  992 │                     value={formData.observacoes}
+  993 │                     onChange={(e) =>
+  994 │                       handleInputChange("observacoes", e.target.value)
+  995 │                     }
+  996 │                     className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+  997 │                     rows={2}
+  998 │                     placeholder="Informações adicionais que podem ajudar..."
+  999 │                   />
+ 1000 │                 </div>
+ 1001 │               </div>
+ 1002 │ 
+ 1003 │               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1003:14" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1003" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20justify-end%20pt-3%20sm%3Apt-4%20border-t%20border-gray-300%20dark%3Aborder-gray-700%22%7D" className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+ 1004 │                 <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1004:16" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1004" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22px-4%20sm%3Apx-6%20py-2%20sm%3Apy-3%20bg-%5B%23FF6B00%5D%20hover%3Abg-%5B%23D65A00%5D%20text-white%20font-semibold%20rounded-xl%20transition-colors%20duration-200%20disabled%3Aopacity-50%20disabled%3Acursor-not-allowed%20text-sm%20sm%3Atext-base%22%7D"
+ 1005 │                   onClick={handleSubmitContextualization}
+ 1006 │                   disabled={!isContextualizationValid || isLoading}
+ 1007 │                   className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+ 1008 │                 >
+ 1009 │                   {isLoading ? "Processando..." : "Gerar Plano de Aula"}
+ 1010 │                 </button>
+ 1011 │               </div>
+ 1012 │             </motion.div>
+ 1013 │           ) : (
+ 1014 │             <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1014:12" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1014" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22flex-1%20flex%20flex-col%20overflow-hidden%22%7D"
+ 1015 │               key="actionplan-content"
+ 1016 │               initial={{ opacity: 0, x: 20 }}
+ 1017 │               animate={{ opacity: 1, x: 0 }}
+ 1018 │               transition={{ duration: 0.3 }}
+ 1019 │               className="flex-1 flex flex-col overflow-hidden"
+ 1020 │             >
+ 1021 │               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1021:14" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1021" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20justify-between%20mb-3%20sm%3Amb-4%22%7D" className="flex items-center justify-between mb-3 sm:mb-4">
+ 1022 │                 <h3 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1022:16" data-lov-name="h3"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1022" data-component-file="CardDeConstrucao.tsx" data-component-name="h3" data-component-content="%7B%22className%22%3A%22text-base%20sm%3Atext-lg%20font-semibold%20text-gray-900%20dark%3Atext-white%22%7D" className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+ 1023 │                   {showAddActivityInterface ? "Adicionar Atividade Manual" : "Atividades Sugeridas"}
+ 1024 │                 </h3>
+ 1025 │                 {!showAddActivityInterface && (
+ 1026 │                   <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1026:18" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1026" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20gap-2%22%7D" className="flex items-center gap-2">
+ 1027 │                     <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1027:20" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1027" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-9%20h-9%20flex%20items-center%20justify-center%20rounded-xl%20bg-gradient-to-br%20from-%5B%23FF6B00%5D%2F10%20to-%5B%23FF9248%5D%2F5%20hover%3Afrom-%5B%23FF6B00%5D%2F20%20hover%3Ato-%5B%23FF9248%5D%2F10%20border%20border-%5B%23FF6B00%5D%2F30%20hover%3Aborder-%5B%23FF6B00%5D%2F50%20transition-all%20duration-300%20shadow-sm%20hover%3Ashadow-md%22%7D"
+ 1028 │                       onClick={() => setShowAddActivityInterface(true)}
+ 1029 │                       className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B00]/10 to-[#FF9248]/5 hover:from-[#FF6B00]/20 hover:to-[#FF9248]/10 border border-[#FF6B00]/30 hover:border-[#FF6B00]/50 transition-all duration-300 shadow-sm hover:shadow-md"
+ 1030 │                       title="Adicionar Atividade Manual"
+ 1031 │                     >
+ 1032 │                       <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1032:22" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1032" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20text-%5B%23FF6B00%5D%20transition-colors%20duration-200%22%7D" className="w-4 h-4 text-[#FF6B00] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 1033 │                         <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1033:24" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1033" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+ 1034 │                       </svg>
+ 1035 │                     </button>
+ 1036 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1036:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1036" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22text%22%3A%22selecionada%22%2C%22className%22%3A%22bg-%5B%23FF6B00%5D%2F10%20text-%5B%23FF6B00%5D%20px-2%20sm%3Apx-3%20py-1%20rounded-full%20text-xs%20sm%3Atext-sm%20font-medium%22%7D" className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+ 1037 │                       {selectedActivities2.length} selecionada
+ 1038 │                       {selectedActivities2.length !== 1 ? "s" : ""}
+ 1039 │                       {selectedTrilhasCount > 0 && (
+ 1040 │                         <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1040:24" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1040" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22(%20trilha%20)%22%2C%22className%22%3A%22ml-1%20text-orange-600%22%7D" className="ml-1 text-orange-600">
+ 1041 │                           ({selectedTrilhasCount} trilha{selectedTrilhasCount !== 1 ? "s" : ""})
+ 1042 │                         </span>
+ 1043 │                       )}
+ 1044 │                     </div>
+ 1045 │                     <GridToggleComponent data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1045:20" data-lov-name="GridToggleComponent"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1045" data-component-file="CardDeConstrucao.tsx" data-component-name="GridToggleComponent" data-component-content="%7B%7D" 
+ 1046 │                       viewMode={viewMode}
+ 1047 │                       onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+ 1048 │                     />
+ 1049 │                     <FilterComponent data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1049:20" data-lov-name="FilterComponent"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1049" data-component-file="CardDeConstrucao.tsx" data-component-name="FilterComponent" data-component-content="%7B%7D" 
+ 1050 │                       activities={getCombinedActivities()}
+ 1051 │                       selectedActivities2={selectedActivities2}
+ 1052 │                       onFilterApply={(filterType) => handleFilterApply(filterType)}
+ 1053 │                     />
+ 1054 │                   </div>
+ 1055 │                 )}
+ 1056 │               </div>
+ 1057 │ 
+ 1058 │               {showAddActivityInterface ? (
+ 1059 │                 <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1059:16" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1059" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%22className%22%3A%22flex-1%20overflow-y-auto%20mb-3%20sm%3Amb-4%20pr-1%20sm%3Apr-2%22%7D"
+ 1060 │                   className="flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2"
+ 1061 │                   initial={{ opacity: 0, x: 20 }}
+ 1062 │                   animate={{ opacity: 1, x: 0 }}
+ 1063 │                   transition={{ duration: 0.3 }}
+ 1064 │                 >
+ 1065 │                   <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1065:18" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1065" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22space-y-4%22%7D" className="space-y-4">
+ 1066 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1066:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1066" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+ 1067 │                       <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1067:22" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1067" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%93%9D%20T%C3%ADtulo%20da%20Atividade%20*%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+ 1068 │                         📝 Título da Atividade *
+ 1069 │                       </label>
+ 1070 │                       <input data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1070:22" data-lov-name="input"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1070" data-component-file="CardDeConstrucao.tsx" data-component-name="input" data-component-content="%7B%22placeholder%22%3A%22Ex%3A%20Lista%20de%20Exerc%C3%ADcios%20sobre%20Fun%C3%A7%C3%B5es%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%22%7D"
+ 1071 │                         type="text"
+ 1072 │                         value={manualActivityForm.title}
+ 1073 │                         onChange={(e) => handleManualFormChange('title', e.target.value)}
+ 1074 │                         className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+ 1075 │                         placeholder="Ex: Lista de Exercícios sobre Funções"
+ 1076 │                         maxLength={100}
+ 1077 │                       />
+ 1078 │                     </div>
+ 1079 │ 
+ 1080 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1080:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1080" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+ 1081 │                       <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1081:22" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1081" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%8E%AF%20Tipo%20de%20Atividade%20*%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+ 1082 │                         🎯 Tipo de Atividade *
+ 1083 │                       </label>
+ 1084 │                       <select data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1084:22" data-lov-name="select"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1084" data-component-file="CardDeConstrucao.tsx" data-component-name="select" data-component-content="%7B%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%22%7D"
+ 1085 │                         value={manualActivityForm.typeId}
+ 1086 │                         onChange={(e) => handleManualFormChange('typeId', e.target.value)}
+ 1087 │                         className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm"
+ 1088 │                       >
+ 1089 │                         <option data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1089:24" data-lov-name="option"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1089" data-component-file="CardDeConstrucao.tsx" data-component-name="option" data-component-content="%7B%22text%22%3A%22Selecione%20o%20tipo%20de%20atividade...%22%7D" value="">Selecione o tipo de atividade...</option>
+ 1090 │                         {schoolPowerActivities.map((activity) => (
+ 1091 │                           <option data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1091:26" data-lov-name="option"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1091" data-component-file="CardDeConstrucao.tsx" data-component-name="option" data-component-content="%7B%7D" key={activity.id} value={activity.id}>
+ 1092 │                             {activity.name}
+ 1093 │                           </option>
+ 1094 │                         ))}
+ 1095 │                       </select>
+ 1096 │                     </div>
+ 1097 │ 
+ 1098 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1098:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1098" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D">
+ 1099 │                       <label data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1099:22" data-lov-name="label"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1099" data-component-file="CardDeConstrucao.tsx" data-component-name="label" data-component-content="%7B%22text%22%3A%22%F0%9F%93%8B%20Descri%C3%A7%C3%A3o%20da%20Atividade%20*%22%2C%22className%22%3A%22block%20text-sm%20font-semibold%20text-gray-800%20dark%3Atext-white%20mb-2%22%7D" className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+ 1100 │                         📋 Descrição da Atividade *
+ 1101 │                       </label>
+ 1102 │                       <textarea data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1102:22" data-lov-name="textarea"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1102" data-component-file="CardDeConstrucao.tsx" data-component-name="textarea" data-component-content="%7B%22placeholder%22%3A%22Descreva%20detalhadamente%20o%20que%20voc%C3%AA%20quer%20que%20seja%20feito%20nesta%20atividade...%22%2C%22className%22%3A%22w-full%20p-2%20sm%3Ap-3%20border-2%20border-%5B%23FF6B00%5D%2F30%20dark%3Aborder-%5B%23FF6B00%5D%2F40%20bg-white%2F90%20dark%3Abg-gray-800%2F80%20text-gray-900%20dark%3Atext-white%20rounded-xl%20focus%3Aring-2%20focus%3Aring-%5B%23FF6B00%5D%20focus%3Aborder-%5B%23FF6B00%5D%20transition-all%20duration-200%20backdrop-blur-sm%20placeholder-gray-500%20dark%3Aplaceholder-gray-400%22%7D"
+ 1103 │                         value={manualActivityForm.description}
+ 1104 │                         onChange={(e) => handleManualFormChange('description', e.target.value)}
+ 1105 │                         className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+ 1106 │                         rows={4}
+ 1107 │                         placeholder="Descreva detalhadamente o que você quer que seja feito nesta atividade..."
+ 1108 │                         maxLength={500}
+ 1109 │                       />
+ 1110 │                       <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1110:22" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1110" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22text%22%3A%22%2F500%20caracteres%22%2C%22className%22%3A%22text-xs%20text-gray-500%20dark%3Atext-gray-400%20mt-1%22%7D" className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+ 1111 │                         {manualActivityForm.description.length}/500 caracteres
+ 1112 │                       </div>
+ 1113 │                     </div>
+ 1114 │ 
+ 1115 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1115:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1115" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20gap-3%20pt-4%22%7D" className="flex gap-3 pt-4">
+ 1116 │                       <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1116:22" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1116" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22text%22%3A%22Cancelar%22%2C%22className%22%3A%22flex-1%20px-4%20py-3%20text-gray-600%20dark%3Atext-gray-300%20hover%3Atext-gray-900%20dark%3Ahover%3Atext-white%20border%20border-gray-400%20dark%3Aborder-gray-600%20rounded-xl%20hover%3Abg-gray-100%20dark%3Ahover%3Abg-gray-800%20transition-colors%20duration-200%22%7D"
+ 1117 │                         onClick={() => setShowAddActivityInterface(false)}
+ 1118 │                         className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+ 1119 │                       >
+ 1120 │                         Cancelar
+ 1121 │                       </button>
+ 1122 │                       <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1122:22" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1122" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22text%22%3A%22Adicionar%20Atividade%22%2C%22className%22%3A%22flex-1%20px-4%20py-3%20bg-%5B%23FF6B00%5D%20hover%3Abg-%5B%23D65A00%5D%20text-white%20font-semibold%20rounded-xl%20transition-colors%20duration-200%20disabled%3Aopacity-50%20disabled%3Acursor-not-allowed%20flex%20items-center%20justify-center%20gap-2%22%7D"
+ 1123 │                         onClick={handleAddManualActivity}
+ 1124 │                         disabled={!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()}
+ 1125 │                         className="flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+ 1126 │                       >
+ 1127 │                         <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1127:24" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1127" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-5%20h-5%22%7D" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 1128 │                           <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1128:26" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1128" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+ 1129 │                         </svg>
+ 1130 │                         Adicionar Atividade
+ 1131 │                       </button>
+ 1132 │                     </div>
+ 1133 │                   </div>
+ 1134 │                 </motion.div>
+ 1135 │               ) : (
+ 1136 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1136:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1136" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D"
+ 1137 │                   className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
+ 1138 │                     viewMode === 'grid' 
+ 1139 │                       ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min' 
+ 1140 │                       : 'space-y-2 sm:space-y-3'
+ 1141 │                   }`}
+ 1142 │                   style={{
+ 1143 │                     maxHeight: "calc(100% - 80px)",
+ 1144 │                     scrollbarWidth: "thin",
+ 1145 │                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
+ 1146 │                   }}
+ 1147 │                 >
+ 1148 │                   {(filterState === 'selected' 
+ 1149 │                     ? selectedActivities2 
+ 1150 │                     : getCombinedActivities()
+ 1151 │                   )?.map((activity, index) => {
+ 1152 │                     const isSelected = selectedActivities2.some(
+ 1153 │                       (item) => item.id === activity.id,
+ 1154 │                     );
+ 1155 │ 
+ 1156 │                     const badgeProps = getTrilhasBadgeProps(activity.id);
+ 1157 │ 
+ 1158 │                     return (
+ 1159 │                       <motion.div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1159:22" data-lov-name="motion.div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1159" data-component-file="CardDeConstrucao.tsx" data-component-name="motion.div" data-component-content="%7B%7D"
+ 1160 │                         key={activity.id}
+ 1161 │                         className={`relative p-6 border-2 transition-all duration-300 cursor-pointer ${
+ 1162 │                           viewMode === 'grid' ? 'rounded-[32px]' : 'rounded-[32px] mb-4'
+ 1163 │                         } ${
+ 1164 │                           isSelected
+ 1165 │                             ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
+ 1166 │                             : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
+ 1167 │                         }`}
+ 1168 │                         initial={{ opacity: 0, y: 20 }}
+ 1169 │                         animate={{ opacity: 1, y: 0 }}
+ 1170 │                         transition={{ duration: 0.3, delay: index * 0.05 }}
+ 1171 │                         onClick={() => handleActivityToggle(activity)}
+ 1172 │                       >
+ 1173 │                         {/* Badge Manual - para atividades manuais */}
+ 1174 │                         {activity.isManual && (
+ 1175 │                           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1175:26" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1175" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D" className={`absolute top-4 z-20 ${badgeProps.showBadge ? 'right-[131px]' : 'right-4'}`}>
+ 1176 │                             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1176:28" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1176" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20gap-3%20px-4%20py-2%20border-2%20border-purple-500%20rounded-full%20bg-purple-500%2F10%20hover%3Abg-purple-500%2F15%20hover%3Aborder-purple-600%20transition-all%20duration-300%20cursor-default%20hover%3Ascale-105%22%7D" className="flex items-center gap-3 px-4 py-2 border-2 border-purple-500 rounded-full bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-600 transition-all duration-300 cursor-default hover:scale-105">
+ 1177 │                               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1177:30" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1177" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22w-2%20h-6%20min-w-2%20min-h-6%20flex%20items-center%20justify-center%20relative%20flex-shrink-0%22%7D" className="w-2 h-6 min-w-2 min-h-6 flex items-center justify-center relative flex-shrink-0">
+ 1178 │                                 <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1178:32" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1178" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-5%20h-5%20text-purple-600%20transition-all%20duration-300%20relative%20z-10%22%7D" className="w-5 h-5 text-purple-600 transition-all duration-300 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+ 1179 │                                   <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1179:34" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1179" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+ 1180 │                                 </svg>
+ 1181 │                               </div>
+ 1182 │                               <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1182:30" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1182" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22Manual%22%2C%22className%22%3A%22text-sm%20font-bold%20text-purple-600%20whitespace-nowrap%20transition-all%20duration-300%22%7D" className="text-sm font-bold text-purple-600 whitespace-nowrap transition-all duration-300">
+ 1183 │                                 Manual
+ 1184 │                               </span>
+ 1185 │                             </div>
+ 1186 │                           </div>
+ 1187 │                         )}
+ 1188 │ 
+ 1189 │                         {/* Badge Trilhas */}
+ 1190 │                         {badgeProps.showBadge && (
+ 1191 │                           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1191:26" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1191" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22absolute%20top-4%20right-4%20z-20%22%7D" className="absolute top-4 right-4 z-20">
+ 1192 │                             <TrilhasBadge data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1192:28" data-lov-name="TrilhasBadge"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1192" data-component-file="CardDeConstrucao.tsx" data-component-name="TrilhasBadge" data-component-content="%7B%7D" />
+ 1193 │                           </div>
+ 1194 │                         )}
+ 1195 │ 
+ 1196 │                         <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1196:24" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1196" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-start%20gap-4%22%7D" className="flex items-start gap-4">
+ 1197 │                           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1197:26" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1197" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex-1%22%7D" className="flex-1">
+ 1198 │                             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1198:28" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1198" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20items-center%20gap-3%20mb-2%22%7D" className="flex items-center gap-3 mb-2">
+ 1199 │                               <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1199:30" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1199" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%7D" 
+ 1200 │                                 className={`icon-container ${isSelected ? 'active' : ''}`}
+ 1201 │                                 onClick={(e) => {
+ 1202 │                                   e.stopPropagation();
+ 1203 │                                   handleActivityToggle(activity);
+ 1204 │                                 }}
+ 1205 │                                 style={{
+ 1206 │                                   width: '40px',
+ 1207 │                                   height: '40px',
+ 1208 │                                   minWidth: '40px',
+ 1209 │                                   minHeight: '40px',
+ 1210 │                                   borderRadius: '14px',
+ 1211 │                                   display: 'flex',
+ 1212 │                                   alignItems: 'center',
+ 1213 │                                   justifyContent: 'center',
+ 1214 │                                   background: isSelected 
+ 1215 │                                     ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+ 1216 │                                     : 'rgba(255, 110, 6, 0.1)',
+ 1217 │                                   transition: 'all 0.3s ease',
+ 1218 │                                   position: 'relative',
+ 1219 │                                   overflow: 'hidden',
+ 1220 │                                   cursor: 'pointer',
+ 1221 │                                   boxShadow: isSelected 
+ 1222 │                                     ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
+ 1223 │                                     : 'none',
+ 1224 │                                   transform: isSelected ? 'scale(1.05)' : 'scale(1)'
+ 1225 │                                 }}
+ 1226 │                               >
+ 1227 │                                 {isSelected ? (
+ 1228 │                                   <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1228:34" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1228" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-5%20h-5%20text-white%20transition-all%20duration-300%20relative%20z-10%22%7D" 
+ 1229 │                                     className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
+ 1230 │                                     fill="currentColor" 
+ 1231 │                                     viewBox="0 0 20 20"
+ 1232 │                                   >
+ 1233 │                                     <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1233:36" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1233" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" 
+ 1234 │                                       fillRule="evenodd" 
+ 1235 │                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+ 1236 │                                       clipRule="evenodd"/>
+ 1237 │                                   </svg>
+ 1238 │                                 ) : (
+ 1239 │                                   React.createElement(getIconByActivityId(activity.id), {
+ 1240 │                                     className: `w-5 h-5 transition-all duration-300 relative z-10`,
+ 1241 │                                     style: {
+ 1242 │                                       color: '#FF6E06'
+ 1243 │                                     }
+ 1244 │                                   })
+ 1245 │                                 )}
+ 1246 │                                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1246:32" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1246" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22icon-glow%22%7D" 
+ 1247 │                                   className="icon-glow"
+ 1248 │                                   style={{
+ 1249 │                                     position: 'absolute',
+ 1250 │                                     top: '50%',
+ 1251 │                                     left: '50%',
+ 1252 │                                     width: '20px',
+ 1253 │                                     height: '20px',
+ 1254 │                                     background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
+ 1255 │                                     borderRadius: '50%',
+ 1256 │                                     transform: isSelected 
+ 1257 │                                       ? 'translate(-50%, -50%) scale(2.2)' 
+ 1258 │                                       : 'translate(-50%, -50%) scale(0)',
+ 1259 │                                     transition: 'transform 0.3s ease'
+ 1260 │                                   }}
+ 1261 │                                 />
+ 1262 │                               </div>
+ 1263 │ 
+ 1264 │                               <h3 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1264:30" data-lov-name="h3"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1264" data-component-file="CardDeConstrucao.tsx" data-component-name="h3" data-component-content="%7B%22className%22%3A%22text-lg%20font-semibold%20text-gray-900%20dark%3Atext-white%20line-clamp-2%20flex-1%20pr-8%22%7D" className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-8">
+ 1265 │                                 {activity.title}
+ 1266 │                               </h3>
+ 1267 │                             </div>
+ 1268 │ 
+ 1269 │                             <p data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1269:28" data-lov-name="p"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1269" data-component-file="CardDeConstrucao.tsx" data-component-name="p" data-component-content="%7B%22className%22%3A%22text-gray-600%20dark%3Atext-gray-400%20leading-relaxed%20line-clamp-3%20mb-3%22%7D" className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-3">
+ 1270 │                               {activity.description}
+ 1271 │                             </p>
+ 1272 │ 
+ 1273 │                             <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1273:28" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1273" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22mt-2%22%7D" className="mt-2">
+ 1274 │                               <span data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1274:30" data-lov-name="span"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1274" data-component-file="CardDeConstrucao.tsx" data-component-name="span" data-component-content="%7B%22text%22%3A%22ID%3A%22%2C%22className%22%3A%22text-xs%20px-2%20py-1%20bg-gray-100%20dark%3Abg-gray-800%20text-gray-500%20dark%3Atext-gray-400%20rounded%22%7D" className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
+ 1275 │                                 ID: {activity.id}
+ 1276 │                               </span>
+ 1277 │                             </div>
+ 1278 │                           </div>
+ 1279 │                         </div>
+ 1280 │ 
+ 1281 │                         {isSelected && (
+ 1282 │                           <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1282:26" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1282" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22absolute%20inset-0%20rounded-%5B32px%5D%20border-2%20border-%5B%23FF6B00%5D%20animate-pulse%20opacity-50%20pointer-events-none%22%7D" className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
+ 1283 │                         )}
+ 1284 │                       </motion.div>
+ 1285 │                     );
+ 1286 │                   })}
+ 1287 │ 
+ 1288 │                   {filterState === 'selected' && selectedActivities2.length === 0 && (
+ 1289 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1289:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1289" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20flex-col%20items-center%20justify-center%20py-12%20text-center%22%7D" className="flex flex-col items-center justify-center py-12 text-center">
+ 1290 │                       <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1290:22" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1290" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22w-16%20h-16%20bg-gray-100%20dark%3Abg-gray-800%20rounded-full%20flex%20items-center%20justify-center%20mb-4%22%7D" className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+ 1291 │                         <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1291:24" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1291" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-8%20h-8%20text-gray-400%22%7D" className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ 1292 │                           <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1292:26" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1292" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+ 1293 │                         </svg>
+ 1294 │                       </div>
+ 1295 │                       <h3 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1295:22" data-lov-name="h3"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1295" data-component-file="CardDeConstrucao.tsx" data-component-name="h3" data-component-content="%7B%22text%22%3A%22Nenhuma%20atividade%20selecionada%22%2C%22className%22%3A%22text-lg%20font-semibold%20text-gray-900%20dark%3Atext-white%20mb-2%22%7D" className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+ 1296 │                         Nenhuma atividade selecionada
+ 1297 │                       </h3>
+ 1298 │                       <p data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1298:22" data-lov-name="p"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1298" data-component-file="CardDeConstrucao.tsx" data-component-name="p" data-component-content="%7B%22text%22%3A%22Selecione%20algumas%20atividades%20primeiro%20para%20v%C3%AA-las%20aqui%22%2C%22className%22%3A%22text-sm%20text-gray-500%20dark%3Atext-gray-400%20max-w-xs%22%7D" className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+ 1299 │                         Selecione algumas atividades primeiro para vê-las aqui
+ 1300 │                       </p>
+ 1301 │                     </div>
+ 1302 │                   )}
+ 1303 │ 
+ 1304 │                   {getCombinedActivities().length === 0 && (
+ 1305 │                     <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1305:20" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1305" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20flex-col%20items-center%20justify-center%20py-12%20text-center%22%7D" className="flex flex-col items-center justify-center py-12 text-center">
+ 1306 │                       <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1306:22" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1306" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22w-16%20h-16%20bg-gray-100%20dark%3Abg-gray-800%20rounded-full%20flex%20items-center%20justify-center%20mb-4%22%7D" className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+ 1307 │                         <svg data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1307:24" data-lov-name="svg"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1307" data-component-file="CardDeConstrucao.tsx" data-component-name="svg" data-component-content="%7B%22className%22%3A%22w-8%20h-8%20text-gray-400%22%7D" className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ 1308 │                           <path data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1308:26" data-lov-name="path"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1308" data-component-file="CardDeConstrucao.tsx" data-component-name="path" data-component-content="%7B%7D" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+ 1309 │                         </svg>
+ 1310 │                       </div>
+ 1311 │                       <h3 data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1311:22" data-lov-name="h3"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1311" data-component-file="CardDeConstrucao.tsx" data-component-name="h3" data-component-content="%7B%22text%22%3A%22Nenhuma%20atividade%20dispon%C3%ADvel%22%2C%22className%22%3A%22text-lg%20font-semibold%20text-gray-900%20dark%3Atext-white%20mb-2%22%7D" className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+ 1312 │                         Nenhuma atividade disponível
+ 1313 │                       </h3>
+ 1314 │                       <p data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1314:22" data-lov-name="p"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1314" data-component-file="CardDeConstrucao.tsx" data-component-name="p" data-component-content="%7B%22text%22%3A%22Adicione%20atividades%20manuais%20ou%20aguarde%20as%20sugest%C3%B5es%20da%20IA%22%2C%22className%22%3A%22text-sm%20text-gray-500%20dark%3Atext-gray-400%20max-w-xs%22%7D" className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+ 1315 │                         Adicione atividades manuais ou aguarde as sugestões da IA
+ 1316 │                       </p>
+ 1317 │                     </div>
+ 1318 │                   )}
+ 1319 │                 </div>
+ 1320 │               )}
+ 1321 │ 
+ 1322 │               {!showAddActivityInterface && (
+ 1323 │                 <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1323:16" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1323" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22flex%20justify-end%20pt-3%20sm%3Apt-4%20border-t%20border-gray-300%20dark%3Aborder-gray-700%22%7D" className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+ 1324 │                   <Button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1324:18" data-lov-name="Button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1324" data-component-file="CardDeConstrucao.tsx" data-component-name="Button" data-component-content="%7B%22className%22%3A%22px-4%20sm%3Apx-6%20py-2%20sm%3Apy-3%20bg-%5B%23FF6B00%5D%20hover%3Abg-%5B%23D65A00%5D%20text-white%20font-semibold%20rounded-xl%20transition-colors%20duration-200%20disabled%3Aopacity-50%20disabled%3Acursor-not-allowed%20flex%20items-center%20gap-2%20text-sm%20sm%3Atext-base%22%7D"
+ 1325 │                     onClick={handleApproveActionPlan}
+ 1326 │                     disabled={selectedActivities2.length === 0 || isLoading}
+ 1327 │                     className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+ 1328 │                   >
+ 1329 │                     <Target data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1329:20" data-lov-name="Target"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1329" data-component-file="CardDeConstrucao.tsx" data-component-name="Target" data-component-content="%7B%22className%22%3A%22w-4%20h-4%20sm%3Aw-5%20sm%3Ah-5%22%7D" className="w-4 h-4 sm:w-5 sm:h-5" />
+ 1330 │                     {isLoading
+ 1331 │                       ? "Processando..."
+ 1332 │                       : `Aprovar Plano (${selectedActivities2.length})`}
+ 1333 │                   </Button>
+ 1334 │                 </div>
+ 1335 │               )}
+ 1336 │             </motion.div>
+ 1337 │           )}
+ 1338 │         </motion.div>
+ 1339 │       )}
+ 1340 │ 
+ 1341 │       {/* Debug Panel para verificar sistema de Trilhas */}
+ 1342 │       {actionPlan && (
+ 1343 │         <TrilhasDebugPanel data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1343:8" data-lov-name="TrilhasDebugPanel"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1343" data-component-file="CardDeConstrucao.tsx" data-component-name="TrilhasDebugPanel" data-component-content="%7B%7D" 
+ 1344 │           activities={actionPlan.map(activity => ({ 
+ 1345 │             id: activity.id, 
+ 1346 │             title: activity.title 
+ 1347 │           }))}
+ 1348 │           isVisible={showTrilhasDebug}
+ 1349 │         />
+ 1350 │       )}
+ 1351 │ 
+ 1352 │       {/* Botão para toggle do debug (só visível em desenvolvimento) */}
+ 1353 │       {process.env.NODE_ENV === 'development' && actionPlan && (
+ 1354 │         <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:1354:8" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="1354" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22fixed%20bottom-4%20left-4%20z-40%20bg-blue-500%20text-white%20px-3%20py-2%20rounded-lg%20text-xs%20font-medium%20shadow-lg%20hover%3Abg-blue-600%20transition-colors%22%7D"
+ 1355 │           onClick={() => setShowTrilhasDebug(!showTrilhasDebug)}
+ 1356 │           className="fixed bottom-4 left-4 z-40 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg hover:bg-blue-600 transition-colors"
+ 1357 │         >
+ 1358 │           {showTrilhasDebug ? '🔍 Fechar Debug' : '🔍 Debug Trilhas'}
+ 1359 │         </button>
+ 1360 │       )}
+ 1361 │     </motion.div>
+ 1362 │   );
+ 1363 │ }
+ 1364 │ 
+ 1365 │ 
+ 1366 │ 
+ 1367 │ import {
+ 1368 │   Dialog,
+ 1369 │   DialogContent,
+ 1370 │   DialogDescription,
+ 1371 │   DialogHeader,
+ 1372 │   DialogTitle,
+ 1373 │   DialogTrigger,
+ 1374 │ } from "@/components/ui/dialog";
+ 1375 │ import { Settings } from "lucide-react";
+ 1376 │ import { EditMaterialsInterface } from "./EditMaterialsInterface";
+ 1377 │ 
+ 1378 │ interface ConstructionInterfaceProps {
+ 1379 │     approvedActivities: ActionPlanItem[];
+ 1380 │ }
+ 1381 │ 
+ 1382 │ export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
+      ·                 ──────────┬──────────
+      ·                           ╰── `ConstructionInterface` redefined here
+ 1383 │     const [modalStates, setModalStates] = useState<{ [activityId: string]: boolean }>({});
+ 1384 │     const [selectedActivity, setSelectedActivity] = useState<ActionPlanItem | null>(null);
+      ╰────
+/home/runner/workspace/src/features/schoolpower/construction/CardDeConstrucao.tsx:46:1
+389|        <div data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:389:6" data-lov-name="div"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="389" data-component-file="CardDeConstrucao.tsx" data-component-name="div" data-component-content="%7B%22className%22%3A%22relative%22%7D" className="relative" ref={filterRef}>
+390|          <button data-lov-id="src/features/schoolpower/construction/CardDeConstrucao.tsx:390:8" data-lov-name="button"  data-component-path="src/features/schoolpower/construction/CardDeConstrucao.tsx" data-component-line="390" data-component-file="CardDeConstrucao.tsx" data-component-name="button" data-component-content="%7B%22className%22%3A%22w-9%20h-9%20flex%20items-center%20justify-center%20rounded-xl%20bg-gradient-to-br%20from-gray-50%20to-gray-100%20dark%3Afrom-gray-800%20dark%3Ato-gray-750%20hover%3Afrom-%5B%23FF6B00%5D%2F5%20hover%3Ato-%5B%23FF9248%5D%2F5%20dark%3Ahover%3Afrom-%5B%23FF6B00%5D%2F10%20dark%3Ahover%3Ato-%5B%23FF9248%5D%2F10%20border%20border-gray-200%20dark%3Aborder-gray-600%20hover%3Aborder-%5B%23FF6B00%5D%2F30%20transition-all%20duration-300%20shadow-sm%20hover%3Ashadow-md%22%7D"
+391|            onClick={() => setIsFilterOpen(!isFilterOpen)}
+   |                                 ^
+392|            className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 hover:from-[#FF6B00]/5 hover:to-[#FF9248]/5 dark:hover:from-[#FF6B00]/10 dark:hover:to-[#FF9248]/10 border border-gray-200 dark:border-gray-600 hover:border-[#FF6B00]/30 transition-all duration-300 shadow-sm hover:shadow-md"
+393|            title="Filtros e Ações"
