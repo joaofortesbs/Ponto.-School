@@ -229,10 +229,7 @@ const calculateQuestionPoints = (difficulty: string): number => {
     case 'Avançado': return 3;
     default: return 1;
   }
-};erial de apoio sobre ${data.theme}
-`}
-
-## Lista de Exercícios
+};
 
 ### Exercício 1: Conceitos Fundamentais de ${data.theme}
 **Questão 1.1:** Defina os conceitos principais de ${data.theme} abordados em ${data.subject}.
