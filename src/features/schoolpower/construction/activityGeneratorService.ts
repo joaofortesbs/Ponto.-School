@@ -3,13 +3,12 @@ interface ActivityFormData {
   title: string;
   description: string;
   subject: string;
+  theme: string;
+  schoolYear: string;
+  numberOfQuestions: string;
   difficulty: string;
-  format: string;
-  duration: string;
-  objectives: string;
-  materials: string;
-  instructions: string;
-  evaluation: string;
+  questionModel: string;
+  sources: string;
 }
 
 interface GeneratedActivity {
