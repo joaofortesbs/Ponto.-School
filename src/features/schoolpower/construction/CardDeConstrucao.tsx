@@ -603,7 +603,7 @@ export function CardDeConstrucao({
       className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
       style={{
         width: "1153px",
-        height: "700px"
+        height: "800px"
       }}
       data-theme="adaptive"
     >
