@@ -1,74 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Settings, FileText, Play, Download, Edit3 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ConstructionActivity } from './types';
-import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
+import { X, Plus } from 'lucide-react';
 
 interface EditActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activity: ConstructionActivity | null;
-  onSave: (activityData: any) => void;
+  activity: {
+    id: string;
+    title: string;
+    description: string;
+    type: string;
+    status: string;
+    progress: number;
+  } | null;
+  onSave: (updatedActivity: any) => void;
 }
 
 interface ActivityFormData {
-  title: string;
-  description: string;
-  subject: string;
-  difficulty: string;
-  format: string;
-  duration: string;
-  objectives: string;
-  materials: string;
-  instructions: string;
-  evaluation: string;
+  disciplina: string;
+  tema: string;
+  anoEscolaridade: string;
+  numeroQuestoes: string;
+  nivelDificuldade: string;
+  modeloQuestoes: string;
+  fontes: string[];
 }
 
 export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   isOpen,
   onClose,
   activity,
-  onSave
+  onSave,
 }) => {
   const [formData, setFormData] = useState<ActivityFormData>({
-    title: '',
-    description: '',
-    subject: '',
-    difficulty: 'Médio',
-    format: 'PDF',
-    duration: '30 minutos',
-    objectives: '',
-    materials: '',
-    instructions: '',
-    evaluation: ''
+    disciplina: '',
+    tema: '',
+    anoEscolaridade: '',
+    numeroQuestoes: '',
+    nivelDificuldade: '',
+    modeloQuestoes: '',
+    fontes: [],
   });
 
-  const [generatedActivity, setGeneratedActivity] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState<'editar' | 'visualizar'>('editar');
+  const [newFonte, setNewFonte] = useState('');
 
   useEffect(() => {
     if (activity) {
+      // Carregar dados existentes se houver
       setFormData({
-        title: activity.title || '',
-        description: activity.description || '',
-        subject: 'Português',
-        difficulty: 'Médio',
-        format: 'PDF',
-        duration: '30 minutos',
-        objectives: '',
-        materials: '',
-        instructions: '',
-        evaluation: ''
+        disciplina: '',
+        tema: '',
+        anoEscolaridade: '',
+        numeroQuestoes: '',
+        nivelDificuldade: '',
+        modeloQuestoes: '',
+        fontes: [],
       });
     }
   }, [activity]);
@@ -76,352 +68,234 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleBuildActivity = async () => {
-    setIsGenerating(true);
-    try {
-      const { generateActivity, validateFormData } = await import('./activityGeneratorService');
-
-      // Validar dados do formulário
-      const errors = validateFormData(formData);
-      if (errors.length > 0) {
-        console.error('Erros de validação:', errors);
-        setIsGenerating(false);
-        return;
-      }
-
-      // Gerar atividade usando o serviço
-      const result = await generateActivity(formData);
-      setGeneratedActivity(result.content);
-      setIsGenerating(false);
-    } catch (error) {
-      console.error('Erro ao gerar atividade:', error);
-      setIsGenerating(false);
+  const handleAddFonte = () => {
+    if (newFonte.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        fontes: [...prev.fontes, newFonte.trim()],
+      }));
+      setNewFonte('');
     }
   };
 
-  const handleSaveChanges = () => {
-    const activityData = {
-      ...formData,
-      generatedContent: generatedActivity
-    };
-    onSave(activityData);
-    onClose();
+  const handleRemoveFonte = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      fontes: prev.fontes.filter((_, i) => i !== index),
+    }));
   };
 
-  // Converter formData em formato para ActivityPreview
-  const getActivityPreviewData = () => {
-    return {
-      title: formData.title,
-      description: formData.description,
-      difficulty: formData.difficulty,
-      timeLimit: formData.duration,
-      instructions: formData.instructions,
-      materials: formData.materials ? formData.materials.split('\n').filter(m => m.trim()) : [],
-      objective: formData.objectives,
-      targetAudience: 'Estudantes',
-      rubric: formData.evaluation,
-      questions: []
-    };
+  const handleSave = () => {
+    if (activity) {
+      const updatedActivity = {
+        ...activity,
+        editData: formData,
+      };
+      onSave(updatedActivity);
+      onClose();
+    }
   };
 
-  if (!isOpen) return null;
+  const anoOptions = [
+    '1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano',
+    '6º Ano', '7º Ano', '8º Ano', '9º Ano',
+    '1º Ensino Médio', '2º Ensino Médio', '3º Ensino Médio'
+  ];
+
+  const nivelDificuldadeOptions = [
+    'Fácil', 'Médio', 'Difícil', 'Muito Difícil'
+  ];
+
+  const modeloQuestoesOptions = [
+    'Múltipla Escolha', 'Verdadeiro ou Falso', 'Dissertativa', 
+    'Completar Lacunas', 'Associação', 'Mista'
+  ];
+
+  if (!activity) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 dark:bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 max-w-7xl w-full mx-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-[#FF6B00] to-[#FF8C40]">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Settings className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  Editar Materiais - {activity?.title}
-                </h2>
-                <p className="text-white/80 text-sm">
-                  Configure os materiais e gere o conteúdo da atividade
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 text-white"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-gray-800">
+            Editar Materiais - {activity.title}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 p-4">
+          {/* Disciplina */}
+          <div className="space-y-2">
+            <Label htmlFor="disciplina" className="text-sm font-medium text-gray-700">
+              Disciplina
+            </Label>
+            <Input
+              id="disciplina"
+              value={formData.disciplina}
+              onChange={(e) => handleInputChange('disciplina', e.target.value)}
+              placeholder="Ex: Matemática, Português, História..."
+              className="w-full"
+            />
           </div>
 
-          {/* Mini-sections Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'editar' | 'visualizar')} className="w-full">
-              <TabsList className="h-12 w-full justify-start rounded-none bg-transparent border-0 p-0">
-                <TabsTrigger 
-                  value="editar" 
-                  className="flex items-center space-x-2 h-12 px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:bg-white data-[state=active]:dark:bg-gray-900 data-[state=active]:text-[#FF6B00] bg-transparent"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  <span>Editar</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="visualizar" 
-                  className="flex items-center space-x-2 h-12 px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:bg-white data-[state=active]:dark:bg-gray-900 data-[state=active]:text-[#FF6B00] bg-transparent"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>Visualizar</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Content */}
-              <div className="p-6 h-[calc(800px-180px)] overflow-hidden">
-                <TabsContent value="editar" className="mt-0 h-full">
-                  <div className="flex gap-6 h-full">
-                    {/* Formulário (50%) */}
-                    <div className="flex flex-col space-y-4 overflow-y-auto flex-1 pr-2">
-                      <Card>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-4 flex items-center">
-                            <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
-                            Informações da Atividade
-                          </h3>
-
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="title" className="text-sm">Título da Atividade</Label>
-                              <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) => handleInputChange('title', e.target.value)}
-                                placeholder="Digite o título da atividade"
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="description" className="text-sm">Descrição</Label>
-                              <Textarea
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => handleInputChange('description', e.target.value)}
-                                placeholder="Descreva a atividade..."
-                                className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="subject" className="text-sm">Disciplina</Label>
-                                <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione a disciplina" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="Português">Português</SelectItem>
-                                    <SelectItem value="Matemática">Matemática</SelectItem>
-                                    <SelectItem value="História">História</SelectItem>
-                                    <SelectItem value="Geografia">Geografia</SelectItem>
-                                    <SelectItem value="Ciências">Ciências</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              <div>
-                                <Label htmlFor="difficulty" className="text-sm">Dificuldade</Label>
-                                <Select value={formData.difficulty} onValueChange={(value) => handleInputChange('difficulty', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione a dificuldade" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="Fácil">Fácil</SelectItem>
-                                    <SelectItem value="Médio">Médio</SelectItem>
-                                    <SelectItem value="Difícil">Difícil</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="format" className="text-sm">Formato de Entrega</Label>
-                                <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione o formato" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="PDF">PDF Imprimível</SelectItem>
-                                    <SelectItem value="Interativo">Interativo</SelectItem>
-                                    <SelectItem value="Vídeo">Vídeo Explicativo</SelectItem>
-                                    <SelectItem value="Apresentação">Apresentação</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              <div>
-                                <Label htmlFor="duration" className="text-sm">Duração Estimada</Label>
-                                <Select value={formData.duration} onValueChange={(value) => handleInputChange('duration', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione a duração" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="15 minutos">15 minutos</SelectItem>
-                                    <SelectItem value="30 minutos">30 minutos</SelectItem>
-                                    <SelectItem value="45 minutos">45 minutos</SelectItem>
-                                    <SelectItem value="1 hora">1 hora</SelectItem>
-                                    <SelectItem value="2 horas">2 horas</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
-                              <Textarea
-                                id="objectives"
-                                value={formData.objectives}
-                                onChange={(e) => handleInputChange('objectives', e.target.value)}
-                                placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
-                              <Textarea
-                                id="materials"
-                                value={formData.materials}
-                                onChange={(e) => handleInputChange('materials', e.target.value)}
-                                placeholder="Liste os materiais necessários (um por linha)..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
-                              <Textarea
-                                id="instructions"
-                                value={formData.instructions}
-                                onChange={(e) => handleInputChange('instructions', e.target.value)}
-                                placeholder="Descreva como a atividade deve ser executada..."
-                                className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
-                              <Textarea
-                                id="evaluation"
-                                value={formData.evaluation}
-                                onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                                placeholder="Como a atividade será avaliada..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Button
-                        onClick={handleBuildActivity}
-                        disabled={isGenerating}
-                        className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3"
-                      >
-                        {isGenerating ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Gerando...
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4 mr-2" />
-                            Construir Atividade
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="visualizar" className="mt-0 h-full">
-                  <div className="h-full">
-                    <Card className="h-full">
-                      <CardContent className="p-6 h-full">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="font-semibold text-xl flex items-center">
-                            <Eye className="h-6 w-6 mr-2 text-[#FF6B00]" />
-                            Visualização da Atividade
-                          </h3>
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                            >
-                              <Download className="h-3 w-3 mr-1" />
-                              Baixar PDF
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                            >
-                              <Download className="h-3 w-3 mr-1" />
-                              Exportar
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="border rounded-lg p-6 h-[calc(100%-100px)] overflow-y-auto bg-white dark:bg-gray-800">
-                          <ActivityPreview activityData={getActivityPreviewData()} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-              </div>
-            </Tabs>
+          {/* Tema */}
+          <div className="space-y-2">
+            <Label htmlFor="tema" className="text-sm font-medium text-gray-700">
+              Tema
+            </Label>
+            <Input
+              id="tema"
+              value={formData.tema}
+              onChange={(e) => handleInputChange('tema', e.target.value)}
+              placeholder="Ex: Substantivos e Verbos, Função de 1º Grau..."
+              className="w-full"
+            />
           </div>
 
-          {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
-            <div className="flex justify-end space-x-3">
+          {/* Ano de Escolaridade */}
+          <div className="space-y-2">
+            <Label htmlFor="anoEscolaridade" className="text-sm font-medium text-gray-700">
+              Ano de Escolaridade
+            </Label>
+            <Select value={formData.anoEscolaridade} onValueChange={(value) => handleInputChange('anoEscolaridade', value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o ano de escolaridade" />
+              </SelectTrigger>
+              <SelectContent>
+                {anoOptions.map((ano) => (
+                  <SelectItem key={ano} value={ano}>
+                    {ano}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Número de Questões */}
+          <div className="space-y-2">
+            <Label htmlFor="numeroQuestoes" className="text-sm font-medium text-gray-700">
+              Número de Questões
+            </Label>
+            <Input
+              id="numeroQuestoes"
+              type="number"
+              value={formData.numeroQuestoes}
+              onChange={(e) => handleInputChange('numeroQuestoes', e.target.value)}
+              placeholder="Ex: 10, 20, 30..."
+              className="w-full"
+              min="1"
+              max="100"
+            />
+          </div>
+
+          {/* Nível de Dificuldade */}
+          <div className="space-y-2">
+            <Label htmlFor="nivelDificuldade" className="text-sm font-medium text-gray-700">
+              Nível de Dificuldade
+            </Label>
+            <Select value={formData.nivelDificuldade} onValueChange={(value) => handleInputChange('nivelDificuldade', value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o nível de dificuldade" />
+              </SelectTrigger>
+              <SelectContent>
+                {nivelDificuldadeOptions.map((nivel) => (
+                  <SelectItem key={nivel} value={nivel}>
+                    {nivel}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Modelo de Questões */}
+          <div className="space-y-2">
+            <Label htmlFor="modeloQuestoes" className="text-sm font-medium text-gray-700">
+              Modelo de Questões
+            </Label>
+            <Select value={formData.modeloQuestoes} onValueChange={(value) => handleInputChange('modeloQuestoes', value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o modelo de questões" />
+              </SelectTrigger>
+              <SelectContent>
+                {modeloQuestoesOptions.map((modelo) => (
+                  <SelectItem key={modelo} value={modelo}>
+                    {modelo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Fontes */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">
+              Fontes
+            </Label>
+
+            {/* Lista de fontes adicionadas */}
+            {formData.fontes.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.fontes.map((fonte, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {fonte}
+                    <button
+                      onClick={() => handleRemoveFonte(index)}
+                      className="ml-1 text-gray-500 hover:text-red-500"
+                    >
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Campo para adicionar nova fonte */}
+            <div className="flex gap-2">
+              <Input
+                value={newFonte}
+                onChange={(e) => setNewFonte(e.target.value)}
+                placeholder="Ex: Livro didático, Site educacional, Artigo..."
+                className="flex-1"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddFonte();
+                  }
+                }}
+              />
               <Button
+                onClick={handleAddFonte}
                 variant="outline"
-                onClick={onClose}
-                className="px-6 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                size="sm"
+                className="px-3"
               >
-                Cancelar
-              </Button>
-              <Button
-                onClick={handleSaveChanges}
-                className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
-              >
-                Salvar Alterações
+                <Plus size={16} />
               </Button>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+
+        {/* Botões de ação */}
+        <div className="flex justify-end gap-3 p-4 border-t">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="px-6"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            className="px-6 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Salvar Alterações
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
