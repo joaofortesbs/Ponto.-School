@@ -818,8 +818,8 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-      {/* Renderização condicional baseada no step */}
-      {step === "generating" || step === "generatingActivities" ? (
+      
+      {step === "generating" ? (
         <motion.div
           className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
           initial={{ opacity: 0 }}
@@ -831,73 +831,20 @@ export function CardDeConstrucao({
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
-            {step === "generating"
-              ? "🤖 Analisando com IA Gemini"
-              : "🎯 Gerando Atividades"}
+            🤖 Analisando com IA Gemini
           </h3>
           <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-lg text-sm sm:text-base">
-            {step === "generating"
-              ? "A IA está processando sua mensagem e contexto para criar um plano de ação personalizado..."
-              : "As atividades aprovadas estão sendo geradas automaticamente pelo School Power..."}
+            A IA está processando sua mensagem e contexto para criar um plano de ação personalizado...
           </p>
-          <div className="bg-gradient-to-r from-[#FF6B00]/10 to-orange-100/20 dark:to-[#29335C]/10 rounded-lg p-3 sm:p-4 mb-4 border border-[#FF6B00]/20 max-w-md w-full">
-            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {step === "generating" ? (
-                <>
-                  ✨ Consultando 137 atividades disponíveis
-                  <br />
-                  🎯 Personalizando para seu contexto específico
-                  <br />
-                  📝 Gerando sugestões inteligentes
-                  <br />
-                  🔍 Validando compatibilidade das atividades
-                </>
-              ) : (
-                <>
-                  ✅ Personalizando conteúdo das atividades
-                  <br />
-                  🎨 Criando materiais visuais
-                  <br />
-                  📝 Formatando atividades finais
-                  <br />
-                  🚀 Preparando download
-                </>
-              )}
-            </p>
-          </div>
-          <div className="flex gap-3 justify-center">
-            {onResetFlow && (
-              <button
-                onClick={onResetFlow}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-              >
-                Cancelar
-              </button>
-            )}
-          </div>
         </motion.div>
-      ) : step === "activities" ? (
+      ) : step === "generatingActivities" || step === "construction" ? (
         <motion.div
-          key="activities-content"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          className="relative z-10 h-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative z-10 h-full flex flex-col pt-16"
         >
-          <div className="flex items-center justify-end mb-4">
-            <button
-              onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-            >
-              Voltar ao início
-            </button>
-          </div>
-
-          {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden">
-            {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities2)}
-            <ConstructionInterface approvedActivities={selectedActivities2} />
-          </div>
+          <ConstructionInterface approvedActivities={selectedActivities2} />
         </motion.div>
       ) : (
         <motion.div
@@ -1361,6 +1308,3 @@ export function CardDeConstrucao({
     </motion.div>
   );
 }
-
-
-
