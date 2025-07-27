@@ -92,12 +92,7 @@ export function ConstructionCard({
         {/* Animated Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 dark:from-white/5 dark:via-transparent dark:to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        {/* Floating Particles Effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-br from-[#FF6B00] to-[#D65A00] rounded-full opacity-60 animate-pulse" />
-          <div className="absolute top-3 right-8 w-1 h-1 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-40 animate-bounce" style={{ animationDelay: '0.5s' }} />
-          <div className="absolute bottom-4 right-2 w-1.5 h-1.5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-50 animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
+        
 
         {/* Header Section with ID and Status */}
         <div className="flex items-start justify-between mb-4 relative z-10">
@@ -105,7 +100,7 @@ export function ConstructionCard({
             <div className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#FF6B00]/20 to-[#D65A00]/20 border border-[#FF6B00]/30 dark:border-[#FF6B00]/20">
               <span className="text-xs font-semibold text-[#FF6B00] dark:text-[#FF8736] flex items-center gap-1">
                 <Activity className="w-3 h-3" />
-                ID: {id}
+                {title}
               </span>
             </div>
           </div>
@@ -234,7 +229,7 @@ export function ConstructionCard({
                 <div className="flex items-center gap-2">
                   <Zap className="w-3 h-3 text-[#FF6B00]" />
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {progress === 0 ? 'Aguardando' : progress === 100 ? 'Finalizada' : 'Ativa'}
+                    {progress === 100 ? 'Finalizada' : 'Ativa'}
                   </span>
                 </div>
               </div>
