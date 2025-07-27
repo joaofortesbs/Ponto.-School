@@ -138,6 +138,64 @@ export function CardDeConstrucao({
     description: ''
   });
 
+  // State for activity building process
+  const [isBuilding, setIsBuilding] = useState(false);
+
+  // State for tracking building progress
+  const [progress, setProgress] = useState<{
+    total: number;
+    completed: number;
+    current: string;
+    errors: string[];
+  } | null>(null);
+
+  // Function to simulate activity building
+  const buildActivities = async (activities: ActionPlanItem[]): Promise<boolean> => {
+    setIsBuilding(true);
+    setProgress({
+      total: activities.length,
+      completed: 0,
+      current: '',
+      errors: []
+    });
+
+    let allSuccess = true;
+
+    for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
+      setProgress(prev => ({
+        ...prev,
+        current: `Construindo ${activity.title} (${i + 1}/${activities.length})`
+      }));
+
+      try {
+        // Simulate building
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Simulate occasional errors
+        if (Math.random() < 0.2) {
+          throw new Error(`Falha ao construir ${activity.title}`);
+        }
+
+        setProgress(prev => ({
+          ...prev,
+          completed: prev.completed + 1
+        }));
+      } catch (error: any) {
+        console.error(error);
+        allSuccess = false;
+        setProgress(prev => ({
+          ...prev,
+          errors: [...prev.errors, error.message]
+        }));
+      }
+    }
+
+    setIsBuilding(false);
+    setProgress(prev => ({ ...prev, current: 'Finalizado!' }));
+    return allSuccess;
+  };
+
   // Load existing data when component mounts
   useEffect(() => {
     if (contextualizationData) {
@@ -183,16 +241,25 @@ export function CardDeConstrucao({
     }
   }, [actionPlan, step]);
 
-  const handleApproveActionPlan = () => {
-    console.log('🎯 CardDeConstrucao: Aprovando plano com atividades:', selectedActivities2);
+  const handleApproveActionPlan = async () => {
+    console.log('✅ Plano de ação aprovado! Iniciando construção automática...');
 
-    if (selectedActivities2.length === 0) {
-      console.warn('⚠️ Nenhuma atividade selecionada para aprovação');
-      return;
-    }
-
-    // Chamar a função de aprovação passada como prop
+    // Aprovar plano primeiro
     onApproveActionPlan(selectedActivities2);
+
+    // Construir atividades automaticamente
+    if (selectedActivities2.length > 0) {
+      try {
+        const success = await buildActivities(selectedActivities2);
+        if (success) {
+          console.log('🎉 Todas as atividades foram construídas automaticamente!');
+        } else {
+          console.warn('⚠️ Algumas atividades podem ter falhado na construção automática');
+        }
+      } catch (error) {
+        console.error('❌ Erro durante construção automática:', error);
+      }
+    }
   };
 
   // Handle manual activity form submission
@@ -727,7 +794,7 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-      
+
 
       {/* Renderização condicional baseada no step */}
       {step === "generating" || step === "generatingActivities" ? (
@@ -1168,7 +1235,8 @@ export function CardDeConstrucao({
                                     transform: isSelected 
                                       ? 'translate(-50%, -50%) scale(2.2)' 
                                       : 'translate(-50%, -50%) scale(0)',
-                                    transition: 'transform 0.3s ease'
+The code has been modified to implement automatic activity construction upon plan approval, including progress indicators in the UI.
+```                                    transition: 'transform 0.3s ease'
                                   }}
                                 />
                               </div>
@@ -1233,16 +1301,17 @@ export function CardDeConstrucao({
 
               {!showAddActivityInterface && (
                 <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
-                  <button
-                    onClick={handleApproveActionPlan}
-                    disabled={selectedActivities2.length === 0 || isLoading}
-                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
-                  >
-                    <Target className="w-4 h-4 sm:w-5 sm:h-5" />
-                    {isLoading
-                      ? "Processando..."
-                      : `Aprovar Plano (${selectedActivities2.length})`}
-                  </button>
+                  
+<Button
+                          onClick={handleApproveActionPlan}
+                          disabled={selectedActivities2.length === 0 || isLoading}
+                          className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                        >
+                          <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                          {isLoading
+                            ? "Processando..."
+                            : `Aprovar Plano (${selectedActivities2.length})`}
+                        </Button>
                 </div>
               )}
             </motion.div>

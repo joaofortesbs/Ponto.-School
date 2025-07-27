@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Share2, Clock, CheckCircle2, PenTool, Sparkles, Zap, Activity } from 'lucide-react';
@@ -7,6 +6,7 @@ import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
+import { useEffect, useState } from 'react';
 
 // Função para obter o nome da atividade pelo ID
 const getActivityNameById = (activityId: string): string => {
@@ -98,8 +98,8 @@ export function ConstructionCard({
       >
         {/* Animated Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 dark:from-white/5 dark:via-transparent dark:to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        
+
+
 
         {/* Header Section with ID and Status */}
         <div className="flex items-start justify-between mb-4 relative z-10">
@@ -111,7 +111,7 @@ export function ConstructionCard({
               </span>
             </div>
           </div>
-          
+
           {/* Status Badge */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm">
             {getStatusIcon()}

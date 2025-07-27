@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { ActivityFormData, GeneratedActivity, ActivityGenerationPayload } from '../types/ActivityTypes';
 import { generateActivityAPI, validateActivityData } from '../api/generateActivity';
@@ -35,7 +34,7 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
       // Gerar atividade
       const result = await generateActivityAPI(payload);
       setGeneratedContent(result.content);
-      
+
       // Salvar no localStorage para persistência
       localStorage.setItem(`generated_activity_${activityId}`, JSON.stringify({
         content: result.content,
@@ -51,14 +50,19 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
   }, [activityId, activityType]);
 
   const loadSavedContent = useCallback(() => {
-    try {
-      const saved = localStorage.getItem(`generated_activity_${activityId}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setGeneratedContent(parsed.content);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar conteúdo salvo:', err);
+    // Primeiro verificar se há conteúdo gerado automaticamente
+    const autoContent = localStorage.getItem(`generated_content_${activityId}`);
+    if (autoContent) {
+      setGeneratedContent(autoContent);
+      console.log('🤖 Conteúdo automático carregado para atividade:', activityId);
+      return;
+    }
+
+    // Se não houver conteúdo automático, carregar conteúdo salvo manualmente
+    const savedContent = localStorage.getItem(`activity_content_${activityId}`);
+    if (savedContent) {
+      setGeneratedContent(savedContent);
+      console.log('📖 Conteúdo salvo carregado para atividade:', activityId);
     }
   }, [activityId]);
 

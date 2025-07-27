@@ -74,22 +74,54 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
   useEffect(() => {
     if (activity) {
-      // Carregar dados da atividade
-      setFormData({
-        title: activity.title || '',
-        description: activity.description || '',
-        subject: 'Português',
-        theme: '',
-        schoolYear: '',
-        numberOfQuestions: '10',
-        difficultyLevel: 'Médio',
-        questionModel: '',
-        sources: '',
-        objectives: '',
-        materials: '',
-        instructions: '',
-        evaluation: ''
-      });
+      // Verificar se há dados automáticos preenchidos
+      const autoDataKey = `auto_activity_data_${activity.id}`;
+      const autoData = localStorage.getItem(autoDataKey);
+      
+      if (autoData) {
+        try {
+          const { formData: autoFormData } = JSON.parse(autoData);
+          console.log('📋 Carregando dados automáticos para:', activity.title);
+          setFormData(autoFormData);
+          // Limpar dados automáticos após uso
+          localStorage.removeItem(autoDataKey);
+        } catch (error) {
+          console.error('❌ Erro ao carregar dados automáticos:', error);
+          // Usar dados padrão em caso de erro
+          setFormData({
+            title: activity.title || '',
+            description: activity.description || '',
+            subject: 'Português',
+            theme: '',
+            schoolYear: '',
+            numberOfQuestions: '10',
+            difficultyLevel: 'Médio',
+            questionModel: '',
+            sources: '',
+            objectives: '',
+            materials: '',
+            instructions: '',
+            evaluation: ''
+          });
+        }
+      } else {
+        // Carregar dados padrão da atividade
+        setFormData({
+          title: activity.title || '',
+          description: activity.description || '',
+          subject: 'Português',
+          theme: '',
+          schoolYear: '',
+          numberOfQuestions: '10',
+          difficultyLevel: 'Médio',
+          questionModel: '',
+          sources: '',
+          objectives: '',
+          materials: '',
+          instructions: '',
+          evaluation: ''
+        });
+      }
 
       // Tentar carregar conteúdo salvo
       loadSavedContent();
