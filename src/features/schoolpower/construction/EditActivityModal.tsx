@@ -116,11 +116,17 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   };
 
   // Verificar se campos obrigatórios estão preenchidos
-  const isFormValid = formData.title.trim() && 
-                     formData.description.trim() && 
-                     formData.subject.trim() && 
-                     formData.theme.trim() && 
-                     formData.schoolYear.trim();
+  const isFormValid = activity?.id === 'lista-exercicios' 
+    ? formData.title.trim() && 
+      formData.description.trim() && 
+      formData.subject.trim() && 
+      formData.theme.trim() && 
+      formData.schoolYear.trim() &&
+      formData.numberOfQuestions.trim() &&
+      formData.difficultyLevel.trim() &&
+      formData.questionModel.trim()
+    : formData.title.trim() && 
+      formData.description.trim();
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -248,158 +254,168 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="subject" className="text-sm">Disciplina</Label>
-                                <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione a disciplina" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="Português">Português</SelectItem>
-                                    <SelectItem value="Matemática">Matemática</SelectItem>
-                                    <SelectItem value="História">História</SelectItem>
-                                    <SelectItem value="Geografia">Geografia</SelectItem>
-                                    <SelectItem value="Ciências">Ciências</SelectItem>
-                                    <SelectItem value="Física">Física</SelectItem>
-                                    <SelectItem value="Química">Química</SelectItem>
-                                    <SelectItem value="Biologia">Biologia</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                            {/* Campos específicos para Lista de Exercícios */}
+                            {activity?.id === 'lista-exercicios' && (
+                              <>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="subject" className="text-sm">Disciplina</Label>
+                                    <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                                        <SelectValue placeholder="Selecione a disciplina" />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                        <SelectItem value="Português">Português</SelectItem>
+                                        <SelectItem value="Matemática">Matemática</SelectItem>
+                                        <SelectItem value="História">História</SelectItem>
+                                        <SelectItem value="Geografia">Geografia</SelectItem>
+                                        <SelectItem value="Ciências">Ciências</SelectItem>
+                                        <SelectItem value="Física">Física</SelectItem>
+                                        <SelectItem value="Química">Química</SelectItem>
+                                        <SelectItem value="Biologia">Biologia</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
 
-                              <div>
-                                <Label htmlFor="theme" className="text-sm">Tema</Label>
-                                <Input
-                                  id="theme"
-                                  value={formData.theme}
-                                  onChange={(e) => handleInputChange('theme', e.target.value)}
-                                  placeholder="Ex: Substantivos e Verbos"
-                                  className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                />
-                              </div>
-                            </div>
+                                  <div>
+                                    <Label htmlFor="theme" className="text-sm">Tema</Label>
+                                    <Input
+                                      id="theme"
+                                      value={formData.theme}
+                                      onChange={(e) => handleInputChange('theme', e.target.value)}
+                                      placeholder="Ex: Substantivos e Verbos"
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
-                                <Select value={formData.schoolYear} onValueChange={(value) => handleInputChange('schoolYear', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione o ano" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="6º ano">6º ano</SelectItem>
-                                    <SelectItem value="7º ano">7º ano</SelectItem>
-                                    <SelectItem value="8º ano">8º ano</SelectItem>
-                                    <SelectItem value="9º ano">9º ano</SelectItem>
-                                    <SelectItem value="1º ano EM">1º ano EM</SelectItem>
-                                    <SelectItem value="2º ano EM">2º ano EM</SelectItem>
-                                    <SelectItem value="3º ano EM">3º ano EM</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
+                                    <Select value={formData.schoolYear} onValueChange={(value) => handleInputChange('schoolYear', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                                        <SelectValue placeholder="Selecione o ano" />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                        <SelectItem value="6º ano">6º ano</SelectItem>
+                                        <SelectItem value="7º ano">7º ano</SelectItem>
+                                        <SelectItem value="8º ano">8º ano</SelectItem>
+                                        <SelectItem value="9º ano">9º ano</SelectItem>
+                                        <SelectItem value="1º ano EM">1º ano EM</SelectItem>
+                                        <SelectItem value="2º ano EM">2º ano EM</SelectItem>
+                                        <SelectItem value="3º ano EM">3º ano EM</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
 
-                              <div>
-                                <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
-                                <Select value={formData.numberOfQuestions} onValueChange={(value) => handleInputChange('numberOfQuestions', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione a quantidade" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="5">5 questões</SelectItem>
-                                    <SelectItem value="10">10 questões</SelectItem>
-                                    <SelectItem value="15">15 questões</SelectItem>
-                                    <SelectItem value="20">20 questões</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
+                                  <div>
+                                    <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
+                                    <Select value={formData.numberOfQuestions} onValueChange={(value) => handleInputChange('numberOfQuestions', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                                        <SelectValue placeholder="Selecione a quantidade" />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                        <SelectItem value="5">5 questões</SelectItem>
+                                        <SelectItem value="10">10 questões</SelectItem>
+                                        <SelectItem value="15">15 questões</SelectItem>
+                                        <SelectItem value="20">20 questões</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
-                                <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione a dificuldade" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="Básico">Básico</SelectItem>
-                                    <SelectItem value="Intermediário">Intermediário</SelectItem>
-                                    <SelectItem value="Avançado">Avançado</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
+                                    <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                                        <SelectValue placeholder="Selecione a dificuldade" />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                        <SelectItem value="Básico">Básico</SelectItem>
+                                        <SelectItem value="Intermediário">Intermediário</SelectItem>
+                                        <SelectItem value="Avançado">Avançado</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
 
-                              <div>
-                                <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
-                                <Select value={formData.questionModel} onValueChange={(value) => handleInputChange('questionModel', value)}>
-                                  <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                    <SelectValue placeholder="Selecione o modelo" />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                    <SelectItem value="Múltipla Escolha">Múltipla Escolha</SelectItem>
-                                    <SelectItem value="Dissertativa">Dissertativa</SelectItem>
-                                    <SelectItem value="Verdadeiro/Falso">Verdadeiro/Falso</SelectItem>
-                                    <SelectItem value="Mista">Mista</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
+                                  <div>
+                                    <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
+                                    <Select value={formData.questionModel} onValueChange={(value) => handleInputChange('questionModel', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                                        <SelectValue placeholder="Selecione o modelo" />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                        <SelectItem value="Múltipla Escolha">Múltipla Escolha</SelectItem>
+                                        <SelectItem value="Dissertativa">Dissertativa</SelectItem>
+                                        <SelectItem value="Verdadeiro/Falso">Verdadeiro/Falso</SelectItem>
+                                        <SelectItem value="Mista">Mista</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
 
-                            <div>
-                              <Label htmlFor="sources" className="text-sm">Fontes</Label>
-                              <Textarea
-                                id="sources"
-                                value={formData.sources}
-                                onChange={(e) => handleInputChange('sources', e.target.value)}
-                                placeholder="Digite as fontes de referência..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
+                                <div>
+                                  <Label htmlFor="sources" className="text-sm">Fontes</Label>
+                                  <Textarea
+                                    id="sources"
+                                    value={formData.sources}
+                                    onChange={(e) => handleInputChange('sources', e.target.value)}
+                                    placeholder="Digite as fontes de referência..."
+                                    className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                              </>
+                            )}
 
-                            <div>
-                              <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
-                              <Textarea
-                                id="objectives"
-                                value={formData.objectives}
-                                onChange={(e) => handleInputChange('objectives', e.target.value)}
-                                placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
+                            {/* Campos genéricos para outras atividades */}
+                            {activity?.id !== 'lista-exercicios' && (
+                              <>
+                                <div>
+                                  <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
+                                  <Textarea
+                                    id="objectives"
+                                    value={formData.objectives}
+                                    onChange={(e) => handleInputChange('objectives', e.target.value)}
+                                    placeholder="Descreva os objetivos que os alunos devem alcançar..."
+                                    className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                            <div>
-                              <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
-                              <Textarea
-                                id="materials"
-                                value={formData.materials}
-                                onChange={(e) => handleInputChange('materials', e.target.value)}
-                                placeholder="Liste os materiais necessários (um por linha)..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
+                                <div>
+                                  <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
+                                  <Textarea
+                                    id="materials"
+                                    value={formData.materials}
+                                    onChange={(e) => handleInputChange('materials', e.target.value)}
+                                    placeholder="Liste os materiais necessários (um por linha)..."
+                                    className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                            <div>
-                              <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
-                              <Textarea
-                                id="instructions"
-                                value={formData.instructions}
-                                onChange={(e) => handleInputChange('instructions', e.target.value)}
-                                placeholder="Descreva como a atividade deve ser executada..."
-                                className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
+                                <div>
+                                  <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
+                                  <Textarea
+                                    id="instructions"
+                                    value={formData.instructions}
+                                    onChange={(e) => handleInputChange('instructions', e.target.value)}
+                                    placeholder="Descreva como a atividade deve ser executada..."
+                                    className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                            <div>
-                              <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
-                              <Textarea
-                                id="evaluation"
-                                value={formData.evaluation}
-                                onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                                placeholder="Como a atividade será avaliada..."
-                                className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
+                                <div>
+                                  <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
+                                  <Textarea
+                                    id="evaluation"
+                                    value={formData.evaluation}
+                                    onChange={(e) => handleInputChange('evaluation', e.target.value)}
+                                    placeholder="Como a atividade será avaliada..."
+                                    className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                              </>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
