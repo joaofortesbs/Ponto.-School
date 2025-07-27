@@ -48,7 +48,6 @@ import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
-import { Settings } from "lucide-react";
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -630,7 +629,7 @@ export function CardDeConstrucao({
     const fallbackIcons = [
       BookOpen, FileText, PenTool, Search, Brain,
       Users, MessageSquare, Presentation, ThumbsUp, Heart,
-      Settings, Wrench, Target, Compass, Trophy,
+      Wrench, Target, Compass, Trophy, Edit3,
       Calendar, Clock, CheckSquare, Star, Award,
       Microscope, Calculator, Eye, Globe, MapPin,
       Music, Palette, Camera, Video, Headphones,
@@ -1415,7 +1414,7 @@ export function ConstructionInterface({ approvedActivities }: ConstructionInterf
                             setSelectedActivity(activity);
                           }}
                         >
-                          <Settings className="w-4 h-4 mr-1" />
+                          <Edit3 className="w-4 h-4 mr-1" />
                           Editar Materiais
                         </Button>
                       </DialogTrigger>
