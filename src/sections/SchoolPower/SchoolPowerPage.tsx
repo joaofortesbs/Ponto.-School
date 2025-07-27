@@ -52,28 +52,8 @@ export function SchoolPowerPage() {
   const handleApproveActionPlan = (approvedItems: any) => {
     console.log('✅ Aprovando action plan do SchoolPowerPage:', approvedItems);
 
-    const newFlowData = {
-      ...flowData,
-      actionPlan: approvedItems,
-      timestamp: Date.now()
-    };
-
-    console.log('📋 Aprovando plano de ação:', approvedItems);
-
-    // Transicionar imediatamente para construction para mostrar a grade
-    setFlowState('construction');
-    setFlowData(newFlowData);
-
-    // Salvar no localStorage
-    const flowToSave = {
-      initialMessage: newFlowData.initialMessage,
-      contextualizationData: newFlowData.contextualizationData,
-      actionPlan: approvedItems,
-      timestamp: Date.now()
-    };
-
-    localStorage.setItem('schoolPowerFlow', JSON.stringify(flowToSave));
-    console.log('💾 Dados do School Power Flow salvos no localStorage:', flowToSave);
+    // Usar o hook corretamente
+    handleApproveActionPlanHook(approvedItems);
   };
 
   // Função para resetar o fluxo

@@ -221,7 +221,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
     try {
       setIsLoading(true);
-      setFlowState('generatingActivities');
 
       const newFlowData = {
         ...flowData,
@@ -232,24 +231,16 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowData(newFlowData);
       saveData(newFlowData);
 
-      // Importa e executa automação
-      const AutomationController = (await import('../construction/automationController')).default;
-      const controller = AutomationController.getInstance();
+      console.log('🎯 Dados salvos, transitioning para construction...');
 
-      // Converte itens aprovados para formato de atividades
-      const activitiesData = approvedItems.map(item => ({
-        id: item.id,
-        type: item.type || 'atividade_lista_exercicios',
-        title: item.title,
-        description: item.description,
-        duration: item.duration,
-        difficulty: item.difficulty,
-        category: item.category
-      }));
+      // Pequena pausa para garantir que os dados sejam salvos
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      console.log('🤖 Iniciando construção automática das atividades...');
+      // Transicionar para o estado construction
+      setFlowState('construction');
+      setIsLoading(false);
 
-      // Pequena pausa para garantir que a interface foi atualizada
+      console.log('✅ Transição para construction concluída'); que a interface foi atualizada
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Executa automação para todas as atividades

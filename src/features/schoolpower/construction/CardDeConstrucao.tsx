@@ -241,50 +241,19 @@ export function CardDeConstrucao({
     }
   }, [actionPlan, step]);
 
-  const handleApproveActionPlan = async () => {
-    console.log('✅ Plano de ação aprovado! Iniciando construção automática com ModalBinderEngine...');
+  const handleApproveActionPlan = () => {
+    console.log('✅ Aprovando plano de ação:', selectedActivities2);
+    
+    if (selectedActivities2.length === 0) {
+      console.warn('⚠️ Nenhuma atividade selecionada');
+      return;
+    }
 
-    // Aprovar plano primeiro
-    onApproveActionPlan(selectedActivities2);
-
-    // Construir atividades automaticamente usando o novo sistema
-    if (selectedActivities2.length > 0) {
-      try {
-        console.log('🔧 Iniciando construção automática com ModalBinderEngine...');
-        console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
-
-        // Usar o contexto de contextualização para enriquecer a geração
-        const contextData = {
-          materias: formData.materias,
-          publicoAlvo: formData.publicoAlvo,
-          restricoes: formData.restricoes,
-          datasImportantes: formData.datasImportantes,
-          observacoes: formData.observacoes
-        };
-
-        console.log('🎯 Dados de contexto para geração:', contextData);
-
-        const success = await buildActivities(selectedActivities2, contextData);
-
-        if (success) {
-          console.log('🎉 Todas as atividades foram construídas automaticamente com ModalBinderEngine!');
-
-          // Exibir notificação de sucesso
-          console.log('✅ Sistema de construção automática funcionando corretamente!');
-        } else {
-          console.warn('⚠️ Algumas atividades podem ter falhado na construção automática');
-        }
-      } catch (error) {
-        console.error('❌ Erro durante construção automática:', error);
-        console.error('📊 Detalhes do erro:', {
-          message: error.message,
-          stack: error.stack,
-          selectedActivities: selectedActivities2.length,
-          contextData: !!contextData
-        });
-      }
+    // Chamar a função onApproveActionPlan das props
+    if (onApproveActionPlan) {
+      onApproveActionPlan(selectedActivities2);
     } else {
-      console.log('ℹ️ Nenhuma atividade selecionada para construção automática');
+      console.error('❌ onApproveActionPlan não está definido nas props');
     }
   };
 
