@@ -252,7 +252,7 @@ export function CardDeConstrucao({
       try {
         console.log('🔧 Iniciando construção automática com ModalBinderEngine...');
         console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
-        
+
         // Usar o contexto de contextualização para enriquecer a geração
         const contextData = {
           materias: formData.materias,
@@ -261,14 +261,14 @@ export function CardDeConstrucao({
           datasImportantes: formData.datasImportantes,
           observacoes: formData.observacoes
         };
-        
+
         console.log('🎯 Dados de contexto para geração:', contextData);
-        
+
         const success = await buildActivities(selectedActivities2, contextData);
-        
+
         if (success) {
           console.log('🎉 Todas as atividades foram construídas automaticamente com ModalBinderEngine!');
-          
+
           // Exibir notificação de sucesso
           console.log('✅ Sistema de construção automática funcionando corretamente!');
         } else {
@@ -1233,8 +1233,7 @@ export function CardDeConstrucao({
                                     <path 
                                       fillRule="evenodd" 
                                       d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                                      clipRule="evenodd" 
-                                    />
+                                      clipRule="evenodd"/>
                                   </svg>
                                 ) : (
                                   React.createElement(getIconByActivityId(activity.id), {
@@ -1361,4 +1360,82 @@ export function CardDeConstrucao({
       )}
     </motion.div>
   );
+}
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
+import { Settings } from "lucide-react";
+import { EditMaterialsInterface } from "./EditMaterialsInterface";
+
+interface ConstructionInterfaceProps {
+    approvedActivities: ActionPlanItem[];
+}
+
+export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
+    const [modalStates, setModalStates] = useState<{ [activityId: string]: boolean }>({});
+    const [selectedActivity, setSelectedActivity] = useState<ActionPlanItem | null>(null);
+
+    // Inicializa o estado do modal para cada atividade aprovada
+    useEffect(() => {
+        const initialModalStates: { [activityId: string]: boolean } = {};
+        approvedActivities.forEach(activity => {
+            initialModalStates[activity.id] = false;
+        });
+        setModalStates(initialModalStates);
+    }, [approvedActivities]);
+
+    // Função para atualizar o estado do modal
+    const setModalState = (activityId: string, open: boolean) => {
+        setModalStates(prev => ({ ...prev, [activityId]: open }));
+    };
+
+    return (
+        <div>
+            <h2>Atividades Aprovadas</h2>
+            {approvedActivities.map((activity) => (
+                <div key={activity.id}>
+                    <p>{activity.title}</p>
+
+                    <Dialog open={modalStates[activity.id]} onOpenChange={(open) => setModalState(activity.id, open)}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="bg-white/80 hover:bg-white text-[#FF6B00] border-[#FF6B00]/30 hover:border-[#FF6B00]"
+                          onClick={() => {
+                            console.log('🔧 Abrindo modal de edição para:', activity.id);
+                            setSelectedActivity(activity);
+                          }}
+                        >
+                          <Settings className="w-4 h-4 mr-1" />
+                          Editar Materiais
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent 
+                        className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800"
+                        data-activity-id={selectedActivity?.id}
+                      >
+                        <DialogHeader>
+                            <DialogTitle>Editar Materiais da Atividade</DialogTitle>
+                            <DialogDescription>
+                                Ajuste os materiais e configurações desta atividade.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {selectedActivity && (
+                            <EditMaterialsInterface activity={selectedActivity} />
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                </div>
+            ))}
+        </div>
+    );
 }

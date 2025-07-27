@@ -216,30 +216,57 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     }
   }, [flowData, saveData]);
 
-  const approveActionPlan = useCallback((approvedItems: ActionPlanItem[]) => {
-    console.log('🎯 Hook: approveActionPlan chamado com items:', approvedItems);
+  const approveActionPlan = useCallback(async (approvedItems: ActionPlanItem[]) => {
+    console.log('📋 Aprovando plano de ação:', approvedItems);
 
-    if (!flowData.actionPlan) {
-      console.error('❌ Hook: Tentativa de aprovar sem actionPlan válido');
-      return;
+    try {
+      setIsLoading(true);
+      setFlowState('generatingActivities');
+
+      const newFlowData = {
+        ...flowData,
+        actionPlan: approvedItems,
+        timestamp: Date.now()
+      };
+
+      setFlowData(newFlowData);
+      saveData(newFlowData);
+
+      // Importa e executa automação
+      const AutomationController = (await import('../construction/automationController')).default;
+      const controller = AutomationController.getInstance();
+
+      // Converte itens aprovados para formato de atividades
+      const activitiesData = approvedItems.map(item => ({
+        id: item.id,
+        type: item.type || 'atividade_lista_exercicios',
+        title: item.title,
+        description: item.description,
+        duration: item.duration,
+        difficulty: item.difficulty,
+        category: item.category
+      }));
+
+      console.log('🤖 Iniciando construção automática das atividades...');
+
+      // Pequena pausa para garantir que a interface foi atualizada
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Executa automação para todas as atividades
+      const automationResults = await controller.autoBuildMultipleActivities(activitiesData);
+
+      const successCount = automationResults.filter(r => r).length;
+      console.log(`✅ Automação concluída: ${successCount}/${activitiesData.length} atividades construídas`);
+
+      setTimeout(() => {
+        setFlowState('activities');
+        setIsLoading(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('❌ Erro ao aprovar plano de ação:', error);
+      setIsLoading(false);
     }
-
-    const updatedData: SchoolPowerFlowData = {
-      ...flowData,
-      actionPlan: approvedItems.map(item => ({
-        ...item,
-        approved: true
-      })),
-      timestamp: Date.now()
-    };
-
-    setFlowData(updatedData);
-    saveData(updatedData);
-
-    // Transicionar para estado de activities
-    console.log('✅ Hook: ActionPlan aprovado, transitioning para activities');
-    setFlowState('activities');
-
   }, [flowData, saveData]);
 
   // Reset do fluxo
