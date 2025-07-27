@@ -242,17 +242,29 @@ export function CardDeConstrucao({
   }, [actionPlan, step]);
 
   const handleApproveActionPlan = async () => {
-    console.log('✅ Plano de ação aprovado! Iniciando construção automática...');
+    console.log('✅ Plano de ação aprovado! Iniciando construção automática com ModalBinderEngine...');
 
     // Aprovar plano primeiro
     onApproveActionPlan(selectedActivities2);
 
-    // Construir atividades automaticamente
+    // Construir atividades automaticamente usando o novo sistema
     if (selectedActivities2.length > 0) {
       try {
-        const success = await buildActivities(selectedActivities2);
+        console.log('🔧 Iniciando construção automática com ModalBinderEngine...');
+        
+        // Usar o contexto de contextualização para enriquecer a geração
+        const contextData = {
+          materias: formData.materias,
+          publicoAlvo: formData.publicoAlvo,
+          restricoes: formData.restricoes,
+          datasImportantes: formData.datasImportantes,
+          observacoes: formData.observacoes
+        };
+        
+        const success = await buildActivities(selectedActivities2, contextData);
+        
         if (success) {
-          console.log('🎉 Todas as atividades foram construídas automaticamente!');
+          console.log('🎉 Todas as atividades foram construídas automaticamente com ModalBinderEngine!');
         } else {
           console.warn('⚠️ Algumas atividades podem ter falhado na construção automática');
         }
