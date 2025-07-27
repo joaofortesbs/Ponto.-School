@@ -1450,7 +1450,7 @@ Exemplo de formato da resposta:
           img.src = URL.createObjectURL(tempProfileImage);
         });
         
-        fileToUpload = compressedFile;;
+        fileToUpload = compressedFile;
       }
 
       // Upload para o storage

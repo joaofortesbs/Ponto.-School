@@ -792,8 +792,6 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-
-
       {/* Renderização condicional baseada no step */}
       {step === "generating" || step === "generatingActivities" ? (
         <motion.div
@@ -1233,8 +1231,7 @@ export function CardDeConstrucao({
                                     transform: isSelected 
                                       ? 'translate(-50%, -50%) scale(2.2)' 
                                       : 'translate(-50%, -50%) scale(0)',
-The code has been modified to implement automatic activity construction upon plan approval, including progress indicators in the UI.
-```                                    transition: 'transform 0.3s ease'
+                                    transition: 'transform 0.3s ease'
                                   }}
                                 />
                               </div>
@@ -1315,8 +1312,6 @@ The code has been modified to implement automatic activity construction upon pla
           )}
         </motion.div>
       )}
-
-
 
       {/* Debug Panel para verificar sistema de Trilhas */}
       {actionPlan && (
