@@ -230,34 +230,6 @@ const calculateQuestionPoints = (difficulty: string): number => {
     default: return 1;
   }
 };
-
-### Exercício 1: Conceitos Fundamentais de ${data.theme}
-**Questão 1.1:** Defina os conceitos principais de ${data.theme} abordados em ${data.subject}.
-
-**Questão 1.2:** Explique a importância de ${data.theme} no contexto do ${data.schoolYear}.
-
-### Exercício 2: Aplicação Prática
-**Questão 2.1:** Resolva os problemas apresentados aplicando os conceitos de ${data.theme}.
-
-**Questão 2.2:** Justifique suas respostas com base na teoria de ${data.subject}.
-
-### Exercício 3: Análise e Síntese
-**Questão 3.1:** Analise os exemplos de ${data.theme} e identifique padrões.
-
-**Questão 3.2:** Crie um resumo dos principais pontos de ${data.theme} em ${data.subject}.
-
-## Critérios de Avaliação
-${data.evaluation || `
-- Compreensão dos conceitos: 40%
-- Aplicação prática: 35%
-- Clareza na apresentação: 25%
-`}
-
-## Recursos Adicionais
-- Material de leitura complementar sobre ${data.theme}
-- ${data.sources || 'Fontes de estudo recomendadas'}
-- Exercícios extras para prática
-  `;
 };
 
 export const generateGame = (data: ActivityFormData): string => {
