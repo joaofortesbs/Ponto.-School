@@ -34,7 +34,7 @@ import {
   Trophy, Zap, Brain, Heart, 
   PenTool, Presentation, Search, MapPin, Calculator, Globe,
   Microscope, Palette, Music, Camera, Video, Headphones,
-  Gamepad2, Puzzle, Award, Star, Flag, Compass, Settings,
+  Gamepad2, Puzzle, Award, Star, Flag, Compass,
   Download, Upload, Share2, MessageSquare, ThumbsUp,
   Pause, SkipForward, Volume2, Wifi, Battery,
   Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
@@ -48,6 +48,7 @@ import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
+import { Settings } from "lucide-react";
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
