@@ -2,17 +2,25 @@
 import { ActivityFieldMap } from './index';
 
 export const activityListaExerciciosFieldMap: ActivityFieldMap = {
-  titulo: 'input[name="title"], #field-titulo, [data-field="title"]',
-  descricao: 'textarea[name="description"], #field-descricao, [data-field="description"]',
-  disciplina: 'select[name="subject"], #select-disciplina, [data-field="subject"]',
-  dificuldade: 'select[name="difficulty"], #select-dificuldade, [data-field="difficulty"]',
-  formatoEntrega: 'select[name="format"], #select-formato, [data-field="format"]',
-  duracao: 'input[name="duration"], #input-duracao, [data-field="duration"]',
-  objetivos: 'textarea[name="objectives"], #textarea-objetivos, [data-field="objectives"]',
-  materiais: 'textarea[name="materials"], #textarea-materiais, [data-field="materials"]',
-  instrucoes: 'textarea[name="instructions"], #textarea-instrucoes, [data-field="instructions"]',
-  exercicios: 'textarea[name="exercises"], #editor-exercicios, [data-field="exercises"]',
-  questoes: 'textarea[name="questions"], #editor-questoes, [data-field="questions"]',
-  gabarito: 'textarea[name="answer_key"], #textarea-gabarito, [data-field="answer_key"]',
-  observacoes: 'textarea[name="notes"], #textarea-observacoes, [data-field="notes"]'
+  // Campos básicos da atividade
+  title: 'input[name="title"], input[id="title"], input[placeholder*="título"], input[placeholder*="nome"]',
+  description: 'textarea[name="description"], textarea[id="description"], textarea[placeholder*="descrição"]',
+  subject: 'select[name="subject"], select[id="subject"], [data-field="subject"]',
+  difficulty: 'select[name="difficulty"], select[id="difficulty"], [data-field="difficulty"]',
+  format: 'select[name="format"], select[id="format"], [data-field="format"]',
+  duration: 'input[name="duration"], input[id="duration"], input[type="number"][placeholder*="duração"]',
+  
+  // Campos específicos para Lista de Exercícios (baseados no modal EditActivityModal.tsx)
+  objectives: 'textarea[name="objectives"], textarea[id="objectives"], textarea[placeholder*="objetivos"]',
+  materials: 'textarea[name="materials"], textarea[id="materials"], textarea[placeholder*="materiais"]',
+  instructions: 'textarea[name="instructions"], textarea[id="instructions"], textarea[placeholder*="instruções"]',
+  exercises: 'textarea[name="exercises"], textarea[id="exercises"], textarea[placeholder*="exercícios"]',
+  questions: 'textarea[name="questions"], textarea[id="questions"], textarea[placeholder*="questões"]',
+  answerKey: 'textarea[name="answer_key"], textarea[name="answerKey"], textarea[id="answerKey"], textarea[placeholder*="gabarito"]',
+  notes: 'textarea[name="notes"], textarea[id="notes"], textarea[placeholder*="observações"]',
+  
+  // Campos adicionais identificados no modal
+  learningObjectives: 'textarea[name="learningObjectives"], textarea[id="learningObjectives"]',
+  evaluationCriteria: 'textarea[name="evaluationCriteria"], textarea[id="evaluationCriteria"]',
+  additionalResources: 'textarea[name="additionalResources"], textarea[id="additionalResources"]'
 };

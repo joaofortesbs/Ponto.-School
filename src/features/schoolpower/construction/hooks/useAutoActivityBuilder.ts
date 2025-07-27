@@ -38,7 +38,9 @@ export const useAutoActivityBuilder = () => {
                     throw new Error('Falha na geração dos dados via IA');
                 }
 
-                // 2. Configurar ModalBinderEngine
+                console.log('🤖 Resposta da IA recebida:', iaResponse.substring(0, 200) + '...');
+
+              // 2. Configurar ModalBinderEngine
                 const binderConfig: ModalBinderConfig = {
                     activityId: activity.id,
                     type: activity.id, // Usar o ID como tipo de atividade
@@ -46,17 +48,29 @@ export const useAutoActivityBuilder = () => {
                     contextualizationData
                 };
 
+                console.log('🔧 Configuração do ModalBinder:', {
+                    activityId: binderConfig.activityId,
+                    type: binderConfig.type,
+                    hasOutput: !!binderConfig.iaRawOutput,
+                    hasContext: !!binderConfig.contextualizationData
+                });
+
                 // 3. Executar sincronização automática
+                console.log('🚀 Iniciando ModalBinderEngine para:', activity.title);
                 const success = await modalBinderEngine(binderConfig);
 
                 if (success) {
-                    console.log(`✅ Atividade construída automaticamente: ${activity.title}`);
+                    console.log(`✅ Atividade processada com sucesso: ${activity.title}`);
                     results.push({ activity: activity.title, status: 'success' });
                      // Adicionar atividade construída ao conjunto
                     const newBuiltActivities = new Set(builtActivities);
                     newBuiltActivities.add(activity.id);
                     setBuiltActivities(newBuiltActivities);
+                    
+                    // Aguardar um pouco antes da próxima atividade
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } else {
+                    console.warn(`⚠️ Falha na sincronização automática para: ${activity.title}`);
                     throw new Error('Falha na sincronização automática');
                 }
 
