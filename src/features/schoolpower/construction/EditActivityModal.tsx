@@ -214,7 +214,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                   <span className="font-medium text-sm">Pré-visualização</span>
                 </Button>
               </div>
-            
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -482,34 +482,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                   <div className="h-full">
                     <Card className="h-full">
                       <CardContent className="p-6 h-full">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="font-semibold text-xl flex items-center">
-                            <FileText className="h-6 w-6 mr-2 text-[#FF6B00]" />
-                            Atividade Gerada pela IA
-                          </h3>
-                          {generatedContent && (
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleCopyContent}
-                                className="text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                              >
-                                <Copy className="h-3 w-3 mr-1" />
-                                Copiar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleExportPDF}
-                                className="text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                              >
-                                <Download className="h-3 w-3 mr-1" />
-                                Exportar PDF
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                        
 
                         <div className="border rounded-lg h-[calc(100%-100px)] overflow-hidden bg-white dark:bg-gray-800">
                           {generatedContent ? (
