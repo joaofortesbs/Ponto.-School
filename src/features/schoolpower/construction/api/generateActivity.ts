@@ -59,8 +59,8 @@ export const validateActivityData = (data: ActivityGenerationPayload): string[] 
   return errors;
 };
 import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
-import { GEMINI_API_KEY } from '../../activitiesManager';
-import { GeminiClient } from '../../activitiesManager/GeminiClient';
+import { API_KEYS } from '../../../../config/apiKeys';
+import { GeminiClient } from '../../../../utils/api/geminiClient';
 
 export const generateActivityData = async (
   activity: ActionPlanItem, 
@@ -71,7 +71,7 @@ export const generateActivityData = async (
 
     const prompt = buildActivityPrompt(activity, contextualizationData);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEYS.GEMINI}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
