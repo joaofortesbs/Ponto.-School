@@ -1,0 +1,134 @@
+Criar um sistema de “Mapeamento Inteligente de Campos por Tipo de Atividade”, para que:
+
+Cada tipo de atividade (por ID ou tipo) tenha um arquivo exclusivo que define os campos esperados do modal de Editar Materiais.
+
+A IA saiba exatamente quais respostas gerar, com chaves que correspondem aos campos que precisam ser preenchidos dentro do modal.
+
+O sistema consiga sincronizar automaticamente as respostas geradas pela IA com os campos corretos do modal de forma segura, automática e sem precisar de qualquer ação manual do usuário.
+
+🧠 NOME DO SISTEMA:
+IA_ModalBinderEngine
+
+📁 ESTRUTURA DE PASTAS:
+
+src/features/schoolpower/construction/modalBinder/
+
+modalBinderEngine.ts → Função principal de sincronização.
+
+fieldMaps/
+
+atividade_videoaula.ts
+
+atividade_estudo_caso.ts
+
+atividade_quiz.ts
+
+atividade_mapa_mental.ts
+
+atividade_livro_digital.ts
+
+[... um arquivo por tipo de atividade ...]
+
+utils/
+
+parseIAResponse.ts → Transforma resposta da IA em objeto com chave → valor.
+
+fieldSetter.ts → Faz o binding dos dados nos campos corretos do modal.
+
+🧩 FUNCIONAMENTO DO SISTEMA PASSO A PASSO:
+
+Quando o usuário clica em “Aprovar Plano de Ação”:
+
+O sistema identifica todos os tipos de atividades no plano aprovado.
+
+Para cada atividade, carrega seu respectivo arquivo de mapeamento de campos (fieldMap) a partir da pasta modalBinder/fieldMaps/.
+
+O sistema faz uma chamada à IA (Gemini), passando:
+
+O tipo de atividade.
+
+O conteúdo da atividade no plano aprovado.
+
+O modelo de mapeamento da atividade.
+
+A IA responde com um objeto estruturado que segue exatamente a chave de cada campo necessário no modal. Exemplo:
+
+ts
+Copiar
+Editar
+{
+  titulo: "As mudanças climáticas e seus efeitos",
+  descricao: "Estudo guiado sobre impactos ambientais...",
+  formatoEntrega: "PDF",
+  duracao: "45 minutos",
+  dificuldade: "Intermediária",
+  objetivos: ["Compreender...", "Relacionar..."],
+  materiais: ["Texto base", "Vídeo de apoio"]
+}
+O sistema chama modalBinderEngine.ts, que faz o seguinte:
+
+Usa o ID da atividade e tipo para localizar o modal aberto.
+
+Usa o fieldSetter.ts para preencher cada campo com base nas chaves e valores recebidos.
+
+Aciona automaticamente o botão “Construir Atividade”.
+
+🧩 EXEMPLO DE ARQUIVO DE MAPEAMENTO: atividade_quiz.ts
+
+ts
+Copiar
+Editar
+export const activityQuizFieldMap = {
+  titulo: "#field-titulo",
+  descricao: "#field-descricao",
+  disciplina: "#select-disciplina",
+  dificuldade: "#select-dificuldade",
+  formatoEntrega: "#select-formato",
+  duracao: "#input-duracao",
+  objetivos: "#textarea-objetivos",
+  materiais: "#textarea-materiais",
+  perguntas: "#editor-perguntas"
+}
+⚙️ COMPONENTE PRINCIPAL: modalBinderEngine.ts
+
+ts
+Copiar
+Editar
+import { getFieldMap } from './fieldMaps';
+import { parseIAResponse } from './utils/parseIAResponse';
+import { fillModalField } from './utils/fieldSetter';
+
+export const modalBinderEngine = async (activityId, type, iaRawOutput) => {
+  const fieldMap = getFieldMap(type);
+  const parsed = parseIAResponse(iaRawOutput);
+
+  for (const [key, value] of Object.entries(parsed)) {
+    const selector = fieldMap[key];
+    if (!selector) continue;
+    await fillModalField(activityId, selector, value);
+  }
+
+  // Disparar a construção automática
+  await triggerBuildButton(activityId);
+};
+📦 RESULTADO FINAL ESPERADO
+
+✅ Após a aprovação do plano de ação:
+
+O sistema automaticamente entende o tipo de atividade.
+
+Gera via IA todos os campos esperados.
+
+Preenche todos os campos certos no modal correto.
+
+Aciona o botão “Construir Atividade”.
+
+Atividade construída automaticamente e sem erro.
+
+🧠 VANTAGENS ESTRATÉGICAS
+
+✅ Sistema modular e escalável: cada tipo de atividade pode evoluir sem impactar as demais.
+✅ Evita bugs: não há mapeamento genérico, tudo é específico por tipo de atividade.
+✅ IA bem guiada: os campos esperados são declarados, evitando respostas erradas ou faltantes.
+✅ Zero intervenção do usuário: completamente automático e fluido.
+✅ Compatível com o design atual: nenhuma mudança visual é feita.
