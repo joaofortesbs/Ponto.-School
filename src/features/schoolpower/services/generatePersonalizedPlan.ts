@@ -1,6 +1,7 @@
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
+import activityFieldsSchema from '../data/activityFieldsSchema.json';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
 
@@ -49,62 +50,96 @@ function buildGeminiPrompt(
     .filter(a => a.enabled)
     .map(a => a.id); // Remover limitação para permitir todas as atividades
 
-  const prompt = `Você é uma IA especializada em criar planos de ação educacionais. Com base nas informações do professor, seu objetivo é sugerir de 10 a 35 atividades com título, descrição e campos personalizados preenchidos automaticamente.
+    const activitiesString = allowedActivities
+    .filter(a => a.enabled)
+    .map(a => `"${a.id}"`)
+    .join(', ');
 
-Você só pode usar os IDs de atividade listados a seguir: ${activitiesIds.join(', ')}
+      // Obter campos personalizados disponíveis
+    const getCustomFieldsForActivity = (activityId: string): string[] => {
+      const schema = activityFieldsSchema[activityId as keyof typeof activityFieldsSchema];
+      return schema?.fields || [];
+    };
 
-Para cada atividade sugerida, você deve seguir a estrutura JSON abaixo, incluindo os campos customFields com base no ID da atividade.
+    // Criar string com informações sobre campos personalizados
+    const customFieldsInfo = Object.keys(activityFieldsSchema).map(activityId => {
+      const fields = getCustomFieldsForActivity(activityId);
+      return `${activityId}: [${fields.join(', ')}]`;
+    }).join('\n');
 
-DADOS COLETADOS:
+    // Construir o prompt para a Gemini
+    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
+
+Aqui estão as informações coletadas:
+
+DADOS:
 - Pedido: "${initialMessage}"
-- Matérias e temas: ${contextualizationData.subjects || 'Geral'}
-- Público: ${contextualizationData.audience || 'Estudantes'}
-- Restrições: "${contextualizationData.restrictions}"
-- Datas importantes: "${contextualizationData.dates}"
-- Observações: ${contextualizationData.notes || 'Nenhuma'}
+- Matérias e temas: ${contextualizationData?.subjects || 'Geral'}
+- Público: ${contextualizationData?.audience || 'Estudantes'}
+- Restrições: "${contextualizationData?.restrictions || 'undefined'}"
+- Datas importantes: "${contextualizationData?.dates || 'undefined'}"
+- Observações: ${contextualizationData?.notes || 'Nenhuma'}
 
-EXEMPLO DE RESPOSTA:
+ATIVIDADES DISPONÍVEIS: ${activitiesString}
+
+CAMPOS PERSONALIZADOS POR ATIVIDADE:
+${customFieldsInfo}
+
+INSTRUÇÕES:
+1. Analise cuidadosamente o pedido e as informações fornecidas
+2. Selecione APENAS atividades da lista disponível que sejam relevantes para o pedido
+3. Gere um plano de ação com 5-15 atividades diferentes
+4. Cada atividade deve ter um título personalizado e descritivo
+5. A descrição deve ser específica e detalhada para o contexto fornecido
+6. Use os IDs exatos das atividades disponíveis
+7. Varie a duração e dificuldade conforme apropriado
+8. OBRIGATÓRIO: Para cada atividade, preencha TODOS os campos personalizados listados acima para aquele ID específico
+9. Os campos personalizados devem conter dados realistas, contextualizados e específicos - NUNCA deixe vazio ou genérico
+10. Todos os campos extras devem ser strings (texto simples)
+
+FORMATO DE RESPOSTA (JSON):
+Retorne APENAS um array JSON válido com as atividades selecionadas, seguindo exatamente este formato:
+
 [
-{
-"id": "lista-exercicios",
-"title": "Lista sobre Substantivos",
-"description": "Atividade para fixar conceitos de substantivos concretos e abstratos.",
-"duration": "30 minutos",
-"difficulty": "Fácil",
-"category": "Língua Portuguesa",
-"type": "atividade",
-"customFields": {
-"tema": "Substantivos",
-"disciplina": "Português",
-"anoEscolaridade": "6º ano",
-"quantidadeQuestoes": "10",
-"modeloQuestoes": "Múltipla escolha e discursivas",
-"fontes": "Livro didático + plataforma RedaçãoNotaMil"
-}
-}
+  {
+    "id": "id-da-atividade-exato",
+    "title": "Título personalizado da atividade",
+    "description": "Descrição específica e detalhada da atividade para este contexto",
+    "duration": "XX min",
+    "difficulty": "Fácil/Médio/Difícil",
+    "category": "Categoria da disciplina",
+    "type": "atividade",
+    "Campo Personalizado 1": "Valor específico e realista",
+    "Campo Personalizado 2": "Valor específico e realista",
+    "Campo Personalizado N": "Valor específico e realista"
+  }
 ]
 
-CAMPOS PERSONALIZADOS POR TIPO:
-- lista-exercicios: tema, disciplina, anoEscolaridade, quantidadeQuestoes, modeloQuestoes, fontes
-- prova: tema, disciplina, anoEscolaridade, quantidadeQuestoes, tipoQuestoes, tempoProva, criteriosAvaliacao
-- podcast: tema, roteiro, duracao, recursosTecnologicos, papeisAlunos, formaEntrega
-- resumo: tema, disciplina, fonteConteudo, extensao, formatoEntrega, topicosChave
-- mapa-mental: tema, disciplina, conceituosChave, nivelComplexidade, ferramentasVisuais, objetivoAprendizagem
-- jogos-educativos: tema, disciplina, tipoJogo, numeroJogadores, materiaisNecessarios, tempoJogo
-- caca-palavras: tema, disciplina, palavrasChave, nivelDificuldade, tamanhoGrade, orientacoes
-- proposta-redacao: tema, generoTextual, extensaoTexto, criteriosAvaliacao, fontesPesquisa, prazoEntrega
+EXEMPLO para lista-exercicios:
+{
+  "id": "lista-exercicios",
+  "title": "Lista de Exercícios: Substantivos e Verbos",
+  "description": "Elaboração de uma lista de exercícios abrangendo a identificação, classificação e uso de substantivos e verbos em diferentes contextos.",
+  "duration": "30 min",
+  "difficulty": "Médio",
+  "category": "Gramática",
+  "type": "atividade",
+  "Quantidade de Questões": "10 questões mistas entre substantivos comuns e próprios, além de verbos regulares",
+  "Tema": "Substantivos e Verbos",
+  "Disciplina": "Língua Portuguesa",
+  "Ano de Escolaridade": "6º Ano",
+  "Nível de Dificuldade": "Intermediário",
+  "Modelo de Questões": "Objetivas e dissertativas",
+  "Fontes": "Livro didático Projeto Ápis e site TodaMatéria"
+}
 
-REGRAS IMPORTANTES:
-1. Use apenas os IDs permitidos
-2. Para cada ID, preencha corretamente todos os campos definidos no mapeamento
-3. Não invente campos fora do padrão
-4. Não adicione comentários nem texto fora do JSON
-5. Se o professor pedir uma atividade específica, ela deve obrigatoriamente estar incluída
-6. Capriche nos valores de cada campo. Eles serão exibidos no mini-card da interface
-7. Seja claro, direto e objetivo nos valores dos campos
-8. Analise o pedido e contexto para personalizar adequadamente cada campo
-
-IMPORTANTE: Retorne APENAS o JSON válido, sem texto adicional.`;
+IMPORTANTE: 
+- Use APENAS os IDs disponíveis na lista
+- PREENCHA TODOS os campos personalizados para cada atividade
+- Os dados dos campos devem ser específicos, realistas e contextualizados
+- NÃO inclua explicações antes ou depois do JSON
+- NÃO use markdown ou formatação
+- Retorne APENAS o array JSON válido`;
 
   return prompt;
 }

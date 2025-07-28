@@ -1,4 +1,3 @@
-
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
 
@@ -47,7 +46,7 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
   }
 
   const normalizedId = activityId.trim().toLowerCase();
-  
+
   return allowedActivities.some(activity => {
     const activityNormalizedId = activity.id.toLowerCase();
     return (
@@ -93,7 +92,7 @@ function validateSingleActivity(
 
   // Busca a atividade original
   const originalActivity = findActivityById(normalizedId, allowedActivities);
-  
+
   if (!originalActivity) {
     console.warn(`❌ Atividade não encontrada: ${normalizedId}`);
     return null;
@@ -127,7 +126,7 @@ function removeDuplicates(activities: ValidatedActivity[]): {
   duplicateIds: string[] 
 } {
   console.log('🔄 Removendo duplicatas...');
-  
+
   const seen = new Set<string>();
   const uniqueActivities: ValidatedActivity[] = [];
   const duplicateIds: string[] = [];
@@ -213,7 +212,7 @@ export async function validateGeminiPlan(
     console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
 
     const validatedActivity = validateSingleActivity(activity, allowedActivities);
-    
+
     if (validatedActivity) {
       validatedActivities.push(validatedActivity);
     } else {

@@ -1,0 +1,155 @@
+
+{
+  "lista-exercicios": {
+    "fields": [
+      "Quantidade de Questões",
+      "Tema",
+      "Disciplina", 
+      "Ano de Escolaridade",
+      "Nível de Dificuldade",
+      "Modelo de Questões",
+      "Fontes"
+    ]
+  },
+  "prova": {
+    "fields": [
+      "Quantidade de Questões",
+      "Tema",
+      "Disciplina",
+      "Ano de Escolaridade", 
+      "Tipo de Avaliação",
+      "Tempo de Prova",
+      "Critérios de Correção"
+    ]
+  },
+  "roteiro-filme": {
+    "fields": [
+      "Gênero do Filme",
+      "Duração Sugerida",
+      "Classificação Etária",
+      "Tema Principal",
+      "Objetivos Pedagógicos",
+      "Atividades Complementares"
+    ]
+  },
+  "debate": {
+    "fields": [
+      "Tema do Debate",
+      "Número de Participantes",
+      "Tempo de Duração",
+      "Formato do Debate",
+      "Critérios de Avaliação",
+      "Recursos Necessários"
+    ]
+  },
+  "jogos-educativos": {
+    "fields": [
+      "Tipo de Jogo",
+      "Faixa Etária",
+      "Número de Jogadores",
+      "Materiais Necessários",
+      "Objetivos de Aprendizagem",
+      "Regras Básicas"
+    ]
+  },
+  "mapa-mental": {
+    "fields": [
+      "Tema Central",
+      "Conceitos Principais",
+      "Estrutura Visual",
+      "Cores Sugeridas",
+      "Ferramentas Recomendadas",
+      "Critérios de Avaliação"
+    ]
+  },
+  "proposta-redacao": {
+    "fields": [
+      "Gênero Textual",
+      "Tema da Redação",
+      "Número de Linhas",
+      "Critérios de Correção",
+      "Textos de Apoio",
+      "Competências Avaliadas"
+    ]
+  },
+  "revisao-guiada": {
+    "fields": [
+      "Conteúdos Revisados",
+      "Estratégias de Revisão",
+      "Materiais de Apoio",
+      "Exercícios Práticos",
+      "Tempo de Duração",
+      "Forma de Avaliação"
+    ]
+  },
+  "caca-palavras": {
+    "fields": [
+      "Tema das Palavras",
+      "Quantidade de Palavras",
+      "Nível de Dificuldade",
+      "Formato da Grade",
+      "Palavras Incluídas",
+      "Dicas Fornecidas"
+    ]
+  },
+  "lista-vocabulario": {
+    "fields": [
+      "Tema do Vocabulário",
+      "Quantidade de Palavras",
+      "Idioma",
+      "Nível de Dificuldade",
+      "Contexto de Uso",
+      "Exercícios Associados"
+    ]
+  },
+  "exemplos-contextualizados": {
+    "fields": [
+      "Contexto de Aplicação",
+      "Tipo de Exemplos",
+      "Área de Conhecimento",
+      "Nível de Complexidade",
+      "Recursos Visuais",
+      "Atividades Práticas"
+    ]
+  },
+  "pergunte-texto": {
+    "fields": [
+      "Tipo de Texto",
+      "Gênero Textual",
+      "Extensão do Texto",
+      "Questões Associadas",
+      "Competências Trabalhadas",
+      "Estratégias de Leitura"
+    ]
+  },
+  "atividade-criativa": {
+    "fields": [
+      "Tipo de Criação",
+      "Materiais Necessários",
+      "Tema Criativo",
+      "Técnicas Utilizadas",
+      "Público-Alvo",
+      "Produto Final"
+    ]
+  },
+  "experimento": {
+    "fields": [
+      "Área Científica",
+      "Materiais Necessários",
+      "Procedimentos",
+      "Hipóteses Testadas",
+      "Resultados Esperados",
+      "Medidas de Segurança"
+    ]
+  },
+  "pesquisa": {
+    "fields": [
+      "Tema da Pesquisa",
+      "Fontes Sugeridas",
+      "Metodologia",
+      "Produto Final",
+      "Critérios de Avaliação",
+      "Prazo de Entrega"
+    ]
+  }
+}

@@ -77,7 +77,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       // Verificar se há dados automáticos preenchidos
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoData = localStorage.getItem(autoDataKey);
-      
+
       if (autoData) {
         try {
           const { formData: autoFormData } = JSON.parse(autoData);
