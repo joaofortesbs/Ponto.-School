@@ -14,7 +14,6 @@ import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerF
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
-import { AutomationMonitor } from '../../features/schoolpower/automation/AutomationMonitor';
 
 export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);

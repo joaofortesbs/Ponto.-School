@@ -1,6 +1,5 @@
+
 import { ActivityFormData, GeneratedActivity, ActivityType } from '../types/ActivityTypes';
-import { ActivityTypeDetector } from '../../automation/ActivityTypeDetector';
-import { AIDataGenerator } from '../../automation/AIDataGenerator';
 
 export const generateTest = (data: ActivityFormData): string => {
   return `
@@ -66,7 +65,7 @@ ${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`
 export const generateExerciseList = (data: ActivityFormData): string => {
   // Gerar questões baseadas nos dados do usuário
   const questions = generateQuestionsBasedOnUserData(data);
-
+  
   return JSON.stringify({
     title: data.title,
     description: data.description,
@@ -89,10 +88,10 @@ export const generateExerciseList = (data: ActivityFormData): string => {
 const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
   const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
   const questions = [];
-
+  
   for (let i = 1; i <= numberOfQuestions; i++) {
     let question;
-
+    
     switch (data.questionModel) {
       case 'Múltipla Escolha':
         question = generateMultipleChoiceQuestion(i, data);
@@ -118,10 +117,10 @@ const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
       default:
         question = generateMultipleChoiceQuestion(i, data);
     }
-
+    
     questions.push(question);
   }
-
+  
   return questions;
 };
 
@@ -144,10 +143,10 @@ const generateMultipleChoiceQuestion = (questionNumber: number, data: ActivityFo
       `Avalie criticamente os elementos de ${data.theme} e selecione a alternativa que melhor sintetiza o conhecimento:`
     ]
   };
-
+  
   const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
   const questionText = templates[questionNumber % templates.length];
-
+  
   return {
     id: `q${questionNumber}`,
     type: 'multiple-choice',
@@ -183,10 +182,10 @@ const generateEssayQuestion = (questionNumber: number, data: ActivityFormData) =
       `Construa uma reflexão aprofundada sobre ${data.theme}, estabelecendo conexões com outros temas da disciplina.`
     ]
   };
-
+  
   const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
   const questionText = templates[questionNumber % templates.length];
-
+  
   return {
     id: `q${questionNumber}`,
     type: 'essay',
@@ -207,10 +206,10 @@ const generateTrueFalseQuestion = (questionNumber: number, data: ActivityFormDat
     `As aplicações práticas de ${data.theme} são limitadas ao contexto teórico de ${data.subject}.`,
     `${data.theme} pode ser compreendido completamente sem conhecimento prévio em ${data.subject}.`
   ];
-
+  
   const statement = statements[questionNumber % statements.length];
   const isTrue = questionNumber % 2 === 1; // Alternar entre verdadeiro e falso
-
+  
   return {
     id: `q${questionNumber}`,
     type: 'true-false',
@@ -353,31 +352,39 @@ ${data.sources || `Bibliografia recomendada sobre ${data.theme} em ${data.subjec
   `;
 };
 
-export const generateActivityByType = async (activityType: string, baseData: any): Promise<any> => {
-  try {
-    console.log(`🧠 Generating activity data for type: ${activityType}`);
+export const generateActivityByType = (type: ActivityType, data: ActivityFormData): GeneratedActivity => {
+  let content: string;
 
-    // Get type mapping
-    const typeMapping = ActivityTypeDetector.getTypeById(activityType);
-
-    if (!typeMapping) {
-      console.error(`Unknown activity type: ${activityType}`);
-      return null;
-    }
-
-    // Generate AI data
-    const result = await AIDataGenerator.generateActivityData(typeMapping, baseData);
-
-    if (result.success) {
-      console.log(`✅ Successfully generated data for ${activityType}`);
-      return result.data;
-    } else {
-      console.error(`❌ Failed to generate data for ${activityType}:`, result.errors);
-      return null;
-    }
-
-  } catch (error) {
-    console.error('Error generating activity by type:', error);
-    return null;
+  switch (type) {
+    case 'prova':
+      content = generateTest(data);
+      break;
+    case 'lista-exercicios':
+      content = generateExerciseList(data);
+      break;
+    case 'jogo':
+      content = generateGame(data);
+      break;
+    case 'video':
+      content = generateVideo(data);
+      break;
+    case 'mapa-mental':
+      content = `# Mapa Mental: ${data.title}\n\nEstrutura conceitual sobre ${data.theme} em ${data.subject} será desenvolvida...`;
+      break;
+    case 'apresentacao':
+      content = `# Apresentação: ${data.title}\n\nSlides sobre ${data.theme} em ${data.subject} serão criados...`;
+      break;
+    default:
+      content = `Tipo de atividade "${type}" não suportado ainda. Desenvolvendo estratégia personalizada...`;
   }
+
+  return {
+    content,
+    metadata: {
+      estimatedTime: '45 minutos',
+      difficulty: data.difficultyLevel || 'Médio',
+      format: 'Texto estruturado',
+      type: type
+    }
+  };
 };
