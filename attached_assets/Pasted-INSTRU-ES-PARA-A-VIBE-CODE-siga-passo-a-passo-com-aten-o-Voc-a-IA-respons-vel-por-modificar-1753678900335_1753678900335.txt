@@ -1,0 +1,154 @@
+INSTRUÇÕES PARA A VIBE CODE (siga passo a passo com atenção):
+
+Você é a IA responsável por modificar e aplicar corretamente a lógica do sistema de preenchimento automático de atividades no School Power. Seu objetivo é fazer com que, ao gerar uma sugestão de atividade na interface de Plano de Ação, o sistema:
+
+✅ Preencha todos os campos da sugestão automaticamente (incluindo título, descrição e todos os campos personalizados);
+✅ Preencha esses dados diretamente no mini-card da atividade, já dentro do card de construção;
+✅ Utilize corretamente a estrutura de campos por tipo de atividade, com base no ID da atividade;
+✅ Mantenha compatibilidade com o funcionamento do modal Editar Materiais, que já aceita esses campos.
+
+O QUE JÁ EXISTE:
+
+Um sistema de sugestão de atividades geradas por IA (Gemini), ativado pelo arquivo generatePersonalizedPlan.ts;
+
+O sistema já gera título e descrição corretamente;
+
+Existe um arquivo com as definições de todas as 82 atividades e seus IDs: schoolPowerActivities.json;
+
+Agora, será criado um novo arquivo com os campos obrigatórios por tipo de atividade (ex: lista-exercicios requer: tema, disciplina, quantidadeQuestoes etc);
+
+O modal Editar Materiais já está preparado para receber todos os campos como texto.
+
+OBJETIVO:
+
+Você deve modificar o sistema para que o Gemini gere, além de título e descrição, os campos personalizados de cada atividade, com base em seu ID, e coloque essas informações no campo miniCardData do card gerado.
+
+Isso permitirá que:
+
+O mini-card exiba todos os campos já preenchidos;
+
+O botão “Editar Materiais” abra o modal já com os dados completos;
+
+O sistema funcione com qualquer uma das 82 atividades, adaptando o preenchimento conforme os campos esperados para aquele ID.
+
+ESTRATÉGIA PARA IMPLEMENTAÇÃO:
+
+🧩 1. Criar o mapeamento dos campos por ID de atividade:
+
+Crie (ou carregue) um arquivo chamado activityCustomFields.ts com a estrutura:
+
+export const activityCustomFields = {
+"lista-exercicios": [
+"tema",
+"disciplina",
+"anoEscolaridade",
+"quantidadeQuestoes",
+"modeloQuestoes",
+"fontes"
+],
+"podcast": [
+"tema",
+"roteiro",
+"duração",
+"recursosTecnologicos",
+"papéisDosAlunos",
+"formaDeEntrega"
+],
+...
+};
+
+Esse arquivo define quais campos devem ser preenchidos no campo customFields do JSON retornado pela IA Gemini, com base no ID da atividade.
+
+📤 2. Modificar o prompt do Gemini:
+
+No arquivo generatePersonalizedPlan.ts, atualize o prompt da IA com a versão abaixo:
+
+const prompt = `
+Você é uma IA especializada em criar planos de ação educacionais. Com base nas informações do professor, seu objetivo é sugerir de 10 a 35 atividades com título, descrição e campos personalizados preenchidos automaticamente.
+
+Você só pode usar os IDs de atividade listados a seguir: ${activitiesIds.join(', ')}
+
+Para cada atividade sugerida, você deve seguir a estrutura JSON abaixo, incluindo os campos customFields com base no ID da atividade.
+
+EXEMPLO DE RESPOSTA:
+
+[
+{
+"id": "lista-exercicios",
+"title": "Lista sobre Substantivos",
+"description": "Atividade para fixar conceitos de substantivos concretos e abstratos.",
+"duration": "30 minutos",
+"difficulty": "Fácil",
+"category": "Língua Portuguesa",
+"type": "atividade",
+"customFields": {
+"tema": "Substantivos",
+"disciplina": "Português",
+"anoEscolaridade": "6º ano",
+"quantidadeQuestoes": "10",
+"modeloQuestoes": "Múltipla escolha e discursivas",
+"fontes": "Livro didático + plataforma RedaçãoNotaMil"
+}
+}
+]
+
+Regras importantes:
+
+Use apenas os IDs permitidos;
+
+Para cada ID, preencha corretamente todos os campos definidos no arquivo de mapeamento;
+
+Não invente campos fora do padrão;
+
+Não adicione comentários nem texto fora do JSON;
+
+Se o professor pedir uma atividade específica (ex: podcast, roteiro de aula), ela deve obrigatoriamente estar incluída na sugestão;
+
+Capriche nos valores de cada campo. Eles serão exibidos no mini-card da interface. Seja claro, direto e objetivo.
+`;
+
+💾 3. Processar os dados no front-end (actionPlanService.ts ou componente de UI):
+
+Garanta que, após a resposta da IA, o sistema:
+
+Interprete corretamente o campo customFields;
+
+Insira todos os campos recebidos dentro do mini-card da sugestão (em miniCardData);
+
+Quando o usuário clicar em “Editar Materiais”, os dados sejam passados para o modal e preencham todos os campos automaticamente.
+
+EXEMPLO DE USO NO MINI-CARD:
+
+O mini-card da atividade no front-end deve ser preenchido com:
+
+{
+id: "lista-exercicios",
+title: "Lista sobre Substantivos",
+description: "Atividade para fixar conceitos de substantivos concretos e abstratos.",
+duration: "30 minutos",
+difficulty: "Fácil",
+category: "Língua Portuguesa",
+type: "atividade",
+customFields: {
+tema: "Substantivos",
+disciplina: "Português",
+anoEscolaridade: "6º ano",
+quantidadeQuestoes: "10",
+modeloQuestoes: "Múltipla escolha e discursivas",
+fontes: "Livro didático + plataforma RedaçãoNotaMil"
+}
+}
+
+✅ O campo customFields deve ser mapeado dinamicamente de acordo com o ID.
+
+EXTRA: se quiser, use este campo para exibir os dados no mini-card com ícones ou agrupamento visual!
+
+📌 CONSIDERAÇÕES FINAIS:
+
+Esse sistema será expandido futuramente para funcionar também dentro do modal de Edição de Materiais, então a estrutura precisa ser sólida;
+
+Mantenha retrocompatibilidade: se o campo customFields estiver ausente, o sistema ainda deve funcionar com apenas título e descrição;
+
+As sugestões geradas devem continuar sendo exibidas como antes, mas agora com os campos extras incluídos e visíveis no mini-card;
+
+Após implementar isso, testaremos com a atividade de ID "lista-exercicios". Certifique-se de que ela funcione 100%.
