@@ -2,10 +2,6 @@ import { ContextualizationData } from '../contextualization/ContextualizationCar
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { getEnabledSchoolPowerActivities } from '../activitiesManager';
 import { generateActivityPrompt, validateActivityResponse, ActivityFieldData } from './activityFieldsService';
-
-const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
-import { ContextualizationData } from '../contextualization/ContextualizationCard';
-import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
