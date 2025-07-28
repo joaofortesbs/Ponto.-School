@@ -323,21 +323,13 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <Label htmlFor="subject" className="text-sm">Disciplina</Label>
-                                  <Select value={formData.subject} onValueChange={(value) => handleInputChange('subject', value)}>
-                                    <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                      <SelectValue placeholder="Selecione a disciplina" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                      <SelectItem value="Português">Português</SelectItem>
-                                      <SelectItem value="Matemática">Matemática</SelectItem>
-                                      <SelectItem value="História">História</SelectItem>
-                                      <SelectItem value="Geografia">Geografia</SelectItem>
-                                      <SelectItem value="Ciências">Ciências</SelectItem>
-                                      <SelectItem value="Física">Física</SelectItem>
-                                      <SelectItem value="Química">Química</SelectItem>
-                                      <SelectItem value="Biologia">Biologia</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <Input
+                                    id="subject"
+                                    value={formData.subject}
+                                    onChange={(e) => handleInputChange('subject', e.target.value)}
+                                    placeholder="Ex: Português, Matemática, História..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
                                 </div>
 
                                 <div>
@@ -355,66 +347,48 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
-                                  <Select value={formData.schoolYear} onValueChange={(value) => handleInputChange('schoolYear', value)}>
-                                    <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                      <SelectValue placeholder="Selecione o ano" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                      <SelectItem value="6º ano">6º ano</SelectItem>
-                                      <SelectItem value="7º ano">7º ano</SelectItem>
-                                      <SelectItem value="8º ano">8º ano</SelectItem>
-                                      <SelectItem value="9º ano">9º ano</SelectItem>
-                                      <SelectItem value="1º ano EM">1º ano EM</SelectItem>
-                                      <SelectItem value="2º ano EM">2º ano EM</SelectItem>
-                                      <SelectItem value="3º ano EM">3º ano EM</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <Input
+                                    id="schoolYear"
+                                    value={formData.schoolYear}
+                                    onChange={(e) => handleInputChange('schoolYear', e.target.value)}
+                                    placeholder="Ex: 6º ano, 7º ano, 1º ano EM..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
                                 </div>
 
                                 <div>
                                   <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
-                                  <Select value={formData.numberOfQuestions} onValueChange={(value) => handleInputChange('numberOfQuestions', value)}>
-                                    <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                      <SelectValue placeholder="Selecione a quantidade" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                      <SelectItem value="5">5 questões</SelectItem>
-                                      <SelectItem value="10">10 questões</SelectItem>
-                                      <SelectItem value="15">15 questões</SelectItem>
-                                      <SelectItem value="20">20 questões</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <Input
+                                    id="numberOfQuestions"
+                                    value={formData.numberOfQuestions}
+                                    onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
+                                    placeholder="Ex: 5, 10, 15, 20..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
                                   <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
-                                  <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
-                                    <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                      <SelectValue placeholder="Selecione a dificuldade" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                      <SelectItem value="Básico">Básico</SelectItem>
-                                      <SelectItem value="Intermediário">Intermediário</SelectItem>
-                                      <SelectItem value="Avançado">Avançado</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <Input
+                                    id="difficultyLevel"
+                                    value={formData.difficultyLevel}
+                                    onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
+                                    placeholder="Ex: Básico, Intermediário, Avançado..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
                                 </div>
 
                                 <div>
                                   <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
-                                  <Select value={formData.questionModel} onValueChange={(value) => handleInputChange('questionModel', value)}>
-                                    <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                                      <SelectValue placeholder="Selecione o modelo" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                      <SelectItem value="Múltipla Escolha">Múltipla Escolha</SelectItem>
-                                      <SelectItem value="Dissertativa">Dissertativa</SelectItem>
-                                      <SelectItem value="Verdadeiro/Falso">Verdadeiro/Falso</SelectItem>
-                                      <SelectItem value="Mista">Mista</SelectItem>
-                                    </SelectContent>
-                                  </Select>
+                                  <Input
+                                    id="questionModel"
+                                    value={formData.questionModel}
+                                    onChange={(e) => handleInputChange('questionModel', e.target.value)}
+                                    placeholder="Ex: Múltipla Escolha, Dissertativa, Mista..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
                                 </div>
                               </div>
 
