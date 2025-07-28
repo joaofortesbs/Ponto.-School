@@ -198,23 +198,29 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity) => (
-          <ConstructionCard
-            key={activity.id}
-            id={activity.id}
-            title={activity.title}
-            description={activity.description}
-            progress={activity.progress}
-            type={activity.type}
-            status={activity.status}
-            onEdit={() => {
-              console.log('🎯 Abrindo modal para atividade:', activity.title);
-              console.log('🎯 Dados da atividade:', activity);
-              openModal(activity);
-            }}
-            onView={handleView}
+      {/* Grid centralizado para card único */}
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
+          {activities.map((activity) => (
+            <ConstructionCard
+              key={activity.id}
+              id={activity.id}
+              title={activity.title}
+              description={activity.description}
+              progress={activity.progress}
+              type={activity.type}
+              status={activity.status}
+              onEdit={() => {
+                console.log('🎯 Abrindo modal para atividade:', activity.title);
+                console.log('🎯 Dados da atividade:', activity);
+                openModal(activity);
+              }}
+              onView={handleView}
+            onShare={handleShare}
+          />
+        ))}
+        </div>
+      </div>
             onShare={handleShare}
           />
         ))}

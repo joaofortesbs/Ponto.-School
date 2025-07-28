@@ -810,12 +810,16 @@ export function CardDeConstrucao({
         </motion.div>
       ) : step === "generatingActivities" || step === "construction" ? (
         <motion.div
-          className="relative z-10 h-full"
+          className="relative z-10 flex flex-col h-full pt-16"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <ConstructionInterface approvedActivities={selectedActivities2} />
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="w-full max-w-4xl">
+              <ConstructionInterface approvedActivities={selectedActivities2} />
+            </div>
+          </div>
         </motion.div>
       ) : (
         <motion.div
