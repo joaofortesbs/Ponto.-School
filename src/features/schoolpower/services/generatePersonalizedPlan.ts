@@ -133,6 +133,12 @@ EXEMPLO para lista-exercicios:
   "Fontes": "Livro didático Projeto Ápis e site TodaMatéria"
 }
 
+LEMBRE-SE: 
+- TODOS os campos personalizados DEVEM ser preenchidos para CADA atividade
+- Os valores devem ser específicos, detalhados e contextualizados
+- NUNCA deixe um campo vazio ou com valor genérico
+- Cada atividade deve ter TODOS os seus campos personalizados preenchidos
+
 IMPORTANTE: 
 - Use APENAS os IDs disponíveis na lista
 - PREENCHA TODOS os campos personalizados para cada atividade
@@ -388,6 +394,8 @@ export async function generatePersonalizedPlan(
                 customFields[key] = activity[key];
             }
         });
+
+        console.log(`✅ Campos personalizados extraídos para ${activity.id}:`, customFields);
 
         return {
             id: activity.id,
