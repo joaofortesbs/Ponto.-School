@@ -33,6 +33,7 @@ interface GeminiActivityResponse {
   difficulty: string;
   category: string;
   type: string;
+  customFields?: Record<string, string>;
 }
 
 /**
@@ -48,11 +49,13 @@ function buildGeminiPrompt(
     .filter(a => a.enabled)
     .map(a => a.id); // Remover limitação para permitir todas as atividades
 
-  const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
-  
-Aqui estão as informações coletadas:
+  const prompt = `Você é uma IA especializada em criar planos de ação educacionais. Com base nas informações do professor, seu objetivo é sugerir de 10 a 35 atividades com título, descrição e campos personalizados preenchidos automaticamente.
 
-DADOS:
+Você só pode usar os IDs de atividade listados a seguir: ${activitiesIds.join(', ')}
+
+Para cada atividade sugerida, você deve seguir a estrutura JSON abaixo, incluindo os campos customFields com base no ID da atividade.
+
+DADOS COLETADOS:
 - Pedido: "${initialMessage}"
 - Matérias e temas: ${contextualizationData.subjects || 'Geral'}
 - Público: ${contextualizationData.audience || 'Estudantes'}
@@ -60,19 +63,48 @@ DADOS:
 - Datas importantes: "${contextualizationData.dates}"
 - Observações: ${contextualizationData.notes || 'Nenhuma'}
 
-ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
+EXEMPLO DE RESPOSTA:
+[
+{
+"id": "lista-exercicios",
+"title": "Lista sobre Substantivos",
+"description": "Atividade para fixar conceitos de substantivos concretos e abstratos.",
+"duration": "30 minutos",
+"difficulty": "Fácil",
+"category": "Língua Portuguesa",
+"type": "atividade",
+"customFields": {
+"tema": "Substantivos",
+"disciplina": "Português",
+"anoEscolaridade": "6º ano",
+"quantidadeQuestoes": "10",
+"modeloQuestoes": "Múltipla escolha e discursivas",
+"fontes": "Livro didático + plataforma RedaçãoNotaMil"
+}
+}
+]
 
-INSTRUÇÕES:
-1. Analise cuidadosamente todas as informações fornecidas
-2. TAREFA: Selecione 10-35 atividades adequadas ao pedido, priorizando variedade e completude. Retorne APENAS este JSON:
-[{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada", "duration": "30 min", "difficulty": "Médio", "category": "Geral", "type": "atividade"}]
-3. Personalize o título e descrição de cada atividade com base nas informações coletadas
-4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
-5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas!!!!!!!
-6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades possíveis, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
-7. Se por acaso nos dados coletados tiver um número de atividades especificas para ser criadas/geradas, gere exatamente a mesma quantidade de atividades, sem deixar nada faltando!!!!!!!
+CAMPOS PERSONALIZADOS POR TIPO:
+- lista-exercicios: tema, disciplina, anoEscolaridade, quantidadeQuestoes, modeloQuestoes, fontes
+- prova: tema, disciplina, anoEscolaridade, quantidadeQuestoes, tipoQuestoes, tempoProva, criteriosAvaliacao
+- podcast: tema, roteiro, duracao, recursosTecnologicos, papeisAlunos, formaEntrega
+- resumo: tema, disciplina, fonteConteudo, extensao, formatoEntrega, topicosChave
+- mapa-mental: tema, disciplina, conceituosChave, nivelComplexidade, ferramentasVisuais, objetivoAprendizagem
+- jogos-educativos: tema, disciplina, tipoJogo, numeroJogadores, materiaisNecessarios, tempoJogo
+- caca-palavras: tema, disciplina, palavrasChave, nivelDificuldade, tamanhoGrade, orientacoes
+- proposta-redacao: tema, generoTextual, extensaoTexto, criteriosAvaliacao, fontesPesquisa, prazoEntrega
 
-IMPORTANTE: Use SOMENTE os IDs listados acima.`;
+REGRAS IMPORTANTES:
+1. Use apenas os IDs permitidos
+2. Para cada ID, preencha corretamente todos os campos definidos no mapeamento
+3. Não invente campos fora do padrão
+4. Não adicione comentários nem texto fora do JSON
+5. Se o professor pedir uma atividade específica, ela deve obrigatoriamente estar incluída
+6. Capriche nos valores de cada campo. Eles serão exibidos no mini-card da interface
+7. Seja claro, direto e objetivo nos valores dos campos
+8. Analise o pedido e contexto para personalizar adequadamente cada campo
+
+IMPORTANTE: Retorne APENAS o JSON válido, sem texto adicional.`;
 
   return prompt;
 }
@@ -198,7 +230,8 @@ function convertToActionPlanItems(
       title: activity.personalizedTitle || activity.title || originalActivity.name,
       description: activity.personalizedDescription || activity.description || originalActivity.description,
       approved: false,
-      isTrilhasEligible: isActivityEligibleForTrilhas(activity.id)
+      isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
+      customFields: activity.customFields || {}
     };
 
     console.log('✅ ActionPlanItem criado:', actionPlanItem);
@@ -313,7 +346,8 @@ export async function generatePersonalizedPlan(
         title: activity.personalizedTitle || activity.title,
         description: activity.personalizedDescription || activity.description,
         approved: false,
-        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id)
+        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
+        customFields: activity.customFields || {}
     }));
 
     if (validatedActivities.length === 0) {

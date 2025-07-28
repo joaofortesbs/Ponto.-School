@@ -16,6 +16,7 @@ export interface ActionPlanItem {
   description: string;
   approved: boolean;
   isTrilhasEligible?: boolean;
+  customFields?: Record<string, string>;
   duration?: string;
   difficulty?: string;
   category?: string;

@@ -1,5 +1,6 @@
 
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
+import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
 
 /**
  * Interface para atividade retornada pela Gemini

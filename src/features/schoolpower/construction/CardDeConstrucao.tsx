@@ -48,6 +48,7 @@ import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
+import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -73,6 +74,7 @@ export interface ActionPlanItem {
   type: string;
   isManual?: boolean;
   approved?: boolean;
+  customFields?: { [key: string]: string };
 }
 
 interface CardDeConstrucaoProps {
@@ -305,7 +307,8 @@ export function CardDeConstrucao({
       difficulty: "Personalizado", 
       category: activityType?.tags[0] || "manual",
       type: activityType?.name || "Atividade Manual",
-      isManual: true
+      isManual: true,
+      customFields: {} // Atividades manuais também podem ter customFields
     };
 
     // Add to manual activities list
@@ -684,6 +687,7 @@ export function CardDeConstrucao({
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: -50 }}
+```python
       transition={{
         duration: 0.6,
         ease: [0.25, 0.1, 0.25, 1],
@@ -1232,7 +1236,8 @@ export function CardDeConstrucao({
                                   >
                                     <path 
                                       fillRule="evenodd" 
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 ```python
+011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
                                       clipRule="evenodd"/>
                                   </svg>
                                 ) : (
@@ -1269,6 +1274,26 @@ export function CardDeConstrucao({
                             <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-3">
                               {activity.description}
                             </p>
+
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                        📊 {activity.difficulty} • ⏱️ {activity.duration || '30 min'}
+                                      </div>
+
+                                      {/* Exibir customFields se existirem */}
+                                      {activity.customFields && Object.keys(activity.customFields).length > 0 && (
+                                        <div className="mt-2 space-y-1">
+                                          {Object.entries(activity.customFields).slice(0, 3).map(([key, value]) => (
+                                            <div key={key} className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                                              <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value}
+                                            </div>
+                                          ))}
+                                          {Object.keys(activity.customFields).length > 3 && (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                                              +{Object.keys(activity.customFields).length - 3} campos adicionais
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
 
                             <div className="mt-2">
                               <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
@@ -1361,6 +1386,3 @@ export function CardDeConstrucao({
     </motion.div>
   );
 }
-
-
-
