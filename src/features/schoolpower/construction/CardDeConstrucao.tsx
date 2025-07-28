@@ -68,13 +68,14 @@ export interface ActionPlanItem {
   id: string;
   title: string;
   description: string;
-  duration: string;
-  difficulty: string;
-  category: string;
-  type: string;
+  duration?: string;
+  difficulty?: string;
+  category?: string;
+  type?: string;
+  approved: boolean;
+  isTrilhasEligible?: boolean;
+  customFields?: Record<string, string>;
   isManual?: boolean;
-  approved?: boolean;
-  customFields?: { [key: string]: string };
 }
 
 interface CardDeConstrucaoProps {
@@ -308,6 +309,7 @@ export function CardDeConstrucao({
       category: activityType?.tags[0] || "manual",
       type: activityType?.name || "Atividade Manual",
       isManual: true,
+      approved: false,
       customFields: {} // Atividades manuais também podem ter customFields
     };
 

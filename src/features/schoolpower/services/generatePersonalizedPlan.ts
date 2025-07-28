@@ -397,14 +397,21 @@ export async function generatePersonalizedPlan(
 
         console.log(`✅ Campos personalizados extraídos para ${activity.id}:`, customFields);
 
-        return {
+        const actionPlanItem = {
             id: activity.id,
             title: activity.personalizedTitle || activity.title,
             description: activity.personalizedDescription || activity.description,
+            duration: activity.duration || '30 min',
+            difficulty: activity.difficulty || 'Médio',
+            category: activity.category || 'Geral',
+            type: activity.type || 'atividade',
             approved: false,
             isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
             customFields: customFields
         };
+
+        console.log(`✅ ActionPlanItem completo criado para ${activity.id}:`, actionPlanItem);
+        return actionPlanItem;
     });
 
     if (validatedActivities.length === 0) {
