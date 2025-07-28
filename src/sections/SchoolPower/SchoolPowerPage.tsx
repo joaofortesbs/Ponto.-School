@@ -49,9 +49,10 @@ export function SchoolPowerPage() {
     handleSubmitContextualizationHook(data);
   };
 
-  // Função para aprovar action plan
   const handleApproveActionPlan = (approvedItems: any) => {
-    console.log("✅ Aprovando action plan do SchoolPowerPage:", approvedItems);
+    console.log('✅ Aprovando action plan do SchoolPowerPage:', approvedItems);
+
+    // Usar o hook corretamente
     handleApproveActionPlanHook(approvedItems);
   };
 
@@ -135,7 +136,7 @@ export function SchoolPowerPage() {
       )}
 
       {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
-      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
+      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities' || flowState === 'construction') && (
         <motion.div 
           className="absolute inset-0 flex items-center justify-center z-40"
           initial={{ opacity: 0 }}
@@ -155,7 +156,7 @@ export function SchoolPowerPage() {
               step={flowState === 'contextualizing' ? 'contextualization' : 
                     flowState === 'actionplan' ? 'actionPlan' : 
                     flowState === 'generating' ? 'generating' : 
-                    flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
+                    flowState === 'generatingActivities' ? 'generatingActivities' : flowState === 'construction' ? 'construction' : 'activities'}
               contextualizationData={flowData?.contextualizationData || null}
               actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
               onSubmitContextualization={handleSubmitContextualization}
