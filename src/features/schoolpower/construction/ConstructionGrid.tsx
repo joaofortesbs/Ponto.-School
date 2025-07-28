@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -216,14 +217,10 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
                 openModal(activity);
               }}
               onView={handleView}
-            onShare={handleShare}
-          />
-        ))}
+              onShare={handleShare}
+            />
+          ))}
         </div>
-      </div>
-            onShare={handleShare}
-          />
-        ))}
       </div>
 
       {/* Modal de Edição */}
