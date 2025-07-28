@@ -4,7 +4,7 @@ import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
-export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
+export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
 interface SchoolPowerFlowData {
   initialMessage: string | null;
@@ -221,6 +221,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
     try {
       setIsLoading(true);
+      setFlowState('generatingActivities');
 
       const newFlowData = {
         ...flowData,
@@ -231,13 +232,36 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowData(newFlowData);
       saveData(newFlowData);
 
-      console.log('🎯 Dados salvos, transitioning para construction...');
+      // Importa e executa automação
+      const AutomationController = (await import('../construction/automationController')).default;
+      const controller = AutomationController.getInstance();
 
-      // Transicionar para o estado construction
-      setFlowState('construction');
+      // Converte itens aprovados para formato de atividades
+      const activitiesData = approvedItems.map(item => ({
+        id: item.id,
+        type: item.type || 'atividade_lista_exercicios',
+        title: item.title,
+        description: item.description,
+        duration: item.duration,
+        difficulty: item.difficulty,
+        category: item.category
+      }));
 
-      console.log('✅ Transição para construction concluída - automação será iniciada pelo CardDeConstrucao');
-      setIsLoading(false);
+      console.log('🤖 Iniciando construção automática das atividades...');
+
+      // Pequena pausa para garantir que a interface foi atualizada
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Executa automação para todas as atividades
+      const automationResults = await controller.autoBuildMultipleActivities(activitiesData);
+
+      const successCount = automationResults.filter(r => r).length;
+      console.log(`✅ Automação concluída: ${successCount}/${activitiesData.length} atividades construídas`);
+
+      setTimeout(() => {
+        setFlowState('activities');
+        setIsLoading(false);
+      }, 2000);
 
     } catch (error) {
       console.error('❌ Erro ao aprovar plano de ação:', error);
