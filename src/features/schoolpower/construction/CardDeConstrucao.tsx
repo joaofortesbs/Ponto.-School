@@ -687,7 +687,6 @@ export function CardDeConstrucao({
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: -50 }}
-```python
       transition={{
         duration: 0.6,
         ease: [0.25, 0.1, 0.25, 1],
@@ -1236,8 +1235,7 @@ export function CardDeConstrucao({
                                   >
                                     <path 
                                       fillRule="evenodd" 
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 ```python
-011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
                                       clipRule="evenodd"/>
                                   </svg>
                                 ) : (
