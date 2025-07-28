@@ -152,7 +152,7 @@ export function CardDeConstrucao({
   } | null>(null);
 
   // Function to simulate activity building
-  const buildActivities = async (activities: ActionPlanItem[]): Promise<boolean> => {
+  const buildActivities = async (activities: ActionPlanItem[], contextData?: any): Promise<boolean> => {
     setIsBuilding(true);
     setProgress({
       total: activities.length,
@@ -688,8 +688,7 @@ export function CardDeConstrucao({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: -50 }}
       transition={{
-        duration:```python
- 0.6,
+        duration: 0.6,
         ease: [0.25, 0.1, 0.25, 1],
         type: "spring",
         stiffness: 100,
