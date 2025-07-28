@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
@@ -15,7 +15,7 @@ interface ConstructionGridProps {
 export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
-  const { activities, loading, setActivities } = useConstructionActivities(approvedActivities);
+  const { activities, loading } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
@@ -39,76 +39,6 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
     console.log('Editar materiais da atividade:', activityId);
     // TODO: Implementar lógica de edição de materiais
   };
-
-  useEffect(() => {
-    const loadActivitiesFromPlan = async () => {
-      console.log('🔄 ConstructionGrid: Carregando atividades do plano aprovado...', approvedActivities);
-
-      if (!approvedActivities || approvedActivities.length === 0) {
-        console.log('⚠️ Nenhuma atividade aprovada encontrada');
-        setActivities([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Converter atividades aprovadas para o formato de construção
-        const constructionActivities: ConstructionActivity[] = approvedActivities.map((activity: any) => ({
-          id: activity.id,
-          title: activity.title,
-          description: activity.description,
-          progress: 0, // Começar com 0% de progresso
-          type: activity.category || 'atividade',
-          status: 'in-progress' as const, // Marcar como em progresso para mostrar geração
-          originalData: activity
-        }));
-
-        console.log('🏗️ Atividades de construção criadas:', constructionActivities);
-        setActivities(constructionActivities);
-
-        // Simular progresso de geração para cada atividade
-        constructionActivities.forEach((activity, index) => {
-          setTimeout(() => {
-            simulateActivityGeneration(activity.id);
-          }, index * 2000); // Espaçar as gerações
-        });
-
-      } catch (error) {
-        console.error('❌ Erro ao carregar atividades do plano:', error);
-        setActivities([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const simulateActivityGeneration = (activityId: string) => {
-      let currentProgress = 0;
-      const progressInterval = setInterval(() => {
-        currentProgress += Math.random() * 20 + 10; // Incremento aleatório entre 10-30%
-
-        if (currentProgress >= 100) {
-          currentProgress = 100;
-          clearInterval(progressInterval);
-
-          // Atualizar status para completed
-          setActivities(prev => prev.map(activity => 
-            activity.id === activityId 
-              ? { ...activity, progress: 100, status: 'completed' as const }
-              : activity
-          ));
-        } else {
-          // Atualizar progresso
-          setActivities(prev => prev.map(activity => 
-            activity.id === activityId 
-              ? { ...activity, progress: Math.min(currentProgress, 100) }
-              : activity
-          ));
-        }
-      }, 800); // Atualizar a cada 800ms
-    };
-
-    loadActivitiesFromPlan();
-  }, [approvedActivities, setActivities]);
 
   if (loading) {
     return (
