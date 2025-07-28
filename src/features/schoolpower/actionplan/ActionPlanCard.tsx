@@ -5,10 +5,11 @@ import { TrilhasBadge } from '../components/TrilhasBadge';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Clock, BookOpen, Target, Trash2, Plus, X } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Clock, Trash2, Plus, X, Loader2, Settings } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
+import { useSchoolPowerAutomation } from '../automation/AutomationHooks';
 
 export interface ActionPlanItem {
   id: string;
@@ -21,6 +22,7 @@ export interface ActionPlanItem {
   category?: string;
   type?: string;
   isManual?: boolean;
+  data?: any;
 }
 
 // Function to get the correct activity name from schoolPowerActivities
@@ -37,6 +39,7 @@ interface ActionPlanCardProps {
 
 export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: ActionPlanCardProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+    const { status: automationStatus, startAutomation, stopAutomation } = useSchoolPowerAutomation();
 
   console.log('🎯 ActionPlanCard renderizado com:', { actionPlan, isLoading });
 
@@ -92,6 +95,33 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
   const handleItemToggle = (itemId: string) => {
     // Funcionalidade de seleção removida - apenas log para debug
     console.log('Item clicado:', itemId);
+  };
+
+  const handleApproveWithAutomation = async () => {
+    try {
+      // First call the original approve handler if provided
+      if (onApprove) {
+        onApprove(actionPlan);
+      }
+
+      // Then start the automation process
+      console.log('🚀 Starting automated activity construction...');
+
+      // Prepare activities data for automation
+      const activitiesData = actionPlan.map((activity, index) => ({
+        id: activity.id || `activity_${index}`,
+        titulo: activity.title,
+        type: activity.type,
+        descricao: `Atividade gerada automaticamente: ${activity.title}`,
+        estimatedTime: activity.duration,
+        ...activity.data // Include any additional data
+      }));
+
+      await startAutomation(activitiesData);
+
+    } catch (error) {
+      console.error('Error in automated approval:', error);
+    }
   };
 
   const handleApprove = () => {
@@ -317,15 +347,65 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
             </button>
 
             <button
-              onClick={handleApprove}
+              onClick={handleApproveWithAutomation}
+              disabled={automationStatus.isRunning}
               className="px-8 py-3 rounded-lg font-semibold transition-all bg-gradient-to-r from-[#FF6B00] to-[#FF8533] text-white hover:shadow-lg hover:scale-105 transform"
             >
 
-                <Sparkles className="w-4 h-4 inline mr-2" />
+                {automationStatus.isRunning ? (
+                  <>
+                    <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />
+                    Construindo Automaticamente...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 inline mr-2" />
                 Gerar Atividades ({actionPlan.length})
+                  </>
+                )}
 
             </button>
+                         {automationStatus.isRunning && (
+                <Button variant="outline" onClick={stopAutomation} className="text-red-600">
+                  Parar Automação
+                </Button>
+              )}
           </div>
+                                  {automationStatus.isRunning && (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Construindo Atividades Automaticamente
+                </span>
+                <span className="text-sm text-blue-600 dark:text-blue-400">
+                  {automationStatus.currentActivity}/{automationStatus.totalActivities}
+                </span>
+              </div>
+              <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${automationStatus.progress}%` }}
+                />
+              </div>
+              {automationStatus.errors.length > 0 && (
+                <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  Erros: {automationStatus.errors.join(', ')}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Automation Completed */}
+          {automationStatus.completed && !automationStatus.isRunning && (
+            <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex items-center text-green-700 dark:text-green-300">
+                <CheckCircle2 className="w-5 h-5 mr-2" />
+                <span className="text-sm font-medium">
+                  Todas as atividades foram construídas automaticamente!
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </motion.div>
