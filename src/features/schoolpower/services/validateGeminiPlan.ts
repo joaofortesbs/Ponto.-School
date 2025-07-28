@@ -22,6 +22,7 @@ interface ValidatedActivity {
   description: string;
   personalizedTitle?: string;
   personalizedDescription?: string;
+  [key: string]: any; // Permite campos personalizados dinâmicos
 }
 
 /**
@@ -113,6 +114,15 @@ function validateSingleActivity(
   if (activity.personalizedDescription) {
     validatedActivity.personalizedDescription = activity.personalizedDescription;
   }
+
+  // Preserva todos os campos personalizados da resposta da Gemini
+  const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
+  
+  Object.keys(activity).forEach(key => {
+    if (!standardFields.includes(key) && typeof activity[key] === 'string') {
+      validatedActivity[key] = activity[key];
+    }
+  });
 
   console.log('✅ Atividade validada:', validatedActivity);
   return validatedActivity;

@@ -1277,17 +1277,21 @@ export function CardDeConstrucao({
                                         📊 {activity.difficulty} • ⏱️ {activity.duration || '30 min'}
                                       </div>
 
-                                      {/* Exibir customFields se existirem */}
+                                      {/* Exibir customFields como tags/badges */}
                                       {activity.customFields && Object.keys(activity.customFields).length > 0 && (
-                                        <div className="mt-2 space-y-1">
-                                          {Object.entries(activity.customFields).slice(0, 3).map(([key, value]) => (
-                                            <div key={key} className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                                              <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value}
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                          {Object.entries(activity.customFields).slice(0, 4).map(([key, value]) => (
+                                            <div 
+                                              key={key} 
+                                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
+                                            >
+                                              <span className="font-semibold">{key}:</span>
+                                              <span className="ml-1 truncate max-w-[120px]">{value}</span>
                                             </div>
                                           ))}
-                                          {Object.keys(activity.customFields).length > 3 && (
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                              +{Object.keys(activity.customFields).length - 3} campos adicionais
+                                          {Object.keys(activity.customFields).length > 4 && (
+                                            <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                                              +{Object.keys(activity.customFields).length - 4} mais
                                             </div>
                                           )}
                                         </div>

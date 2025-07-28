@@ -376,14 +376,28 @@ export async function generatePersonalizedPlan(
 
 
     // Mapear atividades validadas para o formato do ActionPlanItem
-    const actionPlanItems = validatedActivities.map(activity => ({
-        id: activity.id,
-        title: activity.personalizedTitle || activity.title,
-        description: activity.personalizedDescription || activity.description,
-        approved: false,
-        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
-        customFields: activity.customFields || {}
-    }));
+    const actionPlanItems = validatedActivities.map(activity => {
+        // Extrair campos personalizados da atividade
+        const customFields: Record<string, string> = {};
+        
+        // Pegar todos os campos que não são padrões do sistema
+        const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
+        
+        Object.keys(activity).forEach(key => {
+            if (!standardFields.includes(key) && typeof activity[key] === 'string') {
+                customFields[key] = activity[key];
+            }
+        });
+
+        return {
+            id: activity.id,
+            title: activity.personalizedTitle || activity.title,
+            description: activity.personalizedDescription || activity.description,
+            approved: false,
+            isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
+            customFields: customFields
+        };
+    });
 
     if (validatedActivities.length === 0) {
       console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
