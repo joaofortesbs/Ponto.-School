@@ -1,0 +1,84 @@
+Sistema Inteligente de Geração e Exibição de Campos Personalizados em Mini-Cards do Plano de Ação
+
+Objetivo:
+Você está configurando a IA do Vibe Code para funcionar com perfeição na exibição dos campos personalizados no mini-card de cada atividade sugerida dentro da interface de Plano de Ação (na seção de Construção).
+
+Sua função será garantir que:
+
+Os campos personalizados sejam gerados automaticamente pela IA Gemini com base no ID da atividade (que está listado no arquivo schoolPowerActivities.json).
+
+Esses campos personalizados apareçam corretamente no mini-card da sugestão de atividade, ao lado do campo de ID.
+
+Cada tipo de atividade (com base no seu ID) tenha um conjunto único de campos a serem gerados.
+
+Os dados gerados sejam realistas, contextualizados, coerentes e variados, sem serem padronizados ou genéricos.
+
+Todos os campos devem aparecer como texto (string), pois o modal Editar Materiais já aceita todos os campos como texto simples.
+
+Etapas do Funcionamento Esperado:
+
+Ao gerar as sugestões personalizadas de atividades via IA Gemini (usando o prompt principal já enviado anteriormente), o sistema deve identificar o ID de cada atividade sugerida.
+
+Com base nesse ID, o sistema deve consultar um arquivo de definição de estrutura de campos por tipo de atividade (exemplo: activityFieldsSchema.json), que contém a lista dos campos personalizados que devem ser gerados para aquele tipo de atividade.
+
+Exemplo para ID lista-exercicios:
+{
+"id": "lista-exercicios",
+"fields": [
+"Quantidade de Questões",
+"Tema",
+"Disciplina",
+"Ano de Escolaridade",
+"Nível de Dificuldade",
+"Modelo de Questões",
+"Fontes"
+]
+}
+
+Após identificar os campos específicos da atividade, o sistema deve adicionar esses campos como chaves extras dentro do JSON que está sendo retornado pela IA Gemini no momento da sugestão da atividade.
+
+Exemplo de saída esperada no JSON da atividade sugerida:
+{
+"id": "lista-exercicios",
+"title": "Lista de Exercícios: Substantivos e Verbos",
+"description": "Elaboração de uma lista de exercícios abrangendo a identificação, classificação e uso de substantivos e verbos em diferentes contextos.",
+"duration": "30 min",
+"difficulty": "Médio",
+"category": "Gramática",
+"type": "atividade",
+"Quantidade de Questões": "10 questões mistas entre substantivos comuns e próprios, além de verbos regulares.",
+"Tema": "Substantivos e Verbos",
+"Disciplina": "Língua Portuguesa",
+"Ano de Escolaridade": "6º Ano",
+"Nível de Dificuldade": "Intermediário",
+"Modelo de Questões": "Objetivas e dissertativas",
+"Fontes": "Livro didático Projeto Ápis e site TodaMatéria"
+}
+
+O sistema da interface deve capturar esses campos adicionais (todos que não sejam os campos padrão como title, description, duration, etc.) e renderizá-los automaticamente dentro do mini-card da atividade sugerida, logo abaixo ou ao lado do campo ID da atividade.
+
+Todos os campos extras devem ser exibidos no mesmo padrão visual, com destaque para o nome do campo (em negrito ou similar) e o conteúdo abaixo (como texto contínuo), como:
+
+Tema: Substantivos e Verbos
+Ano de Escolaridade: 6º Ano
+Modelo de Questões: Objetivas e dissertativas
+
+Caso o ID da atividade não esteja presente no arquivo de definição de campos (activityFieldsSchema.json), renderize apenas os campos padrão: título, descrição, duração e dificuldade.
+
+Outras Instruções Técnicas:
+
+A lógica que coleta os campos extras a partir do ID da atividade deve ser implementada na função que processa o retorno do Gemini (provavelmente dentro de actionPlanService.ts ou um arquivo intermediário).
+
+Os campos extras devem ser passados junto ao objeto da atividade sugerida, para serem usados tanto na interface do mini-card quanto no modal Editar Materiais posteriormente.
+
+O arquivo activityFieldsSchema.json deve conter os campos obrigatórios para todas as 82 atividades do arquivo schoolPowerActivities.json. (Você pode começar com os mais importantes como “lista-exercicios”, “roteiro-filme”, “debate”, etc.)
+
+Restrições:
+
+Não usar campos padrão como título, descrição, duração ou dificuldade para os dados personalizados. Os campos extras devem ser diferentes e únicos conforme a atividade.
+
+Os dados dos campos extras devem ser preenchidos pela IA Gemini, e nunca deixar valores em branco, nulos ou com o texto "padrão".
+
+O sistema não deve apresentar erros mesmo que um campo não esteja presente (deve apenas ignorá-lo).
+
+Com isso, todo o sistema estará completamente funcional, seguro e inteligente. A IA gerará sugestões personalizadas com todos os campos que a atividade requer e o sistema exibirá esses campos de maneira adequada, útil e bonita dentro do mini-card da atividade sugerida no Plano de Ação.

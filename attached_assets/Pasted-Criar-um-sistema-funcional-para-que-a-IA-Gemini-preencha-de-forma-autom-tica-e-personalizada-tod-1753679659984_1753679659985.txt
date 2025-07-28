@@ -1,0 +1,150 @@
+Criar um sistema funcional para que a IA (Gemini) preencha, de forma automática e personalizada, todos os campos de cada mini-card de atividade sugerida, dentro da interface de Plano de Ação do School Power, respeitando os campos esperados para cada tipo de atividade (identificada via ID).
+
+Isso inclui:
+
+Modificar o prompt enviado ao Gemini para que ele gere, além de título e descrição, todos os campos relevantes por tipo de atividade.
+
+Exibir corretamente todos esses campos dentro do mini-card de cada sugestão de atividade (ao lado do ID), como texto visível e organizado.
+
+Garantir que a IA utilize a estrutura correta de campos esperados conforme o ID da atividade (com base no schoolPowerActivities.json e estrutura auxiliar).
+
+Permitir variação completa nos campos por tipo de atividade (ex: “lista de exercícios” vai ter campos como “quantidade de questões”, “modelo de questões”, etc.; já “jogo pedagógico” terá campos como “material necessário”, “número de participantes”, etc.)
+
+Manter todos os campos em formato de texto simples, para facilitar implementação e compatibilidade com o modal Editar Materiais.
+
+📦 ARQUIVOS QUE DEVEM SER MODIFICADOS / CRIADOS:
+
+generatePersonalizedPlan.ts
+
+Injetar dinamicamente no prompt do Gemini os campos esperados por tipo de atividade (usando o ID)
+
+Unificar o resultado em JSON com os campos personalizados
+
+actionPlanService.ts
+
+Processar a resposta do Gemini com os campos personalizados
+
+Enviar para o frontend no formato esperado
+
+mini-card de atividade sugerida (dentro da interface de Plano de Ação)
+
+Exibir todos os campos personalizados no layout lateral do card
+
+Manter título no topo, descrição embaixo, ID e campos laterais (como mostrado nas imagens)
+
+activitiesFieldSchema.json (novo arquivo se ainda não existir)
+
+Criar estrutura com os campos esperados por tipo de atividade (exemplo abaixo)
+
+📁 Exemplo da estrutura do arquivo activitiesFieldSchema.json:
+
+{
+"lista-exercicios": {
+"fields": [
+{ "key": "tema", "label": "Tema" },
+{ "key": "quantidadeQuestoes", "label": "Quantidade de Questões" },
+{ "key": "modeloQuestoes", "label": "Modelo de Questões" },
+{ "key": "disciplina", "label": "Disciplina" },
+{ "key": "anoEscolaridade", "label": "Ano de Escolaridade" },
+{ "key": "nivelDificuldade", "label": "Nível de Dificuldade" },
+{ "key": "fontes", "label": "Fontes" }
+]
+},
+"jogo-pedagogico": {
+"fields": [
+{ "key": "materiais", "label": "Materiais Necessários" },
+{ "key": "numeroParticipantes", "label": "Número de Participantes" },
+{ "key": "regras", "label": "Regras do Jogo" }
+]
+}
+}
+
+🎯 NOVO PROMPT PERSONALIZADO (para Gemini):
+
+Você é uma IA especialista em criação de planos de ação educacionais completos, personalizados e funcionais. Sua tarefa agora é gerar atividades educacionais sugeridas, com todos os campos personalizados preenchidos de acordo com o tipo de atividade (identificado por ID). Use as instruções a seguir.
+
+DADOS DO USUÁRIO:
+
+Pedido: "${initialMessage}"
+
+Matérias e temas: ${contextualizationData.subjects || 'Geral'}
+
+Público: ${contextualizationData.audience || 'Estudantes'}
+
+Restrições: "${contextualizationData.restrictions}"
+
+Datas importantes: "${contextualizationData.dates}"
+
+Observações: ${contextualizationData.notes || 'Nenhuma'}
+
+ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
+
+ESTRUTURA DOS CAMPOS POR ATIVIDADE (EXEMPLO):
+
+Para o ID "lista-exercicios", gere também: "tema", "quantidadeQuestoes", "modeloQuestoes", "disciplina", "anoEscolaridade", "nivelDificuldade", "fontes"
+
+Para o ID "jogo-pedagogico", gere: "materiais", "numeroParticipantes", "regras"
+
+[Os campos exatos serão definidos dinamicamente pela plataforma conforme o ID da atividade]
+
+INSTRUÇÕES:
+
+Analise cuidadosamente todos os dados fornecidos
+
+Gere de 10 a 35 atividades, conforme a complexidade do pedido
+
+Para cada atividade, retorne um objeto JSON no seguinte formato:
+
+{
+"id": "atividade-id",
+"title": "Título Personalizado",
+"description": "Descrição personalizada contextualizada",
+"campos": {
+"campo1": "valor gerado com base no contexto",
+"campo2": "valor gerado com base no contexto",
+...
+}
+}
+
+Os campos devem ser coerentes com o ID da atividade (fornecidos pela plataforma dinamicamente)
+
+Nunca invente IDs. Use apenas IDs válidos da lista permitida.
+
+Capriche na personalização: pense como um professor planejando uma aula de verdade. Conecte tema, tipo de atividade e público com consistência.
+
+EXEMPLO DE SAÍDA:
+
+{
+"id": "lista-exercicios",
+"title": "Lista: Substantivos e Verbos em Ação",
+"description": "Uma sequência de 12 questões que trabalham substantivos comuns e verbos regulares, com base em textos jornalísticos e publicitários.",
+"campos": {
+"tema": "Substantivos e verbos",
+"quantidadeQuestoes": "12 questões",
+"modeloQuestoes": "múltipla escolha + abertas",
+"disciplina": "Língua Portuguesa",
+"anoEscolaridade": "8º ano",
+"nivelDificuldade": "Médio",
+"fontes": "Livro didático e textos jornalísticos"
+}
+}
+
+INTERFACE:
+
+Esses campos serão exibidos ao lado do ID dentro do mini-card da interface de Plano de Ação
+
+Não repetir título ou descrição nos campos — seja direto e textual
+
+OBSERVAÇÕES:
+
+Os campos serão enviados como texto simples para facilitar integração com o modal "Editar Materiais"
+
+Campos irrelevantes para o tipo de atividade devem ser omitidos (respeitar estrutura)
+
+🛠️ Observações Finais para Devs (IA Vibe Code):
+
+Certifique-se que cada mini-card de atividade sugerida no Plano de Ação receba todos os dados e exiba no layout lateral direito, de forma clara e textual
+
+Exiba label + valor para cada campo extra vindo da IA, mantendo responsividade da interface
+
+Todos os dados devem estar acessíveis posteriormente dentro do modal de edição da atividade (Editar Materiais)
