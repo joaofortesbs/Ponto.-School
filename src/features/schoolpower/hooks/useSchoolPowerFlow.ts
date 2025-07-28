@@ -118,6 +118,13 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Submete contextualização e gera action plan
   const submitContextualization = useCallback(async (contextData: ContextualizationData) => {
     console.log('📝 Contextualização submetida:', contextData);
+    console.log('🎯 Dados de contextualização detalhados:', {
+      subjects: contextData.subjects || contextData.materias,
+      audience: contextData.audience || contextData.publicoAlvo,
+      restrictions: contextData.restrictions || contextData.restricoes,
+      dates: contextData.dates || contextData.datasImportantes,
+      notes: contextData.notes || contextData.observacoes
+    });
     console.log('📋 Dados atuais do flow:', flowData);
 
     // Validar se temos initialMessage (buscar também no localStorage se necessário)

@@ -26,6 +26,11 @@ interface ValidatedActivity {
   description: string;
   personalizedTitle?: string;
   personalizedDescription?: string;
+  duration?: string;
+  difficulty?: string;
+  category?: string;
+  type?: string;
+  camposPreenchidos?: Record<string, any>;
 }
 
 /**
@@ -102,23 +107,49 @@ function validateSingleActivity(
     return null;
   }
 
-  // Cria atividade validada
+  // Priorizar dados personalizados da IA quando disponíveis
+  const personalizedTitle = activity.personalizedTitle || activity.title;
+  const personalizedDescription = activity.personalizedDescription || activity.description;
+
+  // Cria atividade validada preservando toda a personalização
   const validatedActivity: ValidatedActivity = {
     id: originalActivity.id,
-    title: activity.personalizedTitle || activity.title || originalActivity.name,
-    description: activity.personalizedDescription || activity.description || originalActivity.description,
+    title: personalizedTitle && personalizedTitle.trim() !== '' 
+      ? personalizedTitle 
+      : originalActivity.name,
+    description: personalizedDescription && personalizedDescription.trim() !== '' 
+      ? personalizedDescription 
+      : originalActivity.description,
+    personalizedTitle: personalizedTitle,
+    personalizedDescription: personalizedDescription
   };
 
-  // Adiciona campos de personalização se existirem
-  if (activity.personalizedTitle) {
-    validatedActivity.personalizedTitle = activity.personalizedTitle;
+  // Preservar campos adicionais da resposta da IA
+  if (activity.duration) {
+    validatedActivity.duration = activity.duration;
+  }
+  if (activity.difficulty) {
+    validatedActivity.difficulty = activity.difficulty;
+  }
+  if (activity.category) {
+    validatedActivity.category = activity.category;
+  }
+  if (activity.type) {
+    validatedActivity.type = activity.type;
   }
 
-  if (activity.personalizedDescription) {
-    validatedActivity.personalizedDescription = activity.personalizedDescription;
+  // Preservar campos preenchidos automaticamente se existirem
+  if (activity.camposPreenchidos) {
+    validatedActivity.camposPreenchidos = activity.camposPreenchidos;
   }
 
-  console.log('✅ Atividade validada:', validatedActivity);
+  console.log('✅ Atividade validada com personalização:', {
+    id: validatedActivity.id,
+    originalTitle: originalActivity.name,
+    personalizedTitle: validatedActivity.personalizedTitle,
+    finalTitle: validatedActivity.title
+  });
+
   return validatedActivity;
 }
 
