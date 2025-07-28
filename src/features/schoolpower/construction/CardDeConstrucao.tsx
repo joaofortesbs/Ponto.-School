@@ -149,6 +149,12 @@ export function CardDeConstrucao({
     errors: string[];
   } | null>(null);
 
+  // Estado para campos gerados pela IA para cada atividade
+  const [activityFields, setActivityFields] = useState<Record<string, ActivityFieldData>>({});
+
+  // Estado para controlar quando os campos estão sendo gerados
+  const [generatingFields, setGeneratingFields] = useState<Record<string, boolean>>({});
+
   // Function to simulate activity building
   const buildActivities = async (activities: ActionPlanItem[]): Promise<boolean> => {
     setIsBuilding(true);
@@ -1232,7 +1238,7 @@ export function CardDeConstrucao({
                                   >
                                     <path 
                                       fillRule="evenodd" 
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
                                       clipRule="evenodd"/>
                                   </svg>
                                 ) : (
@@ -1361,6 +1367,3 @@ export function CardDeConstrucao({
     </motion.div>
   );
 }
-
-
-
