@@ -1,0 +1,98 @@
+Objetivo:
+
+Você deve configurar um sistema inteligente e 100% automático, que conecta a IA do Plano de Ação à interface de Construção de Atividades do School Power. O sistema deve identificar automaticamente os campos exigidos dentro do modal Editar Materiais, e preencher cada um deles com os dados gerados pela IA, de acordo com o tipo específico de atividade (lista de exercícios, produção textual, jogo interativo, etc). Após isso, o sistema deve acionar o botão “Construir Atividade” e gerar a atividade de forma autônoma, sem a interferência do usuário.
+
+🔁 Fluxo do sistema:
+
+Após o usuário clicar em “Aprovar Plano de Ação”, o sistema deve percorrer todos os cards de atividades que foram definidos e gerar automaticamente os dados de cada atividade individual.
+
+Para cada atividade, o sistema deve:
+a. Identificar automaticamente o tipo da atividade (baseado no ID ou tag);
+b. Mapear os campos visíveis e exigidos dentro do modal Editar Materiais daquele tipo de atividade;
+c. Utilizar a IA para gerar os dados necessários para todos os campos (não apenas título e descrição);
+d. Preencher automaticamente todos os campos (mesmo os que exigem seletores, botões, opções ou múltiplas marcações);
+e. Validar se todos os campos obrigatórios foram preenchidos corretamente;
+f. Acionar automaticamente o botão “Construir Atividade”;
+g. Garantir que a atividade seja gerada corretamente.
+
+📦 Requisitos técnicos do sistema:
+
+Mapeamento inteligente dos campos:
+
+O sistema deve escanear o DOM do modal Editar Materiais para identificar todos os campos visíveis e obrigatórios.
+
+Os tipos de campos podem ser:
+
+<input> de texto simples (ex: Título, Objetivos)
+
+<textarea> (ex: Descrição)
+Selects e dropdowns com opções (ex: Disciplina, Dificuldade, Ano de Escolaridade, Formato de Entrega, Modelo de Questão)
+
+Botões de múltipla escolha (ex: Nível de dificuldade, Opções de modelo)
+
+Grupos com checkboxes ou radio-buttons (ex: Recursos necessários, Etapas de projeto)
+
+Campos condicionais que mudam de acordo com o tipo de atividade
+
+Interação com os campos:
+
+Para campos de texto: use .value = “texto” e dispare eventos de “input” ou “change”.
+
+Para selects: simule o clique no campo, localize a opção correta pela label e clique nela.
+
+Para botões de múltipla escolha: localize o botão com base na label/valor e dispare o clique.
+
+Para campos com múltiplas etapas: dispare os cliques sequenciais para exibir e preencher os campos adicionais.
+
+Dados entregues pela IA:
+
+A IA deve gerar um objeto JSON estruturado, com todos os campos esperados e seus respectivos valores.
+
+Exemplo padrão de retorno da IA para uma atividade tipo “Lista de Exercícios”:
+
+{
+"tipo": "lista-exercicios",
+"titulo": "Treinando Substantivos e Verbos",
+"descricao": "Nesta atividade, os alunos irão...",
+"disciplina": "Português",
+"tema": "Substantivos e Verbos",
+"ano": "6º ano",
+"nivel": "Fácil",
+"modelo_questao": "Múltipla Escolha",
+"formato_entrega": "Online",
+"tempo_estimado": "45 minutos",
+"objetivos": [
+"Reconhecer substantivos e verbos em frases",
+"Classificar corretamente as palavras"
+],
+"materiais_necessarios": [
+"Caderno", "Lápis", "Tablet ou celular com internet"
+]
+}
+
+O sistema deve converter esse objeto em ações de preenchimento em tempo real, no modal correspondente.
+
+Ao final, após validar todos os campos preenchidos corretamente, o sistema deve clicar no botão “Construir Atividade” de forma automática.
+
+🛡️ Regras de estabilidade e segurança:
+
+O sistema não deve tentar acionar o botão de construção caso algum campo obrigatório esteja vazio ou inválido.
+
+O sistema deve aguardar a renderização completa do modal antes de começar o preenchimento.
+
+Cada tipo de atividade deve ter um esquema de preenchimento e validação único e separado (ex: /fillers/lista.js, /fillers/jogo.js, etc).
+
+O processo deve respeitar o design atual da plataforma sem alterar a aparência dos cards, modais ou botões.
+
+🚀 Importante:
+
+O sistema deve funcionar mesmo que o usuário não abra manualmente o modal Editar Materiais.
+
+Nenhuma ação humana deve ser necessária após a aprovação do Plano de Ação.
+
+A IA deve entregar dados para todos os campos necessários do tipo de atividade em questão.
+
+Toda a lógica deve ser desacoplada por tipo de atividade para garantir manutenção e escalabilidade futura.
+
+✅ Resultado esperado:
+Ao aprovar o Plano de Ação, a plataforma preencherá automaticamente todos os campos de cada atividade no modal Editar Materiais, acionará o botão “Construir Atividade” e criará a atividade automaticamente, sem nenhuma interferência do usuário.
