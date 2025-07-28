@@ -3,7 +3,6 @@ import { ContextualizationData } from '../contextualization/ContextualizationCar
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
-import { hasCustomFields } from '../data/activityMaterialFieldsMap';
 
 export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
@@ -118,13 +117,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Submete contextualização e gera action plan
   const submitContextualization = useCallback(async (contextData: ContextualizationData) => {
     console.log('📝 Contextualização submetida:', contextData);
-    console.log('🎯 Dados de contextualização detalhados:', {
-      subjects: contextData.subjects || contextData.materias,
-      audience: contextData.audience || contextData.publicoAlvo,
-      restrictions: contextData.restrictions || contextData.restricoes,
-      dates: contextData.dates || contextData.datasImportantes,
-      notes: contextData.notes || contextData.observacoes
-    });
     console.log('📋 Dados atuais do flow:', flowData);
 
     // Validar se temos initialMessage (buscar também no localStorage se necessário)

@@ -1,20 +1,16 @@
-import { ActionPlanItem } from '../actionplan/ActionPlanCard';
+
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
-import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
-import { getCamposObrigatorios, hasCustomFields } from '../data/activityMaterialFieldsMap';
 
 /**
  * Interface para atividade retornada pela Gemini
  */
 interface GeminiActivity {
   id: string;
-  title: string;
-  description: string;
-  duration?: string;
-  difficulty?: string;
-  category?: string;
-  type?: string;
-  camposPreenchidos?: Record<string, any>;
+  title?: string;
+  description?: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+  [key: string]: any;
 }
 
 /**
@@ -26,11 +22,6 @@ interface ValidatedActivity {
   description: string;
   personalizedTitle?: string;
   personalizedDescription?: string;
-  duration?: string;
-  difficulty?: string;
-  category?: string;
-  type?: string;
-  camposPreenchidos?: Record<string, any>;
 }
 
 /**
@@ -55,7 +46,7 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
   }
 
   const normalizedId = activityId.trim().toLowerCase();
-
+  
   return allowedActivities.some(activity => {
     const activityNormalizedId = activity.id.toLowerCase();
     return (
@@ -101,55 +92,29 @@ function validateSingleActivity(
 
   // Busca a atividade original
   const originalActivity = findActivityById(normalizedId, allowedActivities);
-
+  
   if (!originalActivity) {
     console.warn(`❌ Atividade não encontrada: ${normalizedId}`);
     return null;
   }
 
-  // Priorizar dados personalizados da IA quando disponíveis
-  const personalizedTitle = activity.personalizedTitle || activity.title;
-  const personalizedDescription = activity.personalizedDescription || activity.description;
-
-  // Cria atividade validada preservando toda a personalização
+  // Cria atividade validada
   const validatedActivity: ValidatedActivity = {
     id: originalActivity.id,
-    title: personalizedTitle && personalizedTitle.trim() !== '' 
-      ? personalizedTitle 
-      : originalActivity.name,
-    description: personalizedDescription && personalizedDescription.trim() !== '' 
-      ? personalizedDescription 
-      : originalActivity.description,
-    personalizedTitle: personalizedTitle,
-    personalizedDescription: personalizedDescription
+    title: activity.personalizedTitle || activity.title || originalActivity.name,
+    description: activity.personalizedDescription || activity.description || originalActivity.description,
   };
 
-  // Preservar campos adicionais da resposta da IA
-  if (activity.duration) {
-    validatedActivity.duration = activity.duration;
-  }
-  if (activity.difficulty) {
-    validatedActivity.difficulty = activity.difficulty;
-  }
-  if (activity.category) {
-    validatedActivity.category = activity.category;
-  }
-  if (activity.type) {
-    validatedActivity.type = activity.type;
+  // Adiciona campos de personalização se existirem
+  if (activity.personalizedTitle) {
+    validatedActivity.personalizedTitle = activity.personalizedTitle;
   }
 
-  // Preservar campos preenchidos automaticamente se existirem
-  if (activity.camposPreenchidos) {
-    validatedActivity.camposPreenchidos = activity.camposPreenchidos;
+  if (activity.personalizedDescription) {
+    validatedActivity.personalizedDescription = activity.personalizedDescription;
   }
 
-  console.log('✅ Atividade validada com personalização:', {
-    id: validatedActivity.id,
-    originalTitle: originalActivity.name,
-    personalizedTitle: validatedActivity.personalizedTitle,
-    finalTitle: validatedActivity.title
-  });
-
+  console.log('✅ Atividade validada:', validatedActivity);
   return validatedActivity;
 }
 
@@ -161,7 +126,7 @@ function removeDuplicates(activities: ValidatedActivity[]): {
   duplicateIds: string[] 
 } {
   console.log('🔄 Removendo duplicatas...');
-
+  
   const seen = new Set<string>();
   const uniqueActivities: ValidatedActivity[] = [];
   const duplicateIds: string[] = [];
@@ -247,7 +212,7 @@ export async function validateGeminiPlan(
     console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
 
     const validatedActivity = validateSingleActivity(activity, allowedActivities);
-
+    
     if (validatedActivity) {
       validatedActivities.push(validatedActivity);
     } else {
@@ -292,34 +257,6 @@ export async function validateGeminiPlan(
 
   console.log('✅ Validação concluída com sucesso');
   console.log('📊 Atividades aprovadas:', uniqueActivities.map(a => ({ id: a.id, title: a.title })));
-
-  // Converter atividades válidas para ActionPlanItems
-  console.log('🔄 Convertendo atividades para ActionPlanItems...');
-  const actionPlanItems: ActionPlanItem[] = validActivities.map(activity => {
-    const actionPlanItem: ActionPlanItem = {
-      id: activity.id,
-      title: activity.title,
-      description: activity.description,
-      duration: activity.duration || "Personalizado",
-      difficulty: activity.difficulty || "Personalizado",
-      category: activity.category || "geral",
-      type: activity.type || "Atividade",
-      approved: false,
-      isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
-      camposPreenchidos: activity.camposPreenchidos || {}
-    };
-
-    console.log('✅ ActionPlanItem criado:', {
-      id: actionPlanItem.id,
-      title: actionPlanItem.title,
-      description: actionPlanItem.description,
-      approved: actionPlanItem.approved,
-      isTrilhasEligible: actionPlanItem.isTrilhasEligible,
-      camposPreenchidos: actionPlanItem.camposPreenchidos
-    });
-
-    return actionPlanItem;
-  });
 
   return uniqueActivities;
 }

@@ -14,14 +14,13 @@ export interface ActionPlanItem {
   id: string;
   title: string;
   description: string;
-  duration: string;
-  difficulty: string;
-  category: string;
-  type: string;
-  isManual?: boolean;
-  approved?: boolean;
+  approved: boolean;
   isTrilhasEligible?: boolean;
-  camposPreenchidos?: Record<string, any>;
+  duration?: string;
+  difficulty?: string;
+  category?: string;
+  type?: string;
+  isManual?: boolean;
 }
 
 // Function to get the correct activity name from schoolPowerActivities

@@ -1,9 +1,8 @@
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
-import { validateGeminiPlan } from './validateGeminiPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
-import { activityMaterialFieldsMap, getCamposObrigatorios, AVAILABLE_FIELD_TYPES } from '../data/activityMaterialFieldsMap';
+import { validateGeminiPlan } from './validateGeminiPlan';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
@@ -47,94 +46,33 @@ function buildGeminiPrompt(
   // Simplificar lista de atividades para economizar tokens
   const activitiesIds = allowedActivities
     .filter(a => a.enabled)
-    .map(a => a.id);
+    .map(a => a.id); // Remover limitação para permitir todas as atividades
 
-  // Criar exemplo de campos obrigatórios para o prompt
-  const fieldExamples = Object.entries(activityMaterialFieldsMap).slice(0, 3).map(([id, config]) => {
-    return `"${id}": [${config.camposObrigatorios.map(campo => `"${campo}"`).join(', ')}]`;
-  }).join('\n  ');
-
-  // Analisar contexto para personalização mais inteligente
-  const materias = contextualizationData.subjects || contextualizationData.materias || 'Geral';
-  const publicoAlvo = contextualizationData.audience || contextualizationData.publicoAlvo || 'Estudantes';
-  const restricoes = contextualizationData.restrictions || contextualizationData.restricoes || 'Nenhuma';
-  const datasImportantes = contextualizationData.dates || contextualizationData.datasImportantes || 'Não especificado';
-  const observacoes = contextualizationData.notes || contextualizationData.observacoes || 'Nenhuma';
-
-  // Identificar palavras-chave específicas no pedido para personalização mais precisa
-  const palavrasChave = initialMessage.toLowerCase();
-  const isListaExercicios = palavrasChave.includes('lista') || palavrasChave.includes('exercicio');
-  const isProva = palavrasChave.includes('prova') || palavrasChave.includes('avaliacao');
-  const isBimestre = palavrasChave.includes('bimestre') || palavrasChave.includes('trimestre');
+  const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
   
-  // Criar contexto educacional mais específico
-  let contextoEspecifico = '';
-  if (materias && materias !== 'Geral' && materias !== '7') {
-    contextoEspecifico += `\nDISCIPLINA ESPECÍFICA: ${materias}`;
-  }
-  if (publicoAlvo && publicoAlvo !== 'Estudantes' && publicoAlvo !== '7') {
-    contextoEspecifico += `\nPÚBLICO-ALVO: ${publicoAlvo}`;
-  }
-  if (isBimestre) {
-    contextoEspecifico += `\nPERÍODO: Atividade para período bimestral/trimestral`;
-  }
+Aqui estão as informações coletadas:
 
-  const prompt = `Você é uma IA especializada em educação que cria planos de ação ULTRA PERSONALIZADOS baseados nos dados coletados. Você deve personalizar CADA atividade de acordo com o contexto específico fornecido.
+DADOS:
+- Pedido: "${initialMessage}"
+- Matérias e temas: ${contextualizationData.subjects || 'Geral'}
+- Público: ${contextualizationData.audience || 'Estudantes'}
+- Restrições: "${contextualizationData.restrictions}"
+- Datas importantes: "${contextualizationData.dates}"
+- Observações: ${contextualizationData.notes || 'Nenhuma'}
 
-🎯 ANÁLISE DO PEDIDO:
-Pedido original: "${initialMessage}"
+ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
 
-📊 DADOS DE CONTEXTUALIZAÇÃO:
-- Matérias/Disciplinas: ${materias}
-- Público-alvo: ${publicoAlvo}
-- Restrições específicas: ${restricoes}
-- Datas importantes: ${datasImportantes}
-- Observações especiais: ${observacoes}${contextoEspecifico}
+INSTRUÇÕES:
+1. Analise cuidadosamente todas as informações fornecidas
+2. TAREFA: Selecione 10-35 atividades adequadas ao pedido, priorizando variedade e completude. Retorne APENAS este JSON:
+[{"id":"atividade-id","title":"Título Personalizado","description":"Descrição contextualizada", "duration": "30 min", "difficulty": "Médio", "category": "Geral", "type": "atividade"}]
+3. Personalize o título e descrição de cada atividade com base nas informações coletadas
+4. Priorize a diversidade de tipos de atividades para criar um plano completo e abrangente
+5. Se o usuário pediu atividades específicas (como "lista de exercícios", "prova", "mapa mental", etc.), INCLUA TODAS elas!!!!!!!
+6. Se o usuário pediu algo que demanda muitas atividades, faça o máximo de atividades possíveis, de uma maneira planejada, e priorizando a organização e planejamento para o professor/coordenador!
+7. Se por acaso nos dados coletados tiver um número de atividades especificas para ser criadas/geradas, gere exatamente a mesma quantidade de atividades, sem deixar nada faltando!!!!!!!
 
-🎲 ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
-
-🔧 CAMPOS AUTOMÁTICOS POR ATIVIDADE:
-${fieldExamples}
-
-📝 INSTRUÇÕES PARA PERSONALIZAÇÃO TOTAL:
-
-1. ANÁLISE OBRIGATÓRIA:
-   - Identifique EXATAMENTE o que foi pedido
-   - Use as matérias/disciplinas mencionadas
-   - Considere o público-alvo específico
-   - Respeite todas as restrições
-
-2. PERSONALIZAÇÃO INTELIGENTE:
-   - TÍTULOS: Sempre inclua a disciplina + tema específico + nível
-   - DESCRIÇÕES: Contextualize com base nos dados coletados
-   - Se mencionou "Língua Portuguesa + Substantivos e Verbos" → personalize para isso
-   - Se mencionou "3º bimestre" → inclua referências ao período
-
-3. SELEÇÃO DE ATIVIDADES:
-   ${isListaExercicios ? '- PRIORIDADE: Lista de exercícios (pedido específico identificado)' : ''}
-   ${isProva ? '- PRIORIDADE: Prova/avaliação (pedido específico identificado)' : ''}
-   - Selecione 8-15 atividades relevantes
-   - Garanta variedade e completude
-   - Use APENAS os IDs da lista fornecida
-
-4. FORMATO DE RESPOSTA (JSON):
-[
-  {
-    "id": "id-da-atividade",
-    "personalizedTitle": "Título Ultra Personalizado com Disciplina + Tema + Contexto",
-    "personalizedDescription": "Descrição detalhada considerando matéria, público, período e observações específicas",
-    "duration": "Tempo estimado",
-    "difficulty": "Nível adequado ao público",
-    "category": "Categoria relevante",
-    "type": "Tipo da atividade"
-  }
-]
-
-⚠️ REGRAS CRÍTICAS:
-- SEMPRE personalize títulos e descrições com base nos dados coletados
-- Use APENAS IDs válidos da lista fornecida
-- Retorne APENAS o JSON válido, sem texto adicional
-- Contextualize CADA atividade para as disciplinas/temas mencionados`;
+IMPORTANTE: Use SOMENTE os IDs listados acima.`;
 
   return prompt;
 }
@@ -369,37 +307,24 @@ export async function generatePersonalizedPlan(
 
 
 
+    // Mapear atividades validadas para o formato do ActionPlanItem
+    const actionPlanItems = validatedActivities.map(activity => ({
+        id: activity.id,
+        title: activity.personalizedTitle || activity.title,
+        description: activity.personalizedDescription || activity.description,
+        approved: false,
+        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id)
+    }));
+
     if (validatedActivities.length === 0) {
       console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
       return generateFallbackPlan(initialMessage, contextualizationData);
     }
 
-    // Mapear atividades validadas para o formato do ActionPlanItem
-    const actionPlanItems: ActionPlanItem[] = validatedActivities.map(activity => {
-      const actionPlanItem: ActionPlanItem = {
-        id: activity.id,
-        title: activity.personalizedTitle || activity.title,
-        description: activity.personalizedDescription || activity.description,
-        duration: activity.duration || "Personalizado",
-        difficulty: activity.difficulty || "Personalizado", 
-        category: activity.category || "Geral",
-        type: activity.type || "Atividade",
-        approved: false,
-        isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
-        camposPreenchidos: activity.camposPreenchidos || {}
-      };
+    // Converte para ActionPlanItems
+    const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
 
-      console.log('✅ ActionPlanItem personalizado criado:', {
-        id: actionPlanItem.id,
-        title: actionPlanItem.title,
-        description: actionPlanItem.description?.substring(0, 100) + '...',
-        personalizada: !!(activity.personalizedTitle || activity.personalizedDescription)
-      });
-
-      return actionPlanItem;
-    });
-
-    console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems.length, 'atividades');
+    console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems);
     return actionPlanItems;
 
   } catch (error) {
