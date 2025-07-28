@@ -1,7 +1,5 @@
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
-import { getEnabledSchoolPowerActivities } from '../activitiesManager';
-import { generateActivityPrompt, validateActivityResponse, ActivityFieldData } from './activityFieldsService';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
@@ -51,7 +49,7 @@ function buildGeminiPrompt(
     .map(a => a.id); // Remover limitação para permitir todas as atividades
 
   const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
-
+  
 Aqui estão as informações coletadas:
 
 DADOS:
@@ -272,114 +270,68 @@ function generateFallbackPlan(
 }
 
 /**
- * Gera campos detalhados para uma atividade específica via IA
+ * Função principal para gerar plano personalizado
  */
-export async function generateActivityFields(
-  activityId: string,
-  contextualizationData: ContextualizationData
-): Promise<ActivityFieldData | null> {
-  try {
-    console.log(`🎯 Gerando campos para atividade: ${activityId}`);
-
-    const prompt = generateActivityPrompt(activityId, contextualizationData);
-
-    console.log('📝 Prompt enviado para Gemini:', prompt);
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na API do Gemini: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!generatedText) {
-      throw new Error('Resposta vazia da API do Gemini');
-    }
-
-    console.log('🤖 Resposta bruta do Gemini:', generatedText);
-
-    // Extrair JSON da resposta
-    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Formato JSON não encontrado na resposta da IA');
-    }
-
-    const activityData = JSON.parse(jsonMatch[0]);
-
-    // Validar resposta
-    const validation = validateActivityResponse(activityId, activityData);
-    if (!validation.isValid) {
-      console.warn('⚠️ Campos faltantes na resposta:', validation.missingFields);
-    }
-
-    console.log('✅ Campos gerados com sucesso:', activityData);
-    return activityData;
-
-  } catch (error) {
-    console.error('❌ Erro ao gerar campos da atividade:', error);
-    return null;
-  }
-}
-
 export async function generatePersonalizedPlan(
+  initialMessage: string,
   contextualizationData: ContextualizationData
 ): Promise<ActionPlanItem[]> {
   console.log('🤖 Iniciando geração de plano personalizado...');
-  console.log('📝 Dados de entrada:', { contextualizationData });
+  console.log('📝 Dados de entrada:', { initialMessage, contextualizationData });
 
   try {
     // Validação dos dados de entrada
+    if (!initialMessage?.trim()) {
+      throw new Error('Mensagem inicial é obrigatória');
+    }
+
     if (!contextualizationData) {
       throw new Error('Dados de contextualização são obrigatórios');
     }
 
-    const enabledActivities = getEnabledSchoolPowerActivities();
-    console.log('📚 Atividades disponíveis:', enabledActivities.length);
+    // Carrega atividades permitidas
+    console.log('📚 Atividades disponíveis:', schoolPowerActivities.length);
 
-    // 1. Gerar campos das atividades
-    const activityFieldsPromises = enabledActivities.map(activity =>
-      generateActivityFields(activity.id, contextualizationData)
-    );
+    // Constrói o prompt estruturado
+    const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities);
+    console.log('📝 Prompt construído com sucesso');
 
-    const activityFields = await Promise.all(activityFieldsPromises);
+    // Chama a API Gemini
+    const geminiResponse = await callGeminiAPI(prompt);
 
-    const validActivities = enabledActivities.filter((_, index) => activityFields[index] !== null);
+    // Processa a resposta
+    const geminiActivities = parseGeminiResponse(geminiResponse);
 
-    const actionPlanItems = validActivities.map((activity) => {
-      return {
+    // Valida as atividades retornadas
+    const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
+
+
+
+    // Mapear atividades validadas para o formato do ActionPlanItem
+    const actionPlanItems = validatedActivities.map(activity => ({
         id: activity.id,
-        title: activity.name,
-        description: activity.description,
+        title: activity.personalizedTitle || activity.title,
+        description: activity.personalizedDescription || activity.description,
         approved: false,
         isTrilhasEligible: isActivityEligibleForTrilhas(activity.id)
-      };
-    });
+    }));
+
+    if (validatedActivities.length === 0) {
+      console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
+      return generateFallbackPlan(initialMessage, contextualizationData);
+    }
+
+    // Converte para ActionPlanItems
+    const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
 
     console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems);
     return actionPlanItems;
 
   } catch (error) {
     console.error('❌ Erro ao gerar plano personalizado:', error);
-    return []; // Retornar array vazio em caso de erro
+
+    // Em caso de erro, retorna o plano de fallback
+    console.log('🔄 Usando plano de fallback devido ao erro');
+    return generateFallbackPlan(initialMessage, contextualizationData);
   }
 }

@@ -1,2 +1,0 @@
-
-export { ActivityFieldsDisplay } from './ActivityFieldsDisplay';
