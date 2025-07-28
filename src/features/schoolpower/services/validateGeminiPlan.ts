@@ -1,16 +1,20 @@
-
+import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
+import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
+import { getCamposObrigatorios, hasCustomFields } from '../data/activityMaterialFieldsMap';
 
 /**
  * Interface para atividade retornada pela Gemini
  */
 interface GeminiActivity {
   id: string;
-  title?: string;
-  description?: string;
-  personalizedTitle?: string;
-  personalizedDescription?: string;
-  [key: string]: any;
+  title: string;
+  description: string;
+  duration?: string;
+  difficulty?: string;
+  category?: string;
+  type?: string;
+  camposPreenchidos?: Record<string, any>;
 }
 
 /**
@@ -46,7 +50,7 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
   }
 
   const normalizedId = activityId.trim().toLowerCase();
-  
+
   return allowedActivities.some(activity => {
     const activityNormalizedId = activity.id.toLowerCase();
     return (
@@ -92,7 +96,7 @@ function validateSingleActivity(
 
   // Busca a atividade original
   const originalActivity = findActivityById(normalizedId, allowedActivities);
-  
+
   if (!originalActivity) {
     console.warn(`❌ Atividade não encontrada: ${normalizedId}`);
     return null;
@@ -126,7 +130,7 @@ function removeDuplicates(activities: ValidatedActivity[]): {
   duplicateIds: string[] 
 } {
   console.log('🔄 Removendo duplicatas...');
-  
+
   const seen = new Set<string>();
   const uniqueActivities: ValidatedActivity[] = [];
   const duplicateIds: string[] = [];
@@ -212,7 +216,7 @@ export async function validateGeminiPlan(
     console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
 
     const validatedActivity = validateSingleActivity(activity, allowedActivities);
-    
+
     if (validatedActivity) {
       validatedActivities.push(validatedActivity);
     } else {
@@ -257,6 +261,34 @@ export async function validateGeminiPlan(
 
   console.log('✅ Validação concluída com sucesso');
   console.log('📊 Atividades aprovadas:', uniqueActivities.map(a => ({ id: a.id, title: a.title })));
+
+  // Converter atividades válidas para ActionPlanItems
+  console.log('🔄 Convertendo atividades para ActionPlanItems...');
+  const actionPlanItems: ActionPlanItem[] = validActivities.map(activity => {
+    const actionPlanItem: ActionPlanItem = {
+      id: activity.id,
+      title: activity.title,
+      description: activity.description,
+      duration: activity.duration || "Personalizado",
+      difficulty: activity.difficulty || "Personalizado",
+      category: activity.category || "geral",
+      type: activity.type || "Atividade",
+      approved: false,
+      isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
+      camposPreenchidos: activity.camposPreenchidos || {}
+    };
+
+    console.log('✅ ActionPlanItem criado:', {
+      id: actionPlanItem.id,
+      title: actionPlanItem.title,
+      description: actionPlanItem.description,
+      approved: actionPlanItem.approved,
+      isTrilhasEligible: actionPlanItem.isTrilhasEligible,
+      camposPreenchidos: actionPlanItem.camposPreenchidos
+    });
+
+    return actionPlanItem;
+  });
 
   return uniqueActivities;
 }

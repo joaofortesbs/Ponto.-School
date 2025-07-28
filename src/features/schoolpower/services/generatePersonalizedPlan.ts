@@ -1,8 +1,9 @@
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
-import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
+import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
+import { activityMaterialFieldsMap, getCamposObrigatorios, AVAILABLE_FIELD_TYPES } from '../data/activityMaterialFieldsMap';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
@@ -48,8 +49,17 @@ function buildGeminiPrompt(
     .filter(a => a.enabled)
     .map(a => a.id); // Remover limitação para permitir todas as atividades
 
+  // Criar exemplo de campos obrigatórios para o prompt
+  const fieldExamples = Object.entries(activityMaterialFieldsMap).slice(0, 3).map(([id, config]) => {
+    return `"${id}": [${config.camposObrigatorios.map(campo => `"${campo}"`).join(', ')}]`;
+  }).join('\n  ');
+
+  // Verificar se é um teste - priorizar lista-exercicios para teste
+  const isTestMode = initialMessage.toLowerCase().includes('teste') || initialMessage.toLowerCase().includes('lista');
+  const priorityNote = isTestMode ? '\n\nPRIORIDADE DE TESTE: Inclua pelo menos uma atividade do tipo "lista-exercicios" nas primeiras sugestões para demonstrar o sistema de campos automáticos.' : '';
+
   const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
-  
+
 Aqui estão as informações coletadas:
 
 DADOS:
@@ -61,6 +71,12 @@ DADOS:
 - Observações: ${contextualizationData.notes || 'Nenhuma'}
 
 ATIVIDADES DISPONÍVEIS: ${activitiesIds.join(', ')}
+
+CAMPOS OBRIGATÓRIOS POR TIPO DE ATIVIDADE:
+Para cada atividade que você sugerir, identifique o ID e preencha automaticamente os campos obrigatórios correspondentes. Exemplos:
+  ${fieldExamples}
+
+TIPOS DE CAMPOS DISPONÍVEIS: ${AVAILABLE_FIELD_TYPES.join(', ')}
 
 INSTRUÇÕES:
 1. Analise cuidadosamente todas as informações fornecidas

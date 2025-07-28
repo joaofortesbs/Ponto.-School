@@ -48,6 +48,7 @@ import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
+import { hasCustomFields, getCamposObrigatorios } from '../data/activityMaterialFieldsMap';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -73,6 +74,7 @@ export interface ActionPlanItem {
   type: string;
   isManual?: boolean;
   approved?: boolean;
+  camposPreenchidos?: Record<string, any>;
 }
 
 interface CardDeConstrucaoProps {
@@ -169,6 +171,11 @@ export function CardDeConstrucao({
       }));
 
       try {
+        // Log campos preenchidos se existirem
+        if (activity.camposPreenchidos && Object.keys(activity.camposPreenchidos).length > 0) {
+          console.log(`🔧 Construindo atividade ${activity.id} com campos preenchidos:`, activity.camposPreenchidos);
+        }
+
         // Simulate building
         await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -335,6 +342,33 @@ export function CardDeConstrucao({
     const aiActivities = actionPlan || [];
     const allActivities = [...aiActivities, ...manualActivities];
     return allActivities;
+  };
+
+  // Componente para exibir campos preenchidos
+  const CamposPreenchidosDisplay = ({ activity }: { activity: ActionPlanItem }) => {
+    if (!activity.camposPreenchidos || Object.keys(activity.camposPreenchidos).length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          📋 Detalhes da Atividade
+        </h4>
+        <div className="grid grid-cols-1 gap-2">
+          {Object.entries(activity.camposPreenchidos).map(([campo, valor]) => (
+            <div key={campo} className="flex flex-col">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400 capitalize">
+                {campo.replace(/([A-Z])/g, ' $1').trim()}:
+              </span>
+              <span className="text-sm text-gray-800 dark:text-gray-200">
+                {Array.isArray(valor) ? valor.join(', ') : valor}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // Check if contextualization form is valid
@@ -1270,10 +1304,18 @@ export function CardDeConstrucao({
                               {activity.description}
                             </p>
 
+                            {/* Exibir campos preenchidos se existirem */}
+                            <CamposPreenchidosDisplay activity={activity} />
+
                             <div className="mt-2">
                               <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
                                 ID: {activity.id}
                               </span>
+                              {hasCustomFields(activity.id) && (
+                                <span className="ml-2 text-xs px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded">
+                                  ✨ Campos Automáticos
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

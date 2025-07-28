@@ -3,6 +3,7 @@ import { ContextualizationData } from '../contextualization/ContextualizationCar
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
+import { hasCustomFields } from '../data/activityMaterialFieldsMap';
 
 export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
