@@ -144,7 +144,7 @@ export function CardDeConstrucao({
   const [isBuilding, setIsBuilding] = useState(false);
 
   // State for tracking building progress
-  const [progress, setProgress = useState<{
+  const [progress, setProgress] = useState<{
     total: number;
     completed: number;
     current: string;
