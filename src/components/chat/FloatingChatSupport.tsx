@@ -1574,7 +1574,7 @@ Exemplo de formato da resposta:
                   console.error("Erro ao processar áudio:", error);
                   const errorMessage: ChatMessage = {
                     id: Date.now() + 1,
-                    content: "Desculpe, encontrei um problema ao processar seu áudio."; Por favor, tente novamente mais tarde.",
+                    content: "Desculpe, encontrei um problema ao processar seu áudio. Por favor, tente novamente mais tarde.",
                     sender: "assistant",
                     timestamp: new Date(),
                   };
