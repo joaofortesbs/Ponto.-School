@@ -684,6 +684,49 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
+  // Adicionar preenchimento automático dos campos do modal com dados da IA
+  const handleEditActivity = (activity: any) => {
+    console.log('🔧 Editando atividade:', activity.id);
+
+    // Buscar dados da atividade no action plan se disponível
+    const actionPlanActivity = actionPlan?.find(item => item.id === activity.id);
+
+    if (actionPlanActivity?.customFields && Object.keys(actionPlanActivity.customFields).length > 0) {
+      console.log('📋 Preenchendo automaticamente com dados da IA:', actionPlanActivity.customFields);
+
+      // Preparar dados automáticos para preenchimento do modal
+      const autoDataKey = `auto_activity_data_${activity.id}`;
+      const autoFormData = {
+        title: actionPlanActivity.title || activity.title,
+        description: actionPlanActivity.description || activity.description,
+        subject: actionPlanActivity.customFields['Disciplina'] || 'Português',
+        theme: actionPlanActivity.customFields['Tema'] || '',
+        schoolYear: actionPlanActivity.customFields['Ano de Escolaridade'] || '',
+        numberOfQuestions: actionPlanActivity.customFields['Quantidade de Questões'] || '10',
+        difficultyLevel: actionPlanActivity.customFields['Nível de Dificuldade'] || 'Médio',
+        questionModel: actionPlanActivity.customFields['Modelo de Questões'] || '',
+        sources: actionPlanActivity.customFields['Fontes'] || '',
+        objectives: actionPlanActivity.customFields['Objetivos'] || '',
+        materials: actionPlanActivity.customFields['Materiais'] || '',
+        instructions: actionPlanActivity.customFields['Instruções'] || '',
+        evaluation: actionPlanActivity.customFields['Critérios de Correção'] || actionPlanActivity.customFields['Critérios de Avaliação'] || ''
+      };
+
+      // Salvar dados automáticos no localStorage para o modal usar
+      const autoData = {
+        formData: autoFormData,
+        customFields: actionPlanActivity.customFields,
+        timestamp: Date.now()
+      };
+
+      localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+      console.log('💾 Dados automáticos salvos para:', activity.id, autoFormData);
+    }
+
+    setSelectedActivity(activity);
+    setIsEditModalOpen(true);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -901,7 +944,7 @@ export function CardDeConstrucao({
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities2)}
-            <ConstructionInterface approvedActivities={selectedActivities2} />
+            <ConstructionInterface approvedActivities={selectedActivities2} handleEditActivity={handleEditActivity} />
           </div>
         </motion.div>
       ) : (
@@ -1186,8 +1229,7 @@ export function CardDeConstrucao({
                               </div>
                               <span className="text-sm font-bold text-purple-600 whitespace-nowrap transition-all duration-300">
                                 Manual
-                              </span>
-                            </div>
+                              </span>                            </div>
                           </div>
                         )}
 

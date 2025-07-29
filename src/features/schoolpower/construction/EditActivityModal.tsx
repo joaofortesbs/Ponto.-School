@@ -54,7 +54,25 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     objectives: '',
     materials: '',
     instructions: '',
-    evaluation: ''
+    evaluation: '',
+    timeLimit: '',
+    context: '',
+    textType: '',
+    textGenre: '',
+    textLength: '',
+    associatedQuestions: '',
+    competencies: '',
+    readingStrategies: '',
+    visualResources: '',
+    practicalActivities: '',
+    wordsIncluded: '',
+    gridFormat: '',
+    providedHints: '',
+    vocabularyContext: '',
+    language: '',
+    associatedExercises: '',
+    knowledgeArea: '',
+    complexityLevel: ''
   });
 
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
@@ -80,9 +98,49 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       if (autoData) {
         try {
-          const { formData: autoFormData } = JSON.parse(autoData);
+          const { formData: autoFormData, customFields } = JSON.parse(autoData);
           console.log('📋 Carregando dados automáticos para:', activity.title);
-          setFormData(autoFormData);
+          console.log('🔧 Campos personalizados encontrados:', customFields);
+          
+          // Mapear todos os campos personalizados para os campos do formulário
+          const enrichedFormData = {
+            ...autoFormData,
+            // Mapeamentos específicos para campos personalizados
+            subject: customFields['Disciplina'] || autoFormData.subject || 'Português',
+            theme: customFields['Tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || autoFormData.theme || '',
+            schoolYear: customFields['Ano de Escolaridade'] || autoFormData.schoolYear || '',
+            numberOfQuestions: customFields['Quantidade de Questões'] || customFields['Quantidade de Palavras'] || autoFormData.numberOfQuestions || '10',
+            difficultyLevel: customFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
+            questionModel: customFields['Modelo de Questões'] || customFields['Tipo de Avaliação'] || autoFormData.questionModel || '',
+            sources: customFields['Fontes'] || autoFormData.sources || '',
+            objectives: customFields['Objetivos'] || customFields['Competências Trabalhadas'] || autoFormData.objectives || '',
+            materials: customFields['Materiais'] || customFields['Recursos Visuais'] || autoFormData.materials || '',
+            instructions: customFields['Instruções'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || autoFormData.instructions || '',
+            evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+            // Campos adicionais específicos
+            timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || '',
+            context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || '',
+            textType: customFields['Tipo de Texto'] || '',
+            textGenre: customFields['Gênero Textual'] || '',
+            textLength: customFields['Extensão do Texto'] || '',
+            associatedQuestions: customFields['Questões Associadas'] || '',
+            competencies: customFields['Competências Trabalhadas'] || '',
+            readingStrategies: customFields['Estratégias de Leitura'] || '',
+            visualResources: customFields['Recursos Visuais'] || '',
+            practicalActivities: customFields['Atividades Práticas'] || '',
+            wordsIncluded: customFields['Palavras Incluídas'] || '',
+            gridFormat: customFields['Formato da Grade'] || '',
+            providedHints: customFields['Dicas Fornecidas'] || '',
+            vocabularyContext: customFields['Contexto de Uso'] || '',
+            language: customFields['Idioma'] || '',
+            associatedExercises: customFields['Exercícios Associados'] || '',
+            knowledgeArea: customFields['Área de Conhecimento'] || '',
+            complexityLevel: customFields['Nível de Complexidade'] || ''
+          };
+
+          setFormData(enrichedFormData);
+          console.log('✅ Formulário preenchido automaticamente:', enrichedFormData);
+          
           // Limpar dados automáticos após uso
           localStorage.removeItem(autoDataKey);
         } catch (error) {
@@ -401,6 +459,31 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                                   placeholder="Digite as fontes de referência..."
                                   className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
+                              </div>
+
+                              {/* Campos adicionais específicos baseados nos customFields */}
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label htmlFor="timeLimit" className="text-sm">Tempo Limite</Label>
+                                  <Input
+                                    id="timeLimit"
+                                    value={formData.timeLimit || ''}
+                                    onChange={(e) => handleInputChange('timeLimit', e.target.value)}
+                                    placeholder="Ex: 50 minutos, 1 hora..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+
+                                <div>
+                                  <Label htmlFor="context" className="text-sm">Contexto de Aplicação</Label>
+                                  <Input
+                                    id="context"
+                                    value={formData.context || ''}
+                                    onChange={(e) => handleInputChange('context', e.target.value)}
+                                    placeholder="Ex: Produção textual, Sala de aula..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
                               </div>
                             </>
                           )}
