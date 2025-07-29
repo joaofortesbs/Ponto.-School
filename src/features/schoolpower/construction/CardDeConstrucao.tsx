@@ -458,7 +458,7 @@ export function CardDeConstrucao({
                 </button>
 
                 <button
-                  onClick={()={() => {
+                  onClick={() => {
                     onFilterApply('viewAll');
                     setIsFilterOpen(false);
                   }}
@@ -683,7 +683,7 @@ export function CardDeConstrucao({
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoFormData = {
         title: actionPlanActivity?.title || activity.title || originalData?.title || '',
-        description: actionPlanActivity?.``description || activity.description || originalData?.description || '',
+        description: actionPlanActivity?.description || activity.description || originalData?.description || '',
         subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
         theme: customFields['Tema'] || customFields['tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || '',
         schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['ano'] || '',
