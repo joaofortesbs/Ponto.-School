@@ -685,10 +685,13 @@ export function CardDeConstrucao({
   }, [selectedActivities2]);
 
   // Adicionar preenchimento automático dos campos do modal com dados da IA
+  const [selectedActivity, setSelectedActivity] = useState<ActionPlanItem | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const handleEditActivity = (activity: any) => {
     console.log('🔧 Editando atividade:', activity.id);
 
-    // Buscar dados da atividade no action plan se disponível
+        // Buscar dados da atividade no action plan se disponível
     const actionPlanActivity = actionPlan?.find(item => item.id === activity.id);
 
     if (actionPlanActivity?.customFields && Object.keys(actionPlanActivity.customFields).length > 0) {
@@ -1425,5 +1428,288 @@ export function CardDeConstrucao({
         </button>
       )}
     </motion.div>
+  );
+}
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import { Trash } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command"
+import { Check } from "lucide-react"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+
+// Define the ConstructionActivity type
+export interface ConstructionActivity {
+  id: string;
+  title: string;
+  description: string;
+  difficulty?: string;
+  duration?: string;
+  category?: string;
+  type?: string;
+  approved: boolean;
+  customFields?: Record<string, string>;
+  isManual?: boolean;
+}
+
+const formSchema = z.object({
+  title: z.string().min(2, {
+    message: "Título deve ter pelo menos 2 caracteres.",
+  }),
+  description: z.string().min(10, {
+    message: "Descrição deve ter pelo menos 10 caracteres.",
+  }),
+})
+
+interface ConstructionInterfaceProps {
+  approvedActivities: ConstructionActivity[];
+  handleEditActivity: (activity: ConstructionActivity) => void;
+}
+
+export function ConstructionInterface({ approvedActivities, handleEditActivity }: ConstructionInterfaceProps) {
+  const [editingActivity, setEditingActivity] = useState<ConstructionActivity | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const handleOpenEditModal = (activity: ConstructionActivity) => {
+      console.log('🎯 Abrindo modal para atividade:', activity.title);
+      console.log('📋 Custom Fields disponíveis:', activity.customFields);
+
+      // Função auxiliar para extrair valor dos customFields
+      const getCustomFieldValue = (keys: string[], defaultValue = '') => {
+        if (!activity.customFields) return defaultValue;
+        for (const key of keys) {
+          if (activity.customFields[key]) {
+            return activity.customFields[key];
+          }
+        }
+        return defaultValue;
+      };
+
+      // Armazenar dados automáticos no localStorage para preenchimento completo do modal
+      const autoDataKey = `auto_activity_data_${activity.id}`;
+      const autoData = {
+        formData: {
+          title: activity.title,
+          description: activity.description,
+
+          // Campos básicos
+          subject: getCustomFieldValue(['Disciplina', 'Matéria', 'Área'], 'Português'),
+          theme: getCustomFieldValue(['Tema', 'Tema das Palavras', 'Tema do Vocabulário', 'Assunto']),
+          schoolYear: getCustomFieldValue(['Ano de Escolaridade', 'Série', 'Ano']),
+          numberOfQuestions: getCustomFieldValue(['Quantidade de Questões', 'Quantidade de Palavras', 'Número de Questões'], '10'),
+          difficultyLevel: getCustomFieldValue(['Nível de Dificuldade', 'Dificuldade'], 'Médio'),
+          questionModel: getCustomFieldValue(['Modelo de Questões', 'Tipo de Avaliação', 'Formato']),
+          sources: getCustomFieldValue(['Fontes', 'Referências']),
+          objectives: getCustomFieldValue(['Objetivos', 'Objetivos de Aprendizagem']),
+          materials: getCustomFieldValue(['Materiais', 'Recursos Necessários']),
+          instructions: getCustomFieldValue(['Instruções', 'Orientações']),
+          evaluation: getCustomFieldValue(['Critérios de Correção', 'Critérios de Avaliação', 'Avaliação']),
+
+          // Campos adicionais específicos
+          timeLimit: getCustomFieldValue(['Tempo de Prova', 'Tempo Limite', 'Duração']),
+          context: getCustomFieldValue(['Contexto de Aplicação', 'Contexto de Uso', 'Contexto']),
+          textType: getCustomFieldValue(['Tipo de Texto']),
+          textGenre: getCustomFieldValue(['Gênero Textual']),
+          textLength: getCustomFieldValue(['Extensão do Texto']),
+          associatedQuestions: getCustomFieldValue(['Questões Associadas']),
+          competencies: getCustomFieldValue(['Competências Trabalhadas', 'Competências']),
+          readingStrategies: getCustomFieldValue(['Estratégias de Leitura']),
+          visualResources: getCustomFieldValue(['Recursos Visuais']),
+          practicalActivities: getCustomFieldValue(['Atividades Práticas']),
+          wordsIncluded: getCustomFieldValue(['Palavras Incluídas']),
+          gridFormat: getCustomFieldValue(['Formato da Grade']),
+          providedHints: getCustomFieldValue(['Dicas Fornecidas']),
+          vocabularyContext: getCustomFieldValue(['Contexto de Uso']),
+          language: getCustomFieldValue(['Idioma']),
+          associatedExercises: getCustomFieldValue(['Exercícios Associados']),
+          knowledgeArea: getCustomFieldValue(['Área de Conhecimento']),
+          complexityLevel: getCustomFieldValue(['Nível de Complexidade'])
+        },
+        customFields: activity.customFields || {},
+        timestamp: Date.now()
+      };
+
+      localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+      console.log('💾 Dados automáticos completos salvos:', autoData);
+      console.log('🔍 Verificando campos preenchidos:', Object.entries(autoData.formData).filter(([key, value]) => value && value.toString().trim()));
+
+      setEditingActivity(activity);
+      setShowEditModal(true);
+    };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditingActivity(null);
+  };
+
+  return (
+    <div className="w-full">
+      <h2 className="text-xl font-semibold mb-4">Atividades Aprovadas</h2>
+      {approvedActivities.length > 0 ? (
+        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {approvedActivities.map((activity) => (
+            <li key={activity.id} className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-semibold">{activity.title}</h3>
+              <p className="text-gray-600">{activity.description}</p>
+              <div className="mt-2 flex justify-end">
+                <Button onClick={() => handleOpenEditModal(activity)} variant="outline">
+                  Editar
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Nenhuma atividade aprovada.</p>
+      )}
+
+      {editingActivity && (
+        <EditActivityModal
+          isOpen={showEditModal}
+          onClose={handleCloseEditModal}
+          activity={editingActivity}
+        />
+      )}
+    </div>
+  );
+}
+
+interface EditActivityModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  activity: ConstructionActivity;
+}
+
+function EditActivityModal({ isOpen, onClose, activity }: EditActivityModalProps) {
+  const autoDataKey = `auto_activity_data_${activity.id}`;
+  const storedAutoData = localStorage.getItem(autoDataKey);
+  const initialFormData = storedAutoData ? JSON.parse(storedAutoData).formData : {};
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: initialFormData.title || activity.title,
+      description: initialFormData.description || activity.description,
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Editar Atividade</DialogTitle>
+          <DialogDescription>
+            Edite os campos da atividade. Clique em salvar quando terminar.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Título da atividade" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Descrição da atividade"
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit">Salvar</Button>
+          </form>
+        </Form>
+        <DialogFooter>
+          
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

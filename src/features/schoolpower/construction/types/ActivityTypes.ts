@@ -1,5 +1,6 @@
 
 export interface ActivityFormData {
+  // Campos obrigatórios
   title: string;
   description: string;
   subject: string;
@@ -13,24 +14,26 @@ export interface ActivityFormData {
   materials: string;
   instructions: string;
   evaluation: string;
-  timeLimit?: string;
-  context?: string;
-  textType?: string;
-  textGenre?: string;
-  textLength?: string;
-  associatedQuestions?: string;
-  competencies?: string;
-  readingStrategies?: string;
-  visualResources?: string;
-  practicalActivities?: string;
-  wordsIncluded?: string;
-  gridFormat?: string;
-  providedHints?: string;
-  vocabularyContext?: string;
-  language?: string;
-  associatedExercises?: string;
-  knowledgeArea?: string;
-  complexityLevel?: string;
+  
+  // Campos opcionais com valores padrão vazios
+  timeLimit: string;
+  context: string;
+  textType: string;
+  textGenre: string;
+  textLength: string;
+  associatedQuestions: string;
+  competencies: string;
+  readingStrategies: string;
+  visualResources: string;
+  practicalActivities: string;
+  wordsIncluded: string;
+  gridFormat: string;
+  providedHints: string;
+  vocabularyContext: string;
+  language: string;
+  associatedExercises: string;
+  knowledgeArea: string;
+  complexityLevel: string;
 }
 
 export interface GeneratedActivity {
