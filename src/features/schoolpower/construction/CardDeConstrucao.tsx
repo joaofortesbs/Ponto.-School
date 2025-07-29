@@ -4,23 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Clock, 
-  Building2, 
-  Lightbulb,
-  Target,
-  BookOpen,
-  Users,
-  Calendar,
-  AlertCircle,
-  Loader2,
-  FileText,
-  Edit3,
-  Eye,
-  Play
-} from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -38,7 +21,9 @@ import {
   Download, Upload, Share2, MessageSquare, ThumbsUp,
   Pause, SkipForward, Volume2, Wifi, Battery,
   Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
-  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle
+  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle,
+  Users, Target, Calendar, Clock, CheckCircle2, Lightbulb,
+  Eye, Edit3, Play, FileText, Building2
 } from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
@@ -55,14 +40,6 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   ...activity,
   name: activity.name || activity.title || activity.description
 }));
-
-export interface ContextualizationData {
-  materias: string;
-  publicoAlvo: string;
-  restricoes: string;
-  datasImportantes?: string;
-  observacoes?: string;
-}
 
 export interface ActionPlanItem {
   id: string;
