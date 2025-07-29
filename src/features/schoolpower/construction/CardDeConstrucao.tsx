@@ -241,7 +241,7 @@ export function CardDeConstrucao({
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
-      
+
       // Se estivermos na etapa de atividades, também atualizar selectedActivities
       if (step === 'activities') {
         setSelectedActivities(approved);
@@ -458,7 +458,7 @@ export function CardDeConstrucao({
                 </button>
 
                 <button
-                  onClick={() => {
+                  onClick={()={() => {
                     onFilterApply('viewAll');
                     setIsFilterOpen(false);
                   }}
@@ -661,10 +661,10 @@ export function CardDeConstrucao({
     // Buscar dados da atividade no action plan se disponível
     const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
                                actionPlan?.find(item => item.id === activity.id);
-    
+
     // Também verificar nos dados originais da atividade
     const originalData = activity.originalData || activity;
-    
+
     console.log('📊 Action plan activity encontrada:', actionPlanActivity);
     console.log('📊 Dados originais da atividade:', originalData);
 
@@ -683,7 +683,7 @@ export function CardDeConstrucao({
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoFormData = {
         title: actionPlanActivity?.title || activity.title || originalData?.title || '',
-        description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+        description: actionPlanActivity?.``description || activity.description || originalData?.description || '',
         subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
         theme: customFields['Tema'] || customFields['tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || '',
         schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['ano'] || '',
