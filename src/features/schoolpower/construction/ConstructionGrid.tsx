@@ -10,9 +10,10 @@ import { AlertCircle, Building2 } from 'lucide-react';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
+  handleEditActivity?: (activity: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
   const { activities, loading } = useConstructionActivities(approvedActivities);
@@ -22,7 +23,14 @@ export function ConstructionGrid({ approvedActivities }: ConstructionGridProps) 
 
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
-    openModal(activity);
+    
+    if (externalHandleEditActivity) {
+      // Usar a função externa se disponível
+      externalHandleEditActivity(activity);
+    } else {
+      // Fallback para a lógica interna
+      openModal(activity);
+    }
   };
 
   const handleView = (id: string) => {

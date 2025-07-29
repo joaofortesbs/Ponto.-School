@@ -244,54 +244,12 @@ export function CardDeConstrucao({
     }
   }, [actionPlan, step]);
 
-  const handleApproveActionPlan = async () => {
-    console.log('✅ Plano de ação aprovado! Iniciando construção automática com ModalBinderEngine...');
+  const handleApproveActionPlan = () => {
+    console.log('✅ Plano de ação aprovado! Transitando para interface de construção...');
+    console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
 
-    // Aprovar plano primeiro
+    // Aprovar plano e passar as atividades selecionadas
     onApproveActionPlan(selectedActivities2);
-
-    // Construir atividades automaticamente usando o novo sistema
-    if (selectedActivities2.length > 0) {
-      try {
-        console.log('🔧 Iniciando construção automática com ModalBinderEngine...');
-        console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
-
-        // Usar o contexto de contextualização para enriquecer a geração
-        const contextData = {
-          materias: formData.materias,
-          publicoAlvo: formData.publicoAlvo,
-          restricoes: formData.restricoes,
-          datasImportantes: formData.datasImportantes,
-          observacoes: formData.observacoes
-        };
-
-        console.log('🎯 Dados de contexto para geração:', contextData);
-
-        // Importar função de construção
-        const { buildActivities } = await import('./automationController');
-        
-        const success = await buildActivities(selectedActivities2, contextData);
-
-        if (success) {
-          console.log('🎉 Todas as atividades foram construídas automaticamente com ModalBinderEngine!');
-
-          // Exibir notificação de sucesso
-          console.log('✅ Sistema de construção automática funcionando corretamente!');
-        } else {
-          console.warn('⚠️ Algumas atividades podem ter falhado na construção automática');
-        }
-      } catch (error) {
-        console.error('❌ Erro durante construção automática:', error);
-        console.error('📊 Detalhes do erro:', {
-          message: error.message,
-          stack: error.stack,
-          selectedActivities: selectedActivities2.length,
-          contextData: !!contextData
-        });
-      }
-    } else {
-      console.log('ℹ️ Nenhuma atividade selecionada para construção automática');
-    }
   };
 
   // Handle manual activity form submission
@@ -693,7 +651,8 @@ export function CardDeConstrucao({
     console.log('🔍 Dados completos da atividade:', activity);
 
     // Buscar dados da atividade no action plan se disponível
-    const actionPlanActivity = actionPlan?.find(item => item.id === activity.id);
+    const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
+                               actionPlan?.find(item => item.id === activity.id);
     
     // Também verificar nos dados originais da atividade
     const originalData = activity.originalData || activity;
@@ -766,8 +725,13 @@ export function CardDeConstrucao({
       console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
     }
 
-    setSelectedActivity(activity);
-    setIsEditModalOpen(true);
+    // Para componentes que usam handleEditActivity, precisamos definir essas variáveis
+    if (typeof setSelectedActivity === 'function') {
+      setSelectedActivity(activity);
+    }
+    if (typeof setIsEditModalOpen === 'function') {
+      setIsEditModalOpen(true);
+    }
   };
 
   return (
@@ -987,7 +951,10 @@ export function CardDeConstrucao({
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities2)}
-            <ConstructionInterface approvedActivities={selectedActivities2} handleEditActivity={handleEditActivity} />
+            <ConstructionInterface 
+              approvedActivities={selectedActivities2} 
+              handleEditActivity={handleEditActivity} 
+            />
           </div>
         </motion.div>
       ) : (

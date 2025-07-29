@@ -4,6 +4,7 @@ import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 
 export interface ConstructionInterfaceProps {
   approvedActivities: any[];
+  handleEditActivity?: (activity: any) => void;
 }
 
 export interface ConstructionActivity {
@@ -16,13 +17,14 @@ export interface ConstructionActivity {
   originalData?: any;
 }
 
-export function ConstructionInterface({ approvedActivities }: ConstructionInterfaceProps) {
+export function ConstructionInterface({ approvedActivities, handleEditActivity }: ConstructionInterfaceProps) {
   console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
 
   return (
     <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)', backgroundColor: 'transparent' }}>
       <ConstructionGrid 
         approvedActivities={approvedActivities}
+        handleEditActivity={handleEditActivity}
       />
     </div>
   );
