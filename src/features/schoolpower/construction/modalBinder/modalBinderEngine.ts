@@ -1,4 +1,4 @@
-import { getFieldMap } from './fieldMaps';
+import { getFieldMap } from './fieldMaps/index';
 import { parseIAResponse } from './utils/parseIAResponse';
 import { fillModalField } from './utils/fieldSetter';
 

@@ -243,17 +243,17 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       try {
         const AutomationController = (await import('../construction/automationController')).default;
         const controller = AutomationController.getInstance();
-        
+
         // Executar construção automática para todas as atividades aprovadas
         const automationResults = await controller.autoBuildMultipleActivities(approvedItems);
-        
+
         const successCount = automationResults.filter(result => result.success).length;
         console.log(`✅ Construção automática concluída: ${successCount}/${approvedItems.length} atividades construídas com sucesso`);
-        
+
         if (successCount > 0) {
           console.log('🎉 Atividades construídas automaticamente com sucesso!');
         }
-        
+
       } catch (automationError) {
         console.error('❌ Erro na construção automática:', automationError);
         // Não interromper o fluxo mesmo se a automação falhar
@@ -298,9 +298,39 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   return {
     flowState,
     flowData,
-    sendInitialMessage,
-    submitContextualization,
-    approveActionPlan,
+    sendInitialMessage: (message: string) => {
+      console.log('📤 Enviando mensagem inicial:', message);
+      const newData = {
+        ...flowData,
+        initialMessage: message,
+        timestamp: Date.now()
+      };
+      setFlowData(newData);
+      saveData(newData);
+      setFlowState('contextualizing');
+    },
+    submitContextualization: (data: ContextualizationData) => {
+      console.log('📝 Submetendo contextualização:', data);
+      const newData = {
+        ...flowData,
+        contextualizationData: data,
+        timestamp: Date.now()
+      };
+      setFlowData(newData);
+      saveData(newData);
+      setFlowState('generating');
+    },
+    approveActionPlan: (approvedItems: ActionPlanItem[]) => {
+      console.log('✅ Aprovando plano de ação:', approvedItems);
+      const newData = {
+        ...flowData,
+        actionPlan: approvedItems,
+        timestamp: Date.now()
+      };
+      setFlowData(newData);
+      saveData(newData);
+      setFlowState('activities');
+    },
     resetFlow,
     isLoading
   };

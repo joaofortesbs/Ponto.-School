@@ -178,7 +178,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity }: Con
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity) => {
+        {activities && activities.length > 0 ? activities.map((activity) => {
             const status = constructionStatus[activity.id];
             const isBuilt = status?.built || false;
             const hasContent = !!status?.content;
@@ -201,7 +201,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity }: Con
                 onShare={() => console.log('Compartilhar atividade:', activity.id)}
               />
             );
-          })}
+          }) : (
+        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Nenhuma atividade para construir
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Approve algumas atividades no plano de ação para começar a construção.
+          </p>
+        </div>
+      )}
       </div>
 
       {/* Modal de Edição */}
