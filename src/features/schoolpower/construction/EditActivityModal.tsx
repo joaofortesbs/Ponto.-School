@@ -132,71 +132,104 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   });
 
   useEffect(() => {
-    if (activity) {
+    if (activity && isOpen) {
+      console.log('🔄 Modal aberto, carregando dados para atividade:', activity.id);
+      console.log('📊 Dados completos da atividade recebida:', activity);
+      
       // Verificar se há dados automáticos preenchidos
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoData = localStorage.getItem(autoDataKey);
 
       if (autoData) {
         try {
-          const { formData: autoFormData, customFields } = JSON.parse(autoData);
+          const { 
+            formData: autoFormData, 
+            customFields, 
+            originalActivity, 
+            actionPlanActivity 
+          } = JSON.parse(autoData);
+          
           console.log('📋 Carregando dados automáticos para:', activity.title);
           console.log('🔧 Campos personalizados encontrados:', customFields);
+          console.log('📊 Dados originais:', originalActivity);
+          console.log('📊 Action plan activity:', actionPlanActivity);
 
-          // Mapear todos os campos personalizados para os campos do formulário
-          const enrichedFormData = {
-            ...autoFormData,
-            // Mapeamentos específicos para campos personalizados
-            subject: customFields['Disciplina'] || autoFormData.subject || 'Português',
-            theme: customFields['Tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || autoFormData.theme || '',
-            schoolYear: customFields['Ano de Escolaridade'] || autoFormData.schoolYear || '',
-            numberOfQuestions: customFields['Quantidade de Questões'] || customFields['Quantidade de Palavras'] || autoFormData.numberOfQuestions || '10',
-            difficultyLevel: customFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
-            questionModel: customFields['Modelo de Questões'] || customFields['Tipo de Avaliação'] || autoFormData.questionModel || '',
-            sources: customFields['Fontes'] || autoFormData.sources || '',
-            objectives: customFields['Objetivos'] || customFields['Competências Trabalhadas'] || autoFormData.objectives || '',
-            materials: customFields['Materiais'] || customFields['Recursos Visuais'] || autoFormData.materials || '',
-            instructions: customFields['Instruções'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || autoFormData.instructions || '',
-            evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
-            // Campos adicionais específicos
-            timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || '',
-            context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || '',
-            textType: customFields['Tipo de Texto'] || '',
-            textGenre: customFields['Gênero Textual'] || '',
-            textLength: customFields['Extensão do Texto'] || '',
-            associatedQuestions: customFields['Questões Associadas'] || '',
-            competencies: customFields['Competências Trabalhadas'] || '',
-            readingStrategies: customFields['Estratégias de Leitura'] || '',
-            visualResources: customFields['Recursos Visuais'] || '',
-            practicalActivities: customFields['Atividades Práticas'] || '',
-            wordsIncluded: customFields['Palavras Incluídas'] || '',
-            gridFormat: customFields['Formato da Grade'] || '',
-            providedHints: customFields['Dicas Fornecidas'] || '',
-            vocabularyContext: customFields['Contexto de Uso'] || '',
-            language: customFields['Idioma'] || '',
-            associatedExercises: customFields['Exercícios Associados'] || '',
-            knowledgeArea: customFields['Área de Conhecimento'] || '',
-            complexityLevel: customFields['Nível de Complexidade'] || ''
+          // Garantir que todos os dados disponíveis sejam utilizados
+          const consolidatedData = {
+            ...activity,
+            ...originalActivity,
+            ...actionPlanActivity
           };
 
-          setFormData(enrichedFormData);
-          console.log('✅ Formulário preenchido automaticamente:', enrichedFormData);
+          const consolidatedCustomFields = {
+            ...originalActivity?.customFields,
+            ...actionPlanActivity?.customFields,
+            ...customFields
+          };
 
-          // Limpar dados automáticos após uso
-          localStorage.removeItem(autoDataKey);
+          console.log('🔀 Dados consolidados:', consolidatedData);
+          console.log('🗂️ Custom fields consolidados:', consolidatedCustomFields);
+
+          // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
+          const enrichedFormData = {
+            title: consolidatedData.title || autoFormData.title || '',
+            description: consolidatedData.description || autoFormData.description || '',
+            subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Português',
+            theme: consolidatedCustomFields['Tema'] || consolidatedCustomFields['tema'] || consolidatedCustomFields['Tema das Palavras'] || consolidatedCustomFields['Tema do Vocabulário'] || autoFormData.theme || '',
+            schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || consolidatedCustomFields['ano'] || autoFormData.schoolYear || '',
+            numberOfQuestions: consolidatedCustomFields['Quantidade de Questões'] || consolidatedCustomFields['quantidadeQuestoes'] || consolidatedCustomFields['Quantidade de Palavras'] || autoFormData.numberOfQuestions || '10',
+            difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || consolidatedCustomFields['nivelDificuldade'] || consolidatedCustomFields['dificuldade'] || autoFormData.difficultyLevel || 'Médio',
+            questionModel: consolidatedCustomFields['Modelo de Questões'] || consolidatedCustomFields['modeloQuestoes'] || consolidatedCustomFields['Tipo de Avaliação'] || autoFormData.questionModel || '',
+            sources: consolidatedCustomFields['Fontes'] || consolidatedCustomFields['fontes'] || consolidatedCustomFields['Referencias'] || autoFormData.sources || '',
+            objectives: consolidatedCustomFields['Objetivos'] || consolidatedCustomFields['objetivos'] || consolidatedCustomFields['Competências Trabalhadas'] || autoFormData.objectives || '',
+            materials: consolidatedCustomFields['Materiais'] || consolidatedCustomFields['materiais'] || consolidatedCustomFields['Recursos Visuais'] || autoFormData.materials || '',
+            instructions: consolidatedCustomFields['Instruções'] || consolidatedCustomFields['instrucoes'] || consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['Atividades Práticas'] || autoFormData.instructions || '',
+            evaluation: consolidatedCustomFields['Critérios de Correção'] || consolidatedCustomFields['Critérios de Avaliação'] || consolidatedCustomFields['criteriosAvaliacao'] || autoFormData.evaluation || '',
+            // Campos adicionais específicos
+            timeLimit: consolidatedCustomFields['Tempo de Prova'] || consolidatedCustomFields['Tempo Limite'] || consolidatedCustomFields['tempoLimite'] || autoFormData.timeLimit || '',
+            context: consolidatedCustomFields['Contexto de Aplicação'] || consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contexto'] || autoFormData.context || '',
+            textType: consolidatedCustomFields['Tipo de Texto'] || consolidatedCustomFields['tipoTexto'] || '',
+            textGenre: consolidatedCustomFields['Gênero Textual'] || consolidatedCustomFields['generoTextual'] || '',
+            textLength: consolidatedCustomFields['Extensão do Texto'] || consolidatedCustomFields['extensaoTexto'] || '',
+            associatedQuestions: consolidatedCustomFields['Questões Associadas'] || consolidatedCustomFields['questoesAssociadas'] || '',
+            competencies: consolidatedCustomFields['Competências Trabalhadas'] || consolidatedCustomFields['competencias'] || '',
+            readingStrategies: consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['estrategiasLeitura'] || '',
+            visualResources: consolidatedCustomFields['Recursos Visuais'] || consolidatedCustomFields['recursosVisuais'] || '',
+            practicalActivities: consolidatedCustomFields['Atividades Práticas'] || consolidatedCustomFields['atividadesPraticas'] || '',
+            wordsIncluded: consolidatedCustomFields['Palavras Incluídas'] || consolidatedCustomFields['palavrasIncluidas'] || '',
+            gridFormat: consolidatedCustomFields['Formato da Grade'] || consolidatedCustomFields['formatoGrade'] || '',
+            providedHints: consolidatedCustomFields['Dicas Fornecidas'] || consolidatedCustomFields['dicasFornecidas'] || '',
+            vocabularyContext: consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contextoUso'] || '',
+            language: consolidatedCustomFields['Idioma'] || consolidatedCustomFields['idioma'] || '',
+            associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
+            knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
+            complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || ''
+          };
+
+          console.log('✅ Formulário será preenchido com:', enrichedFormData);
+          setFormData(enrichedFormData);
+
+          // Aguardar um momento antes de limpar para garantir que o estado foi atualizado
+          setTimeout(() => {
+            localStorage.removeItem(autoDataKey);
+            console.log('🗑️ Dados automáticos limpos do localStorage');
+          }, 1000);
+          
         } catch (error) {
           console.error('❌ Erro ao carregar dados automáticos:', error);
-          // Usar dados padrão em caso de erro
-          setFormData({
-            title: activity.title || '',
-            description: activity.description || '',
-            subject: 'Português',
-            theme: '',
-            schoolYear: '',
-            numberOfQuestions: '10',
-            difficultyLevel: 'Médio',
-            questionModel: '',
-            sources: '',
+          console.error('📊 Dados que causaram erro:', autoData);
+          
+          // Usar dados da atividade mesmo com erro
+          const fallbackData = {
+            title: activity.title || activity.originalData?.title || '',
+            description: activity.description || activity.originalData?.description || '',
+            subject: activity.originalData?.customFields?.['Disciplina'] || 'Português',
+            theme: activity.originalData?.customFields?.['Tema'] || '',
+            schoolYear: activity.originalData?.customFields?.['Ano de Escolaridade'] || '',
+            numberOfQuestions: activity.originalData?.customFields?.['Quantidade de Questões'] || '10',
+            difficultyLevel: activity.originalData?.customFields?.['Nível de Dificuldade'] || 'Médio',
+            questionModel: activity.originalData?.customFields?.['Modelo de Questões'] || '',
+            sources: activity.originalData?.customFields?.['Fontes'] || '',
             objectives: '',
             materials: '',
             instructions: '',
@@ -219,26 +252,37 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             associatedExercises: '',
             knowledgeArea: '',
             complexityLevel: ''
-          });
+          };
+          
+          setFormData(fallbackData);
+          console.log('🔧 Usando dados de fallback:', fallbackData);
         }
       } else {
-        // Carregar dados padrão da atividade
-        setFormData({
-          title: activity.title || '',
-          description: activity.description || '',
-          subject: 'Português',
-          theme: '',
-          schoolYear: '',
-          numberOfQuestions: '10',
-          difficultyLevel: 'Médio',
-          questionModel: '',
-          sources: '',
-          objectives: '',
-          materials: '',
-          instructions: '',
-          evaluation: '',
-          timeLimit: '',
-          context: '',
+        console.log('⚠️ Nenhum dado automático encontrado, usando dados da atividade');
+        
+        // Carregar dados diretamente da atividade
+        const activityData = activity.originalData || activity;
+        const customFields = activityData.customFields || {};
+        
+        console.log('📊 Dados da atividade para preenchimento:', activityData);
+        console.log('🗂️ Custom fields disponíveis:', customFields);
+        
+        const directFormData = {
+          title: activityData.title || '',
+          description: activityData.description || '',
+          subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
+          theme: customFields['Tema'] || customFields['tema'] || '',
+          schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '',
+          numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || '10',
+          difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+          questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || '',
+          sources: customFields['Fontes'] || customFields['fontes'] || '',
+          objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
+          materials: customFields['Materiais'] || customFields['materiais'] || '',
+          instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
+          evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || '',
+          timeLimit: customFields['Tempo Limite'] || '',
+          context: customFields['Contexto de Aplicação'] || '',
           textType: '',
           textGenre: '',
           textLength: '',
@@ -255,13 +299,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           associatedExercises: '',
           knowledgeArea: '',
           complexityLevel: ''
-        });
+        };
+        
+        setFormData(directFormData);
+        console.log('📝 Formulário preenchido com dados diretos:', directFormData);
       }
 
       // Tentar carregar conteúdo salvo
-      loadSavedContent();
+      if (loadSavedContent) {
+        loadSavedContent();
+      }
     }
-  }, [activity, loadSavedContent]);
+  }, [activity, isOpen, loadSavedContent]);
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({

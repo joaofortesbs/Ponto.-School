@@ -690,40 +690,80 @@ export function CardDeConstrucao({
   // Adicionar preenchimento automático dos campos do modal com dados da IA
   const handleEditActivity = (activity: any) => {
     console.log('🔧 Editando atividade:', activity.id);
+    console.log('🔍 Dados completos da atividade:', activity);
 
     // Buscar dados da atividade no action plan se disponível
     const actionPlanActivity = actionPlan?.find(item => item.id === activity.id);
+    
+    // Também verificar nos dados originais da atividade
+    const originalData = activity.originalData || activity;
+    
+    console.log('📊 Action plan activity encontrada:', actionPlanActivity);
+    console.log('📊 Dados originais da atividade:', originalData);
 
-    if (actionPlanActivity?.customFields && Object.keys(actionPlanActivity.customFields).length > 0) {
-      console.log('📋 Preenchendo automaticamente com dados da IA:', actionPlanActivity.customFields);
+    // Coletar todos os customFields disponíveis
+    const customFields = {
+      ...originalData?.customFields,
+      ...actionPlanActivity?.customFields
+    };
 
-      // Preparar dados automáticos para preenchimento do modal
+    console.log('🗂️ Custom fields consolidados:', customFields);
+
+    if (customFields && Object.keys(customFields).length > 0) {
+      console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
+
+      // Preparar dados automáticos para preenchimento do modal com mapeamento completo
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoFormData = {
-        title: actionPlanActivity.title || activity.title,
-        description: actionPlanActivity.description || activity.description,
-        subject: actionPlanActivity.customFields['Disciplina'] || 'Português',
-        theme: actionPlanActivity.customFields['Tema'] || '',
-        schoolYear: actionPlanActivity.customFields['Ano de Escolaridade'] || '',
-        numberOfQuestions: actionPlanActivity.customFields['Quantidade de Questões'] || '10',
-        difficultyLevel: actionPlanActivity.customFields['Nível de Dificuldade'] || 'Médio',
-        questionModel: actionPlanActivity.customFields['Modelo de Questões'] || '',
-        sources: actionPlanActivity.customFields['Fontes'] || '',
-        objectives: actionPlanActivity.customFields['Objetivos'] || '',
-        materials: actionPlanActivity.customFields['Materiais'] || '',
-        instructions: actionPlanActivity.customFields['Instruções'] || '',
-        evaluation: actionPlanActivity.customFields['Critérios de Correção'] || actionPlanActivity.customFields['Critérios de Avaliação'] || ''
+        title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+        description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+        subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
+        theme: customFields['Tema'] || customFields['tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || '',
+        schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['ano'] || '',
+        numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || customFields['Quantidade de Palavras'] || '10',
+        difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || customFields['dificuldade'] || 'Médio',
+        questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || customFields['Tipo de Avaliação'] || '',
+        sources: customFields['Fontes'] || customFields['fontes'] || customFields['Referencias'] || '',
+        objectives: customFields['Objetivos'] || customFields['objetivos'] || customFields['Competências Trabalhadas'] || '',
+        materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
+        instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
+        evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
+        // Campos adicionais específicos
+        timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
+        context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || customFields['contexto'] || '',
+        textType: customFields['Tipo de Texto'] || customFields['tipoTexto'] || '',
+        textGenre: customFields['Gênero Textual'] || customFields['generoTextual'] || '',
+        textLength: customFields['Extensão do Texto'] || customFields['extensaoTexto'] || '',
+        associatedQuestions: customFields['Questões Associadas'] || customFields['questoesAssociadas'] || '',
+        competencies: customFields['Competências Trabalhadas'] || customFields['competencias'] || '',
+        readingStrategies: customFields['Estratégias de Leitura'] || customFields['estrategiasLeitura'] || '',
+        visualResources: customFields['Recursos Visuais'] || customFields['recursosVisuais'] || '',
+        practicalActivities: customFields['Atividades Práticas'] || customFields['atividadesPraticas'] || '',
+        wordsIncluded: customFields['Palavras Incluídas'] || customFields['palavrasIncluidas'] || '',
+        gridFormat: customFields['Formato da Grade'] || customFields['formatoGrade'] || '',
+        providedHints: customFields['Dicas Fornecidas'] || customFields['dicasFornecidas'] || '',
+        vocabularyContext: customFields['Contexto de Uso'] || customFields['contextoUso'] || '',
+        language: customFields['Idioma'] || customFields['idioma'] || '',
+        associatedExercises: customFields['Exercícios Associados'] || customFields['exerciciosAssociados'] || '',
+        knowledgeArea: customFields['Área de Conhecimento'] || customFields['areaConhecimento'] || '',
+        complexityLevel: customFields['Nível de Complexidade'] || customFields['nivelComplexidade'] || ''
       };
 
       // Salvar dados automáticos no localStorage para o modal usar
       const autoData = {
         formData: autoFormData,
-        customFields: actionPlanActivity.customFields,
+        customFields: customFields,
+        originalActivity: originalData,
+        actionPlanActivity: actionPlanActivity,
         timestamp: Date.now()
       };
 
       localStorage.setItem(autoDataKey, JSON.stringify(autoData));
-      console.log('💾 Dados automáticos salvos para:', activity.id, autoFormData);
+      console.log('💾 Dados automáticos salvos para:', activity.id);
+      console.log('📋 Form data preparado:', autoFormData);
+      console.log('🔧 Custom fields salvos:', customFields);
+    } else {
+      console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
     }
 
     setSelectedActivity(activity);
