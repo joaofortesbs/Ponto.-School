@@ -1,4 +1,3 @@
-
 import { getFieldMap } from './fieldMaps';
 import { parseIAResponse } from './utils/parseIAResponse';
 import { fillModalField } from './utils/fieldSetter';
@@ -10,125 +9,150 @@ export interface ModalBinderConfig {
   contextualizationData?: any;
 }
 
-export const modalBinderEngine = async (config: ModalBinderConfig): Promise<boolean> => {
+export async function modalBinderEngine(
+  activityId: string, 
+  activityData: any,
+  config: ModalBinderConfig = {}
+): Promise<boolean> {
+  console.log('🚀 Iniciando ModalBinderEngine para atividade:', activityId);
+  console.log('📊 Dados da atividade recebidos:', activityData);
+
   try {
-    console.log('🔧 ModalBinderEngine: Iniciando sincronização automática para:', config.activityId);
-    console.log('📋 Configuração recebida:', { 
-      activityId: config.activityId, 
-      type: config.type,
-      hasIAOutput: !!config.iaRawOutput,
-      hasContext: !!config.contextualizationData 
-    });
-    
-    const { activityId, type, iaRawOutput, contextualizationData } = config;
-    
-    // 1. Verificar se o modal está aberto e carregado
-    const modalElement = document.querySelector('[role="dialog"], .modal, [data-state="open"]');
-    if (!modalElement) {
-      console.warn('⚠️ Modal não encontrado - aguardando abertura...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    
-    // 2. Obter mapeamento específico do tipo de atividade
-    const fieldMap = getFieldMap(type);
-    if (!fieldMap) {
-      console.warn(`⚠️ Mapeamento não encontrado para tipo: ${type}`);
+    // 1. Obter mapeamento de campos para o tipo de atividade
+    const fieldMap = getFieldMap(activityId);
+    console.log('🗺️ Mapeamento de campos obtido:', fieldMap);
+
+    if (!fieldMap || Object.keys(fieldMap).length === 0) {
+      console.warn('⚠️ Nenhum mapeamento de campos encontrado para:', activityId);
       return false;
     }
-    
-    console.log('📋 Mapeamento de campos carregado:', Object.keys(fieldMap));
-    
-    // 3. Processar resposta da IA
-    const parsedData = parseIAResponse(iaRawOutput, contextualizationData);
-    if (!parsedData) {
-      console.warn('⚠️ Falha ao processar resposta da IA');
+
+    // 2. Verificar se é um tipo de atividade suportado
+    if (!isActivityTypeSupported(activityId)) {
+      console.warn('⚠️ Tipo de atividade não suportado:', activityId);
       return false;
     }
-    
-    console.log('📊 Dados processados da IA:', parsedData);
-    
-    // 4. Aguardar estabilização do modal
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // 5. Preencher campos do modal automaticamente
+
+    // 3. Aguardar um momento para garantir que o modal está aberto
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // 4. Processar dados da atividade de forma mais robusta
+    let parsedData: any = {};
+
+    if (activityData && typeof activityData === 'object') {
+      // Se já é um objeto, usar diretamente e também parsear
+      parsedData = { ...activityData };
+
+      // Também tentar parsear se houver uma string de resposta
+      if (activityData.response || activityData.description || activityData.content) {
+        const responseStr = activityData.response || activityData.description || activityData.content;
+        const additionalData = parseIAResponse(responseStr, activityId);
+        parsedData = { ...parsedData, ...additionalData };
+      }
+
+      // Garantir campos básicos se estiverem disponíveis no objeto
+      if (activityData.title && !parsedData.titulo) parsedData.titulo = activityData.title;
+      if (activityData.description && !parsedData.descricao) parsedData.descricao = activityData.description;
+      if (activityData.personalizedTitle && !parsedData.titulo) parsedData.titulo = activityData.personalizedTitle;
+      if (activityData.personalizedDescription && !parsedData.descricao) parsedData.descricao = activityData.personalizedDescription;
+
+    } else if (activityData && typeof activityData === 'string') {
+      parsedData = parseIAResponse(activityData, activityId);
+    } else {
+      console.warn('⚠️ Dados da atividade não encontrados ou inválidos');
+      return false;
+    }
+
+    console.log('🔍 Dados finais processados para preenchimento:', parsedData);
+
+    // 5. Aguardar mais um momento para garantir que o modal está totalmente carregado
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // 6. Preencher campos do modal automaticamente com múltiplas tentativas
     let fieldsFilledCount = 0;
     let totalAttempts = 0;
-    
+    const maxRetries = 3;
+
     for (const [key, value] of Object.entries(parsedData)) {
-      const selector = fieldMap[key];
-      if (!selector || !value) {
-        console.log(`⚠️ Pulando campo ${key}: selector=${!!selector}, value=${!!value}`);
+      if (!value || value === '' || value === null || value === undefined) {
+        console.log(`⚠️ Pulando campo ${key}: valor vazio ou nulo`);
         continue;
       }
-      
+
+      const selector = fieldMap[key];
+      if (!selector) {
+        console.log(`⚠️ Pulando campo ${key}: seletor não encontrado no mapeamento`);
+        continue;
+      }
+
       totalAttempts++;
-      console.log(`🎯 Tentando preencher campo: ${key} -> ${selector}`);
-      
-      try {
-        const success = await fillModalField(activityId, selector, value);
-        if (success) {
-          fieldsFilledCount++;
-          console.log(`✅ Campo ${key} preenchido com sucesso`);
-        } else {
-          console.warn(`❌ Falha ao preencher campo ${key}`);
+      console.log(`🎯 Tentando preencher campo: ${key} -> ${selector} com valor: ${value}`);
+
+      let filled = false;
+      for (let retry = 0; retry < maxRetries && !filled; retry++) {
+        try {
+          if (retry > 0) {
+            console.log(`🔄 Tentativa ${retry + 1} para campo ${key}`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+
+          const success = await fillModalField(activityId, selector, String(value));
+          if (success) {
+            fieldsFilledCount++;
+            filled = true;
+            console.log(`✅ Campo ${key} preenchido com sucesso na tentativa ${retry + 1}`);
+          }
+
+        } catch (error) {
+          console.error(`❌ Erro na tentativa ${retry + 1} para campo ${key}:`, error);
         }
-        
-        // Pequena pausa entre preenchimentos
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-      } catch (error) {
-        console.error(`❌ Erro ao preencher campo ${key}:`, error);
       }
+
+      if (!filled) {
+        console.warn(`❌ Falha ao preencher campo ${key} após ${maxRetries} tentativas`);
+      }
+
+      // Pausa entre campos
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
-    
-    console.log(`📊 Resultado do preenchimento: ${fieldsFilledCount}/${totalAttempts} campos preenchidos`);
-    
-    // 6. Verificar se conseguimos preencher pelo menos alguns campos essenciais
-    if (fieldsFilledCount === 0) {
-      console.error('❌ Nenhum campo foi preenchido - verificar mapeamentos e seletores');
-      return false;
-    }
-    
+
+    console.log(`📊 Resultado final do preenchimento: ${fieldsFilledCount}/${totalAttempts} campos preenchidos`);
+
     // 7. Aguardar um momento adicional para garantir que todos os campos foram processados
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // 8. Tentar acionar construção automática (opcional)
-    try {
-      const buildButton = document.querySelector('button[type="submit"], button:contains("Construir"), button:contains("Salvar"), button:contains("Gerar")');
-      if (buildButton && buildButton instanceof HTMLButtonElement) {
-        console.log('🎯 Botão de construção encontrado, acionando...');
-        buildButton.click();
-        console.log('🎉 Construção automática acionada!');
-      } else {
-        console.log('ℹ️ Botão de construção não encontrado - preenchimento manual concluído');
-      }
-    } catch (error) {
-      console.warn('⚠️ Erro ao acionar construção automática:', error);
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Considerar sucesso se pelo menos 50% dos campos foram preenchidos ou se pelo menos 1 campo foi preenchido
+    const successThreshold = Math.max(1, Math.floor(totalAttempts * 0.3));
+    const isSuccess = fieldsFilledCount >= successThreshold;
+
+    if (isSuccess) {
+      console.log('✅ ModalBinderEngine executado com sucesso!');
+    } else {
+      console.warn('⚠️ ModalBinderEngine completado com resultado parcial');
     }
-    
-    console.log(`🎉 ModalBinderEngine concluído com sucesso! ${fieldsFilledCount} campos preenchidos`);
-    return fieldsFilledCount > 0;
-    
+
+    return isSuccess;
+
   } catch (error) {
-    console.error('❌ Erro crítico no ModalBinderEngine:', error);
+    console.error('❌ Erro no ModalBinderEngine:', error);
     return false;
   }
-};
+}
 
 const triggerBuildButton = async (activityId: string): Promise<boolean> => {
   try {
     // Buscar o botão de construir atividade no modal específico
     const modalSelector = `[data-activity-id="${activityId}"]`;
     const modal = document.querySelector(modalSelector);
-    
+
     if (!modal) {
       console.warn(`Modal não encontrado para atividade: ${activityId}`);
       return false;
     }
-    
+
     // Buscar botão "Construir Atividade" ou similar
     const buildButton = modal.querySelector('button[data-action="build"], button:contains("Construir"), button:contains("Gerar")') as HTMLButtonElement;
-    
+
     if (buildButton && !buildButton.disabled) {
       buildButton.click();
       console.log('🔥 Botão de construção acionado automaticamente');

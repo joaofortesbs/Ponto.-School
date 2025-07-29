@@ -37,24 +37,24 @@ const getActivityIcon = (activityId: string) => {
 
 export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   isOpen,
-  onClose,
   activity,
+  onClose,
   onSave
 }) => {
   const [formData, setFormData] = useState<ActivityFormData>({
-    title: '',
-    description: '',
-    subject: '',
-    theme: '',
-    schoolYear: '',
-    numberOfQuestions: '',
-    difficultyLevel: 'Médio',
+    title: activity?.title || activity?.personalizedTitle || '',
+    description: activity?.description || activity?.personalizedDescription || '',
+    subject: activity?.customFields?.disciplina || '',
+    theme: activity?.customFields?.tema || activity?.personalizedTitle || activity?.title || '',
+    schoolYear: activity?.customFields?.anoEscolaridade || '',
+    numberOfQuestions: activity?.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
+    difficultyLevel: activity?.customFields?.tempoLimite || '',
     questionModel: '',
     sources: '',
-    objectives: '',
-    materials: '',
-    instructions: '',
-    evaluation: '',
+    objectives: activity?.description || activity?.personalizedDescription || '',
+    materials: activity?.customFields?.fontes || '',
+    instructions: activity?.customFields?.contextoAplicacao || '',
+    evaluation: activity?.customFields?.modeloQuestoes || '',
     timeLimit: '',
     context: '',
     textType: '',
@@ -74,6 +74,47 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     knowledgeArea: '',
     complexityLevel: ''
   });
+
+  // Atualizar dados quando a atividade mudar
+  useEffect(() => {
+    if (activity && isOpen) {
+      console.log('🔄 Atualizando dados do modal com atividade:', activity);
+
+      setFormData({
+        title: activity.title || activity.personalizedTitle || '',
+        description: activity.description || activity.personalizedDescription || '',
+        subject: activity.customFields?.disciplina || '',
+        theme: activity.customFields?.tema || activity.personalizedTitle || activity.title || '',
+        schoolYear: activity.customFields?.anoEscolaridade || '',
+        numberOfQuestions: activity.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
+        difficultyLevel: activity.customFields?.tempoLimite || '',
+        questionModel: '',
+        sources: '',
+        objectives: activity.description || activity.personalizedDescription || '',
+        materials: activity.customFields?.fontes || '',
+        instructions: activity.customFields?.contextoAplicacao || '',
+        evaluation: activity.customFields?.modeloQuestoes || '',
+        timeLimit: '',
+        context: '',
+        textType: '',
+        textGenre: '',
+        textLength: '',
+        associatedQuestions: '',
+        competencies: '',
+        readingStrategies: '',
+        visualResources: '',
+        practicalActivities: '',
+        wordsIncluded: '',
+        gridFormat: '',
+        providedHints: '',
+        vocabularyContext: '',
+        language: '',
+        associatedExercises: '',
+        knowledgeArea: '',
+        complexityLevel: ''
+      });
+    }
+  }, [activity, isOpen]);
 
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
 
@@ -101,7 +142,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           const { formData: autoFormData, customFields } = JSON.parse(autoData);
           console.log('📋 Carregando dados automáticos para:', activity.title);
           console.log('🔧 Campos personalizados encontrados:', customFields);
-          
+
           // Mapear todos os campos personalizados para os campos do formulário
           const enrichedFormData = {
             ...autoFormData,
@@ -140,7 +181,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
           setFormData(enrichedFormData);
           console.log('✅ Formulário preenchido automaticamente:', enrichedFormData);
-          
+
           // Limpar dados automáticos após uso
           localStorage.removeItem(autoDataKey);
         } catch (error) {
@@ -159,7 +200,25 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             objectives: '',
             materials: '',
             instructions: '',
-            evaluation: ''
+            evaluation: '',
+            timeLimit: '',
+            context: '',
+            textType: '',
+            textGenre: '',
+            textLength: '',
+            associatedQuestions: '',
+            competencies: '',
+            readingStrategies: '',
+            visualResources: '',
+            practicalActivities: '',
+            wordsIncluded: '',
+            gridFormat: '',
+            providedHints: '',
+            vocabularyContext: '',
+            language: '',
+            associatedExercises: '',
+            knowledgeArea: '',
+            complexityLevel: ''
           });
         }
       } else {
@@ -177,7 +236,25 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           objectives: '',
           materials: '',
           instructions: '',
-          evaluation: ''
+          evaluation: '',
+          timeLimit: '',
+          context: '',
+          textType: '',
+          textGenre: '',
+          textLength: '',
+          associatedQuestions: '',
+          competencies: '',
+          readingStrategies: '',
+          visualResources: '',
+          practicalActivities: '',
+          wordsIncluded: '',
+          gridFormat: '',
+          providedHints: '',
+          vocabularyContext: '',
+          language: '',
+          associatedExercises: '',
+          knowledgeArea: '',
+          complexityLevel: ''
         });
       }
 

@@ -267,6 +267,9 @@ export function CardDeConstrucao({
 
         console.log('🎯 Dados de contexto para geração:', contextData);
 
+        // Importar função de construção
+        const { buildActivities } = await import('./automationController');
+        
         const success = await buildActivities(selectedActivities2, contextData);
 
         if (success) {
