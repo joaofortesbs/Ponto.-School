@@ -98,58 +98,55 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       if (autoData) {
         try {
-          const parsedData = JSON.parse(autoData);
+          const { formData: autoFormData, customFields } = JSON.parse(autoData);
           console.log('📋 Carregando dados automáticos para:', activity.title);
-          console.log('🔧 Dados completos encontrados:', parsedData);
+          console.log('🔧 Campos personalizados encontrados:', customFields);
           
-          const { formData: autoFormData, customFields } = parsedData;
-          
-          // Mapear todos os campos personalizados para os campos do formulário com preenchimento completo
-          const enrichedFormData: ActivityFormData = {
-            title: activity.title || '',
-            description: activity.description || '',
-            // Mapeamentos específicos para campos personalizados da Lista de Exercícios
-            subject: customFields?.['Disciplina'] || autoFormData?.subject || 'Português',
-            theme: customFields?.['Tema'] || customFields?.['Tema das Palavras'] || customFields?.['Tema do Vocabulário'] || autoFormData?.theme || '',
-            schoolYear: customFields?.['Ano de Escolaridade'] || autoFormData?.schoolYear || '',
-            numberOfQuestions: String(customFields?.['Quantidade de Questões'] || customFields?.['Quantidade de Palavras'] || autoFormData?.numberOfQuestions || '10'),
-            difficultyLevel: customFields?.['Nível de Dificuldade'] || autoFormData?.difficultyLevel || 'Médio',
-            questionModel: customFields?.['Modelo de Questões'] || customFields?.['Tipo de Avaliação'] || autoFormData?.questionModel || '',
-            sources: customFields?.['Fontes'] || autoFormData?.sources || '',
-            objectives: customFields?.['Objetivos'] || customFields?.['Competências Trabalhadas'] || autoFormData?.objectives || '',
-            materials: customFields?.['Materiais'] || customFields?.['Recursos Visuais'] || autoFormData?.materials || '',
-            instructions: customFields?.['Instruções'] || customFields?.['Estratégias de Leitura'] || customFields?.['Atividades Práticas'] || autoFormData?.instructions || '',
-            evaluation: customFields?.['Critérios de Correção'] || customFields?.['Critérios de Avaliação'] || autoFormData?.evaluation || '',
-            // Campos adicionais específicos - garantindo que todos sejam preenchidos
-            timeLimit: customFields?.['Tempo de Prova'] || customFields?.['Tempo Limite'] || autoFormData?.timeLimit || '',
-            context: customFields?.['Contexto de Aplicação'] || customFields?.['Contexto de Uso'] || autoFormData?.context || '',
-            textType: customFields?.['Tipo de Texto'] || autoFormData?.textType || '',
-            textGenre: customFields?.['Gênero Textual'] || autoFormData?.textGenre || '',
-            textLength: customFields?.['Extensão do Texto'] || autoFormData?.textLength || '',
-            associatedQuestions: customFields?.['Questões Associadas'] || autoFormData?.associatedQuestions || '',
-            competencies: customFields?.['Competências Trabalhadas'] || autoFormData?.competencies || '',
-            readingStrategies: customFields?.['Estratégias de Leitura'] || autoFormData?.readingStrategies || '',
-            visualResources: customFields?.['Recursos Visuais'] || autoFormData?.visualResources || '',
-            practicalActivities: customFields?.['Atividades Práticas'] || autoFormData?.practicalActivities || '',
-            wordsIncluded: customFields?.['Palavras Incluídas'] || autoFormData?.wordsIncluded || '',
-            gridFormat: customFields?.['Formato da Grade'] || autoFormData?.gridFormat || '',
-            providedHints: customFields?.['Dicas Fornecidas'] || autoFormData?.providedHints || '',
-            vocabularyContext: customFields?.['Contexto de Uso'] || autoFormData?.vocabularyContext || '',
-            language: customFields?.['Idioma'] || autoFormData?.language || '',
-            associatedExercises: customFields?.['Exercícios Associados'] || autoFormData?.associatedExercises || '',
-            knowledgeArea: customFields?.['Área de Conhecimento'] || autoFormData?.knowledgeArea || '',
-            complexityLevel: customFields?.['Nível de Complexidade'] || autoFormData?.complexityLevel || ''
+          // Mapear todos os campos personalizados para os campos do formulário
+          const enrichedFormData = {
+            ...autoFormData,
+            // Mapeamentos específicos para campos personalizados
+            subject: customFields['Disciplina'] || autoFormData.subject || 'Português',
+            theme: customFields['Tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || autoFormData.theme || '',
+            schoolYear: customFields['Ano de Escolaridade'] || autoFormData.schoolYear || '',
+            numberOfQuestions: customFields['Quantidade de Questões'] || customFields['Quantidade de Palavras'] || autoFormData.numberOfQuestions || '10',
+            difficultyLevel: customFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
+            questionModel: customFields['Modelo de Questões'] || customFields['Tipo de Avaliação'] || autoFormData.questionModel || '',
+            sources: customFields['Fontes'] || autoFormData.sources || '',
+            objectives: customFields['Objetivos'] || customFields['Competências Trabalhadas'] || autoFormData.objectives || '',
+            materials: customFields['Materiais'] || customFields['Recursos Visuais'] || autoFormData.materials || '',
+            instructions: customFields['Instruções'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || autoFormData.instructions || '',
+            evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+            // Campos adicionais específicos
+            timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || '',
+            context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || '',
+            textType: customFields['Tipo de Texto'] || '',
+            textGenre: customFields['Gênero Textual'] || '',
+            textLength: customFields['Extensão do Texto'] || '',
+            associatedQuestions: customFields['Questões Associadas'] || '',
+            competencies: customFields['Competências Trabalhadas'] || '',
+            readingStrategies: customFields['Estratégias de Leitura'] || '',
+            visualResources: customFields['Recursos Visuais'] || '',
+            practicalActivities: customFields['Atividades Práticas'] || '',
+            wordsIncluded: customFields['Palavras Incluídas'] || '',
+            gridFormat: customFields['Formato da Grade'] || '',
+            providedHints: customFields['Dicas Fornecidas'] || '',
+            vocabularyContext: customFields['Contexto de Uso'] || '',
+            language: customFields['Idioma'] || '',
+            associatedExercises: customFields['Exercícios Associados'] || '',
+            knowledgeArea: customFields['Área de Conhecimento'] || '',
+            complexityLevel: customFields['Nível de Complexidade'] || ''
           };
 
-          console.log('✅ Formulário preenchido automaticamente:', enrichedFormData);
           setFormData(enrichedFormData);
+          console.log('✅ Formulário preenchido automaticamente:', enrichedFormData);
           
-          // Limpar dados automáticos após uso para evitar reutilização
+          // Limpar dados automáticos após uso
           localStorage.removeItem(autoDataKey);
         } catch (error) {
           console.error('❌ Erro ao carregar dados automáticos:', error);
-          // Carregar dados padrão com valores básicos da atividade
-          const defaultFormData: ActivityFormData = {
+          // Usar dados padrão em caso de erro
+          setFormData({
             title: activity.title || '',
             description: activity.description || '',
             subject: 'Português',
@@ -162,31 +159,12 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             objectives: '',
             materials: '',
             instructions: '',
-            evaluation: '',
-            timeLimit: '',
-            context: '',
-            textType: '',
-            textGenre: '',
-            textLength: '',
-            associatedQuestions: '',
-            competencies: '',
-            readingStrategies: '',
-            visualResources: '',
-            practicalActivities: '',
-            wordsIncluded: '',
-            gridFormat: '',
-            providedHints: '',
-            vocabularyContext: '',
-            language: '',
-            associatedExercises: '',
-            knowledgeArea: '',
-            complexityLevel: ''
-          };
-          setFormData(defaultFormData);
+            evaluation: ''
+          });
         }
       } else {
-        // Carregar dados padrão da atividade quando não há dados automáticos
-        const defaultFormData: ActivityFormData = {
+        // Carregar dados padrão da atividade
+        setFormData({
           title: activity.title || '',
           description: activity.description || '',
           subject: 'Português',
@@ -199,27 +177,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           objectives: '',
           materials: '',
           instructions: '',
-          evaluation: '',
-          timeLimit: '',
-          context: '',
-          textType: '',
-          textGenre: '',
-          textLength: '',
-          associatedQuestions: '',
-          competencies: '',
-          readingStrategies: '',
-          visualResources: '',
-          practicalActivities: '',
-          wordsIncluded: '',
-          gridFormat: '',
-          providedHints: '',
-          vocabularyContext: '',
-          language: '',
-          associatedExercises: '',
-          knowledgeArea: '',
-          complexityLevel: ''
-        };
-        setFormData(defaultFormData);
+          evaluation: ''
+        });
       }
 
       // Tentar carregar conteúdo salvo
