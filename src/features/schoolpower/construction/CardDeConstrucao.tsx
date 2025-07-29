@@ -241,12 +241,20 @@ export function CardDeConstrucao({
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
+      
+      // Se estivermos na etapa de atividades, também atualizar selectedActivities
+      if (step === 'activities') {
+        setSelectedActivities(approved);
+      }
     }
   }, [actionPlan, step]);
 
   const handleApproveActionPlan = () => {
     console.log('✅ Plano de ação aprovado! Transitando para interface de construção...');
     console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
+
+    // Atualizar estado local imediatamente
+    setSelectedActivities(selectedActivities2);
 
     // Aprovar plano e passar as atividades selecionadas
     onApproveActionPlan(selectedActivities2);
@@ -950,9 +958,9 @@ export function CardDeConstrucao({
 
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
-            {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities2)}
+            {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
             <ConstructionInterface 
-              approvedActivities={selectedActivities2} 
+              approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
               handleEditActivity={handleEditActivity} 
             />
           </div>

@@ -221,7 +221,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
 
     try {
       setIsLoading(true);
-      setFlowState('generatingActivities');
 
       const newFlowData = {
         ...flowData,
@@ -232,24 +231,31 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowData(newFlowData);
       saveData(newFlowData);
 
-      // Importa e executa automação
-      const AutomationController = (await import('../construction/automationController')).default;
-      const controller = AutomationController.getInstance();
+      // Transição imediata para activities sem geração automática
+      console.log('🎯 Transitando imediatamente para interface de construção...');
+      setFlowState('activities');
+      setIsLoading(false);
 
-      // Converte itens aprovados para formato de atividades
-      const activitiesData = approvedItems.map(item => ({
-        id: item.id,
-        type: item.type || 'atividade_lista_exercicios',
-        title: item.title,
-        description: item.description,
-        duration: item.duration,
-        difficulty: item.difficulty,
-        category: item.category
-      }));
+      // Opcional: Se quiser manter a automação, pode fazer em background
+      // setTimeout(async () => {
+      //   try {
+      //     const AutomationController = (await import('../construction/automationController')).default;
+      //     const controller = AutomationController.getInstance();
+      //     // Processo de automação em background...
+      //   } catch (error) {
+      //     console.error('Erro na automação em background:', error);
+      //   }
+      // }, 100);
 
-      console.log('🤖 Iniciando construção automática das atividades...');
+      console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
-      // Pequena pausa para garantir que a interface foi atualizada
+    } catch (error) {
+      console.error('❌ Erro ao aprovar plano de ação:', error);
+      setFlowState('actionplan');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [flowData, saveData]); que a interface foi atualizada
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Executa automação para todas as atividades
