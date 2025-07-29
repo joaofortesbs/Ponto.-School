@@ -255,24 +255,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [flowData, saveData]); que a interface foi atualizada
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Executa automação para todas as atividades
-      const automationResults = await controller.autoBuildMultipleActivities(activitiesData);
-
-      const successCount = automationResults.filter(r => r).length;
-      console.log(`✅ Automação concluída: ${successCount}/${activitiesData.length} atividades construídas`);
-
-      setTimeout(() => {
-        setFlowState('activities');
-        setIsLoading(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('❌ Erro ao aprovar plano de ação:', error);
-      setIsLoading(false);
-    }
   }, [flowData, saveData]);
 
   // Reset do fluxo
