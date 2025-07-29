@@ -1,91 +1,51 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
+import { EditActivityModal } from './EditActivityModal';
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
-import { EditActivityModal } from './EditActivityModal';
 import { ConstructionActivity } from './types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, Building2 } from 'lucide-react';
-import AutomationController from './automationController';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
   handleEditActivity?: (activity: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities, handleEditActivity }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
   const { activities, loading } = useConstructionActivities(approvedActivities);
-  const { isModalOpen, selectedActivity, openModal, closeModal } = useEditActivityModal();
-  const [constructionStatus, setConstructionStatus] = useState<Record<string, { built: boolean; content?: string }>>({});
+  const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
-  // Verificar status de construção das atividades
-  useEffect(() => {
-    const checkConstructionStatus = () => {
-      const controller = AutomationController.getInstance();
-      const status: Record<string, { built: boolean; content?: string }> = {};
-
-      activities.forEach(activity => {
-        const isBuilt = controller.isActivityBuilt(activity.id);
-        const content = controller.getGeneratedContent(activity.id);
-        status[activity.id] = { built: isBuilt, content: content || undefined };
-      });
-
-      setConstructionStatus(status);
-    };
-
-    if (activities.length > 0) {
-      checkConstructionStatus();
-
-      // Verificar periodicamente se novas atividades foram construídas
-      const interval = setInterval(checkConstructionStatus, 2000);
-      return () => clearInterval(interval);
-    }
-  }, [activities]);
-
-  // Listener para atualizações de construção automática
-  useEffect(() => {
-    const handleAutoBuilt = (event: CustomEvent) => {
-      console.log('🤖 Atividades auto-construídas detectadas, atualizando interface...');
-      const { results } = event.detail;
-
-      const newStatus: Record<string, { built: boolean; content?: string }> = { ...constructionStatus };
-      results.forEach((result: any) => {
-        newStatus[result.activityId] = {
-          built: result.success,
-          content: result.generatedContent
-        };
-      });
-
-      setConstructionStatus(newStatus);
-    };
-
-    window.addEventListener('activitiesAutoBuilt', handleAutoBuilt as EventListener);
-
-    return () => {
-      window.removeEventListener('activitiesAutoBuilt', handleAutoBuilt as EventListener);
-    };
-  }, [constructionStatus]);
-
-  const handleEdit = (activity: ConstructionActivity) => {
-    console.log('🔧 Clique no botão Editar Materiais detectado para atividade:', activity.title);
-    console.log('🔧 ID da atividade:', activity.id);
-    console.log('🔧 Função onEdit disponível:', typeof handleEditActivity);
-
-    if (handleEditActivity) {
-      console.log('🎯 Abrindo modal para atividade:', activity.title);
-      console.log('🎯 Dados da atividade:', activity);
-      handleEditActivity(activity);
+  const handleEditActivity = (activity: ConstructionActivity) => {
+    console.log('🔧 Abrindo modal para editar atividade:', activity);
+    
+    if (externalHandleEditActivity) {
+      // Usar a função externa se disponível
+      externalHandleEditActivity(activity);
     } else {
-      console.log('Opening modal for activity:', activity.id);
+      // Fallback para a lógica interna
       openModal(activity);
     }
+  };
 
-    console.log('🔧 Função onEdit executada com sucesso!');
+  const handleView = (id: string) => {
+    console.log('👁️ Visualizando atividade:', id);
+    // TODO: Implementar visualização da atividade
+  };
+
+  const handleShare = (id: string) => {
+    console.log('📤 Compartilhando atividade:', id);
+    // TODO: Implementar funcionalidade de compartilhamento
+  };
+
+  const handleEdit = (activityId: string) => {
+    console.log('Editar materiais da atividade:', activityId);
+    // TODO: Implementar lógica de edição de materiais
   };
 
   if (loading) {
@@ -178,39 +138,24 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity }: Con
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities && activities.length > 0 ? activities.map((activity) => {
-            const status = constructionStatus[activity.id];
-            const isBuilt = status?.built || false;
-            const hasContent = !!status?.content;
-
-            // Calcular progresso baseado no status de construção
-            const progress = isBuilt ? (hasContent ? 100 : 80) : activity.progress;
-            const activityStatus = isBuilt ? (hasContent ? 'completed' : 'in-progress') : activity.status;
-
-            return (
-              <ConstructionCard
-                key={activity.id}
-                id={activity.id}
-                title={activity.title}
-                description={activity.description}
-                progress={progress}
-                type={activity.type}
-                status={activityStatus}
-                onEdit={() => handleEdit(activity)}
-                onView={() => console.log('Visualizar atividade:', activity.id)}
-                onShare={() => console.log('Compartilhar atividade:', activity.id)}
-              />
-            );
-          }) : (
-        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Nenhuma atividade para construir
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Approve algumas atividades no plano de ação para começar a construção.
-          </p>
-        </div>
-      )}
+        {activities.map((activity) => (
+          <ConstructionCard
+            key={activity.id}
+            id={activity.id}
+            title={activity.title}
+            description={activity.description}
+            progress={activity.progress}
+            type={activity.type}
+            status={activity.status}
+            onEdit={() => {
+              console.log('🎯 Abrindo modal para atividade:', activity.title);
+              console.log('🎯 Dados da atividade:', activity);
+              openModal(activity);
+            }}
+            onView={handleView}
+            onShare={handleShare}
+          />
+        ))}
       </div>
 
       {/* Modal de Edição */}
@@ -218,7 +163,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity }: Con
         isOpen={isModalOpen}
         onClose={closeModal}
         activity={selectedActivity}
-        // onSave={handleSaveActivity}  // Remove onSave prop as per the instructions
+        onSave={handleSaveActivity}
       />
     </motion.div>
   );

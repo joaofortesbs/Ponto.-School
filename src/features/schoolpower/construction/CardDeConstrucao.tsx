@@ -241,7 +241,7 @@ export function CardDeConstrucao({
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
-
+      
       // Se estivermos na etapa de atividades, também atualizar selectedActivities
       if (step === 'activities') {
         setSelectedActivities(approved);
@@ -661,10 +661,10 @@ export function CardDeConstrucao({
     // Buscar dados da atividade no action plan se disponível
     const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
                                actionPlan?.find(item => item.id === activity.id);
-
+    
     // Também verificar nos dados originais da atividade
     const originalData = activity.originalData || activity;
-
+    
     console.log('📊 Action plan activity encontrada:', actionPlanActivity);
     console.log('📊 Dados originais da atividade:', originalData);
 

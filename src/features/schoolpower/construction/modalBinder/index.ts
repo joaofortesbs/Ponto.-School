@@ -1,6 +1,14 @@
 export { modalBinderEngine } from './modalBinderEngine';
-export { getFieldMap } from './fieldMaps';
-export type { FieldMap, FieldSetter } from './fieldMaps';
+export { getFieldMap, getAllSupportedActivityTypes, isActivityTypeSupported } from './fieldMaps';
+export { parseIAResponse } from './utils/parseIAResponse';
+export { fillModalField } from './utils/fieldSetter';
+
+export type { ModalBinderConfig } from './modalBinderEngine';
+export type { ActivityFieldMap } from './fieldMaps';
+export type { ParsedIAResponse } from './utils/parseIAResponse';
+
+// Sistema principal exportado como default
+export { modalBinderEngine as default } from './modalBinderEngine';
 
 // Função para obter mapeamento de campos por tipo de atividade
 export function getFieldMap(activityType: string): Record<string, string> {

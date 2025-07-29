@@ -1,25 +1,21 @@
+
 import { getFieldMap, modalBinderEngine } from './modalBinder';
 import { fillActivityModalFields } from './api/fillActivityModalFields';
-import { ActivityFormData } from './types/ActivityTypes';
-import { getActivityDataFromPlan } from './utils/getActivityDataFromPlan';
-import { generateActivity } from './api/generateActivity';
-import { waitForElement } from './utils/waitForElement';
-import ConstructionSync from './utils/constructionSync';
 
 export async function buildActivities(approvedActivities: any[], contextData: any): Promise<boolean> {
   console.log('🏗️ Iniciando construção automática de atividades:', approvedActivities);
-
+  
   if (!approvedActivities || approvedActivities.length === 0) {
     console.warn('⚠️ Nenhuma atividade aprovada fornecida');
     return false;
   }
-
+  
   let successCount = 0;
-
+  
   for (let i = 0; i < approvedActivities.length; i++) {
     const activity = approvedActivities[i];
     console.log(`🎯 Processando atividade ${i + 1}/${approvedActivities.length}:`, activity);
-
+    
     try {
       // Preparar dados da atividade para preenchimento
       const activityData = {
@@ -29,13 +25,13 @@ export async function buildActivities(approvedActivities: any[], contextData: an
         personalizedTitle: activity.personalizedTitle || activity.title,
         personalizedDescription: activity.personalizedDescription || activity.description,
         type: activity.type,
-
+        
         // Dados de contexto
         ...contextData,
-
+        
         // Campos customizados se existirem
         ...(activity.customFields || {}),
-
+        
         // Campos padrão baseados no contexto
         disciplina: contextData?.materias || 'Não especificado',
         tema: activity.personalizedTitle || activity.title,
@@ -47,30 +43,30 @@ export async function buildActivities(approvedActivities: any[], contextData: an
         tempoLimite: 'Ex: 50 minutos, 1 hora...',
         contextoAplicacao: contextData?.observacoes || 'Ex: Produção textual, Sala de aula...'
       };
-
+      
       console.log('📊 Dados preparados para atividade:', activityData);
-
+      
       // Usar o ModalBinderEngine para preencher automaticamente
       const success = await modalBinderEngine(activity.id, activityData);
-
+      
       if (success) {
         successCount++;
         console.log(`✅ Atividade ${activity.title} processada com sucesso`);
       } else {
         console.warn(`⚠️ Falha ao processar atividade ${activity.title}`);
       }
-
+      
       // Aguardar entre processamentos para evitar sobrecarga
       await new Promise(resolve => setTimeout(resolve, 500));
-
+      
     } catch (error) {
       console.error(`❌ Erro ao processar atividade ${activity.title}:`, error);
     }
   }
-
+  
   const successRate = successCount / approvedActivities.length;
   console.log(`📈 Resultado final: ${successCount}/${approvedActivities.length} atividades processadas (${Math.round(successRate * 100)}%)`);
-
+  
   return successRate >= 0.5; // Considerar sucesso se pelo menos 50% das atividades foram processadas
 }
 
@@ -82,17 +78,9 @@ interface ActivityData {
   [key: string]: any;
 }
 
-interface AutomationResult {
-  activityId: string;
-  activityTitle: string;
-  success: boolean;
-  error?: string;
-  generatedContent?: string;
-}
-
-export default class AutomationController {
+class AutomationController {
   private static instance: AutomationController;
-  private isRunning = false;
+  private activeAutomations: Set<string> = new Set();
 
   static getInstance(): AutomationController {
     if (!AutomationController.instance) {
@@ -101,254 +89,328 @@ export default class AutomationController {
     return AutomationController.instance;
   }
 
-  async autoBuildMultipleActivities(activities: any[]): Promise<AutomationResult[]> {
-    if (this.isRunning) {
-      console.warn('⚠️ Automação já está em execução');
-      return [];
-    }
+  /**
+   * Aguarda que um elemento esteja presente no DOM
+   */
+  private async waitForElement(selector: string, timeout: number = 10000): Promise<HTMLElement | null> {
+    return new Promise((resolve) => {
+      const element = document.querySelector(selector) as HTMLElement;
+      if (element) {
+        resolve(element);
+        return;
+      }
 
-    this.isRunning = true;
-    const results: AutomationResult[] = [];
-    const sync = ConstructionSync.getInstance();
-
-    console.log(`🤖 Iniciando construção automática de ${activities.length} atividades...`);
-
-    // Notificar início da construção
-    sync.notifyConstructionStarted(activities.map(a => ({ id: a.id, title: a.title })));
-
-    try {
-      // Processar todas as atividades em paralelo (com limite de concorrência)
-      const batchSize = 2; // Processar 2 atividades por vez
-      for (let i = 0; i < activities.length; i += batchSize) {
-        const batch = activities.slice(i, i + batchSize);
-
-        const batchPromises = batch.map(async (activity) => {
-          console.log(`🔄 Processando atividade: ${activity.title}`);
-
-          try {
-            const result = await this.buildSingleActivity(activity);
-            const activityResult = {
-              activityId: activity.id,
-              activityTitle: activity.title,
-              success: result.success,
-              error: result.error,
-              generatedContent: result.generatedContent
-            };
-
-            // Notificar construção individual
-            sync.notifyActivityBuilt(
-              activity.id, 
-              activity.title, 
-              result.success, 
-              result.generatedContent, 
-              result.error
-            );
-
-            return activityResult;
-          } catch (error) {
-            console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
-            const activityResult = {
-              activityId: activity.id,
-              activityTitle: activity.title,
-              success: false,
-              error: error instanceof Error ? error.message : 'Erro desconhecido'
-            };
-
-            // Notificar erro na construção
-            sync.notifyActivityBuilt(
-              activity.id, 
-              activity.title, 
-              false, 
-              undefined, 
-              activityResult.error
-            );
-
-            return activityResult;
-          }
-        });
-
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults);
-
-        // Aguardar entre batches
-        if (i + batchSize < activities.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector(selector) as HTMLElement;
+        if (element) {
+          observer.disconnect();
+          resolve(element);
         }
-      }
-    } finally {
-      this.isRunning = false;
-    }
+      });
 
-    console.log('🎯 Construção automática finalizada:', results);
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
 
-    // Notificar conclusão do lote
-    sync.notifyBatchCompleted(results.map(r => ({
-      activityId: r.activityId,
-      activityTitle: r.activityTitle,
-      success: r.success,
-      content: r.generatedContent,
-      error: r.error
-    })));
-
-    // Disparar evento personalizado para compatibilidade
-    window.dispatchEvent(new CustomEvent('activitiesAutoBuilt', {
-      detail: { results }
-    }));
-
-    return results;
-  }
-
-  private async buildSingleActivity(activity: any): Promise<{ success: boolean; error?: string; generatedContent?: string }> {
-    try {
-      console.log(`🏗️ Construindo atividade: ${activity.title}`);
-
-      // Verificar se a atividade já foi construída
-      if (this.isActivityBuilt(activity.id)) {
-        console.log(`✅ Atividade ${activity.title} já foi construída anteriormente`);
-        return { 
-          success: true, 
-          generatedContent: this.getGeneratedContent(activity.id) || undefined 
-        };
-      }
-
-      // Obter dados da atividade do plano aprovado
-      const activityData = getActivityDataFromPlan(activity);
-      console.log('📊 Dados da atividade obtidos:', activityData);
-
-      // Preencher campos do formulário com base nos dados do plano
-      const formData = await fillActivityModalFields(activity.id, activityData);
-      console.log('📝 Campos preenchidos:', formData);
-
-      // Validar se os campos obrigatórios estão preenchidos
-      if (!this.validateFormData(formData, activity.id)) {
-        throw new Error('Dados insuficientes para gerar a atividade');
-      }
-
-      // Gerar atividade usando a API apropriada
-      const generatedContent = await generateActivity(activity.id, formData);
-
-      if (!generatedContent) {
-        throw new Error('Falha na geração do conteúdo da atividade');
-      }
-
-      console.log('✅ Conteúdo gerado com sucesso para:', activity.title);
-
-      // Salvar no localStorage para persistência e sincronização
-      const storageKey = `generated_activity_${activity.id}`;
-      const storageData = {
-        content: generatedContent,
-        timestamp: Date.now(),
-        activityId: activity.id,
-        activityTitle: activity.title,
-        formData,
-        originalActivity: activity,
-        autoGenerated: true
-      };
-
-      localStorage.setItem(storageKey, JSON.stringify(storageData));
-
-      // Salvar também uma versão para o hook useGenerateActivity
-      const hookStorageKey = `activity_content_${activity.id}`;
-      localStorage.setItem(hookStorageKey, generatedContent);
-
-      // Marcar como construída
-      this.markActivityAsBuilt(activity.id, generatedContent);
-
-      return { 
-        success: true, 
-        generatedContent 
-      };
-
-    } catch (error) {
-      console.error(`❌ Erro na construção da atividade ${activity.title}:`, error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
-      };
-    }
-  }
-
-  private validateFormData(formData: ActivityFormData, activityId: string): boolean {
-    // Validação básica - campos obrigatórios
-    if (!formData.title?.trim() || !formData.description?.trim()) {
-      return false;
-    }
-
-    // Validação específica para lista de exercícios
-    if (activityId === 'lista-exercicios') {
-      return !!(
-        formData.subject?.trim() &&
-        formData.theme?.trim() &&
-        formData.schoolYear?.trim() &&
-        formData.numberOfQuestions?.trim() &&
-        formData.difficultyLevel?.trim()
-      );
-    }
-
-    return true;
-  }
-
-  private markActivityAsBuilt(activityId: string, content: string): void {
-    const builtKey = `activity_built_${activityId}`;
-    localStorage.setItem(builtKey, JSON.stringify({
-      built: true,
-      timestamp: Date.now(),
-      hasContent: !!content
-    }));
-  }
-
-  // Método para verificar se uma atividade já foi construída
-  public isActivityBuilt(activityId: string): boolean {
-    const storageKey = `generated_activity_${activityId}`;
-    const builtKey = `activity_built_${activityId}`;
-
-    const stored = localStorage.getItem(storageKey);
-    const built = localStorage.getItem(builtKey);
-
-    return !!(stored || built);
-  }
-
-  // Método para obter conteúdo gerado de uma atividade
-  public getGeneratedContent(activityId: string): string | null {
-    // Tentar primeira opção
-    const storageKey = `generated_activity_${activityId}`;
-    const stored = localStorage.getItem(storageKey);
-
-    if (stored) {
-      try {
-        const data = JSON.parse(stored);
-        return data.content || null;
-      } catch (error) {
-        console.error('Erro ao recuperar conteúdo gerado:', error);
-      }
-    }
-
-    // Tentar segunda opção (hook storage)
-    const hookStorageKey = `activity_content_${activityId}`;
-    const hookStored = localStorage.getItem(hookStorageKey);
-
-    return hookStored || null;
-  }
-
-  // Método para limpar dados de construção
-  public clearActivityData(activityId: string): void {
-    const keys = [
-      `generated_activity_${activityId}`,
-      `activity_content_${activityId}`,
-      `activity_built_${activityId}`
-    ];
-
-    keys.forEach(key => {
-      localStorage.removeItem(key);
+      // Timeout fallback
+      setTimeout(() => {
+        observer.disconnect();
+        resolve(null);
+      }, timeout);
     });
   }
 
-  // Método para obter estatísticas de construção
-  public getConstructionStats(activities: any[]): { built: number; total: number; percentage: number } {
-    const total = activities.length;
-    const built = activities.filter(activity => this.isActivityBuilt(activity.id)).length;
-    const percentage = total > 0 ? Math.round((built / total) * 100) : 0;
+  /**
+   * Aguarda que o modal esteja completamente carregado
+   */
+  private async waitModalLoad(modalSelector: string): Promise<boolean> {
+    console.group(`🔄 [AutomationController] Aguardando carregamento do modal: ${modalSelector}`);
+    
+    try {
+      // Aguarda o modal aparecer
+      const modal = await this.waitForElement(modalSelector, 5000);
+      if (!modal) {
+        console.error('❌ Modal não encontrado:', modalSelector);
+        console.groupEnd();
+        return false;
+      }
 
-    return { built, total, percentage };
+      // Aguarda um frame adicional para garantir renderização completa
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      
+      // Verifica se o modal está visível
+      const isVisible = modal.offsetParent !== null;
+      if (!isVisible) {
+        console.error('❌ Modal não está visível:', modalSelector);
+        console.groupEnd();
+        return false;
+      }
+
+      console.log('✅ Modal carregado e visível');
+      console.groupEnd();
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao aguardar modal:', error);
+      console.groupEnd();
+      return false;
+    }
+  }
+
+  /**
+   * Preenche um campo específico com validação
+   */
+  private async fillField(selector: string, value: any, fieldType: string = 'input'): Promise<boolean> {
+    try {
+      const element = document.querySelector(selector) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      if (!element) {
+        console.warn(`⚠️ Campo não encontrado: ${selector}`);
+        return false;
+      }
+
+      // Aguarda o elemento estar interativo
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const stringValue = String(value || '');
+
+      if (fieldType === 'select') {
+        const selectElement = element as HTMLSelectElement;
+        
+        // Tenta encontrar a opção por valor
+        let optionFound = false;
+        for (let i = 0; i < selectElement.options.length; i++) {
+          if (selectElement.options[i].value === stringValue || 
+              selectElement.options[i].text === stringValue) {
+            selectElement.selectedIndex = i;
+            optionFound = true;
+            break;
+          }
+        }
+
+        if (!optionFound && selectElement.options.length > 0) {
+          // Se não encontrou, seleciona a primeira opção válida
+          selectElement.selectedIndex = stringValue ? 1 : 0;
+        }
+
+        // Dispara eventos necessários
+        selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+        selectElement.dispatchEvent(new Event('input', { bubbles: true }));
+      } else {
+        // Para inputs normais e textareas
+        const inputElement = element as HTMLInputElement | HTMLTextAreaElement;
+        inputElement.value = stringValue;
+        inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+        inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Verifica se o valor foi aplicado
+      const currentValue = element.value || (element as HTMLSelectElement).selectedOptions?.[0]?.text || '';
+      const success = currentValue.trim() !== '' || stringValue === '';
+      
+      if (success) {
+        console.log(`✅ Campo preenchido: ${selector} = "${currentValue}"`);
+      } else {
+        console.warn(`⚠️ Falha ao preencher: ${selector}`);
+      }
+
+      return success;
+    } catch (error) {
+      console.error(`❌ Erro ao preencher campo ${selector}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Preenche todos os campos do modal
+   */
+  private async fillAllFields(fieldMap: Record<string, string>, iaData: ActivityData, activityId: string): Promise<boolean> {
+    console.group(`📝 [AutomationController] Preenchendo campos da atividade: ${activityId}`);
+    
+    let successCount = 0;
+    let totalFields = 0;
+
+    for (const [dataKey, selector] of Object.entries(fieldMap)) {
+      totalFields++;
+      const value = iaData[dataKey];
+      
+      if (value === undefined || value === null) {
+        console.log(`ℹ️ Campo ${dataKey} não possui valor nos dados da IA`);
+        continue;
+      }
+
+      // Determina o tipo do campo
+      const element = document.querySelector(selector);
+      const fieldType = element?.tagName.toLowerCase() === 'select' ? 'select' : 'input';
+
+      const success = await this.fillField(selector, value, fieldType);
+      if (success) {
+        successCount++;
+      }
+
+      // Pequena pausa entre campos para estabilidade
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    const fillSuccess = successCount > 0; // Pelo menos um campo deve ser preenchido
+    console.log(`📊 Resultado: ${successCount}/${totalFields} campos preenchidos`);
+    console.groupEnd();
+
+    return fillSuccess;
+  }
+
+  /**
+   * Clica no botão "Construir Atividade"
+   */
+  private async clickBuildButton(activityId: string): Promise<boolean> {
+    console.group(`🔨 [AutomationController] Clicando em "Construir Atividade": ${activityId}`);
+    
+    try {
+      // Possíveis seletores para o botão de construir
+      const buttonSelectors = [
+        `[data-activity-id="${activityId}"] button[type="submit"]`,
+        `[data-activity-id="${activityId}"] .construir-atividade`,
+        `[data-activity-id="${activityId}"] button:contains("Construir")`,
+        '.modal button[type="submit"]',
+        '.modal .construir-atividade',
+        'button:contains("Construir Atividade")',
+        'button:contains("Construir")'
+      ];
+
+      let button: HTMLButtonElement | null = null;
+
+      for (const selector of buttonSelectors) {
+        if (selector.includes(':contains')) {
+          // Para seletores com :contains, busca manualmente
+          const buttons = document.querySelectorAll('button');
+          for (const btn of Array.from(buttons)) {
+            if (btn.textContent?.includes('Construir')) {
+              button = btn as HTMLButtonElement;
+              break;
+            }
+          }
+        } else {
+          button = document.querySelector(selector) as HTMLButtonElement;
+        }
+        
+        if (button) break;
+      }
+
+      if (!button) {
+        console.error('❌ Botão "Construir Atividade" não encontrado');
+        console.groupEnd();
+        return false;
+      }
+
+      // Verifica se o botão está habilitado
+      if (button.disabled) {
+        console.warn('⚠️ Botão "Construir Atividade" está desabilitado');
+        console.groupEnd();
+        return false;
+      }
+
+      // Aguarda um momento para garantir que todos os campos foram processados
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Clica no botão
+      button.click();
+      console.log('✅ Botão "Construir Atividade" clicado com sucesso');
+      console.groupEnd();
+      return true;
+
+    } catch (error) {
+      console.error('❌ Erro ao clicar no botão "Construir Atividade":', error);
+      console.groupEnd();
+      return false;
+    }
+  }
+
+  /**
+   * Função principal para construir uma atividade automaticamente
+   */
+  public async autoBuildActivity(activityData: ActivityData): Promise<boolean> {
+    const { id: activityId, type, ...iaData } = activityData;
+
+    // Evita automações duplicadas
+    if (this.activeAutomations.has(activityId)) {
+      console.warn(`⚠️ Automação já em andamento para atividade: ${activityId}`);
+      return false;
+    }
+
+    this.activeAutomations.add(activityId);
+
+    try {
+      console.group(`🚀 [AutomationController] Iniciando construção automática: ${activityId}`);
+      console.log('📋 Dados da atividade:', activityData);
+
+      // 1. Aguarda o modal estar carregado
+      const modalSelector = `[data-activity-id="${activityId}"]`;
+      const modalReady = await this.waitModalLoad(modalSelector);
+      
+      if (!modalReady) {
+        console.error(`❌ Modal não carregou para atividade: ${activityId}`);
+        return false;
+      }
+
+      // 2. Obtém o mapeamento de campos para o tipo de atividade
+      const fieldMap = getFieldMap(type);
+      if (!fieldMap || Object.keys(fieldMap).length === 0) {
+        console.error(`❌ Mapeamento de campos não encontrado para tipo: ${type}`);
+        return false;
+      }
+
+      console.log('🗺️ Mapeamento de campos:', fieldMap);
+
+      // 3. Preenche todos os campos
+      const fieldsSuccess = await this.fillAllFields(fieldMap, { ...iaData, id: activityId, type }, activityId);
+      
+      if (!fieldsSuccess) {
+        console.error(`❌ Falha ao preencher campos da atividade: ${activityId}`);
+        return false;
+      }
+
+      // 4. Clica no botão "Construir Atividade"
+      const buildSuccess = await this.clickBuildButton(activityId);
+      
+      if (!buildSuccess) {
+        console.error(`❌ Falha ao clicar no botão de construção da atividade: ${activityId}`);
+        return false;
+      }
+
+      console.log(`✅ Atividade construída automaticamente com sucesso: ${activityId}`);
+      console.groupEnd();
+      return true;
+
+    } catch (error) {
+      console.error(`❌ Erro durante construção automática da atividade ${activityId}:`, error);
+      console.groupEnd();
+      return false;
+    } finally {
+      this.activeAutomations.delete(activityId);
+    }
+  }
+
+  /**
+   * Constrói múltiplas atividades em sequência
+   */
+  public async autoBuildMultipleActivities(activitiesData: ActivityData[]): Promise<boolean[]> {
+    console.group(`🔄 [AutomationController] Construindo ${activitiesData.length} atividades automaticamente`);
+    
+    const results: boolean[] = [];
+    
+    for (const activityData of activitiesData) {
+      const result = await this.autoBuildActivity(activityData);
+      results.push(result);
+      
+      // Pausa entre atividades para evitar sobrecarga
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    const successCount = results.filter(r => r).length;
+    console.log(`📊 Resultado final: ${successCount}/${activitiesData.length} atividades construídas`);
+    console.groupEnd();
+
+    return results;
   }
 }
+
+export default AutomationController;
