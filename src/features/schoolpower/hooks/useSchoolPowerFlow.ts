@@ -231,21 +231,33 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       setFlowData(newFlowData);
       saveData(newFlowData);
 
-      // Transição imediata para activities sem geração automática
-      console.log('🎯 Transitando imediatamente para interface de construção...');
+      // Transição imediata para activities
+      console.log('🎯 Transitando para interface de construção...');
       setFlowState('activities');
-      setIsLoading(false);
 
-      // Opcional: Se quiser manter a automação, pode fazer em background
-      // setTimeout(async () => {
-      //   try {
-      //     const AutomationController = (await import('../construction/automationController')).default;
-      //     const controller = AutomationController.getInstance();
-      //     // Processo de automação em background...
-      //   } catch (error) {
-      //     console.error('Erro na automação em background:', error);
-      //   }
-      // }, 100);
+      // Aguardar um momento para a interface ser renderizada
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Iniciar construção automática das atividades aprovadas
+      console.log('🤖 Iniciando construção automática das atividades...');
+      try {
+        const AutomationController = (await import('../construction/automationController')).default;
+        const controller = AutomationController.getInstance();
+        
+        // Executar construção automática para todas as atividades aprovadas
+        const automationResults = await controller.autoBuildMultipleActivities(approvedItems);
+        
+        const successCount = automationResults.filter(result => result.success).length;
+        console.log(`✅ Construção automática concluída: ${successCount}/${approvedItems.length} atividades construídas com sucesso`);
+        
+        if (successCount > 0) {
+          console.log('🎉 Atividades construídas automaticamente com sucesso!');
+        }
+        
+      } catch (automationError) {
+        console.error('❌ Erro na construção automática:', automationError);
+        // Não interromper o fluxo mesmo se a automação falhar
+      }
 
       console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
