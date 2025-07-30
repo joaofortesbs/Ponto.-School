@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
-import { Zap, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
