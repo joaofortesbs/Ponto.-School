@@ -347,6 +347,25 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     }
   }, [activity, isOpen, loadSavedContent]);
 
+  // Função para automação - será chamada externamente
+  useEffect(() => {
+    const handleAutoBuild = () => {
+      if (activity && formData.title && formData.description && !isGenerating) {
+        console.log('🤖 Construção automática iniciada para:', activity.title);
+        handleBuildActivity();
+      }
+    };
+
+    // Registrar a função no window para acesso externo
+    if (activity) {
+      (window as any).autoBuildCurrentActivity = handleAutoBuild;
+    }
+
+    return () => {
+      delete (window as any).autoBuildCurrentActivity;
+    };
+  }, [activity, formData, isGenerating]);
+
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -814,6 +833,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                     )}
 
                     <Button
+                      id="build-activity-button"
+                      data-testid="build-activity-button"
                       onClick={handleBuildActivity}
                       disabled={isGenerating || !isFormValid}
                       className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"

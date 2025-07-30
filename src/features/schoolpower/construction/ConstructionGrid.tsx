@@ -1,12 +1,12 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Building2, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Zap, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -18,12 +18,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const { activities, loading } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
+  const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
-    
+
     if (externalHandleEditActivity) {
       // Usar a função externa se disponível
       externalHandleEditActivity(activity);
@@ -43,40 +45,39 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     // TODO: Implementar funcionalidade de compartilhamento
   };
 
-  const handleBuildAll = () => {
+  const handleBuildAll = async () => {
     console.log('🤖 Iniciando construção automática em massa');
-    
-    const buildableActivities = activities.filter(activity => 
-      activity.status === 'draft' && 
-      activity.title && 
-      activity.description && 
+
+    const buildableActivities = activities.filter(activity =>
+      activity.status === 'draft' &&
+      activity.title &&
+      activity.description &&
       activity.progress < 100
     );
-    
+
     console.log(`🎯 ${buildableActivities.length} atividades serão construídas automaticamente`);
-    
-    buildableActivities.forEach((activity, index) => {
-      setTimeout(() => {
-        console.log(`🔨 Construindo atividade ${index + 1}/${buildableActivities.length}: ${activity.title}`);
-        
-        // Simula a abertura do modal e construção automática
-        if (externalHandleEditActivity) {
-          externalHandleEditActivity(activity);
-        } else {
-          openModal(activity);
-        }
-        
-        // Simula clique no botão construir após pequeno delay
-        setTimeout(() => {
-          const buildButton = document.querySelector('[data-testid="build-activity-button"], button:contains("Construir Atividade"), .construir-atividade');
-          if (buildButton) {
-            console.log(`✅ Ativando construção para: ${activity.title}`);
-            (buildButton as HTMLButtonElement).click();
-          }
-        }, 500);
-        
-      }, index * 1000); // Delay de 1 segundo entre cada atividade
-    });
+
+    if (buildableActivities.length === 0) {
+      alert("Não há atividades para construir.");
+      return;
+    }
+
+    setShowProgressModal(true);
+
+    autoBuildService.buildActivities(buildableActivities,
+      (progress: AutoBuildProgress) => {
+        console.log("🚀 Progresso:", progress);
+        setBuildProgress(progress);
+      },
+      (error: any) => {
+        console.error("🚨 Erro durante a construção:", error);
+        setBuildProgress(prevState => ({
+          ...prevState,
+          status: 'error',
+          errors: [...prevState.errors, error.message || 'Erro desconhecido']
+        } as AutoBuildProgress));
+      }
+    );
   };
 
   const handleEdit = (activityId: string) => {
@@ -172,17 +173,17 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             </p>
           </div>
         </div>
-        
+
         {/* Botão Construir Todas */}
         {activities.filter(activity => activity.status === 'draft' && activity.title && activity.description && activity.progress < 100).length > 0 && (
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={handleBuildAll}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Zap className="w-4 h-4" />
               Construir Todas
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -211,11 +212,84 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
       {/* Modal de Edição */}
       <EditActivityModal
+        activity={selectedActivity}
         isOpen={isModalOpen}
         onClose={closeModal}
-        activity={selectedActivity}
         onSave={handleSaveActivity}
       />
+
+      {/* Modal de Progresso da Construção Automática */}
+      {showProgressModal && buildProgress && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-4">
+                Construção Automática em Andamento
+              </h3>
+
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(buildProgress.current / buildProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                  {buildProgress.current} de {buildProgress.total} atividades
+                </p>
+              </div>
+
+              {buildProgress.status === 'running' && (
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">
+                    Construindo: {buildProgress.currentActivity}
+                  </span>
+                </div>
+              )}
+
+              {buildProgress.status === 'completed' && (
+                <div className="flex items-center justify-center gap-2 mb-4 text-green-600">
+                  <CheckCircle className="h-5 w-5" />
+                  <span>Construção concluída com sucesso!</span>
+                </div>
+              )}
+
+              {buildProgress.status === 'error' && (
+                <div className="flex items-center justify-center gap-2 mb-4 text-red-600">
+                  <AlertCircle className="h-5 w-5" />
+                  <span>Construção concluída com alguns erros</span>
+                </div>
+              )}
+
+              {buildProgress.errors.length > 0 && (
+                <div className="text-left mb-4">
+                  <p className="text-sm font-medium text-red-600 mb-2">Erros encontrados:</p>
+                  <div className="max-h-32 overflow-y-auto">
+                    {buildProgress.errors.map((error, index) => (
+                      <p key={index} className="text-xs text-red-500 mb-1">
+                        • {error}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(buildProgress.status === 'completed' || buildProgress.status === 'error') && (
+                <Button
+                  onClick={() => {
+                    setShowProgressModal(false);
+                    setBuildProgress(null);
+                  }}
+                  className="w-full"
+                >
+                  Fechar
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
