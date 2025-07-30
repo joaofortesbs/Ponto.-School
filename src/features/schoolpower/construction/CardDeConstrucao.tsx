@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,7 +47,6 @@ import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/tril
 import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
 import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
-import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
 import { AutomationDebugPanel } from './components/AutomationDebugPanel';
@@ -108,6 +108,7 @@ export function CardDeConstrucao({
 
   const [actionPlanItems, setActionPlanItems] = useState<ActionPlanItem[]>([]);
   const [selectedActivities, setSelectedActivities] = useState<ActionPlanItem[]>([]);
+  
   // Form data for contextualization
   const [formData, setFormData] = useState<ContextualizationData>({
     materias: "",
@@ -733,14 +734,6 @@ export function CardDeConstrucao({
     } else {
       console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
     }
-
-    // Para componentes que usam handleEditActivity, precisamos definir essas variáveis
-    if (typeof setSelectedActivity === 'function') {
-      setSelectedActivity(activity);
-    }
-    if (typeof setIsEditModalOpen === 'function') {
-      setIsEditModalOpen(true);
-    }
   };
 
   return (
@@ -958,84 +951,50 @@ export function CardDeConstrucao({
           </div>
 
           {/* Interface de Construção */}
-          
-          
-            import { ConstructionGrid } from './ConstructionGrid';
-import { EditActivityModal } from './EditActivityModal';
-import { useConstructionActivities } from './useConstructionActivities';
-import { useEditActivityModal } from './useEditActivityModal';
-import { AutomationDebugPanel } from './components/AutomationDebugPanel';
+          <div className="flex-1 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Construção de Atividades
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedActivities.length} atividade{selectedActivities.length !== 1 ? 's' : ''} aprovada{selectedActivities.length !== 1 ? 's' : ''} para construção
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onResetFlow}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                >
+                  Voltar ao início
+                </button>
+              </div>
+            </div>
 
-export interface ConstructionActivity {
-  id: string;
-  title: string;
-  description: string;
-  isBuilt: boolean;
-}
+            {/* Layout com Grid e Debug Panel */}
+            <div className="flex-1 flex gap-4">
+              {/* Grid Principal */}
+              <div className="flex-1">
+                <ConstructionGrid
+                  activities={selectedActivities}
+                  onEdit={handleEditActivity}
+                  onPreview={(activity: any) => console.log('Preview:', activity)}
+                  isAutoBuilding={false}
+                />
+              </div>
 
-export function ConstructionInterface({ approvedActivities }: { approvedActivities: any }) {
-  const onBack = () => {
-    alert('Voltar ao início');
-  };
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
-  // Implemente a lógica para lidar com a edição da atividade
-  const handleEdit = (activity: any) => {
-    console.log('Editar atividade:', activity.id);
-    setIsEditModalOpen(true);
-  };
-
-  // Implemente a lógica para lidar com a visualização da atividade
-  const handlePreview = (activity: any) => {
-    console.log('Visualizar atividade:', activity.id);
-    // Lógica para visualização
-  };
-  
-  const { activities, setActivities, isAutoBuilding } = useConstructionActivities(approvedActivities);
-
-  // Estados do modal
-  const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  return (
-    
-      
-        
-          
-            Construção de Atividades
-          
-          
-            {activities.length} atividade{activities.length !== 1 ? 's' : ''} aprovada{activities.length !== 1 ? 's' : ''} para construção
-          
-        
-
-        
-          Voltar ao início
-          
-        
-      
-
-      {/* Layout com Grid e Debug Panel */}
-      
-        {/* Grid Principal */}
-        
-          
-              activities={activities}
-              onEdit={handleEdit}
-              onPreview={handlePreview}
-              isAutoBuilding={isAutoBuilding}
-            
-        
-
-        {/* Painel de Debug */}
-        
-          
-              activities={activities}
-              isAutoBuilding={isAutoBuilding}
-            
-        
-      
-    
+              {/* Painel de Debug */}
+              <div className="w-80">
+                <AutomationDebugPanel
+                  activities={selectedActivities}
+                  isAutoBuilding={false}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
+    </motion.div>
   );
 }
