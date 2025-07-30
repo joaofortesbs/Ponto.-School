@@ -988,8 +988,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       {isContentLoaded && generatedContent ? (
                         activity?.id === 'lista-exercicios' ? (
                           <ExerciseListPreview 
+                            data={processExerciseListData(formData, generatedContent)}
                             content={generatedContent}
                             activityData={activity}
+                            onRegenerateContent={handleRegenerateContent}
                           />
                         ) : (
                           <ActivityPreview 

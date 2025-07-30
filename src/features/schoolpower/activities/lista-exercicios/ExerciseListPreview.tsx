@@ -235,22 +235,25 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     );
   }
 
+  const consolidatedData = data || {};
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho da Lista */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      
+<Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-xl text-blue-900">{data.titulo}</CardTitle>
+              <CardTitle className="text-xl text-blue-900">{consolidatedData.titulo}</CardTitle>
               <div className="flex items-center gap-4 mt-2 text-sm text-blue-700">
                 <div className="flex items-center gap-1">
                   <GraduationCap className="w-4 h-4" />
-                  <span>{data.disciplina}</span>
+                  <span>{consolidatedData.disciplina}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <FileText className="w-4 h-4" />
-                  <span>{data.tema}</span>
+                  <span>{consolidatedData.tema}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -268,13 +271,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       </Card>
 
       {/* Objetivos */}
-      {data.objetivos && (
+      {consolidatedData.objetivos && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Objetivos de Aprendizagem</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 leading-relaxed">{data.objetivos}</p>
+            <p className="text-gray-700 leading-relaxed">{consolidatedData.objetivos}</p>
           </CardContent>
         </Card>
       )}
@@ -306,13 +309,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       </div>
 
       {/* Instruções Adicionais */}
-      {data.observacoes && (
+      {consolidatedData.observacoes && (
         <Card className="border-amber-200 bg-amber-50">
           <CardHeader>
             <CardTitle className="text-amber-800">Observações Importantes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-amber-700">{data.observacoes}</p>
+            <p className="text-amber-700">{consolidatedData.observacoes}</p>
           </CardContent>
         </Card>
       )}
