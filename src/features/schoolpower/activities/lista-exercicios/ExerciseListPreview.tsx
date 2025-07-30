@@ -63,7 +63,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   const gerarQuestoesSimuladas = (activityData: ExerciseListData): Question[] => {
     const questoes: Question[] = [];
-    const tipos = activityData.tipoQuestoes.toLowerCase();
+    const tipos = (activityData.tipoQuestoes || 'multipla-escolha').toLowerCase();
     const numeroQuestoes = activityData.numeroQuestoes || 5;
 
     for (let i = 1; i <= numeroQuestoes; i++) {
@@ -81,15 +81,15 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       questoes.push({
         id: `questao-${i}`,
         type: tipoQuestao,
-        enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina}`,
+        enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina || 'conteúdo geral'}`,
         alternativas: tipoQuestao === 'multipla-escolha' ? [
           'Alternativa A',
           'Alternativa B', 
           'Alternativa C',
           'Alternativa D'
         ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
-        dificuldade: activityData.dificuldade?.toLowerCase() as 'facil' | 'medio' | 'dificil' || 'medio',
-        tema: activityData.tema
+        dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as 'facil' | 'medio' | 'dificil',
+        tema: activityData.tema || 'Tema não especificado'
       });
     }
 
@@ -111,11 +111,25 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   };
 
   const getDifficultyColor = (dificuldade?: string) => {
-    switch (dificuldade) {
-      case 'facil': return 'bg-green-100 text-green-800';
-      case 'medio': return 'bg-yellow-100 text-yellow-800';
-      case 'dificil': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+    const nivel = dificuldade ? dificuldade.toLowerCase() : 'medio';
+    switch (nivel) {
+      case 'facil': 
+      case 'fácil':
+      case 'básico':
+      case 'basico':
+        return 'bg-green-100 text-green-800';
+      case 'medio': 
+      case 'médio':
+      case 'intermediário':
+      case 'intermediario':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'dificil': 
+      case 'difícil':
+      case 'avançado':
+      case 'avancado':
+        return 'bg-red-100 text-red-800';
+      default: 
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -235,7 +249,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     );
   }
 
-  const consolidatedData = data || {};
+  const consolidatedData = {
+    titulo: data?.titulo || 'Lista de Exercícios',
+    disciplina: data?.disciplina || 'Disciplina não especificada',
+    tema: data?.tema || 'Tema não especificado',
+    tipoQuestoes: data?.tipoQuestoes || 'multipla-escolha',
+    numeroQuestoes: data?.numeroQuestoes || 5,
+    dificuldade: data?.dificuldade || 'medio',
+    objetivos: data?.objetivos || '',
+    conteudoPrograma: data?.conteudoPrograma || '',
+    observacoes: data?.observacoes || '',
+    questoes: data?.questoes || []
+  };
 
   return (
     <div className="space-y-6">

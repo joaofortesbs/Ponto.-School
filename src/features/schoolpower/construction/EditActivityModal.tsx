@@ -155,18 +155,45 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const processExerciseListData = (formData: ActivityFormData, generatedContent?: any) => {
     if (generatedContent) {
       try {
-        return generatedContent;
+        return {
+          titulo: generatedContent.titulo || formData.title || 'Lista de Exercícios',
+          disciplina: generatedContent.disciplina || formData.subject || 'Disciplina não especificada',
+          tema: generatedContent.tema || formData.theme || 'Tema não especificado',
+          tipoQuestoes: generatedContent.tipoQuestoes || formData.questionModel || 'multipla-escolha',
+          numeroQuestoes: generatedContent.numeroQuestoes || parseInt(formData.numberOfQuestions || '5'),
+          dificuldade: generatedContent.dificuldade || formData.difficultyLevel || 'medio',
+          objetivos: generatedContent.objetivos || formData.objectives || '',
+          conteudoPrograma: generatedContent.conteudoPrograma || formData.instructions || '',
+          observacoes: generatedContent.observacoes || '',
+          questoes: generatedContent.questoes || generatedContent.questions || []
+        };
       } catch (error) {
         console.error('Erro ao processar conteúdo da IA:', error);
         return {
-          ...formData,
+          titulo: formData.title || 'Lista de Exercícios',
+          disciplina: formData.subject || 'Disciplina não especificada',
+          tema: formData.theme || 'Tema não especificado',
+          tipoQuestoes: formData.questionModel || 'multipla-escolha',
+          numeroQuestoes: parseInt(formData.numberOfQuestions || '5'),
+          dificuldade: formData.difficultyLevel || 'medio',
+          objetivos: formData.objectives || '',
+          conteudoPrograma: formData.instructions || '',
+          observacoes: '',
           questoes: []
         };
       }
     }
 
     return {
-      ...formData,
+      titulo: formData.title || 'Lista de Exercícios',
+      disciplina: formData.subject || 'Disciplina não especificada',
+      tema: formData.theme || 'Tema não especificado',
+      tipoQuestoes: formData.questionModel || 'multipla-escolha',
+      numeroQuestoes: parseInt(formData.numberOfQuestions || '5'),
+      dificuldade: formData.difficultyLevel || 'medio',
+      objetivos: formData.objectives || '',
+      conteudoPrograma: formData.instructions || '',
+      observacoes: '',
       questoes: []
     };
   };
