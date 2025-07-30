@@ -394,6 +394,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     try {
       setIsSaving(true);
 
+      // Obter customFields a partir dos dados da atividade
+      const customFields = activity.customFields || {};
+
       // Salvar os dados editados
       const updatedActivity = {
         ...activity,
@@ -429,6 +432,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     if (!activity) return;
 
     try {
+      // Obter customFields a partir dos dados da atividade
+      const customFields = activity.customFields || {};
+
       // Simular clique no botão "Construir Atividade"
       const updatedActivity = {
         ...activity,
@@ -456,6 +462,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   useEffect(() => {
     if (!activity || !isOpen) return;
 
+    // Obter customFields a partir dos dados da atividade
+    const customFields = activity.customFields || {};
+
     // Verificar se os campos foram preenchidos automaticamente pela IA
     const hasAutoFilledFields = Object.keys(customFields).length > 0 && 
                                formData.title && 
@@ -470,7 +479,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [customFields, formData, activity, isOpen, onUpdateActivity]);
+  }, [formData, activity, isOpen, onUpdateActivity]);
 
   if (!isOpen) return null;
 
