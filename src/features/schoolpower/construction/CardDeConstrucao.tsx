@@ -684,8 +684,7 @@ export function CardDeConstrucao({
       console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
 
       // Preparar dados automáticos para preenchimento do modal com mapeamento completo
-```text
-      const autoDataKey = `auto_activity_data_${activity.id}`;
+          const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoFormData = {
         title: actionPlanActivity?.title || activity.title || originalData?.title || '',
         description: actionPlanActivity?.description || activity.description || originalData?.description || '',
