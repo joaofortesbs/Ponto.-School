@@ -158,23 +158,42 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     if (generatedContent && generatedContent.isGeneratedByAI) {
       console.log('✅ Usando conteúdo gerado pela IA');
       try {
+        // Extrair questões de diferentes formatos possíveis
+        let questoesExtraidas = [];
+        
+        if (generatedContent.questoes && Array.isArray(generatedContent.questoes)) {
+          questoesExtraidas = generatedContent.questoes;
+        } else if (generatedContent.questions && Array.isArray(generatedContent.questions)) {
+          questoesExtraidas = generatedContent.questions;
+        } else if (generatedContent.content && generatedContent.content.questoes) {
+          questoesExtraidas = generatedContent.content.questoes;
+        } else if (generatedContent.content && generatedContent.content.questions) {
+          questoesExtraidas = generatedContent.content.questions;
+        }
+
+        console.log(`📝 Questões extraídas: ${questoesExtraidas.length}`);
+        
         const processedData = {
           titulo: generatedContent.titulo || formData.title || 'Lista de Exercícios',
           disciplina: generatedContent.disciplina || formData.subject || 'Disciplina não especificada',
           tema: generatedContent.tema || formData.theme || 'Tema não especificado',
           tipoQuestoes: generatedContent.tipoQuestoes || formData.questionModel || 'multipla-escolha',
-          numeroQuestoes: generatedContent.numeroQuestoes || parseInt(formData.numberOfQuestions || '5'),
+          numeroQuestoes: questoesExtraidas.length || parseInt(formData.numberOfQuestions || '5'),
           dificuldade: generatedContent.dificuldade || formData.difficultyLevel || 'medio',
           objetivos: generatedContent.objetivos || formData.objectives || '',
           conteudoPrograma: generatedContent.conteudoPrograma || formData.instructions || '',
           observacoes: generatedContent.observacoes || '',
-          questoes: generatedContent.questoes || generatedContent.questions || [],
+          questoes: questoesExtraidas,
           isGeneratedByAI: true,
           generatedAt: generatedContent.generatedAt
         };
 
         console.log('📊 Dados processados da IA:', processedData);
-        console.log(`📝 Questões encontradas: ${processedData.questoes.length}`);
+        console.log(`📝 Questões finais: ${processedData.questoes.length}`);
+        
+        if (processedData.questoes.length > 0) {
+          console.log('📄 Primeira questão processada:', processedData.questoes[0]);
+        }
         
         return processedData;
       } catch (error) {
@@ -503,28 +522,44 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       console.log('📋 Dados do formulário para IA:', formData);
 
       // Preparar dados específicos para lista de exercícios
+      const contextData = {
+        titulo: formData.title,
+        description: formData.description,
+        disciplina: formData.subject,
+        tema: formData.theme,
+        anoEscolaridade: formData.schoolYear,
+        numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
+        nivelDificuldade: formData.difficultyLevel,
+        modeloQuestoes: formData.questionModel,
+        fontes: formData.sources,
+        objetivos: formData.objectives,
+        materiais: formData.materials,
+        instrucoes: formData.instructions,
+        tempoLimite: formData.timeLimit,
+        contextoAplicacao: formData.context,
+        // Dados alternativos em inglês para compatibilidade
+        subject: formData.subject,
+        theme: formData.theme,
+        schoolYear: formData.schoolYear,
+        difficultyLevel: formData.difficultyLevel,
+        questionModel: formData.questionModel,
+        sources: formData.sources,
+        objectives: formData.objectives,
+        materials: formData.materials,
+        instructions: formData.instructions,
+        timeLimit: formData.timeLimit,
+        context: formData.context
+      };
+
       const activityData = {
         ...formData,
         activityType: activity?.id || 'lista-exercicios',
         activityId: activity?.id,
-        contextData: {
-          titulo: formData.title,
-          disciplina: formData.subject,
-          tema: formData.theme,
-          anoEscolaridade: formData.schoolYear,
-          numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
-          nivelDificuldade: formData.difficultyLevel,
-          modeloQuestoes: formData.questionModel,
-          fontes: formData.sources,
-          objetivos: formData.objectives,
-          materiais: formData.materials,
-          instrucoes: formData.instructions,
-          tempoLimite: formData.timeLimit,
-          contextoAplicacao: formData.context
-        }
+        contextData: contextData
       };
 
       console.log('🤖 Enviando dados para IA:', activityData);
+      console.log('🔍 Context data detalhado:', contextData);
 
       const result = await generateActivity(activityData);
       
@@ -537,21 +572,41 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       }
 
       // Processar e validar o conteúdo gerado
+      let questoesGeradas = [];
+      
+      if (result.questoes && Array.isArray(result.questoes)) {
+        questoesGeradas = result.questoes;
+      } else if (result.questions && Array.isArray(result.questions)) {
+        questoesGeradas = result.questions;
+      } else if (result.content && result.content.questoes) {
+        questoesGeradas = result.content.questoes;
+      } else if (result.content && result.content.questions) {
+        questoesGeradas = result.content.questions;
+      }
+
+      console.log(`📝 Questões extraídas da IA: ${questoesGeradas.length}`);
+      if (questoesGeradas.length > 0) {
+        console.log('📄 Primeira questão:', questoesGeradas[0]);
+      }
+
       const processedContent = {
         ...result,
         titulo: result.titulo || formData.title,
         disciplina: result.disciplina || formData.subject,
         tema: result.tema || formData.theme,
-        questoes: result.questoes || result.questions || [],
-        numeroQuestoes: result.numeroQuestoes || parseInt(formData.numberOfQuestions || '10'),
+        questoes: questoesGeradas,
+        numeroQuestoes: questoesGeradas.length || parseInt(formData.numberOfQuestions || '10'),
         dificuldade: result.dificuldade || formData.difficultyLevel,
         tipoQuestoes: result.tipoQuestoes || formData.questionModel,
         objetivos: result.objetivos || formData.objectives,
+        conteudoPrograma: result.conteudoPrograma || formData.instructions,
+        observacoes: result.observacoes || '',
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
       };
 
       console.log('📊 Conteúdo processado final:', processedContent);
+      console.log(`✅ Total de questões processadas: ${processedContent.questoes.length}`);
 
       // Salvar o conteúdo gerado
       setGeneratedContent(processedContent);

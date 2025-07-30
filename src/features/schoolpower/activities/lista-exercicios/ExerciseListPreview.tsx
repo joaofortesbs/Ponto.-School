@@ -53,16 +53,48 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
     console.log('🔄 Processando questões no ExerciseListPreview:', data);
+    console.log('🔍 Estrutura completa dos dados:', JSON.stringify(data, null, 2));
     
-    if (data.questoes && data.questoes.length > 0) {
-      console.log(`✅ Usando ${data.questoes.length} questões reais da IA`);
-      setQuestoesProcessadas(data.questoes);
-    } else if (data.isGeneratedByAI === false) {
-      console.log('⚠️ Conteúdo não foi gerado pela IA, gerando questões simuladas');
+    // Verificar diferentes formatos de questões que podem vir da IA
+    let questoesDaIA = null;
+    
+    if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
+      console.log(`✅ Questões encontradas em 'questoes': ${data.questoes.length}`);
+      questoesDaIA = data.questoes;
+    } else if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
+      console.log(`✅ Questões encontradas em 'questions': ${data.questions.length}`);
+      questoesDaIA = data.questions;
+    } else if (data.content && data.content.questoes && Array.isArray(data.content.questoes)) {
+      console.log(`✅ Questões encontradas em 'content.questoes': ${data.content.questoes.length}`);
+      questoesDaIA = data.content.questoes;
+    } else if (data.content && data.content.questions && Array.isArray(data.content.questions)) {
+      console.log(`✅ Questões encontradas em 'content.questions': ${data.content.questions.length}`);
+      questoesDaIA = data.content.questions;
+    }
+
+    if (questoesDaIA && questoesDaIA.length > 0) {
+      console.log(`✅ Usando ${questoesDaIA.length} questões reais da IA`);
+      console.log('📝 Primeira questão da IA:', questoesDaIA[0]);
+      
+      // Processar e validar as questões da IA
+      const questoesProcessadasIA = questoesDaIA.map((questao, index) => ({
+        id: questao.id || `questao-${index + 1}`,
+        type: questao.type || questao.tipo || 'multipla-escolha',
+        enunciado: questao.enunciado || questao.pergunta || questao.question || `Questão ${index + 1}`,
+        alternativas: questao.alternativas || questao.alternatives || questao.options || [],
+        respostaCorreta: questao.respostaCorreta || questao.correctAnswer || 0,
+        explicacao: questao.explicacao || questao.explanation || '',
+        dificuldade: questao.dificuldade || questao.difficulty || 'medio',
+        tema: questao.tema || questao.topic || data.tema || 'Tema não especificado'
+      }));
+      
+      setQuestoesProcessadas(questoesProcessadasIA);
+    } else if (data.isGeneratedByAI === false || !data.isGeneratedByAI) {
+      console.log('⚠️ Conteúdo não foi gerado pela IA ou não há questões válidas, gerando questões simuladas');
       const questoesSimuladas = gerarQuestoesSimuladas(data);
       setQuestoesProcessadas(questoesSimuladas);
     } else {
-      console.log('❌ Nenhuma questão encontrada');
+      console.log('❌ Nenhuma questão encontrada em nenhum formato');
       setQuestoesProcessadas([]);
     }
   }, [data]);

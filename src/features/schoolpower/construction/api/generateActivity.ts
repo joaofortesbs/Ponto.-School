@@ -198,7 +198,7 @@ export { buildActivityPrompt, parseActivityResponse };
 export const generateActivityContent = async (
   activityType: string,
   contextData: any
-): Promise<string> => {
+): Promise<any> => {
   try {
     console.log('🤖 Iniciando geração de conteúdo com Gemini para:', activityType);
     console.log('📋 Dados de contexto:', contextData);
@@ -209,40 +209,9 @@ export const generateActivityContent = async (
     let prompt = '';
 
     if (activityType === 'lista-exercicios') {
-      prompt = `
-Crie uma lista de exercícios educacionais detalhada em formato JSON com as seguintes especificações:
-
-CONTEXTO:
-- Disciplina: ${contextData.materias || 'Não especificado'}
-- Público-alvo: ${contextData.publicoAlvo || 'Não especificado'}
-- Restrições: ${contextData.restricoes || 'Nenhuma'}
-- Datas importantes: ${contextData.datasImportantes || 'Não especificado'}
-- Observações: ${contextData.observacoes || 'Nenhuma'}
-
-FORMATO DE RESPOSTA (JSON):
-{
-  "title": "Título da lista de exercícios",
-  "description": "Descrição detalhada da atividade",
-  "subject": "Disciplina específica",
-  "difficulty": "Fácil/Médio/Difícil",
-  "duration": "Tempo estimado em minutos",
-  "objectives": "Objetivos de aprendizagem claros e específicos",
-  "materials": "Materiais necessários para realizar os exercícios",
-  "instructions": "Instruções detalhadas para o aluno",
-  "exercises": "Lista numerada de exercícios práticos e desafiadores",
-  "questions": "Questões para reflexão ou avaliação",
-  "answerKey": "Gabarito com respostas detalhadas",
-  "notes": "Observações adicionais para o professor ou aluno"
-}
-
-REQUISITOS:
-- Crie pelo menos 5 exercícios variados
-- Inclua questões de diferentes níveis de dificuldade
-- Forneça explicações detalhadas no gabarito
-- Adapte o conteúdo ao público-alvo especificado
-- Use linguagem clara e didática
-
-Responda APENAS com o JSON, sem texto adicional.`;
+      // Importar o prompt específico
+      const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
+      prompt = buildListaExerciciosPrompt(contextData);
     } else {
       // Prompt genérico para outros tipos de atividade
       prompt = `

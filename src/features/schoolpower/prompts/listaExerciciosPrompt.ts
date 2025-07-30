@@ -1,79 +1,91 @@
 
-/**
- * Prompt específico para geração de lista de exercícios pelo Gemini
- */
-export function buildListaExerciciosPrompt(formData: any): string {
+export const buildListaExerciciosPrompt = (contextData: any): string => {
+  const numeroQuestoes = parseInt(contextData.numeroQuestoes || contextData.numberOfQuestions || '10');
+  const disciplina = contextData.disciplina || contextData.subject || 'Português';
+  const tema = contextData.tema || contextData.theme || 'Conteúdo Geral';
+  const anoEscolar = contextData.anoEscolaridade || contextData.schoolYear || '6º ano';
+  const dificuldade = contextData.nivelDificuldade || contextData.difficultyLevel || 'Médio';
+  const modeloQuestoes = contextData.modeloQuestoes || contextData.questionModel || 'multipla-escolha';
+  const titulo = contextData.titulo || contextData.title || `Lista de Exercícios: ${tema}`;
+  const descricao = contextData.descricao || contextData.description || '';
+  const objetivos = contextData.objetivos || contextData.objectives || '';
+  const fontes = contextData.fontes || contextData.sources || '';
+
   return `
-Você é um especialista em educação e criação de materiais didáticos. Precisa criar uma lista de exercícios estruturada baseada nos seguintes dados:
+Você é um especialista em educação. Crie uma lista de exercícios PERSONALIZADA e REAL baseada nos dados específicos fornecidos.
 
-**DADOS DA ATIVIDADE:**
-- Título: ${formData.titulo || 'Lista de Exercícios'}
-- Disciplina: ${formData.disciplina || 'Não especificada'}
-- Tema Principal: ${formData.tema || 'Não especificado'}
-- Tipo de Questões: ${formData.tipoQuestoes || 'Mista'}
-- Número de Questões: ${formData.numeroQuestoes || 10}
-- Nível de Dificuldade: ${formData.dificuldade || 'Médio'}
-- Conteúdo Programático: ${formData.conteudoPrograma || 'Não especificado'}
-- Objetivos de Aprendizagem: ${formData.objetivos || 'Não especificado'}
-- Tempo Estimado: ${formData.tempoEstimado || 45} minutos
-- Observações: ${formData.observacoes || 'Nenhuma'}
+DADOS ESPECÍFICOS DA ATIVIDADE:
+- Título: ${titulo}
+- Descrição: ${descricao}
+- Disciplina: ${disciplina}
+- Tema: ${tema}
+- Ano de Escolaridade: ${anoEscolar}
+- Número de Questões: ${numeroQuestoes}
+- Nível de Dificuldade: ${dificuldade}
+- Modelo de Questões: ${modeloQuestoes}
+- Objetivos: ${objetivos}
+- Fontes: ${fontes}
 
-**INSTRUÇÕES PARA CRIAÇÃO:**
+INSTRUÇÕES ESPECÍFICAS:
+1. Crie EXATAMENTE ${numeroQuestoes} questões sobre ${tema} em ${disciplina}
+2. Adeque o conteúdo para estudantes do ${anoEscolar}
+3. Use nível de dificuldade: ${dificuldade}
+4. Tipo de questões: ${modeloQuestoes}
+5. Todas as questões devem ser sobre o tema específico: ${tema}
 
-1. **Formato de Saída**: Retorne APENAS um JSON válido no seguinte formato:
+FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
 {
-  "titulo": "Nome da Lista de Exercícios",
-  "disciplina": "Nome da Disciplina",
-  "tema": "Tema Principal",
-  "objetivos": "Objetivos claros de aprendizagem",
-  "instrucoes": "Instruções gerais para resolução",
+  "titulo": "${titulo}",
+  "disciplina": "${disciplina}",
+  "tema": "${tema}",
+  "anoEscolaridade": "${anoEscolar}",
+  "numeroQuestoes": ${numeroQuestoes},
+  "dificuldade": "${dificuldade}",
+  "tipoQuestoes": "${modeloQuestoes}",
+  "objetivos": "Objetivos específicos para ${tema}",
+  "conteudoPrograma": "Conteúdo programático detalhado",
+  "observacoes": "Observações importantes",
   "questoes": [
     {
-      "id": 1,
-      "tipo": "multipla-escolha|discursiva|verdadeiro-falso",
-      "enunciado": "Texto da questão clara e bem formulada",
-      "alternativas": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
+      "id": "questao-1",
+      "type": "multipla-escolha",
+      "enunciado": "Pergunta específica sobre ${tema}",
+      "alternativas": [
+        "Alternativa A",
+        "Alternativa B",
+        "Alternativa C",
+        "Alternativa D"
+      ],
       "respostaCorreta": 0,
-      "explicacao": "Explicação detalhada da resposta correta",
-      "dificuldade": "facil|medio|dificil",
-      "tema": "Subtema específico da questão"
+      "explicacao": "Explicação detalhada",
+      "dificuldade": "${dificuldade.toLowerCase()}",
+      "tema": "${tema}"
     }
   ]
 }
 
-2. **Tipos de Questões por Configuração:**
-   - Múltipla Escolha: 4 alternativas (A, B, C, D)
-   - Verdadeiro ou Falso: 2 alternativas (Verdadeiro, Falso)
-   - Discursivas: Sem alternativas, apenas enunciado
-   - Mista: Combine os tipos conforme apropriado
+REGRAS IMPORTANTES:
+- Para múltipla escolha: sempre 4 alternativas
+- Para verdadeiro/falso: ["Verdadeiro", "Falso"]
+- Para discursivas: sem alternativas
+- Cada questão deve ter ID único
+- Conteúdo deve ser educacional real
+- Adequar vocabulário ao ano escolar
+- Focar no tema específico fornecido
 
-3. **Qualidade das Questões:**
-   - Enunciados claros e sem ambiguidade
-   - Questões progressivas em complexidade
-   - Alternativas plausíveis nas múltipla escolha
-   - Explicações educativas e construtivas
-   - Alinhamento com os objetivos de aprendizagem
-
-4. **Distribuição de Dificuldade:**
-   - Fácil: 30% das questões
-   - Médio: 50% das questões  
-   - Difícil: 20% das questões
-
-5. **Conteúdo Educacional:**
-   - Questões devem abordar conceitos fundamentais
-   - Incluir aplicação prática dos conhecimentos
-   - Estimular pensamento crítico
-   - Conectar teoria com exemplos reais
-
-**IMPORTANTE:**
-- Retorne APENAS o JSON válido, sem texto adicional
-- Todas as questões devem estar completas e bem estruturadas
-- As explicações devem ser educativas e claras
-- Respeite rigorosamente o número de questões solicitado
-- Adapte o vocabulário ao nível educacional apropriado
-
-Crie agora a lista de exercícios seguindo estas especificações:
+Responda APENAS com o JSON válido, sem markdown ou texto adicional.
 `;
-}
+};
 
-export default buildListaExerciciosPrompt;
+export const validateListaExerciciosResponse = (response: any): boolean => {
+  if (!response || typeof response !== 'object') return false;
+  
+  if (!response.questoes || !Array.isArray(response.questoes)) return false;
+  
+  return response.questoes.every((questao: any) => 
+    questao.id && 
+    questao.type && 
+    questao.enunciado &&
+    (questao.type === 'discursiva' || questao.alternativas)
+  );
+};
