@@ -64,91 +64,39 @@ export class AutoBuildService {
     // Marcar como construída
     activity.isBuilt = true;
     activity.builtAt = new Date().toISOString();
-    console.log('📋 Dados do formulário preparados para IA:', formData);
 
-    // Preparar dados contextualizados exatamente como no modal
-    const contextualizedData = {
-      ...formData,
-      numeroQuestoes: formData.numberOfQuestions || '10',
-      disciplina: formData.subject || 'Português',
-      tema: formData.theme || 'Conteúdo Geral',
-      anoEscolar: formData.schoolYear || '6º ano',
-      dificuldade: formData.difficultyLevel || 'Médio',
-      modeloQuestoes: formData.questionModel || 'multipla-escolha',
-      titulo: formData.title || 'Lista de Exercícios',
-      descricao: formData.description || '',
-      objetivos: formData.objectives || '',
-      fontes: formData.sources || '',
-      contextData: {
-        titulo: formData.title,
-        descricao: formData.description,
-        disciplina: formData.subject,
-        tema: formData.theme,
-        anoEscolaridade: formData.schoolYear,
-        numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
-        nivelDificuldade: formData.difficultyLevel,
-        modeloQuestoes: formData.questionModel,
-        fontes: formData.sources,
-        objetivos: formData.objectives,
-        materiais: formData.materials,
-        instrucoes: formData.instructions,
-        tempoLimite: formData.timeLimit,
-        contextoAplicacao: formData.context
-      }
+    // Gerar conteúdo da atividade
+    console.log(`🏗️ Gerando conteúdo para: ${activity.title}`);
+    const generatedContent = await activityGenerationService.generateActivity(activity.id, formData);
+
+    console.log(`✅ Conteúdo gerado para ${activity.title}:`, generatedContent);
+
+    // Padronizar e salvar conteúdo gerado
+    const contentToSave = {
+      generatedAt: new Date().toISOString(),
+      activityId: activity.id,
+      activityTitle: activity.title,
+      isGenerated: true,
+      ...generatedContent
     };
 
-    console.log('🤖 Dados contextualizados para IA:', contextualizedData);
+    localStorage.setItem(`activity_${activity.id}`, JSON.stringify(contentToSave));
 
-    // Usar exatamente a mesma função de geração que o modal usa
-    try {
-      // Importar dinamicamente a função de geração de atividades
-      const { generateActivityContent } = await import('../api/generateActivity');
+    // Atualizar atividade construída
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    constructedActivities[activity.id] = {
+      ...activity,
+      isBuilt: true,
+      builtAt: new Date().toISOString(),
+      generatedContent: contentToSave
+    };
+    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-      const generatedContent = await generateActivityContent(activity.id, contextualizedData);
+    console.log(`💾 Atividade ${activity.id} salva com sucesso`);
 
-      console.log('✅ Conteúdo gerado pela IA:', generatedContent);
-
-      // Validar se as questões foram geradas corretamente
-      if (activity.id === 'lista-exercicios') {
-        if (!generatedContent.questoes || !Array.isArray(generatedContent.questoes) || generatedContent.questoes.length === 0) {
-          throw new Error('Nenhuma questão foi gerada pela IA para a lista de exercícios');
-        }
-        console.log(`📝 ${generatedContent.questoes.length} questões geradas com sucesso`);
-      }
-
-      // Salvar conteúdo gerado no formato correto
-      const savedContent = {
-        generatedAt: new Date().toISOString(),
-        activityId: activity.id,
-        activityTitle: activity.title,
-        isGenerated: true,
-        formData: formData,
-        isGeneratedByAI: true,
-        ...generatedContent
-      };
-
-      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(savedContent));
-
-      // Marcar como construída
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      constructedActivities[activity.id] = {
-        ...activity,
-        isBuilt: true,
-        builtAt: new Date().toISOString(),
-        generatedContent: generatedContent
-      };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-      console.log(`✅ Conteúdo salvo com sucesso para: ${activity.title}`);
-
-      // Notificar que a atividade foi construída
-      if (this.onActivityBuilt) {
-        this.onActivityBuilt(activity.id);
-      }
-
-    } catch (error) {
-      console.error(`❌ Erro ao gerar conteúdo para ${activity.title}:`, error);
-      throw error;
+    // Notificar que a atividade foi construída
+    if (this.onActivityBuilt) {
+      this.onActivityBuilt(activity.id);
     }
   }
 
