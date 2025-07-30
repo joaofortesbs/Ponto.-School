@@ -64,8 +64,7 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
     }`;
   }
 
-  return `
-Você é um especialista em educação brasileira. Crie uma lista de exercícios REAL e PERSONALIZADA baseada nos dados específicos fornecidos.
+  return `Você é um especialista em educação brasileira. Crie uma lista de exercícios REAL e PERSONALIZADA baseada nos dados específicos fornecidos.
 
 DADOS ESPECÍFICOS DA ATIVIDADE:
 - Título: ${titulo}
@@ -108,7 +107,7 @@ FORMATO DE RESPOSTA OBRIGATÓRIO - JSON VÁLIDO:
 }
 
 REGRAS CRÍTICAS:
-- Responda APENAS com JSON válido, sem ```json``` ou texto adicional
+- Responda APENAS com JSON válido, sem caracteres extras ou texto adicional
 - Crie ${numeroQuestoes} questões diferentes e específicas sobre "${tema}"
 - Para múltipla escolha: exatamente 4 alternativas
 - Para verdadeiro/falso: ["Verdadeiro", "Falso"] 
@@ -117,8 +116,7 @@ REGRAS CRÍTICAS:
 - Enunciados específicos do tema, não genéricos
 - Adequar ao nível escolar e dificuldade solicitados
 
-IMPORTANTE: O conteúdo deve ser específico para "${tema}" em ${disciplina}, adequado ao ${anoEscolar}.
-`;
+IMPORTANTE: O conteúdo deve ser específico para "${tema}" em ${disciplina}, adequado ao ${anoEscolar}.`;
 };
 
 export const validateListaExerciciosResponse = (response: any): boolean => {
