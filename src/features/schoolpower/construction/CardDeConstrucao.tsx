@@ -49,6 +49,7 @@ import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
 import atividadesTrilhas from '../data/atividadesTrilhas.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
+import { EditActivityModal } from '../editactivitymodal/EditActivityModal';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -76,6 +77,7 @@ export interface ActionPlanItem {
   isTrilhasEligible?: boolean;
   customFields?: Record<string, string>;
   isManual?: boolean;
+  isBuilt?: boolean;
 }
 
 interface CardDeConstrucaoProps {
@@ -241,7 +243,7 @@ export function CardDeConstrucao({
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
-      
+
       // Se estivermos na etapa de atividades, também atualizar selectedActivities
       if (step === 'activities') {
         setSelectedActivities(approved);
@@ -624,6 +626,8 @@ export function CardDeConstrucao({
   };
 
   const [selectedTrilhasCount, setSelectedTrilhasCount] = useState(0);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ActionPlanItem | null>(null);
 
   useEffect(() => {
     const trilhasActivityIds = [
@@ -661,10 +665,10 @@ export function CardDeConstrucao({
     // Buscar dados da atividade no action plan se disponível
     const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
                                actionPlan?.find(item => item.id === activity.id);
-    
+
     // Também verificar nos dados originais da atividade
     const originalData = activity.originalData || activity;
-    
+
     console.log('📊 Action plan activity encontrada:', actionPlanActivity);
     console.log('📊 Dados originais da atividade:', originalData);
 
@@ -680,6 +684,7 @@ export function CardDeConstrucao({
       console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
 
       // Preparar dados automáticos para preenchimento do modal com mapeamento completo
+```text
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoFormData = {
         title: actionPlanActivity?.title || activity.title || originalData?.title || '',
@@ -739,6 +744,46 @@ export function CardDeConstrucao({
     }
     if (typeof setIsEditModalOpen === 'function') {
       setIsEditModalOpen(true);
+    }
+  };
+
+  const handleUpdateActivity = async (updatedActivity: any) => {
+    console.log('💾 Atualizando atividade:', updatedActivity);
+
+    const newActionPlan = actionPlan.map(activity => 
+      activity.id === updatedActivity.id ? updatedActivity : activity
+    );
+
+    // updateActionPlan(newActionPlan);
+    setActionPlanItems(newActionPlan);
+
+    // Sincronizar com localStorage se necessário
+    try {
+      const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
+      if (flowData.actionPlan) {
+        flowData.actionPlan = newActionPlan;
+        localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
+        console.log('✅ Dados sincronizados no localStorage');
+      }
+    } catch (error) {
+      console.error('Erro ao sincronizar com localStorage:', error);
+    }
+  };
+
+  const handleRemoveActivity = (activityId: string) => {
+    const newActionPlan = actionPlan.filter(activity => activity.id !== activityId);
+    // updateActionPlan(newActionPlan);
+    setActionPlanItems(newActionPlan);
+
+    // Também remover do localStorage
+    try {
+      const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
+      if (flowData.actionPlan) {
+        flowData.actionPlan = newActionPlan;
+        localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
+      }
+    } catch (error) {
+      console.error('Erro ao remover do localStorage:', error);
     }
   };
 
@@ -1188,7 +1233,7 @@ export function CardDeConstrucao({
                       <button
                         onClick={handleAddManualActivity}
                         disabled={!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()}
-                        className="flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -1442,6 +1487,15 @@ export function CardDeConstrucao({
           {showTrilhasDebug ? '🔍 Fechar Debug' : '🔍 Debug Trilhas'}
         </button>
       )}
+      <EditActivityModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedActivity(null);
+        }}
+        activity={selectedActivity}
+        onUpdateActivity={handleUpdateActivity}
+      />
     </motion.div>
   );
 }

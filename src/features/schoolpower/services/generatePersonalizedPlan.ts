@@ -382,36 +382,38 @@ export async function generatePersonalizedPlan(
 
 
     // Mapear atividades validadas para o formato do ActionPlanItem
-    const actionPlanItems = validatedActivities.map(activity => {
+    const actionPlanItems = validatedActivities.map(activityData => {
         // Extrair campos personalizados da atividade
         const customFields: Record<string, string> = {};
-        
+
         // Pegar todos os campos que não são padrões do sistema
         const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
-        
-        Object.keys(activity).forEach(key => {
-            if (!standardFields.includes(key) && typeof activity[key] === 'string') {
-                customFields[key] = activity[key];
+
+        Object.keys(activityData).forEach(key => {
+            if (!standardFields.includes(key) && typeof activityData[key] === 'string') {
+                customFields[key] = activityData[key];
             }
         });
 
-        console.log(`✅ Campos personalizados extraídos para ${activity.id}:`, customFields);
+        console.log(`✅ Campos personalizados extraídos para ${activityData.id}:`, customFields);
 
-        const actionPlanItem = {
-            id: activity.id,
-            title: activity.personalizedTitle || activity.title,
-            description: activity.personalizedDescription || activity.description,
-            duration: activity.duration || '30 min',
-            difficulty: activity.difficulty || 'Médio',
-            category: activity.category || 'Geral',
-            type: activity.type || 'atividade',
-            approved: false,
-            isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
-            customFields: customFields
+        const activity = {
+          id: activityData.id,
+          title: activityData.title,
+          description: activityData.description,
+          duration: activityData.duration,
+          difficulty: activityData.difficulty,
+          category: activityData.category,
+          type: activityData.type,
+          customFields: customFields || {},
+          approved: true,
+          isTrilhasEligible: true,
+          isBuilt: false, // Será marcado como true após construção automática
+          builtAt: null
         };
 
-        console.log(`✅ ActionPlanItem completo criado para ${activity.id}:`, actionPlanItem);
-        return actionPlanItem;
+        console.log(`✅ ActionPlanItem completo criado para ${activityData.id}:`, activity);
+        return activity;
     });
 
     if (validatedActivities.length === 0) {

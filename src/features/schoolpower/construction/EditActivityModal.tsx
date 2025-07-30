@@ -21,6 +21,7 @@ interface EditActivityModalProps {
   activity: ConstructionActivity | null;
   onClose: () => void;
   onSave: (activityData: any) => void;
+  onUpdateActivity?: (activity: any) => Promise<void>;
 }
 
 // Função para obter ícone baseado no tipo de atividade
@@ -39,7 +40,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   isOpen,
   activity,
   onClose,
-  onSave
+  onSave,
+  onUpdateActivity
 }) => {
   const [formData, setFormData] = useState<ActivityFormData>({
     title: activity?.title || activity?.personalizedTitle || '',
@@ -135,7 +137,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     if (activity && isOpen) {
       console.log('🔄 Modal aberto, carregando dados para atividade:', activity.id);
       console.log('📊 Dados completos da atividade recebida:', activity);
-      
+
       // Verificar se há dados automáticos preenchidos
       const autoDataKey = `auto_activity_data_${activity.id}`;
       const autoData = localStorage.getItem(autoDataKey);
@@ -148,7 +150,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             originalActivity, 
             actionPlanActivity 
           } = JSON.parse(autoData);
-          
+
           console.log('📋 Carregando dados automáticos para:', activity.title);
           console.log('🔧 Campos personalizados encontrados:', customFields);
           console.log('📊 Dados originais:', originalActivity);
@@ -214,11 +216,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             localStorage.removeItem(autoDataKey);
             console.log('🗑️ Dados automáticos limpos do localStorage');
           }, 1000);
-          
+
         } catch (error) {
           console.error('❌ Erro ao carregar dados automáticos:', error);
           console.error('📊 Dados que causaram erro:', autoData);
-          
+
           // Usar dados da atividade mesmo com erro
           const fallbackData = {
             title: activity.title || activity.originalData?.title || '',
@@ -253,20 +255,20 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             knowledgeArea: '',
             complexityLevel: ''
           };
-          
+
           setFormData(fallbackData);
           console.log('🔧 Usando dados de fallback:', fallbackData);
         }
       } else {
         console.log('⚠️ Nenhum dado automático encontrado, usando dados da atividade');
-        
+
         // Carregar dados diretamente da atividade
         const activityData = activity.originalData || activity;
         const customFields = activityData.customFields || {};
-        
+
         console.log('📊 Dados da atividade para preenchimento:', activityData);
         console.log('🗂️ Custom fields disponíveis:', customFields);
-        
+
         const directFormData = {
           title: activityData.title || '',
           description: activityData.description || '',
@@ -300,7 +302,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           knowledgeArea: '',
           complexityLevel: ''
         };
-        
+
         setFormData(directFormData);
         console.log('📝 Formulário preenchido com dados diretos:', directFormData);
       }
@@ -371,6 +373,90 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       questions: []
     };
   };
+
+  const handleSave = async () => {
+    if (!activity) return;
+
+    try {
+      setIsSaving(true);
+
+      // Salvar os dados editados
+      const updatedActivity = {
+        ...activity,
+        ...formData,
+        customFields: customFields
+      };
+
+      // Chamar a função de atualização passada como prop
+      if (onUpdateActivity) {
+        await onUpdateActivity(updatedActivity);
+      }
+
+      toast({
+        title: "Atividade atualizada",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar atividade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Função para acionar automaticamente o botão "Construir Atividade"
+  const triggerAutoBuild = async () => {
+    if (!activity) return;
+
+    try {
+      // Simular clique no botão "Construir Atividade"
+      const updatedActivity = {
+        ...activity,
+        ...formData,
+        customFields: customFields,
+        isBuilt: true,
+        builtAt: new Date().toISOString()
+      };
+
+      // Atualizar a atividade com os dados preenchidos pela IA
+      if (onUpdateActivity) {
+        await onUpdateActivity(updatedActivity);
+      }
+
+      console.log('🤖 Atividade construída automaticamente:', updatedActivity);
+
+      // Fechar o modal após a construção automática
+      onClose();
+    } catch (error) {
+      console.error('Erro na construção automática:', error);
+    }
+  };
+
+  // Effect para detectar quando todos os campos foram preenchidos pela IA
+  useEffect(() => {
+    if (!activity || !isOpen) return;
+
+    // Verificar se os campos foram preenchidos automaticamente pela IA
+    const hasAutoFilledFields = Object.keys(customFields).length > 0 && 
+                               formData.title && 
+                               formData.description;
+
+    if (hasAutoFilledFields && !activity.isBuilt) {
+      // Aguardar um pequeno delay para garantir que todos os campos foram preenchidos
+      const timer = setTimeout(() => {
+        console.log('🚀 Acionando construção automática da atividade...');
+        triggerAutoBuild();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [customFields, formData, activity, isOpen, onUpdateActivity]);
 
   if (!isOpen) return null;
 
