@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
@@ -119,6 +120,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   }, [activity, isOpen]);
 
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Hook para geração de atividades
   const {
@@ -146,13 +148,13 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         try {
           const { 
             formData: autoFormData, 
-            customFields, 
+            customFields: autoCustomFields, 
             originalActivity, 
             actionPlanActivity 
           } = JSON.parse(autoData);
 
           console.log('📋 Carregando dados automáticos para:', activity.title);
-          console.log('🔧 Campos personalizados encontrados:', customFields);
+          console.log('🔧 Campos personalizados encontrados:', autoCustomFields);
           console.log('📊 Dados originais:', originalActivity);
           console.log('📊 Action plan activity:', actionPlanActivity);
 
@@ -166,9 +168,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           // Consolidar customFields de todas as fontes
           const consolidatedCustomFields = {
             ...activity?.customFields,
-            ...autoData?.customFields,
-            ...autoData?.originalActivity?.customFields,
-            ...autoData?.actionPlanActivity?.customFields
+            ...autoCustomFields,
+            ...originalActivity?.customFields,
+            ...actionPlanActivity?.customFields
           } || {};
 
           // Garantir que customFields existe para evitar erros
