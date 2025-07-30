@@ -151,6 +151,43 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     activityType: activity?.id || ''
   });
 
+  // Processar dados específicos para lista de exercícios
+  const processExerciseListData = (formData: ActivityFormData, generatedContent?: any) => {
+    if (generatedContent) {
+      try {
+        return generatedContent;
+      } catch (error) {
+        console.error('Erro ao processar conteúdo da IA:', error);
+        return {
+          ...formData,
+          questoes: []
+        };
+      }
+    }
+
+    return {
+      ...formData,
+      questoes: []
+    };
+  };
+
+  // Regenerar conteúdo específico para lista de exercícios
+  const handleRegenerateContent = async () => {
+    if (activity?.id === 'lista-exercicios') {
+      try {
+        const newContent = await generateActivity(formData);
+        setGeneratedContent(newContent);
+      } catch (error) {
+        console.error('Erro ao regenerar conteúdo:', error);
+        toast({
+          title: "Erro ao regenerar",
+          description: "Não foi possível regenerar o conteúdo. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   // Carregar conteúdo construído quando o modal abrir
   useEffect(() => {
     if (activity && isOpen) {

@@ -1,4 +1,3 @@
-
 export const activityCustomFields: Record<string, string[]> = {
   "lista-exercicios": [
     "tema",
@@ -176,8 +175,11 @@ export const activityCustomFields: Record<string, string[]> = {
 /**
  * Obtém os campos personalizados para um tipo de atividade
  */
-export function getCustomFieldsForActivity(activityId: string): string[] {
-  return activityCustomFields[activityId] || [];
+export function getCustomFieldsForActivity(activityId: string): Record<string, any> {
+  // Campos específicos para lista de exercícios
+  if (activityId === 'lista-exercicios') {
+    return getListaExerciciosCustomFields();
+  }
 }
 
 /**

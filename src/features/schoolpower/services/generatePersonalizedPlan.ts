@@ -4,6 +4,7 @@ import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import activityFieldsSchema from '../data/activityFieldsSchema.json';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
+import { processAIGeneratedContent } from './exerciseListProcessor';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
