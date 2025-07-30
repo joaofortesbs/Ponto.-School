@@ -153,9 +153,12 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
   // Processar dados específicos para lista de exercícios
   const processExerciseListData = (formData: ActivityFormData, generatedContent?: any) => {
-    if (generatedContent) {
+    console.log('🔄 Processando dados da lista de exercícios:', { formData, generatedContent });
+
+    if (generatedContent && generatedContent.isGeneratedByAI) {
+      console.log('✅ Usando conteúdo gerado pela IA');
       try {
-        return {
+        const processedData = {
           titulo: generatedContent.titulo || formData.title || 'Lista de Exercícios',
           disciplina: generatedContent.disciplina || formData.subject || 'Disciplina não especificada',
           tema: generatedContent.tema || formData.theme || 'Tema não especificado',
@@ -165,25 +168,21 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           objetivos: generatedContent.objetivos || formData.objectives || '',
           conteudoPrograma: generatedContent.conteudoPrograma || formData.instructions || '',
           observacoes: generatedContent.observacoes || '',
-          questoes: generatedContent.questoes || generatedContent.questions || []
+          questoes: generatedContent.questoes || generatedContent.questions || [],
+          isGeneratedByAI: true,
+          generatedAt: generatedContent.generatedAt
         };
+
+        console.log('📊 Dados processados da IA:', processedData);
+        console.log(`📝 Questões encontradas: ${processedData.questoes.length}`);
+        
+        return processedData;
       } catch (error) {
-        console.error('Erro ao processar conteúdo da IA:', error);
-        return {
-          titulo: formData.title || 'Lista de Exercícios',
-          disciplina: formData.subject || 'Disciplina não especificada',
-          tema: formData.theme || 'Tema não especificado',
-          tipoQuestoes: formData.questionModel || 'multipla-escolha',
-          numeroQuestoes: parseInt(formData.numberOfQuestions || '5'),
-          dificuldade: formData.difficultyLevel || 'medio',
-          objetivos: formData.objectives || '',
-          conteudoPrograma: formData.instructions || '',
-          observacoes: '',
-          questoes: []
-        };
+        console.error('❌ Erro ao processar conteúdo da IA:', error);
       }
     }
 
+    console.log('⚠️ Usando dados de fallback (sem conteúdo da IA)');
     return {
       titulo: formData.title || 'Lista de Exercícios',
       disciplina: formData.subject || 'Disciplina não especificada',
@@ -194,7 +193,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       objetivos: formData.objectives || '',
       conteudoPrograma: formData.instructions || '',
       observacoes: '',
-      questoes: []
+      questoes: [],
+      isGeneratedByAI: false
     };
   };
 
@@ -500,10 +500,61 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const handleBuildActivity = async () => {
     try {
       console.log('🏗️ Iniciando construção da atividade...');
-      const result = await generateActivity(formData);
+      console.log('📋 Dados do formulário para IA:', formData);
+
+      // Preparar dados específicos para lista de exercícios
+      const activityData = {
+        ...formData,
+        activityType: activity?.id || 'lista-exercicios',
+        activityId: activity?.id,
+        contextData: {
+          titulo: formData.title,
+          disciplina: formData.subject,
+          tema: formData.theme,
+          anoEscolaridade: formData.schoolYear,
+          numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
+          nivelDificuldade: formData.difficultyLevel,
+          modeloQuestoes: formData.questionModel,
+          fontes: formData.sources,
+          objetivos: formData.objectives,
+          materiais: formData.materials,
+          instrucoes: formData.instructions,
+          tempoLimite: formData.timeLimit,
+          contextoAplicacao: formData.context
+        }
+      };
+
+      console.log('🤖 Enviando dados para IA:', activityData);
+
+      const result = await generateActivity(activityData);
+      
+      console.log('✅ Resultado da IA recebido:', result);
+
+      // Verificar se o resultado contém questões válidas
+      if (!result || (!result.questoes && !result.questions)) {
+        console.warn('⚠️ IA não retornou questões válidas, forçando regeneração...');
+        throw new Error('Conteúdo inválido gerado pela IA');
+      }
+
+      // Processar e validar o conteúdo gerado
+      const processedContent = {
+        ...result,
+        titulo: result.titulo || formData.title,
+        disciplina: result.disciplina || formData.subject,
+        tema: result.tema || formData.theme,
+        questoes: result.questoes || result.questions || [],
+        numeroQuestoes: result.numeroQuestoes || parseInt(formData.numberOfQuestions || '10'),
+        dificuldade: result.dificuldade || formData.difficultyLevel,
+        tipoQuestoes: result.tipoQuestoes || formData.questionModel,
+        objetivos: result.objetivos || formData.objectives,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true
+      };
+
+      console.log('📊 Conteúdo processado final:', processedContent);
 
       // Salvar o conteúdo gerado
-      setGeneratedContent(result);
+      setGeneratedContent(processedContent);
       setIsContentLoaded(true);
 
       // Salvar no localStorage
@@ -512,7 +563,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         activityId: activity?.id,
         activityTitle: activity?.title,
         isGenerated: true,
-        ...result
+        formData: formData,
+        ...processedContent
       }));
 
       // Marcar como construída
@@ -521,7 +573,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         ...activity,
         isBuilt: true,
         builtAt: new Date().toISOString(),
-        generatedContent: result
+        generatedContent: processedContent
       };
       localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
@@ -546,7 +598,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       toast({
         title: "Atividade construída com sucesso!",
-        description: "O conteúdo foi gerado e está disponível na aba de pré-visualização.",
+        description: "O conteúdo foi gerado pela IA e está disponível na aba de pré-visualização.",
       });
 
       // Automaticamente mudar para a aba de pré-visualização após gerar
@@ -554,6 +606,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
     } catch (error) {
       console.error('❌ Erro na construção da atividade:', error);
+      toast({
+        title: "Erro na construção",
+        description: "Não foi possível gerar o conteúdo. Verifique os dados e tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 

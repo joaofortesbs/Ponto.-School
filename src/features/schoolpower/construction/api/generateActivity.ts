@@ -276,22 +276,44 @@ Responda APENAS com o JSON, sem texto adicional.`;
       // Limpar a resposta para garantir que seja JSON válido
       let cleanedResponse = response.result.trim();
 
+      console.log('🔧 Resposta bruta da IA:', cleanedResponse);
+
+      // Remover markdown se presente
+      cleanedResponse = cleanedResponse.replace(/```json\s*/, '').replace(/```\s*$/, '');
+
       // Remover possíveis prefixos/sufixos que não sejam JSON
       const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}') + 1;
+      const jsonEnd = cleanedResponse.lastIndexOf('}');
 
-      if (jsonStart !== -1 && jsonEnd > jsonStart) {
-        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd);
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
       }
 
-      // Validar se é JSON válido
+      console.log('🔧 Resposta limpa para parsing:', cleanedResponse);
+
       try {
-        JSON.parse(cleanedResponse);
-        console.log('✅ JSON válido gerado pelo Gemini');
-        return cleanedResponse;
-      } catch (jsonError) {
-        console.warn('⚠️ Resposta não é JSON válido, retornando texto bruto');
-        return response.result;
+        const parsedResult = JSON.parse(cleanedResponse);
+        console.log('✅ Resultado parseado com sucesso:', parsedResult);
+
+        // Validar se contém questões
+        if (activityType === 'lista-exercicios') {
+          if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes) || parsedResult.questoes.length === 0) {
+            console.error('❌ IA não gerou questões válidas');
+            throw new Error('Questões não encontradas na resposta da IA');
+          }
+
+          console.log(`📝 ${parsedResult.questoes.length} questões geradas pela IA`);
+
+          // Marcar como gerado pela IA
+          parsedResult.isGeneratedByAI = true;
+          parsedResult.generatedAt = new Date().toISOString();
+        }
+
+        return parsedResult;
+      } catch (parseError) {
+        console.error('❌ Erro ao fazer parse do JSON:', parseError);
+        console.error('📄 Conteúdo que causou erro:', cleanedResponse);
+        throw new Error(`Erro ao processar resposta da IA: ${parseError.message}`);
       }
 
     } else {

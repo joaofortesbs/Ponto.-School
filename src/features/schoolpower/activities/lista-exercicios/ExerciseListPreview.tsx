@@ -52,12 +52,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
+    console.log('🔄 Processando questões no ExerciseListPreview:', data);
+    
     if (data.questoes && data.questoes.length > 0) {
+      console.log(`✅ Usando ${data.questoes.length} questões reais da IA`);
       setQuestoesProcessadas(data.questoes);
-    } else {
-      // Simular processamento de questões se não houver dados estruturados
+    } else if (data.isGeneratedByAI === false) {
+      console.log('⚠️ Conteúdo não foi gerado pela IA, gerando questões simuladas');
       const questoesSimuladas = gerarQuestoesSimuladas(data);
       setQuestoesProcessadas(questoesSimuladas);
+    } else {
+      console.log('❌ Nenhuma questão encontrada');
+      setQuestoesProcessadas([]);
     }
   }, [data]);
 
@@ -259,8 +265,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     objetivos: data?.objetivos || '',
     conteudoPrograma: data?.conteudoPrograma || '',
     observacoes: data?.observacoes || '',
-    questoes: data?.questoes || []
+    questoes: data?.questoes || [],
+    isGeneratedByAI: data?.isGeneratedByAI || false,
+    generatedAt: data?.generatedAt
   };
+
+  console.log('📊 Dados consolidados finais:', consolidatedData);
 
   return (
     <div className="space-y-6">
@@ -284,6 +294,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   <Clock className="w-4 h-4" />
                   <span>{questoesProcessadas.length} questões</span>
                 </div>
+                {consolidatedData.isGeneratedByAI && (
+                  <Badge className="bg-green-100 text-green-800 text-xs">
+                    🤖 Gerado por IA
+                  </Badge>
+                )}
               </div>
             </div>
             {onRegenerateContent && (
