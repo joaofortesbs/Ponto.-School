@@ -203,11 +203,6 @@ export const generateActivityContent = async (
     console.log('🤖 Iniciando geração de conteúdo com Gemini para:', activityType);
     console.log('📋 Dados de contexto completos:', JSON.stringify(contextData, null, 2));
 
-    // Validar dados essenciais antes de prosseguir
-    if (!contextData || typeof contextData !== 'object') {
-      throw new Error('Dados de contexto inválidos ou ausentes');
-    }
-
     // Prompt específico para Lista de Exercícios
     let prompt = '';
 
@@ -215,31 +210,26 @@ export const generateActivityContent = async (
       // Usar exatamente o mesmo prompt que o modal usa
       const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
       
-      // Preparar dados no formato correto para o prompt com validação
+      // Preparar dados no formato correto para o prompt
       const promptData = {
-        titulo: String(contextData.titulo || contextData.title || 'Lista de Exercícios').trim(),
-        disciplina: String(contextData.disciplina || contextData.subject || 'Português').trim(),
-        tema: String(contextData.tema || contextData.theme || 'Conteúdo Geral').trim(),
-        anoEscolaridade: String(contextData.anoEscolaridade || contextData.schoolYear || '6º ano').trim(),
-        numeroQuestoes: Math.max(1, Math.min(20, parseInt(contextData.numeroQuestoes || contextData.numberOfQuestions || '10'))),
-        nivelDificuldade: String(contextData.nivelDificuldade || contextData.difficultyLevel || 'Médio').trim(),
-        modeloQuestoes: String(contextData.modeloQuestoes || contextData.questionModel || 'Múltipla escolha').trim(),
-        fontes: String(contextData.fontes || contextData.sources || 'Livros didáticos e exercícios educacionais').trim(),
-        objetivos: String(contextData.objetivos || contextData.objectives || '').trim(),
-        materiais: String(contextData.materiais || contextData.materials || '').trim(),
-        instrucoes: String(contextData.instrucoes || contextData.instructions || '').trim(),
-        tempoLimite: String(contextData.tempoLimite || contextData.timeLimit || '').trim(),
-        contextoAplicacao: String(contextData.contextoAplicacao || contextData.context || '').trim()
+        titulo: contextData.titulo || contextData.title || 'Lista de Exercícios',
+        disciplina: contextData.disciplina || contextData.subject || 'Português',
+        tema: contextData.tema || contextData.theme || 'Conteúdo Geral',
+        anoEscolaridade: contextData.anoEscolaridade || contextData.schoolYear || '6º ano',
+        numeroQuestoes: parseInt(contextData.numeroQuestoes || contextData.numberOfQuestions || '10'),
+        nivelDificuldade: contextData.nivelDificuldade || contextData.difficultyLevel || 'Médio',
+        modeloQuestoes: contextData.modeloQuestoes || contextData.questionModel || 'multipla-escolha',
+        fontes: contextData.fontes || contextData.sources || 'Gramática básica para concursos e exercícios online Brasil Escola',
+        objetivos: contextData.objetivos || contextData.objectives || '',
+        materiais: contextData.materiais || contextData.materials || '',
+        instrucoes: contextData.instrucoes || contextData.instructions || '',
+        tempoLimite: contextData.tempoLimite || contextData.timeLimit || '',
+        contextoAplicacao: contextData.contextoAplicacao || contextData.context || ''
       };
 
-      // Validar se os campos essenciais não estão vazios
-      if (!promptData.titulo || !promptData.disciplina || !promptData.tema) {
-        throw new Error('Campos essenciais estão ausentes: título, disciplina ou tema');
-      }
-
       prompt = buildListaExerciciosPrompt(promptData);
-      console.log('📝 Prompt gerado para lista de exercícios');
-      console.log('🎯 Dados validados usados no prompt:', promptData);
+      console.log('📝 Prompt gerado para lista de exercícios:', prompt.substring(0, 500) + '...');
+      console.log('🎯 Dados usados no prompt:', promptData);
     } else {
       // Prompt genérico para outros tipos de atividade
       prompt = `
@@ -255,11 +245,6 @@ Responda APENAS com o JSON, sem texto adicional.`;
     }
 
     console.log('📤 Enviando prompt para Gemini...');
-
-    // Validar se o prompt não está vazio
-    if (!prompt || prompt.trim().length === 0) {
-      throw new Error('Prompt vazio ou inválido');
-    }
 
     // Usar exatamente a mesma chamada da API que o modal usa
     const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAOcWwuLjx8m1jN_-63a0aPLs7XFYztlKY', {
@@ -283,13 +268,7 @@ Responda APENAS com o JSON, sem texto adicional.`;
     });
 
     if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error('❌ Erro na API Gemini:', {
-        status: geminiResponse.status,
-        statusText: geminiResponse.statusText,
-        error: errorText
-      });
-      throw new Error(`Erro na API Gemini: ${geminiResponse.status} - ${errorText || geminiResponse.statusText}`);
+      throw new Error(`Erro na API Gemini: ${geminiResponse.status}`);
     }
 
     const geminiData = await geminiResponse.json();

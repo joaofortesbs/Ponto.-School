@@ -51,11 +51,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('🤖 Iniciando construção automática em massa');
     console.log('🎯', activities.length, 'atividades serão construídas automaticamente');
 
-    // Limpar qualquer conteúdo pré-gerado
-    activities.forEach(activity => {
-      localStorage.removeItem(`activity_${activity.id}`);
-    });
-
     setShowProgressModal(true);
 
     autoBuildService.setProgressCallback((progress) => {
@@ -89,37 +84,24 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     const enrichedActivities = activities.map(activity => {
       const customFields = activity.customFields || {};
       
-      // Garantir que todos os campos necessários estão presentes com validação
+      // Garantir que todos os campos necessários estão presentes
       const enrichedActivity = {
         ...activity,
         customFields: {
           ...customFields,
-          disciplina: String(customFields.disciplina || customFields['Disciplina'] || 'Português').trim(),
-          tema: String(customFields.tema || customFields['Tema'] || activity.title || 'Conteúdo Geral').trim(),
-          anoEscolaridade: String(customFields.anoEscolaridade || customFields['Ano de Escolaridade'] || '6º ano').trim(),
-          quantidadeQuestoes: String(customFields.quantidadeQuestoes || customFields['Quantidade de Questões'] || '10').trim(),
-          nivelDificuldade: String(customFields.nivelDificuldade || customFields['Nível de Dificuldade'] || 'Médio').trim(),
-          modeloQuestoes: String(customFields.modeloQuestoes || customFields['Modelo de Questões'] || 'Múltipla escolha').trim(),
-          fontes: String(customFields.fontes || customFields['Fontes'] || 'Livros didáticos e exercícios educacionais').trim(),
-          objetivos: String(customFields.objetivos || customFields['Objetivos'] || '').trim(),
-          materiais: String(customFields.materiais || customFields['Materiais'] || '').trim(),
-          instrucoes: String(customFields.instrucoes || customFields['Instruções'] || '').trim(),
-          criteriosAvaliacao: String(customFields.criteriosAvaliacao || customFields['Critérios de Avaliação'] || '').trim(),
-          tempoLimite: String(customFields.tempoLimite || customFields['Tempo Limite'] || '').trim(),
-          contextoAplicacao: String(customFields.contextoAplicacao || customFields['Contexto de Aplicação'] || '').trim(),
-          // Campos adicionais para compatibilidade
-          numberOfQuestions: String(customFields.quantidadeQuestoes || customFields['Quantidade de Questões'] || '10').trim(),
-          subject: String(customFields.disciplina || customFields['Disciplina'] || 'Português').trim(),
-          theme: String(customFields.tema || customFields['Tema'] || activity.title || 'Conteúdo Geral').trim(),
-          schoolYear: String(customFields.anoEscolaridade || customFields['Ano de Escolaridade'] || '6º ano').trim(),
-          difficultyLevel: String(customFields.nivelDificuldade || customFields['Nível de Dificuldade'] || 'Médio').trim(),
-          questionModel: String(customFields.modeloQuestoes || customFields['Modelo de Questões'] || 'Múltipla escolha').trim(),
-          sources: String(customFields.fontes || customFields['Fontes'] || 'Livros didáticos e exercícios educacionais').trim(),
-          objectives: String(customFields.objetivos || customFields['Objetivos'] || '').trim(),
-          materials: String(customFields.materiais || customFields['Materiais'] || '').trim(),
-          instructions: String(customFields.instrucoes || customFields['Instruções'] || '').trim(),
-          timeLimit: String(customFields.tempoLimite || customFields['Tempo Limite'] || '').trim(),
-          context: String(customFields.contextoAplicacao || customFields['Contexto de Aplicação'] || '').trim()
+          disciplina: customFields.disciplina || customFields['Disciplina'] || 'Português',
+          tema: customFields.tema || customFields['Tema'] || activity.title || '',
+          anoEscolaridade: customFields.anoEscolaridade || customFields['Ano de Escolaridade'] || '6º ano',
+          quantidadeQuestoes: customFields.quantidadeQuestoes || customFields['Quantidade de Questões'] || '10',
+          nivelDificuldade: customFields.nivelDificuldade || customFields['Nível de Dificuldade'] || 'Médio',
+          modeloQuestoes: customFields.modeloQuestoes || customFields['Modelo de Questões'] || 'Múltipla escolha e complete as frases',
+          fontes: customFields.fontes || customFields['Fontes'] || 'Gramática básica para concursos e exercícios online Brasil Escola',
+          objetivos: customFields.objetivos || customFields['Objetivos'] || '',
+          materiais: customFields.materiais || customFields['Materiais'] || '',
+          instrucoes: customFields.instrucoes || customFields['Instruções'] || '',
+          criteriosAvaliacao: customFields.criteriosAvaliacao || customFields['Critérios de Avaliação'] || '',
+          tempoLimite: customFields.tempoLimite || customFields['Tempo Limite'] || '',
+          contextoAplicacao: customFields.contextoAplicacao || customFields['Contexto de Aplicação'] || ''
         }
       };
 
