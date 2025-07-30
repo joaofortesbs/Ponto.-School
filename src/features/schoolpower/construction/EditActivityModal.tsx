@@ -163,11 +163,23 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             ...actionPlanActivity
           };
 
+          // Consolidar customFields de todas as fontes
           const consolidatedCustomFields = {
-            ...originalActivity?.customFields,
-            ...actionPlanActivity?.customFields,
-            ...customFields
-          };
+            ...activity?.customFields,
+            ...autoData?.customFields,
+            ...autoData?.originalActivity?.customFields,
+            ...autoData?.actionPlanActivity?.customFields
+          } || {};
+
+          // Garantir que customFields existe para evitar erros
+          const customFields = consolidatedCustomFields || {};
+
+          console.log('🔧 Dados consolidados para modal:', {
+            activity,
+            autoData,
+            consolidatedCustomFields,
+            customFields
+          });
 
           console.log('🔀 Dados consolidados:', consolidatedData);
           console.log('🗂️ Custom fields consolidados:', consolidatedCustomFields);
