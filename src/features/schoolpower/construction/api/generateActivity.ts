@@ -252,7 +252,7 @@ Responda APENAS com o JSON, sem texto adicional.`;
       // 1. Remover markdown
       cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
       cleanedResponse = cleanedResponse.replace(/```\s*/g, '');
-      
+
       // 2. Remover possíveis textos antes e depois do JSON
       const jsonStart = cleanedResponse.indexOf('{');
       const jsonEnd = cleanedResponse.lastIndexOf('}');
@@ -322,7 +322,7 @@ Responda APENAS com o JSON, sem texto adicional.`;
           // Marcar como gerado pela IA
           parsedResult.isGeneratedByAI = true;
           parsedResult.generatedAt = new Date().toISOString();
-          
+
           // Garantir que todos os campos necessários existem
           parsedResult.titulo = parsedResult.titulo || contextData.titulo || contextData.title || 'Lista de Exercícios';
           parsedResult.disciplina = parsedResult.disciplina || contextData.disciplina || contextData.subject || 'Disciplina';
@@ -334,19 +334,19 @@ Responda APENAS com o JSON, sem texto adicional.`;
       } catch (parseError) {
         console.error('❌ Erro ao fazer parse do JSON:', parseError);
         console.error('📄 Conteúdo que causou erro (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
-        
+
         // Tentar extrair JSON de forma mais agressiva
         try {
           // Buscar por padrões JSON válidos
           const jsonPattern = /\{[\s\S]*\}/;
           const match = cleanedResponse.match(jsonPattern);
-          
+
           if (match) {
             const extractedJson = match[0];
             console.log('🔄 Tentando JSON extraído:', extractedJson.substring(0, 200));
             const secondAttempt = JSON.parse(extractedJson);
             console.log('✅ Segunda tentativa de parse bem sucedida');
-            
+
             // Aplicar mesmas validações
             if (activityType === 'lista-exercicios') {
               if (secondAttempt.questoes && Array.isArray(secondAttempt.questoes) && secondAttempt.questoes.length > 0) {
@@ -355,13 +355,13 @@ Responda APENAS com o JSON, sem texto adicional.`;
                 return secondAttempt;
               }
             }
-            
+
             return secondAttempt;
           }
         } catch (secondError) {
           console.error('❌ Segunda tentativa de parse também falhou:', secondError);
         }
-        
+
         throw new Error(`Erro ao processar resposta da IA: ${parseError.message}`);
       }
 
@@ -372,6 +372,117 @@ Responda APENAS com o JSON, sem texto adicional.`;
 
   } catch (error) {
     console.error('❌ Erro crítico ao gerar conteúdo da atividade:', error);
+    throw error;
+  }
+};
+
+export const generateActivity = async (activityData: any): Promise<any> => {
+  try {
+    console.log('🚀 Gerando atividade com dados completos:', activityData);
+
+    // Garantir que os dados essenciais estão presentes
+    const contextualizedData = {
+      ...activityData,
+      numeroQuestoes: activityData.numeroQuestoes || activityData.numberOfQuestions || '10',
+      disciplina: activityData.disciplina || activityData.subject || 'Português',
+      tema: activityData.tema || activityData.theme || 'Conteúdo Geral',
+      anoEscolar: activityData.anoEscolaridade || activityData.schoolYear || '6º ano',
+      dificuldade: activityData.nivelDificuldade || activityData.difficultyLevel || 'Médio',
+      modeloQuestoes: activityData.modeloQuestoes || activityData.questionModel || 'multipla-escolha',
+      titulo: activityData.titulo || activityData.title || `Lista de Exercícios`,
+      descricao: activityData.descricao || activityData.description || '',
+      objetivos: activityData.objetivos || activityData.objectives || '',
+      fontes: activityData.fontes || activityData.sources || ''
+    };
+
+    const prompt = buildListaExerciciosPrompt(contextualizedData);
+    console.log('📝 Prompt personalizado gerado:', prompt);
+    console.log('🎯 Dados contextualizados:', contextualizedData);
+
+    // Chamar a API Gemini diretamente para personalização
+    const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAOcWwuLjx8m1jN_-63a0aPLs7XFYztlKY', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 8192,
+        }
+      }),
+    });
+
+    if (!geminiResponse.ok) {
+      throw new Error(`Erro na API Gemini: ${geminiResponse.status}`);
+    }
+
+    const geminiData = await geminiResponse.json();
+    console.log('🤖 Resposta bruta do Gemini:', geminiData);
+
+    let generatedText = '';
+    if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
+      generatedText = geminiData.candidates[0].content.parts[0].text;
+    } else {
+      throw new Error('Resposta inválida da API Gemini');
+    }
+
+    console.log('📄 Texto gerado:', generatedText);
+
+    // Processar e validar a resposta JSON
+    let parsedResponse;
+    try {
+      // Limpar possíveis caracteres extras
+      const cleanText = generatedText.trim()
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '')
+        .replace(/^```\s*/, '')
+        .replace(/\s*```$/, '');
+
+      parsedResponse = JSON.parse(cleanText);
+      console.log('✅ JSON parseado:', parsedResponse);
+    } catch (parseError) {
+      console.error('❌ Erro ao parsear JSON:', parseError);
+      console.log('🔍 Texto que falhou no parse:', generatedText);
+      throw new Error('Resposta da IA não está em formato JSON válido');
+    }
+
+    // Validar a estrutura da resposta
+    if (!parsedResponse.questoes || !Array.isArray(parsedResponse.questoes)) {
+      throw new Error('Resposta da IA não contém questões válidas');
+    }
+
+    // Garantir que as questões estão no formato correto
+    const processedQuestions = parsedResponse.questoes.map((questao: any, index: number) => ({
+      id: questao.id || `questao-${index + 1}`,
+      type: questao.type || 'multipla-escolha',
+      enunciado: questao.enunciado || '',
+      alternativas: questao.alternativas || [],
+      respostaCorreta: questao.respostaCorreta,
+      explicacao: questao.explicacao || '',
+      dificuldade: questao.dificuldade || contextualizedData.dificuldade.toLowerCase(),
+      tema: questao.tema || contextualizedData.tema
+    }));
+
+    const result = {
+      ...parsedResponse,
+      questoes: processedQuestions,
+      isGeneratedByAI: true,
+      contextData: contextualizedData
+    };
+
+    console.log('🎉 Atividade personalizada gerada com sucesso:', result);
+    return result;
+
+  } catch (error) {
+    console.error('❌ Erro ao gerar atividade personalizada:', error);
     throw error;
   }
 };

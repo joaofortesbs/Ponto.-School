@@ -160,7 +160,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       try {
         // Extrair questões de diferentes formatos possíveis
         let questoesExtraidas = [];
-        
+
         if (generatedContent.questoes && Array.isArray(generatedContent.questoes)) {
           questoesExtraidas = generatedContent.questoes;
         } else if (generatedContent.questions && Array.isArray(generatedContent.questions)) {
@@ -172,7 +172,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         }
 
         console.log(`📝 Questões extraídas: ${questoesExtraidas.length}`);
-        
+
         const processedData = {
           titulo: generatedContent.titulo || formData.title || 'Lista de Exercícios',
           disciplina: generatedContent.disciplina || formData.subject || 'Disciplina não especificada',
@@ -190,11 +190,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
         console.log('📊 Dados processados da IA:', processedData);
         console.log(`📝 Questões finais: ${processedData.questoes.length}`);
-        
+
         if (processedData.questoes.length > 0) {
           console.log('📄 Primeira questão processada:', processedData.questoes[0]);
         }
-        
+
         return processedData;
       } catch (error) {
         console.error('❌ Erro ao processar conteúdo da IA:', error);
@@ -538,7 +538,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         instrucoes: formData.instructions || '',
         tempoLimite: formData.timeLimit || '',
         contextoAplicacao: formData.context || '',
-        
+
         // Dados alternativos em inglês para compatibilidade
         title: formData.title,
         description: formData.description,
@@ -555,7 +555,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         timeLimit: formData.timeLimit,
         context: formData.context
       };
-      
+
       console.log('📊 Context data preparado para IA:', contextData);
 
       const activityData = {
@@ -569,7 +569,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       console.log('🔍 Context data detalhado:', contextData);
 
       const result = await generateActivity(activityData);
-      
+
       console.log('✅ Resultado da IA recebido:', result);
       console.log('🔍 Estrutura do resultado:', {
         hasQuestoes: !!result?.questoes,
@@ -587,7 +587,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
       // Processar e validar o conteúdo gerado
       let questoesGeradas = [];
-      
+
       if (result.questoes && Array.isArray(result.questoes) && result.questoes.length > 0) {
         questoesGeradas = result.questoes;
         console.log(`✅ Questões encontradas em 'questoes': ${questoesGeradas.length}`);
@@ -622,7 +622,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         if (!processedContent.questoes || processedContent.questoes.length === 0) {
           throw new Error('Nenhuma questão foi processada corretamente');
         }
-        
+
         console.log('📋 Resumo das questões geradas:');
         processedContent.questoes.forEach((questao: any, index: number) => {
           console.log(`  ${index + 1}. ${questao.enunciado} (${questao.type})`);
