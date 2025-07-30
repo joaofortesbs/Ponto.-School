@@ -56,44 +56,38 @@ export class AutoBuildService {
     // Aguardar um pouco para simular o processamento
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Gerar a atividade usando o serviço real
-    const generatedActivity = await activityGenerationService.generateActivity(activity.id, formData);
-
-    console.log('✅ Atividade gerada com sucesso:', generatedActivity);
-
-    // Marcar como construída
-    activity.isBuilt = true;
-    activity.builtAt = new Date().toISOString();
-    console.log('📋 Dados do formulário preparados para IA:', formData);
-
     // Preparar dados contextualizados exatamente como no modal
     const contextualizedData = {
       ...formData,
-      numeroQuestoes: formData.numberOfQuestions || '10',
-      disciplina: formData.subject || 'Português',
-      tema: formData.theme || 'Conteúdo Geral',
-      anoEscolar: formData.schoolYear || '6º ano',
-      dificuldade: formData.difficultyLevel || 'Médio',
-      modeloQuestoes: formData.questionModel || 'multipla-escolha',
-      titulo: formData.title || 'Lista de Exercícios',
-      descricao: formData.description || '',
-      objetivos: formData.objectives || '',
-      fontes: formData.sources || '',
+      numeroQuestoes: formData.numberOfQuestions || formData['Quantidade de Questões'] || '10',
+      disciplina: formData.subject || formData['Disciplina'] || 'Português',
+      tema: formData.theme || formData['Tema'] || activity.title || 'Conteúdo Geral',
+      anoEscolaridade: formData.schoolYear || formData['Ano de Escolaridade'] || '6º ano',
+      nivelDificuldade: formData.difficultyLevel || formData['Nível de Dificuldade'] || 'Médio',
+      modeloQuestoes: formData.questionModel || formData['Modelo de Questões'] || 'Múltipla escolha',
+      titulo: formData.title || activity.title || 'Lista de Exercícios',
+      descricao: formData.description || activity.description || '',
+      objetivos: formData.objectives || formData['Objetivos'] || '',
+      fontes: formData.sources || formData['Fontes'] || 'Livros didáticos e exercícios educacionais',
+      materiais: formData.materials || formData['Materiais'] || '',
+      instrucoes: formData.instructions || formData['Instruções'] || '',
+      tempoLimite: formData.timeLimit || formData['Tempo Limite'] || '',
+      contextoAplicacao: formData.context || formData['Contexto de Aplicação'] || '',
       contextData: {
-        titulo: formData.title,
-        descricao: formData.description,
-        disciplina: formData.subject,
-        tema: formData.theme,
-        anoEscolaridade: formData.schoolYear,
-        numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
-        nivelDificuldade: formData.difficultyLevel,
-        modeloQuestoes: formData.questionModel,
-        fontes: formData.sources,
-        objetivos: formData.objectives,
-        materiais: formData.materials,
-        instrucoes: formData.instructions,
-        tempoLimite: formData.timeLimit,
-        contextoAplicacao: formData.context
+        titulo: formData.title || activity.title,
+        descricao: formData.description || activity.description,
+        disciplina: formData.subject || formData['Disciplina'] || 'Português',
+        tema: formData.theme || formData['Tema'] || activity.title,
+        anoEscolaridade: formData.schoolYear || formData['Ano de Escolaridade'] || '6º ano',
+        numeroQuestoes: parseInt(formData.numberOfQuestions || formData['Quantidade de Questões'] || '10'),
+        nivelDificuldade: formData.difficultyLevel || formData['Nível de Dificuldade'] || 'Médio',
+        modeloQuestoes: formData.questionModel || formData['Modelo de Questões'] || 'Múltipla escolha',
+        fontes: formData.sources || formData['Fontes'] || 'Livros didáticos e exercícios educacionais',
+        objetivos: formData.objectives || formData['Objetivos'] || '',
+        materiais: formData.materials || formData['Materiais'] || '',
+        instrucoes: formData.instructions || formData['Instruções'] || '',
+        tempoLimite: formData.timeLimit || formData['Tempo Limite'] || '',
+        contextoAplicacao: formData.context || formData['Contexto de Aplicação'] || ''
       }
     };
 
