@@ -1,4 +1,3 @@
-
 export interface ActivityGenerationRequest {
   id: string;
   title: string;
@@ -46,10 +45,10 @@ export class ActivityGenerationService {
   async generateActivity(request: ActivityGenerationRequest): Promise<GeneratedActivity> {
     try {
       console.log(`🎯 Gerando atividade: ${request.title}`);
-      
+
       // Gerar conteúdo baseado no tipo de atividade
       const content = await this.generateContentByType(request);
-      
+
       return {
         content: content.content,
         questions: content.questions,
@@ -167,14 +166,20 @@ export class ActivityGenerationService {
     };
   }
 
-  async saveGeneratedActivity(activityId: string, generatedActivity: GeneratedActivity): Promise<void> {
+  async saveGeneratedActivity(activityData: ActivityGenerationRequest, generatedContent: any): Promise<any> {
     try {
-      // Salvar no localStorage
-      localStorage.setItem(`generated_activity_${activityId}`, JSON.stringify(generatedActivity));
-      localStorage.setItem(`activity_built_${activityId}`, 'true');
-      localStorage.setItem(`activity_built_at_${activityId}`, new Date().toISOString());
-      
-      console.log(`💾 Atividade ${activityId} salva com sucesso`);
+      // Salvar no localStorage usando o ID da atividade
+      localStorage.setItem(`activity_${activityData.id}`, JSON.stringify({
+        ...generatedContent,
+        generatedAt: new Date().toISOString(),
+        activityId: activityData.id,
+        activityTitle: activityData.title,
+        isGenerated: true
+      }));
+
+      console.log(`💾 Atividade ${activityData.id} salva com sucesso`);
+
+      return generatedContent;
     } catch (error) {
       console.error('❌ Erro ao salvar atividade:', error);
       throw error;

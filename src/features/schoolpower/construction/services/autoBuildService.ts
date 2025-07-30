@@ -1,4 +1,3 @@
-
 export interface AutoBuildProgress {
   current: number;
   total: number;
@@ -43,7 +42,7 @@ export class AutoBuildService {
 
     for (let i = 0; i < buildableActivities.length; i++) {
       const activity = buildableActivities[i];
-      
+
       progressCallback({
         current: i + 1,
         total: buildableActivities.length,
@@ -86,13 +85,13 @@ export class AutoBuildService {
   private async buildSingleActivity(activity: any): Promise<void> {
     try {
       console.log(`🔨 Construindo: ${activity.title}`);
-      
+
       // Preparar dados da atividade baseados nos customFields
       const activityData = this.prepareActivityData(activity);
-      
+
       // Gerar conteúdo da atividade usando IA
       await this.generateActivityContent(activityData);
-      
+
       console.log(`✅ Atividade construída com sucesso: ${activity.title}`);
     } catch (error) {
       console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
@@ -103,7 +102,7 @@ export class AutoBuildService {
   private prepareActivityData(activity: any): any {
     const originalData = activity.originalData || activity;
     const customFields = originalData.customFields || {};
-    
+
     return {
       id: activity.id,
       title: activity.title,
@@ -130,13 +129,13 @@ export class AutoBuildService {
     try {
       // Importar o serviço de geração dinamicamente
       const { activityGenerationService } = await import('./activityGenerationService');
-      
+
       // Gerar atividade usando o serviço especializado
       const generatedActivity = await activityGenerationService.generateActivity(activityData);
-      
+
       // Salvar atividade gerada
       await activityGenerationService.saveGeneratedActivity(activityData.id, generatedActivity);
-      
+
       return generatedActivity;
     } catch (error) {
       console.error('Erro ao gerar conteúdo:', error);
@@ -144,7 +143,7 @@ export class AutoBuildService {
     }
   }
 
-  
+
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));

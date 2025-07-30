@@ -16,6 +16,7 @@ import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
+import { CheckCircle2 } from 'lucide-react';
 
 interface EditActivityModalProps {
   isOpen: boolean;
@@ -53,6 +54,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   onSave,
   onUpdateActivity
 }) => {
+  // Estado para controlar qual aba está ativa
+  const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
+
+  // Estados do formulário
   const [formData, setFormData] = useState<ActivityFormData>({
     title: activity?.title || activity?.personalizedTitle || '',
     description: activity?.description || activity?.personalizedDescription || '',
@@ -86,6 +91,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     knowledgeArea: '',
     complexityLevel: ''
   });
+
+  // Estado para conteúdo gerado
+  const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   // Atualizar dados quando a atividade mudar
   useEffect(() => {
@@ -128,7 +137,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     }
   }, [activity, isOpen]);
 
-  const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
   const [isSaving, setIsSaving] = useState(false);
 
   // Hook para geração de atividades
@@ -137,12 +145,41 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     loadSavedContent,
     clearContent,
     isGenerating,
-    generatedContent,
     error
   } = useGenerateActivity({
     activityId: activity?.id || '',
     activityType: activity?.id || ''
   });
+
+  // Carregar conteúdo construído quando o modal abrir
+  useEffect(() => {
+    if (activity && isOpen) {
+      console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id}`);
+
+      // Verificar se a atividade foi construída automaticamente
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const savedContent = localStorage.getItem(`activity_${activity.id}`);
+
+      if (constructedActivities[activity.id]?.generatedContent) {
+        console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
+        setGeneratedContent(constructedActivities[activity.id].generatedContent);
+        setIsContentLoaded(true);
+      } else if (savedContent) {
+        console.log(`✅ Conteúdo salvo encontrado para: ${activity.id}`);
+        try {
+          const parsedContent = JSON.parse(savedContent);
+          setGeneratedContent(parsedContent);
+          setIsContentLoaded(true);
+        } catch (error) {
+          console.error('Erro ao parsear conteúdo salvo:', error);
+        }
+      } else {
+        console.log(`⚠️ Nenhum conteúdo construído encontrado para: ${activity.id}`);
+        setGeneratedContent(null);
+        setIsContentLoaded(false);
+      }
+    }
+  }, [activity, isOpen]);
 
   useEffect(() => {
     if (activity && isOpen) {
@@ -373,10 +410,34 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     }));
   };
 
+  // Função para construir a atividade
   const handleBuildActivity = async () => {
     try {
       console.log('🏗️ Iniciando construção da atividade...');
       await generateActivity(formData);
+
+      // Salvar o conteúdo gerado
+      // setGeneratedContent(result);
+      // setIsContentLoaded(true);
+
+      // Salvar no localStorage
+      localStorage.setItem(`activity_${activity?.id}`, JSON.stringify({
+        generatedAt: new Date().toISOString(),
+        activityId: activity?.id,
+        activityTitle: activity?.title,
+        isGenerated: true,
+        ...generatedContent // spread the generatedContent here
+      }));
+
+      // Marcar como construída
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity?.id] = {
+        ...activity,
+        isBuilt: true,
+        builtAt: new Date().toISOString(),
+        generatedContent: generatedContent // and here
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
       // Automaticamente mudar para a aba de pré-visualização após gerar
       setActiveTab('preview');
@@ -399,6 +460,15 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           console.log('🔄 Modal fechado automaticamente pelo agente interno');
         }, 2000);
       }
+
+      toast({
+        title: "Atividade construída com sucesso!",
+        description: "O conteúdo foi gerado e está disponível na aba de pré-visualização.",
+      });
+
+      // Navegar para a aba de pré-visualização
+      setActiveTab('preview');
+
     } catch (error) {
       console.error('❌ Erro na construção da atividade:', error);
     }
@@ -859,17 +929,17 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 {activeTab === 'preview' && (
                   <div className="h-full">
                     <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                      {generatedContent ? (
+                      {isContentLoaded && generatedContent ? (
                         activity?.id === 'lista-exercicios' ? (
-                          <ExerciseListPreview exerciseData={JSON.parse(generatedContent)} />
+                          <ExerciseListPreview 
+                            content={generatedContent}
+                            activityData={activity}
+                          />
                         ) : (
-                          <div className="p-6 h-full overflow-y-auto">
-                            <div className="prose prose-sm max-w-none dark:prose-invert">
-                              <pre className="whitespace-pre-wrap font-sans text-gray-900 dark:text-white leading-relaxed">
-                                {generatedContent}
-                              </pre>
-                            </div>
-                          </div>
+                          <ActivityPreview 
+                            content={generatedContent}
+                            activityData={activity}
+                          />
                         )
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full text-center">

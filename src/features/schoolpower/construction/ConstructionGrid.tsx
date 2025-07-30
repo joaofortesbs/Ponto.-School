@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
@@ -103,6 +103,20 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('Editar materiais da atividade:', activityId);
     // TODO: Implementar lógica de edição de materiais
   };
+
+  useEffect(() => {
+    console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', activities);
+    console.log('🎯 Estado do modal:', { isModalOpen });
+
+    // Verificar e atualizar status de atividades construídas
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    activities.forEach(activity => {
+      if (constructedActivities[activity.id] && !activity.isBuilt) {
+        activity.isBuilt = true;
+        activity.builtAt = constructedActivities[activity.id].builtAt;
+      }
+    });
+  }, [activities, isModalOpen]);
 
   if (loading) {
     return (
