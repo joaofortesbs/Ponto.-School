@@ -80,8 +80,37 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       }));
     });
 
+    // Preparar atividades com dados contextualizados completos
+    const enrichedActivities = activities.map(activity => {
+      const customFields = activity.customFields || {};
+      
+      // Garantir que todos os campos necessários estão presentes
+      const enrichedActivity = {
+        ...activity,
+        customFields: {
+          ...customFields,
+          disciplina: customFields.disciplina || customFields['Disciplina'] || 'Português',
+          tema: customFields.tema || customFields['Tema'] || activity.title || '',
+          anoEscolaridade: customFields.anoEscolaridade || customFields['Ano de Escolaridade'] || '6º ano',
+          quantidadeQuestoes: customFields.quantidadeQuestoes || customFields['Quantidade de Questões'] || '10',
+          nivelDificuldade: customFields.nivelDificuldade || customFields['Nível de Dificuldade'] || 'Médio',
+          modeloQuestoes: customFields.modeloQuestoes || customFields['Modelo de Questões'] || 'Múltipla escolha e complete as frases',
+          fontes: customFields.fontes || customFields['Fontes'] || 'Gramática básica para concursos e exercícios online Brasil Escola',
+          objetivos: customFields.objetivos || customFields['Objetivos'] || '',
+          materiais: customFields.materiais || customFields['Materiais'] || '',
+          instrucoes: customFields.instrucoes || customFields['Instruções'] || '',
+          criteriosAvaliacao: customFields.criteriosAvaliacao || customFields['Critérios de Avaliação'] || '',
+          tempoLimite: customFields.tempoLimite || customFields['Tempo Limite'] || '',
+          contextoAplicacao: customFields.contextoAplicacao || customFields['Contexto de Aplicação'] || ''
+        }
+      };
+
+      console.log(`📋 Atividade enriquecida: ${activity.title}`, enrichedActivity.customFields);
+      return enrichedActivity;
+    });
+
     try {
-      await autoBuildService.buildAllActivities(activities);
+      await autoBuildService.buildAllActivities(enrichedActivities);
 
       // Aguardar um pouco antes de fechar o modal para mostrar conclusão
       setTimeout(() => {
