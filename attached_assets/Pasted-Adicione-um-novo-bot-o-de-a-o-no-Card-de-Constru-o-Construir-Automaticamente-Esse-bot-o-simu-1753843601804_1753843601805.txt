@@ -1,0 +1,91 @@
+Adicione um novo botão de ação no Card de Construção (“Construir Automaticamente”).
+
+Esse botão simula automaticamente o clique no botão “Construir Atividade” do modal “Editar Materiais” após o preenchimento dos campos.
+
+Execute esse processo para todas as atividades aprovadas de dentro da interface de Construção de Atividades, sem o usuário precisar abrir cada modal manualmente.
+
+Sem alterar o design atual do modal, nem o fluxo original de interações.
+
+Aqui está o prompt super detalhado que você deve usar com a IA de Vibe Code para construir isso:
+
+🟠 Prompt Técnico para Vibe Code — Ativação Automática de Construção de Atividades no School Power
+
+Objetivo:
+Implementar um sistema de automação interna para ativar automaticamente o botão “Construir Atividade” de dentro do modal “Editar Materiais” para todas as atividades aprovadas, diretamente a partir da interface de "Construção de Atividades" (cards principais), sem alterar o design atual e sem exigir intervenção manual do usuário. Esse processo deve funcionar para todas as atividades geradas pela IA, uma vez que os campos já estão previamente preenchidos.
+
+Etapas técnicas:
+
+✅ Adicionar novo botão no Card de Construção
+
+Local: Dentro de cada mini-card de atividade da interface principal de Construção de Atividades.
+
+Nome do botão: Construir Automaticamente
+
+Estilo: Mesmo estilo visual dos demais botões (Ex: botão “Ativa”), seguindo design system atual.
+
+Condição de exibição: Apenas se todos os campos obrigatórios já estiverem preenchidos (título, descrição, disciplina, dificuldade, etc).
+
+Ícone sugerido: ⚡
+
+⚙️ Lógica de Funcionamento do Botão
+
+Ao clicar em “Construir Automaticamente”, o sistema deve:
+
+Simular a abertura do modal “Editar Materiais” referente à atividade.
+
+Detectar que os campos já estão preenchidos.
+
+Simular o clique no botão “Construir Atividade” dentro desse modal.
+
+Fechar o modal automaticamente após iniciar a construção.
+
+Atualizar visualmente o progresso da atividade (Ex: de “Pendente” para “Em construção” ou “100%”).
+
+🔄 Execução em Massa
+
+O sistema deve permitir que essa ação seja disparada em lote, ou seja:
+
+O botão “Construir Automaticamente” pode ser clicado uma vez por card individual, ou
+
+(Opcional) Criar um botão no topo da página: “Construir Todas”, que executa esse processo automaticamente para todas as atividades pendentes e com campos preenchidos.
+
+🧠 Reaproveitamento da Lógica Existente
+
+Toda a lógica de construção da atividade já existente no botão “Construir Atividade” do modal deve ser reaproveitada.
+
+Isso inclui validações, criação de arquivos, pré-visualização e publicação.
+
+O botão “Construir Automaticamente” apenas simula a ação que o usuário faria manualmente, mas sem alterar o modal.
+
+🧩 Integrações e Importações
+
+Certifique-se de importar todos os serviços e hooks necessários:
+
+serviceBuildActivity.ts (ou o equivalente que dispara a construção real da atividade)
+
+useActivityContext / useBuildActivity / useAutoBuildHook (se aplicável)
+
+Atividade deve ser atualizada via setState ou via context API do School Power
+
+Os dados devem ser persistidos no backend assim como no fluxo atual
+
+🔁 Fallback e Erros
+
+Se houver erro no preenchimento de campos ou falha de rede:
+
+Exibir um alerta discreto no card (Ex: “Erro ao construir automaticamente. Clique em Editar para revisar.”)
+
+Em caso de sucesso: Alterar o status do card para “Construída” e progresso para 100%.
+
+🚫 Limitações
+
+Nenhum fluxo visual existente deve ser alterado.
+
+O botão de “Editar” deve continuar funcionando normalmente, permitindo edições manuais mesmo após a construção automática.
+
+A interface de pré-visualização também deve continuar sendo atualizada como já acontece.
+
+Resumo Final:
+
+Criar um botão dentro de cada card de atividade chamado “Construir Automaticamente”, que, ao ser clicado, ativa o processo interno de geração de atividade como se o usuário tivesse aberto o modal, revisado os dados e clicado manualmente em “Construir Atividade”. Tudo isso deve acontecer automaticamente, sem alterar o fluxo visual ou de interação do usuário atual. A lógica já existente do modal de Editar Materiais e geração da atividade deve ser usada como base.
+
