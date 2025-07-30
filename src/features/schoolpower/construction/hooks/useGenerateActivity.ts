@@ -1,74 +1,51 @@
 import { useState, useCallback } from 'react';
-import { ActivityFormData, GeneratedActivity, ActivityGenerationPayload } from '../types/ActivityTypes';
-import { generateActivityAPI, validateActivityData } from '../api/generateActivity';
+import { ActivityFormData } from '../types/ActivityTypes';
+import { activityGenerationService } from '../services/activityGenerationService';
 
 interface UseGenerateActivityProps {
   activityId: string;
-  activityType?: string;
+  activityType: string;
 }
 
 export const useGenerateActivity = ({ activityId, activityType }: UseGenerateActivityProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<any>(null);
 
   const generateActivity = useCallback(async (formData: ActivityFormData) => {
     setIsGenerating(true);
     setError(null);
 
     try {
-      const payload: ActivityGenerationPayload = {
-        ...formData,
-        activityId,
-        activityType: activityType || ''
-      };
-
-      // Validar dados
-      const validationErrors = validateActivityData(payload);
-      if (validationErrors.length > 0) {
-        setError(validationErrors.join(', '));
-        setIsGenerating(false);
-        return;
-      }
-
-      // Gerar atividade
-      const result = await generateActivityAPI(payload);
-      setGeneratedContent(result.content);
-
-      // Salvar no localStorage para persistência
-      localStorage.setItem(`generated_activity_${activityId}`, JSON.stringify({
-        content: result.content,
-        metadata: result.metadata,
-        timestamp: Date.now()
-      }));
-
+      const result = await activityGenerationService.generateActivity(activityId, formData);
+      setGeneratedContent(result);
+      return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(errorMessage);
+      throw err;
     } finally {
       setIsGenerating(false);
     }
-  }, [activityId, activityType]);
+  }, [activityId]);
 
   const loadSavedContent = useCallback(() => {
-    // Primeiro verificar se há conteúdo gerado automaticamente
-    const autoContent = localStorage.getItem(`generated_content_${activityId}`);
-    if (autoContent) {
-      setGeneratedContent(autoContent);
-      console.log('🤖 Conteúdo automático carregado para atividade:', activityId);
-      return;
+    try {
+      const saved = localStorage.getItem(`activity_${activityId}`);
+      if (saved) {
+        const parsedContent = JSON.parse(saved);
+        setGeneratedContent(parsedContent);
+        return parsedContent;
+      }
+    } catch (err) {
+      console.error('Erro ao carregar conteúdo salvo:', err);
     }
-
-    // Se não houver conteúdo automático, carregar conteúdo salvo manualmente
-    const savedContent = localStorage.getItem(`activity_content_${activityId}`);
-    if (savedContent) {
-      setGeneratedContent(savedContent);
-      console.log('📖 Conteúdo salvo carregado para atividade:', activityId);
-    }
+    return null;
   }, [activityId]);
 
   const clearContent = useCallback(() => {
-    setGeneratedContent('');
-    localStorage.removeItem(`generated_activity_${activityId}`);
+    setGeneratedContent(null);
+    localStorage.removeItem(`activity_${activityId}`);
   }, [activityId]);
 
   return {
@@ -76,7 +53,7 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
     loadSavedContent,
     clearContent,
     isGenerating,
-    generatedContent,
-    error
+    error,
+    generatedContent
   };
 };

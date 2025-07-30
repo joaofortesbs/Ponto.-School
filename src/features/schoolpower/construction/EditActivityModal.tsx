@@ -414,11 +414,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const handleBuildActivity = async () => {
     try {
       console.log('🏗️ Iniciando construção da atividade...');
-      await generateActivity(formData);
+      const result = await generateActivity(formData);
 
       // Salvar o conteúdo gerado
-      // setGeneratedContent(result);
-      // setIsContentLoaded(true);
+      setGeneratedContent(result);
+      setIsContentLoaded(true);
 
       // Salvar no localStorage
       localStorage.setItem(`activity_${activity?.id}`, JSON.stringify({
@@ -426,7 +426,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         activityId: activity?.id,
         activityTitle: activity?.title,
         isGenerated: true,
-        ...generatedContent // spread the generatedContent here
+        ...result
       }));
 
       // Marcar como construída
@@ -435,12 +435,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         ...activity,
         isBuilt: true,
         builtAt: new Date().toISOString(),
-        generatedContent: generatedContent // and here
+        generatedContent: result
       };
       localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-      // Automaticamente mudar para a aba de pré-visualização após gerar
-      setActiveTab('preview');
 
       // Marcar atividade como construída
       if (activity && onUpdateActivity) {
@@ -466,7 +463,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         description: "O conteúdo foi gerado e está disponível na aba de pré-visualização.",
       });
 
-      // Navegar para a aba de pré-visualização
+      // Automaticamente mudar para a aba de pré-visualização após gerar
       setActiveTab('preview');
 
     } catch (error) {

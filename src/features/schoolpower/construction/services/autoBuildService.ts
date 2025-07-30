@@ -195,3 +195,6 @@ export class AutoBuildService {
     }
   }
 }
+
+// Exportar a instância para uso direto
+export const autoBuildService = AutoBuildService.getInstance();

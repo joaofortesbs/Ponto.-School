@@ -1,4 +1,3 @@
-
 export interface ActivityFormData {
   title: string;
   description: string;
@@ -13,24 +12,25 @@ export interface ActivityFormData {
   materials: string;
   instructions: string;
   evaluation: string;
-  timeLimit?: string;
-  context?: string;
-  textType?: string;
-  textGenre?: string;
-  textLength?: string;
-  associatedQuestions?: string;
-  competencies?: string;
-  readingStrategies?: string;
-  visualResources?: string;
-  practicalActivities?: string;
-  wordsIncluded?: string;
-  gridFormat?: string;
-  providedHints?: string;
-  vocabularyContext?: string;
-  language?: string;
-  associatedExercises?: string;
-  knowledgeArea?: string;
-  complexityLevel?: string;
+  timeLimit: string;
+  context: string;
+  textType: string;
+  textGenre: string;
+  textLength: string;
+  associatedQuestions: string;
+  competencies: string;
+  readingStrategies: string;
+  visualResources: string;
+  practicalActivities: string;
+  wordsIncluded: string;
+  gridFormat: string;
+  providedHints: string;
+  vocabularyContext: string;
+  language: string;
+  associatedExercises: string;
+  knowledgeArea: string;
+  complexityLevel: string;
+  customFields?: Record<string, any>;
 }
 
 export interface GeneratedActivity {
