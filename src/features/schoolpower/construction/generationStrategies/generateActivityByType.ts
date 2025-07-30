@@ -1,4 +1,3 @@
-
 import { ActivityFormData, GeneratedActivity, ActivityType } from '../types/ActivityTypes';
 
 export const generateTest = (data: ActivityFormData): string => {
@@ -65,7 +64,7 @@ ${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`
 export const generateExerciseList = (data: ActivityFormData): string => {
   // Gerar questões baseadas nos dados do usuário
   const questions = generateQuestionsBasedOnUserData(data);
-  
+
   return JSON.stringify({
     title: data.title,
     description: data.description,
@@ -88,10 +87,10 @@ export const generateExerciseList = (data: ActivityFormData): string => {
 const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
   const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
   const questions = [];
-  
+
   for (let i = 1; i <= numberOfQuestions; i++) {
     let question;
-    
+
     switch (data.questionModel) {
       case 'Múltipla Escolha':
         question = generateMultipleChoiceQuestion(i, data);
@@ -117,10 +116,10 @@ const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
       default:
         question = generateMultipleChoiceQuestion(i, data);
     }
-    
+
     questions.push(question);
   }
-  
+
   return questions;
 };
 
@@ -143,10 +142,10 @@ const generateMultipleChoiceQuestion = (questionNumber: number, data: ActivityFo
       `Avalie criticamente os elementos de ${data.theme} e selecione a alternativa que melhor sintetiza o conhecimento:`
     ]
   };
-  
+
   const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
   const questionText = templates[questionNumber % templates.length];
-  
+
   return {
     id: `q${questionNumber}`,
     type: 'multiple-choice',
@@ -182,10 +181,10 @@ const generateEssayQuestion = (questionNumber: number, data: ActivityFormData) =
       `Construa uma reflexão aprofundada sobre ${data.theme}, estabelecendo conexões com outros temas da disciplina.`
     ]
   };
-  
+
   const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
   const questionText = templates[questionNumber % templates.length];
-  
+
   return {
     id: `q${questionNumber}`,
     type: 'essay',
@@ -206,10 +205,10 @@ const generateTrueFalseQuestion = (questionNumber: number, data: ActivityFormDat
     `As aplicações práticas de ${data.theme} são limitadas ao contexto teórico de ${data.subject}.`,
     `${data.theme} pode ser compreendido completamente sem conhecimento prévio em ${data.subject}.`
   ];
-  
+
   const statement = statements[questionNumber % statements.length];
   const isTrue = questionNumber % 2 === 1; // Alternar entre verdadeiro e falso
-  
+
   return {
     id: `q${questionNumber}`,
     type: 'true-false',
@@ -360,7 +359,65 @@ export const generateActivityByType = (type: ActivityType, data: ActivityFormDat
       content = generateTest(data);
       break;
     case 'lista-exercicios':
-      content = generateExerciseList(data);
+      const numberOfQuestions = parseInt(data.numberOfQuestions) || 5;
+      const questions = [];
+
+      // Gerar questões baseadas no tema e disciplina
+      for (let i = 1; i <= numberOfQuestions; i++) {
+        const isMultipleChoice = data.questionModel?.toLowerCase().includes('múltipla') || 
+                               data.questionModel?.toLowerCase().includes('escolha');
+
+        const question = {
+          id: `q${i}`,
+          question: `Questão ${i} sobre ${data.theme || 'o conteúdo'}: ` +
+                   `Esta é uma questão de ${data.subject || 'Português'} para ${data.schoolYear || '6º ano'} ` +
+                   `com nível de dificuldade ${data.difficultyLevel || 'médio'}. ` +
+                   `Desenvolva um questionamento que explore o conhecimento sobre ${data.theme || 'o tema proposto'}.`,
+          type: data.questionModel || (isMultipleChoice ? 'Múltipla Escolha' : 'Dissertativa'),
+          difficulty: data.difficultyLevel || 'Médio',
+          subject: data.subject || 'Português',
+          theme: data.theme || ''
+        };
+
+        // Adicionar alternativas se for múltipla escolha
+        if (isMultipleChoice) {
+          question.options = [
+            `Primeira alternativa relacionada a ${data.theme || 'o tema'}`,
+            `Segunda alternativa sobre ${data.subject || 'a disciplina'}`,
+            `Terceira opção contextualizada para ${data.schoolYear || 'o ano escolar'}`,
+            `Quarta alternativa com nível ${data.difficultyLevel || 'médio'}`
+          ];
+          question.answer = 'A';
+          question.correctAnswer = question.options[0];
+        } else {
+          question.answer = `Resposta esperada para a questão ${i}, demonstrando compreensão sobre ${data.theme || 'o tema'}.`;
+        }
+
+        question.explanation = `Explicação detalhada para a questão ${i}: ` +
+                              `Esta questão visa avaliar o conhecimento em ${data.subject || 'Português'} ` +
+                              `sobre ${data.theme || 'o tema proposto'}, adequada para ${data.schoolYear || '6º ano'} ` +
+                              `com nível de dificuldade ${data.difficultyLevel || 'médio'}.`;
+
+        questions.push(question);
+      }
+
+      content = JSON.stringify({
+        title: data.title,
+        description: data.description,
+        questions,
+        exercicios: questions, // Alias para compatibilidade
+        metadata: {
+          subject: data.subject,
+          theme: data.theme,
+          schoolYear: data.schoolYear,
+          difficulty: data.difficultyLevel,
+          questionModel: data.questionModel,
+          estimatedTime: `${numberOfQuestions * 4} minutos`,
+          totalQuestions: numberOfQuestions,
+          generatedAt: new Date().toISOString(),
+          type: 'lista-exercicios'
+        }
+      }, null, 2);
       break;
     case 'jogo':
       content = generateGame(data);

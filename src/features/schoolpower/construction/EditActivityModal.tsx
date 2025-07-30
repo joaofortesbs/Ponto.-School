@@ -160,18 +160,40 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const savedContent = localStorage.getItem(`activity_${activity.id}`);
 
+      console.log(`🔎 Estado do localStorage:`, {
+        constructedActivities: Object.keys(constructedActivities),
+        hasSavedContent: !!savedContent,
+        activityId: activity.id
+      });
+
       if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
-        setGeneratedContent(constructedActivities[activity.id].generatedContent);
+        const content = constructedActivities[activity.id].generatedContent;
+        console.log(`📄 Estrutura do conteúdo do cache:`, {
+          hasQuestions: !!content?.questions,
+          hasContent: !!content?.content,
+          contentType: typeof content,
+          keys: content ? Object.keys(content) : []
+        });
+        setGeneratedContent(content);
         setIsContentLoaded(true);
       } else if (savedContent) {
         console.log(`✅ Conteúdo salvo encontrado para: ${activity.id}`);
         try {
           const parsedContent = JSON.parse(savedContent);
+          console.log(`📄 Estrutura do conteúdo salvo:`, {
+            hasQuestions: !!parsedContent?.questions,
+            hasContent: !!parsedContent?.content,
+            contentType: typeof parsedContent,
+            keys: parsedContent ? Object.keys(parsedContent) : []
+          });
           setGeneratedContent(parsedContent);
           setIsContentLoaded(true);
         } catch (error) {
-          console.error('Erro ao parsear conteúdo salvo:', error);
+          console.error('❌ Erro ao parsear conteúdo salvo:', error);
+          console.error('📄 Conteúdo que causou erro:', savedContent);
+          setGeneratedContent(null);
+          setIsContentLoaded(false);
         }
       } else {
         console.log(`⚠️ Nenhum conteúdo construído encontrado para: ${activity.id}`);

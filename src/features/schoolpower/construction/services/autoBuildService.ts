@@ -65,19 +65,32 @@ export class AutoBuildService {
     activity.isBuilt = true;
     activity.builtAt = new Date().toISOString();
 
-    // Salvar no localStorage para persistir o estado
+    // Gerar conteúdo da atividade
+    console.log(`🏗️ Gerando conteúdo para: ${activity.title}`);
+    const generatedContent = await activityGenerationService.generateActivity(activity.id, formData);
+
+    console.log(`✅ Conteúdo gerado para ${activity.title}:`, generatedContent);
+
+    // Padronizar e salvar conteúdo gerado
+    const contentToSave = {
+      generatedAt: new Date().toISOString(),
+      activityId: activity.id,
+      activityTitle: activity.title,
+      isGenerated: true,
+      ...generatedContent
+    };
+
+    localStorage.setItem(`activity_${activity.id}`, JSON.stringify(contentToSave));
+
+    // Atualizar atividade construída
     const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
     constructedActivities[activity.id] = {
+      ...activity,
       isBuilt: true,
-      builtAt: activity.builtAt,
-      title: activity.title,
-      generatedContent: generatedActivity
+      builtAt: new Date().toISOString(),
+      generatedContent: contentToSave
     };
     localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-    // Salvar a atividade gerada no localStorage específico para visualização
-    const activityKey = `schoolpower_activity_${activity.id}`;
-    localStorage.setItem(activityKey, JSON.stringify(generatedActivity));
 
     console.log(`💾 Atividade ${activity.id} salva com sucesso`);
 
