@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { ActivityFormData } from '../types/ActivityTypes';
-import { activityGenerationService } from '../services/activityGenerationService';
+import { useState } from 'react';
+import { generateActivityContent } from '../api/generateActivity';
+import { validateAndNormalizeQuestions, isValidExerciseList } from '../../services/questionValidator';
 
 interface UseGenerateActivityProps {
   activityId: string;
@@ -9,51 +9,69 @@ interface UseGenerateActivityProps {
 
 export const useGenerateActivity = ({ activityId, activityType }: UseGenerateActivityProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const generateActivity = useCallback(async (formData: ActivityFormData) => {
-    setIsGenerating(true);
-    setError(null);
-
+  const generateActivity = async (formData: any) => {
     try {
-      const result = await activityGenerationService.generateActivity(activityId, formData);
-      setGeneratedContent(result);
-      return result;
+      setIsGenerating(true);
+      setError(null);
+
+      console.log('🚀 Iniciando geração de atividade:', { activityId, activityType });
+      console.log('📋 Dados do formulário:', formData);
+
+      const rawContent = await generateActivityContent(activityType, formData.contextData || formData);
+
+      console.log('📦 Conteúdo bruto da IA:', rawContent);
+
+      let processedContent = rawContent;
+
+      // Para lista de exercícios, aplicar validação e normalização rigorosa
+      if (activityType === 'lista-exercicios') {
+        console.log('📝 Aplicando validação para lista de exercícios...');
+
+        if (!isValidExerciseList(rawContent)) {
+          throw new Error('IA não gerou uma lista de exercícios válida');
+        }
+
+        try {
+          processedContent = validateAndNormalizeQuestions(rawContent, formData.contextData || formData);
+          console.log('✅ Questões validadas e normalizadas:', processedContent);
+        } catch (validationError) {
+          console.error('❌ Erro na validação das questões:', validationError);
+          throw new Error(`Erro na validação: ${validationError.message}`);
+        }
+      }
+
+      setGeneratedContent(processedContent);
+
+      // Salvar no localStorage com metadados
+      const savedData = {
+        ...processedContent,
+        activityId,
+        activityType,
+        savedAt: new Date().toISOString(),
+        formData: formData.contextData || formData
+      };
+
+      localStorage.setItem(`activity_${activityId}`, JSON.stringify(savedData));
+      console.log('💾 Conteúdo salvo no localStorage');
+
+      return processedContent;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      console.error('❌ Erro na geração da atividade:', errorMessage);
       setError(errorMessage);
       throw err;
     } finally {
       setIsGenerating(false);
     }
-  }, [activityId]);
-
-  const loadSavedContent = useCallback(() => {
-    try {
-      const saved = localStorage.getItem(`activity_${activityId}`);
-      if (saved) {
-        const parsedContent = JSON.parse(saved);
-        setGeneratedContent(parsedContent);
-        return parsedContent;
-      }
-    } catch (err) {
-      console.error('Erro ao carregar conteúdo salvo:', err);
-    }
-    return null;
-  }, [activityId]);
-
-  const clearContent = useCallback(() => {
-    setGeneratedContent(null);
-    localStorage.removeItem(`activity_${activityId}`);
-  }, [activityId]);
+  };
 
   return {
     generateActivity,
-    loadSavedContent,
-    clearContent,
     isGenerating,
-    error,
-    generatedContent
+    generatedContent,
+    error
   };
 };

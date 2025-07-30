@@ -57,7 +57,15 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     
     // Verificar diferentes formatos de questões que podem vir da IA
     let questoesDaIA = null;
+    let isContentFromAI = false;
     
+    // Verificar se o conteúdo foi gerado pela IA
+    if (data.isGeneratedByAI === true || data.generatedAt) {
+      isContentFromAI = true;
+      console.log('✅ Conteúdo confirmado como gerado pela IA');
+    }
+    
+    // Buscar questões em diferentes possíveis localizações
     if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
       console.log(`✅ Questões encontradas em 'questoes': ${data.questoes.length}`);
       questoesDaIA = data.questoes;
@@ -73,29 +81,72 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
 
     if (questoesDaIA && questoesDaIA.length > 0) {
-      console.log(`✅ Usando ${questoesDaIA.length} questões reais da IA`);
+      console.log(`✅ Processando ${questoesDaIA.length} questões da IA`);
       console.log('📝 Primeira questão da IA:', questoesDaIA[0]);
+      console.log('📝 Estrutura da primeira questão:', {
+        hasId: !!questoesDaIA[0].id,
+        hasType: !!questoesDaIA[0].type,
+        hasEnunciado: !!questoesDaIA[0].enunciado,
+        hasAlternativas: !!questoesDaIA[0].alternativas,
+        alternativasLength: questoesDaIA[0].alternativas ? questoesDaIA[0].alternativas.length : 0
+      });
       
       // Processar e validar as questões da IA
-      const questoesProcessadasIA = questoesDaIA.map((questao, index) => ({
-        id: questao.id || `questao-${index + 1}`,
-        type: questao.type || questao.tipo || 'multipla-escolha',
-        enunciado: questao.enunciado || questao.pergunta || questao.question || `Questão ${index + 1}`,
-        alternativas: questao.alternativas || questao.alternatives || questao.options || [],
-        respostaCorreta: questao.respostaCorreta || questao.correctAnswer || 0,
-        explicacao: questao.explicacao || questao.explanation || '',
-        dificuldade: questao.dificuldade || questao.difficulty || 'medio',
-        tema: questao.tema || questao.topic || data.tema || 'Tema não especificado'
-      }));
+      const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
+        const questaoProcessada = {
+          id: questao.id || `questao-${index + 1}`,
+          type: (questao.type || questao.tipo || 'multipla-escolha').toLowerCase().replace('_', '-'),
+          enunciado: questao.enunciado || questao.pergunta || questao.question || `Questão ${index + 1}`,
+          alternativas: questao.alternativas || questao.alternatives || questao.options || [],
+          respostaCorreta: questao.respostaCorreta || questao.correctAnswer || 0,
+          explicacao: questao.explicacao || questao.explanation || '',
+          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
+          tema: questao.tema || questao.topic || data.tema || 'Tema não especificado'
+        };
+        
+        // Validação de tipos específicos
+        if (questaoProcessada.type === 'multipla-escolha' || questaoProcessada.type === 'multipla_escolha') {
+          questaoProcessada.type = 'multipla-escolha';
+          // Garantir que há alternativas suficientes
+          if (!questaoProcessada.alternativas || questaoProcessada.alternativas.length < 2) {
+            console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
+            questaoProcessada.alternativas = [
+              'Opção A',
+              'Opção B', 
+              'Opção C',
+              'Opção D'
+            ];
+          }
+        } else if (questaoProcessada.type === 'verdadeiro-falso' || questaoProcessada.type === 'verdadeiro_falso') {
+          questaoProcessada.type = 'verdadeiro-falso';
+          questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
+        } else if (questaoProcessada.type === 'discursiva') {
+          // Questões discursivas não precisam de alternativas
+          questaoProcessada.alternativas = undefined;
+        }
+        
+        console.log(`📄 Questão ${index + 1} processada:`, {
+          id: questaoProcessada.id,
+          type: questaoProcessada.type,
+          enunciadoLength: questaoProcessada.enunciado.length,
+          hasAlternativas: !!questaoProcessada.alternativas,
+          alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0
+        });
+        
+        return questaoProcessada;
+      });
       
+      console.log(`✅ ${questoesProcessadasIA.length} questões processadas com sucesso`);
       setQuestoesProcessadas(questoesProcessadasIA);
-    } else if (data.isGeneratedByAI === false || !data.isGeneratedByAI) {
-      console.log('⚠️ Conteúdo não foi gerado pela IA ou não há questões válidas, gerando questões simuladas');
+      
+    } else if (isContentFromAI) {
+      console.error('❌ Conteúdo marcado como da IA mas sem questões válidas');
+      console.error('📊 Dados recebidos:', data);
+      setQuestoesProcessadas([]);
+    } else {
+      console.log('⚠️ Conteúdo não foi gerado pela IA, usando questões simuladas como fallback');
       const questoesSimuladas = gerarQuestoesSimuladas(data);
       setQuestoesProcessadas(questoesSimuladas);
-    } else {
-      console.log('❌ Nenhuma questão encontrada em nenhum formato');
-      setQuestoesProcessadas([]);
     }
   }, [data]);
 

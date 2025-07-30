@@ -11,29 +11,86 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
   const objetivos = contextData.objetivos || contextData.objectives || '';
   const fontes = contextData.fontes || contextData.sources || '';
 
+  // Determinar o tipo de questão baseado no modelo
+  let tipoQuestao = 'multipla-escolha';
+  const modeloLower = modeloQuestoes.toLowerCase();
+  
+  if (modeloLower.includes('dissertativa') || modeloLower.includes('discursiva')) {
+    tipoQuestao = 'discursiva';
+  } else if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
+    tipoQuestao = 'verdadeiro-falso';
+  } else if (modeloLower.includes('multipla') || modeloLower.includes('múltipla')) {
+    tipoQuestao = 'multipla-escolha';
+  }
+
+  // Exemplo de questão baseado no tipo
+  let exemploQuestao = '';
+  if (tipoQuestao === 'multipla-escolha') {
+    exemploQuestao = `{
+      "id": "questao-1",
+      "type": "multipla-escolha",
+      "enunciado": "Questão específica sobre ${tema} para ${anoEscolar}",
+      "alternativas": [
+        "Alternativa A específica do tema",
+        "Alternativa B específica do tema", 
+        "Alternativa C específica do tema",
+        "Alternativa D específica do tema"
+      ],
+      "respostaCorreta": 0,
+      "explicacao": "Explicação detalhada da resposta correta",
+      "dificuldade": "${dificuldade.toLowerCase()}",
+      "tema": "${tema}"
+    }`;
+  } else if (tipoQuestao === 'verdadeiro-falso') {
+    exemploQuestao = `{
+      "id": "questao-1", 
+      "type": "verdadeiro-falso",
+      "enunciado": "Afirmação sobre ${tema} para avaliar se é verdadeira ou falsa",
+      "alternativas": ["Verdadeiro", "Falso"],
+      "respostaCorreta": "true",
+      "explicacao": "Explicação sobre por que a afirmação é verdadeira ou falsa",
+      "dificuldade": "${dificuldade.toLowerCase()}",
+      "tema": "${tema}"
+    }`;
+  } else {
+    exemploQuestao = `{
+      "id": "questao-1",
+      "type": "discursiva", 
+      "enunciado": "Questão dissertativa sobre ${tema} que exige desenvolvimento de resposta",
+      "respostaCorreta": "Resposta esperada detalhada",
+      "explicacao": "Critérios de avaliação e pontos importantes",
+      "dificuldade": "${dificuldade.toLowerCase()}",
+      "tema": "${tema}"
+    }`;
+  }
+
   return `
-Você é um especialista em educação. Crie uma lista de exercícios PERSONALIZADA e REAL baseada nos dados específicos fornecidos.
+Você é um especialista em educação brasileira. Crie uma lista de exercícios REAL e PERSONALIZADA baseada nos dados específicos fornecidos.
 
 DADOS ESPECÍFICOS DA ATIVIDADE:
 - Título: ${titulo}
 - Descrição: ${descricao}
 - Disciplina: ${disciplina}
-- Tema: ${tema}
+- Tema Específico: ${tema}
 - Ano de Escolaridade: ${anoEscolar}
 - Número de Questões: ${numeroQuestoes}
 - Nível de Dificuldade: ${dificuldade}
 - Modelo de Questões: ${modeloQuestoes}
 - Objetivos: ${objetivos}
-- Fontes: ${fontes}
+- Fontes de Referência: ${fontes}
 
-INSTRUÇÕES ESPECÍFICAS:
-1. Crie EXATAMENTE ${numeroQuestoes} questões sobre ${tema} em ${disciplina}
-2. Adeque o conteúdo para estudantes do ${anoEscolar}
+INSTRUÇÕES OBRIGATÓRIAS:
+1. Crie EXATAMENTE ${numeroQuestoes} questões reais e específicas sobre "${tema}" em ${disciplina}
+2. Adeque o vocabulário e complexidade para estudantes do ${anoEscolar}
 3. Use nível de dificuldade: ${dificuldade}
-4. Tipo de questões: ${modeloQuestoes}
-5. Todas as questões devem ser sobre o tema específico: ${tema}
+4. Tipo de questões: ${tipoQuestao}
+5. Cada questão deve abordar aspectos diferentes do tema "${tema}"
+6. Conteúdo deve ser educacionalmente válido e contextualizado
 
-FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
+EXEMPLO DE QUESTÃO PARA SEGUIR:
+${exemploQuestao}
+
+FORMATO DE RESPOSTA OBRIGATÓRIO - JSON VÁLIDO:
 {
   "titulo": "${titulo}",
   "disciplina": "${disciplina}",
@@ -42,38 +99,25 @@ FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
   "numeroQuestoes": ${numeroQuestoes},
   "dificuldade": "${dificuldade}",
   "tipoQuestoes": "${modeloQuestoes}",
-  "objetivos": "Objetivos específicos para ${tema}",
-  "conteudoPrograma": "Conteúdo programático detalhado",
-  "observacoes": "Observações importantes",
+  "objetivos": "Desenvolver o conhecimento sobre ${tema} adequado ao ${anoEscolar}",
+  "conteudoPrograma": "Conteúdo programático específico sobre ${tema} em ${disciplina}",
+  "observacoes": "Instruções importantes para a resolução dos exercícios",
   "questoes": [
-    {
-      "id": "questao-1",
-      "type": "multipla-escolha",
-      "enunciado": "Pergunta específica sobre ${tema}",
-      "alternativas": [
-        "Alternativa A",
-        "Alternativa B",
-        "Alternativa C",
-        "Alternativa D"
-      ],
-      "respostaCorreta": 0,
-      "explicacao": "Explicação detalhada",
-      "dificuldade": "${dificuldade.toLowerCase()}",
-      "tema": "${tema}"
-    }
+    // Array com ${numeroQuestoes} questões seguindo o exemplo acima
   ]
 }
 
-REGRAS IMPORTANTES:
-- Para múltipla escolha: sempre 4 alternativas
-- Para verdadeiro/falso: ["Verdadeiro", "Falso"]
-- Para discursivas: sem alternativas
-- Cada questão deve ter ID único
-- Conteúdo deve ser educacional real
-- Adequar vocabulário ao ano escolar
-- Focar no tema específico fornecido
+REGRAS CRÍTICAS:
+- Responda APENAS com JSON válido, sem ```json``` ou texto adicional
+- Crie ${numeroQuestoes} questões diferentes e específicas sobre "${tema}"
+- Para múltipla escolha: exatamente 4 alternativas
+- Para verdadeiro/falso: ["Verdadeiro", "Falso"] 
+- Para discursiva: sem alternativas
+- IDs únicos: "questao-1", "questao-2", etc.
+- Enunciados específicos do tema, não genéricos
+- Adequar ao nível escolar e dificuldade solicitados
 
-Responda APENAS com o JSON válido, sem markdown ou texto adicional.
+IMPORTANTE: O conteúdo deve ser específico para "${tema}" em ${disciplina}, adequado ao ${anoEscolar}.
 `;
 };
 

@@ -521,26 +521,31 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       console.log('🏗️ Iniciando construção da atividade...');
       console.log('📋 Dados do formulário para IA:', formData);
 
-      // Preparar dados específicos para lista de exercícios
+      // Preparar dados específicos para lista de exercícios com validação
       const contextData = {
-        titulo: formData.title,
-        description: formData.description,
-        disciplina: formData.subject,
-        tema: formData.theme,
-        anoEscolaridade: formData.schoolYear,
+        // Dados em português para o prompt
+        titulo: formData.title || 'Lista de Exercícios',
+        descricao: formData.description || '',
+        disciplina: formData.subject || 'Português',
+        tema: formData.theme || 'Conteúdo Geral',
+        anoEscolaridade: formData.schoolYear || '6º ano',
         numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
-        nivelDificuldade: formData.difficultyLevel,
-        modeloQuestoes: formData.questionModel,
-        fontes: formData.sources,
-        objetivos: formData.objectives,
-        materiais: formData.materials,
-        instrucoes: formData.instructions,
-        tempoLimite: formData.timeLimit,
-        contextoAplicacao: formData.context,
+        nivelDificuldade: formData.difficultyLevel || 'Médio',
+        modeloQuestoes: formData.questionModel || 'Múltipla escolha e complete as frases',
+        fontes: formData.sources || 'Gramática básica para concursos e exercícios online Brasil Escola',
+        objetivos: formData.objectives || '',
+        materiais: formData.materials || '',
+        instrucoes: formData.instructions || '',
+        tempoLimite: formData.timeLimit || '',
+        contextoAplicacao: formData.context || '',
+        
         // Dados alternativos em inglês para compatibilidade
+        title: formData.title,
+        description: formData.description,
         subject: formData.subject,
         theme: formData.theme,
         schoolYear: formData.schoolYear,
+        numberOfQuestions: formData.numberOfQuestions,
         difficultyLevel: formData.difficultyLevel,
         questionModel: formData.questionModel,
         sources: formData.sources,
@@ -550,6 +555,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         timeLimit: formData.timeLimit,
         context: formData.context
       };
+      
+      console.log('📊 Context data preparado para IA:', contextData);
 
       const activityData = {
         ...formData,
@@ -564,49 +571,63 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       const result = await generateActivity(activityData);
       
       console.log('✅ Resultado da IA recebido:', result);
+      console.log('🔍 Estrutura do resultado:', {
+        hasQuestoes: !!result?.questoes,
+        hasQuestions: !!result?.questions,
+        questoesLength: result?.questoes?.length || 0,
+        questionsLength: result?.questions?.length || 0,
+        isGeneratedByAI: result?.isGeneratedByAI,
+        resultKeys: result ? Object.keys(result) : []
+      });
 
       // Verificar se o resultado contém questões válidas
-      if (!result || (!result.questoes && !result.questions)) {
-        console.warn('⚠️ IA não retornou questões válidas, forçando regeneração...');
-        throw new Error('Conteúdo inválido gerado pela IA');
+      if (!result) {
+        throw new Error('Nenhum resultado retornado pela IA');
       }
 
       // Processar e validar o conteúdo gerado
       let questoesGeradas = [];
       
-      if (result.questoes && Array.isArray(result.questoes)) {
+      if (result.questoes && Array.isArray(result.questoes) && result.questoes.length > 0) {
         questoesGeradas = result.questoes;
-      } else if (result.questions && Array.isArray(result.questions)) {
+        console.log(`✅ Questões encontradas em 'questoes': ${questoesGeradas.length}`);
+      } else if (result.questions && Array.isArray(result.questions) && result.questions.length > 0) {
         questoesGeradas = result.questions;
-      } else if (result.content && result.content.questoes) {
+        console.log(`✅ Questões encontradas em 'questions': ${questoesGeradas.length}`);
+      } else if (result.content && result.content.questoes && Array.isArray(result.content.questoes)) {
         questoesGeradas = result.content.questoes;
-      } else if (result.content && result.content.questions) {
+        console.log(`✅ Questões encontradas em 'content.questoes': ${questoesGeradas.length}`);
+      } else if (result.content && result.content.questions && Array.isArray(result.content.questions)) {
         questoesGeradas = result.content.questions;
+        console.log(`✅ Questões encontradas em 'content.questions': ${questoesGeradas.length}`);
       }
 
-      console.log(`📝 Questões extraídas da IA: ${questoesGeradas.length}`);
-      if (questoesGeradas.length > 0) {
-        console.log('📄 Primeira questão:', questoesGeradas[0]);
+      if (questoesGeradas.length === 0) {
+        console.error('❌ IA não gerou questões válidas');
+        console.error('📊 Resultado completo da IA:', JSON.stringify(result, null, 2));
+        throw new Error('Nenhuma questão válida foi gerada pela IA');
       }
 
-      const processedContent = {
-        ...result,
-        titulo: result.titulo || formData.title,
-        disciplina: result.disciplina || formData.subject,
-        tema: result.tema || formData.theme,
-        questoes: questoesGeradas,
-        numeroQuestoes: questoesGeradas.length || parseInt(formData.numberOfQuestions || '10'),
-        dificuldade: result.dificuldade || formData.difficultyLevel,
-        tipoQuestoes: result.tipoQuestoes || formData.questionModel,
-        objetivos: result.objetivos || formData.objectives,
-        conteudoPrograma: result.conteudoPrograma || formData.instructions,
-        observacoes: result.observacoes || '',
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true
-      };
+      console.log(`📝 ${questoesGeradas.length} questões extraídas da IA`);
+      console.log('📄 Primeira questão como exemplo:', questoesGeradas[0]);
+
+      // O resultado já vem validado e processado pelo useGenerateActivity
+      const processedContent = result;
 
       console.log('📊 Conteúdo processado final:', processedContent);
-      console.log(`✅ Total de questões processadas: ${processedContent.questoes.length}`);
+      console.log(`✅ Total de questões processadas: ${processedContent.questoes?.length || 0}`);
+
+      // Verificação final de segurança
+      if (activity?.id === 'lista-exercicios') {
+        if (!processedContent.questoes || processedContent.questoes.length === 0) {
+          throw new Error('Nenhuma questão foi processada corretamente');
+        }
+        
+        console.log('📋 Resumo das questões geradas:');
+        processedContent.questoes.forEach((questao: any, index: number) => {
+          console.log(`  ${index + 1}. ${questao.enunciado} (${questao.type})`);
+        });
+      }
 
       // Salvar o conteúdo gerado
       setGeneratedContent(processedContent);
