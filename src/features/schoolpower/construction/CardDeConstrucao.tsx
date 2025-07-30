@@ -29,7 +29,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ConstructionGrid } from './ConstructionGrid';
-
 import { 
   Wrench, CheckSquare, Filter, 
   Trophy, Zap, Brain, Heart, 
@@ -379,23 +378,10 @@ export function CardDeConstrucao({
             transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
             className="absolute top-full right-0 mt-3 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-600 overflow-hidden z-50 backdrop-blur-sm"
             style={{
-              background: `
-                linear-gradient(135deg, 
-                  rgba(255, 255, 255, 0.95) 0%, 
-                  rgba(248, 250, 252, 0.98) 100%
-                )
-              `,
-              ...(typeof window !== "undefined" &&
-              window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? {
-                    background: `
-                  linear-gradient(135deg, 
-                    rgba(31, 41, 55, 0.95) 0%, 
-                    rgba(17, 24, 39, 0.98) 100%
-                  )
-                `,
-                  }
-                : {}),
+              backgroundImage: typeof window !== "undefined" &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? `linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%)`
+                : `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%)`,
             }}
           >
             <div className="p-2">

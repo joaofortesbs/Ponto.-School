@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Monitor, Play, Square, RefreshCw } from 'lucide-react';
+import { Monitor, Play, Square, RefreshCw, Bot, CheckCircle, AlertCircle, Clock, Activity } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface AutomationLog {
   timestamp: number;
@@ -13,7 +14,20 @@ interface AutomationLog {
   message: string;
 }
 
-export function AutomationDebugPanel() {
+interface ConstructionActivity {
+  id: string;
+  title: string;
+  description: string;
+  status?: 'completed' | 'building' | 'error' | 'pending';
+  autoBuilt?: boolean;
+}
+
+interface AutomationDebugPanelProps {
+  activities: ConstructionActivity[];
+  isAutoBuilding: boolean;
+}
+
+export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationDebugPanelProps) {
   const [logs, setLogs] = useState<AutomationLog[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
 
@@ -72,12 +86,25 @@ export function AutomationDebugPanel() {
     }
   };
 
+  // Calcula estatísticas das atividades
+  const getAutoBuildStats = (activities: ConstructionActivity[]) => {
+    const total = activities.length;
+    const completed = activities.filter(a => a.status === 'completed').length;
+    const building = activities.filter(a => a.status === 'building').length;
+    const errors = activities.filter(a => a.status === 'error').length;
+    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return { total, completed, building, errors, progress };
+  };
+
+  const stats = getAutoBuildStats(activities);
+
   return (
-    <Card className="w-full max-w-4xl">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Monitor className="w-5 h-5" />
-          Debug - Automação de Atividades
+    <Card className="bg-gray-800/50 border-gray-700">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Bot className="w-4 h-4 text-purple-400" />
+          Sistema de Auto-construção
         </CardTitle>
         <div className="flex gap-2">
           <Button
@@ -102,57 +129,6 @@ export function AutomationDebugPanel() {
             Limpar Logs
           </Button>
         </div>
-      </CardHeader>
-      
-      <CardContent>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {logs.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">
-              {isMonitoring ? 'Aguardando logs de automação...' : 'Inicie o monitoramento para ver os logs'}
-            </p>
-          ) : (
-            logs.map((log, index) => (
-              <div key={index} className="flex items-start gap-2 p-2 rounded border">
-                <Badge className={`${getStatusColor(log.status)} text-white`}>
-                  {log.status.toUpperCase()}
-                </Badge>
-                <div className="flex-1">
-                  <p className="text-sm font-mono">{log.message}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(log.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-import React from 'react';
-import { ConstructionActivity } from '../useConstructionActivities';
-import { getAutoBuildStats } from '../auto/autoBuildActivities';
-import { Bot, CheckCircle, AlertCircle, Clock, Activity } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-
-interface AutomationDebugPanelProps {
-  activities: ConstructionActivity[];
-  isAutoBuilding: boolean;
-}
-
-export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationDebugPanelProps) {
-  const stats = getAutoBuildStats(activities);
-
-  return (
-    <Card className="bg-gray-800/50 border-gray-700">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Bot className="w-4 h-4 text-purple-400" />
-          Sistema de Auto-construção
-        </CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-4">
@@ -226,13 +202,41 @@ export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationD
                       ? 'bg-red-500/10 text-red-400'
                       : 'bg-gray-500/10 text-gray-400'
                   }`}>
-                    {activity.status}
+                    {activity.status || 'pending'}
                   </Badge>
                 </div>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Logs de Monitoramento */}
+        {isMonitoring && (
+          <div className="space-y-2">
+            <h4 className="text-xs font-medium text-gray-300">Logs de Automação:</h4>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {logs.length === 0 ? (
+                <p className="text-gray-500 text-center py-2 text-xs">
+                  Aguardando logs de automação...
+                </p>
+              ) : (
+                logs.map((log, index) => (
+                  <div key={index} className="flex items-start gap-2 p-2 rounded border border-gray-600">
+                    <Badge className={`${getStatusColor(log.status)} text-white text-xs`}>
+                      {log.status.toUpperCase()}
+                    </Badge>
+                    <div className="flex-1">
+                      <p className="text-xs font-mono text-gray-300">{log.message}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
