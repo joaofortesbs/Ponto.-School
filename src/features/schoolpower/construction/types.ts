@@ -1,14 +1,22 @@
-
 import React from 'react';
 
 export interface ConstructionActivity {
   id: string;
   title: string;
+  personalizedTitle?: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  progress: number; // 0-100
-  type: string;
-  originalData?: any; // Dados originais da atividade
+  personalizedDescription?: string;
+  categoryId: string;
+  categoryName: string;
+  icon: string;
+  tags: string[];
+  difficulty: string;
+  estimatedTime: string;
+  customFields?: Record<string, any>;
+  originalData?: any;
+  preenchidoAutomaticamente?: boolean;
+  isBuilt?: boolean;
+  builtAt?: string;
 }
 
 export interface ConstructionActivityProps {

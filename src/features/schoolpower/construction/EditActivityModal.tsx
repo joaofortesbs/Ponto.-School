@@ -37,6 +37,15 @@ const getActivityIcon = (activityId: string) => {
   return GraduationCap; // ícone padrão
 };
 
+/**
+ * Modal de Edição de Atividades com Agente Interno de Execução
+ * 
+ * Este componente inclui um agente automático interno que:
+ * - Detecta quando todos os campos foram preenchidos pela IA
+ * - Aciona automaticamente o botão "Construir Atividade"
+ * - Fecha o modal após a construção (quando apropriado)
+ * - Mantém toda a funcionalidade manual original intacta
+ */
 export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   isOpen,
   activity,
@@ -225,6 +234,16 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           console.log('✅ Formulário será preenchido com:', enrichedFormData);
           setFormData(enrichedFormData);
 
+          // Marcar como preenchido automaticamente pela IA
+          if (onUpdateActivity) {
+            const activityWithAutoFlag = {
+              ...activity,
+              preenchidoAutomaticamente: true
+            };
+            onUpdateActivity(activityWithAutoFlag);
+            console.log('🏷️ Atividade marcada como preenchida automaticamente');
+          }
+
           // Aguardar um momento antes de limpar para garantir que o estado foi atualizado
           setTimeout(() => {
             localStorage.removeItem(autoDataKey);
@@ -336,9 +355,34 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   };
 
   const handleBuildActivity = async () => {
-    await generateActivity(formData);
-    // Automaticamente mudar para a aba de pré-visualização após gerar
-    setActiveTab('preview');
+    try {
+      console.log('🏗️ Iniciando construção da atividade...');
+      await generateActivity(formData);
+      
+      // Automaticamente mudar para a aba de pré-visualização após gerar
+      setActiveTab('preview');
+      
+      // Marcar atividade como construída
+      if (activity && onUpdateActivity) {
+        const updatedActivity = {
+          ...activity,
+          isBuilt: true,
+          builtAt: new Date().toISOString()
+        };
+        await onUpdateActivity(updatedActivity);
+        console.log('✅ Atividade marcada como construída');
+      }
+      
+      // Fechar modal automaticamente se foi construída pelo agente interno
+      if (activity?.preenchidoAutomaticamente) {
+        setTimeout(() => {
+          onClose();
+          console.log('🔄 Modal fechado automaticamente pelo agente interno');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('❌ Erro na construção da atividade:', error);
+    }
   };
 
   const handleSaveChanges = () => {
@@ -427,59 +471,47 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     }
   };
 
-  // Função para acionar automaticamente o botão "Construir Atividade"
-  const triggerAutoBuild = async () => {
-    if (!activity) return;
+  
 
-    try {
-      // Obter customFields a partir dos dados da atividade
-      const customFields = activity.customFields || {};
-
-      // Simular clique no botão "Construir Atividade"
-      const updatedActivity = {
-        ...activity,
-        ...formData,
-        customFields: customFields,
-        isBuilt: true,
-        builtAt: new Date().toISOString()
-      };
-
-      // Atualizar a atividade com os dados preenchidos pela IA
-      if (onUpdateActivity) {
-        await onUpdateActivity(updatedActivity);
-      }
-
-      console.log('🤖 Atividade construída automaticamente:', updatedActivity);
-
-      // Fechar o modal após a construção automática
-      onClose();
-    } catch (error) {
-      console.error('Erro na construção automática:', error);
-    }
-  };
-
-  // Effect para detectar quando todos os campos foram preenchidos pela IA
+  // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
     if (!activity || !isOpen) return;
 
     // Obter customFields a partir dos dados da atividade
     const customFields = activity.customFields || {};
 
-    // Verificar se os campos foram preenchidos automaticamente pela IA
-    const hasAutoFilledFields = Object.keys(customFields).length > 0 && 
-                               formData.title && 
-                               formData.description;
+    // Verificar se a atividade foi preenchida automaticamente pela IA
+    const preenchidoPorIA = activity.preenchidoAutomaticamente === true || 
+                           Object.keys(customFields).length > 0;
 
-    if (hasAutoFilledFields && !activity.isBuilt) {
-      // Aguardar um pequeno delay para garantir que todos os campos foram preenchidos
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    const todosCamposPreenchidos = activity?.id === 'lista-exercicios' 
+      ? formData.title.trim() && 
+        formData.description.trim() && 
+        formData.subject.trim() && 
+        formData.theme.trim() && 
+        formData.schoolYear.trim() &&
+        formData.numberOfQuestions.trim() &&
+        formData.difficultyLevel.trim() &&
+        formData.questionModel.trim()
+      : formData.title.trim() && 
+        formData.description.trim() &&
+        formData.objectives.trim();
+
+    // Agente automático: Acionar "Construir Atividade" quando preenchido pela IA
+    if (todosCamposPreenchidos && preenchidoPorIA && !activity.isBuilt) {
+      console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA');
+      console.log('🎯 Acionando construção automática da atividade...');
+      
+      // Aguardar pequeno delay para garantir sincronização
       const timer = setTimeout(() => {
-        console.log('🚀 Acionando construção automática da atividade...');
-        triggerAutoBuild();
-      }, 1000);
+        handleBuildActivity();
+        console.log('✅ Atividade construída automaticamente pelo agente interno');
+      }, 300);
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, onUpdateActivity]);
+  }, [formData, activity, isOpen, handleBuildActivity]);
 
   if (!isOpen) return null;
 
