@@ -37,7 +37,7 @@ export const activityRegistry: ActivityRegistryType = {
   // Atividades Genéricas do School Power
   "lista-exercicios": {
     editor: lazy(() => import("./default/EditActivity")),
-    preview: lazy(() => import("./default/ActivityPreview")),
+    preview: lazy(() => import("./lista-exercicios/ExerciseListPreview")),
   },
   "prova": {
     editor: lazy(() => import("./default/EditActivity")),

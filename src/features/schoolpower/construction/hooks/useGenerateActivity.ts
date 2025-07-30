@@ -1,59 +1,89 @@
-import { useState, useCallback } from 'react';
+
+import { useState } from 'react';
 import { ActivityFormData } from '../types/ActivityTypes';
 import { activityGenerationService } from '../services/activityGenerationService';
+import { autoBuildService } from '../services/autoBuildService';
 
-interface UseGenerateActivityProps {
-  activityId: string;
-  activityType: string;
+interface GenerationResult {
+  success: boolean;
+  content?: any;
+  error?: string;
 }
 
-export const useGenerateActivity = ({ activityId, activityType }: UseGenerateActivityProps) => {
+export const useGenerateActivity = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const generateActivity = useCallback(async (formData: ActivityFormData) => {
+  const generateActivity = async (
+    activityType: string, 
+    formData: ActivityFormData
+  ): Promise<GenerationResult> => {
+    console.log('🎯 Iniciando geração de atividade:', { activityType, formData });
+    
     setIsGenerating(true);
     setError(null);
-
+    
     try {
-      const result = await activityGenerationService.generateActivity(activityId, formData);
-      setGeneratedContent(result);
-      return result;
+      let content: any;
+
+      // Usar o serviço apropriado baseado no tipo
+      if (activityType === 'lista-exercicios') {
+        content = activityGenerationService.generateExerciseList(formData);
+        console.log('📝 Lista de exercícios gerada:', content);
+      } else {
+        content = activityGenerationService.generateActivityContent(activityType, formData);
+        console.log('📄 Conteúdo geral gerado:', content);
+      }
+
+      if (!content) {
+        throw new Error('Falha na geração de conteúdo');
+      }
+
+      setGeneratedContent(content);
+      
+      console.log('✅ Geração concluída com sucesso:', {
+        type: activityType,
+        contentType: typeof content,
+        hasQuestions: content.questions ? `${content.questions.length} questões` : 'Sem questões'
+      });
+
+      return {
+        success: true,
+        content
+      };
+
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido na geração';
+      console.error('❌ Erro na geração:', errorMessage);
       setError(errorMessage);
-      throw err;
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
     } finally {
       setIsGenerating(false);
     }
-  }, [activityId]);
+  };
 
-  const loadSavedContent = useCallback(() => {
-    try {
-      const saved = localStorage.getItem(`activity_${activityId}`);
-      if (saved) {
-        const parsedContent = JSON.parse(saved);
-        setGeneratedContent(parsedContent);
-        return parsedContent;
-      }
-    } catch (err) {
-      console.error('Erro ao carregar conteúdo salvo:', err);
-    }
-    return null;
-  }, [activityId]);
+  const getStoredActivity = (activityId: string) => {
+    console.log('📖 Buscando atividade armazenada:', activityId);
+    return autoBuildService.getActivityContent(activityId);
+  };
 
-  const clearContent = useCallback(() => {
+  const clearGeneratedContent = () => {
+    console.log('🧹 Limpando conteúdo gerado');
     setGeneratedContent(null);
-    localStorage.removeItem(`activity_${activityId}`);
-  }, [activityId]);
+    setError(null);
+  };
 
   return {
     generateActivity,
-    loadSavedContent,
-    clearContent,
+    getStoredActivity,
+    clearGeneratedContent,
     isGenerating,
-    error,
-    generatedContent
+    generatedContent,
+    error
   };
 };

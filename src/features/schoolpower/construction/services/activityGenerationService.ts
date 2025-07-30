@@ -1,173 +1,159 @@
 import { ActivityFormData } from '../types/ActivityTypes';
 
-interface GeneratedActivity {
+export interface Question {
   id: string;
+  number: number;
+  text: string;
+  type: 'multiple-choice' | 'essay' | 'true-false';
+  difficulty: string;
+  points: number;
+  options?: Array<{
+    id: string;
+    text: string;
+    isCorrect: boolean;
+  }>;
+  expectedLength?: string;
+  correctAnswer?: boolean | string;
+  explanation?: string;
+}
+
+export interface ExerciseListData {
   title: string;
-  content: string;
-  type: string;
-  metadata: Record<string, any>;
-  previewData?: any;
+  description: string;
+  subject: string;
+  theme: string;
+  schoolYear: string;
+  numberOfQuestions: number;
+  difficultyLevel: string;
+  questionModel: string;
+  sources: string;
+  questions: Question[];
+  metadata: {
+    generatedAt: string;
+    activityType: string;
+  };
 }
 
 export class ActivityGenerationService {
-  private static instance: ActivityGenerationService;
+  private generateQuestions(formData: ActivityFormData): Question[] {
+    const numberOfQuestions = parseInt(formData.customFields?.['Quantidade de Questões'] || '10');
+    const tema = formData.customFields?.['Tema'] || formData.title || 'Tema geral';
+    const disciplina = formData.customFields?.['Disciplina'] || 'Disciplina';
+    const nivelDificuldade = formData.customFields?.['Nível de Dificuldade'] || 'Médio';
+    const tipoQuestao = formData.customFields?.['Tipo de Questão'] || 'multiple-choice';
 
-  private constructor() {}
+    const questions: Question[] = [];
 
-  static getInstance(): ActivityGenerationService {
-    if (!ActivityGenerationService.instance) {
-      ActivityGenerationService.instance = new ActivityGenerationService();
-    }
-    return ActivityGenerationService.instance;
-  }
+    for (let i = 0; i < numberOfQuestions; i++) {
+      const questionNumber = i + 1;
 
-  async generateActivity(activityId: string, formData: ActivityFormData): Promise<GeneratedActivity> {
-    console.log(`🎯 Gerando atividade: ${activityId}`, formData);
-
-    // Validar dados de entrada
-    if (!formData.title || !formData.description) {
-      throw new Error('Dados de formulário incompletos');
-    }
-
-    // Simular processamento realista
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-
-    // Gerar conteúdo específico baseado no tipo
-    const content = this.generateContentByType(activityId, formData);
-    const previewData = this.generatePreviewData(activityId, formData);
-
-    // Mock da atividade gerada
-    const generatedActivity: GeneratedActivity = {
-      id: activityId,
-      title: formData.title,
-      content,
-      type: activityId,
-      previewData,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        customFields: formData.customFields || {},
-        formData: formData,
-        status: 'generated'
+      if (tipoQuestao === 'multiple-choice' || tipoQuestao === 'Múltipla Escolha') {
+        questions.push({
+          id: `q${questionNumber}`,
+          number: questionNumber,
+          text: `${questionNumber}. Com base no tema "${tema}" em ${disciplina}, analise a seguinte situação problema e assinale a alternativa correta:`,
+          type: 'multiple-choice',
+          difficulty: nivelDificuldade,
+          points: 1,
+          options: [
+            {
+              id: 'a',
+              text: `Primeira alternativa relacionada ao ${tema}`,
+              isCorrect: true
+            },
+            {
+              id: 'b',
+              text: `Segunda alternativa sobre ${tema}`,
+              isCorrect: false
+            },
+            {
+              id: 'c',
+              text: `Terceira alternativa envolvendo ${tema}`,
+              isCorrect: false
+            },
+            {
+              id: 'd',
+              text: `Quarta alternativa referente ao ${tema}`,
+              isCorrect: false
+            }
+          ],
+          explanation: `Esta questão avalia o conhecimento sobre ${tema} no contexto de ${disciplina}.`
+        });
+      } else if (tipoQuestao === 'essay' || tipoQuestao === 'Dissertativa') {
+        questions.push({
+          id: `q${questionNumber}`,
+          number: questionNumber,
+          text: `${questionNumber}. Desenvolva uma resposta dissertativa sobre "${tema}" em ${disciplina}, explicando os principais conceitos e suas aplicações.`,
+          type: 'essay',
+          difficulty: nivelDificuldade,
+          points: 2,
+          expectedLength: 'Entre 5 a 10 linhas',
+          explanation: `Esta questão avalia a capacidade de argumentação e conhecimento sobre ${tema}.`
+        });
+      } else if (tipoQuestao === 'true-false' || tipoQuestao === 'Verdadeiro/Falso') {
+        questions.push({
+          id: `q${questionNumber}`,
+          number: questionNumber,
+          text: `${questionNumber}. A seguinte afirmação sobre ${tema} em ${disciplina} está correta: "Esta é uma afirmação relacionada ao conteúdo de ${tema}."`,
+          type: 'true-false',
+          difficulty: nivelDificuldade,
+          points: 1,
+          correctAnswer: true,
+          explanation: `Esta questão verifica o entendimento sobre conceitos básicos de ${tema}.`
+        });
       }
-    };
-
-    console.log('✅ Atividade gerada com sucesso:', generatedActivity);
-
-    // Simular salvamento no localStorage para cada atividade
-    this.saveActivityData(activityId, generatedActivity);
-
-    return generatedActivity;
-  }
-
-  private saveActivityData(activityId: string, activity: GeneratedActivity): void {
-    try {
-      // Salvar dados da atividade gerada
-      const activityKey = `schoolpower_activity_${activityId}`;
-      localStorage.setItem(activityKey, JSON.stringify(activity));
-
-      // Salvar dados para pré-visualização
-      const previewKey = `schoolpower_preview_${activityId}`;
-      localStorage.setItem(previewKey, JSON.stringify(activity.previewData));
-
-      console.log(`💾 Dados da atividade ${activityId} salvos com sucesso`);
-    } catch (error) {
-      console.error(`❌ Erro ao salvar atividade ${activityId}:`, error);
-    }
-  }
-
-  private generateContentByType(activityId: string, formData: ActivityFormData): string {
-    switch (activityId) {
-      case 'lista-exercicios':
-        return this.generateExerciseListContent(formData);
-      case 'prova':
-        return this.generateExamContent(formData);
-      case 'jogos-educativos':
-        return this.generateGameContent(formData);
-      case 'sequencia-didatica':
-        return this.generateSequenceContent(formData);
-      case 'mapa-mental':
-        return this.generateMindMapContent(formData);
-      default:
-        return this.generateDefaultContent(formData);
-    }
-  }
-
-  private generatePreviewData(activityId: string, formData: ActivityFormData): any {
-    const baseData = {
-      id: activityId,
-      title: formData.title,
-      description: formData.description,
-      type: activityId,
-      generatedAt: new Date().toISOString(),
-      customFields: formData.customFields || {}
-    };
-
-    switch (activityId) {
-      case 'lista-exercicios':
-        return {
-          ...baseData,
-          questions: this.generateQuestions(formData),
-          totalQuestions: parseInt(formData.customFields?.['Quantidade de Questões'] || '10')
-        };
-      default:
-        return baseData;
-    }
-  }
-
-  private generateQuestions(formData: ActivityFormData): any[] {
-    const quantidade = parseInt(formData.customFields?.['Quantidade de Questões'] || '10');
-    const tema = formData.customFields?.['Tema'] || 'Tema geral';
-    const questions = [];
-
-    for (let i = 1; i <= quantidade; i++) {
-      questions.push({
-        id: i,
-        question: `Questão ${i} sobre ${tema}`,
-        options: [
-          'Alternativa A',
-          'Alternativa B', 
-          'Alternativa C',
-          'Alternativa D'
-        ],
-        correctAnswer: 0,
-        explanation: `Explicação da questão ${i}`
-      });
     }
 
     return questions;
   }
 
-  private generateExerciseListContent(formData: ActivityFormData): string {
-    const quantidade = formData.customFields?.['Quantidade de Questões'] || '10';
-    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+  public generateExerciseList(formData: ActivityFormData): ExerciseListData {
+    console.log('🔄 Gerando Lista de Exercícios:', formData);
+
+    const numberOfQuestions = parseInt(formData.customFields?.['Quantidade de Questões'] || '10');
+    const tema = formData.customFields?.['Tema'] || formData.title || 'Tema geral';
     const disciplina = formData.customFields?.['Disciplina'] || 'Disciplina';
-    const anoEscolaridade = formData.customFields?.['Ano de Escolaridade'] || 'Ano não especificado';
+    const anoEscolaridade = formData.customFields?.['Ano de Escolaridade'] || 'Não especificado';
     const nivelDificuldade = formData.customFields?.['Nível de Dificuldade'] || 'Médio';
+    const modeloQuestao = formData.customFields?.['Modelo de Questão'] || 'Múltipla Escolha';
+    const fontes = formData.customFields?.['Fontes e Referências'] || 'Material didático padrão';
 
-    return `# ${formData.title}
+    const questions = this.generateQuestions(formData);
 
-## Informações da Atividade
-- **Disciplina**: ${disciplina}
-- **Tema**: ${tema}
-- **Ano de Escolaridade**: ${anoEscolaridade}
-- **Nível de Dificuldade**: ${nivelDificuldade}
-- **Quantidade de Questões**: ${quantidade}
+    const exerciseListData: ExerciseListData = {
+      title: formData.title,
+      description: formData.description,
+      subject: disciplina,
+      theme: tema,
+      schoolYear: anoEscolaridade,
+      numberOfQuestions: numberOfQuestions,
+      difficultyLevel: nivelDificuldade,
+      questionModel: modeloQuestao,
+      sources: fontes,
+      questions: questions,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        activityType: 'lista-exercicios'
+      }
+    };
 
-## Descrição
-${formData.description}
+    console.log('✅ Lista de Exercícios gerada:', exerciseListData);
+    return exerciseListData;
+  }
 
-### Lista de Exercícios
+  public generateActivityContent(activityType: string, formData: ActivityFormData): any {
+    console.log('🎯 Gerando conteúdo para:', activityType, formData);
 
-${Array.from({length: parseInt(quantidade)}, (_, i) => `
-**${i + 1}.** Questão sobre ${tema} - nível ${nivelDificuldade}
-   a) Alternativa A
-   b) Alternativa B  
-   c) Alternativa C
-   d) Alternativa D
-`).join('\n')}
+    switch (activityType) {
+      case 'lista-exercicios':
+        return this.generateExerciseList(formData);
 
----
-*Atividade gerada automaticamente pelo School Power*`;
+      case 'prova':
+        return this.generateExamContent(formData);
+
+      default:
+        return this.generateDefaultContent(formData);
+    }
   }
 
   private generateExamContent(formData: ActivityFormData): string {
@@ -180,118 +166,43 @@ ${Array.from({length: parseInt(quantidade)}, (_, i) => `
 ## Avaliação - ${tema}
 - **Total de Questões**: ${quantidade}
 - **Tempo de Duração**: ${tempoDuracao}
+- **Disciplina**: ${formData.customFields?.['Disciplina'] || 'Não especificado'}
 
-### Instruções:
-- Leia atentamente cada questão
-- Marque apenas uma alternativa por questão
-- Use caneta azul ou preta
+## Descrição
+${formData.description}
 
-### Questões:
+### Questões da Prova
 
 ${Array.from({length: parseInt(quantidade)}, (_, i) => `
-**Questão ${i + 1}**: Sobre ${tema}...
-a) Alternativa A
-b) Alternativa B
-c) Alternativa C  
-d) Alternativa D
+**${i + 1}.** Questão sobre ${tema} - nível ${formData.customFields?.['Nível de Dificuldade'] || 'Médio'}
+   a) Alternativa A
+   b) Alternativa B  
+   c) Alternativa C
+   d) Alternativa D
 `).join('\n')}
 
 ---
 *Prova gerada automaticamente pelo School Power*`;
   }
 
-  private generateGameContent(formData: ActivityFormData): string {
-    const tema = formData.customFields?.['Tema'] || 'Tema geral';
-    const tipoJogo = formData.customFields?.['Tipo de Jogo'] || 'Quiz Interativo';
-    const nivelDificuldade = formData.customFields?.['Nível de Dificuldade'] || 'Médio';
-
-    return `# ${formData.title}
-
-## Jogo Educativo - ${tipoJogo}
-- **Tema**: ${tema}
-- **Nível**: ${nivelDificuldade}
-
-### Objetivo do Jogo:
-Aprender sobre ${tema} de forma divertida e interativa.
-
-### Regras:
-1. Responda às perguntas corretamente para ganhar pontos
-2. Cada acerto vale 10 pontos
-3. Tempo limite por questão: 30 segundos
-
-### Descrição:
-${formData.description}
-
----
-*Jogo gerado automaticamente pelo School Power*`;
-  }
-
-  private generateSequenceContent(formData: ActivityFormData): string {
-    const tema = formData.customFields?.['Tema'] || 'Tema geral';
-    const disciplina = formData.customFields?.['Disciplina'] || 'Disciplina';
-
-    return `# ${formData.title}
-
-## Sequência Didática - ${tema}
-**Disciplina**: ${disciplina}
-
-### Objetivos:
-- Compreender os conceitos de ${tema}
-- Aplicar conhecimentos em situações práticas
-
-### Etapas da Sequência:
-
-1. **Problematização**
-2. **Desenvolvimento**  
-3. **Sistematização**
-4. **Avaliação**
-
-### Descrição:
-${formData.description}
-
----
-*Sequência didática gerada automaticamente pelo School Power*`;
-  }
-
-  private generateMindMapContent(formData: ActivityFormData): string {
-    const tema = formData.customFields?.['Tema'] || 'Tema geral';
-
-    return `# ${formData.title}
-
-## Mapa Mental - ${tema}
-
-### Conceito Central: ${tema}
-
-### Ramificações:
-- **Conceitos Fundamentais**
-- **Aplicações Práticas**
-- **Exemplos**
-- **Exercícios**
-
-### Descrição:
-${formData.description}
-
----
-*Mapa mental gerado automaticamente pelo School Power*`;
-  }
-
   private generateDefaultContent(formData: ActivityFormData): string {
     return `# ${formData.title}
 
-## Descrição:
+## Descrição
 ${formData.description}
 
-### Conteúdo da Atividade:
-Atividade personalizada gerada com base nos dados fornecidos.
+### Conteúdo da Atividade
 
-### Campos Personalizados:
-${Object.entries(formData.customFields || {})
-  .map(([key, value]) => `- **${key}**: ${value}`)
-  .join('\n')}
+Esta atividade foi gerada automaticamente com base nos parâmetros fornecidos.
+
+**Informações:**
+- **Tipo**: ${formData.type || 'Atividade geral'}
+- **Dificuldade**: ${formData.customFields?.['Nível de Dificuldade'] || 'Não especificado'}
+- **Disciplina**: ${formData.customFields?.['Disciplina'] || 'Não especificado'}
 
 ---
 *Atividade gerada automaticamente pelo School Power*`;
   }
 }
 
-export const activityGenerationService = ActivityGenerationService.getInstance();
+export const activityGenerationService = new ActivityGenerationService();

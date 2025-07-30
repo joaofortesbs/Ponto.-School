@@ -1,4 +1,210 @@
 import { ActivityFormData, GeneratedActivity, ActivityType } from '../types/ActivityTypes';
+import { activityGenerationService, ExerciseListData } from '../services/activityGenerationService';
+
+export const generateExerciseList = (data: ActivityFormData): ExerciseListData => {
+  console.log('🎯 Gerando Lista de Exercícios via estratégia:', data);
+  return activityGenerationService.generateExerciseList(data);
+};
+
+export const generateExam = (data: ActivityFormData): string => {
+  const quantidade = data.customFields?.['Quantidade de Questões'] || '20';
+  const tema = data.customFields?.['Tema'] || 'Tema geral';
+  const tempoDuracao = data.customFields?.['Tempo de Duração'] || '60 minutos';
+  const disciplina = data.customFields?.['Disciplina'] || 'Disciplina';
+  const nivelDificuldade = data.customFields?.['Nível de Dificuldade'] || 'Médio';
+
+  return `# ${data.title}
+
+## Prova - ${tema}
+**Disciplina:** ${disciplina}
+**Duração:** ${tempoDuracao}
+**Total de Questões:** ${quantidade}
+**Nível:** ${nivelDificuldade}
+
+## Descrição
+${data.description}
+
+### Questões
+
+**Questão 1** (10 pontos)
+Analise o conceito de ${tema} e responda:
+a) Conceito básico
+b) Aplicação prática
+c) Características principais
+d) Importância no contexto de ${disciplina}
+
+**Questão 2** (15 pontos)
+Desenvolva uma análise crítica sobre ${tema}, considerando:
+- Aspectos teóricos fundamentais
+- Aplicações práticas em ${disciplina}
+- Relevância no contexto atual
+
+**Questão 3** (15 pontos)
+Com base no estudo de ${tema}, resolva o seguinte problema:
+[Problema contextualizado relacionado ao tema]
+
+**Questão 4** (20 pontos)
+Desenvolva uma análise crítica sobre ${tema}, apresentando argumentos fundamentados baseados em ${data.customFields?.['Fontes e Referências'] || 'fontes confiáveis'}.
+
+## Critérios de Avaliação
+${data.customFields?.['Critérios de Avaliação'] || `
+- Objetivas: Resposta correta = pontuação total
+- Dissertativas: Conteúdo (60%), Organização (25%), Clareza (15%)
+`}
+
+## Materiais de Apoio
+${data.customFields?.['Materiais de Apoio'] || 'Material didático padrão da disciplina'}
+
+## Objetivos de Aprendizagem
+${data.customFields?.['Objetivos de Aprendizagem'] || `Avaliar o conhecimento dos estudantes sobre ${tema}`}
+  `;
+};
+
+export const generateGuidedReview = (data: ActivityFormData): string => {
+  const tema = data.customFields?.['Tema'] || 'Tema geral';
+  const disciplina = data.customFields?.['Disciplina'] || 'Disciplina';
+  const duracao = data.customFields?.['Duração'] || '45 minutos';
+
+  return `# ${data.title}
+
+## Revisão Guiada - ${tema}
+**Disciplina:** ${disciplina}
+**Duração estimada:** ${duracao}
+
+## Descrição
+${data.description}
+
+### Roteiro de Revisão
+
+#### 1. Conceitos Fundamentais
+- Definição de ${tema}
+- Características principais
+- Aplicações básicas
+
+#### 2. Desenvolvimento Teórico
+- Princípios fundamentais
+- Relações conceituais
+- Exemplos práticos
+
+#### 3. Aplicações e Exercícios
+- Problemas resolvidos
+- Exercícios de fixação
+- Casos práticos
+
+#### 4. Síntese e Conclusão
+- Resumo dos pontos principais
+- Conexões interdisciplinares
+- Aplicações futuras
+
+## Atividades de Fixação
+1. Questões conceituais
+2. Exercícios práticos
+3. Estudos de caso
+4. Reflexões críticas
+
+---
+*Revisão guiada gerada automaticamente pelo School Power*`;
+};
+
+export const generateEducationalGames = (data: ActivityFormData): string => {
+  const tema = data.customFields?.['Tema'] || 'Tema geral';
+  const faixaEtaria = data.customFields?.['Faixa Etária'] || 'Não especificado';
+  const numeroJogadores = data.customFields?.['Número de Jogadores'] || '2-4 jogadores';
+
+  return `# ${data.title}
+
+## Jogo Educativo - ${tema}
+**Faixa etária:** ${faixaEtaria}
+**Número de jogadores:** ${numeroJogadores}
+
+## Descrição
+${data.description}
+
+### Objetivo do Jogo
+Desenvolver conhecimentos sobre ${tema} através de atividades lúdicas e interativas.
+
+### Materiais Necessários
+- Cartas de perguntas
+- Tabuleiro temático
+- Peças de jogo
+- Manual de instruções
+
+### Regras do Jogo
+1. **Preparação:** Cada jogador escolhe uma peça
+2. **Início:** O jogo começa com uma pergunta sobre ${tema}
+3. **Desenvolvimento:** Os jogadores avançam respondendo questões
+4. **Vitória:** Primeiro a completar o circuito vence
+
+### Questões Exemplo
+1. O que é ${tema}?
+2. Qual a importância de ${tema}?
+3. Como ${tema} se aplica no dia a dia?
+
+---
+*Jogo educativo gerado automaticamente pelo School Power*`;
+};
+
+export const generateDidacticSequence = (data: ActivityFormData): string => {
+  const tema = data.customFields?.['Tema'] || 'Tema geral';
+  const numeroAulas = data.customFields?.['Número de Aulas'] || '4 aulas';
+  const duracao = data.customFields?.['Duração por Aula'] || '50 minutos';
+
+  return `# ${data.title}
+
+## Sequência Didática - ${tema}
+**Número de aulas:** ${numeroAulas}
+**Duração por aula:** ${duracao}
+
+## Descrição
+${data.description}
+
+### Aula 1: Introdução ao ${tema}
+**Objetivos:**
+- Apresentar o conceito de ${tema}
+- Identificar conhecimentos prévios
+- Despertar interesse pelo tema
+
+**Atividades:**
+- Brainstorming inicial
+- Apresentação conceitual
+- Discussão em grupos
+
+### Aula 2: Desenvolvimento Teórico
+**Objetivos:**
+- Aprofundar conceitos fundamentais
+- Estabelecer relações conceituais
+- Desenvolver pensamento crítico
+
+**Atividades:**
+- Exposição dialogada
+- Análise de casos
+- Exercícios práticos
+
+### Aula 3: Aplicações Práticas
+**Objetivos:**
+- Aplicar conhecimentos adquiridos
+- Resolver problemas contextualizados
+- Desenvolver habilidades específicas
+
+**Atividades:**
+- Laboratório/experimentos
+- Projetos em grupo
+- Estudos de caso
+
+### Aula 4: Síntese e Avaliação
+**Objetivos:**
+- Consolidar aprendizagens
+- Avaliar conhecimentos adquiridos
+- Planejar próximos passos
+
+**Atividades:**
+- Apresentações dos grupos
+- Avaliação formativa
+- Feedback e reflexão
+
+---
+*Sequência didática gerada automaticamente pelo School Power*`;
+};
 
 export const generateTest = (data: ActivityFormData): string => {
   return `
@@ -61,29 +267,6 @@ ${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`
   `;
 };
 
-export const generateExerciseList = (data: ActivityFormData): string => {
-  // Gerar questões baseadas nos dados do usuário
-  const questions = generateQuestionsBasedOnUserData(data);
-
-  return JSON.stringify({
-    title: data.title,
-    description: data.description,
-    subject: data.subject,
-    theme: data.theme,
-    schoolYear: data.schoolYear,
-    numberOfQuestions: parseInt(data.numberOfQuestions || '10'),
-    difficultyLevel: data.difficultyLevel,
-    questionModel: data.questionModel,
-    sources: data.sources,
-    questions: questions,
-    metadata: {
-      generatedAt: new Date().toISOString(),
-      activityType: 'lista-exercicios'
-    }
-  }, null, 2);
-};
-
-// Função para gerar questões baseadas nos dados do usuário
 const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
   const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
   const questions = [];
@@ -356,68 +539,10 @@ export const generateActivityByType = (type: ActivityType, data: ActivityFormDat
 
   switch (type) {
     case 'prova':
-      content = generateTest(data);
+      content = generateExam(data);
       break;
     case 'lista-exercicios':
-      const numberOfQuestions = parseInt(data.numberOfQuestions) || 5;
-      const questions = [];
-
-      // Gerar questões baseadas no tema e disciplina
-      for (let i = 1; i <= numberOfQuestions; i++) {
-        const isMultipleChoice = data.questionModel?.toLowerCase().includes('múltipla') || 
-                               data.questionModel?.toLowerCase().includes('escolha');
-
-        const question = {
-          id: `q${i}`,
-          question: `Questão ${i} sobre ${data.theme || 'o conteúdo'}: ` +
-                   `Esta é uma questão de ${data.subject || 'Português'} para ${data.schoolYear || '6º ano'} ` +
-                   `com nível de dificuldade ${data.difficultyLevel || 'médio'}. ` +
-                   `Desenvolva um questionamento que explore o conhecimento sobre ${data.theme || 'o tema proposto'}.`,
-          type: data.questionModel || (isMultipleChoice ? 'Múltipla Escolha' : 'Dissertativa'),
-          difficulty: data.difficultyLevel || 'Médio',
-          subject: data.subject || 'Português',
-          theme: data.theme || ''
-        };
-
-        // Adicionar alternativas se for múltipla escolha
-        if (isMultipleChoice) {
-          question.options = [
-            `Primeira alternativa relacionada a ${data.theme || 'o tema'}`,
-            `Segunda alternativa sobre ${data.subject || 'a disciplina'}`,
-            `Terceira opção contextualizada para ${data.schoolYear || 'o ano escolar'}`,
-            `Quarta alternativa com nível ${data.difficultyLevel || 'médio'}`
-          ];
-          question.answer = 'A';
-          question.correctAnswer = question.options[0];
-        } else {
-          question.answer = `Resposta esperada para a questão ${i}, demonstrando compreensão sobre ${data.theme || 'o tema'}.`;
-        }
-
-        question.explanation = `Explicação detalhada para a questão ${i}: ` +
-                              `Esta questão visa avaliar o conhecimento em ${data.subject || 'Português'} ` +
-                              `sobre ${data.theme || 'o tema proposto'}, adequada para ${data.schoolYear || '6º ano'} ` +
-                              `com nível de dificuldade ${data.difficultyLevel || 'médio'}.`;
-
-        questions.push(question);
-      }
-
-      content = JSON.stringify({
-        title: data.title,
-        description: data.description,
-        questions,
-        exercicios: questions, // Alias para compatibilidade
-        metadata: {
-          subject: data.subject,
-          theme: data.theme,
-          schoolYear: data.schoolYear,
-          difficulty: data.difficultyLevel,
-          questionModel: data.questionModel,
-          estimatedTime: `${numberOfQuestions * 4} minutos`,
-          totalQuestions: numberOfQuestions,
-          generatedAt: new Date().toISOString(),
-          type: 'lista-exercicios'
-        }
-      }, null, 2);
+      content = JSON.stringify(generateExerciseList(data), null, 2);
       break;
     case 'jogo':
       content = generateGame(data);

@@ -579,6 +579,46 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     }
   };
 
+  const handlePreview = () => {
+    console.log('🔍 Preview - Activity Data:', activity);
+    console.log('🔍 Preview - Generated Content:', generatedContent);
+
+    let contentToPreview = null;
+
+    // Prioridade: conteúdo gerado recentemente
+    if (generatedContent) {
+      contentToPreview = generatedContent;
+      console.log('📖 Usando conteúdo gerado recentemente');
+    } 
+    // Fallback: conteúdo armazenado
+    else if (activity?.isBuilt) {
+      const storedContent = localStorage.getItem(`activity_${activity.id}`);
+      if (storedContent) {
+          try {
+              contentToPreview = JSON.parse(storedContent);
+              console.log('📚 Usando conteúdo armazenado');
+          } catch (error) {
+              console.error('Erro ao analisar conteúdo armazenado:', error);
+          }
+      }
+    }
+
+    if (contentToPreview) {
+      setGeneratedContent(contentToPreview); // Use setGeneratedContent instead of setPreviewContent
+      setIsContentLoaded(true);
+      console.log('✅ Conteúdo definido para preview:', {
+        type: typeof contentToPreview,
+        hasQuestions: contentToPreview.questions ? contentToPreview.questions.length : 'N/A'
+      });
+    } else {
+      console.warn('⚠️ Nenhum conteúdo disponível para preview');
+      setGeneratedContent(null);
+      setIsContentLoaded(false);
+    }
+
+    setActiveTab('preview');
+  };
+
 
 
   // Agente Interno de Execução - Automação da Construção de Atividades
@@ -670,7 +710,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setActiveTab('preview')}
+                  onClick={() => handlePreview()}
                   className={`text-white hover:bg-white/20 rounded-lg px-3 py-2 transition-all duration-200 flex items-center gap-2 ${
                     activeTab === 'preview' ? 'bg-white/20 shadow-md' : ''
                   }`}
