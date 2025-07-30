@@ -1,0 +1,88 @@
+Automação da Construção de Atividades no School Power (Agente Interno de Ação)
+
+Você é responsável por implementar uma automação interna dentro da plataforma School Power, sem alterar nenhuma parte visual ou estrutural da interface atual.
+
+🎯 OBJETIVO
+Criar um agente automático interno que acione o botão “Construir Atividade” assim que todos os campos da atividade forem preenchidos automaticamente pela IA (dentro do modal “Editar Materiais”).
+
+Esse botão já existe e funciona corretamente quando clicado manualmente, portanto, sua função é apenas automatizar essa ação, sem modificar a interface.
+
+🧠 REGRAS DE LÓGICA
+O sistema já possui uma interface que exibe:
+
+Modal “Editar Materiais” com os campos preenchíveis
+
+Botão “Construir Atividade” funcional
+
+Seção de mini-cards (cards de atividades dentro do plano de ação)
+
+Botão “Editar” já funcional e deve continuar funcionando
+
+Sua tarefa:
+
+✅ Criar um “Agente Interno de Execução” invisível ao usuário, que funcione assim:
+
+Detectar automaticamente quando TODOS os campos obrigatórios do modal “Editar Materiais” estiverem preenchidos (inclusive os personalizados conforme o tipo da atividade).
+
+Após a verificação, acionar automaticamente a função interna associada ao botão “Construir Atividade”, simulando exatamente o clique do usuário.
+
+Fechar o modal normalmente (caso já seja parte do fluxo interno da função atual).
+
+Garantir que a atividade gerada apareça corretamente na mini-interface de pré-visualização (dentro da aba Plano de Ação).
+
+🛠 IMPLEMENTAÇÃO SUGERIDA (comportamento esperado)
+Componente: EditMaterialModal.tsx (ou similar)
+ts
+Copiar
+Editar
+useEffect(() => {
+  const todosCamposPreenchidos = verificarCamposPreenchidos(materialData);
+  if (todosCamposPreenchidos) {
+    const delay = setTimeout(() => {
+      construirAtividade(materialData); // mesma função acionada pelo botão "Construir Atividade"
+    }, 300); // pequena pausa para garantir sincronização
+
+    return () => clearTimeout(delay);
+  }
+}, [materialData]); // sempre que os dados forem atualizados
+🔁 Essa automação interna só deve ocorrer quando a origem do preenchimento for a IA.
+Você pode controlar isso com um campo auxiliar como:
+
+ts
+Copiar
+Editar
+const preenchidoPorIA = materialData.preenchidoAutomaticamente === true;
+E condicionar o efeito:
+
+ts
+Copiar
+Editar
+if (todosCamposPreenchidos && preenchidoPorIA) {
+  construirAtividade(materialData);
+}
+🧷 GARANTIAS DE FUNCIONAMENTO
+O botão “Construir Atividade” continua visível, mas será acionado automaticamente pela lógica interna.
+
+O modal de edição será fechado automaticamente após a construção (se já estiver implementado).
+
+O botão “Editar” nos mini-cards continuará funcionando e carregará os campos normalmente para edição manual.
+
+Nenhum componente visual será alterado.
+
+Nenhum fluxo do usuário será quebrado.
+
+O comportamento automático só acontecerá quando a atividade for gerada automaticamente pela IA.
+
+✅ STATUS DE CONCLUSÃO
+A funcionalidade estará concluída quando:
+
+A IA gerar as atividades
+
+Os campos forem preenchidos automaticamente
+
+O botão “Construir Atividade” for acionado automaticamente
+
+A atividade aparecer já gerada na pré-visualização
+
+O botão “Editar” do mini-card carregar o modal corretamente
+
