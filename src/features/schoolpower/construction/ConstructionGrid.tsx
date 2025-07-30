@@ -1,170 +1,163 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ConstructionCard } from './ConstructionCard';
-import { EditActivityModal } from './EditActivityModal';
-import { useConstructionActivities } from './useConstructionActivities';
-import { useEditActivityModal } from './useEditActivityModal';
-import { ConstructionActivity } from './types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Building2 } from 'lucide-react';
+import { ConstructionActivity } from './useConstructionActivities';
+import { ProgressCircle } from './ProgressCircle';
+import { Eye, Settings, Play, CheckCircle, AlertCircle, Bot } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface ConstructionGridProps {
-  approvedActivities: any[];
-  handleEditActivity?: (activity: any) => void;
+  activities: ConstructionActivity[];
+  onEdit: (activity: ConstructionActivity) => void;
+  onPreview: (activity: ConstructionActivity) => void;
+  isAutoBuilding?: boolean;
 }
 
-export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
-  console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
+export function ConstructionGrid({ activities, onEdit, onPreview, isAutoBuilding }: ConstructionGridProps) {
+  console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', activities);
 
-  const { activities, loading } = useConstructionActivities(approvedActivities);
-  const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
+  const getStatusIcon = (status: string, autoBuilt?: boolean) => {
+    if (autoBuilt) {
+      return <Bot className="w-4 h-4 text-purple-500" />;
+    }
 
-  console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
-
-  const handleEditActivity = (activity: ConstructionActivity) => {
-    console.log('🔧 Abrindo modal para editar atividade:', activity);
-    
-    if (externalHandleEditActivity) {
-      // Usar a função externa se disponível
-      externalHandleEditActivity(activity);
-    } else {
-      // Fallback para a lógica interna
-      openModal(activity);
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'building':
+        return <Play className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Settings className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const handleView = (id: string) => {
-    console.log('👁️ Visualizando atividade:', id);
-    // TODO: Implementar visualização da atividade
+  const getStatusText = (status: string, autoBuilt?: boolean) => {
+    if (autoBuilt && status === 'completed') {
+      return 'Auto-construída';
+    }
+
+    switch (status) {
+      case 'completed':
+        return 'Concluída';
+      case 'building':
+        return 'Construindo...';
+      case 'error':
+        return 'Erro';
+      default:
+        return 'Pendente';
+    }
   };
 
-  const handleShare = (id: string) => {
-    console.log('📤 Compartilhando atividade:', id);
-    // TODO: Implementar funcionalidade de compartilhamento
+  const getStatusColor = (status: string, autoBuilt?: boolean) => {
+    if (autoBuilt) {
+      return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
+    }
+
+    switch (status) {
+      case 'completed':
+        return 'bg-green-500/10 text-green-400 border-green-500/20';
+      case 'building':
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'error':
+        return 'bg-red-500/10 text-red-400 border-red-500/20';
+      default:
+        return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+    }
   };
-
-  const handleEdit = (activityId: string) => {
-    console.log('Editar materiais da atividade:', activityId);
-    // TODO: Implementar lógica de edição de materiais
-  };
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {/* Header Skeleton */}
-        <div className="flex items-center gap-3 mb-6">
-          <Skeleton className="w-8 h-8 rounded-lg" />
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-72" />
-          </div>
-        </div>
-
-        {/* Grid Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, index) => (
-            <div key={index} className="rounded-xl border-2 border-gray-200 dark:border-gray-700 p-4 space-y-4">
-              <Skeleton className="h-32 w-full rounded-lg" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-1">
-                  <Skeleton className="h-7 w-8" />
-                  <Skeleton className="h-7 w-8" />
-                  <Skeleton className="h-7 w-8" />
-                </div>
-                <Skeleton className="h-6 w-16 rounded-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!approvedActivities || approvedActivities.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Nenhuma atividade para construir
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-          Aprove algumas atividades no Plano de Ação para começar a construí-las aqui.
-        </p>
-      </div>
-    );
-  }
-
-  if (activities.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-gray-400" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Processando atividades...
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-          As atividades aprovadas estão sendo preparadas para construção.
-        </p>
-      </div>
-    );
-  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-          <Building2 className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            {activities.length} {activities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-          </p>
-        </div>
-      </div>
+    <div className="space-y-4">
+      {/* Banner de Auto-construção */}
+      {isAutoBuilding && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-4"
+        >
+          <div className="flex items-center gap-3">
+            <Bot className="w-5 h-5 text-purple-400 animate-pulse" />
+            <div>
+              <h4 className="text-sm font-medium text-purple-400">Auto-construção Ativa</h4>
+              <p className="text-xs text-purple-300/70">
+                O sistema está construindo automaticamente todas as atividades aprovadas...
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity) => (
-          <ConstructionCard
+      {/* Grid de Atividades */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {activities.map((activity, index) => (
+          <motion.div
             key={activity.id}
-            id={activity.id}
-            title={activity.title}
-            description={activity.description}
-            progress={activity.progress}
-            type={activity.type}
-            status={activity.status}
-            onEdit={() => {
-              console.log('🎯 Abrindo modal para atividade:', activity.title);
-              console.log('🎯 Dados da atividade:', activity);
-              openModal(activity);
-            }}
-            onView={handleView}
-            onShare={handleShare}
-          />
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className={`bg-gray-800/50 rounded-xl border border-gray-700 p-6 hover:border-orange-500/50 transition-all duration-300 ${
+              activity.status === 'building' ? 'ring-2 ring-blue-500/20 animate-pulse' : ''
+            }`}
+          >
+            {/* Header da Atividade */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  {activity.title}
+                </h3>
+                <p className="text-gray-400 text-sm line-clamp-3">
+                  {activity.description}
+                </p>
+              </div>
+              <ProgressCircle progress={activity.progress} size={40} />
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex items-center gap-2 mb-4">
+              {getStatusIcon(activity.status, activity.autoBuilt)}
+              <Badge className={`${getStatusColor(activity.status, activity.autoBuilt)} border`}>
+                {getStatusText(activity.status, activity.autoBuilt)}
+              </Badge>
+            </div>
+
+            {/* Botões de Ação */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(activity)}
+                disabled={activity.status === 'building'}
+                className="flex-1 bg-orange-500/10 border-orange-500/20 text-orange-400 hover:bg-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Editar Materiais
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPreview(activity)}
+                disabled={activity.status === 'building'}
+                className="flex-1 bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Ver
+              </Button>
+            </div>
+
+            {/* Informações do Tipo */}
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>ID: {activity.id}</span>
+                <div className="flex items-center gap-2">
+                  {activity.autoBuilt && <span className="text-purple-400">Auto</span>}
+                  <span className="capitalize">{activity.type}</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         ))}
       </div>
-
-      {/* Modal de Edição */}
-      <EditActivityModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        activity={selectedActivity}
-        onSave={handleSaveActivity}
-      />
-    </motion.div>
+    </div>
   );
 }

@@ -130,3 +130,110 @@ export function AutomationDebugPanel() {
     </Card>
   );
 }
+import React from 'react';
+import { ConstructionActivity } from '../useConstructionActivities';
+import { getAutoBuildStats } from '../auto/autoBuildActivities';
+import { Bot, CheckCircle, AlertCircle, Clock, Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+
+interface AutomationDebugPanelProps {
+  activities: ConstructionActivity[];
+  isAutoBuilding: boolean;
+}
+
+export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationDebugPanelProps) {
+  const stats = getAutoBuildStats(activities);
+
+  return (
+    <Card className="bg-gray-800/50 border-gray-700">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Bot className="w-4 h-4 text-purple-400" />
+          Sistema de Auto-construção
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* Status Geral */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-400">Status:</span>
+          <Badge className={`text-xs ${
+            isAutoBuilding 
+              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
+              : 'bg-green-500/10 text-green-400 border-green-500/20'
+          }`}>
+            {isAutoBuilding ? 'Construindo...' : 'Inativo'}
+          </Badge>
+        </div>
+
+        {/* Progresso Geral */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs">
+            <span className="text-gray-400">Progresso Geral</span>
+            <span className="text-white">{stats.progress}%</span>
+          </div>
+          <Progress value={stats.progress} className="h-2" />
+        </div>
+
+        {/* Estatísticas */}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Activity className="w-3 h-3 text-gray-400" />
+            <span className="text-gray-400">Total:</span>
+            <span className="text-white font-medium">{stats.total}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-3 h-3 text-green-400" />
+            <span className="text-gray-400">Concluídas:</span>
+            <span className="text-green-400 font-medium">{stats.completed}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Clock className="w-3 h-3 text-blue-400" />
+            <span className="text-gray-400">Construindo:</span>
+            <span className="text-blue-400 font-medium">{stats.building}</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-3 h-3 text-red-400" />
+            <span className="text-gray-400">Erros:</span>
+            <span className="text-red-400 font-medium">{stats.errors}</span>
+          </div>
+        </div>
+
+        {/* Lista de Atividades */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-medium text-gray-300">Atividades:</h4>
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between text-xs">
+                <span className="text-gray-400 truncate flex-1" title={activity.title}>
+                  {activity.title}
+                </span>
+                <div className="flex items-center gap-2 ml-2">
+                  {activity.autoBuilt && (
+                    <Bot className="w-3 h-3 text-purple-400" />
+                  )}
+                  <Badge className={`text-xs px-1 py-0 ${
+                    activity.status === 'completed' 
+                      ? 'bg-green-500/10 text-green-400' 
+                      : activity.status === 'building'
+                      ? 'bg-blue-500/10 text-blue-400'
+                      : activity.status === 'error'
+                      ? 'bg-red-500/10 text-red-400'
+                      : 'bg-gray-500/10 text-gray-400'
+                  }`}>
+                    {activity.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
