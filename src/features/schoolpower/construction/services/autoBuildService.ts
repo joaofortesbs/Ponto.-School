@@ -10,7 +10,6 @@ export interface AutoBuildProgress {
 export class AutoBuildService {
   private static instance: AutoBuildService;
   private isRunning = false;
-  private progressCallback?: (progress: AutoBuildProgress) => void;
 
   static getInstance(): AutoBuildService {
     if (!AutoBuildService.instance) {
@@ -19,14 +18,10 @@ export class AutoBuildService {
     return AutoBuildService.instance;
   }
 
-  setProgressCallback(callback: (progress: AutoBuildProgress) => void) {
-    this.progressCallback = callback;
-  }
-
-  async buildAllActivities(
+  async buildActivities(
     activities: any[],
-    openModalFn: (activity: any) => void,
-    closeModalFn: () => void
+    progressCallback: (progress: AutoBuildProgress) => void,
+    errorCallback?: (error: any) => void
   ): Promise<void> {
     if (this.isRunning) {
       console.warn('⚠️ Construção automática já está em execução');
@@ -49,7 +44,7 @@ export class AutoBuildService {
     for (let i = 0; i < buildableActivities.length; i++) {
       const activity = buildableActivities[i];
       
-      this.progressCallback?.({
+      progressCallback({
         current: i + 1,
         total: buildableActivities.length,
         currentActivity: activity.title,
@@ -58,22 +53,25 @@ export class AutoBuildService {
       });
 
       try {
-        await this.buildSingleActivityWithRetry(activity, openModalFn, closeModalFn);
+        await this.buildSingleActivity(activity);
         completed++;
         console.log(`✅ Atividade ${i + 1}/${buildableActivities.length} construída: ${activity.title}`);
       } catch (error) {
         const errorMsg = `Erro ao construir ${activity.title}: ${error}`;
         errors.push(errorMsg);
         console.error(`❌ ${errorMsg}`);
+        if (errorCallback) {
+          errorCallback(error);
+        }
       }
 
       // Delay entre atividades
       if (i < buildableActivities.length - 1) {
-        await this.delay(800);
+        await this.delay(500);
       }
     }
 
-    this.progressCallback?.({
+    progressCallback({
       current: buildableActivities.length,
       total: buildableActivities.length,
       currentActivity: '',
@@ -85,123 +83,68 @@ export class AutoBuildService {
     console.log(`🎉 Construção automática concluída: ${completed}/${buildableActivities.length} atividades`);
   }
 
-  private async buildSingleActivityWithRetry(
-    activity: any,
-    openModalFn: (activity: any) => void,
-    closeModalFn: () => void,
-    maxRetries = 3
-  ): Promise<void> {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        await this.buildSingleActivity(activity, openModalFn, closeModalFn);
-        return; // Sucesso, sair do loop
-      } catch (error) {
-        console.warn(`⚠️ Tentativa ${attempt}/${maxRetries} falhou para ${activity.title}: ${error}`);
-        if (attempt === maxRetries) {
-          throw error; // Última tentativa falhou
-        }
-        await this.delay(1000); // Delay antes de tentar novamente
-      }
-    }
-  }
-
-  private async buildSingleActivity(
-    activity: any,
-    openModalFn: (activity: any) => void,
-    closeModalFn: () => void
-  ): Promise<void> {
-    return new Promise((resolve, reject) => {
+  private async buildSingleActivity(activity: any): Promise<void> {
+    try {
       console.log(`🔨 Construindo: ${activity.title}`);
       
-      // Abrir modal
-      openModalFn(activity);
+      // Preparar dados da atividade baseados nos customFields
+      const activityData = this.prepareActivityData(activity);
       
-      // Aguardar modal abrir e processar
-      setTimeout(() => {
-        const executeConstruction = (retries = 0) => {
-          if (retries > 15) {
-            closeModalFn();
-            reject(new Error('Timeout: botão não encontrado'));
-            return;
-          }
-
-          // Tentar múltiplas estratégias para encontrar e clicar no botão
-          const strategies = [
-            () => this.tryAutoBuildFunction(),
-            () => this.tryFindButtonById(),
-            () => this.tryFindButtonByText(),
-            () => this.tryFindButtonByClass()
-          ];
-
-          let success = false;
-          for (const strategy of strategies) {
-            if (strategy()) {
-              success = true;
-              break;
-            }
-          }
-
-          if (success) {
-            setTimeout(() => {
-              closeModalFn();
-              resolve();
-            }, 1200);
-          } else {
-            setTimeout(() => executeConstruction(retries + 1), 400);
-          }
-        };
-
-        executeConstruction();
-      }, 2000); // Delay inicial maior para garantir que o modal carregue
-    });
-  }
-
-  private tryAutoBuildFunction(): boolean {
-    if ((window as any).autoBuildCurrentActivity) {
-      console.log('🎯 Usando função de automação registrada');
-      (window as any).autoBuildCurrentActivity();
-      return true;
+      // Gerar conteúdo da atividade usando IA
+      await this.generateActivityContent(activityData);
+      
+      console.log(`✅ Atividade construída com sucesso: ${activity.title}`);
+    } catch (error) {
+      console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
+      throw error;
     }
-    return false;
   }
 
-  private tryFindButtonById(): boolean {
-    const button = document.querySelector('#build-activity-button') as HTMLButtonElement;
-    if (button && !button.disabled) {
-      console.log('🎯 Botão encontrado por ID');
-      button.click();
-      return true;
-    }
-    return false;
-  }
-
-  private tryFindButtonByText(): boolean {
-    const buttons = Array.from(document.querySelectorAll('button'));
-    const buildButton = buttons.find(btn => 
-      btn.textContent?.includes('Construir Atividade') ||
-      btn.textContent?.includes('Construir') ||
-      btn.textContent?.includes('Gerar')
-    ) as HTMLButtonElement;
+  private prepareActivityData(activity: any): any {
+    const originalData = activity.originalData || activity;
+    const customFields = originalData.customFields || {};
     
-    if (buildButton && !buildButton.disabled) {
-      console.log('🎯 Botão encontrado por texto');
-      buildButton.click();
-      return true;
-    }
-    return false;
+    return {
+      id: activity.id,
+      title: activity.title,
+      description: activity.description,
+      type: activity.type || 'atividade',
+      subject: customFields['Disciplina'] || '',
+      theme: customFields['Tema'] || '',
+      schoolYear: customFields['Ano de Escolaridade'] || '',
+      numberOfQuestions: customFields['Quantidade de Questões'] || '',
+      difficultyLevel: customFields['Nível de Dificuldade'] || '',
+      questionModel: customFields['Modelo de Questões'] || '',
+      sources: customFields['Fontes'] || '',
+      context: customFields['Contexto'] || '',
+      objectives: customFields['Objetivos'] || '',
+      materials: customFields['Materiais'] || '',
+      instructions: customFields['Instruções'] || '',
+      evaluation: customFields['Avaliação'] || '',
+      timeLimit: customFields['Tempo Limite'] || '',
+      customFields
+    };
   }
 
-  private tryFindButtonByClass(): boolean {
-    const button = document.querySelector('.construir-atividade') as HTMLButtonElement ||
-                  document.querySelector('[data-testid="build-activity-button"]') as HTMLButtonElement;
-    
-    if (button && !button.disabled) {
-      console.log('🎯 Botão encontrado por classe/atributo');
-      button.click();
-      return true;
+  private async generateActivityContent(activityData: any): Promise<any> {
+    try {
+      // Importar o serviço de geração dinamicamente
+      const { activityGenerationService } = await import('./activityGenerationService');
+      
+      // Gerar atividade usando o serviço especializado
+      const generatedActivity = await activityGenerationService.generateActivity(activityData);
+      
+      // Salvar atividade gerada
+      await activityGenerationService.saveGeneratedActivity(activityData.id, generatedActivity);
+      
+      return generatedActivity;
+    } catch (error) {
+      console.error('Erro ao gerar conteúdo:', error);
+      throw error;
     }
-    return false;
   }
+
+  
 
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -211,7 +154,7 @@ export class AutoBuildService {
     return this.isRunning;
   }
 
-  stop() {
+  stop(): void {
     this.isRunning = false;
   }
 }

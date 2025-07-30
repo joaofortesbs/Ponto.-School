@@ -65,21 +65,38 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     }
 
     setShowProgressModal(true);
+    setBuildProgress({
+      current: 0,
+      total: buildableActivities.length,
+      currentActivity: '',
+      status: 'running',
+      errors: []
+    });
 
-    autoBuildService.buildActivities(buildableActivities,
-      (progress: AutoBuildProgress) => {
-        console.log("🚀 Progresso:", progress);
-        setBuildProgress(progress);
-      },
-      (error: any) => {
-        console.error("🚨 Erro durante a construção:", error);
-        setBuildProgress(prevState => ({
-          ...prevState,
-          status: 'error',
-          errors: [...prevState.errors, error.message || 'Erro desconhecido']
-        } as AutoBuildProgress));
-      }
-    );
+    try {
+      await autoBuildService.buildActivities(
+        buildableActivities,
+        (progress: AutoBuildProgress) => {
+          console.log("🚀 Progresso:", progress);
+          setBuildProgress(progress);
+        },
+        (error: any) => {
+          console.error("🚨 Erro durante a construção:", error);
+          setBuildProgress(prevState => ({
+            ...prevState!,
+            status: 'error',
+            errors: [...prevState!.errors, error.message || 'Erro desconhecido']
+          }));
+        }
+      );
+    } catch (error) {
+      console.error("🚨 Erro fatal na construção automática:", error);
+      setBuildProgress(prevState => ({
+        ...prevState!,
+        status: 'error',
+        errors: [...prevState!.errors, 'Erro fatal na construção automática']
+      }));
+    }
   };
 
   const handleEdit = (activityId: string) => {
