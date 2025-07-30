@@ -1,0 +1,59 @@
+(Sistema de Ação Automática no School Power)
+
+Você é uma IA desenvolvedora de interface e lógica de front-end da plataforma School Power. Seu objetivo é concluir a implementação do sistema de sugestão e construção automática de atividades educacionais com IA, sem alterar o design ou o fluxo atual da plataforma.
+
+OBJETIVO
+Finalizar o sistema de geração automática de atividades com IA dentro do School Power, ativando automaticamente o botão "Construir Atividade" após o preenchimento dos campos da atividade, mantendo intacto o modal "Editar Materiais" e ativando totalmente o botão "Editar" de dentro dos mini-cards de atividades (dentro da interface de Plano de Ação).
+
+FUNCIONALIDADES A SEREM IMPLEMENTADAS
+✅ O preenchimento automático de todos os campos da atividade (como Título, Descrição, Duração, Dificuldade etc.) JÁ ESTÁ FUNCIONANDO e não deve ser modificado.
+
+🧠 Sua tarefa agora é:
+
+Após a IA preencher automaticamente os campos no modal 'Editar Materiais' com base no ID da atividade, o sistema deve:
+
+a) Acionar automaticamente a função ou evento equivalente ao clique no botão “Construir Atividade”.
+
+b) Fechar o modal de edição normalmente após a construção da atividade.
+
+As informações completas da atividade devem ser renderizadas dentro do mini-card da atividade sugerida, na interface de Plano de Ação. Isso inclui:
+
+Título
+
+Descrição
+
+Todos os campos específicos por tipo de atividade (que já foram preenchidos pela IA)
+
+O botão "Editar" visível no mini-card da atividade deve:
+
+Abrir o modal "Editar Materiais"
+
+Carregar automaticamente os campos já preenchidos daquela atividade
+
+Permitir que o usuário edite livremente qualquer campo
+
+Após salvar, atualizar o mini-card com os novos dados
+
+Manter a consistência visual e comportamental atual da interface
+
+REGRAS DE IMPLEMENTAÇÃO
+🔁 O botão "Construir Atividade" não deve ser removido da interface nem alterado visualmente. A lógica de clique deve ser automatizada, mas o design deve permanecer idêntico.
+
+🧩 Nenhum fluxo de navegação, botão, modal ou card atual deve ser removido ou modificado visualmente.
+
+🧷 Os mini-cards de atividades devem sempre refletir os dados preenchidos ou editados.
+
+🧠 Os dados da atividade devem ser armazenados em memória/estado de forma sincronizada com o ID da atividade, garantindo consistência quando o usuário editar ou salvar alterações.
+
+EXEMPLO DE FLUXO IDEAL
+Usuário solicita sugestão de atividades via IA
+
+IA gera 1 a 35 atividades e preenche todos os campos com base nos dados do plano de ação
+
+O botão "Construir Atividade" é acionado automaticamente (sem clique manual do usuário)
+
+A atividade aparece completa no mini-card (ID + Título + Descrição + Campos personalizados)
+
+O botão "Editar" abre o modal já preenchido com todos os campos prontos para edição
+
+Ao salvar, o mini-card é atualizado com as novas informações
