@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
-import { activityRegistry } from '../activities/activityRegistry';
-import { autoBuildActivities } from './auto/autoBuildActivities';
+import { isActivityRegistered } from '../activities/activityRegistry';
 
 export interface ConstructionActivity {
   id: string;
@@ -9,65 +8,83 @@ export interface ConstructionActivity {
   description: string;
   progress: number;
   type: string;
-  status: 'draft' | 'building' | 'completed' | 'error';
-  originalData: ActionPlanItem;
-  autoBuilt?: boolean;
+  status: 'draft' | 'in-progress' | 'completed';
+  originalData?: any;
 }
 
-export function useConstructionActivities(actionPlan: ActionPlanItem[]) {
+export const useConstructionActivities = (approvedActivities?: any[]) => {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
-  const [isAutoBuilding, setIsAutoBuilding] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('📚 useConstructionActivities: Carregando atividades para construção...', actionPlan);
+    const loadActivities = async () => {
+      console.log('📚 useConstructionActivities: Carregando atividades para construção...', approvedActivities);
+      setLoading(true);
 
-    const constructionActivities = actionPlan.map(item => {
-      console.log('🔄 Convertendo atividade:', item);
+      try {
+        if (!approvedActivities || approvedActivities.length === 0) {
+          console.log('⚠️ Nenhuma atividade aprovada encontrada');
+          setActivities([]);
+          setLoading(false);
+          return;
+        }
 
-      // Verifica se a atividade está registrada no registry
-      const isRegistered = activityRegistry.hasOwnProperty(item.id);
-      console.log(`🎯 Atividade ${item.id} - Registrada: ${isRegistered}`);
+        const constructionActivities = approvedActivities.map((activity: any) => {
+          console.log('🔄 Convertendo atividade:', activity);
 
-      return {
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        progress: 0,
-        type: item.type || 'atividade',
-        status: 'draft' as const,
-        originalData: item,
-        autoBuilt: false
-      };
-    });
+          const isRegistered = isActivityRegistered(activity.id);
+          console.log(`🎯 Atividade ${activity.id} - Registrada: ${isRegistered}`);
 
-    console.log('✅ Atividades de construção criadas:', constructionActivities);
-    setActivities(constructionActivities);
-  }, [actionPlan]);
-
-  // Auto-construção quando plano é aprovado
-  useEffect(() => {
-    const shouldAutoBuild = actionPlan.length > 0 && 
-                           actionPlan.every(item => item.approved) &&
-                           !isAutoBuilding &&
-                           activities.length > 0 &&
-                           activities.some(activity => !activity.autoBuilt);
-
-    if (shouldAutoBuild) {
-      console.log('🤖 Iniciando auto-construção de atividades...');
-      setIsAutoBuilding(true);
-
-      autoBuildActivities(activities, setActivities)
-        .then(() => {
-          console.log('✅ Auto-construção concluída com sucesso!');
-        })
-        .catch((error) => {
-          console.error('❌ Erro na auto-construção:', error);
-        })
-        .finally(() => {
-          setIsAutoBuilding(false);
+          return {
+            id: activity.id,
+            title: activity.title,
+            description: activity.description,
+            progress: 0,
+            type: activity.type || 'atividade',
+            status: 'draft' as const,
+            originalData: activity
+          };
         });
-    }
-  }, [actionPlan, activities, isAutoBuilding]);
 
-  return { activities, setActivities, isAutoBuilding };
-}
+        console.log('✅ Atividades de construção criadas:', constructionActivities);
+        console.log('📋 IDs das atividades:', constructionActivities.map(a => a.id));
+
+        setActivities(constructionActivities);
+      } catch (error) {
+        console.error('❌ Erro ao carregar atividades de construção:', error);
+        setActivities([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadActivities();
+  }, [approvedActivities]);
+
+  const updateActivityProgress = (id: string, progress: number) => {
+    setActivities(prev => 
+      prev.map(activity => 
+        activity.id === id 
+          ? { ...activity, progress }
+          : activity
+      )
+    );
+  };
+
+  const updateActivityStatus = (id: string, status: ConstructionActivity['status']) => {
+    setActivities(prev => 
+      prev.map(activity => 
+        activity.id === id 
+          ? { ...activity, status }
+          : activity
+      )
+    );
+  };
+
+  return {
+    activities,
+    loading,
+    updateActivityProgress,
+    updateActivityStatus
+  };
+};

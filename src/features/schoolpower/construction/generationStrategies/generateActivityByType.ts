@@ -1,3 +1,4 @@
+
 import { ActivityFormData, GeneratedActivity, ActivityType } from '../types/ActivityTypes';
 
 export const generateTest = (data: ActivityFormData): string => {
@@ -64,7 +65,7 @@ ${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`
 export const generateExerciseList = (data: ActivityFormData): string => {
   // Gerar questões baseadas nos dados do usuário
   const questions = generateQuestionsBasedOnUserData(data);
-
+  
   return JSON.stringify({
     title: data.title,
     description: data.description,
@@ -87,10 +88,10 @@ export const generateExerciseList = (data: ActivityFormData): string => {
 const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
   const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
   const questions = [];
-
+  
   for (let i = 1; i <= numberOfQuestions; i++) {
     let question;
-
+    
     switch (data.questionModel) {
       case 'Múltipla Escolha':
         question = generateMultipleChoiceQuestion(i, data);
@@ -116,10 +117,10 @@ const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
       default:
         question = generateMultipleChoiceQuestion(i, data);
     }
-
+    
     questions.push(question);
   }
-
+  
   return questions;
 };
 
@@ -142,10 +143,10 @@ const generateMultipleChoiceQuestion = (questionNumber: number, data: ActivityFo
       `Avalie criticamente os elementos de ${data.theme} e selecione a alternativa que melhor sintetiza o conhecimento:`
     ]
   };
-
+  
   const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
   const questionText = templates[questionNumber % templates.length];
-
+  
   return {
     id: `q${questionNumber}`,
     type: 'multiple-choice',
@@ -181,10 +182,10 @@ const generateEssayQuestion = (questionNumber: number, data: ActivityFormData) =
       `Construa uma reflexão aprofundada sobre ${data.theme}, estabelecendo conexões com outros temas da disciplina.`
     ]
   };
-
+  
   const templates = difficultyTemplates[data.difficultyLevel as keyof typeof difficultyTemplates] || difficultyTemplates['Básico'];
   const questionText = templates[questionNumber % templates.length];
-
+  
   return {
     id: `q${questionNumber}`,
     type: 'essay',
@@ -205,10 +206,10 @@ const generateTrueFalseQuestion = (questionNumber: number, data: ActivityFormDat
     `As aplicações práticas de ${data.theme} são limitadas ao contexto teórico de ${data.subject}.`,
     `${data.theme} pode ser compreendido completamente sem conhecimento prévio em ${data.subject}.`
   ];
-
+  
   const statement = statements[questionNumber % statements.length];
   const isTrue = questionNumber % 2 === 1; // Alternar entre verdadeiro e falso
-
+  
   return {
     id: `q${questionNumber}`,
     type: 'true-false',
@@ -387,227 +388,3 @@ export const generateActivityByType = (type: ActivityType, data: ActivityFormDat
     }
   };
 };
-
-import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
-
-/**
- * Gera conteúdo específico baseado no tipo de atividade
- */
-export async function generateActivityByType(
-  activityId: string, 
-  actionPlanData: ActionPlanItem
-): Promise<any> {
-  console.log(`🔧 Gerando conteúdo para atividade: ${activityId}`);
-  console.log('📋 Dados do plano de ação:', actionPlanData);
-
-  try {
-    // Simula processamento de geração
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Estratégias específicas por tipo de atividade
-    switch (activityId) {
-      case 'lista-exercicios':
-        return await generateExerciseList(actionPlanData);
-
-      case 'prova':
-        return await generateExam(actionPlanData);
-
-      case 'caca-palavras':
-        return await generateWordSearch(actionPlanData);
-
-      case 'lista-vocabulario':
-        return await generateVocabularyList(actionPlanData);
-
-      case 'pergunte-texto':
-        return await generateTextAnalysis(actionPlanData);
-
-      case 'exemplos-contextualizados':
-        return await generateContextualExamples(actionPlanData);
-
-      case 'mapa-mental':
-        return await generateMindMap(actionPlanData);
-
-      case 'sequencia-didatica':
-        return await generateDidacticSequence(actionPlanData);
-
-      case 'jogos-educativos':
-        return await generateEducationalGames(actionPlanData);
-
-      default:
-        return await generateGenericActivity(actionPlanData);
-    }
-  } catch (error) {
-    console.error(`❌ Erro na geração de ${activityId}:`, error);
-    throw error;
-  }
-}
-
-// Estratégias específicas de geração
-async function generateExerciseList(data: ActionPlanItem) {
-  console.log('📝 Gerando lista de exercícios...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'exercise-list',
-    questions: customFields['Quantidade de Questões'] || '10',
-    theme: customFields['Tema'] || data.title,
-    difficulty: customFields['Nível de Dificuldade'] || 'Médio',
-    model: customFields['Modelo de Questões'] || 'Múltipla escolha',
-    sources: customFields['Fontes'] || 'Material didático',
-    timeLimit: customFields['Tempo Limite'] || '50 minutos',
-    content: `Lista de exercícios sobre ${customFields['Tema'] || 'o tema'} gerada automaticamente com ${customFields['Quantidade de Questões'] || '10'} questões.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateExam(data: ActionPlanItem) {
-  console.log('📋 Gerando prova...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'exam',
-    questions: customFields['Quantidade de Questões'] || '15',
-    theme: customFields['Tema'] || data.title,
-    timeLimit: customFields['Tempo de Prova'] || '60 minutos',
-    evaluationCriteria: customFields['Critérios de Correção'] || 'Padrão',
-    evaluationType: customFields['Tipo de Avaliação'] || 'Escrita',
-    content: `Prova sobre ${customFields['Tema'] || 'o tema'} gerada automaticamente com ${customFields['Quantidade de Questões'] || '15'} questões.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateWordSearch(data: ActionPlanItem) {
-  console.log('🔍 Gerando caça-palavras...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'word-search',
-    theme: customFields['Tema das Palavras'] || data.title,
-    wordCount: customFields['Quantidade de Palavras'] || '15',
-    gridSize: customFields['Formato da Grade'] || '15x15',
-    words: customFields['Palavras Incluídas'] || 'Lista de palavras',
-    hints: customFields['Dicas Fornecidas'] || 'Lista de palavras a serem encontradas',
-    difficulty: customFields['Nível de Dificuldade'] || 'Fácil',
-    content: `Caça-palavras sobre ${customFields['Tema das Palavras'] || 'o tema'} gerado automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateVocabularyList(data: ActionPlanItem) {
-  console.log('📚 Gerando lista de vocabulário...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'vocabulary-list',
-    theme: customFields['Tema do Vocabulário'] || data.title,
-    wordCount: customFields['Quantidade de Palavras'] || '10',
-    context: customFields['Contexto de Uso'] || 'Geral',
-    exercises: customFields['Exercícios Associados'] || 'Frases contextualizadas',
-    language: customFields['Idioma'] || 'Português',
-    difficulty: customFields['Nível de Dificuldade'] || 'Médio',
-    content: `Lista de vocabulário sobre ${customFields['Tema do Vocabulário'] || 'o tema'} gerada automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateTextAnalysis(data: ActionPlanItem) {
-  console.log('📖 Gerando análise de texto...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'text-analysis',
-    textType: customFields['Tipo de Texto'] || 'Informativo',
-    genre: customFields['Gênero Textual'] || 'Artigo',
-    length: customFields['Extensão do Texto'] || 'Médio',
-    questions: customFields['Questões Associadas'] || 'Perguntas interpretativas',
-    competencies: customFields['Competências Trabalhadas'] || 'Leitura e interpretação',
-    strategies: customFields['Estratégias de Leitura'] || 'Leitura atenta',
-    content: `Análise de texto do tipo ${customFields['Tipo de Texto'] || 'informativo'} gerada automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateContextualExamples(data: ActionPlanItem) {
-  console.log('💡 Gerando exemplos contextualizados...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'contextual-examples',
-    context: customFields['Contexto de Aplicação'] || 'Geral',
-    exampleType: customFields['Tipo de Exemplos'] || 'Práticos',
-    complexity: customFields['Nível de Complexidade'] || 'Básico',
-    resources: customFields['Recursos Visuais'] || 'Texto e imagens',
-    activities: customFields['Atividades Práticas'] || 'Exercícios contextualizados',
-    knowledgeArea: customFields['Área de Conhecimento'] || 'Geral',
-    content: `Exemplos contextualizados sobre ${customFields['Contexto de Aplicação'] || 'o tema'} gerados automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateMindMap(data: ActionPlanItem) {
-  console.log('🗺️ Gerando mapa mental...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'mind-map',
-    centralTopic: customFields['Tópico Central'] || data.title,
-    branches: customFields['Ramificações'] || 'Conceitos principais',
-    complexity: customFields['Nível de Complexidade'] || 'Médio',
-    visualStyle: customFields['Estilo Visual'] || 'Colorido',
-    content: `Mapa mental sobre ${customFields['Tópico Central'] || 'o tema'} gerado automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateDidacticSequence(data: ActionPlanItem) {
-  console.log('📚 Gerando sequência didática...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'didactic-sequence',
-    steps: customFields['Etapas'] || 'Introdução, Desenvolvimento, Conclusão',
-    duration: customFields['Duração Total'] || '3 aulas',
-    objectives: customFields['Objetivos'] || 'Aprendizagem do conteúdo',
-    resources: customFields['Recursos Necessários'] || 'Material básico',
-    content: `Sequência didática sobre ${data.title} gerada automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateEducationalGames(data: ActionPlanItem) {
-  console.log('🎮 Gerando jogos educativos...');
-  const customFields = data.customFields || {};
-
-  return {
-    type: 'educational-games',
-    gameType: customFields['Tipo de Jogo'] || 'Quiz interativo',
-    players: customFields['Número de Jogadores'] || '1-4 jogadores',
-    difficulty: customFields['Nível de Dificuldade'] || 'Médio',
-    duration: customFields['Tempo de Jogo'] || '30 minutos',
-    content: `Jogo educativo sobre ${data.title} gerado automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}
-
-async function generateGenericActivity(data: ActionPlanItem) {
-  console.log('⚙️ Gerando atividade genérica...');
-
-  return {
-    type: 'generic-activity',
-    title: data.title,
-    description: data.description,
-    customFields: data.customFields || {},
-    content: `Atividade sobre ${data.title} gerada automaticamente.`,
-    generated: true,
-    timestamp: new Date().toISOString()
-  };
-}

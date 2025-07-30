@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Monitor, Play, Square, RefreshCw, Bot, CheckCircle, AlertCircle, Clock, Activity } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Monitor, Play, Square, RefreshCw } from 'lucide-react';
 
 interface AutomationLog {
   timestamp: number;
@@ -14,20 +13,7 @@ interface AutomationLog {
   message: string;
 }
 
-interface ConstructionActivity {
-  id: string;
-  title: string;
-  description: string;
-  status?: 'completed' | 'building' | 'error' | 'pending';
-  autoBuilt?: boolean;
-}
-
-interface AutomationDebugPanelProps {
-  activities: ConstructionActivity[];
-  isAutoBuilding: boolean;
-}
-
-export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationDebugPanelProps) {
+export function AutomationDebugPanel() {
   const [logs, setLogs] = useState<AutomationLog[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
 
@@ -86,25 +72,12 @@ export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationD
     }
   };
 
-  // Calcula estatísticas das atividades
-  const getAutoBuildStats = (activities: ConstructionActivity[]) => {
-    const total = activities.length;
-    const completed = activities.filter(a => a.status === 'completed').length;
-    const building = activities.filter(a => a.status === 'building').length;
-    const errors = activities.filter(a => a.status === 'error').length;
-    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    return { total, completed, building, errors, progress };
-  };
-
-  const stats = getAutoBuildStats(activities);
-
   return (
-    <Card className="bg-gray-800/50 border-gray-700">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <Bot className="w-4 h-4 text-purple-400" />
-          Sistema de Auto-construção
+    <Card className="w-full max-w-4xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Monitor className="w-5 h-5" />
+          Debug - Automação de Atividades
         </CardTitle>
         <div className="flex gap-2">
           <Button
@@ -131,112 +104,28 @@ export function AutomationDebugPanel({ activities, isAutoBuilding }: AutomationD
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {/* Status Geral */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-400">Status:</span>
-          <Badge className={`text-xs ${
-            isAutoBuilding 
-              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-              : 'bg-green-500/10 text-green-400 border-green-500/20'
-          }`}>
-            {isAutoBuilding ? 'Construindo...' : 'Inativo'}
-          </Badge>
-        </div>
-
-        {/* Progresso Geral */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Progresso Geral</span>
-            <span className="text-white">{stats.progress}%</span>
-          </div>
-          <Progress value={stats.progress} className="h-2" />
-        </div>
-
-        {/* Estatísticas */}
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <Activity className="w-3 h-3 text-gray-400" />
-            <span className="text-gray-400">Total:</span>
-            <span className="text-white font-medium">{stats.total}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-3 h-3 text-green-400" />
-            <span className="text-gray-400">Concluídas:</span>
-            <span className="text-green-400 font-medium">{stats.completed}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Clock className="w-3 h-3 text-blue-400" />
-            <span className="text-gray-400">Construindo:</span>
-            <span className="text-blue-400 font-medium">{stats.building}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-3 h-3 text-red-400" />
-            <span className="text-gray-400">Erros:</span>
-            <span className="text-red-400 font-medium">{stats.errors}</span>
-          </div>
-        </div>
-
-        {/* Lista de Atividades */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-medium text-gray-300">Atividades:</h4>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {activities.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between text-xs">
-                <span className="text-gray-400 truncate flex-1" title={activity.title}>
-                  {activity.title}
-                </span>
-                <div className="flex items-center gap-2 ml-2">
-                  {activity.autoBuilt && (
-                    <Bot className="w-3 h-3 text-purple-400" />
-                  )}
-                  <Badge className={`text-xs px-1 py-0 ${
-                    activity.status === 'completed' 
-                      ? 'bg-green-500/10 text-green-400' 
-                      : activity.status === 'building'
-                      ? 'bg-blue-500/10 text-blue-400'
-                      : activity.status === 'error'
-                      ? 'bg-red-500/10 text-red-400'
-                      : 'bg-gray-500/10 text-gray-400'
-                  }`}>
-                    {activity.status || 'pending'}
-                  </Badge>
+      <CardContent>
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {logs.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">
+              {isMonitoring ? 'Aguardando logs de automação...' : 'Inicie o monitoramento para ver os logs'}
+            </p>
+          ) : (
+            logs.map((log, index) => (
+              <div key={index} className="flex items-start gap-2 p-2 rounded border">
+                <Badge className={`${getStatusColor(log.status)} text-white`}>
+                  {log.status.toUpperCase()}
+                </Badge>
+                <div className="flex-1">
+                  <p className="text-sm font-mono">{log.message}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(log.timestamp).toLocaleTimeString()}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
-
-        {/* Logs de Monitoramento */}
-        {isMonitoring && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-medium text-gray-300">Logs de Automação:</h4>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {logs.length === 0 ? (
-                <p className="text-gray-500 text-center py-2 text-xs">
-                  Aguardando logs de automação...
-                </p>
-              ) : (
-                logs.map((log, index) => (
-                  <div key={index} className="flex items-start gap-2 p-2 rounded border border-gray-600">
-                    <Badge className={`${getStatusColor(log.status)} text-white text-xs`}>
-                      {log.status.toUpperCase()}
-                    </Badge>
-                    <div className="flex-1">
-                      <p className="text-xs font-mono text-gray-300">{log.message}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
