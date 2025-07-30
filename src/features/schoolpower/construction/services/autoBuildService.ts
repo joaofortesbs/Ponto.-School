@@ -1,14 +1,20 @@
+import { ConstructionActivity } from '../types';
+import { activityGenerationService } from './activityGenerationService';
+
 export interface AutoBuildProgress {
   current: number;
   total: number;
   currentActivity: string;
-  status: 'running' | 'completed' | 'error';
+  status: 'idle' | 'running' | 'completed' | 'error';
   errors: string[];
 }
 
 export class AutoBuildService {
   private static instance: AutoBuildService;
-  private isRunning = false;
+  private progressCallback?: (progress: AutoBuildProgress) => void;
+  private onActivityBuilt?: (activityId: string) => void;
+
+  private constructor() {}
 
   static getInstance(): AutoBuildService {
     if (!AutoBuildService.instance) {
@@ -17,145 +23,175 @@ export class AutoBuildService {
     return AutoBuildService.instance;
   }
 
-  async buildActivities(
-    activities: any[],
-    progressCallback: (progress: AutoBuildProgress) => void,
-    errorCallback?: (error: any) => void
-  ): Promise<void> {
-    if (this.isRunning) {
-      console.warn('⚠️ Construção automática já está em execução');
-      return;
-    }
+  setProgressCallback(callback: (progress: AutoBuildProgress) => void) {
+    this.progressCallback = callback;
+  }
 
-    this.isRunning = true;
-    const buildableActivities = activities.filter(activity => 
-      activity.status === 'draft' && 
-      activity.title && 
-      activity.description && 
-      activity.progress < 100
-    );
+  setOnActivityBuilt(callback: (activityId: string) => void) {
+    this.onActivityBuilt = callback;
+  }
+
+  private updateProgress(progress: Partial<AutoBuildProgress>) {
+    if (this.progressCallback) {
+      this.progressCallback(progress as AutoBuildProgress);
+    }
+  }
+
+  private async simulateModalConstruction(activity: ConstructionActivity): Promise<void> {
+    console.log(`🎯 Simulando construção do modal para: ${activity.title}`);
+
+    // Preparar dados do formulário baseado nos customFields da atividade
+    const formData = {
+      typeId: activity.id,
+      title: activity.title,
+      description: activity.description,
+      ...activity.customFields
+    };
+
+    console.log('📝 Dados do formulário preparados:', formData);
+
+    // Simular o preenchimento dos campos do modal
+    await this.fillModalFields(activity.id, formData);
+
+    // Aguardar um pouco para simular o processamento
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Gerar a atividade usando o serviço real
+    const generatedActivity = await activityGenerationService.generateActivity(activity.id, formData);
+
+    console.log('✅ Atividade gerada com sucesso:', generatedActivity);
+
+    // Marcar como construída
+    activity.isBuilt = true;
+    activity.builtAt = new Date().toISOString();
+
+    // Salvar no localStorage para persistir o estado
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    constructedActivities[activity.id] = {
+      isBuilt: true,
+      builtAt: activity.builtAt,
+      title: activity.title,
+      generatedContent: generatedActivity
+    };
+    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+    // Salvar a atividade gerada no localStorage específico para visualização
+    const activityKey = `schoolpower_activity_${activity.id}`;
+    localStorage.setItem(activityKey, JSON.stringify(generatedActivity));
+
+    console.log(`💾 Atividade ${activity.id} salva com sucesso`);
+
+    // Notificar que a atividade foi construída
+    if (this.onActivityBuilt) {
+      this.onActivityBuilt(activity.id);
+    }
+  }
+
+  private async fillModalFields(activityId: string, formData: any): Promise<void> {
+    console.log(`📋 Preenchendo campos do modal para ${activityId}:`, formData);
+
+    // Simular o preenchimento dos campos específicos baseado no tipo de atividade
+    const fieldMappings = {
+      'lista-exercicios': [
+        'Quantidade de Questões',
+        'Tema',
+        'Disciplina',
+        'Ano de Escolaridade',
+        'Nível de Dificuldade',
+        'Modelo de Questões',
+        'Fontes'
+      ],
+      'prova': [
+        'Quantidade de Questões',
+        'Tema',
+        'Disciplina',
+        'Ano de Escolaridade',
+        'Nível de Dificuldade',
+        'Tempo de Duração'
+      ],
+      'jogos-educativos': [
+        'Tema',
+        'Disciplina',
+        'Ano de Escolaridade',
+        'Tipo de Jogo',
+        'Nível de Dificuldade'
+      ]
+    };
+
+    const fields = fieldMappings[activityId] || [];
+    console.log(`🔧 Campos identificados para ${activityId}:`, fields);
+
+    // Simular preenchimento de cada campo
+    for (const field of fields) {
+      if (formData[field]) {
+        console.log(`✏️ Preenchendo campo "${field}" com valor "${formData[field]}"`);
+      }
+    }
+  }
+
+  async buildAllActivities(activities: ConstructionActivity[]): Promise<void> {
+    console.log('🚀 Iniciando construção automática de', activities.length, 'atividades');
 
     const errors: string[] = [];
-    let completed = 0;
 
-    console.log(`🚀 Iniciando construção automática de ${buildableActivities.length} atividades`);
+    this.updateProgress({
+      current: 0,
+      total: activities.length,
+      currentActivity: '',
+      status: 'running',
+      errors: []
+    });
 
-    for (let i = 0; i < buildableActivities.length; i++) {
-      const activity = buildableActivities[i];
+    for (let i = 0; i < activities.length; i++) {
+      const activity = activities[i];
 
-      progressCallback({
-        current: i + 1,
-        total: buildableActivities.length,
+      this.updateProgress({
+        current: i,
+        total: activities.length,
         currentActivity: activity.title,
         status: 'running',
         errors
       });
 
+      console.log(`🔨 Construindo: ${activity.title}`);
+
       try {
-        await this.buildSingleActivity(activity);
-        completed++;
-        console.log(`✅ Atividade ${i + 1}/${buildableActivities.length} construída: ${activity.title}`);
+        // Usar a simulação de construção do modal
+        await this.simulateModalConstruction(activity);
+
+        console.log(`✅ Atividade construída com sucesso: ${activity.title}`);
+        console.log(`✅ Atividade ${i + 1}/${activities.length} construída: ${activity.title}`);
+
       } catch (error) {
-        const errorMsg = `Erro ao construir ${activity.title}: ${error}`;
-        errors.push(errorMsg);
-        console.error(`❌ ${errorMsg}`);
-        if (errorCallback) {
-          errorCallback(error);
-        }
+        console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
+        errors.push(`Erro ao construir ${activity.title}: ${error.message}`);
       }
 
-      // Delay entre atividades
-      if (i < buildableActivities.length - 1) {
-        await this.delay(500);
-      }
+      // Atualizar progresso para a próxima atividade
+      this.updateProgress({
+        current: i + 1,
+        total: activities.length,
+        currentActivity: i + 1 < activities.length ? activities[i + 1].title : '',
+        status: 'running',
+        errors
+      });
+
+      // Pequena pausa entre as construções para simular processamento real
+      await new Promise(resolve => setTimeout(resolve, 800));
     }
 
-    progressCallback({
-      current: buildableActivities.length,
-      total: buildableActivities.length,
+    this.updateProgress({
+      current: activities.length,
+      total: activities.length,
       currentActivity: '',
       status: errors.length > 0 ? 'error' : 'completed',
       errors
     });
 
-    this.isRunning = false;
-    console.log(`🎉 Construção automática concluída: ${completed}/${buildableActivities.length} atividades`);
-  }
-
-  private async buildSingleActivity(activity: any): Promise<void> {
-    try {
-      console.log(`🔨 Construindo: ${activity.title}`);
-
-      // Preparar dados da atividade baseados nos customFields
-      const activityData = this.prepareActivityData(activity);
-
-      // Gerar conteúdo da atividade usando IA
-      await this.generateActivityContent(activityData);
-
-      console.log(`✅ Atividade construída com sucesso: ${activity.title}`);
-    } catch (error) {
-      console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
-      throw error;
+    if (errors.length === 0) {
+      console.log(`🎉 Construção automática concluída: ${activities.length}/${activities.length} atividades`);
+    } else {
+      console.warn(`⚠️ Construção concluída com erros: ${activities.length - errors.length}/${activities.length} atividades`);
     }
-  }
-
-  private prepareActivityData(activity: any): any {
-    const originalData = activity.originalData || activity;
-    const customFields = originalData.customFields || {};
-
-    return {
-      id: activity.id,
-      title: activity.title,
-      description: activity.description,
-      type: activity.type || 'atividade',
-      subject: customFields['Disciplina'] || '',
-      theme: customFields['Tema'] || '',
-      schoolYear: customFields['Ano de Escolaridade'] || '',
-      numberOfQuestions: customFields['Quantidade de Questões'] || '',
-      difficultyLevel: customFields['Nível de Dificuldade'] || '',
-      questionModel: customFields['Modelo de Questões'] || '',
-      sources: customFields['Fontes'] || '',
-      context: customFields['Contexto'] || '',
-      objectives: customFields['Objetivos'] || '',
-      materials: customFields['Materiais'] || '',
-      instructions: customFields['Instruções'] || '',
-      evaluation: customFields['Avaliação'] || '',
-      timeLimit: customFields['Tempo Limite'] || '',
-      customFields
-    };
-  }
-
-  private async generateActivityContent(activityData: any): Promise<any> {
-    try {
-      // Importar o serviço de geração dinamicamente
-      const { activityGenerationService } = await import('./activityGenerationService');
-
-      // Gerar atividade usando o serviço especializado
-      const generatedActivity = await activityGenerationService.generateActivity(activityData);
-
-      // Salvar atividade gerada
-      await activityGenerationService.saveGeneratedActivity(activityData.id, generatedActivity);
-
-      return generatedActivity;
-    } catch (error) {
-      console.error('Erro ao gerar conteúdo:', error);
-      throw error;
-    }
-  }
-
-
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  isCurrentlyRunning(): boolean {
-    return this.isRunning;
-  }
-
-  stop(): void {
-    this.isRunning = false;
   }
 }
-
-export const autoBuildService = AutoBuildService.getInstance();

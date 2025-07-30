@@ -49,53 +49,83 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const handleBuildAll = async () => {
     console.log('🤖 Iniciando construção automática em massa');
-
-    const buildableActivities = activities.filter(activity =>
-      activity.status === 'draft' &&
-      activity.title &&
-      activity.description &&
-      activity.progress < 100
-    );
-
-    console.log(`🎯 ${buildableActivities.length} atividades serão construídas automaticamente`);
-
-    if (buildableActivities.length === 0) {
-      alert("Não há atividades para construir.");
-      return;
-    }
+    console.log('🎯', activities.length, 'atividades serão construídas automaticamente');
 
     setShowProgressModal(true);
-    setBuildProgress({
-      current: 0,
-      total: buildableActivities.length,
-      currentActivity: '',
-      status: 'running',
-      errors: []
+
+    autoBuildService.setProgressCallback((progress) => {
+      setBuildProgress(progress);
+      console.log('🚀 Progresso:', progress);
+    });
+
+    // Configurar callback para quando uma atividade for construída
+    autoBuildService.setOnActivityBuilt((activityId) => {
+      console.log(`🔄 Atividade ${activityId} foi construída, atualizando estado...`);
+
+      // Atualizar o estado da atividade específica
+      const updatedActivities = activities.map(activity => {
+        if (activity.id === activityId) {
+          return {
+            ...activity,
+            isBuilt: true,
+            builtAt: new Date().toISOString()
+          };
+        }
+        return activity;
+      });
+
+      // Forçar re-render para mostrar mudanças
+      window.dispatchEvent(new CustomEvent('activityBuilt', { 
+        detail: { activityId, activities: updatedActivities } 
+      }));
     });
 
     try {
-      await autoBuildService.buildActivities(
-        buildableActivities,
-        (progress: AutoBuildProgress) => {
-          console.log("🚀 Progresso:", progress);
-          setBuildProgress(progress);
-        },
-        (error: any) => {
-          console.error("🚨 Erro durante a construção:", error);
-          setBuildProgress(prevState => ({
-            ...prevState!,
-            status: 'error',
-            errors: [...prevState!.errors, error.message || 'Erro desconhecido']
-          }));
-        }
-      );
+      await autoBuildService.buildAllActivities(activities);
+
+      // Aguardar um pouco antes de fechar o modal para mostrar conclusão
+      setTimeout(() => {
+        setShowProgressModal(false);
+        setBuildProgress({
+          current: 0,
+          total: 0,
+          currentActivity: '',
+          status: 'idle',
+          errors: []
+        });
+
+        // Recarregar dados das atividades para garantir estado atualizado
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        activities.forEach(activity => {
+          if (constructedActivities[activity.id]) {
+            activity.isBuilt = true;
+            activity.builtAt = constructedActivities[activity.id].builtAt;
+          }
+        });
+
+        // Mostrar notificação de sucesso
+        // if (toast) {  // toast is not defined, commenting out
+        //   toast({
+        //     title: "✅ Construção Concluída",
+        //     description: `${activities.length} atividades foram construídas com sucesso! Acesse os modais para visualizar.`,
+        //     variant: "default"
+        //   });
+        // }
+
+        console.log('🎉 Processo de construção automática finalizado');
+      }, 2000);
+
     } catch (error) {
-      console.error("🚨 Erro fatal na construção automática:", error);
-      setBuildProgress(prevState => ({
-        ...prevState!,
-        status: 'error',
-        errors: [...prevState!.errors, 'Erro fatal na construção automática']
-      }));
+      console.error('❌ Erro na construção automática:', error);
+      setShowProgressModal(false);
+
+      //if (toast) { // toast is not defined, commenting out
+      //   toast({
+      //     title: "❌ Erro na Construção",
+      //     description: "Ocorreu um erro durante a construção automática.",
+      //     variant: "destructive"
+      //   });
+      // }
     }
   };
 

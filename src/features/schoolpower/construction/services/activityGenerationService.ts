@@ -1,39 +1,18 @@
-export interface ActivityGenerationRequest {
+import { ActivityFormData } from '../types/ActivityTypes';
+
+interface GeneratedActivity {
   id: string;
   title: string;
-  description: string;
-  type: string;
-  subject: string;
-  theme: string;
-  schoolYear: string;
-  numberOfQuestions: string;
-  difficultyLevel: string;
-  questionModel: string;
-  sources: string;
-  customFields: Record<string, any>;
-}
-
-export interface GeneratedActivity {
   content: string;
-  questions: Array<{
-    question: string;
-    options?: string[];
-    correct?: number;
-    type: 'multiple-choice' | 'essay' | 'true-false';
-  }>;
-  materials: string[];
-  instructions: string;
-  evaluation: string;
-  metadata: {
-    generatedAt: string;
-    type: string;
-    subject: string;
-    theme: string;
-  };
+  type: string;
+  metadata: Record<string, any>;
+  previewData?: any;
 }
 
 export class ActivityGenerationService {
   private static instance: ActivityGenerationService;
+
+  private constructor() {}
 
   static getInstance(): ActivityGenerationService {
     if (!ActivityGenerationService.instance) {
@@ -42,162 +21,276 @@ export class ActivityGenerationService {
     return ActivityGenerationService.instance;
   }
 
-  async generateActivity(request: ActivityGenerationRequest): Promise<GeneratedActivity> {
-    try {
-      console.log(`🎯 Gerando atividade: ${request.title}`);
+  async generateActivity(activityId: string, formData: ActivityFormData): Promise<GeneratedActivity> {
+    console.log(`🎯 Gerando atividade: ${activityId}`, formData);
 
-      // Gerar conteúdo baseado no tipo de atividade
-      const content = await this.generateContentByType(request);
-
-      return {
-        content: content.content,
-        questions: content.questions,
-        materials: content.materials,
-        instructions: content.instructions,
-        evaluation: content.evaluation,
-        metadata: {
-          generatedAt: new Date().toISOString(),
-          type: request.type,
-          subject: request.subject,
-          theme: request.theme
-        }
-      };
-    } catch (error) {
-      console.error('❌ Erro ao gerar atividade:', error);
-      throw error;
-    }
-  }
-
-  private async generateContentByType(request: ActivityGenerationRequest): Promise<any> {
-    switch (request.type) {
-      case 'lista-exercicios':
-        return this.generateExerciseList(request);
-      case 'prova-interativa':
-        return this.generateInteractiveTest(request);
-      case 'mapa-mental':
-        return this.generateMindMap(request);
-      case 'jogos-educativos':
-        return this.generateEducationalGame(request);
-      default:
-        return this.generateGenericActivity(request);
-    }
-  }
-
-  private async generateExerciseList(request: ActivityGenerationRequest): Promise<any> {
-    const numQuestions = parseInt(request.numberOfQuestions) || 10;
-    const questions = [];
-
-    for (let i = 0; i < numQuestions; i++) {
-      questions.push({
-        question: `Questão ${i + 1} sobre ${request.theme} - ${request.subject}`,
-        options: ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'],
-        correct: Math.floor(Math.random() * 4),
-        type: 'multiple-choice' as const
-      });
+    // Validar dados de entrada
+    if (!formData.title || !formData.description) {
+      throw new Error('Dados de formulário incompletos');
     }
 
-    return {
-      content: `Lista de exercícios sobre ${request.theme} para ${request.schoolYear}`,
-      questions,
-      materials: [`Livro didático de ${request.subject}`, 'Caderno de exercícios'],
-      instructions: `Resolva as ${numQuestions} questões sobre ${request.theme}`,
-      evaluation: `Avaliação baseada no acerto de pelo menos 70% das questões`
-    };
-  }
+    // Simular processamento realista
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
 
-  private async generateInteractiveTest(request: ActivityGenerationRequest): Promise<any> {
-    const numQuestions = parseInt(request.numberOfQuestions) || 15;
-    const questions = [];
+    // Gerar conteúdo específico baseado no tipo
+    const content = this.generateContentByType(activityId, formData);
+    const previewData = this.generatePreviewData(activityId, formData);
 
-    for (let i = 0; i < numQuestions; i++) {
-      questions.push({
-        question: `Questão ${i + 1} da prova de ${request.theme}`,
-        options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
-        correct: Math.floor(Math.random() * 4),
-        type: 'multiple-choice' as const
-      });
-    }
-
-    return {
-      content: `Prova interativa de ${request.subject} - ${request.theme}`,
-      questions,
-      materials: ['Material de consulta permitido'],
-      instructions: `Prova com ${numQuestions} questões sobre ${request.theme}`,
-      evaluation: `Nota baseada na pontuação obtida`
-    };
-  }
-
-  private async generateMindMap(request: ActivityGenerationRequest): Promise<any> {
-    return {
-      content: `Mapa mental sobre ${request.theme}`,
-      questions: [{
-        question: `Crie um mapa mental sobre ${request.theme}`,
-        type: 'essay' as const
-      }],
-      materials: ['Papel', 'Canetas coloridas', 'Régua'],
-      instructions: `Desenvolva um mapa mental completo sobre ${request.theme}`,
-      evaluation: 'Avaliação baseada na organização e completude do mapa'
-    };
-  }
-
-  private async generateEducationalGame(request: ActivityGenerationRequest): Promise<any> {
-    return {
-      content: `Jogo educativo sobre ${request.theme}`,
-      questions: [{
-        question: `Participe do jogo sobre ${request.theme}`,
-        type: 'essay' as const
-      }],
-      materials: ['Computador ou tablet', 'Acesso à internet'],
-      instructions: `Complete o jogo educativo sobre ${request.theme}`,
-      evaluation: 'Avaliação baseada na participação e pontuação no jogo'
-    };
-  }
-
-  private async generateGenericActivity(request: ActivityGenerationRequest): Promise<any> {
-    return {
-      content: `Atividade sobre ${request.theme} - ${request.subject}`,
-      questions: [{
-        question: `Desenvolva uma atividade sobre ${request.theme}`,
-        type: 'essay' as const
-      }],
-      materials: ['Material didático', 'Caderno'],
-      instructions: `Realize a atividade sobre ${request.theme}`,
-      evaluation: 'Avaliação baseada no desenvolvimento da atividade'
-    };
-  }
-
-  async saveGeneratedActivity(activityData: ActivityGenerationRequest, generatedContent: any): Promise<any> {
-    try {
-      // Salvar no localStorage usando o ID da atividade
-      localStorage.setItem(`activity_${activityData.id}`, JSON.stringify({
-        ...generatedContent,
+    // Mock da atividade gerada
+    const generatedActivity: GeneratedActivity = {
+      id: activityId,
+      title: formData.title,
+      content,
+      type: activityId,
+      previewData,
+      metadata: {
         generatedAt: new Date().toISOString(),
-        activityId: activityData.id,
-        activityTitle: activityData.title,
-        isGenerated: true
-      }));
+        customFields: formData.customFields || {},
+        formData: formData,
+        status: 'generated'
+      }
+    };
 
-      console.log(`💾 Atividade ${activityData.id} salva com sucesso`);
+    console.log('✅ Atividade gerada com sucesso:', generatedActivity);
 
-      return generatedContent;
-    } catch (error) {
-      console.error('❌ Erro ao salvar atividade:', error);
-      throw error;
-    }
+    // Simular salvamento no localStorage para cada atividade
+    this.saveActivityData(activityId, generatedActivity);
+
+    return generatedActivity;
   }
 
-  getGeneratedActivity(activityId: string): GeneratedActivity | null {
+  private saveActivityData(activityId: string, activity: GeneratedActivity): void {
     try {
-      const saved = localStorage.getItem(`generated_activity_${activityId}`);
-      return saved ? JSON.parse(saved) : null;
+      // Salvar dados da atividade gerada
+      const activityKey = `schoolpower_activity_${activityId}`;
+      localStorage.setItem(activityKey, JSON.stringify(activity));
+
+      // Salvar dados para pré-visualização
+      const previewKey = `schoolpower_preview_${activityId}`;
+      localStorage.setItem(previewKey, JSON.stringify(activity.previewData));
+
+      console.log(`💾 Dados da atividade ${activityId} salvos com sucesso`);
     } catch (error) {
-      console.error('❌ Erro ao recuperar atividade:', error);
-      return null;
+      console.error(`❌ Erro ao salvar atividade ${activityId}:`, error);
     }
   }
 
-  isActivityBuilt(activityId: string): boolean {
-    return localStorage.getItem(`activity_built_${activityId}`) === 'true';
+  private generateContentByType(activityId: string, formData: ActivityFormData): string {
+    switch (activityId) {
+      case 'lista-exercicios':
+        return this.generateExerciseListContent(formData);
+      case 'prova':
+        return this.generateExamContent(formData);
+      case 'jogos-educativos':
+        return this.generateGameContent(formData);
+      case 'sequencia-didatica':
+        return this.generateSequenceContent(formData);
+      case 'mapa-mental':
+        return this.generateMindMapContent(formData);
+      default:
+        return this.generateDefaultContent(formData);
+    }
+  }
+
+  private generatePreviewData(activityId: string, formData: ActivityFormData): any {
+    const baseData = {
+      id: activityId,
+      title: formData.title,
+      description: formData.description,
+      type: activityId,
+      generatedAt: new Date().toISOString(),
+      customFields: formData.customFields || {}
+    };
+
+    switch (activityId) {
+      case 'lista-exercicios':
+        return {
+          ...baseData,
+          questions: this.generateQuestions(formData),
+          totalQuestions: parseInt(formData.customFields?.['Quantidade de Questões'] || '10')
+        };
+      default:
+        return baseData;
+    }
+  }
+
+  private generateQuestions(formData: ActivityFormData): any[] {
+    const quantidade = parseInt(formData.customFields?.['Quantidade de Questões'] || '10');
+    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+    const questions = [];
+
+    for (let i = 1; i <= quantidade; i++) {
+      questions.push({
+        id: i,
+        question: `Questão ${i} sobre ${tema}`,
+        options: [
+          'Alternativa A',
+          'Alternativa B', 
+          'Alternativa C',
+          'Alternativa D'
+        ],
+        correctAnswer: 0,
+        explanation: `Explicação da questão ${i}`
+      });
+    }
+
+    return questions;
+  }
+
+  private generateExerciseListContent(formData: ActivityFormData): string {
+    const quantidade = formData.customFields?.['Quantidade de Questões'] || '10';
+    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+    const disciplina = formData.customFields?.['Disciplina'] || 'Disciplina';
+    const anoEscolaridade = formData.customFields?.['Ano de Escolaridade'] || 'Ano não especificado';
+    const nivelDificuldade = formData.customFields?.['Nível de Dificuldade'] || 'Médio';
+
+    return `# ${formData.title}
+
+## Informações da Atividade
+- **Disciplina**: ${disciplina}
+- **Tema**: ${tema}
+- **Ano de Escolaridade**: ${anoEscolaridade}
+- **Nível de Dificuldade**: ${nivelDificuldade}
+- **Quantidade de Questões**: ${quantidade}
+
+## Descrição
+${formData.description}
+
+### Lista de Exercícios
+
+${Array.from({length: parseInt(quantidade)}, (_, i) => `
+**${i + 1}.** Questão sobre ${tema} - nível ${nivelDificuldade}
+   a) Alternativa A
+   b) Alternativa B  
+   c) Alternativa C
+   d) Alternativa D
+`).join('\n')}
+
+---
+*Atividade gerada automaticamente pelo School Power*`;
+  }
+
+  private generateExamContent(formData: ActivityFormData): string {
+    const quantidade = formData.customFields?.['Quantidade de Questões'] || '20';
+    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+    const tempoDuracao = formData.customFields?.['Tempo de Duração'] || '60 minutos';
+
+    return `# ${formData.title}
+
+## Avaliação - ${tema}
+- **Total de Questões**: ${quantidade}
+- **Tempo de Duração**: ${tempoDuracao}
+
+### Instruções:
+- Leia atentamente cada questão
+- Marque apenas uma alternativa por questão
+- Use caneta azul ou preta
+
+### Questões:
+
+${Array.from({length: parseInt(quantidade)}, (_, i) => `
+**Questão ${i + 1}**: Sobre ${tema}...
+a) Alternativa A
+b) Alternativa B
+c) Alternativa C  
+d) Alternativa D
+`).join('\n')}
+
+---
+*Prova gerada automaticamente pelo School Power*`;
+  }
+
+  private generateGameContent(formData: ActivityFormData): string {
+    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+    const tipoJogo = formData.customFields?.['Tipo de Jogo'] || 'Quiz Interativo';
+    const nivelDificuldade = formData.customFields?.['Nível de Dificuldade'] || 'Médio';
+
+    return `# ${formData.title}
+
+## Jogo Educativo - ${tipoJogo}
+- **Tema**: ${tema}
+- **Nível**: ${nivelDificuldade}
+
+### Objetivo do Jogo:
+Aprender sobre ${tema} de forma divertida e interativa.
+
+### Regras:
+1. Responda às perguntas corretamente para ganhar pontos
+2. Cada acerto vale 10 pontos
+3. Tempo limite por questão: 30 segundos
+
+### Descrição:
+${formData.description}
+
+---
+*Jogo gerado automaticamente pelo School Power*`;
+  }
+
+  private generateSequenceContent(formData: ActivityFormData): string {
+    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+    const disciplina = formData.customFields?.['Disciplina'] || 'Disciplina';
+
+    return `# ${formData.title}
+
+## Sequência Didática - ${tema}
+**Disciplina**: ${disciplina}
+
+### Objetivos:
+- Compreender os conceitos de ${tema}
+- Aplicar conhecimentos em situações práticas
+
+### Etapas da Sequência:
+
+1. **Problematização**
+2. **Desenvolvimento**  
+3. **Sistematização**
+4. **Avaliação**
+
+### Descrição:
+${formData.description}
+
+---
+*Sequência didática gerada automaticamente pelo School Power*`;
+  }
+
+  private generateMindMapContent(formData: ActivityFormData): string {
+    const tema = formData.customFields?.['Tema'] || 'Tema geral';
+
+    return `# ${formData.title}
+
+## Mapa Mental - ${tema}
+
+### Conceito Central: ${tema}
+
+### Ramificações:
+- **Conceitos Fundamentais**
+- **Aplicações Práticas**
+- **Exemplos**
+- **Exercícios**
+
+### Descrição:
+${formData.description}
+
+---
+*Mapa mental gerado automaticamente pelo School Power*`;
+  }
+
+  private generateDefaultContent(formData: ActivityFormData): string {
+    return `# ${formData.title}
+
+## Descrição:
+${formData.description}
+
+### Conteúdo da Atividade:
+Atividade personalizada gerada com base nos dados fornecidos.
+
+### Campos Personalizados:
+${Object.entries(formData.customFields || {})
+  .map(([key, value]) => `- **${key}**: ${value}`)
+  .join('\n')}
+
+---
+*Atividade gerada automaticamente pelo School Power*`;
   }
 }
 
