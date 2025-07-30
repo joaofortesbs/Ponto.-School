@@ -358,10 +358,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     try {
       console.log('🏗️ Iniciando construção da atividade...');
       await generateActivity(formData);
-      
+
       // Automaticamente mudar para a aba de pré-visualização após gerar
       setActiveTab('preview');
-      
+
       // Marcar atividade como construída
       if (activity && onUpdateActivity) {
         const updatedActivity = {
@@ -372,7 +372,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         await onUpdateActivity(updatedActivity);
         console.log('✅ Atividade marcada como construída');
       }
-      
+
       // Fechar modal automaticamente se foi construída pelo agente interno
       if (activity?.preenchidoAutomaticamente) {
         setTimeout(() => {
@@ -471,7 +471,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     }
   };
 
-  
+
 
   // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
@@ -502,7 +502,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     if (todosCamposPreenchidos && preenchidoPorIA && !activity.isBuilt) {
       console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA');
       console.log('🎯 Acionando construção automática da atividade...');
-      
+
       // Aguardar pequeno delay para garantir sincronização
       const timer = setTimeout(() => {
         handleBuildActivity();
@@ -724,7 +724,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                                   value={formData.sources}
                                   onChange={(e) => handleInputChange('sources', e.target.value)}
                                   placeholder="Digite as fontes de referência..."
-                                  className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-8-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 />
                               </div>
 
@@ -817,6 +817,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       onClick={handleBuildActivity}
                       disabled={isGenerating || !isFormValid}
                       className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="build-activity-button"
                     >
                       {isGenerating ? (
                         <>

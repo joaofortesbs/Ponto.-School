@@ -6,7 +6,7 @@ import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, Building2 } from 'lucide-react';
+import { AlertCircle, Building2, Zap } from 'lucide-react';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -41,6 +41,42 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
     // TODO: Implementar funcionalidade de compartilhamento
+  };
+
+  const handleBuildAll = () => {
+    console.log('🤖 Iniciando construção automática em massa');
+    
+    const buildableActivities = activities.filter(activity => 
+      activity.status === 'draft' && 
+      activity.title && 
+      activity.description && 
+      activity.progress < 100
+    );
+    
+    console.log(`🎯 ${buildableActivities.length} atividades serão construídas automaticamente`);
+    
+    buildableActivities.forEach((activity, index) => {
+      setTimeout(() => {
+        console.log(`🔨 Construindo atividade ${index + 1}/${buildableActivities.length}: ${activity.title}`);
+        
+        // Simula a abertura do modal e construção automática
+        if (externalHandleEditActivity) {
+          externalHandleEditActivity(activity);
+        } else {
+          openModal(activity);
+        }
+        
+        // Simula clique no botão construir após pequeno delay
+        setTimeout(() => {
+          const buildButton = document.querySelector('[data-testid="build-activity-button"], button:contains("Construir Atividade"), .construir-atividade');
+          if (buildButton) {
+            console.log(`✅ Ativando construção para: ${activity.title}`);
+            (buildButton as HTMLButtonElement).click();
+          }
+        }, 500);
+        
+      }, index * 1000); // Delay de 1 segundo entre cada atividade
+    });
   };
 
   const handleEdit = (activityId: string) => {
@@ -125,15 +161,30 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       className="space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
-          <Building2 className="w-5 h-5 text-white" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF6B00] to-[#D65A00] flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {activities.length} {activities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            {activities.length} {activities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
-          </p>
-        </div>
+        
+        {/* Botão Construir Todas */}
+        {activities.filter(activity => activity.status === 'draft' && activity.title && activity.description && activity.progress < 100).length > 0 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBuildAll}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              <Zap className="w-4 h-4" />
+              Construir Todas
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Grid */}

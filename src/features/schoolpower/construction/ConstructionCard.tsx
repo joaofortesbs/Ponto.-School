@@ -78,6 +78,44 @@ export function ConstructionCard({
     }
   };
 
+  const getProgressColor = () => {
+    if (progress >= 80) return 'text-emerald-500';
+    if (progress >= 50) return 'text-amber-500';
+    return 'text-slate-400';
+  };
+
+  const getActivityTypeIcon = () => {
+    switch (type) {
+      case 'lista-exercicios':
+        return <PenTool className="w-4 h-4" />;
+      case 'jogo-educativo':
+        return <Sparkles className="w-4 h-4" />;
+      case 'atividade-interativa':
+        return <Zap className="w-4 h-4" />;
+      default:
+        return <Activity className="w-4 h-4" />;
+    }
+  };
+
+  // Verifica se a atividade tem campos preenchidos e não foi construída ainda
+  const canAutoBuild = status === 'draft' && title && description && progress < 100;
+
+  const handleAutoBuild = () => {
+    console.log('🤖 Iniciando construção automática para:', title);
+    // Simula a abertura do modal e clique no botão construir
+    onEdit(); // Abre o modal de edição
+
+    // Pequeno delay para garantir que o modal foi aberto
+    setTimeout(() => {
+      // Procura pelo botão "Construir Atividade" no modal e simula o clique
+      const buildButton = document.querySelector('[data-testid="build-activity-button"], button:contains("Construir Atividade"), .construir-atividade');
+      if (buildButton) {
+        console.log('🎯 Simulando clique no botão Construir Atividade');
+        (buildButton as HTMLButtonElement).click();
+      }
+    }, 500);
+  };
+
   return (
     <TooltipProvider>
       <motion.div
@@ -243,6 +281,26 @@ export function ConstructionCard({
             </div>
           </div>
         </div>
+                 {/* Botão Construir Automaticamente */}
+                 {canAutoBuild && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="sm"
+                  onClick={handleAutoBuild}
+                  className="w-full text-xs bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00] text-white border-0"
+                >
+                  <Zap className="w-3 h-3 mr-1" />
+                  Construir Automaticamente
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Construir atividade automaticamente</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
         {/* Hover Glow Effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FF6B00]/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
