@@ -85,27 +85,8 @@ export class AutoBuildService {
     console.log(`🎯 Usando EXATAMENTE a mesma lógica do modal para: ${activity.title}`);
 
     try {
-      // Usar o hook de geração exatamente como o modal faz
-      const { useGenerateActivity } = await import('../hooks/useGenerateActivity');
-      
-      // Preparar formData exatamente como o modal faz
-      const formData = {
-        title: activity.title || '',
-        description: activity.description || '',
-        subject: activity.customFields?.['Disciplina'] || activity.customFields?.['disciplina'] || 'Português',
-        theme: activity.customFields?.['Tema'] || activity.customFields?.['tema'] || '',
-        schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['anoEscolaridade'] || '6º ano',
-        numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || activity.customFields?.['quantidadeQuestoes'] || '10',
-        difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.['nivelDificuldade'] || 'Médio',
-        questionModel: activity.customFields?.['Modelo de Questões'] || activity.customFields?.['modeloQuestoes'] || 'Múltipla escolha',
-        sources: activity.customFields?.['Fontes'] || activity.customFields?.['fontes'] || '',
-        objectives: activity.customFields?.['Objetivos'] || activity.customFields?.['objetivos'] || '',
-        materials: activity.customFields?.['Materiais'] || activity.customFields?.['materiais'] || '',
-        instructions: activity.customFields?.['Instruções'] || activity.customFields?.['instrucoes'] || '',
-        evaluation: activity.customFields?.['Critérios de Correção'] || activity.customFields?.['criteriosAvaliacao'] || '',
-        timeLimit: activity.customFields?.['Tempo Limite'] || activity.customFields?.['tempoLimite'] || '',
-        context: activity.customFields?.['Contexto de Aplicação'] || activity.customFields?.['contexto'] || ''
-      };
+      // Preparar formData EXATAMENTE como o modal EditActivityModal faz
+      const formData = this.prepareActivityFormData(activity);
 
       console.log('📝 FormData preparado IGUAL ao modal:', formData);
 
@@ -114,7 +95,7 @@ export class AutoBuildService {
       
       // Preparar contextData EXATAMENTE como o modal faz
       const contextData = {
-        // Dados em português para o prompt
+        // Dados em português para o prompt (IDENTICO ao modal)
         titulo: formData.title || 'Atividade',
         descricao: formData.description || '',
         disciplina: formData.subject || 'Português',
@@ -130,6 +111,24 @@ export class AutoBuildService {
         tempoLimite: formData.timeLimit || '',
         contextoAplicacao: formData.context || '',
 
+        // Campos específicos adicionais para todos os tipos (IDENTICO ao modal)
+        tipoTexto: formData.textType || '',
+        generoTextual: formData.textGenre || '',
+        extensaoTexto: formData.textLength || '',
+        questoesAssociadas: formData.associatedQuestions || '',
+        competencias: formData.competencies || '',
+        estrategiasLeitura: formData.readingStrategies || '',
+        recursosVisuais: formData.visualResources || '',
+        atividadesPraticas: formData.practicalActivities || '',
+        palavrasIncluidas: formData.wordsIncluded || '',
+        formatoGrade: formData.gridFormat || '',
+        dicasFornecidas: formData.providedHints || '',
+        contextoVocabulario: formData.vocabularyContext || '',
+        idioma: formData.language || '',
+        exerciciosAssociados: formData.associatedExercises || '',
+        areaConhecimento: formData.knowledgeArea || '',
+        nivelComplexidade: formData.complexityLevel || '',
+
         // Dados alternativos em inglês para compatibilidade
         title: formData.title,
         description: formData.description,
@@ -144,10 +143,26 @@ export class AutoBuildService {
         materials: formData.materials,
         instructions: formData.instructions,
         timeLimit: formData.timeLimit,
-        context: formData.context
+        context: formData.context,
+        textType: formData.textType,
+        textGenre: formData.textGenre,
+        textLength: formData.textLength,
+        associatedQuestions: formData.associatedQuestions,
+        competencies: formData.competencies,
+        readingStrategies: formData.readingStrategies,
+        visualResources: formData.visualResources,
+        practicalActivities: formData.practicalActivities,
+        wordsIncluded: formData.wordsIncluded,
+        gridFormat: formData.gridFormat,
+        providedHints: formData.providedHints,
+        vocabularyContext: formData.vocabularyContext,
+        language: formData.language,
+        associatedExercises: formData.associatedExercises,
+        knowledgeArea: formData.knowledgeArea,
+        complexityLevel: formData.complexityLevel
       };
 
-      console.log('📊 Context data IGUAL ao modal:', contextData);
+      console.log('📊 Context data COMPLETO igual ao modal:', contextData);
 
       // Chamar a função EXATAMENTE como o modal faz
       const result = await generateActivityContent(activity.type || activity.id || 'lista-exercicios', contextData);
@@ -168,7 +183,7 @@ export class AutoBuildService {
         localStorage.setItem(saveKey, JSON.stringify(savedContent));
         console.log(`💾 Conteúdo salvo com chave: ${saveKey}`);
 
-        // Atualizar status de atividades construídas
+        // Atualizar status de atividades construídas EXATAMENTE como o modal
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
         constructedActivities[activity.id] = {
           isBuilt: true,
@@ -189,7 +204,7 @@ export class AutoBuildService {
           this.onActivityBuilt(activity.id);
         }
 
-        console.log(`✅ Atividade construída com MESMA LÓGICA DO MODAL: ${activity.title}`);
+        console.log(`✅ Atividade construída com EXATA MESMA LÓGICA DO MODAL: ${activity.title}`);
       } else {
         throw new Error('Falha na geração do conteúdo pela IA');
       }

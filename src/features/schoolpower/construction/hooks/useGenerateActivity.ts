@@ -1,48 +1,18 @@
-import { useState, useCallback } from 'react';
-import { validateAndNormalizeQuestions, isValidExerciseList } from '../../services/questionValidator';
+import { useState } from 'react';
+import { generateActivityContent } from '../api/generateActivity';
 
-interface UseGenerateActivityProps {
-  activityId: string;
-  activityType: string;
-}
-
-interface ActivityFormData {
-  title?: string;
-  description?: string;
-  subject?: string;
-  theme?: string;
-  schoolYear?: string;
-  numberOfQuestions?: string;
-  difficultyLevel?: string;
-  questionModel?: string;
-  sources?: string;
-  objectives?: string;
-  materials?: string;
-  instructions?: string;
-  timeLimit?: string;
-  context?: string;
-}
-
-export const useGenerateActivity = ({ activityId, activityType }: UseGenerateActivityProps) => {
+export function useGenerateActivity() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const generateActivity = useCallback(async (formData: ActivityFormData) => {
-    if (!activityId || !activityType) {
-      throw new Error('Activity ID and type are required');
-    }
-
+  const generateActivity = async (activityType: string, formData: any) => {
     setIsGenerating(true);
     setError(null);
 
     try {
-      console.log('🚀 useGenerateActivity: Iniciando geração para:', activityType);
-      console.log('📋 Dados do formulário:', formData);
-
-      // Preparar dados de contexto para a IA
+      // Preparar dados de contexto COMPLETOS para enviar para a IA
       const contextData = {
-        // Dados em português para o prompt
+        // Dados em português para o prompt (IDENTICO ao modal e autoBuildService)
         titulo: formData.title || 'Atividade',
         descricao: formData.description || '',
         disciplina: formData.subject || 'Português',
@@ -50,13 +20,31 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
         anoEscolaridade: formData.schoolYear || '6º ano',
         numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
         nivelDificuldade: formData.difficultyLevel || 'Médio',
-        modeloQuestoes: formData.questionModel || 'Múltipla escolha e complete as frases',
-        fontes: formData.sources || 'Gramática básica para concursos e exercícios online Brasil Escola',
+        modeloQuestoes: formData.questionModel || 'Múltipla escolha',
+        fontes: formData.sources || '',
         objetivos: formData.objectives || '',
         materiais: formData.materials || '',
         instrucoes: formData.instructions || '',
         tempoLimite: formData.timeLimit || '',
         contextoAplicacao: formData.context || '',
+
+        // Campos específicos adicionais para todos os tipos
+        tipoTexto: formData.textType || '',
+        generoTextual: formData.textGenre || '',
+        extensaoTexto: formData.textLength || '',
+        questoesAssociadas: formData.associatedQuestions || '',
+        competencias: formData.competencies || '',
+        estrategiasLeitura: formData.readingStrategies || '',
+        recursosVisuais: formData.visualResources || '',
+        atividadesPraticas: formData.practicalActivities || '',
+        palavrasIncluidas: formData.wordsIncluded || '',
+        formatoGrade: formData.gridFormat || '',
+        dicasFornecidas: formData.providedHints || '',
+        contextoVocabulario: formData.vocabularyContext || '',
+        idioma: formData.language || '',
+        exerciciosAssociados: formData.associatedExercises || '',
+        areaConhecimento: formData.knowledgeArea || '',
+        nivelComplexidade: formData.complexityLevel || '',
 
         // Dados alternativos em inglês para compatibilidade
         title: formData.title,
@@ -72,41 +60,41 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
         materials: formData.materials,
         instructions: formData.instructions,
         timeLimit: formData.timeLimit,
-        context: formData.context
+        context: formData.context,
+        textType: formData.textType,
+        textGenre: formData.textGenre,
+        textLength: formData.textLength,
+        associatedQuestions: formData.associatedQuestions,
+        competencies: formData.competencies,
+        readingStrategies: formData.readingStrategies,
+        visualResources: formData.visualResources,
+        practicalActivities: formData.practicalActivities,
+        wordsIncluded: formData.wordsIncluded,
+        gridFormat: formData.gridFormat,
+        providedHints: formData.providedHints,
+        vocabularyContext: formData.vocabularyContext,
+        language: formData.language,
+        associatedExercises: formData.associatedExercises,
+        knowledgeArea: formData.knowledgeArea,
+        complexityLevel: formData.complexityLevel
       };
 
-      console.log('📊 Context data preparado para IA:', contextData);
+      console.log('📊 Dados de contexto COMPLETOS para IA:', contextData);
 
-      // Usar a função generateActivityContent diretamente
-      const { generateActivityContent } = await import('../api/generateActivity');
       const result = await generateActivityContent(activityType, contextData);
-
-      console.log('✅ Atividade gerada pela IA:', result);
-
-      // Salvar no localStorage
-      const saveKey = `activity_${activityId}`;
-      localStorage.setItem(saveKey, JSON.stringify({
-        ...result,
-        generatedAt: new Date().toISOString(),
-        activityId,
-        activityType
-      }));
-
       return result;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('❌ Erro na geração da atividade:', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido na geração';
       setError(errorMessage);
       throw err;
     } finally {
       setIsGenerating(false);
     }
-  }, [activityId, activityType]);
+  };
 
   return {
     generateActivity,
     isGenerating,
-    generatedContent,
     error
   };
-};
+}
