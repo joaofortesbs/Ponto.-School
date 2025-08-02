@@ -98,27 +98,171 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
       console.log('🔥 Iniciando processo de construção para', activitiesToBuild.length, 'atividades');
 
-      // Executar construção automática com lógica REAL
-      await autoBuildService.buildAllActivities(activitiesToBuild);
+      // Executar construção automática de cada atividade
+      let completed = 0;
+      const errors: string[] = [];
 
-      console.log('✅ Construção automática finalizada com sucesso');
+      for (const activity of activitiesToBuild) {
+        try {
+          console.log(`🔨 Construindo atividade: ${activity.title}`);
+          
+          setBuildProgress({
+            current: completed,
+            total: activitiesToBuild.length,
+            currentActivity: `Construindo: ${activity.title}`,
+            status: 'running',
+            errors: [...errors]
+          });
 
-      // Aguardar um pouco para mostrar o progresso completo
+          // Preparar dados do formulário
+          const formData = {
+            title: activity.title || '',
+            description: activity.description || '',
+            subject: activity.customFields?.['Disciplina'] || activity.customFields?.['disciplina'] || 'Português',
+            theme: activity.customFields?.['Tema'] || activity.customFields?.['tema'] || '',
+            schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['anoEscolaridade'] || '',
+            numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || activity.customFields?.['quantidadeQuestoes'] || '10',
+            difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.['nivelDificuldade'] || 'Médio',
+            questionModel: activity.customFields?.['Modelo de Questões'] || activity.customFields?.['modeloQuestoes'] || 'Múltipla escolha',
+            sources: activity.customFields?.['Fontes'] || activity.customFields?.['fontes'] || '',
+            objectives: activity.customFields?.['Objetivos'] || activity.customFields?.['objetivos'] || '',
+            materials: activity.customFields?.['Materiais'] || activity.customFields?.['materiais'] || '',
+            instructions: activity.customFields?.['Instruções'] || activity.customFields?.['instrucoes'] || '',
+            evaluation: activity.customFields?.['Critérios de Correção'] || activity.customFields?.['criteriosAvaliacao'] || '',
+            timeLimit: activity.customFields?.['Tempo Limite'] || activity.customFields?.['tempoLimite'] || '',
+            context: activity.customFields?.['Contexto de Aplicação'] || activity.customFields?.['contexto'] || '',
+            textType: '',
+            textGenre: '',
+            textLength: '',
+            associatedQuestions: '',
+            competencies: '',
+            readingStrategies: '',
+            visualResources: '',
+            practicalActivities: '',
+            wordsIncluded: '',
+            gridFormat: '',
+            providedHints: '',
+            vocabularyContext: '',
+            language: '',
+            associatedExercises: '',
+            knowledgeArea: '',
+            complexityLevel: ''
+          };
+
+          // Preparar dados de contexto para a IA
+          const contextData = {
+            titulo: formData.title || 'Atividade',
+            descricao: formData.description || '',
+            disciplina: formData.subject || 'Português',
+            tema: formData.theme || 'Conteúdo Geral',
+            anoEscolaridade: formData.schoolYear || '6º ano',
+            numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
+            nivelDificuldade: formData.difficultyLevel || 'Médio',
+            modeloQuestoes: formData.questionModel || 'Múltipla escolha',
+            fontes: formData.sources || '',
+            objetivos: formData.objectives || '',
+            materiais: formData.materials || '',
+            instrucoes: formData.instructions || '',
+            tempoLimite: formData.timeLimit || '',
+            contextoAplicacao: formData.context || '',
+
+            title: formData.title,
+            description: formData.description,
+            subject: formData.subject,
+            theme: formData.theme,
+            schoolYear: formData.schoolYear,
+            numberOfQuestions: formData.numberOfQuestions,
+            difficultyLevel: formData.difficultyLevel,
+            questionModel: formData.questionModel,
+            sources: formData.sources,
+            objectives: formData.objectives,
+            materials: formData.materials,
+            instructions: formData.instructions,
+            timeLimit: formData.timeLimit,
+            context: formData.context
+          };
+
+          console.log('📊 Context data para IA:', contextData);
+
+          // Chamar a API de geração real
+          const { generateActivityContent } = await import('./api/generateActivity');
+          const result = await generateActivityContent(activity.type || activity.id || 'lista-exercicios', contextData);
+
+          if (result) {
+            // Salvar resultado gerado
+            const generatedContent = {
+              ...result,
+              generatedAt: new Date().toISOString(),
+              formData: formData,
+              isBuilt: true,
+              builtAt: new Date().toISOString(),
+              activityType: activity.type,
+              activityId: activity.id
+            };
+
+            // Salvar no localStorage
+            localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
+
+            // Marcar como construída
+            const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+            constructedActivities[activity.id] = {
+              ...activity,
+              isBuilt: true,
+              builtAt: new Date().toISOString(),
+              generatedContent: result
+            };
+            localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+            activity.isBuilt = true;
+            activity.progress = 100;
+            activity.status = 'completed';
+
+            console.log(`✅ Atividade ${activity.title} construída com sucesso`);
+          } else {
+            throw new Error('Falha na geração do conteúdo');
+          }
+
+          completed++;
+          
+          setBuildProgress({
+            current: completed,
+            total: activitiesToBuild.length,
+            currentActivity: `Atividade "${activity.title}" construída com sucesso!`,
+            status: 'running',
+            errors: [...errors]
+          });
+
+          // Aguardar um pouco entre construções
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+        } catch (error) {
+          console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
+          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+          errors.push(`${activity.title}: ${errorMessage}`);
+        }
+      }
+
+      console.log('✅ Construção automática finalizada');
+
+      // Mostrar resultado final
+      setBuildProgress({
+        current: completed,
+        total: activitiesToBuild.length,
+        currentActivity: completed === activitiesToBuild.length 
+          ? 'Todas as atividades foram construídas com sucesso!' 
+          : `${completed} de ${activitiesToBuild.length} atividades construídas`,
+        status: errors.length === 0 ? 'completed' : 'completed_with_errors',
+        errors: errors
+      });
+
+      // Aguardar um pouco antes de fechar
       setTimeout(() => {
         setShowProgressModal(false);
-        setBuildProgress({
-          current: activitiesToBuild.length,
-          total: activitiesToBuild.length,
-          currentActivity: 'Todas as atividades construídas com lógica REAL!',
-          status: 'completed',
-          errors: []
-        });
-
-        console.log('🎉 Processo de construção automática com lógica REAL finalizado');
+        setBuildProgress(null);
         
         // Forçar re-render da interface
         window.location.reload();
-      }, 2000);
+      }, 3000);
 
     } catch (error) {
       console.error('❌ Erro na construção automática com lógica REAL:', error);

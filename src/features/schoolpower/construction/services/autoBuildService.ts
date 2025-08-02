@@ -1,6 +1,5 @@
 
 import { ConstructionActivity } from '../types';
-import { generateActivity } from '../api/generateActivity';
 
 export interface AutoBuildProgress {
   current: number;
@@ -75,13 +74,51 @@ export class AutoBuildService {
 
       console.log('📝 Dados do formulário para geração:', formData);
 
-      // Chamar a API de geração real (mesma usada no modal)
-      const result = await generateActivity(formData);
+      // Preparar dados de contexto para a IA (mesmo formato usado no modal)
+      const contextData = {
+        // Dados em português para o prompt
+        titulo: formData.title || 'Atividade',
+        descricao: formData.description || '',
+        disciplina: formData.subject || 'Português',
+        tema: formData.theme || 'Conteúdo Geral',
+        anoEscolaridade: formData.schoolYear || '6º ano',
+        numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
+        nivelDificuldade: formData.difficultyLevel || 'Médio',
+        modeloQuestoes: formData.questionModel || 'Múltipla escolha e complete as frases',
+        fontes: formData.sources || 'Gramática básica para concursos e exercícios online Brasil Escola',
+        objetivos: formData.objectives || '',
+        materiais: formData.materials || '',
+        instrucoes: formData.instructions || '',
+        tempoLimite: formData.timeLimit || '',
+        contextoAplicacao: formData.context || '',
 
-      if (result.success && result.content) {
-        // Salvar no localStorage usando mesma lógica do modal
+        // Dados alternativos em inglês para compatibilidade
+        title: formData.title,
+        description: formData.description,
+        subject: formData.subject,
+        theme: formData.theme,
+        schoolYear: formData.schoolYear,
+        numberOfQuestions: formData.numberOfQuestions,
+        difficultyLevel: formData.difficultyLevel,
+        questionModel: formData.questionModel,
+        sources: formData.sources,
+        objectives: formData.objectives,
+        materials: formData.materials,
+        instructions: formData.instructions,
+        timeLimit: formData.timeLimit,
+        context: formData.context
+      };
+
+      console.log('📊 Context data preparado para IA:', contextData);
+
+      // Usar a mesma função que o modal usa para gerar conteúdo
+      const { generateActivityContent } = await import('../api/generateActivity');
+      const result = await generateActivityContent(activity.type || 'lista-exercicios', contextData);
+
+      if (result) {
+        // Processar resultado da mesma forma que o modal
         const generatedContent = {
-          content: result.content,
+          ...result,
           generatedAt: new Date().toISOString(),
           formData: formData,
           isBuilt: true,
@@ -91,7 +128,7 @@ export class AutoBuildService {
         };
 
         // Salvar conteúdo gerado
-        localStorage.setItem(`generated_content_${activity.id}`, JSON.stringify(generatedContent));
+        localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
 
         // Atualizar status de atividades construídas
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');

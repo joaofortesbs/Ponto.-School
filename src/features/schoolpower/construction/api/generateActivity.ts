@@ -197,6 +197,7 @@ const parseActivityResponse = (response: string, activity: ActionPlanItem): any 
 
 export { buildActivityPrompt, parseActivityResponse };
 
+// Função principal de geração de conteúdo que será usada pelo modal e construção automática
 export const generateActivityContent = async (
   activityType: string,
   contextData: any
