@@ -1,5 +1,5 @@
+
 import { ConstructionActivity } from '../types';
-import { activityGenerationService } from './activityGenerationService';
 import { generateActivity } from '../api/generateActivity';
 
 export interface AutoBuildProgress {
@@ -38,17 +38,40 @@ export class AutoBuildService {
     }
   }
 
+  private prepareActivityFormData(activity: ConstructionActivity): any {
+    console.log(`🎯 Preparando dados do formulário para: ${activity.title}`);
+
+    // Usar dados originais da atividade aprovada se disponível
+    const originalData = activity.originalData || {};
+    
+    // Criar formData seguindo exatamente o mesmo padrão do modal individual
+    const formData = {
+      typeId: activity.id,
+      title: activity.title || originalData.title || '',
+      description: activity.description || originalData.description || '',
+      // Adicionar campos personalizados baseados no tipo de atividade
+      disciplina: originalData.disciplina || originalData.subject || 'Matemática',
+      nivel: originalData.nivel || originalData.level || 'Ensino Médio',
+      duracao: originalData.duracao || originalData.duration || '50 minutos',
+      objetivo: originalData.objetivo || originalData.objective || activity.description,
+      conteudo: originalData.conteudo || originalData.content || activity.description,
+      metodologia: originalData.metodologia || originalData.methodology || 'Prática',
+      recursos: originalData.recursos || originalData.resources || 'Quadro, computador',
+      avaliacao: originalData.avaliacao || originalData.evaluation || 'Participação e exercícios',
+      ...activity.customFields,
+      ...originalData
+    };
+
+    console.log('📝 FormData preparado:', formData);
+    return formData;
+  }
+
   private async generateActivityWithRealLogic(activity: ConstructionActivity): Promise<void> {
-    console.log(`🎯 Usando lógica real de geração para: ${activity.title}`);
+    console.log(`🎯 Usando lógica REAL de geração para: ${activity.title}`);
 
     try {
-      // Usar exatamente a mesma lógica do modal individual
-      const formData = {
-        typeId: activity.id,
-        title: activity.title,
-        description: activity.description,
-        ...activity.customFields
-      };
+      // Preparar dados do formulário usando mesma lógica do modal
+      const formData = this.prepareActivityFormData(activity);
 
       console.log('📝 Dados do formulário para geração:', formData);
 
@@ -56,38 +79,48 @@ export class AutoBuildService {
       const result = await generateActivity(formData);
 
       if (result.success && result.content) {
-        // Salvar no localStorage (mesma lógica do modal)
+        // Salvar no localStorage usando mesma lógica do modal
         const generatedContent = {
           content: result.content,
           generatedAt: new Date().toISOString(),
           formData: formData,
           isBuilt: true,
-          builtAt: new Date().toISOString()
+          builtAt: new Date().toISOString(),
+          activityType: activity.type,
+          activityId: activity.id
         };
 
+        // Salvar conteúdo gerado
         localStorage.setItem(`generated_content_${activity.id}`, JSON.stringify(generatedContent));
 
-        // Atualizar constructedActivities
+        // Atualizar status de atividades construídas
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
         constructedActivities[activity.id] = {
           isBuilt: true,
           builtAt: new Date().toISOString(),
-          formData: formData
+          formData: formData,
+          content: result.content
         };
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+        // Marcar atividade como construída
+        activity.isBuilt = true;
+        activity.builtAt = new Date().toISOString();
+        activity.progress = 100;
+        activity.status = 'completed';
 
         // Callback de atividade construída
         if (this.onActivityBuilt) {
           this.onActivityBuilt(activity.id);
         }
 
-        console.log(`✅ Atividade construída com sucesso usando lógica real: ${activity.title}`);
+        console.log(`✅ Atividade construída com sucesso usando lógica REAL: ${activity.title}`);
       } else {
         throw new Error(result.error || 'Erro na geração da atividade');
       }
 
     } catch (error) {
-      console.error(`❌ Erro na geração real da atividade ${activity.title}:`, error);
+      console.error(`❌ Erro na geração REAL da atividade ${activity.title}:`, error);
       throw error;
     }
   }
@@ -108,6 +141,12 @@ export class AutoBuildService {
     for (let i = 0; i < activities.length; i++) {
       const activity = activities[i];
 
+      // Pular atividades já construídas
+      if (activity.isBuilt || activity.status === 'completed') {
+        console.log(`⏭️ Pulando atividade já construída: ${activity.title}`);
+        continue;
+      }
+
       this.updateProgress({
         current: i,
         total: activities.length,
@@ -116,7 +155,7 @@ export class AutoBuildService {
         errors
       });
 
-      console.log(`🔨 Construindo com lógica REAL: ${activity.title}`);
+      console.log(`🔨 Construindo com lógica REAL (${i + 1}/${activities.length}): ${activity.title}`);
 
       try {
         // Usar a lógica REAL de geração (mesma do modal individual)
@@ -125,7 +164,7 @@ export class AutoBuildService {
         console.log(`✅ Atividade ${i + 1}/${activities.length} construída com LÓGICA REAL: ${activity.title}`);
 
         // Pequeno delay para não sobrecarregar a API
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
       } catch (error) {
         console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);

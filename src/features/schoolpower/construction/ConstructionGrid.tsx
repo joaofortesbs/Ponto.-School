@@ -50,13 +50,26 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const handleBuildAll = async () => {
     console.log('🚀 Iniciando construção automática com lógica REAL de todas as atividades');
 
+    // Filtrar apenas atividades que precisam ser construídas
+    const activitiesToBuild = activities.filter(activity => 
+      !activity.isBuilt && 
+      activity.status !== 'completed' && 
+      activity.title && 
+      activity.description
+    );
+
+    if (activitiesToBuild.length === 0) {
+      console.log('⚠️ Nenhuma atividade precisa ser construída');
+      return;
+    }
+
     try {
       setShowProgressModal(true);
 
       // Inicializar progresso
       setBuildProgress({
         current: 0,
-        total: activities.length,
+        total: activitiesToBuild.length,
         currentActivity: 'Preparando construção com lógica REAL...',
         status: 'running',
         errors: []
@@ -70,19 +83,36 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
       autoBuildService.setOnActivityBuilt((activityId) => {
         console.log(`🎯 Atividade construída automaticamente com lógica REAL: ${activityId}`);
+        
+        // Atualizar estado da atividade em tempo real
+        const updatedActivities = activities.map(activity => {
+          if (activity.id === activityId) {
+            return {
+              ...activity,
+              isBuilt: true,
+              builtAt: new Date().toISOString(),
+              progress: 100,
+              status: 'completed' as const
+            };
+          }
+          return activity;
+        });
+        
+        // Forçar re-render para mostrar atividade construída
+        window.dispatchEvent(new CustomEvent('activity-built', { detail: { activityId } }));
       });
 
       // Executar construção automática com lógica REAL
-      await autoBuildService.buildAllActivities(activities);
+      await autoBuildService.buildAllActivities(activitiesToBuild);
 
       // Aguardar um pouco para mostrar o progresso completo
       setTimeout(() => {
         setShowProgressModal(false);
         setBuildProgress({
-          current: activities.length,
-          total: activities.length,
+          current: activitiesToBuild.length,
+          total: activitiesToBuild.length,
           currentActivity: 'Todas as atividades construídas com lógica REAL!',
-          status: 'complete',
+          status: 'completed',
           errors: []
         });
 
@@ -92,8 +122,13 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           if (constructedActivities[activity.id]) {
             activity.isBuilt = true;
             activity.builtAt = constructedActivities[activity.id].builtAt;
+            activity.progress = 100;
+            activity.status = 'completed';
           }
         });
+
+        // Forçar re-render da interface
+        window.location.reload();
 
         console.log('🎉 Processo de construção automática com lógica REAL finalizado');
       }, 2000);
@@ -104,7 +139,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
       setBuildProgress({
         current: 0,
-        total: activities.length,
+        total: activitiesToBuild.length,
         currentActivity: 'Erro na construção',
         status: 'error',
         errors: [error instanceof Error ? error.message : 'Erro desconhecido']
