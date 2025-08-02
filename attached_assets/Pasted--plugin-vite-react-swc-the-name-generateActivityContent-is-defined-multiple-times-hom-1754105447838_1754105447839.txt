@@ -1,0 +1,244 @@
+[plugin:vite:react-swc] × the name `generateActivityContent` is defined multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/construction/api/generateActivity.ts:195:1]
+ 195 │ 
+ 196 │ export { buildActivityPrompt, parseActivityResponse };
+ 197 │ 
+ 198 │ export const generateActivityContent = async (
+     ·              ───────────┬───────────
+     ·                         ╰── previous definition of `generateActivityContent` here
+ 199 │   activityType: string,
+ 200 │   contextData: any
+ 201 │ ): Promise<any> => {
+ 202 │   try {
+ 203 │     console.log('🤖 Iniciando geração de conteúdo com Gemini para:', activityType);
+ 204 │     console.log('📋 Dados de contexto completos:', JSON.stringify(contextData, null, 2));
+ 205 │ 
+ 206 │     const geminiClient = new GeminiClient();
+ 207 │ 
+ 208 │     // Prompt específico para Lista de Exercícios
+ 209 │     let prompt = '';
+ 210 │ 
+ 211 │     if (activityType === 'lista-exercicios') {
+ 212 │       // Importar o prompt específico
+ 213 │       const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
+ 214 │       prompt = buildListaExerciciosPrompt(contextData);
+ 215 │       console.log('📝 Prompt gerado para lista de exercícios:', prompt.substring(0, 500) + '...');
+ 216 │     } else {
+ 217 │       // Prompt genérico para outros tipos de atividade
+ 218 │       prompt = `
+ 219 │ Crie o conteúdo educacional para uma atividade do tipo "${activityType}" com base no seguinte contexto:
+ 220 │ 
+ 221 │ CONTEXTO:
+ 222 │ ${JSON.stringify(contextData, null, 2)}
+ 223 │ 
+ 224 │ FORMATO: Responda em JSON estruturado com todos os campos relevantes para o tipo de atividade solicitado.
+ 225 │ REQUISITOS: Conteúdo educativo, bem estruturado e adequado ao contexto fornecido.
+ 226 │ 
+ 227 │ Responda APENAS com o JSON, sem texto adicional.`;
+ 228 │     }
+ 229 │ 
+ 230 │     console.log('📤 Enviando prompt para Gemini...');
+ 231 │ 
+ 232 │     const response = await geminiClient.generate({
+ 233 │       prompt,
+ 234 │       temperature: 0.7,
+ 235 │       maxTokens: 4000,
+ 236 │       topP: 0.9,
+ 237 │       topK: 40
+ 238 │     });
+ 239 │ 
+ 240 │     if (response.success) {
+ 241 │       console.log('✅ Resposta recebida do Gemini');
+ 242 │       console.log('📊 Estimativa de tokens:', response.estimatedTokens);
+ 243 │       console.log('💰 Custo estimado:', response.estimatedPowerCost);
+ 244 │       console.log('⏱️ Tempo de execução:', response.executionTime + 'ms');
+ 245 │ 
+ 246 │       // Limpar a resposta para garantir que seja JSON válido
+ 247 │       let cleanedResponse = response.result.trim();
+ 248 │ 
+ 249 │       console.log('🔧 Resposta bruta da IA (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
+ 250 │ 
+ 251 │       // Múltiplas tentativas de limpeza
+ 252 │       // 1. Remover markdown
+ 253 │       cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+ 254 │       cleanedResponse = cleanedResponse.replace(/```\s*/g, '');
+ 255 │ 
+ 256 │       // 2. Remover possíveis textos antes e depois do JSON
+ 257 │       const jsonStart = cleanedResponse.indexOf('{');
+ 258 │       const jsonEnd = cleanedResponse.lastIndexOf('}');
+ 259 │ 
+ 260 │       if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+ 261 │         cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+ 262 │       }
+ 263 │ 
+ 264 │       // 3. Verificar se começa e termina com { }
+ 265 │       if (!cleanedResponse.trim().startsWith('{')) {
+ 266 │         const firstBrace = cleanedResponse.indexOf('{');
+ 267 │         if (firstBrace !== -1) {
+ 268 │           cleanedResponse = cleanedResponse.substring(firstBrace);
+ 269 │         }
+ 270 │       }
+ 271 │ 
+ 272 │       if (!cleanedResponse.trim().endsWith('}')) {
+ 273 │         const lastBrace = cleanedResponse.lastIndexOf('}');
+ 274 │         if (lastBrace !== -1) {
+ 275 │           cleanedResponse = cleanedResponse.substring(0, lastBrace + 1);
+ 276 │         }
+ 277 │       }
+ 278 │ 
+ 279 │       console.log('🔧 Resposta limpa para parsing (primeiros 500 chars):', cleanedResponse.substring(0, 500));
+ 280 │ 
+ 281 │       try {
+ 282 │         const parsedResult = JSON.parse(cleanedResponse);
+ 283 │         console.log('✅ Resultado parseado com sucesso');
+ 284 │         console.log('📊 Estrutura do resultado:', {
+ 285 │           hasTitle: !!parsedResult.titulo,
+ 286 │           hasDisciplina: !!parsedResult.disciplina,
+ 287 │           hasTema: !!parsedResult.tema,
+ 288 │           hasQuestoes: !!parsedResult.questoes,
+ 289 │           questoesLength: parsedResult.questoes ? parsedResult.questoes.length : 0,
+ 290 │           keys: Object.keys(parsedResult)
+ 291 │         });
+ 292 │ 
+ 293 │         // Validação rigorosa para lista de exercícios
+ 294 │         if (activityType === 'lista-exercicios') {
+ 295 │           // Verificar se tem questões
+ 296 │           if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes)) {
+ 297 │             console.error('❌ Estrutura de questões inválida');
+ 298 │             throw new Error('Campo questoes não encontrado ou não é um array');
+ 299 │           }
+ 300 │ 
+ 301 │           if (parsedResult.questoes.length === 0) {
+ 302 │             console.error('❌ Nenhuma questão gerada pela IA');
+ 303 │             throw new Error('Array de questões está vazio');
+ 304 │           }
+ 305 │ 
+ 306 │           // Validar cada questão
+ 307 │           const questoesValidas = parsedResult.questoes.every((questao: any, index: number) => {
+ 308 │             const isValid = questao.id && questao.type && questao.enunciado;
+ 309 │             if (!isValid) {
+ 310 │               console.error(`❌ Questão ${index + 1} inválida:`, questao);
+ 311 │             }
+ 312 │             return isValid;
+ 313 │           });
+ 314 │ 
+ 315 │           if (!questoesValidas) {
+ 316 │             throw new Error('Algumas questões geradas pela IA são inválidas');
+ 317 │           }
+ 318 │ 
+ 319 │           console.log(`📝 ${parsedResult.questoes.length} questões válidas geradas pela IA`);
+ 320 │           console.log('📄 Primeira questão como exemplo:', parsedResult.questoes[0]);
+ 321 │ 
+ 322 │           // Marcar como gerado pela IA
+ 323 │           parsedResult.isGeneratedByAI = true;
+ 324 │           parsedResult.generatedAt = new Date().toISOString();
+ 325 │ 
+ 326 │           // Garantir que todos os campos necessários existem
+ 327 │           parsedResult.titulo = parsedResult.titulo || contextData.titulo || contextData.title || 'Lista de Exercícios';
+ 328 │           parsedResult.disciplina = parsedResult.disciplina || contextData.disciplina || contextData.subject || 'Disciplina';
+ 329 │           parsedResult.tema = parsedResult.tema || contextData.tema || contextData.theme || 'Tema';
+ 330 │           parsedResult.numeroQuestoes = parsedResult.questoes.length;
+ 331 │         }
+ 332 │ 
+ 333 │         return parsedResult;
+ 334 │       } catch (parseError) {
+ 335 │         console.error('❌ Erro ao fazer parse do JSON:', parseError);
+ 336 │         console.error('📄 Conteúdo que causou erro (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
+ 337 │ 
+ 338 │         // Tentar extrair JSON de forma mais agressiva
+ 339 │         try {
+ 340 │           // Buscar por padrões JSON válidos
+ 341 │           const jsonPattern = /\{[\s\S]*\}/;
+ 342 │           const match = cleanedResponse.match(jsonPattern);
+ 343 │ 
+ 344 │           if (match) {
+ 345 │             const extractedJson = match[0];
+ 346 │             console.log('🔄 Tentando JSON extraído:', extractedJson.substring(0, 200));
+ 347 │             const secondAttempt = JSON.parse(extractedJson);
+ 348 │             console.log('✅ Segunda tentativa de parse bem sucedida');
+ 349 │ 
+ 350 │             // Aplicar mesmas validações
+ 351 │             if (activityType === 'lista-exercicios') {
+ 352 │               if (secondAttempt.questoes && Array.isArray(secondAttempt.questoes) && secondAttempt.questoes.length > 0) {
+ 353 │                 secondAttempt.isGeneratedByAI = true;
+ 354 │                 secondAttempt.generatedAt = new Date().toISOString();
+ 355 │                 return secondAttempt;
+ 356 │               }
+ 357 │             }
+ 358 │ 
+ 359 │             return secondAttempt;
+ 360 │           }
+ 361 │         } catch (secondError) {
+ 362 │           console.error('❌ Segunda tentativa de parse também falhou:', secondError);
+ 363 │         }
+ 364 │ 
+ 365 │         throw new Error(`Erro ao processar resposta da IA: ${parseError.message}`);
+ 366 │       }
+ 367 │ 
+ 368 │     } else {
+ 369 │       console.error('❌ Erro na API Gemini:', response.error);
+ 370 │       throw new Error(response.error || 'Falha na geração de conteúdo');
+ 371 │     }
+ 372 │ 
+ 373 │   } catch (error) {
+ 374 │     console.error('❌ Erro crítico ao gerar conteúdo da atividade:', error);
+ 375 │     throw error;
+ 376 │   }
+ 377 │ };
+ 378 │ 
+ 379 │ export async function generateActivity(formData: any): Promise<{ success: boolean; content?: string; error?: string }> {
+ 380 │   console.log('🎯 generateActivity: Iniciando geração com formData:', formData);
+ 381 │ 
+ 382 │   try {
+ 383 │     // Validar dados obrigatórios
+ 384 │     if (!formData.title || !formData.description) {
+ 385 │       throw new Error('Título e descrição são obrigatórios');
+ 386 │     }
+ 387 │ 
+ 388 │     // Preparar dados para a API
+ 389 │     const activityData = {
+ 390 │       title: formData.title,
+ 391 │       description: formData.description,
+ 392 │       type: formData.typeId || 'default',
+ 393 │       disciplina: formData.disciplina || 'Matemática',
+ 394 │       nivel: formData.nivel || 'Ensino Médio',
+ 395 │       duracao: formData.duracao || '50 minutos',
+ 396 │       objetivo: formData.objetivo || formData.description,
+ 397 │       conteudo: formData.conteudo || formData.description,
+ 398 │       metodologia: formData.metodologia || 'Prática',
+ 399 │       recursos: formData.recursos || 'Quadro, computador',
+ 400 │       avaliacao: formData.avaliacao || 'Participação e exercícios'
+ 401 │     };
+ 402 │ 
+ 403 │     console.log('📝 Dados preparados para API:', activityData);
+ 404 │ 
+ 405 │     // Simular geração da atividade (substituir pela API real quando disponível)
+ 406 │     const generatedContent = await generateActivityContent(activityData);
+ 407 │ 
+ 408 │     if (generatedContent) {
+ 409 │       console.log('✅ Atividade gerada com sucesso');
+ 410 │       return {
+ 411 │         success: true,
+ 412 │         content: generatedContent
+ 413 │       };
+ 414 │     } else {
+ 415 │       throw new Error('Falha na geração do conteúdo');
+ 416 │     }
+ 417 │ 
+ 418 │   } catch (error) {
+ 419 │     console.error('❌ Erro na geração da atividade:', error);
+ 420 │     return {
+ 421 │       success: false,
+ 422 │       error: error instanceof Error ? error.message : 'Erro desconhecido'
+ 423 │     };
+ 424 │   }
+ 425 │ }
+ 426 │ 
+ 427 │ async function generateActivityContent(activityData: any): Promise<string> {
+     ·                ───────────┬───────────
+     ·                           ╰── `generateActivityContent` redefined here
+ 428 │   console.log('🔨 Gerando conteúdo da atividade:', activityData.title);
+ 429 │ 
+ 430 │   // Simular delay da API
+     ╰────
+/home/runner/workspace/src/features/schoolpower/construction/api/generateActivity.ts:195:1
