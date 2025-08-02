@@ -1,5 +1,6 @@
 import { ConstructionActivity } from '../types';
 import { activityGenerationService } from './activityGenerationService';
+import { generateActivity } from '../api/generateActivity';
 
 export interface AutoBuildProgress {
   current: number;
@@ -37,113 +38,62 @@ export class AutoBuildService {
     }
   }
 
-  private async simulateModalConstruction(activity: ConstructionActivity): Promise<void> {
-    console.log(`🎯 Simulando construção do modal para: ${activity.title}`);
+  private async generateActivityWithRealLogic(activity: ConstructionActivity): Promise<void> {
+    console.log(`🎯 Usando lógica real de geração para: ${activity.title}`);
 
-    // Preparar dados do formulário baseado nos customFields da atividade
-    const formData = {
-      typeId: activity.id,
-      title: activity.title,
-      description: activity.description,
-      ...activity.customFields
-    };
+    try {
+      // Usar exatamente a mesma lógica do modal individual
+      const formData = {
+        typeId: activity.id,
+        title: activity.title,
+        description: activity.description,
+        ...activity.customFields
+      };
 
-    console.log('📝 Dados do formulário preparados:', formData);
+      console.log('📝 Dados do formulário para geração:', formData);
 
-    // Simular o preenchimento dos campos do modal
-    await this.fillModalFields(activity.id, formData);
+      // Chamar a API de geração real (mesma usada no modal)
+      const result = await generateActivity(formData);
 
-    // Aguardar um pouco para simular o processamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      if (result.success && result.content) {
+        // Salvar no localStorage (mesma lógica do modal)
+        const generatedContent = {
+          content: result.content,
+          generatedAt: new Date().toISOString(),
+          formData: formData,
+          isBuilt: true,
+          builtAt: new Date().toISOString()
+        };
 
-    // Gerar a atividade usando o serviço real
-    const generatedActivity = await activityGenerationService.generateActivity(activity.id, formData);
+        localStorage.setItem(`generated_content_${activity.id}`, JSON.stringify(generatedContent));
 
-    console.log('✅ Atividade gerada com sucesso:', generatedActivity);
+        // Atualizar constructedActivities
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity.id] = {
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          formData: formData
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-    // Marcar como construída
-    activity.isBuilt = true;
-    activity.builtAt = new Date().toISOString();
+        // Callback de atividade construída
+        if (this.onActivityBuilt) {
+          this.onActivityBuilt(activity.id);
+        }
 
-    // Gerar conteúdo da atividade
-    console.log(`🏗️ Gerando conteúdo para: ${activity.title}`);
-    const generatedContent = await activityGenerationService.generateActivity(activity.id, formData);
-
-    console.log(`✅ Conteúdo gerado para ${activity.title}:`, generatedContent);
-
-    // Padronizar e salvar conteúdo gerado
-    const contentToSave = {
-      generatedAt: new Date().toISOString(),
-      activityId: activity.id,
-      activityTitle: activity.title,
-      isGenerated: true,
-      ...generatedContent
-    };
-
-    localStorage.setItem(`activity_${activity.id}`, JSON.stringify(contentToSave));
-
-    // Atualizar atividade construída
-    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-    constructedActivities[activity.id] = {
-      ...activity,
-      isBuilt: true,
-      builtAt: new Date().toISOString(),
-      generatedContent: contentToSave
-    };
-    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-    console.log(`💾 Atividade ${activity.id} salva com sucesso`);
-
-    // Notificar que a atividade foi construída
-    if (this.onActivityBuilt) {
-      this.onActivityBuilt(activity.id);
-    }
-  }
-
-  private async fillModalFields(activityId: string, formData: any): Promise<void> {
-    console.log(`📋 Preenchendo campos do modal para ${activityId}:`, formData);
-
-    // Simular o preenchimento dos campos específicos baseado no tipo de atividade
-    const fieldMappings = {
-      'lista-exercicios': [
-        'Quantidade de Questões',
-        'Tema',
-        'Disciplina',
-        'Ano de Escolaridade',
-        'Nível de Dificuldade',
-        'Modelo de Questões',
-        'Fontes'
-      ],
-      'prova': [
-        'Quantidade de Questões',
-        'Tema',
-        'Disciplina',
-        'Ano de Escolaridade',
-        'Nível de Dificuldade',
-        'Tempo de Duração'
-      ],
-      'jogos-educativos': [
-        'Tema',
-        'Disciplina',
-        'Ano de Escolaridade',
-        'Tipo de Jogo',
-        'Nível de Dificuldade'
-      ]
-    };
-
-    const fields = fieldMappings[activityId] || [];
-    console.log(`🔧 Campos identificados para ${activityId}:`, fields);
-
-    // Simular preenchimento de cada campo
-    for (const field of fields) {
-      if (formData[field]) {
-        console.log(`✏️ Preenchendo campo "${field}" com valor "${formData[field]}"`);
+        console.log(`✅ Atividade construída com sucesso usando lógica real: ${activity.title}`);
+      } else {
+        throw new Error(result.error || 'Erro na geração da atividade');
       }
+
+    } catch (error) {
+      console.error(`❌ Erro na geração real da atividade ${activity.title}:`, error);
+      throw error;
     }
   }
 
   async buildAllActivities(activities: ConstructionActivity[]): Promise<void> {
-    console.log('🚀 Iniciando construção automática de', activities.length, 'atividades');
+    console.log('🚀 Iniciando construção automática com lógica REAL de', activities.length, 'atividades');
 
     const errors: string[] = [];
 
@@ -166,48 +116,39 @@ export class AutoBuildService {
         errors
       });
 
-      console.log(`🔨 Construindo: ${activity.title}`);
+      console.log(`🔨 Construindo com lógica REAL: ${activity.title}`);
 
       try {
-        // Usar a simulação de construção do modal
-        await this.simulateModalConstruction(activity);
+        // Usar a lógica REAL de geração (mesma do modal individual)
+        await this.generateActivityWithRealLogic(activity);
 
-        console.log(`✅ Atividade construída com sucesso: ${activity.title}`);
-        console.log(`✅ Atividade ${i + 1}/${activities.length} construída: ${activity.title}`);
+        console.log(`✅ Atividade ${i + 1}/${activities.length} construída com LÓGICA REAL: ${activity.title}`);
+
+        // Pequeno delay para não sobrecarregar a API
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
         console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
-        errors.push(`Erro ao construir ${activity.title}: ${error.message}`);
+        errors.push(`Erro em "${activity.title}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
-
-      // Atualizar progresso para a próxima atividade
-      this.updateProgress({
-        current: i + 1,
-        total: activities.length,
-        currentActivity: i + 1 < activities.length ? activities[i + 1].title : '',
-        status: 'running',
-        errors
-      });
-
-      // Pequena pausa entre as construções para simular processamento real
-      await new Promise(resolve => setTimeout(resolve, 800));
     }
 
+    // Progresso final
     this.updateProgress({
       current: activities.length,
       total: activities.length,
-      currentActivity: '',
+      currentActivity: 'Concluído',
       status: errors.length > 0 ? 'error' : 'completed',
       errors
     });
 
-    if (errors.length === 0) {
-      console.log(`🎉 Construção automática concluída: ${activities.length}/${activities.length} atividades`);
-    } else {
-      console.warn(`⚠️ Construção concluída com erros: ${activities.length - errors.length}/${activities.length} atividades`);
+    console.log('🎉 Processo de construção automática finalizado com lógica REAL');
+
+    if (errors.length > 0) {
+      console.warn('⚠️ Alguns erros ocorreram:', errors);
+      throw new Error(`Construção concluída com ${errors.length} erro(s)`);
     }
   }
 }
 
-// Exportar a instância para uso direto
 export const autoBuildService = AutoBuildService.getInstance();

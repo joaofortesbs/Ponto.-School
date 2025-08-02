@@ -48,49 +48,41 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   };
 
   const handleBuildAll = async () => {
-    console.log('🤖 Iniciando construção automática em massa');
-    console.log('🎯', activities.length, 'atividades serão construídas automaticamente');
-
-    setShowProgressModal(true);
-
-    autoBuildService.setProgressCallback((progress) => {
-      setBuildProgress(progress);
-      console.log('🚀 Progresso:', progress);
-    });
-
-    // Configurar callback para quando uma atividade for construída
-    autoBuildService.setOnActivityBuilt((activityId) => {
-      console.log(`🔄 Atividade ${activityId} foi construída, atualizando estado...`);
-
-      // Atualizar o estado da atividade específica
-      const updatedActivities = activities.map(activity => {
-        if (activity.id === activityId) {
-          return {
-            ...activity,
-            isBuilt: true,
-            builtAt: new Date().toISOString()
-          };
-        }
-        return activity;
-      });
-
-      // Forçar re-render para mostrar mudanças
-      window.dispatchEvent(new CustomEvent('activityBuilt', { 
-        detail: { activityId, activities: updatedActivities } 
-      }));
-    });
+    console.log('🚀 Iniciando construção automática com lógica REAL de todas as atividades');
 
     try {
+      setShowProgressModal(true);
+
+      // Inicializar progresso
+      setBuildProgress({
+        current: 0,
+        total: activities.length,
+        currentActivity: 'Preparando construção com lógica REAL...',
+        status: 'running',
+        errors: []
+      });
+
+      // Configurar callbacks
+      autoBuildService.setProgressCallback((progress) => {
+        console.log('📊 Progresso atualizado:', progress);
+        setBuildProgress(progress);
+      });
+
+      autoBuildService.setOnActivityBuilt((activityId) => {
+        console.log(`🎯 Atividade construída automaticamente com lógica REAL: ${activityId}`);
+      });
+
+      // Executar construção automática com lógica REAL
       await autoBuildService.buildAllActivities(activities);
 
-      // Aguardar um pouco antes de fechar o modal para mostrar conclusão
+      // Aguardar um pouco para mostrar o progresso completo
       setTimeout(() => {
         setShowProgressModal(false);
         setBuildProgress({
-          current: 0,
-          total: 0,
-          currentActivity: '',
-          status: 'idle',
+          current: activities.length,
+          total: activities.length,
+          currentActivity: 'Todas as atividades construídas com lógica REAL!',
+          status: 'complete',
           errors: []
         });
 
@@ -103,29 +95,20 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           }
         });
 
-        // Mostrar notificação de sucesso
-        // if (toast) {  // toast is not defined, commenting out
-        //   toast({
-        //     title: "✅ Construção Concluída",
-        //     description: `${activities.length} atividades foram construídas com sucesso! Acesse os modais para visualizar.`,
-        //     variant: "default"
-        //   });
-        // }
-
-        console.log('🎉 Processo de construção automática finalizado');
+        console.log('🎉 Processo de construção automática com lógica REAL finalizado');
       }, 2000);
 
     } catch (error) {
-      console.error('❌ Erro na construção automática:', error);
+      console.error('❌ Erro na construção automática com lógica REAL:', error);
       setShowProgressModal(false);
 
-      //if (toast) { // toast is not defined, commenting out
-      //   toast({
-      //     title: "❌ Erro na Construção",
-      //     description: "Ocorreu um erro durante a construção automática.",
-      //     variant: "destructive"
-      //   });
-      // }
+      setBuildProgress({
+        current: 0,
+        total: activities.length,
+        currentActivity: 'Erro na construção',
+        status: 'error',
+        errors: [error instanceof Error ? error.message : 'Erro desconhecido']
+      });
     }
   };
 
