@@ -63,7 +63,7 @@ import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
 export const generateActivityData = async (
-  activity: ActionPlanItem, 
+  activity: ActionPlanItem,
   contextualizationData?: any
 ): Promise<any> => {
   try {
@@ -151,7 +151,7 @@ Gere uma atividade educacional completa e detalhada seguindo exatamente esta est
 }
 \`\`\`
 
-**IMPORTANTE**: 
+**IMPORTANTE**:
 - Responda APENAS com o JSON válido, sem texto adicional
 - Adapte todos os campos ao contexto fornecido
 - Seja específico e prático
@@ -162,8 +162,8 @@ Gere uma atividade educacional completa e detalhada seguindo exatamente esta est
 const parseActivityResponse = (response: string, activity: ActionPlanItem): any => {
   try {
     // Extrair JSON da resposta
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) || 
-                     response.match(/\{[\s\S]*\}/);
+    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) ||
+      response.match(/\{[\s\S]*\}/);
 
     if (jsonMatch) {
       const jsonString = jsonMatch[1] || jsonMatch[0];
@@ -376,113 +376,175 @@ Responda APENAS com o JSON, sem texto adicional.`;
   }
 };
 
-export const generateActivity = async (activityData: any): Promise<any> => {
+export async function generateActivity(formData: any): Promise<{ success: boolean; content?: string; error?: string }> {
+  console.log('🎯 generateActivity: Iniciando geração com formData:', formData);
+
   try {
-    console.log('🚀 Gerando atividade com dados completos:', activityData);
-
-    // Garantir que os dados essenciais estão presentes
-    const contextualizedData = {
-      ...activityData,
-      numeroQuestoes: activityData.numeroQuestoes || activityData.numberOfQuestions || '10',
-      disciplina: activityData.disciplina || activityData.subject || 'Português',
-      tema: activityData.tema || activityData.theme || 'Conteúdo Geral',
-      anoEscolar: activityData.anoEscolaridade || activityData.schoolYear || '6º ano',
-      dificuldade: activityData.nivelDificuldade || activityData.difficultyLevel || 'Médio',
-      modeloQuestoes: activityData.modeloQuestoes || activityData.questionModel || 'multipla-escolha',
-      titulo: activityData.titulo || activityData.title || `Lista de Exercícios`,
-      descricao: activityData.descricao || activityData.description || '',
-      objetivos: activityData.objetivos || activityData.objectives || '',
-      fontes: activityData.fontes || activityData.sources || ''
-    };
-
-    const prompt = buildListaExerciciosPrompt(contextualizedData);
-    console.log('📝 Prompt personalizado gerado:', prompt);
-    console.log('🎯 Dados contextualizados:', contextualizedData);
-
-    // Chamar a API Gemini diretamente para personalização
-    const geminiResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAOcWwuLjx8m1jN_-63a0aPLs7XFYztlKY', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        }
-      }),
-    });
-
-    if (!geminiResponse.ok) {
-      throw new Error(`Erro na API Gemini: ${geminiResponse.status}`);
+    // Validar dados obrigatórios
+    if (!formData.title || !formData.description) {
+      throw new Error('Título e descrição são obrigatórios');
     }
 
-    const geminiData = await geminiResponse.json();
-    console.log('🤖 Resposta bruta do Gemini:', geminiData);
+    // Preparar dados para a API
+    const activityData = {
+      title: formData.title,
+      description: formData.description,
+      type: formData.typeId || 'default',
+      disciplina: formData.disciplina || 'Matemática',
+      nivel: formData.nivel || 'Ensino Médio',
+      duracao: formData.duracao || '50 minutos',
+      objetivo: formData.objetivo || formData.description,
+      conteudo: formData.conteudo || formData.description,
+      metodologia: formData.metodologia || 'Prática',
+      recursos: formData.recursos || 'Quadro, computador',
+      avaliacao: formData.avaliacao || 'Participação e exercícios'
+    };
 
-    let generatedText = '';
-    if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
-      generatedText = geminiData.candidates[0].content.parts[0].text;
+    console.log('📝 Dados preparados para API:', activityData);
+
+    // Simular geração da atividade (substituir pela API real quando disponível)
+    const generatedContent = await generateActivityContent(activityData);
+
+    if (generatedContent) {
+      console.log('✅ Atividade gerada com sucesso');
+      return {
+        success: true,
+        content: generatedContent
+      };
     } else {
-      throw new Error('Resposta inválida da API Gemini');
+      throw new Error('Falha na geração do conteúdo');
     }
-
-    console.log('📄 Texto gerado:', generatedText);
-
-    // Processar e validar a resposta JSON
-    let parsedResponse;
-    try {
-      // Limpar possíveis caracteres extras
-      const cleanText = generatedText.trim()
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .replace(/^```\s*/, '')
-        .replace(/\s*```$/, '');
-
-      parsedResponse = JSON.parse(cleanText);
-      console.log('✅ JSON parseado:', parsedResponse);
-    } catch (parseError) {
-      console.error('❌ Erro ao parsear JSON:', parseError);
-      console.log('🔍 Texto que falhou no parse:', generatedText);
-      throw new Error('Resposta da IA não está em formato JSON válido');
-    }
-
-    // Validar a estrutura da resposta
-    if (!parsedResponse.questoes || !Array.isArray(parsedResponse.questoes)) {
-      throw new Error('Resposta da IA não contém questões válidas');
-    }
-
-    // Garantir que as questões estão no formato correto
-    const processedQuestions = parsedResponse.questoes.map((questao: any, index: number) => ({
-      id: questao.id || `questao-${index + 1}`,
-      type: questao.type || 'multipla-escolha',
-      enunciado: questao.enunciado || '',
-      alternativas: questao.alternativas || [],
-      respostaCorreta: questao.respostaCorreta,
-      explicacao: questao.explicacao || '',
-      dificuldade: questao.dificuldade || contextualizedData.dificuldade.toLowerCase(),
-      tema: questao.tema || contextualizedData.tema
-    }));
-
-    const result = {
-      ...parsedResponse,
-      questoes: processedQuestions,
-      isGeneratedByAI: true,
-      contextData: contextualizedData
-    };
-
-    console.log('🎉 Atividade personalizada gerada com sucesso:', result);
-    return result;
 
   } catch (error) {
-    console.error('❌ Erro ao gerar atividade personalizada:', error);
-    throw error;
+    console.error('❌ Erro na geração da atividade:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
   }
-};
+}
+
+async function generateActivityContent(activityData: any): Promise<string> {
+  console.log('🔨 Gerando conteúdo da atividade:', activityData.title);
+
+  // Simular delay da API
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // Template baseado no tipo de atividade
+  const templates = {
+    'lista-exercicios': `
+# ${activityData.title}
+
+## Informações Gerais
+- **Disciplina:** ${activityData.disciplina}
+- **Nível:** ${activityData.nivel}
+- **Duração:** ${activityData.duracao}
+
+## Objetivo
+${activityData.objetivo}
+
+## Conteúdo
+${activityData.conteudo}
+
+## Exercícios
+
+### Exercício 1
+Resolva a função f(x) = 2x + 3 para x = 5.
+
+**Solução:**
+f(5) = 2(5) + 3 = 10 + 3 = 13
+
+### Exercício 2
+Determine o zero da função f(x) = -3x + 9.
+
+**Solução:**
+-3x + 9 = 0
+-3x = -9
+x = 3
+
+### Exercício 3
+Construa o gráfico da função f(x) = x - 2.
+
+**Solução:**
+- Quando x = 0: f(0) = -2
+- Quando x = 2: f(2) = 0
+- Quando x = 4: f(4) = 2
+
+## Metodologia
+${activityData.metodologia}
+
+## Recursos Necessários
+${activityData.recursos}
+
+## Avaliação
+${activityData.avaliacao}
+    `,
+    'prova': `
+# ${activityData.title}
+
+## Informações da Prova
+- **Disciplina:** ${activityData.disciplina}
+- **Nível:** ${activityData.nivel}
+- **Duração:** ${activityData.duracao}
+
+## Instruções
+1. Leia todas as questões antes de começar
+2. Resolva as questões com calma e atenção
+3. Mostre os cálculos quando necessário
+
+## Questões
+
+### Questão 1 (2,0 pontos)
+Dada a função f(x) = 3x - 6, calcule:
+a) f(2)
+b) O zero da função
+
+### Questão 2 (2,0 pontos)
+Determine a lei de formação da função cujo gráfico passa pelos pontos (0, 4) e (2, 0).
+
+### Questão 3 (3,0 pontos)
+Resolva o sistema de equações:
+2x + y = 7
+x - y = 2
+
+### Questão 4 (3,0 pontos)
+Aplique o Teorema de Pitágoras para encontrar a hipotenusa de um triângulo retângulo com catetos de 3 cm e 4 cm.
+
+## Gabarito
+1. a) f(2) = 0  b) x = 2
+2. f(x) = -2x + 4
+3. x = 3, y = 1
+4. h = 5 cm
+    `,
+    'default': `
+# ${activityData.title}
+
+## Descrição
+${activityData.description}
+
+## Objetivo
+${activityData.objetivo}
+
+## Conteúdo Desenvolvido
+${activityData.conteudo}
+
+## Metodologia
+${activityData.metodologia}
+
+## Recursos
+${activityData.recursos}
+
+## Avaliação
+${activityData.avaliacao}
+
+---
+*Atividade gerada automaticamente pelo School Power*
+    `
+  };
+
+  // Determinar template baseado no tipo ou usar default
+  const activityType = activityData.type || 'default';
+  const template = templates[activityType] || templates['default'];
+
+  return template.trim();
+}

@@ -122,17 +122,27 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
     } catch (error) {
       console.error('❌ Erro na construção automática com lógica REAL:', error);
-      setShowProgressModal(false);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('🔍 Detalhes do erro:', {
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        activitiesToBuild: activitiesToBuild.length
+      });
 
       setBuildProgress({
         current: 0,
         total: activitiesToBuild.length,
         currentActivity: 'Erro na construção',
         status: 'error',
-        errors: [error instanceof Error ? error.message : 'Erro desconhecido']
+        errors: [errorMessage]
       });
 
-      alert(`Erro na construção automática: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      // Manter modal aberto para mostrar erro
+      setTimeout(() => {
+        setShowProgressModal(false);
+        setBuildProgress(null);
+      }, 5000);
     }
   };
 

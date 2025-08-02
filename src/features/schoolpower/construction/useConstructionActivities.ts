@@ -47,16 +47,22 @@ export const useConstructionActivities = (approvedActivities?: any[]) => {
           });
 
           // Preparar campos personalizados baseados no tipo de atividade
+          const existingCustomFields = activity.customFields || {};
           const customFields = {
-            disciplina: activity.disciplina || activity.subject || 'Matemática',
-            nivel: activity.nivel || activity.level || 'Ensino Médio',
-            duracao: activity.duracao || activity.duration || '50 minutos',
-            objetivo: activity.objetivo || activity.objective || activity.description,
-            conteudo: activity.conteudo || activity.content || activity.description,
-            metodologia: activity.metodologia || activity.methodology || 'Prática',
-            recursos: activity.recursos || activity.resources || 'Quadro, computador',
-            avaliacao: activity.avaliacao || activity.evaluation || 'Participação e exercícios',
-            ...activity.customFields
+            disciplina: existingCustomFields.Disciplina || activity.disciplina || activity.subject || 'Matemática',
+            nivel: existingCustomFields['Ano de Escolaridade'] || activity.nivel || activity.level || 'Ensino Médio',
+            duracao: existingCustomFields.duracao || activity.duration || '50 minutos',
+            objetivo: existingCustomFields.objetivo || activity.objective || activity.description,
+            conteudo: existingCustomFields.conteudo || activity.content || activity.description,
+            metodologia: existingCustomFields.metodologia || activity.methodology || 'Prática',
+            recursos: existingCustomFields.recursos || activity.resources || 'Quadro, computador',
+            avaliacao: existingCustomFields.avaliacao || activity.evaluation || 'Participação e exercícios',
+            tema: existingCustomFields.Tema || activity.title,
+            quantidadeQuestoes: existingCustomFields['Quantidade de Questões'] || '10 questões',
+            nivelDificuldade: existingCustomFields['Nível de Dificuldade'] || 'Médio',
+            modeloQuestoes: existingCustomFields['Modelo de Questões'] || 'Múltipla escolha e dissertativas',
+            fontes: existingCustomFields.Fontes || 'Livro didático',
+            ...existingCustomFields
           };
 
           return {

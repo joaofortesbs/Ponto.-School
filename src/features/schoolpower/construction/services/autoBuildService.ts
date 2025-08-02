@@ -50,14 +50,14 @@ export class AutoBuildService {
       title: activity.title || originalData.title || '',
       description: activity.description || originalData.description || '',
       // Adicionar campos personalizados baseados no tipo de atividade
-      disciplina: originalData.disciplina || originalData.subject || 'Matemática',
-      nivel: originalData.nivel || originalData.level || 'Ensino Médio',
-      duracao: originalData.duracao || originalData.duration || '50 minutos',
-      objetivo: originalData.objetivo || originalData.objective || activity.description,
-      conteudo: originalData.conteudo || originalData.content || activity.description,
-      metodologia: originalData.metodologia || originalData.methodology || 'Prática',
-      recursos: originalData.recursos || originalData.resources || 'Quadro, computador',
-      avaliacao: originalData.avaliacao || originalData.evaluation || 'Participação e exercícios',
+      disciplina: originalData.disciplina || originalData.subject || activity.customFields?.disciplina || 'Matemática',
+      nivel: originalData.nivel || originalData.level || activity.customFields?.nivel || 'Ensino Médio',
+      duracao: originalData.duracao || originalData.duration || activity.customFields?.duracao || '50 minutos',
+      objetivo: originalData.objetivo || originalData.objective || activity.customFields?.objetivo || activity.description,
+      conteudo: originalData.conteudo || originalData.content || activity.customFields?.conteudo || activity.description,
+      metodologia: originalData.metodologia || originalData.methodology || activity.customFields?.metodologia || 'Prática',
+      recursos: originalData.recursos || originalData.resources || activity.customFields?.recursos || 'Quadro, computador',
+      avaliacao: originalData.avaliacao || originalData.evaluation || activity.customFields?.avaliacao || 'Participação e exercícios',
       ...activity.customFields,
       ...originalData
     };
