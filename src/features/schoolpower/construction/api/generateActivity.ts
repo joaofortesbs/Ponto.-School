@@ -1,3 +1,4 @@
+
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
 
@@ -58,6 +59,7 @@ export const validateActivityData = (data: ActivityGenerationPayload): string[] 
 
   return errors;
 };
+
 import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
 import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
@@ -402,8 +404,8 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
 
     console.log('📝 Dados preparados para API:', activityData);
 
-    // Simular geração da atividade (substituir pela API real quando disponível)
-    const generatedContent = await generateActivityContent(activityData);
+    // Simular geração da atividade usando uma função auxiliar
+    const generatedContent = await generateSimpleActivityContent(activityData);
 
     if (generatedContent) {
       console.log('✅ Atividade gerada com sucesso');
@@ -424,7 +426,8 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
   }
 }
 
-async function generateActivityContent(activityData: any): Promise<string> {
+// Função auxiliar para evitar conflito de nomes
+async function generateSimpleActivityContent(activityData: any): Promise<string> {
   console.log('🔨 Gerando conteúdo da atividade:', activityData.title);
 
   // Simular delay da API
