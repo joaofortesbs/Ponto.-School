@@ -127,13 +127,15 @@ export class AutoBuildService {
 
   async buildAllActivities(activities: ConstructionActivity[]): Promise<void> {
     console.log('🚀 Iniciando construção automática com lógica REAL de', activities.length, 'atividades');
+    console.log('📋 Lista de atividades para construir:', activities.map(a => ({ id: a.id, title: a.title, isBuilt: a.isBuilt, status: a.status })));
 
     const errors: string[] = [];
+    let processedCount = 0;
 
     this.updateProgress({
       current: 0,
       total: activities.length,
-      currentActivity: '',
+      currentActivity: 'Iniciando...',
       status: 'running',
       errors: []
     });
@@ -144,13 +146,21 @@ export class AutoBuildService {
       // Pular atividades já construídas
       if (activity.isBuilt || activity.status === 'completed') {
         console.log(`⏭️ Pulando atividade já construída: ${activity.title}`);
+        processedCount++;
+        this.updateProgress({
+          current: processedCount,
+          total: activities.length,
+          currentActivity: `Pulando: ${activity.title}`,
+          status: 'running',
+          errors
+        });
         continue;
       }
 
       this.updateProgress({
-        current: i,
+        current: processedCount,
         total: activities.length,
-        currentActivity: activity.title,
+        currentActivity: `Construindo: ${activity.title}`,
         status: 'running',
         errors
       });
@@ -161,14 +171,33 @@ export class AutoBuildService {
         // Usar a lógica REAL de geração (mesma do modal individual)
         await this.generateActivityWithRealLogic(activity);
 
+        processedCount++;
         console.log(`✅ Atividade ${i + 1}/${activities.length} construída com LÓGICA REAL: ${activity.title}`);
 
+        this.updateProgress({
+          current: processedCount,
+          total: activities.length,
+          currentActivity: `Concluída: ${activity.title}`,
+          status: 'running',
+          errors
+        });
+
         // Pequeno delay para não sobrecarregar a API
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
       } catch (error) {
         console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
-        errors.push(`Erro em "${activity.title}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+        errors.push(`Erro em "${activity.title}": ${errorMessage}`);
+        
+        processedCount++;
+        this.updateProgress({
+          current: processedCount,
+          total: activities.length,
+          currentActivity: `Erro em: ${activity.title}`,
+          status: 'running',
+          errors
+        });
       }
     }
 
@@ -176,16 +205,17 @@ export class AutoBuildService {
     this.updateProgress({
       current: activities.length,
       total: activities.length,
-      currentActivity: 'Concluído',
+      currentActivity: 'Processo concluído!',
       status: errors.length > 0 ? 'error' : 'completed',
       errors
     });
 
     console.log('🎉 Processo de construção automática finalizado com lógica REAL');
+    console.log(`📊 Resultado: ${activities.length - errors.length}/${activities.length} atividades construídas com sucesso`);
 
     if (errors.length > 0) {
       console.warn('⚠️ Alguns erros ocorreram:', errors);
-      throw new Error(`Construção concluída com ${errors.length} erro(s)`);
+      // Não fazer throw para permitir que atividades construídas com sucesso sejam salvas
     }
   }
 }

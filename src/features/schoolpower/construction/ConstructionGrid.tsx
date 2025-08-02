@@ -49,17 +49,25 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const handleBuildAll = async () => {
     console.log('🚀 Iniciando construção automática com lógica REAL de todas as atividades');
+    console.log('📋 Atividades disponíveis:', activities);
 
     // Filtrar apenas atividades que precisam ser construídas
-    const activitiesToBuild = activities.filter(activity => 
-      !activity.isBuilt && 
-      activity.status !== 'completed' && 
-      activity.title && 
-      activity.description
-    );
+    const activitiesToBuild = activities.filter(activity => {
+      const needsBuild = !activity.isBuilt && 
+                        activity.status !== 'completed' && 
+                        activity.title && 
+                        activity.description &&
+                        activity.progress < 100;
+      
+      console.log(`🔍 Atividade ${activity.title}: isBuilt=${activity.isBuilt}, status=${activity.status}, progress=${activity.progress}, needsBuild=${needsBuild}`);
+      return needsBuild;
+    });
+
+    console.log('🎯 Atividades que precisam ser construídas:', activitiesToBuild);
 
     if (activitiesToBuild.length === 0) {
       console.log('⚠️ Nenhuma atividade precisa ser construída');
+      alert('Todas as atividades já foram construídas ou não possuem dados suficientes para construção.');
       return;
     }
 
@@ -84,26 +92,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       autoBuildService.setOnActivityBuilt((activityId) => {
         console.log(`🎯 Atividade construída automaticamente com lógica REAL: ${activityId}`);
         
-        // Atualizar estado da atividade em tempo real
-        const updatedActivities = activities.map(activity => {
-          if (activity.id === activityId) {
-            return {
-              ...activity,
-              isBuilt: true,
-              builtAt: new Date().toISOString(),
-              progress: 100,
-              status: 'completed' as const
-            };
-          }
-          return activity;
-        });
-        
         // Forçar re-render para mostrar atividade construída
         window.dispatchEvent(new CustomEvent('activity-built', { detail: { activityId } }));
       });
 
+      console.log('🔥 Iniciando processo de construção para', activitiesToBuild.length, 'atividades');
+
       // Executar construção automática com lógica REAL
       await autoBuildService.buildAllActivities(activitiesToBuild);
+
+      console.log('✅ Construção automática finalizada com sucesso');
 
       // Aguardar um pouco para mostrar o progresso completo
       setTimeout(() => {
@@ -116,21 +114,10 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           errors: []
         });
 
-        // Recarregar dados das atividades para garantir estado atualizado
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        activities.forEach(activity => {
-          if (constructedActivities[activity.id]) {
-            activity.isBuilt = true;
-            activity.builtAt = constructedActivities[activity.id].builtAt;
-            activity.progress = 100;
-            activity.status = 'completed';
-          }
-        });
-
+        console.log('🎉 Processo de construção automática com lógica REAL finalizado');
+        
         // Forçar re-render da interface
         window.location.reload();
-
-        console.log('🎉 Processo de construção automática com lógica REAL finalizado');
       }, 2000);
 
     } catch (error) {
@@ -144,6 +131,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         status: 'error',
         errors: [error instanceof Error ? error.message : 'Erro desconhecido']
       });
+
+      alert(`Erro na construção automática: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
@@ -256,14 +245,24 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         </div>
 
         {/* Botão Construir Todas */}
-        {activities.filter(activity => activity.status === 'draft' && activity.title && activity.description && activity.progress < 100).length > 0 && (
+        {activities.filter(activity => !activity.isBuilt && activity.status !== 'completed' && activity.title && activity.description && activity.progress < 100).length > 0 && (
           <div className="flex items-center gap-2">
             <Button
               onClick={handleBuildAll}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+              disabled={buildProgress?.status === 'running'}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Zap className="w-4 h-4" />
-              Construir Todas
+              {buildProgress?.status === 'running' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Construindo...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4" />
+                  Construir Todas
+                </>
+              )}
             </Button>
           </div>
         )}

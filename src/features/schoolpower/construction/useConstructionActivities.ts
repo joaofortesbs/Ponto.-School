@@ -39,6 +39,12 @@ export const useConstructionActivities = (approvedActivities?: any[]) => {
           const constructedData = localStorage.getItem(`generated_content_${activity.id}`);
           const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
           const isBuilt = !!constructedData || !!constructedActivities[activity.id];
+          
+          console.log(`🔍 Verificando status de construção para ${activity.id}:`, {
+            constructedData: !!constructedData,
+            inConstructedActivities: !!constructedActivities[activity.id],
+            isBuilt
+          });
 
           // Preparar campos personalizados baseados no tipo de atividade
           const customFields = {
