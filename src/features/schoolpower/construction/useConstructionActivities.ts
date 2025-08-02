@@ -1,123 +1,102 @@
 import { useState, useEffect } from 'react';
-import { ActionPlanItem } from '../actionplan/ActionPlanCard';
-import { isActivityRegistered } from '../activities/activityRegistry';
+import { ConstructionActivity } from './types';
 
-export interface ConstructionActivity {
-  id: string;
-  title: string;
-  description: string;
-  progress: number;
-  type: string;
-  status: 'draft' | 'in-progress' | 'completed';
-  originalData?: any;
+interface UseConstructionActivitiesReturn {
+  activities: ConstructionActivity[];
+  loading: boolean;
+  refreshActivities: () => void;
 }
 
-export const useConstructionActivities = (approvedActivities?: any[]) => {
+export function useConstructionActivities(approvedActivities: any[]): UseConstructionActivitiesReturn {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadActivities = async () => {
-      console.log('📚 useConstructionActivities: Carregando atividades para construção...', approvedActivities);
-      setLoading(true);
+  const convertToConstructionActivity = (activity: any): ConstructionActivity => {
+    console.log('🔄 Convertendo atividade:', activity);
 
-      try {
-        if (!approvedActivities || approvedActivities.length === 0) {
-          console.log('⚠️ Nenhuma atividade aprovada encontrada');
-          setActivities([]);
-          setLoading(false);
-          return;
-        }
+    // Verificar se atividade está registrada como construída
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    const isRegisteredAsBuilt = constructedActivities[activity.id];
 
-        const constructionActivities = approvedActivities.map((activity: any) => {
-          console.log('🔄 Convertendo atividade:', activity);
+    // Verificar se existe conteúdo salvo
+    const savedContent = localStorage.getItem(`activity_${activity.id}`);
+    const hasGeneratedContent = savedContent !== null;
 
-          const isRegistered = isActivityRegistered(activity.id);
-          console.log(`🎯 Atividade ${activity.id} - Registrada: ${isRegistered}`);
+    const isBuilt = isRegisteredAsBuilt?.isBuilt || hasGeneratedContent;
 
-          // Verificar se a atividade já foi construída
-          const constructedData = localStorage.getItem(`generated_content_${activity.id}`);
-          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-          const isBuilt = !!constructedData || !!constructedActivities[activity.id];
-          
-          console.log(`🔍 Verificando status de construção para ${activity.id}:`, {
-            constructedData: !!constructedData,
-            inConstructedActivities: !!constructedActivities[activity.id],
-            isBuilt
-          });
+    console.log(`🎯 Atividade ${activity.id} - Registrada: ${!!isRegisteredAsBuilt}, Content: ${hasGeneratedContent}, isBuilt: ${isBuilt}`);
+    console.log(`🔍 Verificando status de construção para ${activity.id}:`, {
+      constructedData: !!savedContent,
+      inConstructedActivities: !!isRegisteredAsBuilt,
+      isBuilt
+    });
 
-          // Preparar campos personalizados baseados no tipo de atividade
-          const existingCustomFields = activity.customFields || {};
-          const customFields = {
-            disciplina: existingCustomFields.Disciplina || activity.disciplina || activity.subject || 'Matemática',
-            nivel: existingCustomFields['Ano de Escolaridade'] || activity.nivel || activity.level || 'Ensino Médio',
-            duracao: existingCustomFields.duracao || activity.duration || '50 minutos',
-            objetivo: existingCustomFields.objetivo || activity.objective || activity.description,
-            conteudo: existingCustomFields.conteudo || activity.content || activity.description,
-            metodologia: existingCustomFields.metodologia || activity.methodology || 'Prática',
-            recursos: existingCustomFields.recursos || activity.resources || 'Quadro, computador',
-            avaliacao: existingCustomFields.avaliacao || activity.evaluation || 'Participação e exercícios',
-            tema: existingCustomFields.Tema || activity.title,
-            quantidadeQuestoes: existingCustomFields['Quantidade de Questões'] || '10 questões',
-            nivelDificuldade: existingCustomFields['Nível de Dificuldade'] || 'Médio',
-            modeloQuestoes: existingCustomFields['Modelo de Questões'] || 'Múltipla escolha e dissertativas',
-            fontes: existingCustomFields.Fontes || 'Livro didático',
-            ...existingCustomFields
-          };
-
-          return {
-            id: activity.id,
-            title: activity.title || activity.name || `Atividade ${activity.id}`,
-            description: activity.description || activity.summary || 'Atividade do plano de ação',
-            progress: isBuilt ? 100 : 0,
-            type: activity.type || activity.category || 'default',
-            status: isBuilt ? 'completed' : 'draft',
-            originalData: activity,
-            isBuilt,
-            builtAt: isBuilt ? (constructedActivities[activity.id]?.builtAt || new Date().toISOString()) : null,
-            customFields
-          } as ConstructionActivity;
-        });
-
-        console.log('✅ Atividades de construção criadas:', constructionActivities);
-        console.log('📋 IDs das atividades:', constructionActivities.map(a => a.id));
-
-        setActivities(constructionActivities);
-      } catch (error) {
-        console.error('❌ Erro ao carregar atividades de construção:', error);
-        setActivities([]);
-      } finally {
-        setLoading(false);
-      }
+    return {
+      id: activity.id,
+      title: activity.title,
+      description: activity.description,
+      type: activity.id, // usar id como tipo para compatibilidade
+      customFields: activity.customFields || {},
+      approved: activity.approved || false,
+      isTrilhasEligible: activity.isTrilhasEligible || false,
+      isBuilt: isBuilt,
+      builtAt: isRegisteredAsBuilt?.builtAt || null,
+      progress: isBuilt ? 100 : 0,
+      status: isBuilt ? 'completed' : 'pending'
     };
+  };
 
+  const loadActivities = () => {
+    console.log('📚 useConstructionActivities: Carregando atividades para construção...', approvedActivities);
+
+    setLoading(true);
+
+    try {
+      if (!approvedActivities || approvedActivities.length === 0) {
+        console.log('⚠️ Nenhuma atividade aprovada fornecida');
+        setActivities([]);
+        return;
+      }
+
+      const constructionActivities = approvedActivities.map(convertToConstructionActivity);
+
+      console.log('✅ Atividades de construção convertidas:', constructionActivities);
+      setActivities(constructionActivities);
+
+    } catch (error) {
+      console.error('❌ Erro ao carregar atividades de construção:', error);
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshActivities = () => {
+    console.log('🔄 Refresh manual das atividades de construção');
+    loadActivities();
+  };
+
+  useEffect(() => {
     loadActivities();
   }, [approvedActivities]);
 
-  const updateActivityProgress = (id: string, progress: number) => {
-    setActivities(prev => 
-      prev.map(activity => 
-        activity.id === id 
-          ? { ...activity, progress }
-          : activity
-      )
-    );
-  };
+  // Listener para mudanças no localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      console.log('📦 Mudança detectada no localStorage, atualizando atividades');
+      loadActivities();
+    };
 
-  const updateActivityStatus = (id: string, status: ConstructionActivity['status']) => {
-    setActivities(prev => 
-      prev.map(activity => 
-        activity.id === id 
-          ? { ...activity, status }
-          : activity
-      )
-    );
-  };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   return {
     activities,
     loading,
-    updateActivityProgress,
-    updateActivityStatus
+    refreshActivities
   };
-};
+}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -18,10 +19,11 @@ interface ConstructionGridProps {
 export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
-  const { activities, loading } = useConstructionActivities(approvedActivities);
+  const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [isBuilding, setIsBuilding] = useState(false);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
@@ -29,10 +31,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('🔧 Abrindo modal para editar atividade:', activity);
 
     if (externalHandleEditActivity) {
-      // Usar a função externa se disponível
       externalHandleEditActivity(activity);
     } else {
-      // Fallback para a lógica interna
       openModal(activity);
     }
   };
@@ -48,9 +48,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   };
 
   const handleBuildAll = async () => {
-    console.log('🚀 Iniciando construção automática usando autoBuildService');
+    if (isBuilding) {
+      console.log('⚠️ Construção já em andamento, ignorando nova solicitação');
+      return;
+    }
 
-    // Filtrar apenas atividades que precisam ser construídas
+    console.log('🚀 Iniciando construção automática com autoBuildService MELHORADO');
+
+    // Filtrar atividades que precisam ser construídas
     const activitiesToBuild = activities.filter(activity => {
       const needsBuild = !activity.isBuilt && 
                         activity.status !== 'completed' && 
@@ -62,7 +67,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       return needsBuild;
     });
 
-    console.log('🎯 Atividades que precisam ser construídas:', activitiesToBuild);
+    console.log('🎯 Atividades que precisam ser construídas:', activitiesToBuild.length);
 
     if (activitiesToBuild.length === 0) {
       console.log('⚠️ Nenhuma atividade precisa ser construída');
@@ -71,32 +76,33 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     }
 
     try {
+      setIsBuilding(true);
       setShowProgressModal(true);
 
-      // Configurar callbacks para o serviço de construção
+      // Configurar callbacks CORRETOS para o serviço
       autoBuildService.setProgressCallback((progress) => {
-        console.log('📊 Progresso atualizado:', progress);
+        console.log('📊 Progresso da construção atualizado:', progress);
         setBuildProgress(progress);
       });
 
       autoBuildService.setOnActivityBuilt((activityId) => {
         console.log(`🎯 Atividade construída automaticamente: ${activityId}`);
         
-        // Forçar re-render para mostrar atividade construída
-        window.dispatchEvent(new CustomEvent('activity-built', { detail: { activityId } }));
+        // Forçar atualização da interface
+        if (refreshActivities) {
+          refreshActivities();
+        }
+        
+        // Disparar evento customizado para atualização
+        window.dispatchEvent(new CustomEvent('activity-built', { 
+          detail: { activityId } 
+        }));
       });
 
-      // Usar o serviço de construção automática
+      // Executar construção automática com a MESMA LÓGICA do modal
       await autoBuildService.buildAllActivities(activitiesToBuild);
 
-      // Aguardar um pouco antes de fechar
-      setTimeout(() => {
-        setShowProgressModal(false);
-        setBuildProgress(null);
-        
-        // Forçar re-render da interface
-        window.location.reload();
-      }, 3000);
+      console.log('✅ Construção automática finalizada com sucesso');
 
     } catch (error) {
       console.error('❌ Erro na construção automática:', error);
@@ -110,33 +116,63 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         status: 'error',
         errors: [errorMessage]
       });
-
-      // Manter modal aberto para mostrar erro
+    } finally {
+      setIsBuilding(false);
+      
+      // Aguardar um pouco antes de fechar para mostrar resultado
       setTimeout(() => {
         setShowProgressModal(false);
         setBuildProgress(null);
-      }, 5000);
+        
+        // Forçar refresh completo das atividades
+        if (refreshActivities) {
+          refreshActivities();
+        }
+      }, 3000);
     }
   };
 
-  const handleEdit = (activityId: string) => {
-    console.log('Editar materiais da atividade:', activityId);
-    // TODO: Implementar lógica de edição de materiais
-  };
+  // Listener para atualizações de atividades construídas
+  useEffect(() => {
+    const handleActivityBuilt = (event: CustomEvent) => {
+      console.log('🎯 Evento de atividade construída recebido:', event.detail);
+      
+      // Forçar atualização das atividades
+      if (refreshActivities) {
+        refreshActivities();
+      }
+    };
+
+    window.addEventListener('activity-built', handleActivityBuilt as EventListener);
+    
+    return () => {
+      window.removeEventListener('activity-built', handleActivityBuilt as EventListener);
+    };
+  }, [refreshActivities]);
 
   useEffect(() => {
-    console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', activities);
-    console.log('🎯 Estado do modal:', { isModalOpen });
-
-    // Verificar e atualizar status de atividades construídas
+    console.log('🎯 ConstructionGrid - Verificando status das atividades');
+    
+    // Verificar e atualizar status de atividades construídas do localStorage
     const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    let hasChanges = false;
+    
     activities.forEach(activity => {
       if (constructedActivities[activity.id] && !activity.isBuilt) {
+        console.log(`📝 Atualizando status da atividade ${activity.id} para construída`);
         activity.isBuilt = true;
         activity.builtAt = constructedActivities[activity.id].builtAt;
+        activity.progress = 100;
+        activity.status = 'completed';
+        hasChanges = true;
       }
     });
-  }, [activities, isModalOpen]);
+
+    if (hasChanges && refreshActivities) {
+      console.log('🔄 Forçando refresh das atividades devido a mudanças');
+      refreshActivities();
+    }
+  }, [activities, refreshActivities]);
 
   if (loading) {
     return (
@@ -207,6 +243,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     );
   }
 
+  const activitiesNeedingBuild = activities.filter(activity => 
+    !activity.isBuilt && 
+    activity.status !== 'completed' && 
+    activity.title && 
+    activity.description && 
+    activity.progress < 100
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -228,14 +272,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         </div>
 
         {/* Botão Construir Todas */}
-        {activities.filter(activity => !activity.isBuilt && activity.status !== 'completed' && activity.title && activity.description && activity.progress < 100).length > 0 && (
+        {activitiesNeedingBuild.length > 0 && (
           <div className="flex items-center gap-2">
             <Button
               onClick={handleBuildAll}
-              disabled={buildProgress?.status === 'running'}
+              disabled={isBuilding || buildProgress?.status === 'running'}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {buildProgress?.status === 'running' ? (
+              {isBuilding || buildProgress?.status === 'running' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Construindo...
@@ -243,7 +287,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
               ) : (
                 <>
                   <Zap className="w-4 h-4" />
-                  Construir Todas
+                  Construir Todas ({activitiesNeedingBuild.length})
                 </>
               )}
             </Button>
@@ -264,7 +308,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             status={activity.status}
             onEdit={() => {
               console.log('🎯 Abrindo modal para atividade:', activity.title);
-              console.log('🎯 Dados da atividade:', activity);
               openModal(activity);
             }}
             onView={handleView}
@@ -287,26 +330,26 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <h3 className="text-lg font-semibold mb-4">
-                Construção Automática em Andamento
+                Construção Automática com Lógica do Modal
               </h3>
 
               <div className="mb-4">
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-[#FF6B00] to-[#D65A00] h-2 rounded-full transition-all duration-300"
                     style={{ width: `${(buildProgress.current / buildProgress.total) * 100}%` }}
                   ></div>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  {buildProgress.current} de {buildProgress.total} atividades
+                  {buildProgress.current} de {buildProgress.total} atividades processadas
                 </p>
               </div>
 
               {buildProgress.status === 'running' && (
                 <div className="flex items-center justify-center gap-2 mb-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#FF6B00]" />
                   <span className="text-sm">
-                    Construindo: {buildProgress.currentActivity}
+                    {buildProgress.currentActivity}
                   </span>
                 </div>
               )}
@@ -344,7 +387,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
                     setShowProgressModal(false);
                     setBuildProgress(null);
                   }}
-                  className="w-full"
+                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#D65A00] hover:from-[#E55A00] hover:to-[#B54A00]"
                 >
                   Fechar
                 </Button>

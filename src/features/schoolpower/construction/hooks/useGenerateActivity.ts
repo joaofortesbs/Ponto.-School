@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { generateActivityContent } from '../api/generateActivity';
 
@@ -10,9 +11,13 @@ export function useGenerateActivity() {
     setError(null);
 
     try {
-      // Preparar dados de contexto COMPLETOS para enviar para a IA
+      console.log('🎯 useGenerateActivity: Preparando dados para IA');
+      console.log('📝 FormData recebido:', formData);
+      console.log('🎪 Tipo de atividade:', activityType);
+
+      // Preparar dados de contexto COMPLETOS e CONSISTENTES
       const contextData = {
-        // Dados em português para o prompt (IDENTICO ao modal e autoBuildService)
+        // Dados em português para o prompt (PADRÃO PRINCIPAL)
         titulo: formData.title || 'Atividade',
         descricao: formData.description || '',
         disciplina: formData.subject || 'Português',
@@ -41,12 +46,12 @@ export function useGenerateActivity() {
         formatoGrade: formData.gridFormat || '',
         dicasFornecidas: formData.providedHints || '',
         contextoVocabulario: formData.vocabularyContext || '',
-        idioma: formData.language || '',
+        idioma: formData.language || 'Português',
         exerciciosAssociados: formData.associatedExercises || '',
         areaConhecimento: formData.knowledgeArea || '',
         nivelComplexidade: formData.complexityLevel || '',
 
-        // Dados alternativos em inglês para compatibilidade
+        // Dados alternativos em inglês para compatibilidade total
         title: formData.title,
         description: formData.description,
         subject: formData.subject,
@@ -79,12 +84,17 @@ export function useGenerateActivity() {
         complexityLevel: formData.complexityLevel
       };
 
-      console.log('📊 Dados de contexto COMPLETOS para IA:', contextData);
+      console.log('📊 ContextData COMPLETO preparado para IA:', contextData);
 
+      // Chamar a função de geração
       const result = await generateActivityContent(activityType, contextData);
+      
+      console.log('✅ Resultado recebido da IA:', result);
       return result;
+      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido na geração';
+      console.error('❌ Erro no useGenerateActivity:', err);
       setError(errorMessage);
       throw err;
     } finally {
