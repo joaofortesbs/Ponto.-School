@@ -114,13 +114,13 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             errors: [...errors]
           });
 
-          // Preparar dados do formulário
+          // Preparar dados do formulário EXATAMENTE como o modal EditActivityModal faz
           const formData = {
             title: activity.title || '',
             description: activity.description || '',
             subject: activity.customFields?.['Disciplina'] || activity.customFields?.['disciplina'] || 'Português',
             theme: activity.customFields?.['Tema'] || activity.customFields?.['tema'] || '',
-            schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['anoEscolaridade'] || '',
+            schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['anoEscolaridade'] || '6º ano',
             numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || activity.customFields?.['quantidadeQuestoes'] || '10',
             difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.['nivelDificuldade'] || 'Médio',
             questionModel: activity.customFields?.['Modelo de Questões'] || activity.customFields?.['modeloQuestoes'] || 'Múltipla escolha',
@@ -131,26 +131,29 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             evaluation: activity.customFields?.['Critérios de Correção'] || activity.customFields?.['criteriosAvaliacao'] || '',
             timeLimit: activity.customFields?.['Tempo Limite'] || activity.customFields?.['tempoLimite'] || '',
             context: activity.customFields?.['Contexto de Aplicação'] || activity.customFields?.['contexto'] || '',
-            textType: '',
-            textGenre: '',
-            textLength: '',
-            associatedQuestions: '',
-            competencies: '',
-            readingStrategies: '',
-            visualResources: '',
-            practicalActivities: '',
-            wordsIncluded: '',
-            gridFormat: '',
-            providedHints: '',
-            vocabularyContext: '',
-            language: '',
-            associatedExercises: '',
-            knowledgeArea: '',
-            complexityLevel: ''
+            
+            // Campos específicos para diferentes tipos de atividade (IDENTICO ao modal)
+            textType: activity.customFields?.['Tipo de Texto'] || activity.customFields?.['tipoTexto'] || '',
+            textGenre: activity.customFields?.['Gênero Textual'] || activity.customFields?.['generoTextual'] || '',
+            textLength: activity.customFields?.['Extensão do Texto'] || activity.customFields?.['extensaoTexto'] || '',
+            associatedQuestions: activity.customFields?.['Questões Associadas'] || activity.customFields?.['questoesAssociadas'] || '',
+            competencies: activity.customFields?.['Competências'] || activity.customFields?.['competencias'] || '',
+            readingStrategies: activity.customFields?.['Estratégias de Leitura'] || activity.customFields?.['estrategiasLeitura'] || '',
+            visualResources: activity.customFields?.['Recursos Visuais'] || activity.customFields?.['recursosVisuais'] || '',
+            practicalActivities: activity.customFields?.['Atividades Práticas'] || activity.customFields?.['atividadesPraticas'] || '',
+            wordsIncluded: activity.customFields?.['Palavras Incluídas'] || activity.customFields?.['palavrasIncluidas'] || '',
+            gridFormat: activity.customFields?.['Formato da Grade'] || activity.customFields?.['formatoGrade'] || '',
+            providedHints: activity.customFields?.['Dicas Fornecidas'] || activity.customFields?.['dicasFornecidas'] || '',
+            vocabularyContext: activity.customFields?.['Contexto do Vocabulário'] || activity.customFields?.['contextoVocabulario'] || '',
+            language: activity.customFields?.['Idioma'] || activity.customFields?.['idioma'] || '',
+            associatedExercises: activity.customFields?.['Exercícios Associados'] || activity.customFields?.['exerciciosAssociados'] || '',
+            knowledgeArea: activity.customFields?.['Área do Conhecimento'] || activity.customFields?.['areaConhecimento'] || '',
+            complexityLevel: activity.customFields?.['Nível de Complexidade'] || activity.customFields?.['nivelComplexidade'] || ''
           };
 
-          // Preparar dados de contexto para a IA
+          // Preparar dados de contexto EXATAMENTE como o modal EditActivityModal faz
           const contextData = {
+            // Dados em português para o prompt (IDENTICO ao modal)
             titulo: formData.title || 'Atividade',
             descricao: formData.description || '',
             disciplina: formData.subject || 'Português',
@@ -166,6 +169,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             tempoLimite: formData.timeLimit || '',
             contextoAplicacao: formData.context || '',
 
+            // Dados alternativos em inglês para compatibilidade (IDENTICO ao modal)
             title: formData.title,
             description: formData.description,
             subject: formData.subject,
@@ -184,31 +188,35 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
           console.log('📊 Context data para IA:', contextData);
 
-          // Chamar a API de geração real
+          // Usar EXATAMENTE o mesmo hook que o modal usa
+          const { useGenerateActivity } = await import('./hooks/useGenerateActivity');
+          
+          // Chamar a função de geração EXATAMENTE como o modal faz
           const { generateActivityContent } = await import('./api/generateActivity');
           const result = await generateActivityContent(activity.type || activity.id || 'lista-exercicios', contextData);
 
           if (result) {
-            // Salvar resultado gerado
-            const generatedContent = {
+            console.log('✅ Resultado da IA recebido no ConstructionGrid:', result);
+
+            // Salvar EXATAMENTE como o modal EditActivityModal faz
+            const saveKey = `activity_${activity.id}`;
+            const savedContent = {
               ...result,
               generatedAt: new Date().toISOString(),
-              formData: formData,
-              isBuilt: true,
-              builtAt: new Date().toISOString(),
-              activityType: activity.type,
-              activityId: activity.id
+              activityId: activity.id,
+              activityType: activity.type || activity.id || 'lista-exercicios',
+              formData: formData
             };
 
-            // Salvar no localStorage
-            localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
+            localStorage.setItem(saveKey, JSON.stringify(savedContent));
+            console.log(`💾 Conteúdo salvo com chave: ${saveKey}`);
 
-            // Marcar como construída
+            // Marcar como construída EXATAMENTE como o modal faz
             const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
             constructedActivities[activity.id] = {
-              ...activity,
               isBuilt: true,
               builtAt: new Date().toISOString(),
+              formData: formData,
               generatedContent: result
             };
             localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
@@ -217,9 +225,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             activity.progress = 100;
             activity.status = 'completed';
 
-            console.log(`✅ Atividade ${activity.title} construída com sucesso`);
+            console.log(`✅ Atividade ${activity.title} construída com MESMA LÓGICA DO MODAL`);
           } else {
-            throw new Error('Falha na geração do conteúdo');
+            throw new Error('Falha na geração do conteúdo pela IA');
           }
 
           completed++;

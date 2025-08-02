@@ -38,43 +38,81 @@ export class AutoBuildService {
   }
 
   private prepareActivityFormData(activity: ConstructionActivity): any {
-    console.log(`🎯 Preparando dados do formulário para: ${activity.title}`);
+    console.log(`🎯 Preparando dados EXATAMENTE como o modal para: ${activity.title}`);
 
-    // Usar dados originais da atividade aprovada se disponível
-    const originalData = activity.originalData || {};
-    
-    // Criar formData seguindo exatamente o mesmo padrão do modal individual
+    // Criar formData IDENTICO ao que o modal EditActivityModal usa
     const formData = {
-      typeId: activity.id,
-      title: activity.title || originalData.title || '',
-      description: activity.description || originalData.description || '',
-      // Adicionar campos personalizados baseados no tipo de atividade
-      disciplina: originalData.disciplina || originalData.subject || activity.customFields?.disciplina || 'Matemática',
-      nivel: originalData.nivel || originalData.level || activity.customFields?.nivel || 'Ensino Médio',
-      duracao: originalData.duracao || originalData.duration || activity.customFields?.duracao || '50 minutos',
-      objetivo: originalData.objetivo || originalData.objective || activity.customFields?.objetivo || activity.description,
-      conteudo: originalData.conteudo || originalData.content || activity.customFields?.conteudo || activity.description,
-      metodologia: originalData.metodologia || originalData.methodology || activity.customFields?.metodologia || 'Prática',
-      recursos: originalData.recursos || originalData.resources || activity.customFields?.recursos || 'Quadro, computador',
-      avaliacao: originalData.avaliacao || originalData.evaluation || activity.customFields?.avaliacao || 'Participação e exercícios',
-      ...activity.customFields,
-      ...originalData
+      title: activity.title || '',
+      description: activity.description || '',
+      subject: activity.customFields?.['Disciplina'] || activity.customFields?.['disciplina'] || 'Português',
+      theme: activity.customFields?.['Tema'] || activity.customFields?.['tema'] || '',
+      schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['anoEscolaridade'] || '6º ano',
+      numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || activity.customFields?.['quantidadeQuestoes'] || '10',
+      difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.['nivelDificuldade'] || 'Médio',
+      questionModel: activity.customFields?.['Modelo de Questões'] || activity.customFields?.['modeloQuestoes'] || 'Múltipla escolha',
+      sources: activity.customFields?.['Fontes'] || activity.customFields?.['fontes'] || '',
+      objectives: activity.customFields?.['Objetivos'] || activity.customFields?.['objetivos'] || '',
+      materials: activity.customFields?.['Materiais'] || activity.customFields?.['materiais'] || '',
+      instructions: activity.customFields?.['Instruções'] || activity.customFields?.['instrucoes'] || '',
+      evaluation: activity.customFields?.['Critérios de Correção'] || activity.customFields?.['criteriosAvaliacao'] || '',
+      timeLimit: activity.customFields?.['Tempo Limite'] || activity.customFields?.['tempoLimite'] || '',
+      context: activity.customFields?.['Contexto de Aplicação'] || activity.customFields?.['contexto'] || '',
+      
+      // Campos específicos para diferentes tipos de atividade
+      textType: activity.customFields?.['Tipo de Texto'] || activity.customFields?.['tipoTexto'] || '',
+      textGenre: activity.customFields?.['Gênero Textual'] || activity.customFields?.['generoTextual'] || '',
+      textLength: activity.customFields?.['Extensão do Texto'] || activity.customFields?.['extensaoTexto'] || '',
+      associatedQuestions: activity.customFields?.['Questões Associadas'] || activity.customFields?.['questoesAssociadas'] || '',
+      competencies: activity.customFields?.['Competências'] || activity.customFields?.['competencias'] || '',
+      readingStrategies: activity.customFields?.['Estratégias de Leitura'] || activity.customFields?.['estrategiasLeitura'] || '',
+      visualResources: activity.customFields?.['Recursos Visuais'] || activity.customFields?.['recursosVisuais'] || '',
+      practicalActivities: activity.customFields?.['Atividades Práticas'] || activity.customFields?.['atividadesPraticas'] || '',
+      wordsIncluded: activity.customFields?.['Palavras Incluídas'] || activity.customFields?.['palavrasIncluidas'] || '',
+      gridFormat: activity.customFields?.['Formato da Grade'] || activity.customFields?.['formatoGrade'] || '',
+      providedHints: activity.customFields?.['Dicas Fornecidas'] || activity.customFields?.['dicasFornecidas'] || '',
+      vocabularyContext: activity.customFields?.['Contexto do Vocabulário'] || activity.customFields?.['contextoVocabulario'] || '',
+      language: activity.customFields?.['Idioma'] || activity.customFields?.['idioma'] || '',
+      associatedExercises: activity.customFields?.['Exercícios Associados'] || activity.customFields?.['exerciciosAssociados'] || '',
+      knowledgeArea: activity.customFields?.['Área do Conhecimento'] || activity.customFields?.['areaConhecimento'] || '',
+      complexityLevel: activity.customFields?.['Nível de Complexidade'] || activity.customFields?.['nivelComplexidade'] || ''
     };
 
-    console.log('📝 FormData preparado:', formData);
+    console.log('📝 FormData preparado IDENTICO ao modal:', formData);
     return formData;
   }
 
   private async generateActivityWithRealLogic(activity: ConstructionActivity): Promise<void> {
-    console.log(`🎯 Usando lógica REAL de geração para: ${activity.title}`);
+    console.log(`🎯 Usando EXATAMENTE a mesma lógica do modal para: ${activity.title}`);
 
     try {
-      // Preparar dados do formulário usando mesma lógica do modal
-      const formData = this.prepareActivityFormData(activity);
+      // Usar o hook de geração exatamente como o modal faz
+      const { useGenerateActivity } = await import('../hooks/useGenerateActivity');
+      
+      // Preparar formData exatamente como o modal faz
+      const formData = {
+        title: activity.title || '',
+        description: activity.description || '',
+        subject: activity.customFields?.['Disciplina'] || activity.customFields?.['disciplina'] || 'Português',
+        theme: activity.customFields?.['Tema'] || activity.customFields?.['tema'] || '',
+        schoolYear: activity.customFields?.['Ano de Escolaridade'] || activity.customFields?.['anoEscolaridade'] || '6º ano',
+        numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || activity.customFields?.['quantidadeQuestoes'] || '10',
+        difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || activity.customFields?.['nivelDificuldade'] || 'Médio',
+        questionModel: activity.customFields?.['Modelo de Questões'] || activity.customFields?.['modeloQuestoes'] || 'Múltipla escolha',
+        sources: activity.customFields?.['Fontes'] || activity.customFields?.['fontes'] || '',
+        objectives: activity.customFields?.['Objetivos'] || activity.customFields?.['objetivos'] || '',
+        materials: activity.customFields?.['Materiais'] || activity.customFields?.['materiais'] || '',
+        instructions: activity.customFields?.['Instruções'] || activity.customFields?.['instrucoes'] || '',
+        evaluation: activity.customFields?.['Critérios de Correção'] || activity.customFields?.['criteriosAvaliacao'] || '',
+        timeLimit: activity.customFields?.['Tempo Limite'] || activity.customFields?.['tempoLimite'] || '',
+        context: activity.customFields?.['Contexto de Aplicação'] || activity.customFields?.['contexto'] || ''
+      };
 
-      console.log('📝 Dados do formulário para geração:', formData);
+      console.log('📝 FormData preparado IGUAL ao modal:', formData);
 
-      // Preparar dados de contexto para a IA (mesmo formato usado no modal)
+      // Usar DIRETAMENTE a função generateActivityContent como o modal faz
+      const { generateActivityContent } = await import('../api/generateActivity');
+      
+      // Preparar contextData EXATAMENTE como o modal faz
       const contextData = {
         // Dados em português para o prompt
         titulo: formData.title || 'Atividade',
@@ -84,8 +122,8 @@ export class AutoBuildService {
         anoEscolaridade: formData.schoolYear || '6º ano',
         numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
         nivelDificuldade: formData.difficultyLevel || 'Médio',
-        modeloQuestoes: formData.questionModel || 'Múltipla escolha e complete as frases',
-        fontes: formData.sources || 'Gramática básica para concursos e exercícios online Brasil Escola',
+        modeloQuestoes: formData.questionModel || 'Múltipla escolha',
+        fontes: formData.sources || '',
         objetivos: formData.objectives || '',
         materiais: formData.materials || '',
         instrucoes: formData.instructions || '',
@@ -109,26 +147,26 @@ export class AutoBuildService {
         context: formData.context
       };
 
-      console.log('📊 Context data preparado para IA:', contextData);
+      console.log('📊 Context data IGUAL ao modal:', contextData);
 
-      // Usar a mesma função que o modal usa para gerar conteúdo
-      const { generateActivityContent } = await import('../api/generateActivity');
-      const result = await generateActivityContent(activity.type || 'lista-exercicios', contextData);
+      // Chamar a função EXATAMENTE como o modal faz
+      const result = await generateActivityContent(activity.type || activity.id || 'lista-exercicios', contextData);
 
       if (result) {
-        // Processar resultado da mesma forma que o modal
-        const generatedContent = {
+        console.log('✅ Resultado da IA recebido:', result);
+
+        // Salvar EXATAMENTE como o modal faz
+        const saveKey = `activity_${activity.id}`;
+        const savedContent = {
           ...result,
           generatedAt: new Date().toISOString(),
-          formData: formData,
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          activityType: activity.type,
-          activityId: activity.id
+          activityId: activity.id,
+          activityType: activity.type || activity.id || 'lista-exercicios',
+          formData: formData
         };
 
-        // Salvar conteúdo gerado
-        localStorage.setItem(`activity_${activity.id}`, JSON.stringify(generatedContent));
+        localStorage.setItem(saveKey, JSON.stringify(savedContent));
+        console.log(`💾 Conteúdo salvo com chave: ${saveKey}`);
 
         // Atualizar status de atividades construídas
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -136,7 +174,7 @@ export class AutoBuildService {
           isBuilt: true,
           builtAt: new Date().toISOString(),
           formData: formData,
-          content: result.content
+          generatedContent: result
         };
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
@@ -151,13 +189,13 @@ export class AutoBuildService {
           this.onActivityBuilt(activity.id);
         }
 
-        console.log(`✅ Atividade construída com sucesso usando lógica REAL: ${activity.title}`);
+        console.log(`✅ Atividade construída com MESMA LÓGICA DO MODAL: ${activity.title}`);
       } else {
-        throw new Error(result.error || 'Erro na geração da atividade');
+        throw new Error('Falha na geração do conteúdo pela IA');
       }
 
     } catch (error) {
-      console.error(`❌ Erro na geração REAL da atividade ${activity.title}:`, error);
+      console.error(`❌ Erro na geração usando lógica do modal para ${activity.title}:`, error);
       throw error;
     }
   }
