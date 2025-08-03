@@ -53,6 +53,7 @@ localPort = 8081
 externalPort = 8081
 
 [workflows]
+runButton = "Run Quiz App"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -206,6 +207,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/setup-storage-buckets.js"
+
+[[workflows.workflow]]
+name = "Run Quiz App"
+author = 45906085
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
 
 [auth]
 pageEnabled = false

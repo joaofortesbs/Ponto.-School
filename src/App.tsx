@@ -55,6 +55,7 @@ import BlankPage from "@/pages/BlankPage";
 import EpictusIAPage from "./pages/epictus-ia";
 import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
+import QuizPage from '@/pages/quiz';
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
@@ -277,6 +278,8 @@ function App() {
 
                 {/* Página em branco - Pública para teste */}
                 <Route path="/blank" element={<BlankPage />} />
+                 {/* Rota pública para quiz */}
+                 <Route path="/quiz" element={<QuizPage />} />
 
                 {/* Main App Routes - Protegidas */}
                 <Route path="/" element={
