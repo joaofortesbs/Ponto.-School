@@ -1,0 +1,170 @@
+🔧 Objetivo do Projeto:
+Criar um sistema de quiz interativo dentro da plataforma Ponto. School, com foco na funcionalidade School Power. O quiz será utilizado como mecanismo de vendas — altamente conversivo — para demonstrar na prática o funcionamento do School Power e levar o usuário à conversão final.
+
+🎯 Público-alvo: Professores da educação básica e ensino médio.
+🔐 Nível de consciência: Consciente da dor, parcialmente consciente da solução.
+
+━━━━━━━━━━━━━━━━━━━
+🔸 Estrutura Visual e Estética
+━━━━━━━━━━━━━━━━━━━
+
+O quiz será apresentado dentro de um Card flutuante moderno com identidade visual da Ponto. School (foco em tons de laranja vibrante, branco e toques de cinza escuro para contraste).
+
+O Card deve ter sombra suave (shadow-xl), cantos arredondados (rounded-3xl), animação de entrada leve (fadeInUp), e responsividade para dispositivos móveis.
+
+Tipografia clara e acessível (Fonte: Inter ou Poppins).
+
+Transições entre etapas com microanimações (transições suaves de elementos, com loading bar progressiva entre as etapas).
+
+O Card flutuante deve permanecer centralizado na tela, com padding interno generoso (p-6 ou p-8) e largura máxima de 700px em desktop, full-width em mobile.
+
+━━━━━━━━━━━━━━━━━━━
+🧠 Lógica do Sistema e Fluxo de Etapas
+━━━━━━━━━━━━━━━━━━━
+
+ETAPA DE ABERTURA — INTRODUÇÃO
+
+Headline em destaque: “Descubra em 2 minutos como a IA da Ponto. School pode economizar até 15 horas do seu planejamento semanal”
+
+Subheadline: “Teste agora gratuitamente a IA pedagógica que cria todas as suas atividades personalizadas com 1 comando.”
+
+Botão CTA: [QUERO TESTAR AGORA] → inicia o quiz
+
+ETAPA 1 — “3 SIMs” (Diagnóstico do Professor)
+
+Perguntas de múltipla escolha com visual moderno (checkboxes animados)
+
+“Você gasta mais de 5 horas por semana planejando aulas?” (Sim / Sim, e muito mais / Não)
+
+“Você sente que as atividades genéricas não funcionam para sua turma?” (Sim / Às vezes / Não)
+
+“Você gostaria de automatizar seu planejamento sem perder a qualidade?” (Com certeza / Sim / Não)
+
+Ao finalizar: avança automaticamente para a próxima etapa com transição de fade-out + fade-in.
+
+ETAPA 2 — COMANDO ESCREVER PEDIDO PARA IA (Input real do professor)
+
+Campo de texto com placeholder de exemplo:
+“Ex: Quero um plano de aula sobre Revolução Francesa para o 9º ano, com alunos com dificuldades de leitura e foco em atividades acessíveis e envolventes.”
+
+Botão: [GERAR PLANO COM A IA]
+
+Ao clicar, chama a API do Gemini com o texto do usuário (veja configuração abaixo)
+
+ETAPA 3 — PLANO DE AÇÃO (CheckList Interativo)
+
+Exibe as respostas do Gemini com base no input, simulando um “plano de ação”
+
+Estrutura visual: CheckList com ícones, emojis, ou mini ilustrações.
+
+Cada item deve ter: título da atividade, objetivo pedagógico, tipo (vídeo, atividade, debate, etc.)
+
+Botão: [VER ATIVIDADES SENDO GERADAS]
+
+ETAPA 4 — CARDS DAS ATIVIDADES (Cards interativos)
+
+Cards animados com loading fake (2 segundos), depois aparecem as atividades do Gemini:
+
+Título
+
+Tipo de atividade
+
+Para qual ano/turma
+
+Estilo pedagógico
+
+Cards com animação ao aparecer, scroll horizontal ou grid com responsividade.
+
+ETAPA 5 — RELATÓRIO DE TRANSFORMAÇÃO (Futuro do professor com IA)
+
+Tela visual com ícones + frases de impacto:
+
+“Você economizou 15h por semana com seu novo assistente pedagógico”
+
+“Aulas mais engajadoras e sob medida para sua turma”
+
+“Menos estresse, mais ensino”
+
+Botão: [CONTINUAR]
+
+ETAPA 6 — COMPARAÇÃO SCHOOL POWER X CONCORRENTES
+
+Tabela visual comparativa, layout moderno, colunas:
+
+Recurso
+
+Outras plataformas
+
+Ponto. School
+
+Marcar visualmente como School Power é superior (check icons, cores diferentes)
+
+ETAPA 7 — OFERTA FINAL + CAPTURA OU VENDA
+
+CTA: “Você acabou de experimentar o futuro da educação.”
+
+Subtexto: “Agora é sua escolha continuar tendo essa IA ao seu lado.”
+
+Botões:
+
+[QUERO ASSINAR A PONTO. SCHOOL] → redireciona para checkout
+
+[AINDA NÃO POSSO, ME ENVIE UM PLANO EXCLUSIVO] → captura de e-mail
+
+━━━━━━━━━━━━━━━━━━━
+🧠 Integração com API do Gemini (Google)
+━━━━━━━━━━━━━━━━━━━
+
+API: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
+
+Chave: AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4
+
+Endpoint: método POST
+
+Input do prompt: texto digitado pelo professor
+
+Output esperado: plano de ação e atividades estruturadas
+
+Prompt interno para Gemini (modelo base):
+
+{
+"contents": [
+{
+"parts": [
+{
+"text": "Você é uma IA pedagógica treinada para ajudar professores a gerar planos de aula e atividades personalizadas com base em suas necessidades reais. Considere o input abaixo, e gere um plano de ação em formato de checklist com títulos de atividades, objetivos e tipos (ex: atividade interativa, vídeo, debate). Em seguida, gere 3 a 5 cards com atividades pedagógicas completas, alinhadas com o público e objetivos do usuário. Input do professor: {{mensagem_do_usuário}}"
+}
+]
+}
+]
+}
+
+━━━━━━━━━━━━━━━━━━━
+📱 Requisitos Extras de Funcionalidade
+━━━━━━━━━━━━━━━━━━━
+
+Sistema deve armazenar cada etapa como um state (por exemplo via React useState).
+
+Cada resposta do usuário (etapa 1 e 2) deve ser capturada em variáveis para uso posterior em relatórios e envio para CRM (opcional).
+
+Responsividade garantida para celular (mobile-first).
+
+Loading animado com IA trabalhando durante chamadas à API.
+
+Caso ocorra erro na API: mostrar mensagem de fallback + opção de reenviar.
+
+━━━━━━━━━━━━━━━━━━━
+✅ Output Esperado
+━━━━━━━━━━━━━━━━━━━
+
+Quiz 100% funcional em card flutuante
+
+Visual moderno, agradável e emocional
+
+Interações fluídas, com transições suaves
+
+Integração com Gemini API ativa
+
+Geração de conteúdo real da IA com base no que o professor escreveu
+
+Relatório e oferta final personalizada
