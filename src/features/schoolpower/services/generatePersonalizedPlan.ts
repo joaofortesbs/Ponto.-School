@@ -89,7 +89,7 @@ ${customFieldsInfo}
 INSTRUÇÕES:
 1. Analise cuidadosamente o pedido e as informações fornecidas
 2. Selecione APENAS atividades da lista disponível que sejam relevantes para o pedido
-3. Gere um plano de ação com 5-15 atividades diferentes
+3. Gere um plano de ação com 15-50 atividades diferentes (quanto mais, melhor)
 4. Cada atividade deve ter um título personalizado e descritivo
 5. A descrição deve ser específica e detalhada para o contexto fornecido
 6. Use os IDs exatos das atividades disponíveis
@@ -175,7 +175,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         temperature: 0.3, // Reduzido para respostas mais consistentes
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 12288, // Aumentado para suportar mais atividades
+        maxOutputTokens: 20480, // Aumentado significativamente para suportar +50 atividades
       }
     };
 

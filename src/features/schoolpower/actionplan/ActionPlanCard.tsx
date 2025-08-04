@@ -177,159 +177,153 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
         <div className="w-20"></div>
       </div>
 
-      {/* Lista de Atividades */}
-      <div className="space-y-4 mb-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-        {actionPlan.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🤖</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Nenhuma atividade disponível
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Houve um problema ao gerar as atividades personalizadas.
-            </p>
-            <button
-              onClick={handleBack}
-              className="px-6 py-3 bg-[#FF6B00] text-white rounded-lg hover:bg-[#FF8533] transition-colors"
-            >
-              Tentar Novamente
-            </button>
-          </div>
-        ) : (
-          actionPlan.map((item, index) => {
-            const Icon = getIconByActivityId(item.id);
-
-
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
-                onClick={() => handleItemToggle(item.id)}
+      {/* Lista de Atividades - Scroll Infinito Otimizado */}
+      <div className="flex-1 overflow-y-auto pr-2 mb-4" style={{
+        maxHeight: 'calc(100vh - 280px)',
+        minHeight: '400px',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#FF6B00 rgba(255,107,0,0.1)'
+      }}>
+        <div className="space-y-2">
+          {actionPlan.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-3">🤖</div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Nenhuma atividade disponível
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-3 text-sm">
+                Houve um problema ao gerar as atividades personalizadas.
+              </p>
+              <button
+                onClick={handleBack}
+                className="px-4 py-2 bg-[#FF6B00] text-white rounded-lg hover:bg-[#FF8533] transition-colors text-sm"
               >
-                {isActivityEligibleForTrilhas(item.id) && (
-                    <div className="absolute top-4 right-4 z-20">
+                Tentar Novamente
+              </button>
+            </div>
+          ) : (
+            actionPlan.map((item, index) => {
+              const Icon = getIconByActivityId(item.id);
+
+              return (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.02 }}
+                  className="relative bg-white dark:bg-gray-800 rounded-lg p-3 shadow-md border transition-all duration-200 cursor-pointer hover:shadow-lg border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
+                  onClick={() => handleItemToggle(item.id)}
+                >
+                  {isActivityEligibleForTrilhas(item.id) && (
+                    <div className="absolute top-2 right-2 z-20">
                       <TrilhasBadge />
                     </div>
                   )}
-                <div className="flex items-start gap-4">
-                  {/* Checkbox customizado */}
-                  {/* Conteúdo da atividade */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {/* Ícone animado da atividade */}
-                      <div 
-                        className={`icon-container ${selectedItems.has(item.id) ? 'active' : ''}`}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          minWidth: '40px',
-                          minHeight: '40px',
-                          borderRadius: '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: selectedItems.has(item.id) 
-                            ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
-                            : 'rgba(255, 110, 6, 0.1)',
-                          transition: 'all 0.3s ease',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          boxShadow: selectedItems.has(item.id) 
-                            ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
-                            : 'none',
-                          transform: selectedItems.has(item.id) ? 'scale(1.05)' : 'scale(1)'
-                        }}
-                      >
-                        {React.createElement(getIconByActivityId(item.id), {
-                          className: `w-5 h-5 transition-all duration-300 relative z-10`,
-                          style: {
-                            color: selectedItems.has(item.id) ? 'white' : '#FF6E06'
-                          }
-                        })}
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {/* Ícone compacto da atividade */}
                         <div 
-                          className="icon-glow"
+                          className={`icon-container ${selectedItems.has(item.id) ? 'active' : ''}`}
                           style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            width: '20px',
-                            height: '20px',
-                            background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
-                            borderRadius: '50%',
-                            transform: selectedItems.has(item.id) 
-                              ? 'translate(-50%, -50%) scale(2.2)' 
-                              : 'translate(-50%, -50%) scale(0)',
-                            transition: 'transform 0.3s ease'
+                            width: '28px',
+                            height: '28px',
+                            minWidth: '28px',
+                            minHeight: '28px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: selectedItems.has(item.id) 
+                              ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+                              : 'rgba(255, 110, 6, 0.1)',
+                            transition: 'all 0.2s ease',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            boxShadow: selectedItems.has(item.id) 
+                              ? '0 2px 8px rgba(255, 110, 6, 0.3)' 
+                              : 'none',
+                            transform: selectedItems.has(item.id) ? 'scale(1.05)' : 'scale(1)'
                           }}
-                        />
-                      </div>
-
-                      {/* Título da atividade */}
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1">
-                        {item.title}
-                      </h3>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
-                      {item.description}
-                    </p>
-
-                    {/* Campos personalizados como badges */}
-                    {item.customFields && Object.keys(item.customFields).length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {Object.entries(item.customFields)
-                          .filter(([key, value]) => value && value.toString().trim() !== '') // Filtra campos vazios
-                          .map(([key, value], index) => {
-                            // Cores diferentes para cada badge
-                            const colors = [
-                              'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
-                              'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700',
-                              'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
-                              'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-700',
-                              'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700',
-                              'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-700',
-                              'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700',
-                              'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700'
-                            ];
-                            const colorClass = colors[index % colors.length];
-
-                            return (
-                              <div 
-                                key={key} 
-                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all duration-200 hover:scale-105 ${colorClass}`}
-                                title={`${key}: ${value}`} // Tooltip com informação completa
-                              >
-                                <span className="font-semibold">{key}:</span>
-                                <span className="ml-1 truncate max-w-[120px]">
-                                  {value.toString().length > 15 ? `${value.toString().substring(0, 15)}...` : value}
-                                </span>
-                              </div>
-                            );
+                        >
+                          {React.createElement(getIconByActivityId(item.id), {
+                            className: `w-3.5 h-3.5 transition-all duration-200 relative z-10`,
+                            style: {
+                              color: selectedItems.has(item.id) ? 'white' : '#FF6E06'
+                            }
                           })}
-                      </div>
-                    )}
+                        </div>
 
-                    {/* ID da atividade (para debug) */}
-                    <div className="mt-2">
-                      <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
-                        ID: {item.id}
-                      </span>
+                        {/* Título compacto da atividade */}
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1 flex-1 pr-6">
+                          {item.title}
+                        </h3>
+                      </div>
+                      
+                      {/* Descrição compacta */}
+                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2 mb-2">
+                        {item.description}
+                      </p>
+
+                      {/* Campos personalizados compactos */}
+                      {item.customFields && Object.keys(item.customFields).length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-1">
+                          {Object.entries(item.customFields)
+                            .filter(([key, value]) => value && value.toString().trim() !== '')
+                            .slice(0, 4) // Limita a 4 badges para economizar espaço
+                            .map(([key, value], index) => {
+                              const colors = [
+                                'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300',
+                                'bg-green-50 text-green-600 border-green-200 dark:bg-green-900/20 dark:text-green-300',
+                                'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300',
+                                'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300'
+                              ];
+                              const colorClass = colors[index % colors.length];
+
+                              return (
+                                <div 
+                                  key={key} 
+                                  className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium border ${colorClass}`}
+                                  title={`${key}: ${value}`}
+                                >
+                                  <span className="truncate max-w-[80px]">
+                                    {key}: {value.toString().length > 8 ? `${value.toString().substring(0, 8)}...` : value}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          {Object.keys(item.customFields).length > 4 && (
+                            <div className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 dark:bg-gray-900/20 dark:text-gray-400">
+                              +{Object.keys(item.customFields).length - 4} mais
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* ID compacto da atividade */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs px-1.5 py-0.5 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-[10px]">
+                          {item.id}
+                        </span>
+                        {selectedItems.has(item.id) && (
+                          <div className="flex items-center gap-1 text-[#FF6B00]">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs font-medium">Selecionado</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Indicador visual de seleção */}
-
-                </div>
-
-                {/* Borda animada para item selecionado */}
-
-              </motion.div>
-            )
-          })
-        )}
+                </motion.div>
+              )
+            })
+          )}
+        </div>
+      </div>
       </div>
 
       {/* Footer com estatísticas e ações */}
