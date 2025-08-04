@@ -1029,7 +1029,8 @@ export function CardDeConstrucao({
               <div
                 className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2"
                 style={{
-                  maxHeight: "calc(100% - 80px)",
+                  maxHeight: "calc(100vh - 200px)",
+                  minHeight: "400px",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                 }}
@@ -1171,6 +1172,10 @@ export function CardDeConstrucao({
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
+                  style={{
+                    maxHeight: "calc(100vh - 250px)",
+                    minHeight: "400px"
+                  }}
                 >
                   <div className="space-y-4">
                     <div>
@@ -1246,11 +1251,12 @@ export function CardDeConstrucao({
                 <div
                   className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
                     viewMode === 'grid' 
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min' 
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 auto-rows-min' 
                       : 'space-y-2 sm:space-y-3'
                   }`}
                   style={{
-                    maxHeight: "calc(100% - 80px)",
+                    maxHeight: "calc(100vh - 250px)",
+                    minHeight: "500px",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                   }}
@@ -1268,17 +1274,18 @@ export function CardDeConstrucao({
                     return (
                       <motion.div
                         key={activity.id}
-                        className={`relative p-6 border-2 transition-all duration-300 cursor-pointer ${
-                          viewMode === 'grid' ? 'rounded-[32px]' : 'rounded-[32px] mb-4'
+                        className={`relative p-4 border-2 transition-all duration-300 cursor-pointer ${
+                          viewMode === 'grid' ? 'rounded-[24px]' : 'rounded-[24px] mb-3'
                         } ${
                           isSelected
-                            ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
+                            ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.01]'
                             : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
                         }`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.3) }}
                         onClick={() => handleActivityToggle(activity)}
+                        style={{ minHeight: viewMode === 'grid' ? '180px' : '140px' }}
                       >
                         {/* Badge Manual - para atividades manuais */}
                         {activity.isManual && (
@@ -1375,7 +1382,7 @@ export function CardDeConstrucao({
                               </h3>
                             </div>
 
-                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-3">
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2 mb-2 text-sm">
                               {activity.description}
                             </p>
 

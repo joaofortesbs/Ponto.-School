@@ -178,7 +178,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       </div>
 
       {/* Lista de Atividades */}
-      <div className="space-y-4 mb-8 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      <div className="space-y-3 mb-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: '400px' }}>
         {actionPlan.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🤖</div>
@@ -205,9 +205,10 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 key={item.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
+                transition={{ delay: Math.min(index * 0.05, 0.5) }}
+                className="relative bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
                 onClick={() => handleItemToggle(item.id)}
+                style={{ minHeight: '120px' }}
               >
                 {isActivityEligibleForTrilhas(item.id) && (
                     <div className="absolute top-4 right-4 z-20">
@@ -273,7 +274,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                         {item.title}
                       </h3>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3">
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2 text-sm">
                       {item.description}
                     </p>
 

@@ -89,7 +89,7 @@ ${customFieldsInfo}
 INSTRUÇÕES:
 1. Analise cuidadosamente o pedido e as informações fornecidas
 2. Selecione APENAS atividades da lista disponível que sejam relevantes para o pedido
-3. Gere um plano de ação com 5-15 atividades diferentes
+3. Gere um plano de ação ABRANGENTE com 15-50 atividades diferentes conforme a complexidade do pedido
 4. Cada atividade deve ter um título personalizado e descritivo
 5. A descrição deve ser específica e detalhada para o contexto fornecido
 6. Use os IDs exatos das atividades disponíveis
@@ -97,6 +97,7 @@ INSTRUÇÕES:
 8. OBRIGATÓRIO: Para cada atividade, preencha TODOS os campos personalizados listados acima para aquele ID específico
 9. Os campos personalizados devem conter dados realistas, contextualizados e específicos - NUNCA deixe vazio ou genérico
 10. Todos os campos extras devem ser strings (texto simples)
+11. Priorize diversidade de tipos de atividades para um plano completo e abrangente
 
 FORMATO DE RESPOSTA (JSON):
 Retorne APENAS um array JSON válido com as atividades selecionadas, seguindo exatamente este formato:
@@ -175,7 +176,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         temperature: 0.3, // Reduzido para respostas mais consistentes
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 12288, // Aumentado para suportar mais atividades
+        maxOutputTokens: 32768, // Significativamente aumentado para suportar 50+ atividades
       }
     };
 
