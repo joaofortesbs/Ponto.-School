@@ -295,7 +295,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                               'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700'
                             ];
                             const colorClass = colors[index % colors.length];
-                            
+
                             return (
                               <div 
                                 key={key} 

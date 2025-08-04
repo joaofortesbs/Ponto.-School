@@ -51,8 +51,8 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
   return allowedActivities.some(activity => {
     const activityNormalizedId = activity.id.toLowerCase();
     return (
-      (activityNormalizedId === normalizedId || 
-       activity.id === activityId.trim()) && 
+      (activityNormalizedId === normalizedId ||
+       activity.id === activityId.trim()) &&
       activity.enabled
     );
   });
@@ -62,7 +62,7 @@ function isValidActivityId(activityId: string, allowedActivities: typeof schoolP
  * Busca uma atividade pela ID na lista permitida
  */
 function findActivityById(activityId: string, allowedActivities: typeof schoolPowerActivities) {
-  return allowedActivities.find(activity => 
+  return allowedActivities.find(activity =>
     activity.id === activityId.trim().toLowerCase() && activity.enabled
   );
 }
@@ -71,7 +71,7 @@ function findActivityById(activityId: string, allowedActivities: typeof schoolPo
  * Valida uma única atividade retornada pela Gemini
  */
 function validateSingleActivity(
-  activity: GeminiActivity, 
+  activity: GeminiActivity,
   allowedActivities: typeof schoolPowerActivities
 ): ValidatedActivity | null {
   console.log('🔍 Validando atividade:', activity);
@@ -117,7 +117,7 @@ function validateSingleActivity(
 
   // Preserva todos os campos personalizados da resposta da Gemini
   const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
-  
+
   Object.keys(activity).forEach(key => {
     if (!standardFields.includes(key) && typeof activity[key] === 'string') {
       validatedActivity[key] = activity[key];
@@ -131,9 +131,9 @@ function validateSingleActivity(
 /**
  * Remove atividades duplicadas mantendo a primeira ocorrência
  */
-function removeDuplicates(activities: ValidatedActivity[]): { 
-  uniqueActivities: ValidatedActivity[], 
-  duplicateIds: string[] 
+function removeDuplicates(activities: ValidatedActivity[]): {
+  uniqueActivities: ValidatedActivity[],
+  duplicateIds: string[]
 } {
   console.log('🔄 Removendo duplicatas...');
 
@@ -192,9 +192,9 @@ export async function validateGeminiPlan(
   allowedActivities: typeof schoolPowerActivities = schoolPowerActivities
 ): Promise<ValidatedActivity[]> {
   console.log('🔍 Iniciando validação do plano da Gemini...');
-  console.log('📊 Dados de entrada:', { 
-    activitiesCount: geminiActivities.length, 
-    allowedCount: allowedActivities.length 
+  console.log('📊 Dados de entrada:', {
+    activitiesCount: geminiActivities.length,
+    allowedCount: allowedActivities.length
   });
 
   // Validação dos parâmetros de entrada
@@ -265,6 +265,12 @@ export async function validateGeminiPlan(
     console.warn('⚠️ ATENÇÃO: Mais da metade das atividades foram rejeitadas');
   }
 
+  // Remove limitação de atividades para permitir geração ilimitada
+  // Apenas log para acompanhamento
+  if (report.validActivities) {
+    console.log(`📊 Total de atividades geradas: ${report.validActivities.length}`);
+  }
+
   console.log('✅ Validação concluída com sucesso');
   console.log('📊 Atividades aprovadas:', uniqueActivities.map(a => ({ id: a.id, title: a.title })));
 
@@ -308,7 +314,7 @@ export function getValidActivityIds(): string[] {
  * Verifica se existe pelo menos uma atividade válida
  */
 export function hasValidActivities(activities: GeminiActivity[]): boolean {
-  return activities.some(activity => 
+  return activities.some(activity =>
     activity.id && isValidActivityId(activity.id, schoolPowerActivities)
   );
 }

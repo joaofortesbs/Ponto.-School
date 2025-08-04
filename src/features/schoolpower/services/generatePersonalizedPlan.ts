@@ -330,8 +330,8 @@ function generateFallbackPlan(
     );
   }
 
-  // Limita a 35 atividades para um plano mais completo
-  relevantActivities = relevantActivities.slice(0, 35);
+  // Remove limite para permitir geração de mais atividades conforme necessário
+  // relevantActivities = relevantActivities.slice(0, 35);
 
   const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
     id: activity.id,
@@ -421,6 +421,8 @@ export async function generatePersonalizedPlan(
       console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
       return generateFallbackPlan(initialMessage, contextualizationData);
     }
+
+    console.log(`✅ Total de atividades validadas geradas: ${validatedActivities.length}`);
 
     // Converte para ActionPlanItems
     const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
