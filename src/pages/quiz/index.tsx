@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Play, Sparkles, Clock, Target, Users, Star, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle, Play, Sparkles, Clock, Target, Users, Star, ArrowRight, Loader2, Zap } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 
 interface QuizState {
@@ -538,94 +538,93 @@ const QuizPage: React.FC = () => {
 
       case 5:
         return (
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-10 text-center"
-          >
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-gray-900">
-                Sua Transformação com a Ponto. School
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Veja os benefícios que você já pode experimentar
-              </p>
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl">
+              {/* Barra de progresso no topo */}
+              <div className="mb-8">
+                <div className="w-full bg-slate-700 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-orange-400 to-orange-500 h-2 rounded-full" style={{ width: '85%' }}></div>
+                </div>
+              </div>
+
+              {/* Card principal retangular vertical largo */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl border-2 border-orange-400 shadow-2xl overflow-hidden">
+                
+                {/* Header */}
+                <div className="text-center py-8 px-6">
+                  <h1 className="text-2xl font-bold text-white mb-2">
+                    Seu futuro com a IA pedagógica
+                  </h1>
+                </div>
+
+                {/* Linha divisória central */}
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-orange-400 to-transparent"></div>
+
+                {/* Seção superior - Cards de benefícios */}
+                <div className="p-8 space-y-6">
+                  
+                  {/* Card 1 - Economia de tempo */}
+                  <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30 rounded-2xl hover:scale-[1.02] transition-all duration-300 shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <Clock className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-xl text-white mb-1">
+                        Você economizou 15h por semana
+                      </h3>
+                      <p className="text-slate-300 text-sm">
+                        com seu novo assistente pedagógico
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 2 - Aulas engajadoras */}
+                  <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30 rounded-2xl hover:scale-[1.02] transition-all duration-300 shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <Star className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-xl text-white mb-1">
+                        Aulas mais engajadoras
+                      </h3>
+                      <p className="text-slate-300 text-sm">
+                        e sob medida para sua turma
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 3 - Menos estresse */}
+                  <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30 rounded-2xl hover:scale-[1.02] transition-all duration-300 shadow-lg">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <Zap className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-xl text-white mb-1">
+                        Menos estresse, mais ensino
+                      </h3>
+                      <p className="text-slate-300 text-sm">
+                        foque no que realmente importa
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Linha divisória central */}
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-orange-400 to-transparent"></div>
+
+                {/* Seção inferior - Botão de ação */}
+                <div className="p-8 text-center">
+                  <button 
+                    onClick={nextStep}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center justify-center gap-3 mx-auto group"
+                  >
+                    CONTINUAR
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
             </div>
-
-            <div className="grid gap-6">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center space-x-6 p-8 bg-gradient-to-r from-green-50 to-green-25 border-2 border-green-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="bg-gradient-to-br from-green-400 to-green-600 p-4 rounded-2xl">
-                  <Clock className="h-10 w-10 text-white" />
-                </div>
-                <div className="text-left flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Você economizou 15h por semana
-                  </h3>
-                  <p className="text-gray-600 text-lg">
-                    Com seu novo assistente pedagógico
-                  </p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center space-x-6 p-8 bg-gradient-to-r from-blue-50 to-blue-25 border-2 border-blue-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="bg-gradient-to-br from-blue-400 to-blue-600 p-4 rounded-2xl">
-                  <Users className="h-10 w-10 text-white" />
-                </div>
-                <div className="text-left flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Aulas mais engajadoras
-                  </h3>
-                  <p className="text-gray-600 text-lg">
-                    Sob medida para sua turma
-                  </p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center space-x-6 p-8 bg-gradient-to-r from-purple-50 to-purple-25 border-2 border-purple-200 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-4 rounded-2xl">
-                  <Star className="h-10 w-10 text-white" />
-                </div>
-                <div className="text-left flex-1">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                    Menos estresse, mais ensino
-                  </h3>
-                  <p className="text-gray-600 text-lg">
-                    Foque no que realmente importa
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Button 
-                onClick={nextStep}
-                size="lg"
-                className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-12 py-4 text-lg font-bold rounded-xl shadow-lg"
-              >
-                CONTINUAR
-                <ArrowRight className="ml-3 h-5 w-5" />
-              </Button>
-            </motion.div>
-          </motion.div>
+          </div>
         );
 
       case 6:
@@ -770,53 +769,60 @@ const QuizPage: React.FC = () => {
             className="w-full max-w-5xl"
           >
             {/* Card principal do quiz - retangular e maior */}
-            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
-              {/* Barra de progresso no topo */}
-              {state.step > 0 && (
-                <div className="relative">
-                  <div className="h-2 bg-gray-100">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPercentage}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="h-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700"
-                    />
+            {state.step !== 5 && (
+              <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
+                {/* Barra de progresso no topo */}
+                {state.step > 0 && (
+                  <div className="relative">
+                    <div className="h-2 bg-gray-100">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercentage}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700"
+                      />
+                    </div>
+                    <div className="absolute top-4 right-6">
+                      <span className="inline-flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold text-gray-600 shadow-lg border border-gray-200">
+                        {state.step} de 7
+                      </span>
+                    </div>
                   </div>
-                  <div className="absolute top-4 right-6">
-                    <span className="inline-flex items-center px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold text-gray-600 shadow-lg border border-gray-200">
-                      {state.step} de 7
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
 
-              <CardContent className="p-12 md:p-16">
-                {/* Conteúdo animado */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={state.step}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {renderStep()}
-                  </motion.div>
-                </AnimatePresence>
-              </CardContent>
-            </Card>
+                <CardContent className="p-12 md:p-16">
+                  {/* Conteúdo animado */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={state.step}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -30 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {renderStep()}
+                    </motion.div>
+                  </AnimatePresence>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Renderizar o step 5 fora do card */}
+            {state.step === 5 && renderStep()}
 
             {/* Footer */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 0.6 }}
-              className="text-center mt-8"
-            >
-              <p className="text-white/80 text-lg backdrop-blur-sm bg-black/20 rounded-2xl px-6 py-3 inline-block border border-white/20">
-                Powered by <span className="text-orange-400 font-bold">Ponto. School</span> IA
-              </p>
-            </motion.div>
+            {state.step !== 5 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1, duration: 0.6 }}
+                className="text-center mt-8"
+              >
+                <p className="text-white/80 text-lg backdrop-blur-sm bg-black/20 rounded-2xl px-6 py-3 inline-block border border-white/20">
+                  Powered by <span className="text-orange-400 font-bold">Ponto. School</span> IA
+                </p>
+              </motion.div>
+            )}
           </motion.div>
         </div>
       </AnimatedBackground>
