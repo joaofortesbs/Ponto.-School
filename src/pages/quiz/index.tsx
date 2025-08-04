@@ -592,21 +592,6 @@ const QuizPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-
-                  {/* Card 3 - Menos estresse */}
-                  <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30 rounded-2xl hover:scale-[1.02] transition-all duration-300 shadow-lg">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-xl text-white mb-1">
-                        Menos estresse, mais ensino
-                      </h3>
-                      <p className="text-slate-300 text-sm">
-                        foque no que realmente importa
-                      </p>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Linha divisória central */}
