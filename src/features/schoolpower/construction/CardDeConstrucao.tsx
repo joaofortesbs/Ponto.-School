@@ -1246,12 +1246,11 @@ export function CardDeConstrucao({
                 <div
                   className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
                     viewMode === 'grid' 
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2 auto-rows-min' 
-                      : 'space-y-1 sm:space-y-2'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-min' 
+                      : 'space-y-2 sm:space-y-3'
                   }`}
                   style={{
-                    maxHeight: "calc(100vh - 200px)",
-                    minHeight: "500px",
+                    maxHeight: "calc(100% - 80px)",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                   }}
@@ -1269,18 +1268,16 @@ export function CardDeConstrucao({
                     return (
                       <motion.div
                         key={activity.id}
-                        className={`relative transition-all duration-200 cursor-pointer ${
-                          viewMode === 'grid' 
-                            ? 'p-3 rounded-lg' 
-                            : 'p-3 rounded-lg mb-2'
+                        className={`relative p-6 border-2 transition-all duration-300 cursor-pointer ${
+                          viewMode === 'grid' ? 'rounded-[32px]' : 'rounded-[32px] mb-4'
                         } ${
                           isSelected
-                            ? 'border-2 border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-md'
-                            : 'border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-sm'
+                            ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.02]'
+                            : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
                         }`}
-                        initial={{ opacity: 0, y: 5 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2, delay: index * 0.01 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
                         onClick={() => handleActivityToggle(activity)}
                       >
                         {/* Badge Manual - para atividades manuais */}
@@ -1305,9 +1302,9 @@ export function CardDeConstrucao({
                           </div>
                         )}
 
-                        <div className="flex items-start gap-2">
+                        <div className="flex items-start gap-4">
                           <div className="flex-1">
-                            <div className="flex items-start gap-2 mb-1">
+                            <div className="flex items-center gap-3 mb-2">
                               <div 
                                 className={`icon-container ${isSelected ? 'active' : ''}`}
                                 onClick={(e) => {
@@ -1315,30 +1312,30 @@ export function CardDeConstrucao({
                                   handleActivityToggle(activity);
                                 }}
                                 style={{
-                                  width: '24px',
-                                  height: '24px',
-                                  minWidth: '24px',
-                                  minHeight: '24px',
-                                  borderRadius: '6px',
+                                  width: '40px',
+                                  height: '40px',
+                                  minWidth: '40px',
+                                  minHeight: '40px',
+                                  borderRadius: '14px',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   background: isSelected 
                                     ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
                                     : 'rgba(255, 110, 6, 0.1)',
-                                  transition: 'all 0.2s ease',
+                                  transition: 'all 0.3s ease',
                                   position: 'relative',
                                   overflow: 'hidden',
                                   cursor: 'pointer',
                                   boxShadow: isSelected 
-                                    ? '0 2px 8px rgba(255, 110, 6, 0.3)' 
+                                    ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
                                     : 'none',
                                   transform: isSelected ? 'scale(1.05)' : 'scale(1)'
                                 }}
                               >
                                 {isSelected ? (
                                   <svg 
-                                    className="w-3 h-3 text-white transition-all duration-200 relative z-10" 
+                                    className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
                                     fill="currentColor" 
                                     viewBox="0 0 20 20"
                                   >
@@ -1349,72 +1346,63 @@ export function CardDeConstrucao({
                                   </svg>
                                 ) : (
                                   React.createElement(getIconByActivityId(activity.id), {
-                                    className: `w-3 h-3 transition-all duration-200 relative z-10`,
+                                    className: `w-5 h-5 transition-all duration-300 relative z-10`,
                                     style: {
                                       color: '#FF6E06'
                                     }
                                   })
                                 )}
+                                <div 
+                                  className="icon-glow"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
+                                    borderRadius: '50%',
+                                    transform: isSelected 
+                                      ? 'translate(-50%, -50%) scale(2.2)' 
+                                      : 'translate(-50%, -50%) scale(0)',
+                                    transition: 'transform 0.3s ease'
+                                  }}
+                                />
                               </div>
 
-                              <div className="flex-1 min-w-0">
-                                <h3 className={`font-semibold text-gray-900 dark:text-white line-clamp-1 pr-4 ${
-                                  viewMode === 'grid' ? 'text-xs' : 'text-sm'
-                                }`}>
-                                  {activity.title}
-                                </h3>
-                                
-                                <p className={`text-gray-600 dark:text-gray-400 leading-tight line-clamp-2 ${
-                                  viewMode === 'grid' ? 'text-xs mt-1' : 'text-xs mt-1'
-                                }`}>
-                                  {activity.description}
-                                </p>
-                              </div>
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-8">
+                                {activity.title}
+                              </h3>
                             </div>
 
-                            {/* Informações compactas */}
-                            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                              <span className="truncate">
-                                {activity.difficulty} • {activity.duration || '30min'}
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-3 mb-3">
+                              {activity.description}
+                            </p>
+
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                        📊 {activity.difficulty} • ⏱️ {activity.duration || '30 min'}
+                                      </div>
+
+                                      {/* Exibir customFields como tags/badges */}
+                                      {activity.customFields && Object.keys(activity.customFields).length > 0 && (
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                          {Object.entries(activity.customFields).map(([key, value]) => (
+                                            <div 
+                                              key={key} 
+                                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
+                                            >
+                                              <span className="font-semibold">{key}:</span>
+                                              <span className="ml-1 truncate max-w-[150px]">{value}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+
+                            <div className="mt-2">
+                              <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
+                                ID: {activity.id}
                               </span>
-                              {isSelected && (
-                                <span className="text-[#FF6B00] font-medium ml-1">✓</span>
-                              )}
                             </div>
-
-                            {/* Campos personalizados ultra compactos */}
-                            {activity.customFields && Object.keys(activity.customFields).length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {Object.entries(activity.customFields)
-                                  .filter(([key, value]) => value && value.toString().trim() !== '')
-                                  .slice(0, viewMode === 'grid' ? 2 : 3) // Menos badges no grid
-                                  .map(([key, value], index) => (
-                                    <div 
-                                      key={key} 
-                                      className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300"
-                                      title={`${key}: ${value}`}
-                                    >
-                                      <span className="truncate max-w-[60px]">
-                                        {key.length > 8 ? key.substring(0, 8) + '...' : key}
-                                      </span>
-                                    </div>
-                                  ))}
-                                {Object.keys(activity.customFields).length > (viewMode === 'grid' ? 2 : 3) && (
-                                  <div className="inline-flex items-center px-1 py-0.5 rounded text-xs bg-gray-50 text-gray-500 dark:bg-gray-900/20 dark:text-gray-400">
-                                    +{Object.keys(activity.customFields).length - (viewMode === 'grid' ? 2 : 3)}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* ID ultra compacto - apenas no modo lista */}
-                            {viewMode === 'list' && (
-                              <div className="mt-1">
-                                <span className="text-xs px-1 py-0.5 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded text-[10px]">
-                                  {activity.id.length > 20 ? activity.id.substring(0, 20) + '...' : activity.id}
-                                </span>
-                              </div>
-                            )}
                           </div>
                         </div>
 
