@@ -45,12 +45,14 @@ interface ExerciseListPreviewProps {
   data: ExerciseListData;
   isGenerating?: boolean;
   onRegenerateContent?: () => void;
+  onQuestionRender?: (questionId: string) => void;
 }
 
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({ 
   data, 
   isGenerating = false,
-  onRegenerateContent 
+  onRegenerateContent,
+  onQuestionRender
 }) => {
   const [respostas, setRespostas] = useState<Record<string, string | number>>({});
   const [questoesExpandidas, setQuestoesExpandidas] = useState<Record<string, boolean>>({});
@@ -249,8 +251,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     const isExpandida = questoesExpandidas[questao.id];
     const respostaAtual = respostas[questao.id];
 
+    // Notificar que a questão foi renderizada
+    React.useEffect(() => {
+      if (onQuestionRender) {
+        onQuestionRender(questao.id);
+      }
+    }, [questao.id]);
+
     return (
-      <Card key={questao.id} className="mb-4 border-l-4 border-l-blue-500">
+      <Card 
+        key={questao.id} 
+        id={`question-${questao.id}`}
+        className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4"
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
