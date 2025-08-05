@@ -83,6 +83,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesExpandidas, setQuestoesExpandidas] = useState<Record<string, boolean>>({});
   const [explicacoesExpandidas, setExplicacoesExpandidas] = useState<Record<string, boolean>>({});
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
@@ -284,141 +286,148 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   }, [questoesProcessadas, onQuestionRender]);
 
-  const renderQuestionContent = (questao: Question, index: number) => {
-    const tipo = (questao.tipo || questao.type || 'multipla-escolha').toLowerCase();
-
-    switch (tipo) {
-      case 'multipla-escolha':
-      case 'multiple-choice':
-      case 'múltipla escolha':
-        const alternativas = questao.alternativas || questao.alternatives || questao.options || [];
-
-        if (!alternativas || alternativas.length === 0) {
-          return (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm">Alternativas não encontradas para esta questão.</p>
+  // Componente de mini-card para grade inicial de questões
+  const renderQuestionGridCard = (questao: Question, index: number) => {
+    return (
+      <motion.div
+        key={questao.id || `questao-${index + 1}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        className="relative cursor-pointer group"
+        onClick={() => {
+          setSelectedQuestionIndex(index);
+          setViewMode('detailed');
+        }}
+      >
+        <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105">
+          {/* Numeração da questão no canto superior esquerdo */}
+          <div className="absolute top-3 left-3 z-10">
+            <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
+              {index + 1}
             </div>
-          );
-        }
-
-        return (
-          <div className="space-y-3">
-            {alternativas.map((alt: any, altIndex: number) => {
-              const letter = String.fromCharCode(97 + altIndex).toUpperCase(); // A, B, C, D...
-              const isCorrect = alt.correta || alt.correct || alt.isCorrect;
-              const texto = alt.texto || alt.text || alt.content || alt;
-
-              return (
-                <div 
-                  key={altIndex}
-                  className={`flex items-start gap-3 p-4 rounded-lg border transition-all duration-200 ${
-                    isCorrect 
-                      ? 'bg-green-50 border-green-200 shadow-sm' 
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    isCorrect 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-400 text-white'
-                  }`}>
-                    {letter}
-                  </div>
-                  <div className="flex-1 text-gray-800 leading-relaxed">
-                    {typeof texto === 'string' ? texto : JSON.stringify(texto)}
-                  </div>
-                  {isCorrect && (
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
-                  )}
-                </div>
-              );
-            })}
-
-            {(questao.explicacao || questao.explanation) && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Explicação:
-                </h5>
-                <p className="text-blue-800 text-sm leading-relaxed">{questao.explicacao || questao.explanation}</p>
-              </div>
-            )}
           </div>
-        );
 
-      case 'discursiva':
-      case 'essay':
-        return (
-          <div className="space-y-4">
-            <div className="min-h-[120px] p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-              <p className="text-gray-500 text-sm">Área para resposta discursiva</p>
+          <CardContent className="p-4 pt-12 h-full flex flex-col">
+            <div className="flex-1">
+              {/* Enunciado da questão (limitado) */}
+              <p className="text-sm text-gray-700 line-clamp-3 mb-3">
+                {questao.enunciado?.substring(0, 120)}
+                {questao.enunciado && questao.enunciado.length > 120 ? '...' : ''}
+              </p>
             </div>
 
-            {(questao.explicacao || questao.explanation) && (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="font-medium text-blue-900 mb-2">Orientações para resposta:</h5>
-                <p className="text-blue-800 text-sm">{questao.explicacao || questao.explanation}</p>
+            {/* Informações básicas na base do card */}
+            <div className="space-y-2 mt-auto">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {getTypeIcon(questao.type)}
+                  <span className="ml-1">
+                    {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
+                     questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
+                  </span>
+                </Badge>
               </div>
-            )}
-          </div>
-        );
 
-      case 'verdadeiro-falso':
-      case 'true-false':
-        return (
-          <div className="space-y-3">
-            {['Verdadeiro', 'Falso'].map((opcao, opcaoIndex) => {
-              const isCorrect = (questao.resposta_correta || questao.correct_answer || '').toLowerCase() === opcao.toLowerCase();
+              <div className="flex items-center justify-between">
+                <Badge className={`text-xs ${getDifficultyColor(questao.dificuldade)}`}>
+                  {questao.dificuldade || 'Médio'}
+                </Badge>
 
-              return (
-                <div 
-                  key={opcaoIndex}
-                  className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
-                    isCorrect 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    isCorrect 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-400 text-white'
-                  }`}>
-                    {opcao.charAt(0)}
-                  </div>
-                  <span className="text-gray-800 font-medium">{opcao}</span>
-                  {isCorrect && (
-                    <CheckCircle className="w-5 h-5 text-green-500 ml-auto" />
-                  )}
-                </div>
-              );
-            })}
-
-            {(questao.explicacao || questao.explanation) && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="font-medium text-blue-900 mb-2">Explicação:</h5>
-                <p className="text-blue-800 text-sm">{questao.explicacao || questao.explanation}</p>
+                {questao.type === 'multipla-escolha' && questao.alternativas && (
+                  <span className="text-xs text-gray-500">
+                    {questao.alternativas.length} alternativas
+                  </span>
+                )}
               </div>
-            )}
-          </div>
-        );
-
-      default:
-        return (
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-gray-600">Tipo de questão: {tipo}</p>
-            <pre className="mt-2 text-xs text-gray-500 overflow-auto">
-              {JSON.stringify(questao, null, 2)}
-            </pre>
-          </div>
-        );
-    }
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
   };
+
+  // Componente da grade de questões
+  const renderQuestionsGrid = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-6"
+    >
+      {/* Cabeçalho da grade */}
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">
+          {consolidatedData.titulo}
+        </h2>
+        <p className="text-gray-600">
+          Selecione uma questão para começar a responder
+        </p>
+        <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            <span>{questoesProcessadas.length} questões</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>{consolidatedData.disciplina}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Target className="w-4 h-4" />
+            <span>{consolidatedData.dificuldade}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Grade de questões */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {questoesProcessadas.map((questao, index) => 
+          renderQuestionGridCard(questao, index)
+        )}
+      </div>
+
+      {/* Informações adicionais */}
+      {consolidatedData.observacoes && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-amber-800 mb-1">Observações Importantes</h4>
+                <p className="text-amber-700 text-sm">{consolidatedData.observacoes}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </motion.div>
+  );
 
   const renderQuestion = (questao: Question, index: number) => {
     const questionId = questao.id || `questao-${index + 1}`;
+
+    // Extrair e processar alternativas de forma mais robusta
+    let alternativasProcessadas = [];
+
+    if (questao.type === 'multipla-escolha') {
+      if (questao.alternativas && Array.isArray(questao.alternativas)) {
+        alternativasProcessadas = questao.alternativas;
+      } else if (questao.alternatives && Array.isArray(questao.alternatives)) {
+        alternativasProcessadas = questao.alternatives;
+      } else if (questao.options && Array.isArray(questao.options)) {
+        alternativasProcessadas = questao.options;
+      } else {
+        // Fallback com alternativas padrão
+        alternativasProcessadas = [
+          'Opção A',
+          'Opção B',
+          'Opção C',
+          'Opção D'
+        ];
+      }
+    }
+
+    console.log(`🔍 Questão ${index + 1} - Alternativas processadas:`, alternativasProcessadas);
 
     return (
       <Card 
@@ -449,25 +458,60 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </CardHeader>
 
         <CardContent className="pt-0">
-          {questao.type === 'multipla-escolha' && questao.alternativas && (
-            <RadioGroup 
-              value={respostas[questao.id]?.toString() || ''} 
-              onValueChange={(value) => handleRespostaChange(questao.id, parseInt(value))}
-              className="space-y-3"
-            >
-              {questao.alternativas.map((alternativa, altIndex) => (
-                <div key={altIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value={altIndex.toString()} id={`${questao.id}-${altIndex}`} />
-                  <Label 
-                    htmlFor={`${questao.id}-${altIndex}`} 
-                    className="flex-1 cursor-pointer font-normal"
-                  >
-                    <span className="font-medium mr-2">{String.fromCharCode(65 + altIndex)})</span>
-                    {alternativa}
-                  </Label>
+          {questao.type === 'multipla-escolha' && (
+            <div className="space-y-3">
+              {alternativasProcessadas.length > 0 ? (
+                alternativasProcessadas.map((alternativa, altIndex) => {
+                  const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
+                  const isSelected = respostas[questao.id] === altIndex;
+
+                  // Extrair texto da alternativa de forma robusta
+                  let textoAlternativa = '';
+                  if (typeof alternativa === 'string') {
+                    textoAlternativa = alternativa;
+                  } else if (alternativa && typeof alternativa === 'object') {
+                    textoAlternativa = alternativa.texto || alternativa.text || alternativa.content || alternativa.label || JSON.stringify(alternativa);
+                  } else {
+                    textoAlternativa = `Alternativa ${letter}`;
+                  }
+
+                  return (
+                    <div 
+                      key={altIndex}
+                      className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                        isSelected 
+                          ? 'bg-blue-50 border-blue-300 shadow-sm' 
+                          : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                      }`}
+                      onClick={() => handleRespostaChange(questao.id, altIndex)}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-500 text-white border-blue-500' 
+                          : 'bg-white text-gray-600 border-gray-300'
+                      }`}>
+                        {letter}
+                      </div>
+                      <div className="flex-1 text-gray-800 leading-relaxed pt-1">
+                        {textoAlternativa}
+                      </div>
+                      {isSelected && (
+                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
+                  </p>
+                  <pre className="mt-2 text-xs text-gray-600 overflow-auto">
+                    {JSON.stringify(questao, null, 2)}
+                  </pre>
                 </div>
-              ))}
-            </RadioGroup>
+              )}
+            </div>
           )}
 
           {questao.type === 'verdadeiro-falso' && (
@@ -565,66 +609,52 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Lista de Questões */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Questões ({questoesProcessadas.length})</h3>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>Progresso: {Object.keys(respostas).length}/{questoesProcessadas.length}</span>
-            <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-300"
-                style={{ 
-                  width: `${(Object.keys(respostas).length / questoesProcessadas.length) * 100}%` 
-                }}
-              />
+      {viewMode === 'grid' ? (
+        renderQuestionsGrid()
+      ) : (
+        <>
+          <div className="flex items-center justify-between px-4 py-2 bg-white shadow-sm border-b">
+            <Button variant="ghost" size="sm" onClick={() => setViewMode('grid')}>
+              <List className="w-4 h-4 mr-2" /> Voltar para Grade
+            </Button>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Questão {selectedQuestionIndex !== null ? selectedQuestionIndex + 1 : 0} de {questoesProcessadas.length}</span>
             </div>
           </div>
-        </div>
+          {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
+            <div className="p-4">
+              {renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)}
+            </div>
+          )}
+        </>
+      )}
 
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-4">
-            {questoesProcessadas.map((questao, index) => renderQuestion(questao, index))}
-          </div>
-        </ScrollArea>
-      </div>
-
-      {/* Instruções Adicionais */}
-      {consolidatedData.observacoes && (
-        <Card className="border-amber-200 bg-amber-50">
+      {/* Resumo de Respostas (visível apenas no modo grid, ou pode ser movido para um modal/rodapé) */}
+      {viewMode === 'grid' && (
+        <Card className="bg-gray-50">
           <CardHeader>
-            <CardTitle className="text-amber-800">Observações Importantes</CardTitle>
+            <CardTitle className="text-sm">Resumo das Respostas</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-amber-700">{consolidatedData.observacoes}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="font-medium">Questões Respondidas:</span>
+                <span className="ml-2">{Object.keys(respostas).length}</span>
+              </div>
+              <div>
+                <span className="font-medium">Questões Pendentes:</span>
+                <span className="ml-2">{questoesProcessadas.length - Object.keys(respostas).length}</span>
+              </div>
+              <div>
+                <span className="font-medium">Progresso:</span>
+                <span className="ml-2">
+                  {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
+                </span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
-
-      {/* Resumo de Respostas */}
-      <Card className="bg-gray-50">
-        <CardHeader>
-          <CardTitle className="text-sm">Resumo das Respostas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="font-medium">Questões Respondidas:</span>
-              <span className="ml-2">{Object.keys(respostas).length}</span>
-            </div>
-            <div>
-              <span className="font-medium">Questões Pendentes:</span>
-              <span className="ml-2">{questoesProcessadas.length - Object.keys(respostas).length}</span>
-            </div>
-            <div>
-              <span className="font-medium">Progresso:</span>
-              <span className="ml-2">
-                {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
