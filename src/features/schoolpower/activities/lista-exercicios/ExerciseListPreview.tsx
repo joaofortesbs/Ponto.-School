@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -236,20 +236,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   };
 
-  const getSidebarDifficultyColor = (difficulty: string) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'facil':
-        return 'bg-green-50 border-green-200 text-green-700';
-      case 'medio':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-700';
-      case 'dificil':
-        return 'bg-red-50 border-red-200 text-red-700';
-      default:
-        return 'bg-gray-50 border-gray-200 text-gray-700';
-    }
-  };
-
-
   const getTypeIcon = (type: Question['type']) => {
     switch (type) {
       case 'multipla-escolha': return <Circle className="w-4 h-4" />;
@@ -373,7 +359,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   if (isGenerating) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 space-4">
+      <div className="flex flex-col items-center justify-center p-8 space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <p className="text-gray-600">Gerando lista de exercícios...</p>
       </div>
@@ -401,288 +387,144 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   console.log('📊 Dados consolidados finais:', consolidatedData);
 
-  const questions = questoesProcessadas;
-  const questionsContainerRef = useRef<HTMLDivElement>(null);
-
-  const scrollToQuestion = (questionIndex: number) => {
-    const questionElement = document.getElementById(`question-${questionIndex + 1}`);
-    if (questionElement && questionsContainerRef.current) {
-      const container = questionsContainerRef.current;
-      const elementTop = questionElement.offsetTop - container.offsetTop;
-      container.scrollTo({
-        top: elementTop - 20, 
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const totalPoints = questions.reduce((sum, q) => sum + (q.pontos || 1), 0);
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'multipla-escolha':
-        return 'Múltipla Escolha';
-      case 'dissertativa':
-        return 'Dissertativa';
-      case 'verdadeiro-falso':
-        return 'Verdadeiro/Falso';
-      default:
-        return type;
-    }
-  };
-
-
   return (
-    <div className="flex h-full">
-      {/* Sidebar de Navegação das Questões */}
-      <div className="w-72 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-        <div className="p-4 border-b border-gray-200">
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <div className="text-sm font-medium text-gray-900 mb-1">
-              Questões: <span className="text-blue-600">{questions.length}</span>
+    <div className="space-y-6">
+      {/* Header com título e informações reorganizado */}
+      <Card className="border-blue-200 bg-blue-50 mb-6">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl text-blue-900">
+                    {consolidatedData.titulo || 'Lista de Exercícios'}
+                  </CardTitle>
+
+                  {/* Tags e informações ao lado direito do título */}
+                  <div className="flex flex-wrap gap-2 ml-4">
+                    {consolidatedData.disciplina && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                        <BookOpen className="w-3 h-3 mr-1" />
+                        {consolidatedData.disciplina}
+                      </Badge>
+                    )}
+                    {consolidatedData.tema && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                        <Target className="w-3 h-3 mr-1" />
+                        {consolidatedData.tema}
+                      </Badge>
+                    )}
+                    {consolidatedData.anoEscolaridade && (
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+                        <GraduationCap className="w-3 h-3 mr-1" />
+                        {consolidatedData.anoEscolaridade}
+                      </Badge>
+                    )}
+                    {questoesProcessadas.length > 0 && (
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                        <List className="w-3 h-3 mr-1" />
+                        {questoesProcessadas.length} questões
+                      </Badge>
+                    )}
+                    {consolidatedData.nivelDificuldade && (
+                      <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        {consolidatedData.nivelDificuldade}
+                      </Badge>
+                    )}
+                    {consolidatedData.tempoLimite && (
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {consolidatedData.tempoLimite}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <p className="text-blue-700 text-sm mt-1">
+                  {consolidatedData.descricao || 'Exercícios práticos para fixação do conteúdo'}
+                </p>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">
-              Total de pontos: <span className="text-green-600">{totalPoints}</span>
+            {isGenerating && (
+              <Button 
+                onClick={onRegenerateContent}
+                variant="outline"
+                size="sm"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100 ml-4"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Regenerar
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Separator />
+
+      {/* Lista de Questões */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Questões ({questoesProcessadas.length})</h3>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>Progresso: {Object.keys(respostas).length}/{questoesProcessadas.length}</span>
+            <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-600 transition-all duration-300"
+                style={{ 
+                  width: `${(Object.keys(respostas).length / questoesProcessadas.length) * 100}%` 
+                }}
+              />
             </div>
           </div>
         </div>
 
-        <div className="p-2 space-y-2">
-          {questions.map((question, index) => (
-            <button
-              key={question.id || index}
-              onClick={() => scrollToQuestion(index)}
-              className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all hover:shadow-sm ${getSidebarDifficultyColor(question.dificuldade)}`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-white rounded-full font-semibold text-sm border border-gray-300">
-                  {index + 1}
-                </div>
-                <div className="text-left">
-                  <div className="font-medium text-sm">
-                    {question.dificuldade}
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {question.pontos || 1} ponto{(question.pontos || 1) > 1 ? 's' : ''}
-                  </div>
-                </div>
-              </div>
-              <div className="text-gray-400">
-                {question.type === 'multipla-escolha' && (
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                  </svg>
-                )}
-                {question.type === 'dissertativa' && (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                  </svg>
-                )}
-                {question.type === 'verdadeiro-falso' && (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
+        <ScrollArea className="h-[600px] pr-4">
+          <div className="space-y-4">
+            {questoesProcessadas.map((questao, index) => renderQuestao(questao, index))}
+          </div>
+        </ScrollArea>
       </div>
 
-      {/* Conteúdo Principal */}
-      <div className="flex-1 overflow-y-auto" ref={questionsContainerRef}>
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
-          {/* Header da Lista de Exercícios */}
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <BookOpen className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold text-gray-900">
-                      {consolidatedData.titulo || 'Lista de Exercícios'}
-                    </CardTitle>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {consolidatedData.disciplina} • {consolidatedData.anoEscolaridade || 'Série'} • {consolidatedData.tema}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    <Target className="w-3 h-3 mr-1" />
-                    {questions.length} questões
-                  </Badge>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                    <GraduationCap className="w-3 h-3 mr-1" />
-                    {totalPoints} pontos
-                  </Badge>
-                </div>
-              </div>
+      {/* Instruções Adicionais */}
+      {consolidatedData.observacoes && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardHeader>
+            <CardTitle className="text-amber-800">Observações Importantes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-amber-700">{consolidatedData.observacoes}</p>
+          </CardContent>
+        </Card>
+      )}
 
-              {consolidatedData.descricao && (
-                <p className="text-gray-700 mt-3 text-sm leading-relaxed">
-                  {consolidatedData.descricao}
-                </p>
-              )}
-
-              {consolidatedData.tempoLimite && (
-                <div className="flex items-center mt-3 text-sm text-gray-600">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Tempo estimado: {consolidatedData.tempoLimite}
-                </div>
-              )}
-            </CardHeader>
-          </Card>
-
-          {/* Lista de Questões */}
-          {questions.length > 0 ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Questões ({questions.length})
-                </h2>
-                <div className="text-sm text-gray-600">
-                  Progresso: {Object.keys(respostas).length}/{questions.length}
-                </div>
-              </div>
-
-              {questions.map((questao, index) => (
-                <Card 
-                  key={questao.id} 
-                  id={`question-${index + 1}`}
-                  className="border border-gray-200 hover:shadow-md transition-shadow scroll-mt-6"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full font-semibold text-sm">
-                          {index + 1}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className={getDifficultyColor(questao.dificuldade)}>
-                            {questao.dificuldade}
-                          </Badge>
-                          <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-200">
-                            {getTypeLabel(questao.type)}
-                          </Badge>
-                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                            {questao.pontos || 1} ponto{(questao.pontos || 1) > 1 ? 's' : ''}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <p className="text-gray-800 mb-4 leading-relaxed">
-                      {questao.enunciado}
-                    </p>
-
-                    {questao.type === 'multipla-escolha' && questao.alternativas && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700 mb-3">Resposta:</p>
-                        <div className="space-y-2">
-                          {questao.alternativas.map((alternativa, altIndex) => (
-                            <label key={altIndex} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                              <input
-                                type="radio"
-                                name={`question-${questao.id}`}
-                                className="mt-1 text-blue-600 focus:ring-blue-500"
-                                checked={respostas[questao.id]?.toString() === altIndex.toString()}
-                                onChange={() => handleRespostaChange(questao.id, altIndex)}
-                              />
-                              <span className="text-gray-700 flex-1">
-                                <span className="font-medium mr-2">{String.fromCharCode(65 + altIndex)})</span>
-                                {alternativa}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {questao.type === 'dissertativa' && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700">Digite sua resposta aqui:</p>
-                        <textarea
-                          className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                          rows={4}
-                          placeholder="Digite sua resposta aqui..."
-                          value={respostas[questao.id]?.toString() || ''}
-                          onChange={(e) => handleRespostaChange(questao.id, e.target.value)}
-                        />
-                      </div>
-                    )}
-
-                    {questao.type === 'verdadeiro-falso' && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700 mb-3">Resposta:</p>
-                        <div className="flex space-x-4">
-                          <label className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input
-                              type="radio"
-                              name={`question-${questao.id}`}
-                              className="text-green-600 focus:ring-green-500"
-                              checked={respostas[questao.id]?.toString() === 'true'}
-                              onChange={() => handleRespostaChange(questao.id, 'true')}
-                            />
-                            <span className="text-gray-700 font-medium">Verdadeiro</span>
-                          </label>
-                          <label className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
-                            <input
-                              type="radio"
-                              name={`question-${questao.id}`}
-                              className="text-red-600 focus:ring-red-500"
-                              checked={respostas[questao.id]?.toString() === 'false'}
-                              onChange={() => handleRespostaChange(questao.id, 'false')}
-                            />
-                            <span className="text-gray-700 font-medium">Falso</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
-
-                    {questao.explicacao && (
-                      <div className="mt-4">
-                        <div 
-                          className="p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400 cursor-pointer hover:bg-blue-100 transition-colors"
-                          onClick={() => toggleExplicacaoExpandida(questao.id)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm font-medium text-blue-800">Explicação</div>
-                            <div className="text-blue-600">
-                              {explicacoesExpandidas[questao.id] ? '−' : '+'}
-                            </div>
-                          </div>
-                          {explicacoesExpandidas[questao.id] && (
-                            <div className="text-sm text-blue-700 mt-2 pt-2 border-t border-blue-200">
-                              {questao.explicacao}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+      {/* Resumo de Respostas */}
+      <Card className="bg-gray-50">
+        <CardHeader>
+          <CardTitle className="text-sm">Resumo das Respostas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="font-medium">Questões Respondidas:</span>
+              <span className="ml-2">{Object.keys(respostas).length}</span>
             </div>
-          ) : (
-            <Card className="border-2 border-dashed border-gray-300">
-              <CardContent className="text-center py-12">
-                <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Nenhuma questão disponível
-                </h3>
-                <p className="text-gray-600">
-                  As questões desta lista de exercícios serão exibidas aqui.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+            <div>
+              <span className="font-medium">Questões Pendentes:</span>
+              <span className="ml-2">{questoesProcessadas.length - Object.keys(respostas).length}</span>
+            </div>
+            <div>
+              <span className="font-medium">Progresso:</span>
+              <span className="ml-2">
+                {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
