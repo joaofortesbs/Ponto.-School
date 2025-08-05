@@ -69,7 +69,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       numero: index + 1,
       dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
       tipo: questao.type || questao.tipo || 'multipla-escolha',
-      completed: false // Pode ser expandido para rastrear progresso
+      completed: false, // Pode ser expandido para rastrear progresso
+      enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
     }));
   };
 
@@ -101,17 +102,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const renderActivityPreview = () => {
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
-    console.log('🎯 Renderizando preview para tipo:', activityType);
-    console.log('🎯 Dados da atividade:', activity);
-    console.log('🎯 Dados originais:', activity.originalData);
-    console.log('🎯 Campos customizados:', activity.customFields);
-
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
-
-    console.log('🎯 Dados do localStorage:', storedData);
-    console.log('🎯 Campos do localStorage:', storedFields);
 
     // Preparar dados para o preview EXATAMENTE como no modal de edição
     const previewData = {
@@ -129,8 +122,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       questions: activity.originalData?.questions || storedData.questions,
       content: activity.originalData?.content || storedData.content
     };
-
-    console.log('🎯 Dados finais para preview:', previewData);
 
     switch (activityType) {
       case 'lista-exercicios':
@@ -165,7 +156,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-[90%] h-[90%] bg-white rounded-lg shadow-2xl overflow-hidden"
+          className="relative w-[90%] h-[90%] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
           style={{
             borderTopLeftRadius: '12px',
@@ -181,7 +172,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none z-10" />
 
           {/* Header com botão de fechar */}
-          <div className="flex justify-end p-4 relative z-10">
+          <div className="flex justify-end p-4 relative z-20">
             <Button
               variant="ghost"
               size="sm"
@@ -192,11 +183,62 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             </Button>
           </div>
 
+          {/* Blue Header Card - Always on top for Exercise Lists */}
+          {isExerciseList && (
+            <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 mb-0 z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-blue-900">
+                      {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
+                    </h2>
+                    <p className="text-blue-700 text-sm">
+                      {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tags and Info on the right */}
+                <div className="flex flex-wrap gap-2 ml-4">
+                  {activity?.originalData?.disciplina && (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      {activity.originalData.disciplina}
+                    </Badge>
+                  )}
+                  {activity?.originalData?.tema && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
+                      </svg>
+                      {activity.originalData.tema}
+                    </Badge>
+                  )}
+                  {questionsForSidebar.length > 0 && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                      {questionsForSidebar.length} questões
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Content Layout */}
-          <div className="flex h-full" style={{ height: 'calc(100% - 60px)' }}>
+          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>
             {/* Question Navigation Sidebar - Only for Exercise Lists */}
             {isExerciseList && questionsForSidebar.length > 0 && (
-              <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto">
+              <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto flex-shrink-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Card */}
                   <Card className="bg-white shadow-sm">
@@ -214,47 +256,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     </CardContent>
                   </Card>
 
-                  {/* Question List */}
+                  {/* Questions List */}
                   <div className="space-y-2">
-                    {questionsForSidebar.map((questao) => (
-                      <Card 
-                        key={questao.id}
-                        className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                          selectedQuestionId === questao.id 
-                            ? 'ring-2 ring-blue-500 bg-blue-50' 
-                            : 'bg-white hover:bg-gray-50'
+                    <h4 className="text-sm font-medium text-gray-700">Navegação</h4>
+                    {questionsForSidebar.map((question, index) => (
+                      <button
+                        key={question.id}
+                        onClick={() => scrollToQuestion(question.id)}
+                        className={`w-full text-left p-2 text-xs rounded transition-colors ${
+                          selectedQuestionId === question.id
+                            ? 'bg-blue-50 border border-blue-200 font-medium text-blue-800'
+                            : 'bg-white border border-gray-200 hover:bg-gray-50'
                         }`}
-                        onClick={() => scrollToQuestion(questao.id)}
                       >
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold ${
-                                questao.dificuldade === 'facil' || questao.dificuldade === 'fácil' 
-                                  ? 'bg-green-100 text-green-800'
-                                  : questao.dificuldade === 'medio' || questao.dificuldade === 'médio'
-                                  ? 'bg-yellow-100 text-yellow-800'  
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {questao.numero}
-                              </div>
-                              <div>
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs ${getDifficultyColor(questao.dificuldade)}`}
-                                >
-                                  {questao.dificuldade.charAt(0).toUpperCase() + questao.dificuldade.slice(1)}
-                                </Badge>
-                              </div>
-                            </div>
-                            <div className="w-4 h-4 rounded-full border-2 border-gray-300">
-                              {questao.completed && (
-                                <div className="w-full h-full bg-green-500 rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                        <div className="font-medium">Questão {index + 1}</div>
+                        <div className="text-gray-500 truncate mt-1">
+                          {question.enunciado?.substring(0, 40)}...
+                        </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -262,11 +281,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             )}
 
             {/* Main Content Area */}
-            <div 
-              ref={contentRef}
-              className="flex-1 overflow-y-auto px-6 pb-6"
-            >
-              {renderActivityPreview()}
+            <div className="flex-1 overflow-hidden">
+              <div className="h-full overflow-y-auto p-6" ref={contentRef}>
+                {renderActivityPreview()}
+              </div>
             </div>
           </div>
         </motion.div>
