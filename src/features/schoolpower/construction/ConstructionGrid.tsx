@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
+import { ActivityViewModal } from './ActivityViewModal';
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
@@ -24,6 +25,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedActivityForView, setSelectedActivityForView] = useState<ConstructionActivity | null>(null);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
@@ -39,7 +42,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const handleView = (id: string) => {
     console.log('👁️ Visualizando atividade:', id);
-    // TODO: Implementar visualização da atividade
+    const activity = activities.find(a => a.id === id);
+    if (activity) {
+      setSelectedActivityForView(activity);
+      setViewModalOpen(true);
+    }
+  };
+
+  const handleCloseViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedActivityForView(null);
   };
 
   const handleShare = (id: string) => {
@@ -322,6 +334,13 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         isOpen={isModalOpen}
         onClose={closeModal}
         onSave={handleSaveActivity}
+      />
+
+      {/* Modal de Visualização */}
+      <ActivityViewModal
+        isOpen={viewModalOpen}
+        onClose={handleCloseViewModal}
+        activity={selectedActivityForView}
       />
 
       {/* Modal de Progresso da Construção Automática */}

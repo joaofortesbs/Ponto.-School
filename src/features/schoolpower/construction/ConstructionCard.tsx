@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Share2, Clock, CheckCircle2, PenTool, Sparkles, Zap, Activity } from 'lucide-react';
 import { ProgressCircle } from './ProgressCircle';
@@ -6,7 +6,51 @@ import { ConstructionActivityProps } from './types';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+
+// Modal Component for Activity Preview
+const ActivityPreviewModal = ({ isOpen, onClose, activityData }: { isOpen: boolean; onClose: () => void; activityData: any }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="relative w-[85%] h-[85%] bg-gradient-to-br from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-xl flex flex-col overflow-hidden"
+        style={{
+          borderImage: 'linear-gradient(to bottom right, #FF6B00, #D65A00) 1',
+          borderImageSlice: 1,
+          borderStyle: 'solid',
+          borderWidth: '4px',
+          borderTopLeftRadius: '10px',
+          borderBottomRightRadius: '10px',
+        }}
+      >
+        <div className="absolute top-2 right-2 z-20">
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <svg xmlns="http://www.w3.org/3.0.0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </Button>
+        </div>
+        <div className="p-6 flex-grow overflow-auto">
+          <h2 className="text-2xl font-bold mb-4 text-orange-600 dark:text-orange-400">Visualização da Atividade</h2>
+          <div className="border-t border-orange-500/30 pt-4">
+            {activityData ? (
+              <>
+                <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">{activityData.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{activityData.description}</p>
+                {/* Render other activity details here as needed */}
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Carregando detalhes da atividade...</p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 // Função para obter o nome da atividade pelo ID
 const getActivityNameById = (activityId: string): string => {
@@ -25,6 +69,17 @@ export function ConstructionCard({
   onShare,
   onEdit
 }: ConstructionActivityProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedActivityData, setSelectedActivityData] = useState<any>(null);
+
+  const handleView = () => {
+    console.log('Abrindo visualização para atividade:', title, 'ID:', id);
+    // In a real scenario, you would fetch the full activity data here based on `id`
+    // For now, we'll mock it with the card's data
+    setSelectedActivityData({ id, title, description, progress, type, status });
+    setIsModalOpen(true);
+  };
+
   const getStatusIcon = () => {
     switch (status) {
       case 'completed':
@@ -122,13 +177,13 @@ export function ConstructionCard({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        whileHover={{ 
-          y: -4, 
+        whileHover={{
+          y: -4,
           scale: 1.02,
           transition: { duration: 0.2, ease: "easeOut" }
         }}
         className={`
-          relative rounded-2xl border-2 p-5 transition-all duration-300 
+          relative rounded-2xl border-2 p-5 transition-all duration-300
           ${statusStyle.border} ${statusStyle.bg} ${statusStyle.glow}
           hover:shadow-xl hover:border-opacity-80
           backdrop-blur-sm overflow-hidden group cursor-pointer
@@ -216,6 +271,28 @@ export function ConstructionCard({
 
           {/* Action Buttons Section */}
           <div className="flex items-center justify-between pt-2 border-t border-slate-200/50 dark:border-slate-700/30">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] transition-all duration-200"
+                onClick={handleView}
+              >
+                <Eye className="w-3 h-3 mr-1" />
+                Ver
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => onShare?.(id)}
+              >
+                <Share2 className="w-3 h-3 mr-1" />
+                Share
+              </Button>
+            </div>
+
+            {/* Action Buttons Section */}
             <div className="flex items-center gap-2">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -230,23 +307,6 @@ export function ConstructionCard({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Editar materiais da atividade</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onView?.(id)}
-                    className="h-8 px-3 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500 hover:border-blue-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-1.5"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span className="font-medium">Ver</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Visualizar atividade completa</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -305,6 +365,7 @@ export function ConstructionCard({
         {/* Hover Glow Effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FF6B00]/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       </motion.div>
+      <ActivityPreviewModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityData={selectedActivityData} />
     </TooltipProvider>
   );
 }
