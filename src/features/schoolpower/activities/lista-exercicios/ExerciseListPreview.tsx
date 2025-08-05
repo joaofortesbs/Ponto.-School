@@ -450,70 +450,47 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
         <CardContent className="pt-0">
           {questao.type === 'multipla-escolha' && questao.alternativas && (
-            <div className="space-y-3">
-              {questao.alternativas.map((alternativa, altIndex) => {
-                const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
-                const isSelected = respostas[questao.id] === altIndex;
-                
-                return (
-                  <div 
-                    key={altIndex}
-                    className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-300 shadow-sm' 
-                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleRespostaChange(questao.id, altIndex)}
+            <RadioGroup 
+              value={respostas[questao.id]?.toString() || ''} 
+              onValueChange={(value) => handleRespostaChange(questao.id, parseInt(value))}
+              className="space-y-3"
+            >
+              {questao.alternativas.map((alternativa, altIndex) => (
+                <div key={altIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem value={altIndex.toString()} id={`${questao.id}-${altIndex}`} />
+                  <Label 
+                    htmlFor={`${questao.id}-${altIndex}`} 
+                    className="flex-1 cursor-pointer font-normal"
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-500 text-white border-blue-500' 
-                        : 'bg-white text-gray-600 border-gray-300'
-                    }`}>
-                      {letter}
-                    </div>
-                    <div className="flex-1 text-gray-800 leading-relaxed pt-1">
-                      {typeof alternativa === 'string' ? alternativa : alternativa.texto || alternativa.text || JSON.stringify(alternativa)}
-                    </div>
-                    {isSelected && (
-                      <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    <span className="font-medium mr-2">{String.fromCharCode(65 + altIndex)})</span>
+                    {alternativa}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           )}
 
           {questao.type === 'verdadeiro-falso' && (
-            <div className="space-y-3">
-              {['Verdadeiro', 'Falso'].map((opcao, opcaoIndex) => {
-                const isSelected = respostas[questao.id] === opcao.toLowerCase();
-
-                return (
-                  <div 
-                    key={opcaoIndex}
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-300 shadow-sm' 
-                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleRespostaChange(questao.id, opcao.toLowerCase())}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-500 text-white border-blue-500' 
-                        : 'bg-white text-gray-600 border-gray-300'
-                    }`}>
-                      {opcao.charAt(0)}
-                    </div>
-                    <span className="text-gray-800 font-medium flex-1">{opcao}</span>
-                    {isSelected && (
-                      <CheckCircle className="w-5 h-5 text-blue-500" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <RadioGroup 
+              value={respostas[questao.id]?.toString() || ''} 
+              onValueChange={(value) => handleRespostaChange(questao.id, value)}
+              className="space-y-3"
+            >
+              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="true" id={`${questao.id}-true`} />
+                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal">
+                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600" />
+                  Verdadeiro
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="false" id={`${questao.id}-false`} />
+                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal">
+                  <Circle className="w-4 h-4 inline mr-2 text-red-600" />
+                  Falso
+                </Label>
+              </div>
+            </RadioGroup>
           )}
 
           {questao.type === 'discursiva' && (
