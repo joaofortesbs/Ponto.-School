@@ -8,11 +8,17 @@ interface UseEditActivityModalReturn {
   openModal: (activity: ConstructionActivity) => void;
   closeModal: () => void;
   handleSaveActivity: (activityData: any) => void;
+  isViewModalOpen: boolean;
+  viewActivity: ConstructionActivity | null;
+  openViewModal: (activity: ConstructionActivity) => void;
+  closeViewModal: () => void;
 }
 
 export const useEditActivityModal = (): UseEditActivityModalReturn => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<ConstructionActivity | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
 
   const openModal = useCallback((activity: ConstructionActivity) => {
     console.log('Opening modal for activity:', activity.id);
@@ -24,6 +30,18 @@ export const useEditActivityModal = (): UseEditActivityModalReturn => {
     console.log('Closing modal');
     setIsModalOpen(false);
     setSelectedActivity(null);
+  }, []);
+
+  const openViewModal = useCallback((activity: ConstructionActivity) => {
+    console.log('Opening view modal for activity:', activity.id);
+    setViewActivity(activity);
+    setIsViewModalOpen(true);
+  }, []);
+
+  const closeViewModal = useCallback(() => {
+    console.log('Closing view modal');
+    setIsViewModalOpen(false);
+    setViewActivity(null);
   }, []);
 
   const handleSaveActivity = useCallback((activityData: any) => {
@@ -44,6 +62,10 @@ export const useEditActivityModal = (): UseEditActivityModalReturn => {
     selectedActivity,
     openModal,
     closeModal,
-    handleSaveActivity
+    handleSaveActivity,
+    isViewModalOpen,
+    viewActivity,
+    openViewModal,
+    closeViewModal
   };
 };

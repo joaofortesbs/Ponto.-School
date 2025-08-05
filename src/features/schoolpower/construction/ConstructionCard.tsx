@@ -78,6 +78,19 @@ export function ConstructionCard({
     }
   };
 
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('👁️ Clique no botão Ver detectado para atividade:', title);
+    console.log('👁️ ID da atividade:', id);
+    if (onView) {
+      onView(id);
+      console.log('👁️ Função onView executada com sucesso!');
+    } else {
+      console.error('👁️ Função onView não disponível!');
+    }
+  };
+
   const getProgressColor = () => {
     if (progress >= 80) return 'text-emerald-500';
     if (progress >= 50) return 'text-amber-500';
@@ -236,9 +249,9 @@ export function ConstructionCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    size="sm"
                     variant="outline"
-                    onClick={() => onView?.(id)}
+                    size="sm"
+                    onClick={handleViewClick}
                     className="h-8 px-3 text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-blue-500 hover:border-blue-600 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-1.5"
                   >
                     <Eye className="w-3.5 h-3.5" />

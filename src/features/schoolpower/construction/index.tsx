@@ -33,6 +33,7 @@ export function ConstructionInterface({ approvedActivities, handleEditActivity }
 export { ConstructionGrid } from './ConstructionGrid';
 export { ConstructionCard } from './ConstructionCard';
 export { EditActivityModal } from './EditActivityModal';
+export { ActivityViewModal } from './ActivityViewModal';
 export { ProgressCircle } from './ProgressCircle';
 export { useConstructionActivities } from './useConstructionActivities';
 export { useEditActivityModal } from './useEditActivityModal';

@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
+import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo modal
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
@@ -25,6 +25,10 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
 
+  // Novos estados para o modal de visualização
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
+
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
   const handleEditActivity = (activity: ConstructionActivity) => {
@@ -37,9 +41,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     }
   };
 
-  const handleView = (id: string) => {
-    console.log('👁️ Visualizando atividade:', id);
-    // TODO: Implementar visualização da atividade
+  const handleView = (activity: ConstructionActivity) => {
+    console.log('👁️ Abrindo modal de visualização para atividade:', activity.title);
+    setViewActivity(activity);
+    setIsViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    console.log('👁️ Fechando modal de visualização');
+    setIsViewModalOpen(false);
+    setViewActivity(null);
   };
 
   const handleShare = (id: string) => {
@@ -57,12 +68,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
     // Filtrar atividades que precisam ser construídas
     const activitiesToBuild = activities.filter(activity => {
-      const needsBuild = !activity.isBuilt && 
-                        activity.status !== 'completed' && 
-                        activity.title && 
+      const needsBuild = !activity.isBuilt &&
+                        activity.status !== 'completed' &&
+                        activity.title &&
                         activity.description &&
                         activity.progress < 100;
-      
+
       console.log(`🔍 Atividade ${activity.title}: isBuilt=${activity.isBuilt}, status=${activity.status}, progress=${activity.progress}, needsBuild=${needsBuild}`);
       return needsBuild;
     });
@@ -87,15 +98,15 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
       autoBuildService.setOnActivityBuilt((activityId) => {
         console.log(`🎯 Atividade construída automaticamente: ${activityId}`);
-        
+
         // Forçar atualização da interface
         if (refreshActivities) {
           refreshActivities();
         }
-        
+
         // Disparar evento customizado para atualização
-        window.dispatchEvent(new CustomEvent('activity-built', { 
-          detail: { activityId } 
+        window.dispatchEvent(new CustomEvent('activity-built', {
+          detail: { activityId }
         }));
       });
 
@@ -106,9 +117,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
     } catch (error) {
       console.error('❌ Erro na construção automática:', error);
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      
+
       setBuildProgress({
         current: 0,
         total: activitiesToBuild.length,
@@ -118,12 +129,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       });
     } finally {
       setIsBuilding(false);
-      
+
       // Aguardar um pouco antes de fechar para mostrar resultado
       setTimeout(() => {
         setShowProgressModal(false);
         setBuildProgress(null);
-        
+
         // Forçar refresh completo das atividades
         if (refreshActivities) {
           refreshActivities();
@@ -136,7 +147,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   useEffect(() => {
     const handleActivityBuilt = (event: CustomEvent) => {
       console.log('🎯 Evento de atividade construída recebido:', event.detail);
-      
+
       // Forçar atualização das atividades
       if (refreshActivities) {
         refreshActivities();
@@ -144,7 +155,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     };
 
     window.addEventListener('activity-built', handleActivityBuilt as EventListener);
-    
+
     return () => {
       window.removeEventListener('activity-built', handleActivityBuilt as EventListener);
     };
@@ -152,11 +163,11 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   useEffect(() => {
     console.log('🎯 ConstructionGrid - Verificando status das atividades');
-    
+
     // Verificar e atualizar status de atividades construídas do localStorage
     const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
     let hasChanges = false;
-    
+
     activities.forEach(activity => {
       if (constructedActivities[activity.id] && !activity.isBuilt) {
         console.log(`📝 Atualizando status da atividade ${activity.id} para construída`);
@@ -243,11 +254,11 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     );
   }
 
-  const activitiesNeedingBuild = activities.filter(activity => 
-    !activity.isBuilt && 
-    activity.status !== 'completed' && 
-    activity.title && 
-    activity.description && 
+  const activitiesNeedingBuild = activities.filter(activity =>
+    !activity.isBuilt &&
+    activity.status !== 'completed' &&
+    activity.title &&
+    activity.description &&
     activity.progress < 100
   );
 
@@ -310,7 +321,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
               console.log('🎯 Abrindo modal para atividade:', activity.title);
               openModal(activity);
             }}
-            onView={handleView}
+            onView={() => handleView(activity)} // Passa a atividade completa para o handleView
             onShare={handleShare}
           />
         ))}
@@ -318,10 +329,17 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
       {/* Modal de Edição */}
       <EditActivityModal
-        activity={selectedActivity}
         isOpen={isModalOpen}
+        activity={selectedActivity}
         onClose={closeModal}
         onSave={handleSaveActivity}
+      />
+
+      {/* Modal de Visualização */}
+      <ActivityViewModal
+        isOpen={isViewModalOpen}
+        activity={viewActivity}
+        onClose={closeViewModal}
       />
 
       {/* Modal de Progresso da Construção Automática */}
