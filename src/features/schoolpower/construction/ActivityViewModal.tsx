@@ -29,24 +29,39 @@ interface ActivityViewModalProps {
 
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
+  const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
     if (isOpen) {
       setShowSidebar(false);
       setSelectedQuestionId(null);
+      setSelectedQuestionIndex(null);
+      setIsInQuestionView(false);
     }
   }, [isOpen]);
 
   if (!isOpen || !activity) return null;
 
-  // Função para rolar para uma questão específica
-  const scrollToQuestion = (questionId: string) => {
+  // Função para lidar com seleção de questão
+  const handleQuestionSelect = (questionIndex: number, questionId: string) => {
+    setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
+    setIsInQuestionView(true);
+  };
+
+  // Função para rolar para uma questão específica
+  const scrollToQuestion = (questionId: string, questionIndex?: number) => {
+    setSelectedQuestionId(questionId);
+    if (questionIndex !== undefined) {
+      setSelectedQuestionIndex(questionIndex);
+      setIsInQuestionView(true);
+    }
     const questionElement = document.getElementById(`question-${questionId}`);
     if (questionElement && contentRef.current) {
       questionElement.scrollIntoView({
@@ -151,6 +166,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <ExerciseListPreview
             data={previewData}
             customFields={previewData.customFields}
+            onQuestionSelect={handleQuestionSelect}
           />
         );
 
@@ -199,17 +215,36 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
                   <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                    {isInQuestionView && selectedQuestionIndex !== null ? (
+                      <span className="text-white font-bold text-sm">
+                        {selectedQuestionIndex + 1}
+                      </span>
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-blue-900">
-                      {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
-                    </h2>
-                    <p className="text-blue-700 text-sm">
-                      {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
-                    </p>
+                    {isInQuestionView && selectedQuestionIndex !== null ? (
+                      <>
+                        <h2 className="text-xl font-bold text-blue-900">
+                          Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
+                        </h2>
+                        <p className="text-blue-700 text-sm">
+                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-xl font-bold text-blue-900">
+                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
+                        </h2>
+                        <p className="text-blue-700 text-sm">
+                          {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
+                        </p>
+                      </>
+                    )}
                   </div>
                   
                   {/* Tags and Info */}
@@ -298,7 +333,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     {questionsForSidebar.map((question, index) => (
                       <button
                         key={question.id}
-                        onClick={() => scrollToQuestion(question.id)}
+                        onClick={() => scrollToQuestion(question.id, index)}
                         className={`w-full text-left p-2 text-xs rounded transition-colors ${
                           selectedQuestionId === question.id
                             ? 'bg-blue-50 border border-blue-200 font-medium text-blue-800'

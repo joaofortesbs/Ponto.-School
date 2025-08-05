@@ -71,13 +71,15 @@ interface ExerciseListPreviewProps {
   isGenerating?: boolean;
   onRegenerateContent?: () => void;
   onQuestionRender?: (questionId: string) => void;
+  onQuestionSelect?: (questionIndex: number, questionId: string) => void;
 }
 
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   data,
   isGenerating = false,
   onRegenerateContent,
-  onQuestionRender
+  onQuestionRender,
+  onQuestionSelect
 }) => {
   const [respostas, setRespostas] = useState<Record<string, string | number>>({});
   const [questoesExpandidas, setQuestoesExpandidas] = useState<Record<string, boolean>>({});
@@ -298,6 +300,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         onClick={() => {
           setSelectedQuestionIndex(index);
           setViewMode('detailed');
+          // Notificar o modal pai sobre a seleção da questão
+          if (onQuestionSelect) {
+            onQuestionSelect(index, questao.id);
+          }
         }}
       >
         <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105">
@@ -614,7 +620,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   return (
                     <button
                       key={questao.id}
-                      onClick={() => setSelectedQuestionIndex(index)}
+                      onClick={() => {
+                        setSelectedQuestionIndex(index);
+                        if (onQuestionSelect) {
+                          onQuestionSelect(index, questao.id);
+                        }
+                      }}
                       className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
                         isSelected
                           ? 'bg-blue-100 border-blue-300 border-2'
@@ -692,7 +703,15 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => selectedQuestionIndex !== null && selectedQuestionIndex > 0 && setSelectedQuestionIndex(selectedQuestionIndex - 1)}
+                      onClick={() => {
+                        if (selectedQuestionIndex !== null && selectedQuestionIndex > 0) {
+                          const newIndex = selectedQuestionIndex - 1;
+                          setSelectedQuestionIndex(newIndex);
+                          if (onQuestionSelect) {
+                            onQuestionSelect(newIndex, questoesProcessadas[newIndex].id);
+                          }
+                        }
+                      }}
                       disabled={selectedQuestionIndex === null || selectedQuestionIndex <= 0}
                       className="border-blue-300 text-blue-700 hover:bg-blue-100"
                     >
@@ -701,7 +720,15 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => selectedQuestionIndex !== null && selectedQuestionIndex < questoesProcessadas.length - 1 && setSelectedQuestionIndex(selectedQuestionIndex + 1)}
+                      onClick={() => {
+                        if (selectedQuestionIndex !== null && selectedQuestionIndex < questoesProcessadas.length - 1) {
+                          const newIndex = selectedQuestionIndex + 1;
+                          setSelectedQuestionIndex(newIndex);
+                          if (onQuestionSelect) {
+                            onQuestionSelect(newIndex, questoesProcessadas[newIndex].id);
+                          }
+                        }
+                      }}
                       disabled={selectedQuestionIndex === null || selectedQuestionIndex >= questoesProcessadas.length - 1}
                       className="border-blue-300 text-blue-700 hover:bg-blue-100"
                     >
