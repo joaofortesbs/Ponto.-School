@@ -46,9 +46,27 @@ function buildGeminiPrompt(
   contextualizationData: ContextualizationData,
   allowedActivities: typeof schoolPowerActivities
 ): string {
-  // Extrair quantidade específica do pedido do usuário
-  const quantityMatch = initialMessage.match(/(\d+)\s*(atividades?|exercícios?|questões?|materiais?)/i);
-  const requestedQuantity = quantityMatch ? parseInt(quantityMatch[1]) : null;
+  // Extrair quantidade específica do pedido do usuário com múltiplos padrões
+  const quantityPatterns = [
+    /(\d+)\s*(atividades?|exercícios?|questões?|materiais?|sugestões?)/i,
+    /quero\s+(\d+)/i,
+    /preciso\s+de\s+(\d+)/i,
+    /gerar\s+(\d+)/i,
+    /(\d+)\s*por\s*dia/i,
+    /(\d+)\s*para/i
+  ];
+  
+  let requestedQuantity = null;
+  for (const pattern of quantityPatterns) {
+    const match = initialMessage.match(pattern);
+    if (match) {
+      requestedQuantity = parseInt(match[1]);
+      break;
+    }
+  }
+  
+  console.log(`🎯 Quantidade solicitada detectada: ${requestedQuantity || 'não especificada'}`);
+  console.log(`📝 Mensagem original: ${initialMessage}`);
 
   // Simplificar lista de atividades para economizar tokens
   const activitiesIds = allowedActivities
@@ -75,7 +93,15 @@ function buildGeminiPrompt(
     // Construir o prompt para a Gemini
     const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
-${requestedQuantity ? `🎯 ATENÇÃO ESPECIAL: O usuário pediu EXATAMENTE ${requestedQuantity} atividades. Você DEVE gerar precisamente ${requestedQuantity} atividades, nem mais nem menos!` : ''} 
+${requestedQuantity ? `
+🎯🎯🎯 ATENÇÃO CRÍTICA - QUANTIDADE OBRIGATÓRIA 🎯🎯🎯
+O usuário solicitou EXATAMENTE ${requestedQuantity} atividades.
+VOCÊ DEVE GERAR PRECISAMENTE ${requestedQuantity} ATIVIDADES - NEM MAIS, NEM MENOS!
+Este é um requisito ABSOLUTO e NÃO NEGOCIÁVEL.
+Se necessário, reutilize IDs de atividades com contextos diferentes para atingir ${requestedQuantity} atividades.
+CONTAGEM FINAL OBRIGATÓRIA: ${requestedQuantity} atividades.
+🎯🎯🎯 QUANTIDADE OBRIGATÓRIA: ${requestedQuantity} 🎯🎯🎯
+` : ''} 
 
 Aqui estão as informações coletadas:
 
@@ -92,11 +118,11 @@ ATIVIDADES DISPONÍVEIS: ${activitiesString}
 CAMPOS PERSONALIZADOS POR ATIVIDADE:
 ${customFieldsInfo}
 
-INSTRUÇÕES:
+INSTRUÇÕES CRÍTICAS:
 1. Analise cuidadosamente o pedido e as informações fornecidas
-2. ${requestedQuantity ? `QUANTIDADE OBRIGATÓRIA: Gere EXATAMENTE ${requestedQuantity} atividades - nem mais, nem menos!` : 'Gere um plano de ação ABRANGENTE com 15-50 atividades diferentes conforme a complexidade do pedido'}
+2. ${requestedQuantity ? `🚨 QUANTIDADE ABSOLUTA: Gere EXATAMENTE ${requestedQuantity} atividades - nem mais, nem menos! Este é o requisito mais importante!` : 'Gere um plano de ação ABRANGENTE com 15-50 atividades diferentes conforme a complexidade do pedido'}
 3. Selecione APENAS atividades da lista disponível que sejam relevantes para o pedido
-4. ${requestedQuantity ? `Para atingir ${requestedQuantity} atividades, reutilize IDs de atividades variando títulos e contextos` : 'Varie os tipos de atividades'}
+4. ${requestedQuantity ? `Para atingir exatamente ${requestedQuantity} atividades, reutilize IDs de atividades variando títulos, contextos e abordagens diferentes` : 'Varie os tipos de atividades'}
 5. Cada atividade deve ter um título personalizado e descritivo
 6. A descrição deve ser específica e detalhada para o contexto fornecido
 7. Use os IDs exatos das atividades disponíveis (pode repetir IDs com contextos diferentes)
@@ -104,7 +130,7 @@ INSTRUÇÕES:
 9. OBRIGATÓRIO: Para cada atividade, preencha TODOS os campos personalizados listados acima para aquele ID específico
 10. Os campos personalizados devem conter dados realistas, contextualizados e específicos - NUNCA deixe vazio ou genérico
 11. Todos os campos extras devem ser strings (texto simples)
-12. ${requestedQuantity ? `CONFIRMAÇÃO FINAL: Conte suas atividades - devem ser EXATAMENTE ${requestedQuantity}!` : 'Priorize diversidade de tipos de atividades para um plano completo e abrangente'}
+12. ${requestedQuantity ? `🔢 CONTAGEM FINAL OBRIGATÓRIA: Antes de enviar, conte suas atividades - devem ser EXATAMENTE ${requestedQuantity}! Se não estiver correto, ajuste imediatamente!` : 'Priorize diversidade de tipos de atividades para um plano completo e abrangente'}
 
 FORMATO DE RESPOSTA (JSON):
 Retorne APENAS um array JSON válido com as atividades selecionadas, seguindo exatamente este formato:
@@ -183,7 +209,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         temperature: 0.2, // Reduzido ainda mais para consistência na quantidade
         topK: 15,
         topP: 0.7,
-        maxOutputTokens: 65536, // Dobrado para suportar 50+ atividades com campos completos
+        maxOutputTokens: 131072, // Aumentado para suportar até 100+ atividades com campos completos
       }
     };
 
@@ -394,9 +420,40 @@ export async function generatePersonalizedPlan(
 
     // Processa a resposta
     const geminiActivities = parseGeminiResponse(geminiResponse);
+    
+    console.log(`📊 Atividades geradas: ${geminiActivities.length}`);
+    console.log(`🎯 Quantidade solicitada: ${requestedQuantity || 'não especificada'}`);
+    
+    // Validação crítica de quantidade
+    if (requestedQuantity && geminiActivities.length !== requestedQuantity) {
+      console.warn(`⚠️ ERRO DE QUANTIDADE: Solicitado ${requestedQuantity}, gerado ${geminiActivities.length}`);
+      
+      // Tentar corrigir a quantidade automaticamente
+      if (geminiActivities.length < requestedQuantity) {
+        console.log(`🔄 Complementando atividades para atingir ${requestedQuantity}`);
+        const deficit = requestedQuantity - geminiActivities.length;
+        
+        // Duplicar atividades existentes com variações para completar
+        for (let i = 0; i < deficit; i++) {
+          const baseActivity = geminiActivities[i % geminiActivities.length];
+          const duplicatedActivity = {
+            ...baseActivity,
+            title: `${baseActivity.title} - Variação ${i + 1}`,
+            description: `${baseActivity.description} (Atividade complementar ${i + 1})`
+          };
+          geminiActivities.push(duplicatedActivity);
+        }
+        
+        console.log(`✅ Quantidade corrigida: ${geminiActivities.length} atividades`);
+      } else if (geminiActivities.length > requestedQuantity) {
+        console.log(`🔄 Reduzindo atividades para ${requestedQuantity}`);
+        geminiActivities.splice(requestedQuantity);
+        console.log(`✅ Quantidade corrigida: ${geminiActivities.length} atividades`);
+      }
+    }
 
     // Valida as atividades retornadas
-    const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
+    const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities, requestedQuantity);
 
 
 

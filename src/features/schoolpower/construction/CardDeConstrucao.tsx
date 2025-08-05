@@ -1255,7 +1255,8 @@ export function CardDeConstrucao({
                       : 'space-y-2 sm:space-y-3'
                   }`}
                   style={{
-                    minHeight: "500px",
+                    minHeight: "400px",
+                    maxHeight: "calc(100vh - 300px)",
                     height: "auto",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
@@ -1285,7 +1286,7 @@ export function CardDeConstrucao({
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.3) }}
                         onClick={() => handleActivityToggle(activity)}
-                        style={{ minHeight: viewMode === 'grid' ? '180px' : '140px' }}
+                        style={{ minHeight: viewMode === 'grid' ? '160px' : '120px' }}
                       >
                         {/* Badge Manual - para atividades manuais */}
                         {activity.isManual && (

@@ -189,7 +189,8 @@ function generateValidationReport(
  */
 export async function validateGeminiPlan(
   geminiActivities: GeminiActivity[],
-  allowedActivities: typeof schoolPowerActivities = schoolPowerActivities
+  allowedActivities: typeof schoolPowerActivities = schoolPowerActivities,
+  requestedQuantity?: number | null
 ): Promise<ValidatedActivity[]> {
   console.log('🔍 Iniciando validação do plano da Gemini...');
   console.log('📊 Dados de entrada:', {
@@ -292,8 +293,14 @@ export async function validateGeminiPlan(
     console.log(`📊 Total de atividades geradas: ${report.validActivities.length}`);
   }
 
+  // Validação final de quantidade se especificada
+  if (requestedQuantity && uniqueActivities.length !== requestedQuantity) {
+    console.warn(`⚠️ ALERTA: Quantidade final (${uniqueActivities.length}) difere da solicitada (${requestedQuantity})`);
+  }
+
   console.log('✅ Validação concluída com sucesso');
   console.log('📊 Atividades aprovadas:', uniqueActivities.map(a => ({ id: a.id, title: a.title })));
+  console.log(`🎯 Quantidade final: ${uniqueActivities.length} atividades`);
 
   return uniqueActivities;
 }
