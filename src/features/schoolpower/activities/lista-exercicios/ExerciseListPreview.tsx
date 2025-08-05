@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Question {
@@ -73,8 +73,8 @@ interface ExerciseListPreviewProps {
   onQuestionRender?: (questionId: string) => void;
 }
 
-const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({ 
-  data, 
+const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
+  data,
   isGenerating = false,
   onRegenerateContent,
   onQuestionRender
@@ -151,7 +151,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
             questaoProcessada.alternativas = [
               'Opção A',
-              'Opção B', 
+              'Opção B',
               'Opção C',
               'Opção D'
             ];
@@ -212,7 +212,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina || 'conteúdo geral'}`,
         alternativas: tipoQuestao === 'multipla-escolha' ? [
           'Alternativa A',
-          'Alternativa B', 
+          'Alternativa B',
           'Alternativa C',
           'Alternativa D'
         ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
@@ -248,22 +248,22 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const getDifficultyColor = (dificuldade?: string) => {
     const nivel = dificuldade ? dificuldade.toLowerCase() : 'medio';
     switch (nivel) {
-      case 'facil': 
+      case 'facil':
       case 'fácil':
       case 'básico':
       case 'basico':
         return 'bg-green-100 text-green-800';
-      case 'medio': 
+      case 'medio':
       case 'médio':
       case 'intermediário':
       case 'intermediario':
         return 'bg-yellow-100 text-yellow-800';
-      case 'dificil': 
+      case 'dificil':
       case 'difícil':
       case 'avançado':
       case 'avancado':
         return 'bg-red-100 text-red-800';
-      default: 
+      default:
         return 'bg-gray-100 text-gray-800';
     }
   };
@@ -357,7 +357,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     >
       {/* Grade de questões */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {questoesProcessadas.map((questao, index) => 
+        {questoesProcessadas.map((questao, index) =>
           renderQuestionGridCard(questao, index)
         )}
       </div>
@@ -406,8 +406,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     console.log(`🔍 Questão ${index + 1} - Alternativas processadas:`, alternativasProcessadas);
 
     return (
-      <Card 
-        key={questionId} 
+      <Card
+        key={questionId}
         id={`question-${questionId}`}
         className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4"
       >
@@ -452,18 +452,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   }
 
                   return (
-                    <div 
+                    <div
                       key={altIndex}
                       className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                        isSelected 
-                          ? 'bg-blue-50 border-blue-300 shadow-sm' 
+                        isSelected
+                          ? 'bg-blue-50 border-blue-300 shadow-sm'
                           : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
                       }`}
                       onClick={() => handleRespostaChange(questao.id, altIndex)}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                        isSelected 
-                          ? 'bg-blue-500 text-white border-blue-500' 
+                        isSelected
+                          ? 'bg-blue-500 text-white border-blue-500'
                           : 'bg-white text-gray-600 border-gray-300'
                       }`}>
                         {letter}
@@ -491,8 +491,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           )}
 
           {questao.type === 'verdadeiro-falso' && (
-            <RadioGroup 
-              value={respostas[questao.id]?.toString() || ''} 
+            <RadioGroup
+              value={respostas[questao.id]?.toString() || ''}
               onValueChange={(value) => handleRespostaChange(questao.id, value)}
               className="space-y-3"
             >
@@ -529,7 +529,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
           {questao.explicacao && (
             <div className="mt-4">
-              <div 
+              <div
                 className="p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400 cursor-pointer hover:bg-blue-100 transition-colors"
                 onClick={() => toggleExplicacaoExpandida(questao.id)}
               >
@@ -630,7 +630,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             </div>
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -640,9 +640,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             <div className="w-80 border-r border-gray-200 bg-gray-50 h-full overflow-y-auto">
               {/* Cabeçalho do menu lateral */}
               <div className="p-4 border-b border-gray-200 bg-white">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setViewMode('grid')}
                   className="w-full justify-start mb-3"
                 >
@@ -665,17 +665,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                       key={questao.id}
                       onClick={() => setSelectedQuestionIndex(index)}
                       className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
-                        isSelected 
-                          ? 'bg-blue-100 border-blue-300 border-2' 
+                        isSelected
+                          ? 'bg-blue-100 border-blue-300 border-2'
                           : 'bg-white border border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                          isAnswered 
-                            ? 'bg-green-500 text-white' 
-                            : isSelected 
-                              ? 'bg-blue-500 text-white' 
+                          isAnswered
+                            ? 'bg-green-500 text-white'
+                            : isSelected
+                              ? 'bg-blue-500 text-white'
                               : 'bg-gray-200 text-gray-600'
                         }`}>
                           {isAnswered ? '✓' : index + 1}
@@ -738,8 +738,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
                   {/* Navegação rápida */}
                   <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => selectedQuestionIndex !== null && selectedQuestionIndex > 0 && setSelectedQuestionIndex(selectedQuestionIndex - 1)}
                       disabled={selectedQuestionIndex === null || selectedQuestionIndex <= 0}
@@ -747,8 +747,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     >
                       Anterior
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => selectedQuestionIndex !== null && selectedQuestionIndex < questoesProcessadas.length - 1 && setSelectedQuestionIndex(selectedQuestionIndex + 1)}
                       disabled={selectedQuestionIndex === null || selectedQuestionIndex >= questoesProcessadas.length - 1}
