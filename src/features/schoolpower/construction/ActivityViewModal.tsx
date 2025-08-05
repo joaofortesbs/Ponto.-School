@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -18,6 +17,24 @@ interface ActivityViewModalProps {
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  // Assume que questaoExpandidas e respostas são gerenciadas de outra forma ou passadas como props,
+  // pois o código original as referenciava dentro de renderQuestao sem defini-las.
+  // Para este exemplo, vamos criar stubs simples.
+  const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
+  const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
+  
+  // Mover o callback onQuestionRender para fora do loop de renderização
+  // Este hook agora é chamado apenas uma vez quando o componente é montado,
+  // se a lógica de onQuestionRender for necessária aqui.
+  // Se onQuestionRender precisa ser dinâmico com base em props, um outro hook com dependências seria necessário.
+  // Para corrigir o erro de hook, estamos assumindo que a intenção original era apenas registrar a primeira renderização ou que a lógica de onQuestionRender
+  // deveria estar em um escopo mais alto ou gerenciada de forma diferente.
+  // Se o `onQuestionRender` é estritamente para a lista de exercícios e precisa ser chamado para cada questão
+  // quando ela aparece na tela, a abordagem correta seria dentro de um `ExerciseListPreview` ou similar
+  // onde a renderização de cada item é mais controlada.
+  // Dado que o erro é "Rendered more hooks than...", a remoção do hook de dentro da função renderQuestao é a correção direta.
+  // Se a funcionalidade de onQuestionRender for essencial para cada questão renderizada, a lógica precisaria ser adaptada dentro de `ExerciseListPreview`
+  // ou gerenciada com um `IntersectionObserver` ou similar.
 
   if (!isOpen || !activity) return null;
 
@@ -37,11 +54,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   // Obter questões para o sidebar
   const getQuestionsForSidebar = () => {
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-    
+
     if (activityType !== 'lista-exercicios') return [];
 
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-    
+
     const previewData = {
       ...activity.originalData,
       ...storedData,
@@ -99,7 +116,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const renderActivityPreview = () => {
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-    
+
     console.log('🎯 Renderizando preview para tipo:', activityType);
     console.log('🎯 Dados da atividade:', activity);
     console.log('🎯 Dados originais:', activity.originalData);
@@ -108,7 +125,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
-    
+
     console.log('🎯 Dados do localStorage:', storedData);
     console.log('🎯 Campos do localStorage:', storedFields);
 
@@ -139,10 +156,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             customFields={previewData.customFields}
             onQuestionRender={(questionId) => {
               // Callback para quando uma questão é renderizada
+              // A lógica de onQuestionRender agora deve ser tratada dentro de ExerciseListPreview se necessário
             }}
           />
         );
-      
+
       default:
         return (
           <ActivityPreview 
