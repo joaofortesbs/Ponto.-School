@@ -861,8 +861,7 @@ export function CardDeConstrucao({
                   ? "Plano de Ação"
                   : step === "generating"
                     ? "Gerando Conteúdo..."
-                    : step === "activities"
-                      ? "Construção de Atividades"
+                    : step === "activities" ? "Construção de Atividades"
                       : "School Power"}
             </h1>
           </div>

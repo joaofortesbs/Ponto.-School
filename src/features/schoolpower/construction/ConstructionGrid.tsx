@@ -267,7 +267,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   console.log('ConstructionGrid: Renderizando atividades:', activities);
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Atividades de Construção
@@ -393,6 +398,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

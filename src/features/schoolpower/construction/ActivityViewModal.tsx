@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -47,13 +46,13 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
 
   const renderListaExercicios = () => {
     const content = activity.generatedContent;
-    
+
     if (typeof content === 'string') {
       // Parse manual do conteúdo se for string
       const lines = content.split('\n').filter(line => line.trim());
       const exercises = [];
       let currentExercise = null;
-      
+
       lines.forEach(line => {
         if (line.match(/^\d+\./)) {
           if (currentExercise) exercises.push(currentExercise);
@@ -76,7 +75,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
               {activity.description}
             </p>
           </div>
-          
+
           {exercises.length > 0 ? (
             <div className="space-y-4">
               {exercises.map((exercise, index) => (
@@ -126,7 +125,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
               {activity.description}
             </p>
           </div>
-          
+
           <div className="space-y-4">
             {content.exercises.map((exercise: any, index: number) => (
               <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -170,7 +169,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
             {activity.description}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="prose prose-sm max-w-none dark:prose-invert">
             <div dangerouslySetInnerHTML={{ 
@@ -193,7 +192,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
             {activity.description}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="prose prose-sm max-w-none dark:prose-invert">
             <div dangerouslySetInnerHTML={{ 
@@ -216,7 +215,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
             {activity.description}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="prose prose-sm max-w-none dark:prose-invert">
             <div dangerouslySetInnerHTML={{ 
@@ -239,7 +238,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
             {activity.description}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="prose prose-sm max-w-none dark:prose-invert">
             <div dangerouslySetInnerHTML={{ 
@@ -262,7 +261,7 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
             {activity.description}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="prose prose-sm max-w-none dark:prose-invert">
             <div dangerouslySetInnerHTML={{ 
