@@ -579,7 +579,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   if (isGenerating) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 space-y-4">
+      <div className="flex flex-col items-center justify-center p-8 space-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <p className="text-gray-600">Gerando lista de exercícios...</p>
       </div>
@@ -608,55 +608,151 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   console.log('📊 Dados consolidados finais:', consolidatedData);
 
   return (
-    <div className="space-y-6">
-      {viewMode === 'grid' ? (
-        renderQuestionsGrid()
-      ) : (
-        <>
-          <div className="flex items-center justify-between px-4 py-2 bg-white shadow-sm border-b">
-            <Button variant="ghost" size="sm" onClick={() => setViewMode('grid')}>
-              <List className="w-4 h-4 mr-2" /> Voltar para Grade
-            </Button>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span>Questão {selectedQuestionIndex !== null ? selectedQuestionIndex + 1 : 0} de {questoesProcessadas.length}</span>
-            </div>
-          </div>
-          {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
-            <div className="p-4">
-              {renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)}
-            </div>
-          )}
-        </>
-      )}
+      <div className="h-full">
+        {viewMode === 'grid' ? (
+          renderQuestionsGrid()
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="flex h-full"
+          >
+            {/* Menu lateral de navegação das questões */}
+            <div className="w-80 border-r border-gray-200 bg-gray-50 h-full overflow-y-auto">
+              {/* Cabeçalho do menu lateral */}
+              <div className="p-4 border-b border-gray-200 bg-white">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setViewMode('grid')}
+                  className="w-full justify-start mb-3"
+                >
+                  <List className="w-4 h-4 mr-2" /> Voltar para Grade
+                </Button>
+                <h3 className="font-semibold text-gray-900">Questões</h3>
+                <p className="text-sm text-gray-600">
+                  {questoesProcessadas.length} questões disponíveis
+                </p>
+              </div>
 
-      {/* Resumo de Respostas (visível apenas no modo grid, ou pode ser movido para um modal/rodapé) */}
-      {viewMode === 'grid' && (
-        <Card className="bg-gray-50">
-          <CardHeader>
-            <CardTitle className="text-sm">Resumo das Respostas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Questões Respondidas:</span>
-                <span className="ml-2">{Object.keys(respostas).length}</span>
+              {/* Lista de questões para navegação */}
+              <div className="p-2 space-y-1">
+                {questoesProcessadas.map((questao, index) => {
+                  const isSelected = selectedQuestionIndex === index;
+                  const isAnswered = respostas[questao.id] !== undefined;
+
+                  return (
+                    <button
+                      key={questao.id}
+                      onClick={() => setSelectedQuestionIndex(index)}
+                      className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                        isSelected 
+                          ? 'bg-blue-100 border-blue-300 border-2' 
+                          : 'bg-white border border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          isAnswered 
+                            ? 'bg-green-500 text-white' 
+                            : isSelected 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          {isAnswered ? '✓' : index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            Questão {index + 1}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {questao.enunciado?.substring(0, 50)}...
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <div>
-                <span className="font-medium">Questões Pendentes:</span>
-                <span className="ml-2">{questoesProcessadas.length - Object.keys(respostas).length}</span>
-              </div>
-              <div>
-                <span className="font-medium">Progresso:</span>
-                <span className="ml-2">
-                  {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
-                </span>
+
+              {/* Resumo de progresso no menu lateral */}
+              <div className="p-4 border-t border-gray-200 bg-white">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Respondidas:</span>
+                    <span className="font-semibold">{Object.keys(respostas).length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pendentes:</span>
+                    <span className="font-semibold">{questoesProcessadas.length - Object.keys(respostas).length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Progresso:</span>
+                    <span className="font-semibold">
+                      {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+
+            {/* Área principal com a questão selecionada */}
+            <div className="flex-1 h-full overflow-y-auto">
+              {/* Cabeçalho azul da questão */}
+              <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">
+                        {selectedQuestionIndex !== null ? selectedQuestionIndex + 1 : 0}
+                      </span>
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-blue-900">
+                        Questão {selectedQuestionIndex !== null ? selectedQuestionIndex + 1 : 0} de {questoesProcessadas.length}
+                      </h2>
+                      <p className="text-blue-700 text-sm">
+                        {consolidatedData.titulo}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Navegação rápida */}
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => selectedQuestionIndex !== null && selectedQuestionIndex > 0 && setSelectedQuestionIndex(selectedQuestionIndex - 1)}
+                      disabled={selectedQuestionIndex === null || selectedQuestionIndex <= 0}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      Anterior
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => selectedQuestionIndex !== null && selectedQuestionIndex < questoesProcessadas.length - 1 && setSelectedQuestionIndex(selectedQuestionIndex + 1)}
+                      disabled={selectedQuestionIndex === null || selectedQuestionIndex >= questoesProcessadas.length - 1}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      Próxima
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conteúdo da questão */}
+              <div className="p-6">
+                {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
+                  renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
 };
 
 export default ExerciseListPreview;
