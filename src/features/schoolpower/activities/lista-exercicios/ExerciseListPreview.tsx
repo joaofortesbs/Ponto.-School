@@ -603,18 +603,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             <div className="w-80 border-r border-gray-200 bg-gray-50 h-full overflow-y-auto">
               {/* Cabeçalho do menu lateral */}
               <div className="p-4 border-b border-gray-200 bg-white">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="w-full justify-start mb-3"
-                >
-                  <List className="w-4 h-4 mr-2" /> Voltar para Grade
-                </Button>
-                <h3 className="font-semibold text-gray-900">Questões</h3>
-                <p className="text-sm text-gray-600">
-                  {questoesProcessadas.length} questões disponíveis
-                </p>
               </div>
 
               {/* Lista de questões para navegação */}
