@@ -54,6 +54,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 }) => {
   const [respostas, setRespostas] = useState<Record<string, string | number>>({});
   const [questoesExpandidas, setQuestoesExpandidas] = useState<Record<string, boolean>>({});
+  const [explicacoesExpandidas, setExplicacoesExpandidas] = useState<Record<string, boolean>>({});
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
 
   // Processar conteúdo gerado pela IA e extrair questões
@@ -205,6 +206,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }));
   };
 
+  const toggleExplicacaoExpandida = (questaoId: string) => {
+    setExplicacoesExpandidas(prev => ({
+      ...prev,
+      [questaoId]: !prev[questaoId]
+    }));
+  };
+
   const getDifficultyColor = (dificuldade?: string) => {
     const nivel = dificuldade ? dificuldade.toLowerCase() : 'medio';
     switch (nivel) {
@@ -325,9 +333,23 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           )}
 
           {questao.explicacao && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400">
-              <div className="text-sm font-medium text-blue-800 mb-1">Explicação:</div>
-              <div className="text-sm text-blue-700">{questao.explicacao}</div>
+            <div className="mt-4">
+              <div 
+                className="p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400 cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => toggleExplicacaoExpandida(questao.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-blue-800">Explicação</div>
+                  <div className="text-blue-600">
+                    {explicacoesExpandidas[questao.id] ? '−' : '+'}
+                  </div>
+                </div>
+                {explicacoesExpandidas[questao.id] && (
+                  <div className="text-sm text-blue-700 mt-2 pt-2 border-t border-blue-200">
+                    {questao.explicacao}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </CardContent>

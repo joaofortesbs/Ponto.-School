@@ -98,16 +98,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-orange-500 rounded-bl-lg pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none" />
 
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b bg-gray-50">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Visualização da Atividade
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {activity.personalizedTitle || activity.title}
-              </p>
-            </div>
+          {/* Header com botão de fechar */}
+          <div className="flex justify-end p-4 border-b">
             <Button
               variant="ghost"
               size="sm"
@@ -119,7 +111,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6" style={{ height: 'calc(100% - 80px)' }}>
+          <div className="flex-1 overflow-y-auto p-6" style={{ height: 'calc(100% - 60px)' }}>
             {renderActivityPreview()}
           </div>
         </motion.div>
