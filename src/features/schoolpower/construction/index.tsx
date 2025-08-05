@@ -37,4 +37,8 @@ export { ActivityViewModal } from './ActivityViewModal';
 export { ProgressCircle } from './ProgressCircle';
 export { useConstructionActivities } from './useConstructionActivities';
 export { useEditActivityModal } from './useEditActivityModal';
-export type { ConstructionActivity, ConstructionInterfaceProps } from './index';
+
+// Re-export the ActivityViewModal function explicitly
+export { ActivityViewModal as default } from './ActivityViewModal';
+
+export type { ConstructionActivity, ConstructionInterfaceProps };

@@ -248,16 +248,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   };
 
+  // Effect para notificar quando questões são renderizadas
+  useEffect(() => {
+    if (onQuestionRender && questoesProcessadas.length > 0) {
+      questoesProcessadas.forEach(questao => {
+        onQuestionRender(questao.id);
+      });
+    }
+  }, [questoesProcessadas, onQuestionRender]);
+
   const renderQuestao = (questao: Question, index: number) => {
     const isExpandida = questoesExpandidas[questao.id];
     const respostaAtual = respostas[questao.id];
-
-    // Notificar que a questão foi renderizada (movido para useEffect no nível do componente)
-    React.useEffect(() => {
-      if (onQuestionRender) {
-        onQuestionRender(questao.id);
-      }
-    }, [questao.id, onQuestionRender]);
 
     return (
       <Card 

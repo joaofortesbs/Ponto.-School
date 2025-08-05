@@ -274,3 +274,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     </AnimatePresence>
   );
 }
+
+// Default export for compatibility
+export default ActivityViewModal;
