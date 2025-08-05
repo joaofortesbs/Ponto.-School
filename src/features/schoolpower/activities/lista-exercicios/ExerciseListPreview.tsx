@@ -420,6 +420,29 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const renderQuestion = (questao: Question, index: number) => {
     const questionId = questao.id || `questao-${index + 1}`;
 
+    // Extrair e processar alternativas de forma mais robusta
+    let alternativasProcessadas = [];
+    
+    if (questao.type === 'multipla-escolha') {
+      if (questao.alternativas && Array.isArray(questao.alternativas)) {
+        alternativasProcessadas = questao.alternativas;
+      } else if (questao.alternatives && Array.isArray(questao.alternatives)) {
+        alternativasProcessadas = questao.alternatives;
+      } else if (questao.options && Array.isArray(questao.options)) {
+        alternativasProcessadas = questao.options;
+      } else {
+        // Fallback com alternativas padrão
+        alternativasProcessadas = [
+          'Opção A',
+          'Opção B',
+          'Opção C',
+          'Opção D'
+        ];
+      }
+    }
+
+    console.log(`🔍 Questão ${index + 1} - Alternativas processadas:`, alternativasProcessadas);
+
     return (
       <Card 
         key={questionId} 
@@ -449,38 +472,59 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </CardHeader>
 
         <CardContent className="pt-0">
-          {questao.type === 'multipla-escolha' && questao.alternativas && (
+          {questao.type === 'multipla-escolha' && (
             <div className="space-y-3">
-              {questao.alternativas.map((alternativa, altIndex) => {
-                const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
-                const isSelected = respostas[questao.id] === altIndex;
-                
-                return (
-                  <div 
-                    key={altIndex}
-                    className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-300 shadow-sm' 
-                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleRespostaChange(questao.id, altIndex)}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-500 text-white border-blue-500' 
-                        : 'bg-white text-gray-600 border-gray-300'
-                    }`}>
-                      {letter}
+              {alternativasProcessadas.length > 0 ? (
+                alternativasProcessadas.map((alternativa, altIndex) => {
+                  const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
+                  const isSelected = respostas[questao.id] === altIndex;
+                  
+                  // Extrair texto da alternativa de forma robusta
+                  let textoAlternativa = '';
+                  if (typeof alternativa === 'string') {
+                    textoAlternativa = alternativa;
+                  } else if (alternativa && typeof alternativa === 'object') {
+                    textoAlternativa = alternativa.texto || alternativa.text || alternativa.content || alternativa.label || JSON.stringify(alternativa);
+                  } else {
+                    textoAlternativa = `Alternativa ${letter}`;
+                  }
+                  
+                  return (
+                    <div 
+                      key={altIndex}
+                      className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                        isSelected 
+                          ? 'bg-blue-50 border-blue-300 shadow-sm' 
+                          : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                      }`}
+                      onClick={() => handleRespostaChange(questao.id, altIndex)}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                        isSelected 
+                          ? 'bg-blue-500 text-white border-blue-500' 
+                          : 'bg-white text-gray-600 border-gray-300'
+                      }`}>
+                        {letter}
+                      </div>
+                      <div className="flex-1 text-gray-800 leading-relaxed pt-1">
+                        {textoAlternativa}
+                      </div>
+                      {isSelected && (
+                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+                      )}
                     </div>
-                    <div className="flex-1 text-gray-800 leading-relaxed pt-1">
-                      {typeof alternativa === 'string' ? alternativa : alternativa.texto || alternativa.text || JSON.stringify(alternativa)}
-                    </div>
-                    {isSelected && (
-                      <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
+                  </p>
+                  <pre className="mt-2 text-xs text-gray-600 overflow-auto">
+                    {JSON.stringify(questao, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
 
