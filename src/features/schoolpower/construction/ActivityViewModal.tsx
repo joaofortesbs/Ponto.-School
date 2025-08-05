@@ -32,15 +32,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
-  const [showSidebar, setShowSidebar] = useState<boolean>(true); // Default value changed to true
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number | null>(null);
+  const [showSidebar, setShowSidebar] = useState<boolean>(false);
 
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
     if (isOpen) {
-      setShowSidebar(false); // This was changed from true to false in the original code
+      setShowSidebar(false);
       setSelectedQuestionId(null);
-      setCurrentQuestionIndex(null); // Reset currentQuestionIndex as well
     }
   }, [isOpen]);
 
@@ -153,8 +151,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <ExerciseListPreview
             data={previewData}
             customFields={previewData.customFields}
-            selectedQuestionIndex={currentQuestionIndex}
-            onQuestionSelect={(index) => setCurrentQuestionIndex(index)}
           />
         );
 
@@ -169,16 +165,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  // Handler para fechar o modal
-  const handleClose = () => {
-    setIsEditing(false); // Assuming setIsEditing exists and is managed elsewhere
-    setShowSidebar(true); // Resetting showSidebar
-    setSelectedQuestionId(null);
-    setCurrentQuestionIndex(null); // Reset currentQuestionIndex
-    onClose();
-  };
-
-
   return (
     <AnimatePresence>
       <motion.div
@@ -186,7 +172,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-        onClick={handleClose} // Changed to handleClose to reset state
+        onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -218,20 +204,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     </svg>
                   </div>
                   <div className="flex-1">
-                    {/* Dynamic Header Title */}
                     <h2 className="text-xl font-bold text-blue-900">
-                      {currentQuestionIndex !== null
-                        ? `Questão ${currentQuestionIndex + 1} de ${questionsForSidebar.length}`
-                        : activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
+                      {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
                     </h2>
-                    {/* Dynamic Header Description */}
                     <p className="text-blue-700 text-sm">
-                      {currentQuestionIndex !== null
-                        ? questionsForSidebar[currentQuestionIndex]?.enunciado?.substring(0, 60) || 'Detalhes da questão'
-                        : activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
+                      {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
                     </p>
                   </div>
-
+                  
                   {/* Tags and Info */}
                   <div className="flex flex-wrap gap-2">
                     {activity?.originalData?.disciplina && (
@@ -258,7 +238,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         {questionsForSidebar.length} questões
                       </Badge>
                     )}
-
+                  
                   </div>
                 </div>
 
@@ -266,7 +246,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleClose} // Changed to handleClose to reset state
+                  onClick={onClose}
                   className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 rounded-full ml-4 flex-shrink-0"
                 >
                   <X className="w-5 h-5" />
@@ -281,7 +261,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleClose} // Changed to handleClose to reset state
+                onClick={onClose}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <X className="w-5 h-5" />
@@ -318,17 +298,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     {questionsForSidebar.map((question, index) => (
                       <button
                         key={question.id}
-                        onClick={() => {
-                          setSelectedQuestionId(question.id);
-                          setCurrentQuestionIndex(index);
-                          // Scroll para a questão específica
-                          setTimeout(() => {
-                            const element = document.getElementById(`question-${question.id}`);
-                            if (element) {
-                              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                          }, 100);
-                        }}
+                        onClick={() => scrollToQuestion(question.id)}
                         className={`w-full text-left p-2 text-xs rounded transition-colors ${
                           selectedQuestionId === question.id
                             ? 'bg-blue-50 border border-blue-200 font-medium text-blue-800'
