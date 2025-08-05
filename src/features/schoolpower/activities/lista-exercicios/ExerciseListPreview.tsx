@@ -260,6 +260,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             questionsRefs.current[questao.id] = el;
           }
         }}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
