@@ -679,64 +679,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
             {/* Área principal com a questão selecionada */}
             <div className="flex-1 h-full overflow-y-auto">
-              {/* Cabeçalho azul da questão */}
-              <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 sticky top-0 z-10">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">
-                        {selectedQuestionIndex !== null ? selectedQuestionIndex + 1 : 0}
-                      </span>
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-blue-900">
-                        Questão {selectedQuestionIndex !== null ? selectedQuestionIndex + 1 : 0} de {questoesProcessadas.length}
-                      </h2>
-                      <p className="text-blue-700 text-sm">
-                        {consolidatedData.titulo}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Navegação rápida */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (selectedQuestionIndex !== null && selectedQuestionIndex > 0) {
-                          const newIndex = selectedQuestionIndex - 1;
-                          setSelectedQuestionIndex(newIndex);
-                          if (onQuestionSelect) {
-                            onQuestionSelect(newIndex, questoesProcessadas[newIndex].id);
-                          }
-                        }
-                      }}
-                      disabled={selectedQuestionIndex === null || selectedQuestionIndex <= 0}
-                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                    >
-                      Anterior
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (selectedQuestionIndex !== null && selectedQuestionIndex < questoesProcessadas.length - 1) {
-                          const newIndex = selectedQuestionIndex + 1;
-                          setSelectedQuestionIndex(newIndex);
-                          if (onQuestionSelect) {
-                            onQuestionSelect(newIndex, questoesProcessadas[newIndex].id);
-                          }
-                        }
-                      }}
-                      disabled={selectedQuestionIndex === null || selectedQuestionIndex >= questoesProcessadas.length - 1}
-                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                    >
-                      Próxima
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              
 
               {/* Conteúdo da questão */}
               <div className="p-6">
