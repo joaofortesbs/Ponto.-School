@@ -263,6 +263,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         key={questao.id} 
         id={`question-${questao.id}`}
         className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4"
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
