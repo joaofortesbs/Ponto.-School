@@ -449,84 +449,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </CardHeader>
 
         <CardContent className="pt-0">
-          {questao.type === 'multipla-escolha' && questao.alternativas && (
-            <RadioGroup 
-              value={respostas[questao.id]?.toString() || ''} 
-              onValueChange={(value) => handleRespostaChange(questao.id, parseInt(value))}
-              className="space-y-3"
-            >
-              {questao.alternativas.map((alternativa, altIndex) => (
-                <div key={altIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value={altIndex.toString()} id={`${questao.id}-${altIndex}`} />
-                  <Label 
-                    htmlFor={`${questao.id}-${altIndex}`} 
-                    className="flex-1 cursor-pointer font-normal"
-                  >
-                    <span className="font-medium mr-2">{String.fromCharCode(65 + altIndex)})</span>
-                    {alternativa}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          )}
-
-          {questao.type === 'verdadeiro-falso' && (
-            <RadioGroup 
-              value={respostas[questao.id]?.toString() || ''} 
-              onValueChange={(value) => handleRespostaChange(questao.id, value)}
-              className="space-y-3"
-            >
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="true" id={`${questao.id}-true`} />
-                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal">
-                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600" />
-                  Verdadeiro
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="false" id={`${questao.id}-false`} />
-                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal">
-                  <Circle className="w-4 h-4 inline mr-2 text-red-600" />
-                  Falso
-                </Label>
-              </div>
-            </RadioGroup>
-          )}
-
-          {questao.type === 'discursiva' && (
-            <div className="space-y-3">
-              <Textarea
-                placeholder="Digite sua resposta aqui..."
-                value={respostas[questao.id]?.toString() || ''}
-                onChange={(e) => handleRespostaChange(questao.id, e.target.value)}
-                className="min-h-[120px] resize-none"
-              />
-              <div className="text-xs text-gray-500">
-                Resposta: {respostas[questao.id]?.toString()?.length || 0} caracteres
-              </div>
-            </div>
-          )}
-
-          {questao.explicacao && (
-            <div className="mt-4">
-              <div 
-                className="p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400 cursor-pointer hover:bg-blue-100 transition-colors"
-                onClick={() => toggleExplicacaoExpandida(questao.id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-800">Explicação</div>
-                  <div className="text-blue-600">
-                    {explicacoesExpandidas[questao.id] ? '−' : '+'}
-                  </div>
-                </div>
-                {explicacoesExpandidas[questao.id] && (
-                  <div className="text-sm text-blue-700 mt-2 pt-2 border-t border-blue-200">
-                    {questao.explicacao}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {/* Usar a função de renderização completa que já existe */}
+          {renderQuestionContent(questao, index)}
         </CardContent>
       </Card>
     );
