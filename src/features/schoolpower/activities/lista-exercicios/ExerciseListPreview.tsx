@@ -565,17 +565,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="bg-blue-600 text-white p-4 rounded-lg">
-        <CardHeader className="p-0">
-          <CardTitle className="text-xl font-bold">
-            {consolidatedData.titulo}
-          </CardTitle>
-          <div className="text-sm opacity-80">
-            {consolidatedData.disciplina} - {consolidatedData.tema}
-          </div>
-        </CardHeader>
-      </Card>
-
       {/* Lista de Questões */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
