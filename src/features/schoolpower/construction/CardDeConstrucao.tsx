@@ -1255,8 +1255,8 @@ export function CardDeConstrucao({
                       : 'space-y-2 sm:space-y-3'
                   }`}
                   style={{
-                    maxHeight: "calc(100vh - 250px)",
                     minHeight: "500px",
+                    height: "auto",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                   }}

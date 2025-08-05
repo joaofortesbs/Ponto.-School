@@ -178,7 +178,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       </div>
 
       {/* Lista de Atividades */}
-      <div className="space-y-3 mb-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: '400px' }}>
+      <div className="space-y-3 mb-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ minHeight: '400px', height: 'auto' }}>
         {actionPlan.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🤖</div>

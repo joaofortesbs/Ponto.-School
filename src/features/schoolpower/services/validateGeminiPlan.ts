@@ -213,25 +213,46 @@ export async function validateGeminiPlan(
     return [];
   }
 
-  const validatedActivities: ValidatedActivity[] = [];
+  // Filtrar apenas atividades válidas e habilitadas
+  const validatedActivities = geminiActivities.filter(activity => {
+    const originalActivity = allowedActivities.find(allowed => allowed.id === activity.id);
+
+    if (!originalActivity) {
+      console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista de atividades permitidas - removendo`);
+      return false;
+    }
+
+    if (!originalActivity.enabled) {
+      console.log(`ℹ️ Atividade ${activity.id} está desabilitada - mas mantendo para preservar quantidade solicitada`);
+      // Não remove atividades desabilitadas para manter a quantidade
+    }
+
+    return true;
+  });
+
+  console.log(`📊 Validação: ${geminiActivities.length} recebidas → ${validatedActivities.length} validadas`);
+
+
   const invalidIds: string[] = [];
 
   // Valida cada atividade individualmente
-  for (let i = 0; i < geminiActivities.length; i++) {
-    const activity = geminiActivities[i];
-    console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
+  for (let i = 0; i < validatedActivities.length; i++) {
+    const activity = validatedActivities[i];
+    console.log(`🔍 Validando atividade ${i + 1}/${validatedActivities.length}:`, activity);
 
     const validatedActivity = validateSingleActivity(activity, allowedActivities);
 
     if (validatedActivity) {
-      validatedActivities.push(validatedActivity);
+      validatedActivities[i] = validatedActivity; // Atualiza no array existente
     } else {
+      // Se validateSingleActivity retornar null, a atividade original já foi logada como inválida ou sem ID
+      // Precisamos coletar os IDs que falharam na validação individual
       invalidIds.push(activity.id || `atividade-${i}`);
     }
   }
 
   // Remove duplicatas
-  const { uniqueActivities, duplicateIds } = removeDuplicates(validatedActivities);
+  const { uniqueActivities, duplicateIds } = removeDuplicates(validatedActivities.filter(Boolean) as ValidatedActivity[]); // Filtra nulls antes de remover duplicatas
 
   // Gera relatório final
   const report = generateValidationReport(
