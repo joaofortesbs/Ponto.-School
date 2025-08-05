@@ -587,43 +587,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       <div className="h-full">
         {viewMode === 'grid' ? (
           <div className="h-full flex flex-col">
-            {/* Cabeçalho azul sempre presente */}
-            <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-blue-900">
-                      {consolidatedData.titulo}
-                    </h2>
-                    <p className="text-blue-700 text-sm">
-                      Selecione uma questão para começar a responder
-                    </p>
-                  </div>
-                </div>
-
-                {/* Informações da lista */}
-                <div className="flex items-center gap-4 text-sm text-blue-700">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    <span>{questoesProcessadas.length} questões</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    <span>{consolidatedData.disciplina}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    <span>{consolidatedData.dificuldade}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Grade de questões */}
             <div className="flex-1 overflow-y-auto p-6">
               {renderQuestionsGrid()}
