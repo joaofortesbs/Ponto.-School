@@ -43,6 +43,7 @@ interface ExerciseListData {
 
 interface ExerciseListPreviewProps {
   data: ExerciseListData;
+  customFields?: Record<string, any>;
   isGenerating?: boolean;
   onRegenerateContent?: () => void;
   onQuestionRender?: (questionId: string) => void;
@@ -251,12 +252,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     const isExpandida = questoesExpandidas[questao.id];
     const respostaAtual = respostas[questao.id];
 
-    // Notificar que a questão foi renderizada
+    // Notificar que a questão foi renderizada (movido para useEffect no nível do componente)
     React.useEffect(() => {
       if (onQuestionRender) {
         onQuestionRender(questao.id);
       }
-    }, [questao.id]);
+    }, [questao.id, onQuestionRender]);
 
     return (
       <Card 
