@@ -189,8 +189,7 @@ function generateValidationReport(
  */
 export async function validateGeminiPlan(
   geminiActivities: GeminiActivity[],
-  allowedActivities: typeof schoolPowerActivities = schoolPowerActivities,
-  requestedQuantity?: number | null
+  allowedActivities: typeof schoolPowerActivities = schoolPowerActivities
 ): Promise<ValidatedActivity[]> {
   console.log('🔍 Iniciando validação do plano da Gemini...');
   console.log('📊 Dados de entrada:', {
@@ -214,46 +213,25 @@ export async function validateGeminiPlan(
     return [];
   }
 
-  // Filtrar apenas atividades válidas e habilitadas
-  const validatedActivities = geminiActivities.filter(activity => {
-    const originalActivity = allowedActivities.find(allowed => allowed.id === activity.id);
-
-    if (!originalActivity) {
-      console.warn(`⚠️ Atividade ${activity.id} não encontrada na lista de atividades permitidas - removendo`);
-      return false;
-    }
-
-    if (!originalActivity.enabled) {
-      console.log(`ℹ️ Atividade ${activity.id} está desabilitada - mas mantendo para preservar quantidade solicitada`);
-      // Não remove atividades desabilitadas para manter a quantidade
-    }
-
-    return true;
-  });
-
-  console.log(`📊 Validação: ${geminiActivities.length} recebidas → ${validatedActivities.length} validadas`);
-
-
+  const validatedActivities: ValidatedActivity[] = [];
   const invalidIds: string[] = [];
 
   // Valida cada atividade individualmente
-  for (let i = 0; i < validatedActivities.length; i++) {
-    const activity = validatedActivities[i];
-    console.log(`🔍 Validando atividade ${i + 1}/${validatedActivities.length}:`, activity);
+  for (let i = 0; i < geminiActivities.length; i++) {
+    const activity = geminiActivities[i];
+    console.log(`🔍 Validando atividade ${i + 1}/${geminiActivities.length}:`, activity);
 
     const validatedActivity = validateSingleActivity(activity, allowedActivities);
 
     if (validatedActivity) {
-      validatedActivities[i] = validatedActivity; // Atualiza no array existente
+      validatedActivities.push(validatedActivity);
     } else {
-      // Se validateSingleActivity retornar null, a atividade original já foi logada como inválida ou sem ID
-      // Precisamos coletar os IDs que falharam na validação individual
       invalidIds.push(activity.id || `atividade-${i}`);
     }
   }
 
   // Remove duplicatas
-  const { uniqueActivities, duplicateIds } = removeDuplicates(validatedActivities.filter(Boolean) as ValidatedActivity[]); // Filtra nulls antes de remover duplicatas
+  const { uniqueActivities, duplicateIds } = removeDuplicates(validatedActivities);
 
   // Gera relatório final
   const report = generateValidationReport(
@@ -293,14 +271,8 @@ export async function validateGeminiPlan(
     console.log(`📊 Total de atividades geradas: ${report.validActivities.length}`);
   }
 
-  // Validação final de quantidade se especificada
-  if (requestedQuantity && uniqueActivities.length !== requestedQuantity) {
-    console.warn(`⚠️ ALERTA: Quantidade final (${uniqueActivities.length}) difere da solicitada (${requestedQuantity})`);
-  }
-
   console.log('✅ Validação concluída com sucesso');
   console.log('📊 Atividades aprovadas:', uniqueActivities.map(a => ({ id: a.id, title: a.title })));
-  console.log(`🎯 Quantidade final: ${uniqueActivities.length} atividades`);
 
   return uniqueActivities;
 }

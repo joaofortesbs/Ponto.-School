@@ -21,7 +21,7 @@ export function ConstructionInterface({ approvedActivities, handleEditActivity }
   console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
 
   return (
-    <div className="w-full h-full overflow-y-auto" style={{ minHeight: '600px', height: 'auto', backgroundColor: 'transparent' }}>
+    <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 150px)', minHeight: '600px', backgroundColor: 'transparent' }}>
       <ConstructionGrid 
         approvedActivities={approvedActivities}
         handleEditActivity={handleEditActivity}
