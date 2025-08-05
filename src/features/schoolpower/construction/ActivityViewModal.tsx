@@ -8,19 +8,6 @@ import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 
-// Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
-// This is a placeholder, replace with actual implementation if needed.
-const getActivityIcon = (activityId: string) => {
-  // Example: return an icon component based on activityId
-  return ({ className }: { className: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c0-1.707.833-3.123 2.12-4.119C15.387 2.507 17.017 2 19 2s3.613.507 4.88-1.881C24.833 1.707 24 3.123 24 5v10a2 2 0 01-2 2H2a2 2 0 01-2-2V5c0-1.877.847-3.293 2.12-4.119C4.167 0.507 5.993 0 8 0s3.833.507 5.12 1.881C14.833 1.707 14 3.123 14 5v10z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v16M8 20h8" />
-    </svg>
-  );
-};
-
-
 interface ActivityViewModalProps {
   isOpen: boolean;
   activity: ConstructionActivity | null;
@@ -40,8 +27,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     setSelectedQuestionId(questionId);
     const questionElement = document.getElementById(`question-${questionId}`);
     if (questionElement && contentRef.current) {
-      questionElement.scrollIntoView({
-        behavior: 'smooth',
+      questionElement.scrollIntoView({ 
+        behavior: 'smooth', 
         block: 'center',
         inline: 'nearest'
       });
@@ -92,22 +79,22 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
-      case 'facil':
+      case 'facil': 
       case 'fácil':
       case 'básico':
       case 'basico':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'medio':
+      case 'medio': 
       case 'médio':
       case 'intermediário':
       case 'intermediario':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'dificil':
+      case 'dificil': 
       case 'difícil':
       case 'avançado':
       case 'avancado':
         return 'bg-red-100 text-red-800 border-red-200';
-      default:
+      default: 
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -139,7 +126,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     switch (activityType) {
       case 'lista-exercicios':
         return (
-          <ExerciseListPreview
+          <ExerciseListPreview 
             data={previewData}
             customFields={previewData.customFields}
           />
@@ -147,7 +134,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       default:
         return (
-          <ActivityPreview
+          <ActivityPreview 
             data={previewData}
             activityType={activityType}
             customFields={previewData.customFields}
@@ -184,11 +171,23 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-orange-500 rounded-bl-lg pointer-events-none z-10" />
           <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none z-10" />
 
-          {/* Header with Close button */}
+          {/* Header com botão de fechar */}
+          <div className="flex justify-end p-4 relative z-20">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Blue Header Card - Always on top for Exercise Lists */}
           {isExerciseList && (
             <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 mb-0 z-10">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
+                <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -202,63 +201,38 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
                     </p>
                   </div>
-                  
-                  {/* Tags and Info */}
-                  <div className="flex flex-wrap gap-2">
-                    {activity?.originalData?.disciplina && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        {activity.originalData.disciplina}
-                      </Badge>
-                    )}
-                    {activity?.originalData?.tema && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
-                        </svg>
-                        {activity.originalData.tema}
-                      </Badge>
-                    )}
-                    {questionsForSidebar.length > 0 && (
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                        {questionsForSidebar.length} questões
-                      </Badge>
-                    )}
-                  </div>
                 </div>
 
-                {/* Close button - positioned in the extreme right */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 rounded-full ml-4 flex-shrink-0"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
+                {/* Tags and Info on the right */}
+                <div className="flex flex-wrap gap-2 ml-4">
+                  {activity?.originalData?.disciplina && (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      {activity.originalData.disciplina}
+                    </Badge>
+                  )}
+                  {activity?.originalData?.tema && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
+                      </svg>
+                      {activity.originalData.tema}
+                    </Badge>
+                  )}
+                  {questionsForSidebar.length > 0 && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                      {questionsForSidebar.length} questões
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           )}
-
-          {/* Non-Exercise List Header */}
-          {!isExerciseList && (
-            <div className="flex justify-end p-4 relative z-20">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-          )}
-
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>

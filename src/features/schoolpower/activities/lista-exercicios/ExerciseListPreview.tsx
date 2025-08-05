@@ -10,34 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface Question {
   id: string;
   type: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
-  enunciado?: string;
+  enunciado: string;
   alternativas?: string[];
   respostaCorreta?: string | number;
   explicacao?: string;
   dificuldade?: 'facil' | 'medio' | 'dificil';
   tema?: string;
-  // Propriedades adicionais que podem vir da IA
-  statement?: string;
-  options?: string[];
-  correctAnswer?: string | number;
-  explanation?: string;
-  difficulty?: string;
-  topic?: string;
-  pontos?: number;
-  tempo_estimado?: string;
-  tipo?: string;
-  alternatives?: string[];
-  question?: string;
-  correct?: boolean;
-  texto?: string;
-  isCorrect?: boolean;
-  response?: string;
-  correct_answer?: string;
 }
 
 interface ExerciseListData {
@@ -57,12 +39,6 @@ interface ExerciseListData {
   anoEscolaridade?: string;
   nivelDificuldade?: string;
   tempoLimite?: string;
-  // Campos adicionais possivelmente presentes nos dados gerados pela IA
-  questions?: Question[];
-  content?: {
-    questoes?: Question[];
-    questions?: Question[];
-  };
 }
 
 interface ExerciseListPreviewProps {
@@ -127,22 +103,19 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       // Processar e validar as questões da IA
       const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
-        const questaoProcessada: Question = {
+        const questaoProcessada = {
           id: questao.id || `questao-${index + 1}`,
-          type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
-          enunciado: questao.enunciado || questao.enunciado || questao.statement || questao.question || `Questão ${index + 1}`,
-          alternativas: questao.alternativas || questao.alternatives || questao.options,
-          respostaCorreta: questao.respostaCorreta || questao.correctAnswer || questao.correct_answer || 0,
-          explicacao: questao.explicacao || questao.explanation,
-          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any, // Permitindo string temporariamente
-          tema: questao.tema || questao.topic || data.tema || 'Tema não especificado',
-          pontos: questao.pontos,
-          tempo_estimado: questao.tempo_estimado,
-          tipo: questao.tipo,
+          type: (questao.type || questao.tipo || 'multipla-escolha').toLowerCase().replace('_', '-'),
+          enunciado: questao.enunciado || questao.pergunta || questao.question || `Questão ${index + 1}`,
+          alternativas: questao.alternativas || questao.alternatives || questao.options || [],
+          respostaCorreta: questao.respostaCorreta || questao.correctAnswer || 0,
+          explicacao: questao.explicacao || questao.explanation || '',
+          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
+          tema: questao.tema || questao.topic || data.tema || 'Tema não especificado'
         };
 
-        // Ajuste de tipo para padronizar
-        if (questaoProcessada.type === 'multipla_escolha' || questaoProcessada.type === 'multiple-choice' || questaoProcessada.type === 'múltipla escolha') {
+        // Validação de tipos específicos
+        if (questaoProcessada.type === 'multipla-escolha' || questaoProcessada.type === 'multipla_escolha') {
           questaoProcessada.type = 'multipla-escolha';
           // Garantir que há alternativas suficientes
           if (!questaoProcessada.alternativas || questaoProcessada.alternativas.length < 2) {
@@ -154,10 +127,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               'Opção D'
             ];
           }
-        } else if (questaoProcessada.type === 'verdadeiro-falso' || questaoProcessada.type === 'true-false') {
+        } else if (questaoProcessada.type === 'verdadeiro-falso' || questaoProcessada.type === 'verdadeiro_falso') {
           questaoProcessada.type = 'verdadeiro-falso';
           questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
-        } else if (questaoProcessada.type === 'discursiva' || questaoProcessada.type === 'essay') {
+        } else if (questaoProcessada.type === 'discursiva') {
           // Questões discursivas não precisam de alternativas
           questaoProcessada.alternativas = undefined;
         }
@@ -165,7 +138,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         console.log(`📄 Questão ${index + 1} processada:`, {
           id: questaoProcessada.id,
           type: questaoProcessada.type,
-          enunciadoLength: questaoProcessada.enunciado?.length,
+          enunciadoLength: questaoProcessada.enunciado.length,
           hasAlternativas: !!questaoProcessada.alternativas,
           alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0
         });
@@ -214,7 +187,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           'Alternativa C',
           'Alternativa D'
         ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
-        dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as any,
+        dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as 'facil' | 'medio' | 'dificil',
         tema: activityData.tema || 'Tema não especificado'
       });
     }
@@ -284,169 +257,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   }, [questoesProcessadas, onQuestionRender]);
 
-  const renderQuestionContent = (questao: Question, index: number) => {
-    const tipo = (questao.tipo || questao.type || 'multipla-escolha').toLowerCase();
-
-    switch (tipo) {
-      case 'multipla-escolha':
-      case 'multiple-choice':
-      case 'múltipla escolha':
-        const alternativas = questao.alternativas || questao.alternatives || questao.options || [];
-
-        if (!alternativas || alternativas.length === 0) {
-          return (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm">Alternativas não encontradas para esta questão.</p>
-            </div>
-          );
-        }
-
-        return (
-          <div className="space-y-3">
-            {alternativas.map((alt: any, altIndex: number) => {
-              const letter = String.fromCharCode(97 + altIndex).toUpperCase(); // A, B, C, D...
-              const isCorrect = alt.correta || alt.correct || alt.isCorrect;
-              const texto = alt.texto || alt.text || alt.content || alt;
-
-              return (
-                <div 
-                  key={altIndex}
-                  className={`flex items-start gap-3 p-4 rounded-lg border transition-all duration-200 ${
-                    isCorrect 
-                      ? 'bg-green-50 border-green-200 shadow-sm' 
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    isCorrect 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-400 text-white'
-                  }`}>
-                    {letter}
-                  </div>
-                  <div className="flex-1 text-gray-800 leading-relaxed">
-                    {typeof texto === 'string' ? texto : JSON.stringify(texto)}
-                  </div>
-                  {isCorrect && (
-                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
-                  )}
-                </div>
-              );
-            })}
-
-            {(questao.explicacao || questao.explanation) && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Explicação:
-                </h5>
-                <p className="text-blue-800 text-sm leading-relaxed">{questao.explicacao || questao.explanation}</p>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'discursiva':
-      case 'essay':
-        return (
-          <div className="space-y-4">
-            <div className="min-h-[120px] p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-              <p className="text-gray-500 text-sm">Área para resposta discursiva</p>
-            </div>
-
-            {(questao.explicacao || questao.explanation) && (
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="font-medium text-blue-900 mb-2">Orientações para resposta:</h5>
-                <p className="text-blue-800 text-sm">{questao.explicacao || questao.explanation}</p>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'verdadeiro-falso':
-      case 'true-false':
-        return (
-          <div className="space-y-3">
-            {['Verdadeiro', 'Falso'].map((opcao, opcaoIndex) => {
-              const isCorrect = (questao.resposta_correta || questao.correct_answer || '').toLowerCase() === opcao.toLowerCase();
-
-              return (
-                <div 
-                  key={opcaoIndex}
-                  className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
-                    isCorrect 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    isCorrect 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-gray-400 text-white'
-                  }`}>
-                    {opcao.charAt(0)}
-                  </div>
-                  <span className="text-gray-800 font-medium">{opcao}</span>
-                  {isCorrect && (
-                    <CheckCircle className="w-5 h-5 text-green-500 ml-auto" />
-                  )}
-                </div>
-              );
-            })}
-
-            {(questao.explicacao || questao.explanation) && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h5 className="font-medium text-blue-900 mb-2">Explicação:</h5>
-                <p className="text-blue-800 text-sm">{questao.explicacao || questao.explanation}</p>
-              </div>
-            )}
-          </div>
-        );
-
-      default:
-        return (
-          <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <p className="text-gray-600">Tipo de questão: {tipo}</p>
-            <pre className="mt-2 text-xs text-gray-500 overflow-auto">
-              {JSON.stringify(questao, null, 2)}
-            </pre>
-          </div>
-        );
-    }
-  };
-
-  const renderQuestion = (questao: Question, index: number) => {
-    const questionId = questao.id || `questao-${index + 1}`;
-
-    // Extrair e processar alternativas de forma mais robusta
-    let alternativasProcessadas = [];
-    
-    if (questao.type === 'multipla-escolha') {
-      if (questao.alternativas && Array.isArray(questao.alternativas)) {
-        alternativasProcessadas = questao.alternativas;
-      } else if (questao.alternatives && Array.isArray(questao.alternatives)) {
-        alternativasProcessadas = questao.alternatives;
-      } else if (questao.options && Array.isArray(questao.options)) {
-        alternativasProcessadas = questao.options;
-      } else {
-        // Fallback com alternativas padrão
-        alternativasProcessadas = [
-          'Opção A',
-          'Opção B',
-          'Opção C',
-          'Opção D'
-        ];
-      }
-    }
-
-    console.log(`🔍 Questão ${index + 1} - Alternativas processadas:`, alternativasProcessadas);
+  const renderQuestao = (questao: Question, index: number) => {
+    const isExpandida = questoesExpandidas[questao.id];
+    const respostaAtual = respostas[questao.id];
 
     return (
       <Card 
-        key={questionId} 
-        id={`question-${questionId}`}
+        key={questao.id} 
+        id={`question-${questao.id}`}
         className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4"
       >
         <CardHeader className="pb-3">
@@ -472,104 +290,60 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </CardHeader>
 
         <CardContent className="pt-0">
-          {questao.type === 'multipla-escolha' && (
-            <div className="space-y-3">
-              {alternativasProcessadas.length > 0 ? (
-                alternativasProcessadas.map((alternativa, altIndex) => {
-                  const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
-                  const isSelected = respostas[questao.id] === altIndex;
-                  
-                  // Extrair texto da alternativa de forma robusta
-                  let textoAlternativa = '';
-                  if (typeof alternativa === 'string') {
-                    textoAlternativa = alternativa;
-                  } else if (alternativa && typeof alternativa === 'object') {
-                    textoAlternativa = alternativa.texto || alternativa.text || alternativa.content || alternativa.label || JSON.stringify(alternativa);
-                  } else {
-                    textoAlternativa = `Alternativa ${letter}`;
-                  }
-                  
-                  return (
-                    <div 
-                      key={altIndex}
-                      className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                        isSelected 
-                          ? 'bg-blue-50 border-blue-300 shadow-sm' 
-                          : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                      }`}
-                      onClick={() => handleRespostaChange(questao.id, altIndex)}
-                    >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                        isSelected 
-                          ? 'bg-blue-500 text-white border-blue-500' 
-                          : 'bg-white text-gray-600 border-gray-300'
-                      }`}>
-                        {letter}
-                      </div>
-                      <div className="flex-1 text-gray-800 leading-relaxed pt-1">
-                        {textoAlternativa}
-                      </div>
-                      {isSelected && (
-                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm">
-                    ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
-                  </p>
-                  <pre className="mt-2 text-xs text-gray-600 overflow-auto">
-                    {JSON.stringify(questao, null, 2)}
-                  </pre>
+          {questao.type === 'multipla-escolha' && questao.alternativas && (
+            <RadioGroup 
+              value={respostaAtual?.toString() || ''} 
+              onValueChange={(value) => handleRespostaChange(questao.id, parseInt(value))}
+              className="space-y-3"
+            >
+              {questao.alternativas.map((alternativa, altIndex) => (
+                <div key={altIndex} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                  <RadioGroupItem value={altIndex.toString()} id={`${questao.id}-${altIndex}`} />
+                  <Label 
+                    htmlFor={`${questao.id}-${altIndex}`} 
+                    className="flex-1 cursor-pointer font-normal"
+                  >
+                    <span className="font-medium mr-2">{String.fromCharCode(65 + altIndex)})</span>
+                    {alternativa}
+                  </Label>
                 </div>
-              )}
-            </div>
+              ))}
+            </RadioGroup>
           )}
 
           {questao.type === 'verdadeiro-falso' && (
-            <div className="space-y-3">
-              {['Verdadeiro', 'Falso'].map((opcao, opcaoIndex) => {
-                const isSelected = respostas[questao.id] === opcao.toLowerCase();
-
-                return (
-                  <div 
-                    key={opcaoIndex}
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-                      isSelected 
-                        ? 'bg-blue-50 border-blue-300 shadow-sm' 
-                        : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleRespostaChange(questao.id, opcao.toLowerCase())}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
-                      isSelected 
-                        ? 'bg-blue-500 text-white border-blue-500' 
-                        : 'bg-white text-gray-600 border-gray-300'
-                    }`}>
-                      {opcao.charAt(0)}
-                    </div>
-                    <span className="text-gray-800 font-medium flex-1">{opcao}</span>
-                    {isSelected && (
-                      <CheckCircle className="w-5 h-5 text-blue-500" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <RadioGroup 
+              value={respostaAtual?.toString() || ''} 
+              onValueChange={(value) => handleRespostaChange(questao.id, value)}
+              className="space-y-3"
+            >
+              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="true" id={`${questao.id}-true`} />
+                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal">
+                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600" />
+                  Verdadeiro
+                </Label>
+              </div>
+              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                <RadioGroupItem value="false" id={`${questao.id}-false`} />
+                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal">
+                  <Circle className="w-4 h-4 inline mr-2 text-red-600" />
+                  Falso
+                </Label>
+              </div>
+            </RadioGroup>
           )}
 
           {questao.type === 'discursiva' && (
             <div className="space-y-3">
               <Textarea
                 placeholder="Digite sua resposta aqui..."
-                value={respostas[questao.id]?.toString() || ''}
+                value={respostaAtual?.toString() || ''}
                 onChange={(e) => handleRespostaChange(questao.id, e.target.value)}
                 className="min-h-[120px] resize-none"
               />
               <div className="text-xs text-gray-500">
-                Resposta: {respostas[questao.id]?.toString()?.length || 0} caracteres
+                Resposta: {respostaAtual?.toString()?.length || 0} caracteres
               </div>
             </div>
           )}
@@ -598,7 +372,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       </Card>
     );
   };
-
 
   if (isGenerating) {
     return (
@@ -632,6 +405,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   return (
     <div className="space-y-6">
+
       {/* Lista de Questões */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -651,7 +425,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
-            {questoesProcessadas.map((questao, index) => renderQuestion(questao, index))}
+            {questoesProcessadas.map((questao, index) => renderQuestao(questao, index))}
           </div>
         </ScrollArea>
       </div>
