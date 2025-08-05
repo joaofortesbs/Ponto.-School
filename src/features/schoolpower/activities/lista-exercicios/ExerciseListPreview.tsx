@@ -9,8 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, Move } from 'lucide-react';
+import { motion, Reorder } from 'framer-motion';
 
 interface Question {
   id: string;
@@ -87,6 +87,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const [isDragMode, setIsDragMode] = useState<boolean>(false);
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
@@ -279,6 +280,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   };
 
+  // Função para reordenar questões
+  const handleReorderQuestions = (newOrder: Question[]) => {
+    setQuestoesProcessadas(newOrder);
+  };
+
   // Effect para notificar quando questões são renderizadas
   useEffect(() => {
     if (onQuestionRender && questoesProcessadas.length > 0) {
@@ -296,21 +302,50 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
-        className="relative cursor-pointer group"
+        className="relative cursor-pointer group select-none"
         onClick={() => {
-          setSelectedQuestionIndex(index);
-          setViewMode('detailed');
-          // Notificar o modal pai sobre a seleção da questão
-          if (onQuestionSelect) {
-            onQuestionSelect(index, questao.id);
+          if (!isDragMode) {
+            setSelectedQuestionIndex(index);
+            setViewMode('detailed');
+            // Notificar o modal pai sobre a seleção da questão
+            if (onQuestionSelect) {
+              onQuestionSelect(index, questao.id);
+            }
           }
         }}
+        whileDrag={{ 
+          scale: 1.05,
+          zIndex: 1000,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+        }}
+        drag={isDragMode}
+        dragConstraints={false}
+        dragElastic={0.1}
+        onDragStart={() => {
+          // Desabilitar onClick durante o drag
+          setIsDragMode(true);
+        }}
+        onDragEnd={() => {
+          // Reabilitar onClick após o drag
+          setTimeout(() => setIsDragMode(false), 100);
+        }}
       >
-        <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105">
+        <Card className={`h-48 transition-all duration-300 border-2 ${
+          isDragMode 
+            ? 'border-blue-500 shadow-xl' 
+            : 'border-gray-200 hover:border-blue-300 hover:shadow-lg group-hover:scale-105'
+        }`}>
           {/* Numeração da questão no canto superior esquerdo */}
           <div className="absolute top-3 left-3 z-10">
             <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
-              {index + 1}
+              {questoesProcessadas.findIndex(q => q.id === questao.id) + 1}
+            </div>
+          </div>
+
+          {/* Ícone de arrastar no canto superior direito */}
+          <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center cursor-move">
+              <Move className="w-3 h-3" />
             </div>
           </div>
 
@@ -361,12 +396,44 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
-      {/* Grade de questões */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {questoesProcessadas.map((questao, index) =>
-          renderQuestionGridCard(questao, index)
-        )}
+      {/* Cabeçalho com instruções de reordenação */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Move className="w-4 h-4" />
+          <span>Arraste e solte as questões para reordená-las</span>
+        </div>
+        <Badge variant="outline" className="text-xs">
+          {questoesProcessadas.length} questões
+        </Badge>
       </div>
+
+      {/* Grade de questões com Reorder */}
+      <Reorder.Group
+        axis="y"
+        values={questoesProcessadas}
+        onReorder={handleReorderQuestions}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      >
+        {questoesProcessadas.map((questao, index) => (
+          <Reorder.Item
+            key={questao.id || `questao-${index + 1}`}
+            value={questao}
+            drag
+            whileDrag={{ 
+              scale: 1.05,
+              zIndex: 1000,
+              boxShadow: "0 15px 40px rgba(0,0,0,0.3)"
+            }}
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            dragElastic={0.1}
+            onDragStart={() => setIsDragMode(true)}
+            onDragEnd={() => setTimeout(() => setIsDragMode(false), 100)}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            {renderQuestionGridCard(questao, index)}
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
 
       {/* Informações adicionais */}
       {consolidatedData.observacoes && (
