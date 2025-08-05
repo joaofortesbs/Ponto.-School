@@ -84,7 +84,22 @@ export function ConstructionCard({
     console.log('👁️ Clique no botão Ver detectado para atividade:', title);
     console.log('👁️ ID da atividade:', id);
     if (onView) {
-      onView(id);
+      // Construir objeto da atividade com todos os dados necessários
+      const activityData = {
+        id,
+        title,
+        description,
+        progress,
+        type,
+        status,
+        // Recuperar dados do localStorage se disponível
+        originalData: JSON.parse(localStorage.getItem(`activity_${id}`) || '{}'),
+        customFields: JSON.parse(localStorage.getItem(`activity_fields_${id}`) || '{}'),
+        personalizedTitle: title,
+        personalizedDescription: description
+      };
+      console.log('👁️ Dados da atividade para visualização:', activityData);
+      onView(activityData);
       console.log('👁️ Função onView executada com sucesso!');
     } else {
       console.error('👁️ Função onView não disponível!');

@@ -25,8 +25,8 @@ export interface ConstructionActivityProps {
   description: string;
   progress: number;
   type: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  onView?: (id: string) => void;
+  status: 'draft' | 'in_progress' | 'completed' | 'pending';
+  onView?: (activityData?: any) => void;
   onShare?: (id: string) => void;
   onEdit?: () => void;
 }

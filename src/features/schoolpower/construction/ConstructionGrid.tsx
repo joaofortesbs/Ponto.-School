@@ -43,6 +43,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const handleView = (activity: ConstructionActivity) => {
     console.log('👁️ Abrindo modal de visualização para atividade:', activity.title);
+    console.log('👁️ Dados completos da atividade:', activity);
+    console.log('👁️ Dados originais:', activity.originalData);
+    console.log('👁️ Campos customizados:', activity.customFields);
     setViewActivity(activity);
     setIsViewModalOpen(true);
   };
@@ -321,7 +324,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
               console.log('🎯 Abrindo modal para atividade:', activity.title);
               openModal(activity);
             }}
-            onView={() => handleView(activity)} // Passa a atividade completa para o handleView
+            onView={(activityData) => {
+              // Se receber dados da atividade, usar eles; senão, usar a atividade original
+              const finalActivity = activityData || activity;
+              console.log('👁️ Visualizando atividade:', finalActivity);
+              handleView(finalActivity);
+            }}
             onShare={handleShare}
           />
         ))}

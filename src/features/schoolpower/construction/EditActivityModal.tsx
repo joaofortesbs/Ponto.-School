@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,6 +95,13 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   // Estado para conteúdo gerado
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
+
+  // Estado para controle de construção da atividade
+  const [buildingStatus, setBuildingStatus] = useState({
+    isBuilding: false,
+    progress: 0,
+    currentStep: ''
+  });
 
   // Atualizar dados quando a atividade mudar
   useEffect(() => {
@@ -516,11 +523,30 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   };
 
   // Função para construir a atividade
-  const handleBuildActivity = async () => {
-    try {
-      console.log('🏗️ Iniciando construção da atividade...');
-      console.log('📋 Dados do formulário para IA:', formData);
+  const handleBuildActivity = useCallback(async () => {
+    if (buildingStatus.isBuilding) {
+      console.log('⚠️ Construção já em andamento, ignorando nova solicitação');
+      return;
+    }
 
+    console.log('🎯 Iniciando construção da atividade:', activity?.title);
+    console.log('🎯 Dados do formulário:', formData);
+
+    // Salvar dados no localStorage para sincronização com modal de visualização
+    if (activity?.id) {
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify({
+        ...formData,
+        title: formData.titulo || activity.title,
+        description: formData.descricao || activity.description,
+        type: activity.type || 'lista-exercicios'
+      }));
+      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(formData));
+      console.log('🎯 Dados salvos no localStorage para sincronização');
+    }
+
+    setBuildingStatus({ isBuilding: true, progress: 0, currentStep: 'Preparando dados...' });
+
+    try {
       // Preparar dados específicos para lista de exercícios com validação
       const contextData = {
         // Dados em português para o prompt
@@ -545,7 +571,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         subject: formData.subject,
         theme: formData.theme,
         schoolYear: formData.schoolYear,
-        numberOfQuestions: formData.numberOfQuestions,
         difficultyLevel: formData.difficultyLevel,
         questionModel: formData.questionModel,
         sources: formData.sources,
@@ -687,8 +712,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         description: "Não foi possível gerar o conteúdo. Verifique os dados e tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setBuildingStatus({ isBuilding: false, progress: 0, currentStep: '' });
     }
-  };
+  }, [formData, activity, generateActivity, onClose, onUpdateActivity, toast, setGeneratedContent, setIsContentLoaded, setBuildingStatus, activeTab]);
 
   const handleSaveChanges = () => {
     const activityData = {
@@ -700,7 +727,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   };
 
   const handleCopyContent = () => {
-    navigator.clipboard.writeText(generatedContent);
+    navigator.clipboard.writeText(JSON.stringify(generatedContent, null, 2));
+    toast({
+      title: "Conteúdo copiado!",
+      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
+    });
   };
 
   const handleExportPDF = () => {
@@ -888,307 +919,299 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             </div>
           </div>
 
-          {/* Mini-sections Tabs */}
-          {/* <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-              <TabsList className="h-12 w-full justify-start rounded-none bg-transparent border-0 p-0">
-                <TabsTrigger 
-                  value="editar" 
-                  className="flex items-center space-x-2 h-12 px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:bg-white data-[state=active]:dark:bg-gray-900 data-[state=active]:text-[#FF6B00] bg-transparent"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  <span>Editar</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="preview" 
-                  className="flex items-center space-x-2 h-12 px-6 rounded-none border-b-2 border-transparent data-[state=active]:border-[#FF6B00] data-[state=active]:bg-white data-[state=active]:dark:bg-gray-900 data-[state=active]:text-[#FF6B00] bg-transparent"
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>Pré-visualização</span>
-                  {generatedContent && (
-                    <Badge className="ml-1 bg-green-500 text-white text-xs">Pronto</Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList> */}
+          {/* Content */}
+          <div className="p-6 h-[calc(800px-180px)] overflow-hidden">
+            {activeTab === 'editar' && (
+            <div className="flex gap-6 h-full">
+              {/* Formulário (100%) */}
+              <div className="flex flex-col space-y-4 overflow-y-auto flex-1 pr-2">
+                <Card>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center">
+                      <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
+                      Informações da Atividade
+                    </h3>
 
-              {/* Content */}
-              <div className="p-6 h-[calc(800px-180px)] overflow-hidden">
-                {activeTab === 'editar' && (
-                <div className="flex gap-6 h-full">
-                  {/* Formulário (100%) */}
-                  <div className="flex flex-col space-y-4 overflow-y-auto flex-1 pr-2">
-                    <Card>
-                      <CardContent className="p-4">
-                        <h3 className="font-semibold text-lg mb-4 flex items-center">
-                          <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
-                          Informações da Atividade
-                        </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="title" className="text-sm">Título da Atividade</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => handleInputChange('title', e.target.value)}
+                          placeholder="Digite o título da atividade"
+                          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        />
+                      </div>
 
-                        <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="description" className="text-sm">Descrição</Label>
+                        <Textarea
+                          id="description"
+                          value={formData.description}
+                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          placeholder="Descreva a atividade..."
+                          className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        />
+                      </div>
+
+                      {/* Campos específicos para Lista de Exercícios */}
+                      {activity?.id === 'lista-exercicios' && (
+                        <>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="subject" className="text-sm">Disciplina</Label>
+                              <Input
+                                id="subject"
+                                value={formData.subject}
+                                onChange={(e) => handleInputChange('subject', e.target.value)}
+                                placeholder="Ex: Português, Matemática, História..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="theme" className="text-sm">Tema</Label>
+                              <Input
+                                id="theme"
+                                value={formData.theme}
+                                onChange={(e) => handleInputChange('theme', e.target.value)}
+                                placeholder="Ex: Substantivos e Verbos"
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
+                              <Input
+                                id="schoolYear"
+                                value={formData.schoolYear}
+                                onChange={(e) => handleInputChange('schoolYear', e.target.value)}
+                                placeholder="Ex: 6º ano, 7º ano, 1º ano EM..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
+                              <Input
+                                id="numberOfQuestions"
+                                value={formData.numberOfQuestions}
+                                onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
+                                placeholder="Ex: 5, 10, 15, 20..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
+                              <Input
+                                id="difficultyLevel"
+                                value={formData.difficultyLevel}
+                                onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
+                                placeholder="Ex: Básico, Intermediário, Avançado..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
+                              <Input
+                                id="questionModel"
+                                value={formData.questionModel}
+                                onChange={(e) => handleInputChange('questionModel', e.target.value)}
+                                placeholder="Ex: Múltipla Escolha, Dissertativa, Mista..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                          </div>
+
                           <div>
-                            <Label htmlFor="title" className="text-sm">Título da Atividade</Label>
-                            <Input
-                              id="title"
-                              value={formData.title}
-                              onChange={(e) => handleInputChange('title', e.target.value)}
-                              placeholder="Digite o título da atividade"
-                              className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            <Label htmlFor="sources" className="text-sm">Fontes</Label>
+                            <Textarea
+                              id="sources"
+                              value={formData.sources}
+                              onChange={(e) => handleInputChange('sources', e.target.value)}
+                              placeholder="Digite as fontes de referência..."
+                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-8-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          {/* Campos adicionais específicos baseados nos customFields */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="timeLimit" className="text-sm">Tempo Limite</Label>
+                              <Input
+                                id="timeLimit"
+                                value={formData.timeLimit || ''}
+                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
+                                placeholder="Ex: 50 minutos, 1 hora..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+
+                            <div>
+                              <Label htmlFor="context" className="text-sm">Contexto de Aplicação</Label>
+                              <Input
+                                id="context"
+                                value={formData.context || ''}
+                                onChange={(e) => handleInputChange('context', e.target.value)}
+                                placeholder="Ex: Produção textual, Sala de aula..."
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Campos genéricos para outras atividades */}
+                      {activity?.id !== 'lista-exercicios' && (
+                        <>
+                          <div>
+                            <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
+                            <Textarea
+                              id="objectives"
+                              value={formData.objectives}
+                              onChange={(e) => handleInputChange('objectives', e.target.value)}
+                              placeholder="Descreva os objetivos que os alunos devem alcançar..."
+                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="description" className="text-sm">Descrição</Label>
+                            <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
                             <Textarea
-                              id="description"
-                              value={formData.description}
-                              onChange={(e) => handleInputChange('description', e.target.value)}
-                              placeholder="Descreva a atividade..."
+                              id="materials"
+                              value={formData.materials}
+                              onChange={(e) => handleInputChange('materials', e.target.value)}
+                              placeholder="Liste os materiais necessários (um por linha)..."
+                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
+                            <Textarea
+                              id="instructions"
+                              value={formData.instructions}
+                              onChange={(e) => handleInputChange('instructions', e.target.value)}
+                              placeholder="Descreva como a atividade deve ser executada..."
                               className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                           </div>
 
-                          {/* Campos específicos para Lista de Exercícios */}
-                          {activity?.id === 'lista-exercicios' && (
-                            <>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label htmlFor="subject" className="text-sm">Disciplina</Label>
-                                  <Input
-                                    id="subject"
-                                    value={formData.subject}
-                                    onChange={(e) => handleInputChange('subject', e.target.value)}
-                                    placeholder="Ex: Português, Matemática, História..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="theme" className="text-sm">Tema</Label>
-                                  <Input
-                                    id="theme"
-                                    value={formData.theme}
-                                    onChange={(e) => handleInputChange('theme', e.target.value)}
-                                    placeholder="Ex: Substantivos e Verbos"
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
-                                  <Input
-                                    id="schoolYear"
-                                    value={formData.schoolYear}
-                                    onChange={(e) => handleInputChange('schoolYear', e.target.value)}
-                                    placeholder="Ex: 6º ano, 7º ano, 1º ano EM..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
-                                  <Input
-                                    id="numberOfQuestions"
-                                    value={formData.numberOfQuestions}
-                                    onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
-                                    placeholder="Ex: 5, 10, 15, 20..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
-                                  <Input
-                                    id="difficultyLevel"
-                                    value={formData.difficultyLevel}
-                                    onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
-                                    placeholder="Ex: Básico, Intermediário, Avançado..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
-                                  <Input
-                                    id="questionModel"
-                                    value={formData.questionModel}
-                                    onChange={(e) => handleInputChange('questionModel', e.target.value)}
-                                    placeholder="Ex: Múltipla Escolha, Dissertativa, Mista..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                              </div>
-
-                              <div>
-                                <Label htmlFor="sources" className="text-sm">Fontes</Label>
-                                <Textarea
-                                  id="sources"
-                                  value={formData.sources}
-                                  onChange={(e) => handleInputChange('sources', e.target.value)}
-                                  placeholder="Digite as fontes de referência..."
-                                  className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-8-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                />
-                              </div>
-
-                              {/* Campos adicionais específicos baseados nos customFields */}
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label htmlFor="timeLimit" className="text-sm">Tempo Limite</Label>
-                                  <Input
-                                    id="timeLimit"
-                                    value={formData.timeLimit || ''}
-                                    onChange={(e) => handleInputChange('timeLimit', e.target.value)}
-                                    placeholder="Ex: 50 minutos, 1 hora..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="context" className="text-sm">Contexto de Aplicação</Label>
-                                  <Input
-                                    id="context"
-                                    value={formData.context || ''}
-                                    onChange={(e) => handleInputChange('context', e.target.value)}
-                                    placeholder="Ex: Produção textual, Sala de aula..."
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                              </div>
-                            </>
-                          )}
-
-                          {/* Campos genéricos para outras atividades */}
-                          {activity?.id !== 'lista-exercicios' && (
-                            <>
-                              <div>
-                                <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
-                                <Textarea
-                                  id="objectives"
-                                  value={formData.objectives}
-                                  onChange={(e) => handleInputChange('objectives', e.target.value)}
-                                  placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                                  className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                />
-                              </div>
-
-                              <div>
-                                <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
-                                <Textarea
-                                  id="materials"
-                                  value={formData.materials}
-                                  onChange={(e) => handleInputChange('materials', e.target.value)}
-                                  placeholder="Liste os materiais necessários (um por linha)..."
-                                  className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                />
-                              </div>
-
-                              <div>
-                                <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
-                                <Textarea
-                                  id="instructions"
-                                  value={formData.instructions}
-                                  onChange={(e) => handleInputChange('instructions', e.target.value)}
-                                  placeholder="Descreva como a atividade deve ser executada..."
-                                  className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                />
-                              </div>
-
-                              <div>
-                                <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
-                                <Textarea
-                                  id="evaluation"
-                                  value={formData.evaluation}
-                                  onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                                  placeholder="Como a atividade será avaliada..."
-                                  className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                />
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {error && (
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                        <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
-                      </div>
-                    )}
-
-                    <Button
-                      id="build-activity-button"
-                      data-testid="build-activity-button"
-                      onClick={handleBuildActivity}
-                      disabled={isGenerating || !isFormValid}
-                      className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                      data-testid="build-activity-button"
-                    >
-                      {isGenerating ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Gerando Atividade...
+                          <div>
+                            <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
+                            <Textarea
+                              id="evaluation"
+                              value={formData.evaluation}
+                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
+                              placeholder="Como a atividade será avaliada..."
+                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
                         </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 mr-2" />
-                          Construir Atividade
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                )}
-
-                {activeTab === 'preview' && (
-                  <div className="h-full">
-                    <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                      {isContentLoaded && generatedContent ? (
-                        activity?.id === 'lista-exercicios' ? (
-                          <ExerciseListPreview 
-                            data={processExerciseListData(formData, generatedContent)}
-                            content={generatedContent}
-                            activityData={activity}
-                            onRegenerateContent={handleRegenerateContent}
-                          />
-                        ) : (
-                          <ActivityPreview 
-                            content={generatedContent}
-                            activityData={activity}
-                          />
-                        )
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-center">
-                          <FileText className="h-16 w-16 text-gray-400 mb-4" />
-                          <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                            Nenhuma atividade gerada ainda
-                          </h4>
-                          <p className="text-gray-500 dark:text-gray-500 mb-4">
-                            Preencha os campos na aba "Editar" e clique em "Construir Atividade" para gerar o conteúdo
-                          </p>
-                          <Button
-                            variant="outline"
-                            onClick={() => setActiveTab('editar')}
-                            className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-                          >
-                            Ir para Edição
-                          </Button>
-                        </div>
                       )}
                     </div>
+                  </CardContent>
+                </Card>
+
+                {error && (
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
                   </div>
                 )}
+
+                <Button
+                  id="build-activity-button"
+                  data-testid="build-activity-button"
+                  onClick={handleBuildActivity}
+                  disabled={buildingStatus.isBuilding || !isFormValid}
+                  className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {buildingStatus.isBuilding ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {buildingStatus.currentStep || 'Gerando Atividade...'}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      Construir Atividade
+                    </>
+                  )}
+                </Button>
               </div>
-            {/* </Tabs> */}
-          {/* </div> */}
+            </div>
+            )}
+
+            {activeTab === 'preview' && (
+              <div className="h-full">
+                <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
+                  {isContentLoaded && generatedContent ? (
+                    activity?.id === 'lista-exercicios' ? (
+                      <ExerciseListPreview 
+                        data={processExerciseListData(formData, generatedContent)}
+                        content={generatedContent}
+                        activityData={activity}
+                        onRegenerateContent={handleRegenerateContent}
+                      />
+                    ) : (
+                      <ActivityPreview 
+                        content={generatedContent}
+                        activityData={activity}
+                      />
+                    )
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <FileText className="h-16 w-16 text-gray-400 mb-4" />
+                      <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                        Nenhuma atividade gerada ainda
+                      </h4>
+                      <p className="text-gray-500 dark:text-gray-500 mb-4">
+                        Preencha os campos na aba "Editar" e clique em "Construir Atividade" para gerar o conteúdo
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={() => setActiveTab('editar')}
+                        className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+                      >
+                        Ir para Edição
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Footer */}
           <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
             <div className="flex justify-between items-center">
               <div className="flex space-x-2">
                 {generatedContent && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={handleCopyContent}
+                      className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
+                    </Button>
+                    {/* <Button
+                      variant="outline"
+                      onClick={handleExportPDF}
+                      className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
+                    </Button> */}
+                  </>
+                )}
+                 {generatedContent && (
                   <Button
                     variant="outline"
                     onClick={clearContent}

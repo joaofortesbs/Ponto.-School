@@ -17,26 +17,45 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   if (!isOpen || !activity) return null;
 
   const renderActivityPreview = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || 'lista-exercicios';
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
     
     console.log('🎯 Renderizando preview para tipo:', activityType);
-    console.log('🎯 Dados da atividade:', activity.originalData);
+    console.log('🎯 Dados da atividade:', activity);
+    console.log('🎯 Dados originais:', activity.originalData);
+    console.log('🎯 Campos customizados:', activity.customFields);
 
-    // Preparar dados para o preview igual ao modal de edição
+    // Tentar recuperar dados do localStorage se não estiverem disponíveis
+    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+    const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
+    
+    console.log('🎯 Dados do localStorage:', storedData);
+    console.log('🎯 Campos do localStorage:', storedFields);
+
+    // Preparar dados para o preview EXATAMENTE como no modal de edição
     const previewData = {
       ...activity.originalData,
-      title: activity.personalizedTitle || activity.title,
-      description: activity.personalizedDescription || activity.description,
-      customFields: activity.customFields || {},
-      type: activityType
+      ...storedData,
+      title: activity.personalizedTitle || activity.title || storedData.title,
+      description: activity.personalizedDescription || activity.description || storedData.description,
+      customFields: {
+        ...activity.customFields,
+        ...storedFields
+      },
+      type: activityType,
+      // Incluir todos os campos que podem estar no originalData
+      exercicios: activity.originalData?.exercicios || storedData.exercicios,
+      questions: activity.originalData?.questions || storedData.questions,
+      content: activity.originalData?.content || storedData.content
     };
+
+    console.log('🎯 Dados finais para preview:', previewData);
 
     switch (activityType) {
       case 'lista-exercicios':
         return (
           <ExerciseListPreview 
             data={previewData}
-            customFields={activity.customFields || {}}
+            customFields={previewData.customFields}
           />
         );
       
@@ -45,7 +64,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <ActivityPreview 
             data={previewData}
             activityType={activityType}
-            customFields={activity.customFields || {}}
+            customFields={previewData.customFields}
           />
         );
     }
