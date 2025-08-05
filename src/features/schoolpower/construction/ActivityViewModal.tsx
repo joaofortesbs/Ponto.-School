@@ -32,6 +32,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
+  const [showSidebar, setShowSidebar] = useState<boolean>(false);
+
+  // Resetar estado do sidebar quando o modal abre
+  React.useEffect(() => {
+    if (isOpen) {
+      setShowSidebar(false);
+      setSelectedQuestionId(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen || !activity) return null;
 
@@ -229,6 +238,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         {questionsForSidebar.length} questões
                       </Badge>
                     )}
+                  {isExerciseList && questionsForSidebar.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSidebar(!showSidebar)}
+                      className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 ml-2"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                      </svg>
+                      {showSidebar ? 'Ocultar Menu' : 'Menu de Questões'}
+                    </Button>
+                  )}
                   </div>
                 </div>
 
@@ -262,8 +284,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>
-            {/* Question Navigation Sidebar - Only for Exercise Lists */}
-            {isExerciseList && questionsForSidebar.length > 0 && (
+            {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
+            {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
               <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto flex-shrink-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Card */}
@@ -308,6 +330,17 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
+              {/* Indicação quando menu lateral está disponível mas oculto */}
+              {isExerciseList && questionsForSidebar.length > 0 && !showSidebar && (
+                <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 text-center">
+                  <p className="text-sm text-blue-700">
+                    <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Menu de navegação das questões disponível no cabeçalho
+                  </p>
+                </div>
+              )}
               <div className="h-full overflow-y-auto p-6" ref={contentRef}>
                 {renderActivityPreview()}
               </div>
