@@ -31,12 +31,6 @@ export interface ConstructionActivityProps {
   onEdit?: () => void;
 }
 
-export interface ActivityViewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  activity: ConstructionActivity | null;
-}
-
 export interface EditActivityModalState {
   isOpen: boolean;
   activityId: string | null;

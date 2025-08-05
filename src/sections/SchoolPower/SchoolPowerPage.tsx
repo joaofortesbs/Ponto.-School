@@ -134,8 +134,8 @@ export function SchoolPowerPage() {
         </>
       )}
 
-      {/* Card de Construção unificado - aparece baseado no flowState */}
-      {(flowState !== 'idle') && (
+      {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
+      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
           className="absolute inset-0 flex items-center justify-center z-40"
           initial={{ opacity: 0 }}

@@ -53,9 +53,9 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        // Verifica se os dados não são muito antigos (4 horas)
-        const fourHours = 4 * 60 * 60 * 1000;
-        if (data.timestamp && Date.now() - data.timestamp < fourHours) {
+        // Verifica se os dados não são muito antigos (1 hora)
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - data.timestamp < oneHour) {
           console.log('📥 Dados carregados do localStorage:', data);
           return data;
         } else {
@@ -75,19 +75,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const storedData = loadStoredData();
     if (storedData) {
       setFlowData(storedData);
-      
-      // Determinar o estado correto baseado nos dados carregados
-      if (storedData.manualActivities && storedData.manualActivities.length > 0) {
-        setFlowState('activities');
-      } else if (storedData.actionPlan && storedData.actionPlan.length > 0) {
-        setFlowState('actionplan');
-      } else if (storedData.contextualizationData) {
-        setFlowState('contextualizing');
-      } else {
-        setFlowState('idle');
-      }
-    }
-  }, []);ata(storedData);
 
       // Definir estado baseado nos dados carregados
       if (storedData.initialMessage && !storedData.contextualizationData) {
@@ -278,7 +265,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: null,
       contextualizationData: null,
       actionPlan: [],
-      manualActivities: [],
       timestamp: Date.now()
     };
 
