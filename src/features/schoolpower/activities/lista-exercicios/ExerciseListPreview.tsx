@@ -603,6 +603,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             <div className="w-80 border-r border-gray-200 bg-gray-50 h-full overflow-y-auto">
               {/* Cabeçalho do menu lateral */}
               <div className="p-4 border-b border-gray-200 bg-white">
+                <div className="flex items-center gap-3">
+                  <BookOpen className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <h2 className="text-base font-bold text-blue-900">
+                      {consolidatedData.titulo}
+                    </h2>
+                    <p className="text-xs text-gray-500">
+                      {consolidatedData.disciplina} - {consolidatedData.tema}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Lista de questões para navegação */}
@@ -652,11 +663,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     <span className="text-gray-600">Respondidas:</span>
                     <span className="font-semibold">{Object.keys(respostas).length}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex items-center gap-2">
                     <span className="text-gray-600">Pendentes:</span>
                     <span className="font-semibold">{questoesProcessadas.length - Object.keys(respostas).length}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex items-center gap-2">
                     <span className="text-gray-600">Progresso:</span>
                     <span className="font-semibold">
                       {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
