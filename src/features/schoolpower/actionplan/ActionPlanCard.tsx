@@ -178,7 +178,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       </div>
 
       {/* Lista de Atividades */}
-      <div className="space-y-3 mb-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ minHeight: '400px', height: 'auto' }}>
+      <div className="space-y-3 mb-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ minHeight: '300px', maxHeight: 'calc(100vh - 400px)', height: 'auto' }}>
         {actionPlan.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🤖</div>
@@ -208,7 +208,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 transition={{ delay: Math.min(index * 0.05, 0.5) }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
                 onClick={() => handleItemToggle(item.id)}
-                style={{ minHeight: '120px' }}
+                style={{ minHeight: '100px' }}
               >
                 {isActivityEligibleForTrilhas(item.id) && (
                     <div className="absolute top-4 right-4 z-20">
