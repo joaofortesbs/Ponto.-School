@@ -45,12 +45,14 @@ interface ExerciseListPreviewProps {
   data: ExerciseListData;
   isGenerating?: boolean;
   onRegenerateContent?: () => void;
+  questionsRefs?: React.MutableRefObject<{ [key: string]: HTMLDivElement | null }>;
 }
 
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({ 
   data, 
   isGenerating = false,
-  onRegenerateContent 
+  onRegenerateContent,
+  questionsRefs
 }) => {
   const [respostas, setRespostas] = useState<Record<string, string | number>>({});
   const [questoesExpandidas, setQuestoesExpandidas] = useState<Record<string, boolean>>({});
@@ -250,7 +252,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     const respostaAtual = respostas[questao.id];
 
     return (
-      <Card key={questao.id} className="mb-4 border-l-4 border-l-blue-500">
+      <Card 
+        key={questao.id} 
+        className="mb-4 border-l-4 border-l-blue-500"
+        ref={(el) => {
+          if (questionsRefs) {
+            questionsRefs.current[questao.id] = el;
+          }
+        }}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
