@@ -250,11 +250,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     const respostaAtual = respostas[questao.id];
 
     return (
-      <Card 
-        key={questao.id} 
-        id={`questao-${index + 1}`}
-        className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4"
-      >
+      <Card key={questao.id} className="mb-4 border-l-4 border-l-blue-500">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -392,9 +388,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   console.log('📊 Dados consolidados finais:', consolidatedData);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Header com título e informações reorganizado */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-blue-200 bg-blue-50 mb-6">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -467,6 +463,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </CardHeader>
       </Card>
 
+      <Separator />
+
       {/* Lista de Questões */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -484,9 +482,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           </div>
         </div>
 
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-          {questoesProcessadas.map((questao, index) => renderQuestao(questao, index))}
-        </div>
+        <ScrollArea className="h-[600px] pr-4">
+          <div className="space-y-4">
+            {questoesProcessadas.map((questao, index) => renderQuestao(questao, index))}
+          </div>
+        </ScrollArea>
       </div>
 
       {/* Instruções Adicionais */}
