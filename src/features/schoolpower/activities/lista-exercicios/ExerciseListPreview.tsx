@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -33,6 +33,12 @@ interface ExerciseListData {
   conteudoPrograma: string;
   observacoes?: string;
   questoes?: Question[];
+  isGeneratedByAI?: boolean;
+  generatedAt?: string;
+  descricao?: string;
+  anoEscolaridade?: string;
+  nivelDificuldade?: string;
+  tempoLimite?: string;
 }
 
 interface ExerciseListPreviewProps {
@@ -54,17 +60,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   useEffect(() => {
     console.log('🔄 Processando questões no ExerciseListPreview:', data);
     console.log('🔍 Estrutura completa dos dados:', JSON.stringify(data, null, 2));
-    
+
     // Verificar diferentes formatos de questões que podem vir da IA
     let questoesDaIA = null;
     let isContentFromAI = false;
-    
+
     // Verificar se o conteúdo foi gerado pela IA
     if (data.isGeneratedByAI === true || data.generatedAt) {
       isContentFromAI = true;
       console.log('✅ Conteúdo confirmado como gerado pela IA');
     }
-    
+
     // Buscar questões em diferentes possíveis localizações
     if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
       console.log(`✅ Questões encontradas em 'questoes': ${data.questoes.length}`);
@@ -90,7 +96,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         hasAlternativas: !!questoesDaIA[0].alternativas,
         alternativasLength: questoesDaIA[0].alternativas ? questoesDaIA[0].alternativas.length : 0
       });
-      
+
       // Processar e validar as questões da IA
       const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
         const questaoProcessada = {
@@ -103,7 +109,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
           tema: questao.tema || questao.topic || data.tema || 'Tema não especificado'
         };
-        
+
         // Validação de tipos específicos
         if (questaoProcessada.type === 'multipla-escolha' || questaoProcessada.type === 'multipla_escolha') {
           questaoProcessada.type = 'multipla-escolha';
@@ -124,7 +130,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           // Questões discursivas não precisam de alternativas
           questaoProcessada.alternativas = undefined;
         }
-        
+
         console.log(`📄 Questão ${index + 1} processada:`, {
           id: questaoProcessada.id,
           type: questaoProcessada.type,
@@ -132,13 +138,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           hasAlternativas: !!questaoProcessada.alternativas,
           alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0
         });
-        
+
         return questaoProcessada;
       });
-      
+
       console.log(`✅ ${questoesProcessadasIA.length} questões processadas com sucesso`);
       setQuestoesProcessadas(questoesProcessadasIA);
-      
+
     } else if (isContentFromAI) {
       console.error('❌ Conteúdo marcado como da IA mas sem questões válidas');
       console.error('📊 Dados recebidos:', data);
@@ -350,60 +356,90 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     observacoes: data?.observacoes || '',
     questoes: data?.questoes || [],
     isGeneratedByAI: data?.isGeneratedByAI || false,
-    generatedAt: data?.generatedAt
+    generatedAt: data?.generatedAt,
+    descricao: data?.descricao || 'Exercícios práticos para fixação do conteúdo',
+    anoEscolaridade: data?.anoEscolaridade,
+    nivelDificuldade: data?.nivelDificuldade,
+    tempoLimite: data?.tempoLimite
   };
 
   console.log('📊 Dados consolidados finais:', consolidatedData);
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho da Lista */}
-      
-<Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-xl text-blue-900">{consolidatedData.titulo}</CardTitle>
-              <div className="flex items-center gap-4 mt-2 text-sm text-blue-700">
-                <div className="flex items-center gap-1">
-                  <GraduationCap className="w-4 h-4" />
-                  <span>{consolidatedData.disciplina}</span>
+      {/* Header com título e informações reorganizado */}
+      <Card className="border-blue-200 bg-blue-50 mb-6">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl text-blue-900">
+                    {consolidatedData.titulo || 'Lista de Exercícios'}
+                  </CardTitle>
+
+                  {/* Tags e informações ao lado direito do título */}
+                  <div className="flex flex-wrap gap-2 ml-4">
+                    {consolidatedData.disciplina && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                        <BookOpen className="w-3 h-3 mr-1" />
+                        {consolidatedData.disciplina}
+                      </Badge>
+                    )}
+                    {consolidatedData.tema && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                        <Target className="w-3 h-3 mr-1" />
+                        {consolidatedData.tema}
+                      </Badge>
+                    )}
+                    {consolidatedData.anoEscolaridade && (
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200">
+                        <GraduationCap className="w-3 h-3 mr-1" />
+                        {consolidatedData.anoEscolaridade}
+                      </Badge>
+                    )}
+                    {questoesProcessadas.length > 0 && (
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                        <List className="w-3 h-3 mr-1" />
+                        {questoesProcessadas.length} questões
+                      </Badge>
+                    )}
+                    {consolidatedData.nivelDificuldade && (
+                      <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-200">
+                        <AlertCircle className="w-3 h-3 mr-1" />
+                        {consolidatedData.nivelDificuldade}
+                      </Badge>
+                    )}
+                    {consolidatedData.tempoLimite && (
+                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {consolidatedData.tempoLimite}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <FileText className="w-4 h-4" />
-                  <span>{consolidatedData.tema}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{questoesProcessadas.length} questões</span>
-                </div>
-                {consolidatedData.isGeneratedByAI && (
-                  <Badge className="bg-green-100 text-green-800 text-xs">
-                    🤖 Gerado por IA
-                  </Badge>
-                )}
+                <p className="text-blue-700 text-sm mt-1">
+                  {consolidatedData.descricao || 'Exercícios práticos para fixação do conteúdo'}
+                </p>
               </div>
             </div>
-            {onRegenerateContent && (
-              <Button variant="outline" size="sm" onClick={onRegenerateContent}>
-                Regenerar Conteúdo
+            {isGenerating && (
+              <Button 
+                onClick={onRegenerateContent}
+                variant="outline"
+                size="sm"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100 ml-4"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Regenerar
               </Button>
             )}
           </div>
         </CardHeader>
       </Card>
-
-      {/* Objetivos */}
-      {consolidatedData.objetivos && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Objetivos de Aprendizagem</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 leading-relaxed">{consolidatedData.objetivos}</p>
-          </CardContent>
-        </Card>
-      )}
 
       <Separator />
 
