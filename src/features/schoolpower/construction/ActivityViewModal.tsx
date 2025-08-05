@@ -1,229 +1,339 @@
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ConstructionActivity } from './types';
+import { X, Download, Share2 } from 'lucide-react';
+import { Activity } from './types';
 
 interface ActivityViewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activity: ConstructionActivity | null;
+  activity: Activity | null;
 }
 
-export function ActivityViewModal({ isOpen, onClose, activity }: ActivityViewModalProps) {
+const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
+  isOpen,
+  onClose,
+  activity
+}) => {
   if (!activity) return null;
 
-  // Recuperar dados da atividade construída do localStorage
-  const getBuiltActivityData = () => {
-    try {
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const activityData = constructedActivities[activity.id];
-      
-      if (activityData && activityData.content) {
-        return activityData.content;
-      }
-      
-      // Fallback para dados básicos se não houver conteúdo construído
-      return {
-        title: activity.title,
-        description: activity.description,
-        content: activity.customFields || {},
-        type: activity.id
-      };
-    } catch (error) {
-      console.error('Erro ao recuperar dados da atividade construída:', error);
-      return {
-        title: activity.title,
-        description: activity.description,
-        content: {},
-        type: activity.id
-      };
+  // Função para renderizar o conteúdo baseado no tipo de atividade
+  const renderActivityContent = () => {
+    if (!activity.generatedContent) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          <p>Conteúdo não disponível para visualização.</p>
+        </div>
+      );
+    }
+
+    // Renderizar conteúdo estruturado baseado no tipo
+    switch (activity.type) {
+      case 'lista-exercicios':
+        return renderListaExercicios();
+      case 'prova':
+        return renderProva();
+      case 'jogo':
+        return renderJogo();
+      case 'resumo':
+        return renderResumo();
+      case 'mapa-mental':
+        return renderMapaMental();
+      default:
+        return renderGenericContent();
     }
   };
 
-  const renderBuiltActivityContent = () => {
-    const builtData = getBuiltActivityData();
+  const renderListaExercicios = () => {
+    const content = activity.generatedContent;
     
-    return (
-      <div className="space-y-6">
-        {/* Título da Atividade */}
-        <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {builtData.title}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {builtData.description}
-          </p>
-        </div>
+    if (typeof content === 'string') {
+      // Parse manual do conteúdo se for string
+      const lines = content.split('\n').filter(line => line.trim());
+      const exercises = [];
+      let currentExercise = null;
+      
+      lines.forEach(line => {
+        if (line.match(/^\d+\./)) {
+          if (currentExercise) exercises.push(currentExercise);
+          currentExercise = { question: line, options: [], answer: '' };
+        } else if (line.match(/^[a-e]\)/)) {
+          if (currentExercise) currentExercise.options.push(line);
+        } else if (line.toLowerCase().includes('resposta:')) {
+          if (currentExercise) currentExercise.answer = line;
+        }
+      });
+      if (currentExercise) exercises.push(currentExercise);
 
-        {/* Conteúdo da Atividade Construída */}
+      return (
         <div className="space-y-6">
-          {/* Renderizar cada campo do conteúdo construído */}
-          {Object.entries(builtData.content || {}).map(([key, value]) => {
-            if (!value || (typeof value === 'string' && value.trim() === '')) return null;
-            
-            const fieldLabel = getFieldLabel(key);
-            
-            return (
-              <div key={key} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  {fieldLabel}
-                </h3>
-                <div className="prose dark:prose-invert max-w-none">
-                  {typeof value === 'string' ? (
-                    <div 
-                      className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap"
-                      dangerouslySetInnerHTML={{ __html: formatContent(value) }}
-                    />
-                  ) : (
-                    <pre className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      {JSON.stringify(value, null, 2)}
-                    </pre>
+          <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+            <h3 className="font-bold text-orange-800 dark:text-orange-200 mb-2">
+              📝 Lista de Exercícios: {activity.title}
+            </h3>
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              {activity.description}
+            </p>
+          </div>
+          
+          {exercises.length > 0 ? (
+            <div className="space-y-4">
+              {exercises.map((exercise, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                    {exercise.question}
+                  </h4>
+                  {exercise.options.length > 0 && (
+                    <div className="space-y-2 ml-4">
+                      {exercise.options.map((option, optIndex) => (
+                        <div key={optIndex} className="text-gray-600 dark:text-gray-400">
+                          {option}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {exercise.answer && (
+                    <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-4 border-green-500">
+                      <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                        {exercise.answer}
+                      </p>
+                    </div>
                   )}
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <div dangerouslySetInnerHTML={{ __html: content.replace(/\n/g, '<br>') }} />
               </div>
-            );
-          })}
-
-          {/* Se não há conteúdo construído, mostrar mensagem */}
-          {Object.keys(builtData.content || {}).length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                <Eye className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Atividade não construída
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Esta atividade ainda não foi construída. Use o botão "Editar" para construir o conteúdo.
-              </p>
             </div>
           )}
+        </div>
+      );
+    }
+
+    // Se o conteúdo já é um objeto estruturado
+    if (typeof content === 'object' && content.exercises) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+            <h3 className="font-bold text-orange-800 dark:text-orange-200 mb-2">
+              📝 Lista de Exercícios: {activity.title}
+            </h3>
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              {activity.description}
+            </p>
+          </div>
+          
+          <div className="space-y-4">
+            {content.exercises.map((exercise: any, index: number) => (
+              <div key={index} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                  {index + 1}. {exercise.question || exercise.enunciado}
+                </h4>
+                {exercise.options && (
+                  <div className="space-y-2 ml-4">
+                    {exercise.options.map((option: string, optIndex: number) => (
+                      <div key={optIndex} className="text-gray-600 dark:text-gray-400">
+                        {String.fromCharCode(97 + optIndex)}) {option}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {exercise.answer && (
+                  <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border-l-4 border-green-500">
+                    <p className="text-sm text-green-700 dark:text-green-300 font-medium">
+                      Resposta: {exercise.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return renderGenericContent();
+  };
+
+  const renderProva = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+          <h3 className="font-bold text-blue-800 dark:text-blue-200 mb-2">
+            📋 Prova: {activity.title}
+          </h3>
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            {activity.description}
+          </p>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div dangerouslySetInnerHTML={{ 
+              __html: String(activity.generatedContent).replace(/\n/g, '<br>') 
+            }} />
+          </div>
         </div>
       </div>
     );
   };
 
-  // Função para obter rótulos amigáveis dos campos
-  const getFieldLabel = (key: string): string => {
-    const labels: Record<string, string> = {
-      objectives: 'Objetivos',
-      content: 'Conteúdo',
-      instructions: 'Instruções',
-      materials: 'Materiais Necessários',
-      evaluation: 'Critérios de Avaliação',
-      timeLimit: 'Tempo Limite',
-      difficulty: 'Nível de Dificuldade',
-      questions: 'Questões',
-      answers: 'Respostas',
-      exercises: 'Exercícios',
-      examples: 'Exemplos',
-      activities: 'Atividades',
-      context: 'Contexto de Aplicação',
-      sources: 'Fontes e Referências'
-    };
-    
-    return labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
+  const renderJogo = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+          <h3 className="font-bold text-purple-800 dark:text-purple-200 mb-2">
+            🎮 Jogo Educativo: {activity.title}
+          </h3>
+          <p className="text-sm text-purple-700 dark:text-purple-300">
+            {activity.description}
+          </p>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div dangerouslySetInnerHTML={{ 
+              __html: String(activity.generatedContent).replace(/\n/g, '<br>') 
+            }} />
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  // Função para formatar o conteúdo
-  const formatContent = (content: string): string => {
-    return content
-      .replace(/\n/g, '<br>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">$1</code>');
+  const renderResumo = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+          <h3 className="font-bold text-green-800 dark:text-green-200 mb-2">
+            📖 Resumo: {activity.title}
+          </h3>
+          <p className="text-sm text-green-700 dark:text-green-300">
+            {activity.description}
+          </p>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div dangerouslySetInnerHTML={{ 
+              __html: String(activity.generatedContent).replace(/\n/g, '<br>') 
+            }} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderMapaMental = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+          <h3 className="font-bold text-yellow-800 dark:text-yellow-200 mb-2">
+            🧠 Mapa Mental: {activity.title}
+          </h3>
+          <p className="text-sm text-yellow-700 dark:text-yellow-300">
+            {activity.description}
+          </p>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div dangerouslySetInnerHTML={{ 
+              __html: String(activity.generatedContent).replace(/\n/g, '<br>') 
+            }} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderGenericContent = () => {
+    return (
+      <div className="space-y-6">
+        <div className="bg-gray-50 dark:bg-gray-900/20 p-4 rounded-lg border border-gray-200 dark:border-gray-800">
+          <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2">
+            📚 {activity.title}
+          </h3>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            {activity.description}
+          </p>
+        </div>
+        
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div dangerouslySetInnerHTML={{ 
+              __html: String(activity.generatedContent).replace(/\n/g, '<br>') 
+            }} />
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-            onClick={onClose}
-          >
-            {/* Modal Container */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-              className="relative bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden border border-[#FF6B00]/20"
-              style={{
-                width: '85%',
-                height: '85%',
-                maxWidth: '1400px',
-                maxHeight: '900px'
-              }}
-              onClick={(e) => e.stopPropagation()}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 rounded-xl border border-gray-300 dark:border-gray-600">
+        {/* Header com bordas arredondadas no topo */}
+        <DialogHeader className="flex flex-row items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-xl">
+          <DialogTitle className="text-xl font-bold">
+            Visualização da Atividade
+          </DialogTitle>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {/* Implementar download */}}
+              className="text-white hover:bg-white/20 h-8 w-8"
             >
-              {/* Bordas decorativas nos cantos - mais finas */}
-              {/* Canto superior esquerdo */}
-              <div className="absolute top-0 left-0 w-8 h-8 z-10">
-                <div className="absolute top-0 left-0 w-4 h-0.5 bg-[#FF6B00] rounded-r-sm"></div>
-                <div className="absolute top-0 left-0 w-0.5 h-4 bg-[#FF6B00] rounded-b-sm"></div>
-              </div>
-              
-              {/* Canto superior direito */}
-              <div className="absolute top-0 right-0 w-8 h-8 z-10">
-                <div className="absolute top-0 right-0 w-4 h-0.5 bg-[#FF6B00] rounded-l-sm"></div>
-                <div className="absolute top-0 right-0 w-0.5 h-4 bg-[#FF6B00] rounded-b-sm"></div>
-              </div>
-              
-              {/* Canto inferior esquerdo */}
-              <div className="absolute bottom-0 left-0 w-8 h-8 z-10">
-                <div className="absolute bottom-0 left-0 w-4 h-0.5 bg-[#FF6B00] rounded-r-sm"></div>
-                <div className="absolute bottom-0 left-0 w-0.5 h-4 bg-[#FF6B00] rounded-t-sm"></div>
-              </div>
-              
-              {/* Canto inferior direito */}
-              <div className="absolute bottom-0 right-0 w-8 h-8 z-10">
-                <div className="absolute bottom-0 right-0 w-4 h-0.5 bg-[#FF6B00] rounded-l-sm"></div>
-                <div className="absolute bottom-0 right-0 w-0.5 h-4 bg-[#FF6B00] rounded-t-sm"></div>
-              </div>
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {/* Implementar compartilhamento */}}
+              className="text-white hover:bg-white/20 h-8 w-8"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-white hover:bg-white/20 h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
 
-              {/* Header do Modal */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-[#FF6B00] to-[#FF9248]">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <Eye className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">
-                      Visualização da Atividade
-                    </h2>
-                    <p className="text-white/80 text-sm">
-                      {activity.title}
-                    </p>
-                  </div>
-                </div>
-                
-                <Button
-                  onClick={onClose}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/20 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
+        {/* Conteúdo principal com scroll */}
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
+          {renderActivityContent()}
+        </div>
 
-              {/* Conteúdo do Modal - Atividade Construída */}
-              <div className="flex-1 overflow-auto p-6" style={{ height: 'calc(100% - 88px)' }}>
-                <div className="h-full">
-                  {renderBuiltActivityContent()}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        {/* Footer com bordas arredondadas no bottom */}
+        <div className="flex justify-end gap-3 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-xl">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="border-gray-300 dark:border-gray-600"
+          >
+            Fechar
+          </Button>
+          <Button
+            onClick={() => {/* Implementar funcionalidade de imprimir/exportar */}}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            Exportar PDF
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+export default ActivityViewModal;

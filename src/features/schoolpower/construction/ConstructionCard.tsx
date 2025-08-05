@@ -18,14 +18,13 @@ const ActivityPreviewModal = ({ isOpen, onClose, activityData }: { isOpen: boole
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="relative w-[85%] h-[85%] bg-gradient-to-br from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-xl flex flex-col overflow-hidden"
+        className="relative w-[85%] h-[85%] bg-gradient-to-br from-white to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-xl flex flex-col overflow-hidden"
         style={{
           borderImage: 'linear-gradient(to bottom right, #FF6B00, #D65A00) 1',
           borderImageSlice: 1,
           borderStyle: 'solid',
-          borderWidth: '4px',
-          borderTopLeftRadius: '10px',
-          borderBottomRightRadius: '10px',
+          borderWidth: '2px', /* Border width reduced */
+          borderRadius: '10px', /* Rounded corners applied */
         }}
       >
         <div className="absolute top-2 right-2 z-20">
@@ -41,6 +40,12 @@ const ActivityPreviewModal = ({ isOpen, onClose, activityData }: { isOpen: boole
                 <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">{activityData.title}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{activityData.description}</p>
                 {/* Render other activity details here as needed */}
+                {activityData.generatedContent && (
+                  <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/50 rounded-lg border border-orange-200 dark:border-orange-700/50">
+                    <h4 className="text-base font-semibold mb-2 text-orange-700 dark:text-orange-300">Conteúdo Gerado:</h4>
+                    <p className="text-sm text-orange-600 dark:text-orange-400 leading-relaxed">{activityData.generatedContent}</p>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400">Carregando detalhes da atividade...</p>
@@ -171,6 +176,9 @@ export function ConstructionCard({
     }, 500);
   };
 
+  // Simula a obtenção do conteúdo gerado para a pré-visualização
+  const generatedContent = status === 'completed' ? "Este é um exemplo de conteúdo gerado para a atividade." : "";
+
   return (
     <TooltipProvider>
       <motion.div
@@ -275,17 +283,18 @@ export function ConstructionCard({
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 hover:bg-[#FF6B00] hover:text-white hover:border-[#FF6B00] transition-all duration-200"
                 onClick={handleView}
+                className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50"
+                disabled={!generatedContent && status !== 'draft'}
               >
-                <Eye className="w-3 h-3 mr-1" />
-                Ver
+                <Eye className="h-4 w-4 mr-1" />
+                Visualizar
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1"
                 onClick={() => onShare?.(id)}
+                className="flex-1"
               >
                 <Share2 className="w-3 h-3 mr-1" />
                 Share
@@ -365,7 +374,7 @@ export function ConstructionCard({
         {/* Hover Glow Effect */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FF6B00]/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       </motion.div>
-      <ActivityPreviewModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityData={selectedActivityData} />
+      <ActivityPreviewModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} activityData={{ id, title, description, progress, type, status, generatedContent }} />
     </TooltipProvider>
   );
 }
