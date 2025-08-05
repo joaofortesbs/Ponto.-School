@@ -32,7 +32,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
-  const [showSidebar, setShowSidebar] = useState<boolean>(false); // State to control sidebar visibility
 
   if (!isOpen || !activity) return null;
 
@@ -56,12 +55,36 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     if (activityType !== 'lista-exercicios') return [];
 
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-    return storedData.questoes || [];
-  };
 
-  // Função para mostrar o sidebar
-  const toggleSidebar = () => {
-    setShowSidebar(!showSidebar);
+    const previewData = {
+      ...activity.originalData,
+      ...storedData,
+      customFields: {
+        ...activity.customFields,
+        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
+      }
+    };
+
+    // Buscar questões em diferentes possíveis localizações
+    let questoes = [];
+    if (previewData.questoes && Array.isArray(previewData.questoes)) {
+      questoes = previewData.questoes;
+    } else if (previewData.questions && Array.isArray(previewData.questions)) {
+      questoes = previewData.questions;
+    } else if (previewData.content && previewData.content.questoes) {
+      questoes = previewData.content.questoes;
+    } else if (previewData.content && previewData.content.questions) {
+      questoes = previewData.content.questions;
+    }
+
+    return questoes.map((questao, index) => ({
+      id: questao.id || `questao-${index + 1}`,
+      numero: index + 1,
+      dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
+      tipo: questao.type || questao.tipo || 'multipla-escolha',
+      completed: false, // Pode ser expandido para rastrear progresso
+      enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
+    }));
   };
 
   const questionsForSidebar = getQuestionsForSidebar();
@@ -179,7 +202,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
                     </p>
                   </div>
-
+                  
                   {/* Tags and Info */}
                   <div className="flex flex-wrap gap-2">
                     {activity?.originalData?.disciplina && (
@@ -239,8 +262,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>
-            {/* Question Navigation Sidebar - Only for Exercise Lists and if showSidebar is true */}
-            {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
+            {/* Question Navigation Sidebar - Only for Exercise Lists */}
+            {isExerciseList && questionsForSidebar.length > 0 && (
               <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto flex-shrink-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Card */}
