@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -17,7 +18,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const renderActivityPreview = () => {
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
+    
     console.log('🎯 Renderizando preview para tipo:', activityType);
     console.log('🎯 Dados da atividade:', activity);
     console.log('🎯 Dados originais:', activity.originalData);
@@ -26,7 +27,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
-
+    
     console.log('🎯 Dados do localStorage:', storedData);
     console.log('🎯 Campos do localStorage:', storedFields);
 
@@ -52,15 +53,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     switch (activityType) {
       case 'lista-exercicios':
         return (
-          <ExerciseListPreview
+          <ExerciseListPreview 
             data={previewData}
             customFields={previewData.customFields}
           />
         );
-
+      
       default:
         return (
-          <ActivityPreview
+          <ActivityPreview 
             data={previewData}
             activityType={activityType}
             customFields={previewData.customFields}
@@ -97,39 +98,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-orange-500 rounded-bl-lg pointer-events-none" />
           <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none" />
 
-          {/* Header - Substituído pelo card de resumo e botão de fechar */}
+          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b bg-gray-50">
-             {/* Renderiza o card de resumo se for do tipo 'lista-exercicios' */}
-             {activity.originalData?.type === 'lista-exercicios' || activity.categoryId === 'lista-exercicios' || activity.type === 'lista-exercicios' ? (
-                <ExerciseListPreview
-                    data={{
-                        ...activity,
-                        title: activity.personalizedTitle || activity.title,
-                        description: activity.personalizedDescription || activity.description,
-                        customFields: activity.customFields || {},
-                        type: 'lista-exercicios'
-                    }}
-                    customFields={activity.customFields || {}}
-                />
-             ) : (
-                // Caso contrário, exibe o título padrão
-                <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                        Visualização da Atividade
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                        {activity.personalizedTitle || activity.title}
-                    </p>
-                </div>
-             )}
-             <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
-             >
-                <X className="w-5 h-5" />
-             </Button>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Visualização da Atividade
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {activity.personalizedTitle || activity.title}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
 
           {/* Content */}

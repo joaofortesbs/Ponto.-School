@@ -325,34 +325,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           )}
 
           {questao.explicacao && (
-            <div className="mt-4">
-              <div 
-                className={`p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400 cursor-pointer transition-all duration-200 ${
-                  isExpandida ? 'hover:bg-blue-100' : 'hover:bg-blue-100'
-                }`}
-                onClick={() => toggleQuestaoExpandida(questao.id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-800">Explicação:</div>
-                  <div className="text-blue-600">
-                    {isExpandida ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                {isExpandida && (
-                  <div className="text-sm text-blue-700 mt-2">{questao.explicacao}</div>
-                )}
-                {!isExpandida && (
-                  <div className="text-xs text-blue-600 mt-1">Clique para ver a explicação</div>
-                )}
-              </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400">
+              <div className="text-sm font-medium text-blue-800 mb-1">Explicação:</div>
+              <div className="text-sm text-blue-700">{questao.explicacao}</div>
             </div>
           )}
         </CardContent>
