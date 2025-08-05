@@ -265,6 +265,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: null,
       contextualizationData: null,
       actionPlan: [],
+      manualActivities: [],
       timestamp: Date.now()
     };
 

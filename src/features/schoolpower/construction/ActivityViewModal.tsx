@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ActivityViewModalProps {
   isOpen: boolean;
@@ -12,7 +14,7 @@ interface ActivityViewModalProps {
   activity: ConstructionActivity | null;
 }
 
-const ActivityViewModal: React.FC<ActivityViewModalProps> = ({ isOpen, onClose, activity }) => {
+export function ActivityViewModal({ isOpen, onClose, activity }: ActivityViewModalProps) {
   const questionsRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   if (!activity) return null;
@@ -145,58 +147,31 @@ const ActivityViewModal: React.FC<ActivityViewModalProps> = ({ isOpen, onClose, 
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/50"
-            onClick={onClose}
-          />
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-7xl max-h-[90vh] mx-4 bg-white rounded-lg shadow-xl overflow-hidden"
-            style={{
-              borderTopLeftRadius: '12px',
-              borderTopRightRadius: '12px',
-              borderBottomLeftRadius: '12px',
-              borderBottomRightRadius: '12px',
-            }}
-          >
-            {/* Bordas laranjas nos cantos */}
-            <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-orange-500 rounded-tl-lg pointer-events-none" />
-            <div className="absolute top-0 right-0 w-16 h-16 border-r-4 border-t-4 border-orange-500 rounded-tr-lg pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-orange-500 rounded-bl-lg pointer-events-none" />
-            <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none" />
-
-            {/* Header com botão de fechar */}
-            <div className="flex justify-end p-4 relative z-10">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-
-            <div className="flex h-[calc(90vh-100px)]">
-              {renderQuestionsSidebar()}
-
-              <div className="flex-1 p-6 overflow-y-auto">
-                {renderActivityPreview()}
-              </div>
-            </div>
-          </motion.div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="p-4 border-b border-gray-200">
+          <DialogTitle className="text-lg font-semibold text-gray-900">
+            {activity.personalizedTitle || activity.title || 'Visualizar Atividade'}
+          </DialogTitle>
+          <div className="absolute top-0 right-0 mt-4 mr-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </DialogHeader>
+        <div className="flex h-[calc(90vh-80px)]">
+          {renderQuestionsSidebar()}
+          <div className="flex-1 p-6 overflow-y-auto">
+            {renderActivityPreview()}
+          </div>
         </div>
-      )}
-    </AnimatePresence>
+      </DialogContent>
+    </Dialog>
   );
 };
 
