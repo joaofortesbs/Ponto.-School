@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
@@ -283,9 +284,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             <ConstructionCard
               key={activity.id}
               activity={activity}
-              onEdit={handleEditActivity} // Usando a função handleEditActivity interna
-              onView={handleView} // Passando handleView para o card
-              onShare={handleShare} // Passando handleShare para o card
+              onEdit={handleEditActivity}
+              onView={handleView}
+              onShare={handleShare}
             />
           );
         })}
@@ -304,9 +305,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           </p>
         </div>
       )}
-    </div>
-  );
-
 
       {/* Modal de Edição */}
       <EditActivityModal
@@ -395,6 +393,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
