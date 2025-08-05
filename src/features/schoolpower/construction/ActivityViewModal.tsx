@@ -99,7 +99,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none" />
 
           {/* Header com botão de fechar */}
-          <div className="flex justify-end p-4 border-b">
+          <div className="flex justify-end p-4">
             <Button
               variant="ghost"
               size="sm"
@@ -111,7 +111,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6" style={{ height: 'calc(100% - 60px)' }}>
+          <div className="flex-1 overflow-y-auto px-6 pb-6" style={{ height: 'calc(100% - 60px)' }}>
             {renderActivityPreview()}
           </div>
         </motion.div>
