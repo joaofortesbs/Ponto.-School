@@ -677,144 +677,142 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   console.log('📊 Dados consolidados finais:', consolidatedData);
 
   return (
-      <div className="h-full">
-        {viewMode === 'grid' ? (
-          <div className="h-full flex flex-col">
-            {/* Grade de questões */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {renderQuestionsGrid()}
-            </div>
+    <div className="h-full">
+      {viewMode === 'grid' ? (
+        <div className="h-full flex flex-col">
+          {/* Grade de questões */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {renderQuestionsGrid()}
           </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="flex h-full"
-          >
-            {/* Menu lateral de navegação das questões */}
-            <div className="w-80 bg-slate-50 border-r border-slate-200 overflow-y-auto">
-              <div className="p-4 border-b border-slate-200">
-                <h3 className="font-semibold text-slate-700 mb-2">Questões</h3>
-                <div className="text-sm text-slate-500 mb-3">
-                  Total: {questoesProcessadas.length} questões
-                </div>
-
-                {/* Legenda de dificuldades */}
-                <div className="grid grid-cols-2 gap-1 text-xs">
-                  {Object.entries(DIFFICULTY_LEVELS).map(([key, config]) => (
-                    <div key={key} className="flex items-center gap-1">
-                      <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
-                      <span className={config.textColor}>{config.label}</span>
-                    </div>
-                  ))}
-                </div>
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
+          className="flex h-full"
+        >
+          {/* Menu lateral de navegação das questões */}
+          <div className="w-80 bg-slate-50 border-r border-slate-200 overflow-y-auto">
+            <div className="p-4 border-b border-slate-200">
+              <h3 className="font-semibold text-slate-700 mb-2">Questões</h3>
+              <div className="text-sm text-slate-500 mb-3">
+                Total: {questoesProcessadas.length} questões
               </div>
 
-              <div className="p-2 space-y-2">
-                {questoesProcessadas.map((questao, index) => {
-                  const difficulty = determineDifficulty(questao);
-                  const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
-                  const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
-                  const isSelected = selectedQuestionIndex === index;
-                  const isAnswered = respostas[questao.id] !== undefined;
+              {/* Legenda de dificuldades */}
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                {Object.entries(DIFFICULTY_LEVELS).map(([key, config]) => (
+                  <div key={key} className="flex items-center gap-1">
+                    <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
+                    <span className={config.textColor}>{config.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-                  // Função para obter o ícone do tipo de questão
-                  const getQuestionTypeIcon = (type: Question['type']) => {
-                    switch (type) {
-                      case 'multipla-escolha':
-                        return <Circle className="w-4 h-4 text-blue-600" />;
-                      case 'discursiva':
-                        return <Edit3 className="w-4 h-4 text-purple-600" />;
-                      case 'verdadeiro-falso':
-                        return <CheckCircle className="w-4 h-4 text-green-600" />;
-                      default:
-                        return <FileText className="w-4 h-4 text-gray-600" />;
-                    }
-                  };
+            <div className="p-2 space-y-2">
+              {questoesProcessadas.map((questao, index) => {
+                const difficulty = determineDifficulty(questao);
+                const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+                const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
+                const isSelected = selectedQuestionIndex === index;
+                const isAnswered = respostas[questao.id] !== undefined;
 
-                  return (
-                    <button
-                      key={questao.id || `questao-${index}`}
-                      onClick={() => {
-                        setSelectedQuestionIndex(index);
-                        if (onQuestionSelect) {
-                          onQuestionSelect(index, questao.id);
-                        }
-                      }}
-                      className={`w-full text-left p-3 rounded-lg transition-all duration-200 border ${
-                        isSelected
-                          ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm'
-                          : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                          isAnswered
-                            ? 'bg-green-500 text-white'
-                            : isSelected
-                              ? 'bg-blue-500 text-white'
-                              : difficultyConfig.color + ' ' + difficultyConfig.textColor
-                        }`}>
-                          {isAnswered ? '✓' : index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className={`font-medium text-sm ${difficultyConfig.textColor}`}>
-                                {difficultyConfig.label}
-                              </div>
-                              <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                                {questionTag}
-                              </Badge>
+                // Função para obter o ícone do tipo de questão
+                const getQuestionTypeIcon = (type: Question['type']) => {
+                  switch (type) {
+                    case 'multipla-escolha':
+                      return <Circle className="w-4 h-4 text-blue-600" />;
+                    case 'discursiva':
+                      return <Edit3 className="w-4 h-4 text-purple-600" />;
+                    case 'verdadeiro-falso':
+                      return <CheckCircle className="w-4 h-4 text-green-600" />;
+                    default:
+                      return <FileText className="w-4 h-4 text-gray-600" />;
+                  }
+                };
+
+                return (
+                  <button
+                    key={questao.id || `questao-${index}`}
+                    onClick={() => {
+                      setSelectedQuestionIndex(index);
+                      if (onQuestionSelect) {
+                        onQuestionSelect(index, questao.id);
+                      }
+                    }}
+                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 border ${
+                      isSelected
+                        ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm'
+                        : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                        isAnswered
+                          ? 'bg-green-500 text-white'
+                          : isSelected
+                            ? 'bg-blue-500 text-white'
+                            : difficultyConfig.color + ' ' + difficultyConfig.textColor
+                      }`}>
+                        {isAnswered ? '✓' : index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`font-medium text-sm ${difficultyConfig.textColor}`}>
+                              {difficultyConfig.label}
                             </div>
-                            <div className="flex-shrink-0">
-                              {getQuestionTypeIcon(questao.type)}
-                            </div>
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                              {questionTag}
+                            </Badge>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {getQuestionTypeIcon(questao.type)}
                           </div>
                         </div>
                       </div>
-                    </button>
-                  );
-                })}</div>
-              </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
               {/* Resumo de progresso no menu lateral */}
-              <div className="p-4 border-t border-gray-200 bg-white">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Respondidas:</span>
-                    <span className="font-semibold">{Object.keys(respostas).length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Pendentes:</span>
-                    <span className="font-semibold">{questoesProcessadas.length - Object.keys(respostas).length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Progresso:</span>
-                    <span className="font-semibold">
-                      {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
-                    </span>
-                  </div>
-                </div>
+          <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Respondidas:</span>
+                <span className="font-semibold">{Object.keys(respostas).length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Pendentes:</span>
+                <span className="font-semibold">{questoesProcessadas.length - Object.keys(respostas).length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Progresso:</span>
+                <span className="font-semibold">
+                  {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
+                </span>
               </div>
             </div>
+          </div>
 
-            {/* Área principal com a questão selecionada */}
-            <div className="flex-1 h-full overflow-y-auto">
-
-
-              {/* Conteúdo da questão */}
-              <div className="p-6">
-                {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
-                  renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
-                )}
-              </div>
+          {/* Área principal com a questão selecionada */}
+          <div className="flex-1 h-full overflow-y-auto">
+            {/* Conteúdo da questão */}
+            <div className="p-6">
+              {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
+                renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
+              )}
             </div>
-          </motion.div>
-        )}
-      </div>
-    );
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
 };
 
 export default ExerciseListPreview;
