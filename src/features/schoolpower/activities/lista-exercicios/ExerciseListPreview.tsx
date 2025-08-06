@@ -696,19 +696,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto">
             <div className="p-4 border-b border-slate-200">
               <h3 className="font-semibold text-slate-700 mb-2">Questões</h3>
-              <div className="text-sm text-slate-500 mb-3">
-                Total: {questoesProcessadas.length} questões
-              </div>
-
-              {/* Legenda de dificuldades */}
-              <div className="grid grid-cols-2 gap-1 text-xs">
-                {Object.entries(DIFFICULTY_LEVELS).map(([key, config]) => (
-                  <div key={key} className="flex items-center gap-1">
-                    <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
-                    <span className={config.textColor}>{config.label}</span>
-                  </div>
-                ))}
-              </div>
             </div>
 
             <div className="p-2 space-y-2">
