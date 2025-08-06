@@ -1,368 +1,652 @@
+
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Eye, Edit3, Download, Share2, Copy, Calendar, Clock, User, BookOpen, Target, Lightbulb, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { useTheme } from '@/components/ThemeProvider';
 import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 
-// Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
-// This is a placeholder, replace with actual implementation if needed.
-const getActivityIcon = (activityId: string) => {
-  // Example: return an icon component based on activityId
-  return ({ className }: { className: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c0-1.707.833-3.123 2.12-4.119C15.387 2.507 17.017 2 19 2s3.613.507 4.88-1.881C24.833 1.707 24 3.123 24 5v10a2 2 0 01-2 2H2a2 2 0 01-2-2V5c0-1.877.847-3.293 2.12-4.119C4.167 0.507 5.993 0 8 0s3.833.507 5.12 1.881C14.833 1.707 14 3.123 14 5v10z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v16M8 20h8" />
-    </svg>
-  );
-};
-
-
 interface ActivityViewModalProps {
   isOpen: boolean;
-  activity: ConstructionActivity | null;
   onClose: () => void;
+  activity: ConstructionActivity | null;
+  onEdit?: (activity: ConstructionActivity) => void;
+  onDuplicate?: (activity: ConstructionActivity) => void;
+  onExport?: (activity: ConstructionActivity) => void;
+  onShare?: (activity: ConstructionActivity) => void;
 }
 
-export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
-  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
-  const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
-  const [showSidebar, setShowSidebar] = useState<boolean>(false);
-  const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
+const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
+  isOpen,
+  onClose,
+  activity,
+  onEdit,
+  onDuplicate,
+  onExport,
+  onShare
+}) => {
+  const { theme } = useTheme();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'preview' | 'details' | 'metadata'>('preview');
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Resetar estado do sidebar quando o modal abre
-  React.useEffect(() => {
-    if (isOpen) {
-      setShowSidebar(false);
-      setSelectedQuestionId(null);
-      setSelectedQuestionIndex(null);
-      setIsInQuestionView(false);
-    }
-  }, [isOpen]);
+  if (!activity) return null;
 
-  if (!isOpen || !activity) return null;
+  const isDark = theme === 'dark';
 
-  // Função para lidar com seleção de questão
-  const handleQuestionSelect = (questionIndex: number, questionId: string) => {
-    setSelectedQuestionIndex(questionIndex);
-    setSelectedQuestionId(questionId);
-    setIsInQuestionView(true);
-  };
-
-  // Função para rolar para uma questão específica
-  const scrollToQuestion = (questionId: string, questionIndex?: number) => {
-    setSelectedQuestionId(questionId);
-    if (questionIndex !== undefined) {
-      setSelectedQuestionIndex(questionIndex);
-      setIsInQuestionView(true);
-    }
-    const questionElement = document.getElementById(`question-${questionId}`);
-    if (questionElement && contentRef.current) {
-      questionElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
-      });
+  const getActivityIcon = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'lista-exercicios':
+      case 'lista_exercicios':
+        return <BookOpen className="w-5 h-5" />;
+      case 'prova':
+      case 'avaliacao':
+        return <Target className="w-5 h-5" />;
+      case 'jogo':
+      case 'jogos':
+        return <Lightbulb className="w-5 h-5" />;
+      default:
+        return <BookOpen className="w-5 h-5" />;
     }
   };
 
-  // Obter questões para o sidebar
-  const getQuestionsForSidebar = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
-    if (activityType !== 'lista-exercicios') return [];
-
-    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-
-    const previewData = {
-      ...activity.originalData,
-      ...storedData,
-      customFields: {
-        ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
-      }
-    };
-
-    // Buscar questões em diferentes possíveis localizações
-    let questoes = [];
-    if (previewData.questoes && Array.isArray(previewData.questoes)) {
-      questoes = previewData.questoes;
-    } else if (previewData.questions && Array.isArray(previewData.questions)) {
-      questoes = previewData.questions;
-    } else if (previewData.content && previewData.content.questoes) {
-      questoes = previewData.content.questoes;
-    } else if (previewData.content && previewData.content.questions) {
-      questoes = previewData.content.questions;
+  const getActivityTypeLabel = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case 'lista-exercicios':
+      case 'lista_exercicios':
+        return 'Lista de Exercícios';
+      case 'prova':
+      case 'avaliacao':
+        return 'Prova/Avaliação';
+      case 'jogo':
+      case 'jogos':
+        return 'Jogo Educativo';
+      default:
+        return 'Atividade';
     }
-
-    return questoes.map((questao, index) => ({
-      id: questao.id || `questao-${index + 1}`,
-      numero: index + 1,
-      dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
-      tipo: questao.type || questao.tipo || 'multipla-escolha',
-      completed: false, // Pode ser expandido para rastrear progresso
-      enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
-    }));
   };
 
-  const questionsForSidebar = getQuestionsForSidebar();
-  const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
-
-  const getDifficultyColor = (dificuldade: string) => {
-    switch (dificuldade.toLowerCase()) {
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toLowerCase()) {
       case 'facil':
       case 'fácil':
-      case 'básico':
-      case 'basico':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return isDark 
+          ? 'bg-green-900/20 text-green-400 border-green-700/50' 
+          : 'bg-green-100 text-green-800 border-green-300';
       case 'medio':
       case 'médio':
-      case 'intermediário':
-      case 'intermediario':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return isDark 
+          ? 'bg-yellow-900/20 text-yellow-400 border-yellow-700/50' 
+          : 'bg-yellow-100 text-yellow-800 border-yellow-300';
       case 'dificil':
       case 'difícil':
-      case 'avançado':
-      case 'avancado':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return isDark 
+          ? 'bg-red-900/20 text-red-400 border-red-700/50' 
+          : 'bg-red-100 text-red-800 border-red-300';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return isDark 
+          ? 'bg-blue-900/20 text-blue-400 border-blue-700/50' 
+          : 'bg-blue-100 text-blue-800 border-blue-300';
     }
+  };
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(activity.id);
   };
 
   const renderActivityPreview = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
-    // Tentar recuperar dados do localStorage se não estiverem disponíveis
-    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-    const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
-
-    // Preparar dados para o preview EXATAMENTE como no modal de edição
-    const previewData = {
-      ...activity.originalData,
-      ...storedData,
-      title: activity.personalizedTitle || activity.title || storedData.title,
-      description: activity.personalizedDescription || activity.description || storedData.description,
-      customFields: {
-        ...activity.customFields,
-        ...storedFields
-      },
-      type: activityType,
-      // Incluir todos os campos que podem estar no originalData
-      exercicios: activity.originalData?.exercicios || storedData.exercicios,
-      questions: activity.originalData?.questions || storedData.questions,
-      content: activity.originalData?.content || storedData.content
-    };
-
-    switch (activityType) {
-      case 'lista-exercicios':
-        return (
-          <ExerciseListPreview
-            data={previewData}
-            customFields={previewData.customFields}
-            onQuestionSelect={handleQuestionSelect}
-          />
-        );
-
-      default:
-        return (
-          <ActivityPreview
-            data={previewData}
-            activityType={activityType}
-            customFields={previewData.customFields}
-          />
-        );
+    if (activity.type === 'lista-exercicios' || activity.type === 'lista_exercicios') {
+      return (
+        <ExerciseListPreview 
+          data={activity.data}
+          customFields={activity.customFields}
+        />
+      );
     }
+    
+    return (
+      <ActivityPreview 
+        activity={activity}
+        isPreview={true}
+      />
+    );
   };
+
+  const tabs = [
+    { id: 'preview', label: 'Visualização', icon: <Eye className="w-4 h-4" /> },
+    { id: 'details', label: 'Detalhes', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'metadata', label: 'Metadados', icon: <Calendar className="w-4 h-4" /> }
+  ];
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-        onClick={onClose}
-      >
+      {isOpen && (
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-[90%] h-[90%] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            borderTopLeftRadius: '12px',
-            borderTopRightRadius: '12px',
-            borderBottomLeftRadius: '12px',
-            borderBottomRightRadius: '12px',
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
+            isDark 
+              ? 'bg-black/80 backdrop-blur-sm' 
+              : 'bg-black/50 backdrop-blur-sm'
+          }`}
+          onClick={onClose}
         >
-          {/* Bordas laranjas nos cantos */}
-          <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-orange-500 rounded-tl-lg pointer-events-none z-10" />
-          <div className="absolute top-0 right-0 w-16 h-16 border-r-4 border-t-4 border-orange-500 rounded-tr-lg pointer-events-none z-10" />
-          <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-orange-500 rounded-bl-lg pointer-events-none z-10" />
-          <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none z-10" />
-
-          {/* Header with Close button */}
-          {isExerciseList && (
-            <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 mb-0 z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                    {isInQuestionView && selectedQuestionIndex !== null ? (
-                      <span className="text-white font-bold text-sm">
-                        {selectedQuestionIndex + 1}
-                      </span>
-                    ) : (
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    {isInQuestionView && selectedQuestionIndex !== null ? (
-                      <>
-                        <h2 className="text-xl font-bold text-blue-900">
-                          Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
-                        </h2>
-                        <p className="text-blue-700 text-sm">
-                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="text-xl font-bold text-blue-900">
-                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
-                        </h2>
-                        <p className="text-blue-700 text-sm">
-                          {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* Tags and Info */}
-                  <div className="flex flex-wrap gap-2">
-                    {activity?.originalData?.disciplina && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        {activity.originalData.disciplina}
+          <motion.div
+            ref={modalRef}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+            className={`relative w-full max-w-7xl h-[90vh] ${
+              isFullscreen ? 'max-w-none h-screen' : ''
+            } ${
+              isDark 
+                ? 'bg-slate-900 border-slate-800' 
+                : 'bg-white border-slate-200'
+            } border rounded-2xl shadow-2xl overflow-hidden`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`flex items-center justify-between p-6 border-b ${
+              isDark 
+                ? 'border-slate-800 bg-slate-900/50' 
+                : 'border-slate-200 bg-slate-50/50'
+            }`}>
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${
+                  isDark 
+                    ? 'bg-blue-900/30 text-blue-400' 
+                    : 'bg-blue-100 text-blue-600'
+                }`}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div>
+                  <h2 className={`text-xl font-semibold ${
+                    isDark ? 'text-white' : 'text-slate-900'
+                  }`}>
+                    {activity.title || 'Atividade sem título'}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className={`${
+                      isDark 
+                        ? 'bg-slate-800 text-slate-300 border-slate-700' 
+                        : 'bg-slate-100 text-slate-700 border-slate-300'
+                    }`}>
+                      {getActivityTypeLabel(activity.type)}
+                    </Badge>
+                    {activity.data?.dificuldade && (
+                      <Badge className={`border ${getDifficultyColor(activity.data.dificuldade)}`}>
+                        {activity.data.dificuldade}
                       </Badge>
                     )}
-                    {activity?.originalData?.tema && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
-                        </svg>
-                        {activity.originalData.tema}
-                      </Badge>
-                    )}
-                    {questionsForSidebar.length > 0 && (
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                        {questionsForSidebar.length} questões
-                      </Badge>
-                    )}
-                  
+                    <button
+                      onClick={handleCopyId}
+                      className={`flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors ${
+                        isDark 
+                          ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' 
+                          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                      }`}
+                      title="Copiar ID"
+                    >
+                      <Copy className="w-3 h-3" />
+                      ID: {activity.id.slice(0, 8)}...
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                {/* Close button - positioned in the extreme right */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className={`${
+                    isDark 
+                      ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </Button>
+                
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit(activity)}
+                    className={`${
+                      isDark 
+                        ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </Button>
+                )}
+
+                {onExport && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onExport(activity)}
+                    className={`${
+                      isDark 
+                        ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                )}
+
+                {onShare && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onShare(activity)}
+                    className={`${
+                      isDark 
+                        ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' 
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </Button>
+                )}
+
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
-                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 rounded-full ml-4 flex-shrink-0"
+                  className={`${
+                    isDark 
+                      ? 'text-slate-400 hover:text-slate-300 hover:bg-slate-800' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-          )}
 
-          {/* Non-Exercise List Header */}
-          {!isExerciseList && (
-            <div className="flex justify-end p-4 relative z-20">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+            {/* Navigation Tabs */}
+            <div className={`flex border-b ${
+              isDark ? 'border-slate-800' : 'border-slate-200'
+            }`}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+                    activeTab === tab.id
+                      ? isDark
+                        ? 'border-blue-500 text-blue-400 bg-slate-800/50'
+                        : 'border-blue-500 text-blue-600 bg-blue-50/50'
+                      : isDark
+                        ? 'border-transparent text-slate-400 hover:text-slate-300 hover:bg-slate-800/30'
+                        : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              ))}
             </div>
-          )}
 
-
-          {/* Content Layout */}
-          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>
-            {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
-            {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
-              <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto flex-shrink-0">
-                <div className="p-4 space-y-4">
-                  {/* Summary Card */}
-                  <Card className="bg-white shadow-sm">
-                    <CardContent className="p-3">
-                      <div className="text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Questões:</span>
-                          <span className="font-semibold">{questionsForSidebar.length}</span>
-                        </div>
-                        <div className="flex justify-between items-center mt-1">
-                          <span className="text-gray-600">Total de pontos:</span>
-                          <span className="font-semibold">{questionsForSidebar.length}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Questions List */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">Navegação</h4>
-                    {questionsForSidebar.map((question, index) => (
-                      <button
-                        key={question.id}
-                        onClick={() => scrollToQuestion(question.id, index)}
-                        className={`w-full text-left p-2 text-xs rounded transition-colors ${
-                          selectedQuestionId === question.id
-                            ? 'bg-blue-50 border border-blue-200 font-medium text-blue-800'
-                            : 'bg-white border border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="font-medium">Questão {index + 1}</div>
-                        <div className="text-gray-500 truncate mt-1">
-                          {question.enunciado?.substring(0, 40)}...
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Main Content Area */}
+            {/* Content */}
             <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto p-6" ref={contentRef}>
-                {renderActivityPreview()}
-              </div>
+              <AnimatePresence mode="wait">
+                {activeTab === 'preview' && (
+                  <motion.div
+                    key="preview"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
+                  >
+                    <ScrollArea className="h-full">
+                      <div className={`p-6 ${
+                        isDark ? 'bg-slate-900' : 'bg-white'
+                      }`}>
+                        {renderActivityPreview()}
+                      </div>
+                    </ScrollArea>
+                  </motion.div>
+                )}
+
+                {activeTab === 'details' && (
+                  <motion.div
+                    key="details"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
+                  >
+                    <ScrollArea className="h-full">
+                      <div className="p-6 space-y-6">
+                        {/* Basic Information */}
+                        <Card className={`${
+                          isDark 
+                            ? 'bg-slate-800/50 border-slate-700' 
+                            : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <CardHeader>
+                            <CardTitle className={`text-lg ${
+                              isDark ? 'text-white' : 'text-slate-900'
+                            }`}>
+                              Informações Básicas
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-sm font-medium ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Título
+                                </label>
+                                <p className={`mt-1 ${
+                                  isDark ? 'text-slate-200' : 'text-slate-900'
+                                }`}>
+                                  {activity.title || 'Não especificado'}
+                                </p>
+                              </div>
+                              <div>
+                                <label className={`text-sm font-medium ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Tipo
+                                </label>
+                                <p className={`mt-1 ${
+                                  isDark ? 'text-slate-200' : 'text-slate-900'
+                                }`}>
+                                  {getActivityTypeLabel(activity.type)}
+                                </p>
+                              </div>
+                              {activity.data?.disciplina && (
+                                <div>
+                                  <label className={`text-sm font-medium ${
+                                    isDark ? 'text-slate-300' : 'text-slate-700'
+                                  }`}>
+                                    Disciplina
+                                  </label>
+                                  <p className={`mt-1 ${
+                                    isDark ? 'text-slate-200' : 'text-slate-900'
+                                  }`}>
+                                    {activity.data.disciplina}
+                                  </p>
+                                </div>
+                              )}
+                              {activity.data?.tema && (
+                                <div>
+                                  <label className={`text-sm font-medium ${
+                                    isDark ? 'text-slate-300' : 'text-slate-700'
+                                  }`}>
+                                    Tema
+                                  </label>
+                                  <p className={`mt-1 ${
+                                    isDark ? 'text-slate-200' : 'text-slate-900'
+                                  }`}>
+                                    {activity.data.tema}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {activity.data?.descricao && (
+                              <div>
+                                <label className={`text-sm font-medium ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Descrição
+                                </label>
+                                <p className={`mt-1 text-sm leading-relaxed ${
+                                  isDark ? 'text-slate-300' : 'text-slate-600'
+                                }`}>
+                                  {activity.data.descricao}
+                                </p>
+                              </div>
+                            )}
+
+                            {activity.data?.objetivos && (
+                              <div>
+                                <label className={`text-sm font-medium ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Objetivos
+                                </label>
+                                <p className={`mt-1 text-sm leading-relaxed ${
+                                  isDark ? 'text-slate-300' : 'text-slate-600'
+                                }`}>
+                                  {activity.data.objetivos}
+                                </p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+
+                        {/* Activity Specific Data */}
+                        {Object.keys(activity.data || {}).length > 0 && (
+                          <Card className={`${
+                            isDark 
+                              ? 'bg-slate-800/50 border-slate-700' 
+                              : 'bg-slate-50 border-slate-200'
+                          }`}>
+                            <CardHeader>
+                              <CardTitle className={`text-lg ${
+                                isDark ? 'text-white' : 'text-slate-900'
+                              }`}>
+                                Dados da Atividade
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {Object.entries(activity.data || {}).map(([key, value]) => {
+                                  if (['titulo', 'descricao', 'objetivos', 'disciplina', 'tema'].includes(key)) return null;
+                                  
+                                  return (
+                                    <div key={key}>
+                                      <label className={`text-sm font-medium capitalize ${
+                                        isDark ? 'text-slate-300' : 'text-slate-700'
+                                      }`}>
+                                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                      </label>
+                                      <p className={`mt-1 text-sm ${
+                                        isDark ? 'text-slate-200' : 'text-slate-900'
+                                      }`}>
+                                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </motion.div>
+                )}
+
+                {activeTab === 'metadata' && (
+                  <motion.div
+                    key="metadata"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
+                  >
+                    <ScrollArea className="h-full">
+                      <div className="p-6">
+                        <Card className={`${
+                          isDark 
+                            ? 'bg-slate-800/50 border-slate-700' 
+                            : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <CardHeader>
+                            <CardTitle className={`text-lg ${
+                              isDark ? 'text-white' : 'text-slate-900'
+                            }`}>
+                              Metadados da Atividade
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className={`text-sm font-medium ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  ID da Atividade
+                                </label>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <code className={`text-sm px-2 py-1 rounded ${
+                                    isDark 
+                                      ? 'bg-slate-900 text-slate-300' 
+                                      : 'bg-slate-200 text-slate-700'
+                                  }`}>
+                                    {activity.id}
+                                  </code>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleCopyId}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <label className={`text-sm font-medium ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Status
+                                </label>
+                                <Badge className={`mt-1 ${
+                                  activity.status === 'completed' 
+                                    ? isDark
+                                      ? 'bg-green-900/20 text-green-400 border-green-700/50'
+                                      : 'bg-green-100 text-green-800 border-green-300'
+                                    : isDark
+                                      ? 'bg-yellow-900/20 text-yellow-400 border-yellow-700/50'
+                                      : 'bg-yellow-100 text-yellow-800 border-yellow-300'
+                                } border`}>
+                                  {activity.status === 'completed' ? 'Concluída' : 'Em Progresso'}
+                                </Badge>
+                              </div>
+
+                              {activity.createdAt && (
+                                <div>
+                                  <label className={`text-sm font-medium ${
+                                    isDark ? 'text-slate-300' : 'text-slate-700'
+                                  }`}>
+                                    Data de Criação
+                                  </label>
+                                  <p className={`mt-1 text-sm ${
+                                    isDark ? 'text-slate-200' : 'text-slate-900'
+                                  }`}>
+                                    {new Date(activity.createdAt).toLocaleString('pt-BR')}
+                                  </p>
+                                </div>
+                              )}
+
+                              {activity.updatedAt && (
+                                <div>
+                                  <label className={`text-sm font-medium ${
+                                    isDark ? 'text-slate-300' : 'text-slate-700'
+                                  }`}>
+                                    Última Atualização
+                                  </label>
+                                  <p className={`mt-1 text-sm ${
+                                    isDark ? 'text-slate-200' : 'text-slate-900'
+                                  }`}>
+                                    {new Date(activity.updatedAt).toLocaleString('pt-BR')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            <Separator className={`${
+                              isDark ? 'bg-slate-700' : 'bg-slate-200'
+                            }`} />
+
+                            {/* Custom Fields */}
+                            {activity.customFields && Object.keys(activity.customFields).length > 0 && (
+                              <div>
+                                <h4 className={`text-sm font-medium mb-3 ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Campos Personalizados
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {Object.entries(activity.customFields).map(([key, value]) => (
+                                    <div key={key}>
+                                      <label className={`text-sm font-medium capitalize ${
+                                        isDark ? 'text-slate-400' : 'text-slate-600'
+                                      }`}>
+                                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                      </label>
+                                      <p className={`mt-1 text-sm ${
+                                        isDark ? 'text-slate-200' : 'text-slate-900'
+                                      }`}>
+                                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Generation Info */}
+                            {activity.data?.isGeneratedByAI && (
+                              <div>
+                                <h4 className={`text-sm font-medium mb-3 ${
+                                  isDark ? 'text-slate-300' : 'text-slate-700'
+                                }`}>
+                                  Informações de Geração
+                                </h4>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge className={`${
+                                    isDark 
+                                      ? 'bg-purple-900/20 text-purple-400 border-purple-700/50' 
+                                      : 'bg-purple-100 text-purple-800 border-purple-300'
+                                  } border`}>
+                                    Gerado por IA
+                                  </Badge>
+                                </div>
+                                {activity.data?.generatedAt && (
+                                  <p className={`text-sm ${
+                                    isDark ? 'text-slate-400' : 'text-slate-600'
+                                  }`}>
+                                    Gerado em: {new Date(activity.data.generatedAt).toLocaleString('pt-BR')}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </ScrollArea>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </AnimatePresence>
   );
-}
+};
 
-// Default export for compatibility
 export default ActivityViewModal;
