@@ -182,7 +182,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
-  const [reorderableQuestoes, setReorderableQuestoes] = useState<Question[]>([]);
+  // Estado local das questões processadas
+  const [questoes, setQuestoes] = useState<any[]>([]);
+  const [reorderableQuestoes, setReorderableQuestoes] = useState<any[]>([]);
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
@@ -237,7 +239,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         };
       });
 
-      setQuestoesProcessadas(questoesProcessadas);
+      setQuestoes(questoesProcessadas);
       setReorderableQuestoes(questoesProcessadas);
 
     } else if (isContentFromAI) {
