@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Sistema de mapeamento de dificuldade
@@ -387,10 +387,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           }
         }}
       >
-        <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105">
+        <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-blue-600">
           {/* Numeração da questão no canto superior esquerdo */}
           <div className="absolute top-3 left-3 z-10">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-90`}>
               {index + 1}
             </div>
           </div>
@@ -398,7 +398,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           <CardContent className="p-4 pt-12 h-full flex flex-col">
             <div className="flex-1">
               {/* Enunciado da questão (limitado) */}
-              <p className="text-sm text-gray-700 line-clamp-3 mb-3">
+              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">
                 {questao.enunciado?.substring(0, 120)}
                 {questao.enunciado && questao.enunciado.length > 120 ? '...' : ''}
               </p>
@@ -407,7 +407,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             {/* Informações básicas na base do card */}
             <div className="space-y-2 mt-auto">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                   {getTypeIcon(questao.type)}
                   <span className="ml-1">
                     {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
@@ -417,12 +417,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-90`}>
                   {difficultyConfig.label}
                 </Badge>
 
                 {questao.type === 'multipla-escolha' && questao.alternativas && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {questao.alternativas.length} alternativas
                   </span>
                 )}
@@ -451,13 +451,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       {/* Informações adicionais */}
       {consolidatedData.observacoes && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-amber-200 bg-amber-50 dark:bg-yellow-950/30 dark:border-yellow-800">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-amber-800 mb-1">Observações Importantes</h4>
-                <p className="text-amber-700 text-sm">{consolidatedData.observacoes}</p>
+                <h4 className="font-medium text-amber-800 dark:text-yellow-200 mb-1">Observações Importantes</h4>
+                <p className="text-amber-700 dark:text-yellow-300 text-sm">{consolidatedData.observacoes}</p>
               </div>
             </div>
           </CardContent>
@@ -472,7 +472,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
     const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
 
-    // Extrair e processar alternativas de forma mais robusta
+    // Extrair e processar alternativas de forma robusta
     let alternativasProcessadas = [];
 
     if (questao.type === 'multipla-escolha') {
@@ -499,27 +499,27 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       <Card
         key={questionId}
         id={`question-${questionId}`}
-        className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4"
+        className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4 dark:bg-gray-800 dark:border-l-blue-600"
       >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                   Questão {index + 1}
                 </Badge>
-                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-90`}>
                   {difficultyConfig.label}
                 </Badge>
-                <div className="flex items-center gap-1 text-xs text-gray-500">
+                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                   {getTypeIcon(questao.type)}
                   <span>{questao.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                 </div>
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
                   {questionTag}
                 </Badge>
               </div>
-              <CardTitle className="text-base font-medium leading-relaxed">
+              <CardTitle className="text-base font-medium leading-relaxed text-gray-900 dark:text-white">
                 {questao.enunciado}
               </CardTitle>
             </div>
@@ -549,33 +549,33 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                       key={altIndex}
                       className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                         isSelected
-                          ? 'bg-blue-50 border-blue-300 shadow-sm'
-                          : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                          ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-600 shadow-sm'
+                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                       onClick={() => handleRespostaChange(questao.id, altIndex)}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
                         isSelected
                           ? 'bg-blue-500 text-white border-blue-500'
-                          : 'bg-white text-gray-600 border-gray-300'
+                          : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                       }`}>
                         {letter}
                       </div>
-                      <div className="flex-1 text-gray-800 leading-relaxed pt-1">
+                      <div className="flex-1 text-gray-800 dark:text-gray-200 leading-relaxed pt-1">
                         {textoAlternativa}
                       </div>
                       {isSelected && (
-                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
+                        <CheckCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-1" />
                       )}
                     </div>
                   );
                 })
               ) : (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-yellow-800 text-sm">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-yellow-800 dark:text-yellow-200 text-sm">
                     ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
                   </p>
-                  <pre className="mt-2 text-xs text-gray-600 overflow-auto">
+                  <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-auto">
                     {JSON.stringify(questao, null, 2)}
                   </pre>
                 </div>
@@ -589,17 +589,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               onValueChange={(value) => handleRespostaChange(questao.id, value)}
               className="space-y-3"
             >
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="true" id={`${questao.id}-true`} />
-                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal">
-                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <RadioGroupItem value="true" id={`${questao.id}-true`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400" />
+                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal text-gray-700 dark:text-gray-300">
+                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
                   Verdadeiro
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value="false" id={`${questao.id}-false`} />
-                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal">
-                  <Circle className="w-4 h-4 inline mr-2 text-red-600" />
+              <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <RadioGroupItem value="false" id={`${questao.id}-false`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400" />
+                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal text-gray-700 dark:text-gray-300">
+                  <Circle className="w-4 h-4 inline mr-2 text-red-600 dark:text-red-400" />
                   Falso
                 </Label>
               </div>
@@ -612,9 +612,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                 placeholder="Digite sua resposta aqui..."
                 value={respostas[questao.id]?.toString() || ''}
                 onChange={(e) => handleRespostaChange(questao.id, e.target.value)}
-                className="min-h-[120px] resize-none"
+                className="min-h-[120px] resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
               />
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 Resposta: {respostas[questao.id]?.toString()?.length || 0} caracteres
               </div>
             </div>
@@ -623,17 +623,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           {questao.explicacao && (
             <div className="mt-4">
               <div
-                className="p-3 bg-blue-50 rounded-lg border-l-4 border-l-blue-400 cursor-pointer hover:bg-blue-100 transition-colors"
+                className="p-3 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-400 dark:border-l-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                 onClick={() => toggleExplicacaoExpandida(questao.id)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-800">Explicação</div>
-                  <div className="text-blue-600">
+                  <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Explicação</div>
+                  <div className="text-blue-600 dark:text-blue-400">
                     {explicacoesExpandidas[questao.id] ? '−' : '+'}
                   </div>
                 </div>
                 {explicacoesExpandidas[questao.id] && (
-                  <div className="text-sm text-blue-700 mt-2 pt-2 border-t border-blue-200">
+                  <div className="text-sm text-blue-700 dark:text-blue-200 mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
                     {questao.explicacao}
                   </div>
                 )}
@@ -648,9 +648,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   if (isGenerating) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 space-4">
+      <div className="flex flex-col items-center justify-center p-8 space-4 dark:text-gray-300">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p className="text-gray-600">Gerando lista de exercícios...</p>
+        <p className="text-gray-600 dark:text-gray-300">Gerando lista de exercícios...</p>
       </div>
     );
   }
@@ -693,7 +693,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           className="flex h-full"
         >
           {/* Menu lateral de navegação das questões */}
-          <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto">
+          <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
             <div className="p-2 space-y-2">
               {questoesProcessadas.map((questao, index) => {
                 const difficulty = determineDifficulty(questao);
@@ -706,13 +706,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                 const getQuestionTypeIcon = (type: Question['type']) => {
                   switch (type) {
                     case 'multipla-escolha':
-                      return <Circle className="w-4 h-4 text-gray-500" />;
+                      return <Circle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
                     case 'discursiva':
-                      return <Edit3 className="w-4 h-4 text-gray-500" />;
+                      return <Edit3 className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
                     case 'verdadeiro-falso':
-                      return <CheckCircle className="w-4 h-4 text-gray-500" />;
+                      return <CheckCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
                     default:
-                      return <FileText className="w-4 h-4 text-gray-500" />;
+                      return <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
                   }
                 };
 
@@ -727,8 +727,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     }}
                     className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
                       isSelected
-                        ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm'
-                        : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm'
+                        ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-600'
+                        : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm dark:border-gray-700 dark:hover:bg-gray-800/50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -737,17 +737,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                           ? 'bg-green-500 text-white'
                           : isSelected
                             ? 'bg-blue-500 text-white'
-                            : difficultyConfig.color + ' ' + difficultyConfig.textColor
+                            : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'
                       }`}>
                         {isAnswered ? '✓' : index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className={`font-medium text-sm ${difficultyConfig.textColor}`}>
+                            <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
                               {difficultyConfig.label}
                             </div>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
                               {questionTag}
                             </Badge>
                           </div>
@@ -762,8 +762,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               })}
             </div>
           </div>
-
-              
 
           {/* Área principal com a questão selecionada */}
           <div className="flex-1 h-full overflow-y-auto">

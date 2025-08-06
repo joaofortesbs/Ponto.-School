@@ -13,13 +13,13 @@ const ActivityPreview: React.FC<ActivityPreviewProps> = ({ content, activityData
   console.log('🔍 ActivityPreview - Dados da atividade:', activityData);
 
   // Se não há conteúdo, mostrar estado vazio
-  if (!content) {
+  if (!content && !activityData) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhum conteúdo disponível</h3>
-          <p className="text-gray-500">A atividade ainda não foi gerada.</p>
+      <div className="flex items-center justify-center h-full dark:bg-gray-800">
+        <div className="text-center p-6">
+          <BookOpen className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">Nenhum conteúdo disponível</h3>
+          <p className="text-gray-500 dark:text-gray-400">A atividade ainda não foi gerada.</p>
         </div>
       </div>
     );
@@ -35,110 +35,111 @@ const ActivityPreview: React.FC<ActivityPreviewProps> = ({ content, activityData
     activityContent = content;
   } 
   // Se é um objeto, tentar extrair o conteúdo
-  else if (typeof content === 'object') {
+  else if (typeof content === 'object' && content !== null) {
     activityContent = content.content || JSON.stringify(content, null, 2);
     activityTitle = content.title || activityTitle;
     activityDescription = content.description || activityDescription;
+  } else {
+    // Caso content seja nulo ou indefinido mas activityData exista
+    activityContent = activityData?.content || JSON.stringify(activityData, null, 2) || '';
   }
 
+
   return (
-    <div className="p-6 bg-white dark:bg-gray-800 h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto">
-        {/* Header da atividade */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            {activityTitle}
-          </h1>
+    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-900">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          {activityTitle}
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300">
+          {activityDescription}
+        </p>
+      </div>
 
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Badge variant="secondary">
-              <BookOpen className="h-4 w-4 mr-1" />
-              Atividade Gerada
-            </Badge>
-            <Badge variant="outline">
-              <Clock className="h-4 w-4 mr-1" />
-              45 minutos
-            </Badge>
-            <Badge variant="outline">
-              <Target className="h-4 w-4 mr-1" />
-              Nível Médio
-            </Badge>
-          </div>
+      <div className="flex flex-wrap gap-2 mb-6 justify-center">
+        <Badge variant="secondary" className="dark:bg-gray-700 dark:text-white">
+          <BookOpen className="h-4 w-4 mr-1" />
+          Atividade Gerada
+        </Badge>
+        <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">
+          <Clock className="h-4 w-4 mr-1" />
+          45 minutos
+        </Badge>
+        <Badge variant="outline" className="dark:border-gray-600 dark:text-gray-300">
+          <Target className="h-4 w-4 mr-1" />
+          Nível Médio
+        </Badge>
+      </div>
 
-          {activityDescription && (
-            <p className="text-gray-600 dark:text-gray-300 text-lg mb-4">
-              {activityDescription}
-            </p>
-          )}
-        </div>
+      {/* Seção de conteúdo */}
+      <div className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          Conteúdo da Atividade
+        </h2>
 
-        {/* Conteúdo da atividade */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Conteúdo da Atividade
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="prose prose-lg max-w-none dark:prose-invert">
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                {activityContent}
-              </pre>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Informações adicionais */}
-        {activityData && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Informações da Atividade</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <div className="space-y-2">
-                  {activityData.subject && (
-                    <div>
-                      <span className="font-medium">Disciplina:</span> {activityData.subject}
-                    </div>
-                  )}
-                  {activityData.theme && (
-                    <div>
-                      <span className="font-medium">Tema:</span> {activityData.theme}
-                    </div>
-                  )}
-                  {activityData.schoolYear && (
-                    <div>
-                      <span className="font-medium">Ano:</span> {activityData.schoolYear}
-                    </div>
-                  )}
-                  {activityData.difficultyLevel && (
-                    <div>
-                      <span className="font-medium">Dificuldade:</span> {activityData.difficultyLevel}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Status</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm">
-                <div className="flex items-center gap-2 text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Atividade gerada com sucesso</span>
-                </div>
-                <p className="text-gray-500 mt-2">
-                  Gerada em {new Date().toLocaleDateString('pt-BR')}
-                </p>
-              </CardContent>
-            </Card>
+        {typeof content === 'string' || (typeof content === 'object' && content !== null && content.content) ? (
+          <div 
+            className="prose max-w-none text-gray-700 dark:text-gray-300 dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: activityContent }}
+          />
+        ) : (
+          <div className="text-gray-700 dark:text-gray-300">
+            <pre className="whitespace-pre-wrap font-sans bg-gray-100 dark:bg-gray-800 p-4 rounded border dark:border-gray-600">
+              {activityContent}
+            </pre>
           </div>
         )}
       </div>
+
+      {/* Informações adicionais */}
+      {activityData && (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-sm text-gray-700 dark:text-gray-300">Informações da Atividade</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-gray-600 dark:text-gray-300">
+              <div className="space-y-2">
+                {activityData.subject && (
+                  <div>
+                    <span className="font-medium text-gray-800 dark:text-white">Disciplina:</span> {activityData.subject}
+                  </div>
+                )}
+                {activityData.theme && (
+                  <div>
+                    <span className="font-medium text-gray-800 dark:text-white">Tema:</span> {activityData.theme}
+                  </div>
+                )}
+                {activityData.schoolYear && (
+                  <div>
+                    <span className="font-medium text-gray-800 dark:text-white">Ano:</span> {activityData.schoolYear}
+                  </div>
+                )}
+                {activityData.difficultyLevel && (
+                  <div>
+                    <span className="font-medium text-gray-800 dark:text-white">Dificuldade:</span> {activityData.difficultyLevel}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="dark:bg-gray-800 dark:border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-sm text-gray-700 dark:text-gray-300">Status</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <CheckCircle className="h-4 w-4" />
+                <span>Atividade gerada com sucesso</span>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">
+                Gerada em {new Date().toLocaleDateString('pt-BR')}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

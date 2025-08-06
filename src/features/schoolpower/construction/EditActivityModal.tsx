@@ -750,7 +750,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       formData.difficultyLevel.trim() &&
       formData.questionModel.trim()
     : formData.title.trim() && 
-      formData.description.trim();
+      formData.description.trim() &&
+      formData.objectives.trim();
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -1037,7 +1038,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               value={formData.sources}
                               onChange={(e) => handleInputChange('sources', e.target.value)}
                               placeholder="Digite as fontes de referência..."
-                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-8-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                           </div>
 
@@ -1190,54 +1191,50 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800/50">
-            <div className="flex justify-between items-center">
-              <div className="flex space-x-2">
-                {generatedContent && (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={handleCopyContent}
-                      className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                    >
-                      <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
-                    </Button>
-                    {/* <Button
-                      variant="outline"
-                      onClick={handleExportPDF}
-                      className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                    >
-                      <Download className="h-4 w-4 mr-2" /> Exportar PDF
-                    </Button> */}
-                  </>
-                )}
-                 {generatedContent && (
-                  <Button
-                    variant="outline"
-                    onClick={clearContent}
-                    className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  >
-                    Limpar Conteúdo
-                  </Button>
-                )}
-              </div>
-              <div className="flex space-x-3">
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isGenerating}
+            className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Fechar
+          </Button>
+            {generatedContent && (
+              <>
                 <Button
                   variant="outline"
-                  onClick={onClose}
-                  className="px-6 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  onClick={handleCopyContent}
+                  className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                 >
-                  Cancelar
+                  <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
                 </Button>
-                <Button
-                  onClick={handleSaveChanges}
-                  className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
+                {/* <Button
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Alterações
-                </Button>
-              </div>
-            </div>
+                  <Download className="h-4 w-4 mr-2" /> Exportar PDF
+                </Button> */}
+              </>
+            )}
+             {generatedContent && (
+              <Button
+                variant="outline"
+                onClick={clearContent}
+                className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+              >
+                Limpar Conteúdo
+              </Button>
+            )}
+            <Button
+              onClick={handleSaveChanges}
+              className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Alterações
+            </Button>
           </div>
         </motion.div>
       </motion.div>

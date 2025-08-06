@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Eye } from 'lucide-react'; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -187,14 +187,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-[90%] h-[90%] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border dark:border-gray-700"
           onClick={(e) => e.stopPropagation()}
           style={{
             borderTopLeftRadius: '12px',
@@ -211,7 +211,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Header with Close button */}
           {isExerciseList && (
-            <div className="bg-blue-50 dark:bg-gray-800 border-b border-blue-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
+            <div className="bg-blue-50 dark:bg-gray-800/50 border-b border-blue-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
                   <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -246,7 +246,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       </>
                     )}
                   </div>
-                  
+
                   {/* Tags and Info */}
                   <div className="flex flex-wrap gap-2">
                     {activity?.originalData?.disciplina && (
@@ -273,34 +273,43 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         {questionsForSidebar.length} questões
                       </Badge>
                     )}
-                  
+
                   </div>
                 </div>
 
                 {/* Close button - positioned in the extreme right */}
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   onClick={onClose}
-                  className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-full ml-4 flex-shrink-0"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5" />
-                </Button>
+                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                </button>
               </div>
             </div>
           )}
 
           {/* Non-Exercise List Header */}
           {!isExerciseList && (
-            <div className="flex justify-end p-4 relative z-20">
-              <Button
-                variant="ghost"
-                size="sm"
+            <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 rounded-lg">
+                  <Eye className="w-5 h-5 text-[#FF6B00]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Visualizar Atividade
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {activity?.title || 'Atividade Gerada'}
+                  </p>
+                </div>
+              </div>
+              <button
                 onClick={onClose}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
-              </Button>
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
             </div>
           )}
 
@@ -353,7 +362,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto p-6 bg-white dark:bg-gray-900" ref={contentRef}>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] bg-white dark:bg-gray-900" ref={contentRef}>
                 {renderActivityPreview()}
               </div>
             </div>
