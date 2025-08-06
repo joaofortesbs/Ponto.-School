@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, EyeOff } from 'lucide-react'; // Import Eye and EyeOff components
+import { X, Eye } from 'lucide-react'; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -273,26 +273,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   </div>
                 </div>
 
-                {/* Toggle Sidebar Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className="text-gray-600 hover:text-gray-800 hover:bg-orange-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-orange-700 rounded-xl"
-                >
-                  {showSidebar ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-                  {showSidebar ? 'Ocultar Lista' : 'Mostrar Lista'}
-                </Button>
-
                 {/* Close button - positioned in the extreme right */}
-                <Button
+                <button
                   onClick={onClose}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-500 hover:text-gray-700 hover:bg-orange-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-orange-700 rounded-xl"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
-                  <X className="w-4 h-4" />
-                </Button>
+                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                </button>
               </div>
             </div>
           )}
@@ -313,14 +300,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   </p>
                 </div>
               </div>
-              <Button
+              <button
                 onClick={onClose}
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700 hover:bg-orange-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-orange-700 rounded-xl"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <X className="w-4 h-4" />
-              </Button>
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
             </div>
           )}
 
