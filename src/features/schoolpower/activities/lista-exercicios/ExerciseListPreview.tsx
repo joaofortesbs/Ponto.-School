@@ -342,34 +342,71 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   const generateQuestionWithAI = async () => {
     if (!newQuestionData.descricao || !newQuestionData.modelo || !newQuestionData.dificuldade) {
+      console.warn('❌ Dados incompletos para gerar questão:', newQuestionData);
       return;
     }
 
+    console.log('🚀 Iniciando geração de questão com IA:', newQuestionData);
     setIsGeneratingQuestion(true);
 
     try {
-      const apiKey = 'AIzaSyAYWJto52s6FqxnwqCgCGGSaGsv8IU_fzw'; // Sua chave da API
+      const apiKey = 'AIzaSyAYWJto52s6FqxnwqCgCGGSaGsv8IU_fzw';
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
+      // Determinar tipo de questão
+      let questionType = 'multipla-escolha';
+      if (newQuestionData.modelo === 'Verdadeiro ou Falso') {
+        questionType = 'verdadeiro-falso';
+      } else if (newQuestionData.modelo === 'Discursiva') {
+        questionType = 'discursiva';
+      }
+
       const prompt = `
-        Crie uma questão educacional baseada nas seguintes especificações:
+        Você é um especialista em educação. Crie uma questão educacional seguindo EXATAMENTE a estrutura JSON abaixo.
         
-        Descrição: ${newQuestionData.descricao}
-        Tipo de questão: ${newQuestionData.modelo}
-        Nível de dificuldade: ${newQuestionData.dificuldade}
+        ESPECIFICAÇÕES:
+        - Descrição/Tema: ${newQuestionData.descricao}
+        - Tipo: ${newQuestionData.modelo}
+        - Dificuldade: ${newQuestionData.dificuldade}
+        - Disciplina: ${data?.disciplina || 'Matemática'}
+        - Tema: ${data?.tema || 'Conteúdo Geral'}
         
-        Retorne APENAS um JSON válido com a seguinte estrutura:
-        {
-          "id": "questao-gerada-${Date.now()}",
-          "type": "${newQuestionData.modelo === 'Múltipla escolha' ? 'multipla-escolha' : newQuestionData.modelo === 'Verdadeiro ou Falso' ? 'verdadeiro-falso' : 'discursiva'}",
-          "enunciado": "Enunciado da questão aqui",
-          "alternativas": ["A", "B", "C", "D"] (apenas para múltipla escolha),
+        RETORNE APENAS O JSON VÁLIDO ABAIXO (sem texto adicional):
+        
+        ${questionType === 'multipla-escolha' ? `{
+          "id": "questao-${Date.now()}",
+          "type": "multipla-escolha",
+          "enunciado": "Crie aqui um enunciado claro e objetivo sobre o tema",
+          "alternativas": [
+            "Primeira alternativa",
+            "Segunda alternativa", 
+            "Terceira alternativa",
+            "Quarta alternativa"
+          ],
+          "respostaCorreta": 0,
+          "explicacao": "Explicação detalhada da resposta correta",
+          "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
+          "tema": "${data?.tema || 'Tema da questão'}"
+        }` : questionType === 'verdadeiro-falso' ? `{
+          "id": "questao-${Date.now()}",
+          "type": "verdadeiro-falso",
+          "enunciado": "Crie aqui uma afirmação para ser julgada como verdadeira ou falsa",
+          "alternativas": ["Verdadeiro", "Falso"],
           "respostaCorreta": 0,
           "explicacao": "Explicação detalhada da resposta",
           "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "Tema relacionado"
-        }
+          "tema": "${data?.tema || 'Tema da questão'}"
+        }` : `{
+          "id": "questao-${Date.now()}",
+          "type": "discursiva",
+          "enunciado": "Crie aqui uma pergunta que exija resposta elaborada",
+          "explicacao": "Critérios de avaliação e pontos importantes da resposta",
+          "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
+          "tema": "${data?.tema || 'Tema da questão'}"
+        }`}
       `;
+
+      console.log('📝 Enviando prompt para Gemini:', prompt);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -385,26 +422,107 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+
       const result = await response.json();
+      console.log('📥 Resposta do Gemini:', result);
       
-      if (result.candidates && result.candidates[0]) {
+      if (result.candidates && result.candidates[0] && result.candidates[0].content) {
         const generatedText = result.candidates[0].content.parts[0].text;
+        console.log('📝 Texto gerado:', generatedText);
         
-        // Extrair JSON da resposta
-        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+        // Extrair JSON da resposta de forma mais robusta
+        let jsonText = generatedText.trim();
+        
+        // Remover possíveis marcações de código
+        jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
+        // Tentar encontrar o JSON na resposta
+        const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          const novaQuestao = JSON.parse(jsonMatch[0]);
+          jsonText = jsonMatch[0];
+        }
+
+        console.log('🔍 JSON extraído:', jsonText);
+
+        try {
+          const novaQuestao = JSON.parse(jsonText);
+          console.log('✅ Questão gerada com sucesso:', novaQuestao);
+          
+          // Validar estrutura da questão
+          if (!novaQuestao.id || !novaQuestao.type || !novaQuestao.enunciado) {
+            throw new Error('Estrutura de questão inválida');
+          }
           
           // Adicionar a nova questão à lista
-          setQuestoesProcessadas(prev => [...prev, novaQuestao]);
+          setQuestoesProcessadas(prev => {
+            const novaLista = [...prev, novaQuestao];
+            console.log('📋 Lista atualizada de questões:', novaLista);
+            return novaLista;
+          });
           
           // Fechar modal e limpar dados
           setShowAddQuestionModal(false);
           setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
+          
+          console.log('🎉 Questão adicionada com sucesso à grade!');
+          
+        } catch (parseError) {
+          console.error('❌ Erro ao fazer parse do JSON:', parseError);
+          console.error('📄 JSON problemático:', jsonText);
+          
+          // Fallback: criar questão manualmente
+          const fallbackQuestion: Question = {
+            id: `questao-${Date.now()}`,
+            type: questionType as Question['type'],
+            enunciado: `Questão sobre: ${newQuestionData.descricao}`,
+            alternativas: questionType === 'multipla-escolha' 
+              ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
+              : questionType === 'verdadeiro-falso' 
+                ? ['Verdadeiro', 'Falso'] 
+                : undefined,
+            respostaCorreta: 0,
+            explicacao: 'Questão gerada automaticamente',
+            dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
+            tema: data?.tema || 'Tema geral'
+          };
+          
+          setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
+          setShowAddQuestionModal(false);
+          setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
+          
+          console.log('🔄 Questão fallback criada:', fallbackQuestion);
         }
+      } else {
+        throw new Error('Resposta inválida do Gemini');
       }
     } catch (error) {
-      console.error('Erro ao gerar questão:', error);
+      console.error('❌ Erro ao gerar questão:', error);
+      
+      // Em caso de erro, criar uma questão de fallback
+      const fallbackQuestion: Question = {
+        id: `questao-${Date.now()}`,
+        type: (newQuestionData.modelo === 'Múltipla escolha' ? 'multipla-escolha' : 
+               newQuestionData.modelo === 'Verdadeiro ou Falso' ? 'verdadeiro-falso' : 'discursiva') as Question['type'],
+        enunciado: `Questão sobre: ${newQuestionData.descricao}`,
+        alternativas: newQuestionData.modelo === 'Múltipla escolha' 
+          ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
+          : newQuestionData.modelo === 'Verdadeiro ou Falso' 
+            ? ['Verdadeiro', 'Falso'] 
+            : undefined,
+        respostaCorreta: 0,
+        explicacao: 'Questão gerada localmente devido a erro na API',
+        dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
+        tema: data?.tema || 'Tema geral'
+      };
+      
+      setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
+      setShowAddQuestionModal(false);
+      setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
+      
+      console.log('🔄 Questão fallback criada devido a erro:', fallbackQuestion);
     } finally {
       setIsGeneratingQuestion(false);
     }
@@ -927,128 +1045,267 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </motion.div>
       )}
 
-      {/* Modal de Adicionar Questão */}
+      {/* Modal de Adicionar Questão - Design Sofisticado */}
       <Dialog open={showAddQuestionModal} onOpenChange={setShowAddQuestionModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                Adicionar Nova Questão
-              </DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-orange-950/20 border-orange-200/50 dark:border-orange-800/50 shadow-2xl">
+          {/* Header Premium */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 px-8 py-6">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="absolute top-0 left-0 w-full h-full">
+              <div className="absolute top-4 left-8 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+              <div className="absolute bottom-4 right-8 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+            </div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Wand2 className="w-5 h-5 text-white" />
+                  </div>
+                  Criar Nova Questão
+                </DialogTitle>
+                <p className="text-orange-100 text-sm">
+                  Utilize a inteligência artificial do School Power para gerar questões personalizadas
+                </p>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAddQuestionModal(false)}
-                className="h-8 w-8 p-0"
+                className="h-10 w-10 p-0 hover:bg-white/20 text-white/80 hover:text-white rounded-full transition-all"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
-          </DialogHeader>
+          </div>
 
-          <div className="space-y-6">
-            {/* Tabs de navegação */}
-            <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+          <div className="p-8 overflow-y-auto max-h-[calc(95vh-120px)]">
+            {/* Tabs de navegação premium */}
+            <div className="flex space-x-2 bg-gradient-to-r from-gray-50 to-orange-50/50 dark:from-gray-800 dark:to-orange-950/30 p-2 rounded-2xl mb-8 shadow-inner">
               <button
                 onClick={() => setAddQuestionTab('school-power')}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   addQuestionTab === 'school-power'
-                    ? 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-400 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25 transform scale-[1.02]'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-white/50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                <Wand2 className="w-4 h-4" />
-                Criar com School Power
+                <Wand2 className="w-5 h-5" />
+                <div className="text-left">
+                  <div>School Power IA</div>
+                  <div className="text-xs opacity-80">Geração inteligente</div>
+                </div>
               </button>
               <button
                 onClick={() => setAddQuestionTab('video')}
                 disabled
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-sm font-semibold text-gray-400 dark:text-gray-500 cursor-not-allowed relative"
               >
-                <Video className="w-4 h-4" />
-                Criar a partir de vídeo
+                <Video className="w-5 h-5" />
+                <div className="text-left">
+                  <div>A partir de Vídeo</div>
+                  <div className="text-xs opacity-80">Em breve</div>
+                </div>
+                <div className="absolute top-2 right-2 px-2 py-1 bg-gray-200 dark:bg-gray-700 text-xs rounded-full">
+                  Soon
+                </div>
               </button>
               <button
                 onClick={() => setAddQuestionTab('material')}
                 disabled
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl text-sm font-semibold text-gray-400 dark:text-gray-500 cursor-not-allowed relative"
               >
-                <Material className="w-4 h-4" />
-                Criar a partir de material
+                <Material className="w-5 h-5" />
+                <div className="text-left">
+                  <div>A partir de Material</div>
+                  <div className="text-xs opacity-80">Em breve</div>
+                </div>
+                <div className="absolute top-2 right-2 px-2 py-1 bg-gray-200 dark:bg-gray-700 text-xs rounded-full">
+                  Soon
+                </div>
               </button>
             </div>
 
             {/* Conteúdo da tab ativa */}
             {addQuestionTab === 'school-power' && (
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="descricao" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Descrição
-                  </Label>
+              <div className="space-y-8">
+                {/* Card de descrição */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-orange-100 dark:border-orange-900/30">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
+                      <Edit3 className="w-4 h-4 text-white" />
+                    </div>
+                    <Label htmlFor="descricao" className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                      Descrição da Questão
+                    </Label>
+                  </div>
                   <Textarea
                     id="descricao"
-                    placeholder="Descreva o tema ou conteúdo da questão que você deseja criar..."
+                    placeholder="Descreva detalhadamente o tema, conceitos ou conteúdo específico que você deseja abordar na questão. Seja específico para obter melhores resultados..."
                     value={newQuestionData.descricao}
                     onChange={(e) => setNewQuestionData(prev => ({ ...prev, descricao: e.target.value }))}
-                    className="mt-1 min-h-[100px]"
+                    className="min-h-[120px] text-base resize-none border-orange-200 dark:border-orange-800 focus:border-orange-400 dark:focus:border-orange-600 focus:ring-orange-400/20"
                   />
+                  <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
+                    <span>Seja específico para obter melhores resultados</span>
+                    <span>{newQuestionData.descricao.length}/500</span>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="modelo" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Modelo de Questões
-                  </Label>
-                  <Select value={newQuestionData.modelo} onValueChange={(value) => setNewQuestionData(prev => ({ ...prev, modelo: value }))}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecione o tipo de questão" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Múltipla escolha">Múltipla escolha</SelectItem>
-                      <SelectItem value="Verdadeiro ou Falso">Verdadeiro ou Falso</SelectItem>
-                      <SelectItem value="Discursiva">Discursiva</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Cards de configuração */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Modelo de Questão */}
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-orange-100 dark:border-orange-900/30">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center">
+                        <List className="w-4 h-4 text-white" />
+                      </div>
+                      <Label htmlFor="modelo" className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                        Tipo de Questão
+                      </Label>
+                    </div>
+                    <Select value={newQuestionData.modelo} onValueChange={(value) => setNewQuestionData(prev => ({ ...prev, modelo: value }))}>
+                      <SelectTrigger className="h-12 text-base border-orange-200 dark:border-orange-800 focus:border-orange-400 dark:focus:border-orange-600">
+                        <SelectValue placeholder="Selecione o formato da questão" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-orange-200 dark:border-orange-800">
+                        <SelectItem value="Múltipla escolha" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <Circle className="w-4 h-4 text-blue-500" />
+                            <div>
+                              <div className="font-medium">Múltipla Escolha</div>
+                              <div className="text-xs text-gray-500">4 alternativas com uma correta</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Verdadeiro ou Falso" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                            <div>
+                              <div className="font-medium">Verdadeiro ou Falso</div>
+                              <div className="text-xs text-gray-500">Questão de confirmação binária</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Discursiva" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <Edit3 className="w-4 h-4 text-purple-500" />
+                            <div>
+                              <div className="font-medium">Discursiva</div>
+                              <div className="text-xs text-gray-500">Resposta elaborada pelo aluno</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Nível de Dificuldade */}
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-orange-100 dark:border-orange-900/30">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center">
+                        <Target className="w-4 h-4 text-white" />
+                      </div>
+                      <Label htmlFor="dificuldade" className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                        Nível de Dificuldade
+                      </Label>
+                    </div>
+                    <Select value={newQuestionData.dificuldade} onValueChange={(value) => setNewQuestionData(prev => ({ ...prev, dificuldade: value }))}>
+                      <SelectTrigger className="h-12 text-base border-orange-200 dark:border-orange-800 focus:border-orange-400 dark:focus:border-orange-600">
+                        <SelectValue placeholder="Defina o nível de complexidade" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-orange-200 dark:border-orange-800">
+                        <SelectItem value="Fácil" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            <div>
+                              <div className="font-medium">Fácil</div>
+                              <div className="text-xs text-gray-500">Conceitos básicos e fundamentais</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Médio" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div>
+                              <div className="font-medium">Médio</div>
+                              <div className="text-xs text-gray-500">Aplicação e análise</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Difícil" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div>
+                              <div className="font-medium">Difícil</div>
+                              <div className="text-xs text-gray-500">Síntese e avaliação crítica</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Extremo" className="h-12 cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-red-800"></div>
+                            <div>
+                              <div className="font-medium">Extremo</div>
+                              <div className="text-xs text-gray-500">Máxima complexidade</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="dificuldade" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Dificuldade
-                  </Label>
-                  <Select value={newQuestionData.dificuldade} onValueChange={(value) => setNewQuestionData(prev => ({ ...prev, dificuldade: value }))}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Selecione o nível de dificuldade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Fácil">Fácil</SelectItem>
-                      <SelectItem value="Médio">Médio</SelectItem>
-                      <SelectItem value="Difícil">Difícil</SelectItem>
-                      <SelectItem value="Extremo">Extremo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Preview em tempo real */}
+                {newQuestionData.descricao && newQuestionData.modelo && newQuestionData.dificuldade && (
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-950/20 dark:to-orange-900/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
+                    <h4 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-3 flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      Preview da Configuração
+                    </h4>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3">
+                        <div className="text-gray-500 dark:text-gray-400">Tipo</div>
+                        <div className="font-medium text-gray-800 dark:text-gray-200">{newQuestionData.modelo}</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3">
+                        <div className="text-gray-500 dark:text-gray-400">Dificuldade</div>
+                        <div className="font-medium text-gray-800 dark:text-gray-200">{newQuestionData.dificuldade}</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800/50 rounded-lg p-3">
+                        <div className="text-gray-500 dark:text-gray-400">Caracteres</div>
+                        <div className="font-medium text-gray-800 dark:text-gray-200">{newQuestionData.descricao.length}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                <div className="flex justify-end gap-3 pt-4">
+                {/* Botões de ação */}
+                <div className="flex justify-end gap-4 pt-6 border-t border-orange-100 dark:border-orange-900/30">
                   <Button
                     variant="outline"
-                    onClick={() => setShowAddQuestionModal(false)}
+                    onClick={() => {
+                      setShowAddQuestionModal(false);
+                      setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
+                    }}
                     disabled={isGeneratingQuestion}
+                    className="px-8 py-3 h-auto text-base border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/20"
                   >
                     Cancelar
                   </Button>
                   <Button
                     onClick={generateQuestionWithAI}
                     disabled={!newQuestionData.descricao || !newQuestionData.modelo || !newQuestionData.dificuldade || isGeneratingQuestion}
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    className="px-8 py-3 h-auto text-base bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isGeneratingQuestion ? (
                       <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Criando...
+                        <RefreshCw className="w-5 h-5 mr-3 animate-spin" />
+                        Gerando Questão...
                       </>
                     ) : (
                       <>
-                        <Wand2 className="w-4 h-4 mr-2" />
-                        Criar Questão
+                        <Wand2 className="w-5 h-5 mr-3" />
+                        Criar Questão com IA
                       </>
                     )}
                   </Button>
@@ -1057,16 +1314,30 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             )}
 
             {addQuestionTab === 'video' && (
-              <div className="text-center py-8">
-                <Video className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Esta funcionalidade estará disponível em breve</p>
+              <div className="text-center py-16">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 flex items-center justify-center">
+                  <Video className="w-12 h-12 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                  Criação a partir de Vídeo
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                  Esta funcionalidade permitirá gerar questões automaticamente a partir do conteúdo de vídeos educacionais. Em desenvolvimento.
+                </p>
               </div>
             )}
 
             {addQuestionTab === 'material' && (
-              <div className="text-center py-8">
-                <Material className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Esta funcionalidade estará disponível em breve</p>
+              <div className="text-center py-16">
+                <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/20 dark:to-green-800/20 flex items-center justify-center">
+                  <Material className="w-12 h-12 text-green-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                  Criação a partir de Material
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+                  Esta funcionalidade permitirá gerar questões automaticamente a partir de PDFs, documentos e outros materiais de estudo. Em desenvolvimento.
+                </p>
               </div>
             )}
           </div>
