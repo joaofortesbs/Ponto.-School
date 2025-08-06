@@ -235,21 +235,23 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         alternativasLength: questoesDaIA[0].alternativas ? questoesDaIA[0].alternativas.length : 0
       });
 
-      // Processar e validar as questões da IA
+      // Processar e validar as questões da IA com validação robusta
       const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
+        console.log(`🔍 Processando questão ${index + 1}:`, questao);
+        
         const questaoProcessada: Question = {
           id: questao.id || `questao-${index + 1}`,
           type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
-          enunciado: questao.enunciado || questao.enunciado || questao.statement || questao.question || `Questão ${index + 1}`,
+          enunciado: questao.enunciado || questao.statement || questao.question || `Questão ${index + 1}`,
           alternativas: questao.alternativas || questao.alternatives || questao.options,
-          respostaCorreta: questao.respostaCorreta || questao.correctAnswer || questao.correct_answer || 0,
-          explicacao: questao.explicacao || questao.explanation,
-          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any, // Permitindo string temporariamente
+          respostaCorreta: questao.respostaCorreta !== undefined ? questao.respostaCorreta : (questao.correctAnswer !== undefined ? questao.correctAnswer : (questao.correct_answer !== undefined ? questao.correct_answer : 0)),
+          explicacao: questao.explicacao || questao.explanation || 'Explicação não fornecida',
+          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any,
           tema: questao.tema || questao.topic || data.tema || 'Tema não especificado',
           pontos: questao.pontos,
           tempo_estimado: questao.tempo_estimado,
           tipo: questao.tipo,
-          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer // Inclui gabarito
+          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer
         };
 
         // Normalizar e validar tipos de questão - apenas 3 tipos permitidos
@@ -257,40 +259,64 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         
         if (tipoOriginal.includes('multipla') || tipoOriginal.includes('escolha') || tipoOriginal.includes('multiple') || tipoOriginal.includes('choice')) {
           questaoProcessada.type = 'multipla-escolha';
-          // Garantir que há alternativas suficientes
-          if (!questaoProcessada.alternativas || questaoProcessada.alternativas.length < 2) {
+          // Garantir que há alternativas suficientes e válidas
+          if (!questaoProcessada.alternativas || !Array.isArray(questaoProcessada.alternativas) || questaoProcessada.alternativas.length < 2) {
             console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
             questaoProcessada.alternativas = [
-              'Opção A',
-              'Opção B', 
-              'Opção C',
-              'Opção D'
+              'Primeira alternativa',
+              'Segunda alternativa', 
+              'Terceira alternativa',
+              'Quarta alternativa'
             ];
+          } else {
+            // Validar cada alternativa individualmente
+            questaoProcessada.alternativas = questaoProcessada.alternativas.map((alt, altIndex) => {
+              if (typeof alt === 'string') return alt;
+              if (alt && typeof alt === 'object' && alt.texto) return alt.texto;
+              if (alt && typeof alt === 'object' && alt.text) return alt.text;
+              return `Alternativa ${String.fromCharCode(65 + altIndex)}`;
+            });
           }
         } else if (tipoOriginal.includes('verdadeiro') || tipoOriginal.includes('falso') || tipoOriginal.includes('true') || tipoOriginal.includes('false')) {
           questaoProcessada.type = 'verdadeiro-falso';
           questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
+          // Para V/F, garantir que resposta correta é 0 ou 1
+          if (questaoProcessada.respostaCorreta !== 0 && questaoProcessada.respostaCorreta !== 1) {
+            questaoProcessada.respostaCorreta = 0;
+          }
         } else if (tipoOriginal.includes('discursiva') || tipoOriginal.includes('essay') || tipoOriginal.includes('dissertativa')) {
           questaoProcessada.type = 'discursiva';
           questaoProcessada.alternativas = undefined;
+          questaoProcessada.respostaCorreta = undefined;
         } else {
           // Se o tipo não for reconhecido, defaultar para múltipla escolha
           console.warn(`⚠️ Tipo de questão não reconhecido: ${questaoProcessada.type}. Convertendo para múltipla escolha.`);
           questaoProcessada.type = 'multipla-escolha';
           questaoProcessada.alternativas = [
-            'Opção A',
-            'Opção B',
-            'Opção C', 
-            'Opção D'
+            'Primeira alternativa',
+            'Segunda alternativa',
+            'Terceira alternativa', 
+            'Quarta alternativa'
           ];
         }
 
-        console.log(`📄 Questão ${index + 1} processada:`, {
+        // Validação final da estrutura
+        if (!questaoProcessada.enunciado || questaoProcessada.enunciado.trim() === '') {
+          questaoProcessada.enunciado = `Questão ${index + 1} sobre ${questaoProcessada.tema}`;
+        }
+
+        if (!questaoProcessada.explicacao || questaoProcessada.explicacao.trim() === '') {
+          questaoProcessada.explicacao = `Explicação para a questão ${index + 1}`;
+        }
+
+        console.log(`📄 Questão ${index + 1} processada e validada:`, {
           id: questaoProcessada.id,
           type: questaoProcessada.type,
           enunciadoLength: questaoProcessada.enunciado?.length,
           hasAlternativas: !!questaoProcessada.alternativas,
-          alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0
+          alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0,
+          respostaCorreta: questaoProcessada.respostaCorreta,
+          hasExplicacao: !!questaoProcessada.explicacao
         });
 
         return questaoProcessada;
@@ -333,21 +359,26 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         tipoQuestao = 'multipla-escolha';
       }
 
-      questoes.push({
+      const questao: Question = {
         id: `questao-${i}`,
         type: tipoQuestao,
-        enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina || 'conteúdo geral'}`,
+        enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina || 'conteúdo geral'}: Esta é uma questão simulada para demonstração do formato ${tipoQuestao.replace('-', ' ')}.`,
         alternativas: tipoQuestao === 'multipla-escolha' ? [
-          'Alternativa A',
-          'Alternativa B',
-          'Alternativa C',
-          'Alternativa D'
+          `Primeira alternativa sobre ${activityData.tema || 'o tema'}`,
+          `Segunda alternativa sobre ${activityData.tema || 'o tema'}`,
+          `Terceira alternativa sobre ${activityData.tema || 'o tema'}`,
+          `Quarta alternativa sobre ${activityData.tema || 'o tema'}`
         ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
+        respostaCorreta: tipoQuestao === 'discursiva' ? undefined : 0,
+        explicacao: `Esta é a explicação para a questão ${i} do tipo ${tipoQuestao.replace('-', ' ')}. Em uma situação real, aqui estaria a justificativa detalhada da resposta.`,
         dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as any,
         tema: activityData.tema || 'Tema não especificado'
-      });
+      };
+
+      questoes.push(questao);
     }
 
+    console.log(`✅ ${questoes.length} questões simuladas geradas:`, questoes);
     return questoes;
   };
 
@@ -384,48 +415,58 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         questionType = 'multipla-escolha';
       }
 
+      const disciplina = consolidatedData?.disciplina || data?.subject || 'Matemática';
+      const tema = consolidatedData?.tema || data?.theme || 'Conteúdo Geral';
+
       const prompt = `
-        Você é um especialista em educação. Crie uma questão educacional seguindo EXATAMENTE a estrutura JSON abaixo.
+        Você é um especialista em educação brasileira. Crie uma questão educacional REAL e ESPECÍFICA seguindo EXATAMENTE a estrutura JSON abaixo.
         
         ESPECIFICAÇÕES:
         - Descrição/Tema: ${newQuestionData.descricao}
         - Tipo: ${newQuestionData.modelo}
         - Dificuldade: ${newQuestionData.dificuldade}
-        - Disciplina: ${data?.disciplina || 'Matemática'}
-        - Tema: ${data?.tema || 'Conteúdo Geral'}
+        - Disciplina: ${disciplina}
+        - Tema: ${tema}
+        
+        INSTRUÇÕES CRÍTICAS:
+        1. Crie uma questão REAL sobre o tema específico mencionado
+        2. O enunciado deve ser claro, objetivo e educacionalmente válido
+        3. Para múltipla escolha: crie 4 alternativas plausíveis com apenas 1 correta
+        4. Para verdadeiro/falso: crie uma afirmação clara que possa ser julgada
+        5. Para discursiva: formule uma pergunta que exija desenvolvimento
         
         RETORNE APENAS O JSON VÁLIDO ABAIXO (sem texto adicional):
         
         ${questionType === 'multipla-escolha' ? `{
           "id": "questao-${Date.now()}",
           "type": "multipla-escolha",
-          "enunciado": "Crie aqui um enunciado claro e objetivo sobre o tema",
+          "enunciado": "Crie aqui um enunciado específico sobre ${newQuestionData.descricao} relacionado a ${tema} em ${disciplina}",
           "alternativas": [
-            "Primeira alternativa",
-            "Segunda alternativa", 
-            "Terceira alternativa",
-            "Quarta alternativa"
+            "Primeira alternativa específica e plausível",
+            "Segunda alternativa específica e plausível", 
+            "Terceira alternativa específica e plausível",
+            "Quarta alternativa específica e plausível"
           ],
           "respostaCorreta": 0,
-          "explicacao": "Explicação detalhada da resposta correta",
+          "explicacao": "Explicação detalhada sobre por que a primeira alternativa está correta e as outras estão incorretas",
           "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "${data?.tema || 'Tema da questão'}"
+          "tema": "${tema}"
         }` : questionType === 'verdadeiro-falso' ? `{
           "id": "questao-${Date.now()}",
           "type": "verdadeiro-falso",
-          "enunciado": "Crie aqui uma afirmação para ser julgada como verdadeira ou falsa",
+          "enunciado": "Crie aqui uma afirmação específica sobre ${newQuestionData.descricao} relacionada a ${tema} em ${disciplina} para ser julgada como verdadeira ou falsa",
           "alternativas": ["Verdadeiro", "Falso"],
           "respostaCorreta": 0,
-          "explicacao": "Explicação detalhada da resposta",
+          "explicacao": "Explicação detalhada sobre por que a afirmação é verdadeira ou falsa",
           "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "${data?.tema || 'Tema da questão'}"
+          "tema": "${tema}"
         }` : `{
           "id": "questao-${Date.now()}",
           "type": "discursiva",
-          "enunciado": "Crie aqui uma pergunta que exija resposta elaborada",
-          "explicacao": "Critérios de avaliação e pontos importantes da resposta",
+          "enunciado": "Crie aqui uma pergunta dissertativa específica sobre ${newQuestionData.descricao} relacionada a ${tema} em ${disciplina} que exija resposta elaborada",
+          "explicacao": "Critérios de avaliação e pontos importantes que devem estar presentes na resposta",
           "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "${data?.tema || 'Tema da questão'}"
+          "tema": "${tema}"
         }`}
       `;
 
@@ -471,17 +512,37 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         console.log('🔍 JSON extraído:', jsonText);
 
         try {
-          const novaQuestao = JSON.parse(jsonText);
-          console.log('✅ Questão gerada com sucesso:', novaQuestao);
+          const novaQuestaoRaw = JSON.parse(jsonText);
+          console.log('✅ Questão bruta gerada:', novaQuestaoRaw);
           
-          // Validar estrutura da questão
-          if (!novaQuestao.id || !novaQuestao.type || !novaQuestao.enunciado) {
-            throw new Error('Estrutura de questão inválida');
+          // Processar e validar a questão gerada de acordo com nossa estrutura
+          const novaQuestaoProcessada: Question = {
+            id: novaQuestaoRaw.id || `questao-${Date.now()}`,
+            type: questionType,
+            enunciado: novaQuestaoRaw.enunciado || `Questão sobre: ${newQuestionData.descricao}`,
+            alternativas: novaQuestaoRaw.alternativas || (
+              questionType === 'multipla-escolha' 
+                ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
+                : questionType === 'verdadeiro-falso' 
+                  ? ['Verdadeiro', 'Falso'] 
+                  : undefined
+            ),
+            respostaCorreta: novaQuestaoRaw.respostaCorreta !== undefined ? novaQuestaoRaw.respostaCorreta : 0,
+            explicacao: novaQuestaoRaw.explicacao || 'Questão gerada automaticamente',
+            dificuldade: (novaQuestaoRaw.dificuldade || newQuestionData.dificuldade.toLowerCase()) as any,
+            tema: novaQuestaoRaw.tema || tema
+          };
+          
+          // Validar estrutura final da questão
+          if (!novaQuestaoProcessada.id || !novaQuestaoProcessada.type || !novaQuestaoProcessada.enunciado) {
+            throw new Error('Estrutura de questão inválida após processamento');
           }
+          
+          console.log('🎯 Questão processada e validada:', novaQuestaoProcessada);
           
           // Adicionar a nova questão à lista
           setQuestoesProcessadas(prev => {
-            const novaLista = [...prev, novaQuestao];
+            const novaLista = [...prev, novaQuestaoProcessada];
             console.log('📋 Lista atualizada de questões:', novaLista);
             return novaLista;
           });
@@ -496,20 +557,20 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           console.error('❌ Erro ao fazer parse do JSON:', parseError);
           console.error('📄 JSON problemático:', jsonText);
           
-          // Fallback: criar questão manualmente
+          // Fallback: criar questão manualmente estruturada
           const fallbackQuestion: Question = {
             id: `questao-${Date.now()}`,
-            type: questionType as Question['type'],
-            enunciado: `Questão sobre: ${newQuestionData.descricao}`,
+            type: questionType,
+            enunciado: `Questão sobre ${newQuestionData.descricao} (relacionada a ${tema})`,
             alternativas: questionType === 'multipla-escolha' 
               ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
               : questionType === 'verdadeiro-falso' 
                 ? ['Verdadeiro', 'Falso'] 
                 : undefined,
             respostaCorreta: 0,
-            explicacao: 'Questão gerada automaticamente',
+            explicacao: 'Esta questão foi gerada automaticamente como fallback devido a erro na API',
             dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
-            tema: data?.tema || 'Tema geral'
+            tema: tema
           };
           
           setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
@@ -524,7 +585,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     } catch (error) {
       console.error('❌ Erro ao gerar questão:', error);
       
-      // Em caso de erro, criar uma questão de fallback - apenas 3 tipos válidos
+      // Em caso de erro, criar uma questão de fallback estruturada
       const modeloLower = newQuestionData.modelo.toLowerCase();
       let tipoFallback: Question['type'] = 'multipla-escolha';
       let alternativasFallback: string[] | undefined = ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];
@@ -540,12 +601,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       const fallbackQuestion: Question = {
         id: `questao-${Date.now()}`,
         type: tipoFallback,
-        enunciado: `Questão sobre: ${newQuestionData.descricao}`,
+        enunciado: `Questão sobre: ${newQuestionData.descricao} (${consolidatedData?.tema || 'Tema geral'})`,
         alternativas: alternativasFallback,
         respostaCorreta: 0,
-        explicacao: 'Questão gerada localmente devido a erro na API',
+        explicacao: 'Esta questão foi gerada localmente devido a erro na API. Recomenda-se revisar o conteúdo.',
         dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
-        tema: data?.tema || 'Tema geral'
+        tema: consolidatedData?.tema || 'Tema geral'
       };
       
       setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
@@ -754,9 +815,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           'Opção D'
         ];
       }
+    } else if (questao.type === 'verdadeiro-falso') {
+      alternativasProcessadas = ['Verdadeiro', 'Falso'];
     }
 
-    console.log(`🔍 Questão ${index + 1} - Alternativas processadas:`, alternativasProcessadas);
+    console.log(`🔍 Questão ${index + 1} - Tipo: ${questao.type}, Alternativas processadas:`, alternativasProcessadas);
 
     return (
       <Card
