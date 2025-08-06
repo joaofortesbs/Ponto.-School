@@ -780,25 +780,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             </div>
           </div>
 
-              {/* Resumo de progresso no menu lateral */}
-          <div className="p-4 border-t border-gray-200 bg-white">
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Respondidas:</span>
-                <span className="font-semibold">{Object.keys(respostas).length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Pendentes:</span>
-                <span className="font-semibold">{questoesProcessadas.length - Object.keys(respostas).length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Progresso:</span>
-                <span className="font-semibold">
-                  {Math.round((Object.keys(respostas).length / questoesProcessadas.length) * 100)}%
-                </span>
-              </div>
-            </div>
-          </div>
+              
 
           {/* Área principal com a questão selecionada */}
           <div className="flex-1 h-full overflow-y-auto">
