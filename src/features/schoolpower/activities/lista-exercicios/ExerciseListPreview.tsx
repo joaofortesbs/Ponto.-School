@@ -133,6 +133,7 @@ interface Question {
   isCorrect?: boolean;
   response?: string;
   correct_answer?: string;
+  gabarito?: string | number; // Adicionado para o gabarito
 }
 
 interface ExerciseListData {
@@ -238,6 +239,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           pontos: questao.pontos,
           tempo_estimado: questao.tempo_estimado,
           tipo: questao.tipo,
+          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer // Inclui gabarito
         };
 
         // Ajuste de tipo para padronizar
@@ -623,7 +625,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           {questao.explicacao && (
             <div className="mt-4">
               <div
-                className="p-3 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-400 dark:border-l-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                className="p-3 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-400 dark:border-l-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors rounded-lg"
                 onClick={() => toggleExplicacaoExpandida(questao.id)}
               >
                 <div className="flex items-center justify-between">
@@ -633,8 +635,45 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   </div>
                 </div>
                 {explicacoesExpandidas[questao.id] && (
-                  <div className="text-sm text-blue-700 dark:text-blue-200 mt-2 pt-2 border-t border-blue-200 dark:border-blue-700">
-                    {questao.explicacao}
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Explicação
+                      </h4>
+                    </div>
+                    <div className="text-blue-800 dark:text-blue-200 whitespace-pre-wrap mb-4">
+                      {questao.explicacao}
+                    </div>
+
+                    {/* Gabarito da Questão */}
+                    {questao.gabarito && (
+                      <div className="pt-4 border-t border-blue-200 dark:border-blue-700">
+                        <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Gabarito
+                        </h5>
+                        <div className="text-blue-800 dark:text-blue-200 font-medium">
+                          {questao.tipo === 'multipla-escolha' ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                              Alternativa {questao.gabarito}
+                            </span>
+                          ) : questao.tipo === 'verdadeiro-falso' ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                              {questao.gabarito === 'V' || questao.gabarito === 'Verdadeiro' ? 'Verdadeiro' : 'Falso'}
+                            </span>
+                          ) : (
+                            <div className="text-sm whitespace-pre-wrap">
+                              {questao.gabarito}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
