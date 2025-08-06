@@ -208,14 +208,89 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [exerciseData, setExerciseData] = useState<ExerciseListData | null>(null); // Estado para os dados processados
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<{ index: number; id: string } | null>(null);
-  const [showProgressModal, setShowProgressModal] = useState(false); // Assume que esta prop está definida em algum lugar ou é gerada
-  const [buildProgress, setBuildProgress] = useState<any>(null); // Assume que esta prop está definida em algum lugar ou é gerada
-  // Assume que 'toast' é uma função de notificação disponível no escopo
-  // const toast = useToast(); // Exemplo de como poderia ser obtido
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [buildProgress, setBuildProgress] = useState<any>(null);
 
-  // Função placeholder para 'toast' caso não esteja definida
-  const toast = (options: { title: string; description: string; variant: "destructive" | "default" | "secondary" | "outline" | null | undefined }) => {
-    console.log(`Toast: ${options.title} - ${options.description} (${options.variant})`);
+  // Função de toast funcional
+  const toast = (options: { title: string; description: string; variant?: "destructive" | "default" | "secondary" | "outline" }) => {
+    console.log(`Toast: ${options.title} - ${options.description} (${options.variant || 'default'})`);
+    // Aqui você pode implementar uma notificação visual real se necessário
+  };
+
+  // Função para iniciar o processo de exclusão
+  const handleDeleteQuestion = (index: number, id: string) => {
+    console.log(`🗑️ Iniciando exclusão da questão ${index + 1} (ID: ${id})`);
+    setQuestionToDelete({ index, id });
+    setShowDeleteModal(true);
+  };
+
+  // Função para cancelar a exclusão
+  const cancelDeleteQuestion = () => {
+    console.log('❌ Exclusão cancelada pelo usuário');
+    setQuestionToDelete(null);
+    setShowDeleteModal(false);
+  };
+
+  // Função para confirmar e executar a exclusão
+  const confirmDeleteQuestion = () => {
+    if (!questionToDelete) return;
+
+    console.log(`🗑️ Confirmando exclusão da questão ${questionToDelete.index + 1} (ID: ${questionToDelete.id})`);
+    
+    // Remove a questão da lista
+    const updatedQuestions = questoesProcessadas.filter((_, index) => index !== questionToDelete.index);
+    setQuestoesProcessadas(updatedQuestions);
+
+    // Remove respostas relacionadas à questão excluída
+    setRespostas(prev => {
+      const newRespostas = { ...prev };
+      delete newRespostas[questionToDelete.id];
+      return newRespostas;
+    });
+
+    // Remove estados de expansão
+    setQuestoesExpandidas(prev => {
+      const newExpanded = { ...prev };
+      delete newExpanded[questionToDelete.id];
+      return newExpanded;
+    });
+
+    setExplicacoesExpandidas(prev => {
+      const newExpanded = { ...prev };
+      delete newExpanded[questionToDelete.id];
+      return newExpanded;
+    });
+
+    // Atualiza os dados do exercício se necessário
+    if (exerciseData) {
+      const updatedExerciseData = {
+        ...exerciseData,
+        questoes: updatedQuestions,
+        numeroQuestoes: updatedQuestions.length
+      };
+      setExerciseData(updatedExerciseData);
+    }
+
+    // Fecha o modal e limpa o estado
+    setShowDeleteModal(false);
+    setQuestionToDelete(null);
+
+    // Se estamos na visualização detalhada e a questão selecionada foi excluída
+    if (selectedQuestionIndex === questionToDelete.index) {
+      setSelectedQuestionIndex(null);
+    } else if (selectedQuestionIndex !== null && selectedQuestionIndex > questionToDelete.index) {
+      // Ajusta o índice se uma questão anterior foi excluída
+      setSelectedQuestionIndex(selectedQuestionIndex - 1);
+    }
+
+    // Mostra notificação de sucesso
+    toast({
+      title: "Questão excluída",
+      description: `A Questão ${questionToDelete.index + 1} foi removida com sucesso.`,
+      variant: "default"
+    });
+
+    console.log(`✅ Questão ${questionToDelete.index + 1} excluída com sucesso. Total de questões restantes: ${updatedQuestions.length}`);
   };
 
   // Função placeholder para 'generateActivity' caso não esteja definida
@@ -931,14 +1006,21 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             </div>
 
             {/* Botão de Excluir Questão */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-400/10 dark:hover:text-red-300 rounded-full w-10 h-10"
-              onClick={() => handleDeleteQuestion(index, questao.id)}
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
+            <div className="flex-shrink-0 ml-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300 rounded-full w-10 h-10 border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log(`🗑️ Botão de exclusão clicado para questão ${index + 1} (ID: ${questao.id})`);
+                  handleDeleteQuestion(index, questao.id);
+                }}
+                title={`Excluir Questão ${index + 1}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </CardHeader>
 
@@ -1514,53 +1596,59 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       </Dialog>
 
       {/* Modal de Confirmação de Exclusão */}
-      {showDeleteModal && questionToDelete && (
-        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-          <DialogContent className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                  <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                </div>
-                Excluir Questão
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="py-4">
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                Tem certeza que deseja excluir a <strong>Questão {questionToDelete.index + 1}</strong>? 
-                Esta ação não pode ser desfeita.
-              </p>
-
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-amber-800 dark:text-amber-200 text-sm">
-                    A questão será removida permanentemente da lista de exercícios e esta alteração será salva.
-                  </p>
-                </div>
+      <Dialog open={showDeleteModal} onOpenChange={(open) => {
+        if (!open) {
+          cancelDeleteQuestion();
+        }
+      }}>
+        <DialogContent className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
-            </div>
+              Excluir Questão
+            </DialogTitle>
+          </DialogHeader>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                variant="outline"
-                onClick={cancelDeleteQuestion}
-                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Cancelar
-              </Button>
-              <Button
-                onClick={confirmDeleteQuestion}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Excluir Questão
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          <div className="py-4">
+            {questionToDelete && (
+              <>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  Tem certeza que deseja excluir a <strong>Questão {questionToDelete.index + 1}</strong>? 
+                  Esta ação não pode ser desfeita.
+                </p>
+
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-amber-800 dark:text-amber-200 text-sm">
+                      A questão será removida permanentemente da lista de exercícios e esta alteração será salva.
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button
+              variant="outline"
+              onClick={cancelDeleteQuestion}
+              className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={confirmDeleteQuestion}
+              className="bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir Questão
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Progresso da Construção Automática */}
       {showProgressModal && buildProgress && (
