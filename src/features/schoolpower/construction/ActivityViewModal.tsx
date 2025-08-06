@@ -203,11 +203,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             borderBottomRightRadius: '12px',
           }}
         >
-          {/* Bordas laranjas nos cantos */}
-          <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-orange-500 rounded-tl-lg pointer-events-none z-10" />
-          <div className="absolute top-0 right-0 w-16 h-16 border-r-4 border-t-4 border-orange-500 rounded-tr-lg pointer-events-none z-10" />
-          <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-orange-500 rounded-bl-lg pointer-events-none z-10" />
-          <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-orange-500 rounded-br-lg pointer-events-none z-10" />
+          
 
           {/* Header with Close button */}
           {isExerciseList && (
