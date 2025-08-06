@@ -203,14 +203,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             borderBottomRightRadius: '12px',
           }}
         >
-          
+
 
           {/* Header with Close button */}
           {isExerciseList && (
-            <div className="bg-blue-50 dark:bg-gray-800/50 border-b border-blue-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
+            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
                     {isInQuestionView && selectedQuestionIndex !== null ? (
                       <span className="text-white font-bold text-sm">
                         {selectedQuestionIndex + 1}
@@ -224,19 +224,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   <div className="flex-1">
                     {isInQuestionView && selectedQuestionIndex !== null ? (
                       <>
-                        <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
                           Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
                         </h2>
-                        <p className="text-blue-700 dark:text-blue-300 text-sm">
+                        <p className="text-orange-700 dark:text-orange-300 text-sm">
                           {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
                         </p>
                       </>
                     ) : (
                       <>
-                        <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
                           {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
                         </h2>
-                        <p className="text-blue-700 dark:text-blue-300 text-sm">
+                        <p className="text-orange-700 dark:text-orange-300 text-sm">
                           {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
                         </p>
                       </>
@@ -246,7 +246,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   {/* Tags and Info */}
                   <div className="flex flex-wrap gap-2">
                     {activity?.originalData?.disciplina && (
-                      <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
+                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
@@ -254,7 +254,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       </Badge>
                     )}
                     {activity?.originalData?.tema && (
-                      <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700">
+                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
                         </svg>
@@ -286,16 +286,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Non-Exercise List Header */}
           {!isExerciseList && (
-            <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 relative z-10">
+            <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-gray-800/50 relative z-10">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#FF6B00]/10 dark:bg-[#FF6B00]/20 rounded-lg">
-                  <Eye className="w-5 h-5 text-[#FF6B00]" />
+                <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg">
+                  <Eye className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-bold text-orange-900 dark:text-white">
                     Visualizar Atividade
                   </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                  <p className="text-sm text-orange-700 dark:text-gray-300">
                     {activity?.title || 'Atividade Gerada'}
                   </p>
                 </div>
@@ -341,7 +341,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         onClick={() => scrollToQuestion(question.id, index)}
                         className={`w-full text-left p-2 text-xs rounded transition-colors ${
                           selectedQuestionId === question.id
-                            ? 'bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 font-medium text-blue-800 dark:text-blue-200'
+                            ? 'bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 font-medium text-orange-800 dark:text-orange-200'
                             : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       >

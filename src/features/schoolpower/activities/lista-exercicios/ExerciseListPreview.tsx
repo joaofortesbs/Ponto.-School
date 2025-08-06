@@ -396,7 +396,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white border-2 border-white/20">
               {index + 1}
             </div>
-            
+
             {/* Tag de dificuldade */}
             <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
               {difficultyConfig.label}
@@ -432,7 +432,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     </span>
                   )}
                 </div>
-                
+
                 {/* Indicador visual de hover */}
                 <div className="w-2 h-2 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
@@ -565,7 +565,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
                         isSelected
-                          ? 'bg-blue-500 text-white border-blue-500'
+                          ? 'bg-orange-500 text-white border-orange-500'
                           : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                       }`}>
                         {letter}
@@ -782,7 +782,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                         isAnswered
                           ? 'bg-green-500 text-white'
                           : isSelected
-                            ? 'bg-blue-500 text-white'
+                            ? 'bg-orange-500 text-white'
                             : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'
                       }`}>
                         {isAnswered ? '✓' : index + 1}
