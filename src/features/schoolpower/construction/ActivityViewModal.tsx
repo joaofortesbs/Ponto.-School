@@ -194,7 +194,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border dark:border-gray-700"
+          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden border dark:border-gray-700"
           onClick={(e) => e.stopPropagation()}
           style={{
             borderTopLeftRadius: '12px',
@@ -315,7 +315,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
 
           {/* Content Layout */}
-          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>
+          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 120px)' : 'calc(100% - 80px)' }}>
             {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
             {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
               <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
@@ -362,7 +362,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] bg-white dark:bg-gray-900" ref={contentRef}>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)] bg-white dark:bg-gray-900" ref={contentRef}>
                 {renderActivityPreview()}
               </div>
             </div>
