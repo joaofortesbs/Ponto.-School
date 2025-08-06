@@ -9,7 +9,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, Video, BookOpen as Material } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Sistema de mapeamento de dificuldade
@@ -183,6 +185,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
+  const [addQuestionTab, setAddQuestionTab] = useState<'school-power' | 'video' | 'material'>('school-power');
+  const [newQuestionData, setNewQuestionData] = useState({
+    descricao: '',
+    modelo: '',
+    dificuldade: ''
+  });
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
@@ -330,6 +340,76 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }));
   };
 
+  const generateQuestionWithAI = async () => {
+    if (!newQuestionData.descricao || !newQuestionData.modelo || !newQuestionData.dificuldade) {
+      return;
+    }
+
+    setIsGeneratingQuestion(true);
+
+    try {
+      const apiKey = 'AIzaSyAYWJto52s6FqxnwqCgCGGSaGsv8IU_fzw'; // Sua chave da API
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+
+      const prompt = `
+        Crie uma questão educacional baseada nas seguintes especificações:
+        
+        Descrição: ${newQuestionData.descricao}
+        Tipo de questão: ${newQuestionData.modelo}
+        Nível de dificuldade: ${newQuestionData.dificuldade}
+        
+        Retorne APENAS um JSON válido com a seguinte estrutura:
+        {
+          "id": "questao-gerada-${Date.now()}",
+          "type": "${newQuestionData.modelo === 'Múltipla escolha' ? 'multipla-escolha' : newQuestionData.modelo === 'Verdadeiro ou Falso' ? 'verdadeiro-falso' : 'discursiva'}",
+          "enunciado": "Enunciado da questão aqui",
+          "alternativas": ["A", "B", "C", "D"] (apenas para múltipla escolha),
+          "respostaCorreta": 0,
+          "explicacao": "Explicação detalhada da resposta",
+          "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
+          "tema": "Tema relacionado"
+        }
+      `;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }]
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.candidates && result.candidates[0]) {
+        const generatedText = result.candidates[0].content.parts[0].text;
+        
+        // Extrair JSON da resposta
+        const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const novaQuestao = JSON.parse(jsonMatch[0]);
+          
+          // Adicionar a nova questão à lista
+          setQuestoesProcessadas(prev => [...prev, novaQuestao]);
+          
+          // Fechar modal e limpar dados
+          setShowAddQuestionModal(false);
+          setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao gerar questão:', error);
+    } finally {
+      setIsGeneratingQuestion(false);
+    }
+  };
+
   const toggleQuestaoExpandida = (questaoId: string) => {
     setQuestoesExpandidas(prev => ({
       ...prev,
@@ -368,6 +448,31 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       });
     }
   }, [questoesProcessadas, onQuestionRender]);
+
+  // Componente do card para adicionar nova questão
+  const renderAddQuestionCard = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: questoesProcessadas.length * 0.05 }}
+      className="relative cursor-pointer group"
+      onClick={() => setShowAddQuestionModal(true)}
+    >
+      <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-orange-300/60 hover:border-orange-500/80 group-hover:scale-[1.02] bg-orange-50/30 dark:bg-orange-950/20 dark:border-orange-600/60 dark:hover:border-orange-500/80 rounded-2xl backdrop-blur-sm shadow-md">
+        <CardContent className="p-5 h-full flex flex-col items-center justify-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-900/40 mb-4 group-hover:bg-orange-200 dark:group-hover:bg-orange-800/60 transition-colors">
+            <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-300 mb-2">Adicionar Questão</h3>
+          <p className="text-sm text-orange-600 dark:text-orange-400 text-center leading-relaxed">
+            Clique para criar uma nova questão personalizada
+          </p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 
   // Componente de mini-card para grade inicial de questões
   const renderQuestionGridCard = (questao: Question, index: number) => {
@@ -456,6 +561,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         {questoesProcessadas.map((questao, index) =>
           renderQuestionGridCard(questao, index)
         )}
+        {renderAddQuestionCard()}
       </div>
 
       {/* Informações adicionais */}
@@ -820,6 +926,152 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           </div>
         </motion.div>
       )}
+
+      {/* Modal de Adicionar Questão */}
+      <Dialog open={showAddQuestionModal} onOpenChange={setShowAddQuestionModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                Adicionar Nova Questão
+              </DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAddQuestionModal(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Tabs de navegação */}
+            <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+              <button
+                onClick={() => setAddQuestionTab('school-power')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  addQuestionTab === 'school-power'
+                    ? 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                <Wand2 className="w-4 h-4" />
+                Criar com School Power
+              </button>
+              <button
+                onClick={() => setAddQuestionTab('video')}
+                disabled
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed"
+              >
+                <Video className="w-4 h-4" />
+                Criar a partir de vídeo
+              </button>
+              <button
+                onClick={() => setAddQuestionTab('material')}
+                disabled
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed"
+              >
+                <Material className="w-4 h-4" />
+                Criar a partir de material
+              </button>
+            </div>
+
+            {/* Conteúdo da tab ativa */}
+            {addQuestionTab === 'school-power' && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="descricao" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Descrição
+                  </Label>
+                  <Textarea
+                    id="descricao"
+                    placeholder="Descreva o tema ou conteúdo da questão que você deseja criar..."
+                    value={newQuestionData.descricao}
+                    onChange={(e) => setNewQuestionData(prev => ({ ...prev, descricao: e.target.value }))}
+                    className="mt-1 min-h-[100px]"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="modelo" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Modelo de Questões
+                  </Label>
+                  <Select value={newQuestionData.modelo} onValueChange={(value) => setNewQuestionData(prev => ({ ...prev, modelo: value }))}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o tipo de questão" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Múltipla escolha">Múltipla escolha</SelectItem>
+                      <SelectItem value="Verdadeiro ou Falso">Verdadeiro ou Falso</SelectItem>
+                      <SelectItem value="Discursiva">Discursiva</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="dificuldade" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Dificuldade
+                  </Label>
+                  <Select value={newQuestionData.dificuldade} onValueChange={(value) => setNewQuestionData(prev => ({ ...prev, dificuldade: value }))}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecione o nível de dificuldade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Fácil">Fácil</SelectItem>
+                      <SelectItem value="Médio">Médio</SelectItem>
+                      <SelectItem value="Difícil">Difícil</SelectItem>
+                      <SelectItem value="Extremo">Extremo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddQuestionModal(false)}
+                    disabled={isGeneratingQuestion}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={generateQuestionWithAI}
+                    disabled={!newQuestionData.descricao || !newQuestionData.modelo || !newQuestionData.dificuldade || isGeneratingQuestion}
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                  >
+                    {isGeneratingQuestion ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-4 h-4 mr-2" />
+                        Criar Questão
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {addQuestionTab === 'video' && (
+              <div className="text-center py-8">
+                <Video className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">Esta funcionalidade estará disponível em breve</p>
+              </div>
+            )}
+
+            {addQuestionTab === 'material' && (
+              <div className="text-center py-8">
+                <Material className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">Esta funcionalidade estará disponível em breve</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
