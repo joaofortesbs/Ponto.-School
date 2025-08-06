@@ -389,29 +389,35 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           }
         }}
       >
-        <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-blue-600">
-          {/* Numeração da questão no canto superior esquerdo */}
-          <div className="absolute top-3 left-3 z-10">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-90`}>
+        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-blue-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-blue-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
+          {/* Container para numeração e tag de dificuldade */}
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+            {/* Numeração da questão */}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white border-2 border-white/20">
               {index + 1}
             </div>
+            
+            {/* Tag de dificuldade */}
+            <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
+              {difficultyConfig.label}
+            </Badge>
           </div>
 
-          <CardContent className="p-4 pt-12 h-full flex flex-col">
+          <CardContent className="p-5 pt-16 h-full flex flex-col">
             <div className="flex-1">
               {/* Enunciado da questão (limitado) */}
-              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">
-                {questao.enunciado?.substring(0, 120)}
-                {questao.enunciado && questao.enunciado.length > 120 ? '...' : ''}
+              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
+                {questao.enunciado?.substring(0, 130)}
+                {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
               </p>
             </div>
 
             {/* Informações básicas na base do card */}
-            <div className="space-y-2 mt-auto">
+            <div className="space-y-3 mt-auto">
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+                <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
                   {getTypeIcon(questao.type)}
-                  <span className="ml-1">
+                  <span className="ml-1.5">
                     {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
                      questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
                   </span>
@@ -419,15 +425,16 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-90`}>
-                  {difficultyConfig.label}
-                </Badge>
-
-                {questao.type === 'multipla-escolha' && questao.alternativas && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {questao.alternativas.length} alternativas
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {questao.type === 'multipla-escolha' && questao.alternativas && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
+                      {questao.alternativas.length} alternativas
+                    </span>
+                  )}
+                </div>
+                
+                {/* Indicador visual de hover */}
+                <div className="w-2 h-2 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
             </div>
           </CardContent>
