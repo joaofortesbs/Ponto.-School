@@ -12,6 +12,101 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+// Sistema de mapeamento de dificuldade
+const DIFFICULTY_LEVELS = {
+  'fácil': { label: 'Fácil', color: 'bg-green-200', textColor: 'text-green-800' },
+  'médio': { label: 'Médio', color: 'bg-yellow-200', textColor: 'text-yellow-800' },
+  'difícil': { label: 'Difícil', color: 'bg-red-200', textColor: 'text-red-800' },
+  'extremo': { label: 'Extremo', color: 'bg-red-600', textColor: 'text-white' }
+};
+
+// Sistema de geração automática de tags
+const generateQuestionTag = (enunciado: string, alternativas?: string[]): string => {
+  const text = (enunciado + ' ' + (alternativas?.join(' ') || '')).toLowerCase();
+
+  // Tags matemáticas específicas
+  if (text.match(/calcul|resolv|determin|encontr|valor|some|subtra|multipl|divid/)) return 'Cálculo';
+  if (text.match(/gráfico|eixo|coordenada|plano|cartesian|abscissa|ordenada/)) return 'Gráfico';
+  if (text.match(/equação|resolve|incógnita|variável|x\s*=|y\s*=/)) return 'Equação';
+  if (text.match(/função|f\(x\)|g\(x\)|domínio|imagem|contradomínio/)) return 'Função';
+  if (text.match(/geometri|área|perímetro|volume|triângulo|círculo|quadrado|retângulo/)) return 'Geometria';
+  if (text.match(/probabilidade|estatística|média|moda|mediana|desvio|amostra/)) return 'Estatística';
+  if (text.match(/zero|raiz|coeficiente|grau|polinôm/)) return 'Álgebra';
+  if (text.match(/crescente|decrescente|máximo|mínimo|derivada/)) return 'Análise';
+  if (text.match(/matriz|determinante|sistema|linear/)) return 'Algebra Linear';
+  if (text.match(/seno|cosseno|tangente|trigonometr/)) return 'Trigonometria';
+
+  // Tags de português
+  if (text.match(/texto|interpret|compreen|análise|leitura|passagem/)) return 'Interpretação';
+  if (text.match(/gramática|sintaxe|morfologi|ortografi|pontuação/)) return 'Gramática';
+  if (text.match(/redação|produção|escrit|dissertaç|argumentaç/)) return 'Redação';
+  if (text.match(/literatura|poem|roman|autor|literári/)) return 'Literatura';
+  if (text.match(/narrativ|conto|crônica|fábula/)) return 'Narrativa';
+  if (text.match(/verbo|substantiv|adjetiv|advérbi/)) return 'Morfologia';
+
+  // Tags de ciências
+  if (text.match(/célula|organism|biologi|ecologi|evolução|genética/)) return 'Biologia';
+  if (text.match(/átomo|molécula|química|reação|elemento|tabela periódica/)) return 'Química';
+  if (text.match(/força|energia|física|movimento|velocidade|aceleração/)) return 'Física';
+  if (text.match(/experimental|laboratório|observação|hipótese/)) return 'Experimento';
+
+  // Tags de história/geografia
+  if (text.match(/históri|época|período|civilizaç|guerra|revolução/)) return 'História';
+  if (text.match(/geografi|clima|relevo|população|país|continente/)) return 'Geografia';
+  if (text.match(/economi|mercado|comércio|moeda/)) return 'Economia';
+  if (text.match(/polític|governo|democraci|constituição/)) return 'Política';
+
+  // Tags de inglês
+  if (text.match(/english|verb|noun|adjective|grammar/)) return 'Grammar';
+  if (text.match(/vocabulary|word|meaning|definition/)) return 'Vocabulary';
+  if (text.match(/reading|comprehension|text|passage/)) return 'Reading';
+
+  // Tags gerais por tipo de ação
+  if (text.match(/anális|observ|compar|contrast|diferenç/)) return 'Análise';
+  if (text.match(/concept|defin|significa|caracteriz/)) return 'Conceito';
+  if (text.match(/aplicaç|prática|exemplo|uso|utiliz/)) return 'Aplicação';
+  if (text.match(/classific|categori|tipo|espécie/)) return 'Classificação';
+  if (text.match(/identific|reconhec|apont|indic/)) return 'Identificação';
+  if (text.match(/explicaç|justific|porqu|causa|motivo/)) return 'Explicação';
+  if (text.match(/relacione|associe|conecte|ligaç/)) return 'Relação';
+
+  return 'Conceito';
+};
+
+// Função para determinar dificuldade baseada no conteúdo
+const determineDifficulty = (questao: any): keyof typeof DIFFICULTY_LEVELS => {
+  // Primeiro, verifica se a dificuldade está explicitamente definida
+  if (questao.dificuldade) {
+    const diff = questao.dificuldade.toLowerCase();
+    if (diff.includes('fácil') || diff.includes('facil') || diff.includes('easy')) return 'fácil';
+    if (diff.includes('médio') || diff.includes('medio') || diff.includes('medium')) return 'médio';
+    if (diff.includes('difícil') || diff.includes('dificil') || diff.includes('hard')) return 'difícil';
+    if (diff.includes('extremo') || diff.includes('extreme') || diff.includes('expert')) return 'extremo';
+  }
+
+  const text = questao.enunciado?.toLowerCase() || '';
+  const length = text.length;
+  let complexityScore = 0;
+
+  // Fatores que aumentam a complexidade
+  if (text.match(/calcul|resolv|determin|encontr|demonstr/)) complexityScore += 1;
+  if (text.match(/gráfico|função|equação|sistema/)) complexityScore += 1;
+  if (text.match(/anális|interpet|justific|explique/)) complexityScore += 1;
+  if (text.match(/múltiplas etapas|várias|diversos|compare|relacione/)) complexityScore += 2;
+  if (text.match(/derivada|integral|limite|matriz|logaritm/)) complexityScore += 3;
+
+  // Baseado no tipo de questão
+  if (questao.type === 'discursiva' || questao.type === 'dissertativa') complexityScore += 1;
+  if (questao.alternativas && questao.alternativas.length > 4) complexityScore += 1;
+
+  // Determina dificuldade final
+  if (complexityScore <= 1) return 'fácil';
+  if (complexityScore <= 3) return 'médio';
+  if (complexityScore <= 5) return 'difícil';
+  return 'extremo';
+};
+
+
 interface Question {
   id: string;
   type: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
@@ -248,27 +343,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   };
 
   const getDifficultyColor = (dificuldade?: string) => {
-    const nivel = dificuldade ? dificuldade.toLowerCase() : 'medio';
-    switch (nivel) {
-      case 'facil':
-      case 'fácil':
-      case 'básico':
-      case 'basico':
-        return 'bg-green-100 text-green-800';
-      case 'medio':
-      case 'médio':
-      case 'intermediário':
-      case 'intermediario':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'dificil':
-      case 'difícil':
-      case 'avançado':
-      case 'avancado':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    const nivel = determineDifficulty({ dificuldade: dificuldade }); // Usa a função de determinação
+    const config = DIFFICULTY_LEVELS[nivel];
+    return `${config.color} ${config.textColor}`;
   };
+
 
   const getTypeIcon = (type: Question['type']) => {
     switch (type) {
@@ -290,6 +369,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   // Componente de mini-card para grade inicial de questões
   const renderQuestionGridCard = (questao: Question, index: number) => {
+    const difficulty = determineDifficulty(questao);
+    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
     return (
       <motion.div
         key={questao.id || `questao-${index + 1}`}
@@ -309,7 +390,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         <Card className="h-48 hover:shadow-lg transition-all duration-300 border-2 border-gray-200 hover:border-blue-300 group-hover:scale-105">
           {/* Numeração da questão no canto superior esquerdo */}
           <div className="absolute top-3 left-3 z-10">
-            <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-sm">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
               {index + 1}
             </div>
           </div>
@@ -336,8 +417,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Badge className={`text-xs ${getDifficultyColor(questao.dificuldade)}`}>
-                  {questao.dificuldade || 'Médio'}
+                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+                  {difficultyConfig.label}
                 </Badge>
 
                 {questao.type === 'multipla-escolha' && questao.alternativas && (
@@ -387,6 +468,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   const renderQuestion = (questao: Question, index: number) => {
     const questionId = questao.id || `questao-${index + 1}`;
+    const difficulty = determineDifficulty(questao);
+    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+    const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
 
     // Extrair e processar alternativas de forma mais robusta
     let alternativasProcessadas = [];
@@ -424,13 +508,16 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                 <Badge variant="outline" className="text-xs">
                   Questão {index + 1}
                 </Badge>
-                <Badge className={`text-xs ${getDifficultyColor(questao.dificuldade)}`}>
-                  {questao.dificuldade || 'Médio'}
+                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+                  {difficultyConfig.label}
                 </Badge>
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   {getTypeIcon(questao.type)}
                   <span>{questao.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                 </div>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  {questionTag}
+                </Badge>
               </div>
               <CardTitle className="text-base font-medium leading-relaxed">
                 {questao.enunciado}
@@ -606,46 +693,66 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             className="flex h-full"
           >
             {/* Menu lateral de navegação das questões */}
-            <div className="w-80 border-r border-gray-200 bg-gray-50 h-full overflow-y-auto">
-              {/* Cabeçalho do menu lateral */}
-              <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="w-80 bg-slate-50 border-r border-slate-200 overflow-y-auto">
+              <div className="p-4 border-b border-slate-200">
+                <h3 className="font-semibold text-slate-700 mb-2">Questões</h3>
+                <div className="text-sm text-slate-500 mb-3">
+                  Total: {questoesProcessadas.length} questões
+                </div>
+
+                {/* Legenda de dificuldades */}
+                <div className="grid grid-cols-2 gap-1 text-xs">
+                  {Object.entries(DIFFICULTY_LEVELS).map(([key, config]) => (
+                    <div key={key} className="flex items-center gap-1">
+                      <div className={`w-3 h-3 rounded-full ${config.color}`}></div>
+                      <span className={config.textColor}>{config.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Lista de questões para navegação */}
-              <div className="p-2 space-y-1">
+              <div className="p-2 space-y-2">
                 {questoesProcessadas.map((questao, index) => {
+                  const difficulty = determineDifficulty(questao);
+                  const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+                  const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
                   const isSelected = selectedQuestionIndex === index;
                   const isAnswered = respostas[questao.id] !== undefined;
 
                   return (
                     <button
-                      key={questao.id}
+                      key={questao.id || `questao-${index}`}
                       onClick={() => {
                         setSelectedQuestionIndex(index);
                         if (onQuestionSelect) {
                           onQuestionSelect(index, questao.id);
                         }
                       }}
-                      className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                      className={`w-full text-left p-3 rounded-lg transition-all duration-200 border ${
                         isSelected
                           ? 'bg-blue-100 border-blue-300 border-2'
                           : 'bg-white border border-gray-200 hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
                           isAnswered
                             ? 'bg-green-500 text-white'
                             : isSelected
                               ? 'bg-blue-500 text-white'
-                              : 'bg-gray-200 text-gray-600'
+                              : difficultyConfig.color + ' ' + difficultyConfig.textColor
                         }`}>
                           {isAnswered ? '✓' : index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            Questão {index + 1}
-                          </p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`font-medium text-sm ${difficultyConfig.textColor}`}>
+                              {difficultyConfig.label}
+                            </div>
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                              {questionTag}
+                            </Badge>
+                          </div>
                           <p className="text-xs text-gray-500 truncate">
                             {questao.enunciado?.substring(0, 50)}...
                           </p>
@@ -679,7 +786,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
             {/* Área principal com a questão selecionada */}
             <div className="flex-1 h-full overflow-y-auto">
-              
+
 
               {/* Conteúdo da questão */}
               <div className="p-6">
