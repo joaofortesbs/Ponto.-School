@@ -170,6 +170,16 @@ interface ExerciseListPreviewProps {
   onQuestionSelect?: (questionIndex: number, questionId: string) => void;
 }
 
+// Função auxiliar para obter ícone do tipo de questão
+const getTypeIcon = (type: Question['type']) => {
+  switch (type) {
+    case 'multipla-escolha': return <Circle className="w-4 h-4" />;
+    case 'discursiva': return <Edit3 className="w-4 h-4" />;
+    case 'verdadeiro-falso': return <CheckCircle className="w-4 h-4" />;
+    default: return <FileText className="w-4 h-4" />;
+  }
+};
+
 // Componente de mini-card para grade inicial de questões
 const RenderQuestionGridCard = ({ questao, index, setSelectedQuestionIndex, setViewMode, onQuestionSelect }: { questao: Question, index: number, setSelectedQuestionIndex: React.Dispatch<React.SetStateAction<number | null>>, setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'detailed'>>, onQuestionSelect?: (questionIndex: number, questionId: string) => void }) => {
   const difficulty = determineDifficulty(questao);
@@ -488,14 +498,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     return config;
   };
 
-  const getTypeIcon = (type: Question['type']) => {
-    switch (type) {
-      case 'multipla-escolha': return <Circle className="w-4 h-4" />;
-      case 'discursiva': return <Edit3 className="w-4 h-4" />;
-      case 'verdadeiro-falso': return <CheckCircle className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
-    }
-  };
+  
 
   // Effect para notificar quando questões são renderizadas
   useEffect(() => {
