@@ -694,10 +694,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         >
           {/* Menu lateral de navegação das questões */}
           <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto">
-            <div className="p-4 border-b border-slate-200">
-              <h3 className="font-semibold text-slate-700 mb-2">Questões</h3>
-            </div>
-
             <div className="p-2 space-y-2">
               {questoesProcessadas.map((questao, index) => {
                 const difficulty = determineDifficulty(questao);
