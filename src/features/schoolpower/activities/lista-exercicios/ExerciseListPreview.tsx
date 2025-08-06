@@ -719,6 +719,20 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   const isSelected = selectedQuestionIndex === index;
                   const isAnswered = respostas[questao.id] !== undefined;
 
+                  // Função para obter o ícone do tipo de questão
+                  const getQuestionTypeIcon = (type: Question['type']) => {
+                    switch (type) {
+                      case 'multipla-escolha':
+                        return <Circle className="w-4 h-4 text-blue-600" />;
+                      case 'discursiva':
+                        return <Edit3 className="w-4 h-4 text-purple-600" />;
+                      case 'verdadeiro-falso':
+                        return <CheckCircle className="w-4 h-4 text-green-600" />;
+                      default:
+                        return <FileText className="w-4 h-4 text-gray-600" />;
+                    }
+                  };
+
                   return (
                     <button
                       key={questao.id || `questao-${index}`}
@@ -730,8 +744,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                       }}
                       className={`w-full text-left p-3 rounded-lg transition-all duration-200 border ${
                         isSelected
-                          ? 'bg-blue-100 border-blue-300 border-2'
-                          : 'bg-white border border-gray-200 hover:bg-gray-50'
+                          ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm'
+                          : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -745,22 +759,24 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                           {isAnswered ? '✓' : index + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className={`font-medium text-sm ${difficultyConfig.textColor}`}>
-                              {difficultyConfig.label}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`font-medium text-sm ${difficultyConfig.textColor}`}>
+                                {difficultyConfig.label}
+                              </div>
+                              <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                                {questionTag}
+                              </Badge>
                             </div>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                              {questionTag}
-                            </Badge>
+                            <div className="flex-shrink-0">
+                              {getQuestionTypeIcon(questao.type)}
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-500 truncate">
-                            {questao.enunciado?.substring(0, 50)}...
-                          </p>
                         </div>
                       </div>
                     </button>
                   );
-                })}
+                })}</div>
               </div>
 
               {/* Resumo de progresso no menu lateral */}
