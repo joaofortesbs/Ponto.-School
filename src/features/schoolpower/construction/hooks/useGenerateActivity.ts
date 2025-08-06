@@ -28,6 +28,16 @@ export function useGenerateActivity() {
       console.log('📝 FormData recebido:', customFields);
       console.log('🎪 Tipo de atividade:', activityType);
 
+      // Verificar se a API key está disponível
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 
+                     process.env.VITE_GEMINI_API_KEY || 
+                     import.meta.env.VITE_GEMINI_API_KEY ||
+                     'AIzaSyBvQScT7BVFJAJmGVQHHI5BXgApSMjY_iM';
+      
+      if (!apiKey) {
+        console.warn('⚠️ Chave da API não encontrada, usando configuração de fallback');
+      }
+
       // Preparar dados de contexto COMPLETOS e CONSISTENTES
       const contextData = {
         // Dados em português para o prompt (PADRÃO PRINCIPAL)
