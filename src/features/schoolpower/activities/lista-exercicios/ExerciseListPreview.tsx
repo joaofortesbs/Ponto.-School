@@ -180,25 +180,74 @@ const getTypeIcon = (type: Question['type']) => {
   }
 };
 
-// Componente de mini-card para grade inicial de questões
-const RenderQuestionGridCard = ({ questao, index, setSelectedQuestionIndex, setViewMode, onQuestionSelect }: { questao: Question, index: number, setSelectedQuestionIndex: React.Dispatch<React.SetStateAction<number | null>>, setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'detailed'>>, onQuestionSelect?: (questionIndex: number, questionId: string) => void }) => {
+// Componente de mini-card para grade inicial de questões com drag-and-drop
+const RenderQuestionGridCard = ({ questao, index, setSelectedQuestionIndex, setViewMode, onQuestionSelect, onReorder, questoesProcessadas, setQuestoesProcessadas }: { 
+  questao: Question, 
+  index: number, 
+  setSelectedQuestionIndex: React.Dispatch<React.SetStateAction<number | null>>, 
+  setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'detailed'>>, 
+  onQuestionSelect?: (questionIndex: number, questionId: string) => void,
+  onReorder?: (fromIndex: number, toIndex: number) => void,
+  questoesProcessadas?: Question[],
+  setQuestoesProcessadas?: React.Dispatch<React.SetStateAction<Question[]>>
+}) => {
   const difficulty = determineDifficulty(questao);
   const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+  const [isDragging, setIsDragging] = useState(false);
+  const [showMoveIcon, setShowMoveIcon] = useState(false);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isDragging || (e.target as HTMLElement).closest('.move-icon')) {
+      return;
+    }
+    setSelectedQuestionIndex(index);
+    setViewMode('detailed');
+    if (onQuestionSelect) {
+      onQuestionSelect(index, questao.id);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    e.dataTransfer.setData('text/plain', index.toString());
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    const toIndex = index;
+
+    if (fromIndex !== toIndex && questoesProcessadas && setQuestoesProcessadas) {
+      const newQuestoes = [...questoesProcessadas];
+      const [movedItem] = newQuestoes.splice(fromIndex, 1);
+      newQuestoes.splice(toIndex, 0, movedItem);
+      setQuestoesProcessadas(newQuestoes);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
       className="relative cursor-pointer group"
-      onClick={() => {
-        setSelectedQuestionIndex(index);
-        setViewMode('detailed');
-        if (onQuestionSelect) {
-          onQuestionSelect(index, questao.id);
-        }
-      }}
+      onClick={handleCardClick}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onMouseEnter={() => setShowMoveIcon(true)}
+      onMouseLeave={() => setShowMoveIcon(false)}
     >
-      <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
+      <Card className={`h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md ${isDragging ? 'opacity-50 shadow-lg' : ''}`}>
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
             {index + 1}
@@ -236,127 +285,24 @@ const RenderQuestionGridCard = ({ questao, index, setSelectedQuestionIndex, setV
             </div>
           </div>
         </CardContent>
+        
+        {showMoveIcon && (
+          <div 
+            className="move-icon absolute bottom-3 right-3 w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center cursor-move opacity-80 hover:opacity-100 transition-opacity z-20"
+            draggable
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Move className="w-3 h-3 text-white" />
+          </div>
+        )}
       </Card>
     </motion.div>
   );
 };
 
-// Componente de Cartão de Questão com Drag-and-Drop
-interface QuestionCardProps {
-  questao: Question;
-  index: number;
-  onReorder: (fromIndex: number, toIndex: number) => void;
-  onQuestionClick: (questao: Question) => void;
-  isSelected: boolean;
-  isAnswered: boolean;
-  getQuestionTypeIcon: (type: Question['type']) => React.ReactNode;
-  getDifficultyConfig: (difficulty?: string) => { label: string; color: string; textColor: string };
-  generateQuestionTag: (enunciado: string | undefined, alternativas: string[] | undefined) => string;
-}
 
-function QuestionCard({ questao, index, onReorder, onQuestionClick, isSelected, isAnswered, getQuestionTypeIcon, getDifficultyConfig, generateQuestionTag }: QuestionCardProps) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [showMoveIcon, setShowMoveIcon] = useState(false);
-  const dragRef = useRef<HTMLDivElement>(null);
-  const difficultyConfig = getDifficultyConfig(questao.dificuldade);
-  const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    if (isDragging || (e.target as HTMLElement).closest('.move-icon')) {
-      return;
-    }
-    onQuestionClick(questao);
-  };
-
-  const handleDragStart = (e: React.DragEvent) => {
-    setIsDragging(true);
-    e.dataTransfer.setData('text/plain', index.toString());
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-    const toIndex = index;
-
-    if (fromIndex !== toIndex) {
-      onReorder(fromIndex, toIndex);
-    }
-  };
-
-  return (
-    <motion.div
-      ref={dragRef}
-      className={`relative group/card p-4 rounded-xl cursor-pointer transition-all duration-200 border 
-                  ${isSelected
-                    ? 'bg-orange-100/20 border-orange-300 border-2 dark:bg-orange-900/30 dark:border-orange-600' 
-                    : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 dark:border-gray-700 dark:hover:bg-gray-800/50'}
-                  ${isDragging ? 'opacity-50 shadow-lg' : ''}`}
-      onClick={handleCardClick}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onMouseEnter={() => setShowMoveIcon(true)}
-      onMouseLeave={() => setShowMoveIcon(false)}
-      whileHover={{ scale: 1.02 }}
-      layout
-    >
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold 
-                        ${isAnswered ? 'bg-green-500 text-white' : isSelected ? 'bg-orange-500 text-white' : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'}`}>
-          {isAnswered ? '✓' : index + 1}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
-                {difficultyConfig.label}
-              </div>
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
-                {questionTag}
-              </Badge>
-            </div>
-            <div className="flex-shrink-0">
-              {getQuestionTypeIcon(questao.type)}
-            </div>
-          </div>
-        </div>
-      </div>
-      <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 leading-relaxed font-medium">
-        {questao.enunciado}
-      </p>
-      <div className="flex items-center justify-between mt-3">
-        <div className="flex items-center gap-2">
-          {questao.type === 'multipla-escolha' && questao.alternativas && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
-              {questao.alternativas.length} alternativas
-            </span>
-          )}
-        </div>
-      </div>
-
-      {showMoveIcon && (
-        <div 
-          className="move-icon absolute bottom-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center cursor-move opacity-80 hover:opacity-100 transition-opacity"
-          draggable
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Move className="w-3 h-3 text-white" />
-        </div>
-      )}
-    </motion.div>
-  );
-}
 
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   data,
@@ -525,6 +471,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             setSelectedQuestionIndex={setSelectedQuestionIndex}
             setViewMode={setViewMode}
             onQuestionSelect={onQuestionSelect}
+            questoesProcessadas={questoesProcessadas}
+            setQuestoesProcessadas={setQuestoesProcessadas}
           />
         )}
       </div>
@@ -770,17 +718,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     tempoLimite: data?.tempoLimite
   };
 
-  const handleReorder = (fromIndex: number, toIndex: number) => {
-    const newQuestoes = [...questoesProcessadas];
-    const [movedItem] = newQuestoes.splice(fromIndex, 1);
-    newQuestoes.splice(toIndex, 0, movedItem);
-    setQuestoesProcessadas(newQuestoes);
-  };
-
-  const handleQuestionClick = (questao: Question) => {
-    setSelectedQuestionIndex(questoesProcessadas.findIndex(q => q.id === questao.id));
-    setViewMode('detailed');
-  };
+  
 
   return (
     <div className="h-full">
@@ -798,25 +736,53 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           className="flex h-full"
         >
           <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
-            <div className="p-2 space-y-2">
+            <div className="p-4 space-y-2">
               {questoesProcessadas.map((questao, index) => {
                 const difficultyConfig = getDifficultyColor(questao.dificuldade);
                 const isSelected = selectedQuestionIndex === index;
                 const isAnswered = respostas[questao.id] !== undefined;
 
                 return (
-                  <QuestionCard
+                  <div
                     key={questao.id || `questao-${index}`}
-                    questao={questao}
-                    index={index}
-                    onReorder={handleReorder}
-                    onQuestionClick={handleQuestionClick}
-                    isSelected={isSelected}
-                    isAnswered={isAnswered}
-                    getQuestionTypeIcon={getTypeIcon}
-                    getDifficultyConfig={getDifficultyColor}
-                    generateQuestionTag={generateQuestionTag}
-                  />
+                    className={`p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
+                      isSelected
+                        ? 'bg-orange-100 border-orange-300 dark:bg-orange-900/30 dark:border-orange-600' 
+                        : 'bg-white border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
+                    }`}
+                    onClick={() => {
+                      setSelectedQuestionIndex(index);
+                      setViewMode('detailed');
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isAnswered ? 'bg-green-500 text-white' : isSelected ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                      }`}>
+                        {isAnswered ? '✓' : index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Badge className={`text-xs px-2 py-1 ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+                            {difficultyConfig.label}
+                          </Badge>
+                          <div className="flex-shrink-0">
+                            {getTypeIcon(questao.type)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 leading-relaxed">
+                      {questao.enunciado}
+                    </p>
+                    {questao.type === 'multipla-escolha' && questao.alternativas && (
+                      <div className="mt-2">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
+                          {questao.alternativas.length} alternativas
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
