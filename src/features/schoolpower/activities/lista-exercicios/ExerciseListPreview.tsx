@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, GripVertical, Eye, X } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -134,8 +134,6 @@ interface Question {
   response?: string;
   correct_answer?: string;
   gabarito?: string | number; // Adicionado para o gabarito
-  // Propriedades para ordenação
-  numero?: number;
 }
 
 interface ExerciseListData {
@@ -172,11 +170,6 @@ interface ExerciseListPreviewProps {
   onQuestionSelect?: (questionIndex: number, questionId: string) => void;
 }
 
-// Interface para perguntas processadas com metadados adicionais
-interface ProcessedQuestion extends Question {
-  numero: number; // Número da questão na lista
-}
-
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   data,
   isGenerating = false,
@@ -184,16 +177,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   onQuestionRender,
   onQuestionSelect
 }) => {
-  const [processedQuestions, setProcessedQuestions] = useState<ProcessedQuestion[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<ProcessedQuestion | null>(null);
-  const [draggedItem, setDraggedItem] = useState<number | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<number | null>(null);
-  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isDraggingRef = useRef(false);
   const [respostas, setRespostas] = useState<Record<string, string | number>>({});
   const [questoesExpandidas, setQuestoesExpandidas] = useState<Record<string, boolean>>({});
   const [explicacoesExpandidas, setExplicacoesExpandidas] = useState<Record<string, boolean>>({});
+  const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
 
@@ -240,7 +227,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       // Processar e validar as questões da IA
       const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
-        const questaoProcessada: ProcessedQuestion = {
+        const questaoProcessada: Question = {
           id: questao.id || `questao-${index + 1}`,
           type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
           enunciado: questao.enunciado || questao.enunciado || questao.statement || questao.question || `Questão ${index + 1}`,
@@ -252,8 +239,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           pontos: questao.pontos,
           tempo_estimado: questao.tempo_estimado,
           tipo: questao.tipo,
-          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer, // Inclui gabarito
-          numero: index + 1 // Adiciona o número da questão
+          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer // Inclui gabarito
         };
 
         // Ajuste de tipo para padronizar
@@ -289,21 +275,21 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       });
 
       console.log(`✅ ${questoesProcessadasIA.length} questões processadas com sucesso`);
-      setProcessedQuestions(questoesProcessadasIA);
+      setQuestoesProcessadas(questoesProcessadasIA);
 
     } else if (isContentFromAI) {
       console.error('❌ Conteúdo marcado como da IA mas sem questões válidas');
       console.error('📊 Dados recebidos:', data);
-      setProcessedQuestions([]);
+      setQuestoesProcessadas([]);
     } else {
       console.log('⚠️ Conteúdo não foi gerado pela IA, usando questões simuladas como fallback');
       const questoesSimuladas = gerarQuestoesSimuladas(data);
-      setProcessedQuestions(questoesSimuladas);
+      setQuestoesProcessadas(questoesSimuladas);
     }
   }, [data]);
 
-  const gerarQuestoesSimuladas = (activityData: ExerciseListData): ProcessedQuestion[] => {
-    const questoes: ProcessedQuestion[] = [];
+  const gerarQuestoesSimuladas = (activityData: ExerciseListData): Question[] => {
+    const questoes: Question[] = [];
     const tipos = (activityData.tipoQuestoes || 'multipla-escolha').toLowerCase();
     const numeroQuestoes = activityData.numeroQuestoes || 5;
 
@@ -330,8 +316,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           'Alternativa D'
         ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
         dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as any,
-        tema: activityData.tema || 'Tema não especificado',
-        numero: i
+        tema: activityData.tema || 'Tema não especificado'
       });
     }
 
@@ -359,93 +344,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }));
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'fácil':
-      case 'facil':
-        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'médio':
-      case 'medio':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'difícil':
-      case 'dificil':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
-      default:
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-    }
-  };
-
-  // Funções de drag-and-drop
-  const handleMouseDown = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    isDraggingRef.current = false;
-
-    // Configurar timeout para long press (500ms)
-    dragTimeoutRef.current = setTimeout(() => {
-      isDraggingRef.current = true;
-      setDraggedItem(index);
-    }, 500);
-  };
-
-  const handleMouseUp = (index: number) => {
-    // Limpar timeout se existir
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
-      dragTimeoutRef.current = null;
-    }
-
-    // Se não está arrastando, é um clique simples
-    if (!isDraggingRef.current) {
-      handleQuestionClick(index);
-    } else {
-      // Finalizar drag-and-drop
-      handleDrop();
-    }
-
-    isDraggingRef.current = false;
-  };
-
-  const handleMouseLeave = () => {
-    // Limpar timeout se o mouse sair do elemento
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
-      dragTimeoutRef.current = null;
-    }
-  };
-
-  const handleQuestionClick = (index: number) => {
-    setSelectedQuestion(processedQuestions[index]);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    setDragOverItem(index);
-  };
-
-  const handleDrop = () => {
-    if (draggedItem !== null && dragOverItem !== null && draggedItem !== dragOverItem) {
-      const newQuestions = [...processedQuestions];
-      const draggedQuestion = newQuestions[draggedItem];
-
-      // Remover o item da posição original
-      newQuestions.splice(draggedItem, 1);
-
-      // Inserir na nova posição
-      newQuestions.splice(dragOverItem, 0, draggedQuestion);
-
-      // Atualizar os IDs das questões para refletir a nova ordem
-      const updatedQuestions = newQuestions.map((question, index) => ({
-        ...question,
-        id: `questao-${index + 1}`,
-        numero: index + 1
-      }));
-
-      setProcessedQuestions(updatedQuestions);
-      console.log('📋 Questões reordenadas:', updatedQuestions.map(q => q.numero));
-    }
-
-    setDraggedItem(null);
-    setDragOverItem(null);
+  const getDifficultyColor = (dificuldade?: string) => {
+    const nivel = determineDifficulty({ dificuldade: dificuldade }); // Usa a função de determinação
+    const config = DIFFICULTY_LEVELS[nivel];
+    return `${config.color} ${config.textColor}`;
   };
 
 
@@ -460,75 +362,83 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   // Effect para notificar quando questões são renderizadas
   useEffect(() => {
-    if (onQuestionRender && processedQuestions.length > 0) {
-      processedQuestions.forEach(questao => {
+    if (onQuestionRender && questoesProcessadas.length > 0) {
+      questoesProcessadas.forEach(questao => {
         onQuestionRender(questao.id);
       });
     }
-  }, [processedQuestions, onQuestionRender]);
+  }, [questoesProcessadas, onQuestionRender]);
 
   // Componente de mini-card para grade inicial de questões
-  const renderQuestionGridCard = (questao: ProcessedQuestion, index: number) => {
+  const renderQuestionGridCard = (questao: Question, index: number) => {
     const difficulty = determineDifficulty(questao);
     const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
     return (
       <motion.div
-        key={questao.id}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: index * 0.1 }}
-        className={`
-          relative bg-gray-800/40 backdrop-blur-sm border border-[#FF6B00]/20 rounded-xl p-4 
-          hover:border-[#FF6B00]/40 transition-all duration-200 cursor-pointer group select-none
-          ${draggedItem === index ? 'opacity-50 scale-105 shadow-2xl z-50' : ''}
-          ${dragOverItem === index && draggedItem !== null ? 'border-[#FF6B00] bg-[#FF6B00]/10' : ''}
-        `}
-        onMouseDown={(e) => handleMouseDown(e, index)}
-        onMouseUp={() => handleMouseUp(index)}
-        onMouseLeave={handleMouseLeave}
-        onDragOver={(e) => handleDragOver(e, index)}
-        draggable={draggedItem === index}
-        style={{
-          transform: draggedItem === index ? 'rotate(2deg)' : 'none',
+        key={questao.id || `questao-${index + 1}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        className="relative cursor-pointer group"
+        onClick={() => {
+          setSelectedQuestionIndex(index);
+          setViewMode('detailed');
+          // Notificar o modal pai sobre a seleção da questão
+          if (onQuestionSelect) {
+            onQuestionSelect(index, questao.id);
+          }
         }}
       >
-        {/* Indicador de drag */}
-        {draggedItem === index && (
-          <div className="absolute top-2 right-2 text-[#FF6B00]">
-            <GripVertical className="w-4 h-4" />
-          </div>
-        )}
-
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B00] to-[#FF8736] rounded-full flex items-center justify-center text-white font-bold text-sm">
-              {questao.numero}
+        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
+          {/* Container para numeração e tag de dificuldade */}
+          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+            {/* Numeração da questão */}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
+              {index + 1}
             </div>
-            <Badge variant="secondary" className={`text-xs px-2 py-1 ${difficultyConfig.color} ${difficultyConfig.textColor}`}>
+
+            {/* Tag de dificuldade */}
+            <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
               {difficultyConfig.label}
             </Badge>
           </div>
-          <Badge variant="outline" className="text-xs text-[#FF6B00] border-[#FF6B00]/30">
-            {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' : 'Questão'}
-          </Badge>
-        </div>
 
-        <p className="text-gray-300 text-sm line-clamp-3 mb-3 group-hover:text-white transition-colors">
-          {questao.enunciado}
-        </p>
+          <CardContent className="p-5 pt-16 h-full flex flex-col">
+            <div className="flex-1">
+              {/* Enunciado da questão (limitado) */}
+              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
+                {questao.enunciado?.substring(0, 130)}
+                {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
+              </p>
+            </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <span>{questao.alternativas?.length || 0} alternativas</span>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Eye className="w-3 h-3" />
-            <span>Ver detalhes</span>
-          </div>
-        </div>
+            {/* Informações básicas na base do card */}
+            <div className="space-y-3 mt-auto">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
+                  {getTypeIcon(questao.type)}
+                  <span className="ml-1.5">
+                    {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
+                     questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
+                  </span>
+                </Badge>
+              </div>
 
-        {/* Feedback visual durante drag */}
-        {draggedItem === index && (
-          <div className="absolute inset-0 bg-[#FF6B00]/20 rounded-xl border-2 border-[#FF6B00] pointer-events-none" />
-        )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {questao.type === 'multipla-escolha' && questao.alternativas && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
+                      {questao.alternativas.length} alternativas
+                    </span>
+                  )}
+                </div>
+
+                {/* Indicador visual de hover */}
+                <div className="w-2 h-2 rounded-full bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     );
   };
@@ -543,7 +453,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     >
       {/* Grade de questões */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {processedQuestions.map((questao, index) =>
+        {questoesProcessadas.map((questao, index) =>
           renderQuestionGridCard(questao, index)
         )}
       </div>
@@ -565,7 +475,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     </motion.div>
   );
 
-  const renderQuestion = (questao: ProcessedQuestion, index: number) => {
+  const renderQuestion = (questao: Question, index: number) => {
     const questionId = questao.id || `questao-${index + 1}`;
     const difficulty = determineDifficulty(questao);
     const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
@@ -831,7 +741,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           {/* Menu lateral de navegação das questões */}
           <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
             <div className="p-2 space-y-2">
-              {processedQuestions.map((questao, index) => {
+              {questoesProcessadas.map((questao, index) => {
                 const difficulty = determineDifficulty(questao);
                 const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
                 const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
@@ -903,110 +813,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           <div className="flex-1 h-full overflow-y-auto">
             {/* Conteúdo da questão */}
             <div className="p-6">
-              {selectedQuestionIndex !== null && processedQuestions[selectedQuestionIndex] && (
-                renderQuestion(processedQuestions[selectedQuestionIndex], selectedQuestionIndex)
+              {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
+                renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
               )}
             </div>
           </div>
         </motion.div>
       )}
-
-      {/* Modal de Detalhes da Questão */}
-      <AnimatePresence>
-        {selectedQuestion && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedQuestion(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-900 border border-[#FF6B00]/30 rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#FF6B00] to-[#FF8736] rounded-full flex items-center justify-center text-white font-bold">
-                    {selectedQuestion.numero}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">Questão {selectedQuestion.numero}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary" className={`text-xs ${getDifficultyColor(selectedQuestion.dificuldade || 'fácil')}`}>
-                        {selectedQuestion.dificuldade || 'Fácil'}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs text-[#FF6B00] border-[#FF6B00]/30">
-                        {selectedQuestion.type === 'multipla-escolha' ? 'Múltipla Escolha' : 'Questão'}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedQuestion(null)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Enunciado */}
-                <div>
-                  <h4 className="text-sm font-semibold text-[#FF6B00] mb-2">Enunciado:</h4>
-                  <p className="text-gray-300 leading-relaxed">{selectedQuestion.enunciado}</p>
-                </div>
-
-                {/* Alternativas */}
-                {selectedQuestion.alternativas && selectedQuestion.alternativas.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#FF6B00] mb-3">Alternativas:</h4>
-                    <div className="space-y-2">
-                      {selectedQuestion.alternativas.map((alternativa, index) => (
-                        <div
-                          key={index}
-                          className={`
-                            p-3 rounded-lg border transition-colors
-                            ${selectedQuestion.respostaCorreta === index
-                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                              : 'bg-gray-800/50 border-gray-700 text-gray-300'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center text-xs font-medium">
-                              {String.fromCharCode(65 + index)}
-                            </span>
-                            <span>{alternativa}</span>
-                            {selectedQuestion.respostaCorreta === index && (
-                              <CheckCircle className="w-4 h-4 text-emerald-400 ml-auto" />
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Explicação */}
-                {selectedQuestion.explicacao && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#FF6B00] mb-2">Explicação:</h4>
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                      <p className="text-blue-200 leading-relaxed">{selectedQuestion.explicacao}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

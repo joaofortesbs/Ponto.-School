@@ -1,0 +1,55 @@
+Prompt Otimizado para IA Programadora (Vibe Code)
+Título: Implementação de Interatividade com Ícone de Movimento em Mini-Cards na Interface de Visualização de Atividades
+Descrição Geral:
+
+Realizar uma atualização funcional na seção "School Power" da aplicação, especificamente na interface de "Construção de Atividades" e no modal de "Visualizar Atividades". A alteração deve focar na grade de mini-cards que representam as questões, introduzindo um ícone interativo para reposicionamento sem alterar o design existente.
+Especificações Técnicas:
+
+Contexto de Modificação:
+
+Localização: Seção "School Power" > Interface "Construção de Atividades" > Modal "Visualizar Atividades" > Grade de Mini-Cards (referência visual na imagem fornecida).
+Objetivo: Adicionar funcionalidade de movimento aos mini-cards via ícone interativo, preservando integralmente o design atual do modal.
+
+
+Comportamentos Interativos:
+
+Hover (Passe do Mouse):
+
+Ao passar o mouse sobre um mini-card, exibir um ícone de movimento (ex.: ícone de "drag" ou "setas") no canto inferior direito do mini-card.
+Requisito: O ícone deve ser discreto, aparecendo apenas durante o hover, sem alterar dimensões, cores ou layout dos mini-cards existentes.
+
+
+Clique no Ícone:
+
+Quando o usuário clicar no ícone de movimento, ativar o modo de arrastar (drag-and-drop) para reposicionar o mini-card dentro da grade.
+Durante o arrastar, o usuário deve poder ajustar a posição do mini-card entre outros mini-cards.
+Requisito: Implementar uma animação suave de transição durante o reposicionamento e atualizar a estrutura de dados da grade dinamicamente após o soltar (event mouseup ou drop).
+
+
+Clique Simples no Card:
+
+Manter o comportamento atual: um clique simples dentro da área do mini-card deve redirecionar o usuário para a visualização detalhada da questão correspondente.
+
+
+Compatibilidade: Assegurar que os comportamentos sejam mutuamente exclusivos e funcionem em dispositivos desktop e touch (mobile), sem interferir no design.
+
+
+Referência Visual:
+
+Analisar a imagem fornecida, que exibe uma grade de mini-cards (ex.: questões 1 a 8) com layout de grade responsiva, etiquetas de dificuldade ("Fácil") e indicadores de tipo de questão ("Múltipla Escolha").
+Garantir que nenhuma alteração seja feita no design (cores, espaçamento, tamanhos, fontes) do modal de "Visualizar Atividades".
+
+
+Requisitos Adicionais:
+
+Feedback Visual: Fornecer feedback ao usuário durante o arrastar (ex.: destaque do mini-card em movimento, sombra ou borda ativa), sem modificar o estilo original dos cards.
+Persistência de Dados: Após reposicionamento, salvar a nova ordem dos mini-cards no estado da aplicação ou banco de dados, conforme a arquitetura atual.
+Testes: Validar a funcionalidade em diferentes tamanhos de tela e cenários de uso (ex.: grade cheia, grade com poucos itens), assegurando que o design permaneça intacto.
+
+
+
+Instruções Finais:
+
+Utilizar as melhores práticas de desenvolvimento front-end (ex.: bibliotecas como React ou Vue, se aplicável, com gerenciamento de estado e eventos).
+Documentar o código com comentários claros sobre a lógica de exibição do ícone e arrastar.
+Testar a implementação com base na imagem fornecida para garantir compatibilidade visual e funcional, sem qualquer alteração no design original do modal.
