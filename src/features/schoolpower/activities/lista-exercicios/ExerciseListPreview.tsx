@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { Clock, BookOpen, Target, Users, FileText, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Clock, BookOpen, Target, Users, FileText, Eye, EyeOff, GripVertical, AlertCircle, Circle, Edit3, CheckCircle } from 'lucide-react';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
