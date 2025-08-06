@@ -1,86 +1,100 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { generateActivityContent } from '../api/generateActivity';
 
 export function useGenerateActivity() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generateActivity = async (activityType: string, formData: any) => {
+  const generateActivity = useCallback(async (
+    activityType: string,
+    customFields: Record<string, any>
+  ) => {
+    // Environment check for browser compatibility
+    const isBrowser = typeof window !== 'undefined';
+    const isNode = typeof process !== 'undefined' && process?.versions?.node;
+
+    console.log('🎬 Iniciando geração de atividade:', { activityType, customFields });
+
+    if (isGenerating) {
+      console.log('⏳ Geração já em andamento, ignorando nova solicitação');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
 
     try {
       console.log('🎯 useGenerateActivity: Preparando dados para IA');
-      console.log('📝 FormData recebido:', formData);
+      console.log('📝 FormData recebido:', customFields);
       console.log('🎪 Tipo de atividade:', activityType);
 
       // Preparar dados de contexto COMPLETOS e CONSISTENTES
       const contextData = {
         // Dados em português para o prompt (PADRÃO PRINCIPAL)
-        titulo: formData.title || 'Atividade',
-        descricao: formData.description || '',
-        disciplina: formData.subject || 'Português',
-        tema: formData.theme || 'Conteúdo Geral',
-        anoEscolaridade: formData.schoolYear || '6º ano',
-        numeroQuestoes: parseInt(formData.numberOfQuestions || '10'),
-        nivelDificuldade: formData.difficultyLevel || 'Médio',
-        modeloQuestoes: formData.questionModel || 'Múltipla escolha',
-        fontes: formData.sources || '',
-        objetivos: formData.objectives || '',
-        materiais: formData.materials || '',
-        instrucoes: formData.instructions || '',
-        tempoLimite: formData.timeLimit || '',
-        contextoAplicacao: formData.context || '',
+        titulo: customFields.title || 'Atividade',
+        descricao: customFields.description || '',
+        disciplina: customFields.subject || 'Português',
+        tema: customFields.theme || 'Conteúdo Geral',
+        anoEscolaridade: customFields.schoolYear || '6º ano',
+        numeroQuestoes: parseInt(customFields.numberOfQuestions || '10'),
+        nivelDificuldade: customFields.difficultyLevel || 'Médio',
+        modeloQuestoes: customFields.questionModel || 'Múltipla escolha',
+        fontes: customFields.sources || '',
+        objetivos: customFields.objectives || '',
+        materiais: customFields.materials || '',
+        instrucoes: customFields.instructions || '',
+        tempoLimite: customFields.timeLimit || '',
+        contextoAplicacao: customFields.context || '',
 
         // Campos específicos adicionais para todos os tipos
-        tipoTexto: formData.textType || '',
-        generoTextual: formData.textGenre || '',
-        extensaoTexto: formData.textLength || '',
-        questoesAssociadas: formData.associatedQuestions || '',
-        competencias: formData.competencies || '',
-        estrategiasLeitura: formData.readingStrategies || '',
-        recursosVisuais: formData.visualResources || '',
-        atividadesPraticas: formData.practicalActivities || '',
-        palavrasIncluidas: formData.wordsIncluded || '',
-        formatoGrade: formData.gridFormat || '',
-        dicasFornecidas: formData.providedHints || '',
-        contextoVocabulario: formData.vocabularyContext || '',
-        idioma: formData.language || 'Português',
-        exerciciosAssociados: formData.associatedExercises || '',
-        areaConhecimento: formData.knowledgeArea || '',
-        nivelComplexidade: formData.complexityLevel || '',
+        tipoTexto: customFields.textType || '',
+        generoTextual: customFields.textGenre || '',
+        extensaoTexto: customFields.textLength || '',
+        questoesAssociadas: customFields.associatedQuestions || '',
+        competencias: customFields.competencies || '',
+        estrategiasLeitura: customFields.readingStrategies || '',
+        recursosVisuais: customFields.visualResources || '',
+        atividadesPraticas: customFields.practicalActivities || '',
+        palavrasIncluidas: customFields.wordsIncluded || '',
+        formatoGrade: customFields.gridFormat || '',
+        dicasFornecidas: customFields.providedHints || '',
+        contextoVocabulario: customFields.vocabularyContext || '',
+        idioma: customFields.language || 'Português',
+        exerciciosAssociados: customFields.associatedExercises || '',
+        areaConhecimento: customFields.knowledgeArea || '',
+        nivelComplexidade: customFields.complexityLevel || '',
 
         // Dados alternativos em inglês para compatibilidade total
-        title: formData.title,
-        description: formData.description,
-        subject: formData.subject,
-        theme: formData.theme,
-        schoolYear: formData.schoolYear,
-        numberOfQuestions: formData.numberOfQuestions,
-        difficultyLevel: formData.difficultyLevel,
-        questionModel: formData.questionModel,
-        sources: formData.sources,
-        objectives: formData.objectives,
-        materials: formData.materials,
-        instructions: formData.instructions,
-        timeLimit: formData.timeLimit,
-        context: formData.context,
-        textType: formData.textType,
-        textGenre: formData.textGenre,
-        textLength: formData.textLength,
-        associatedQuestions: formData.associatedQuestions,
-        competencies: formData.competencies,
-        readingStrategies: formData.readingStrategies,
-        visualResources: formData.visualResources,
-        practicalActivities: formData.practicalActivities,
-        wordsIncluded: formData.wordsIncluded,
-        gridFormat: formData.gridFormat,
-        providedHints: formData.providedHints,
-        vocabularyContext: formData.vocabularyContext,
-        language: formData.language,
-        associatedExercises: formData.associatedExercises,
-        knowledgeArea: formData.knowledgeArea,
-        complexityLevel: formData.complexityLevel
+        title: customFields.title,
+        description: customFields.description,
+        subject: customFields.subject,
+        theme: customFields.theme,
+        schoolYear: customFields.schoolYear,
+        numberOfQuestions: customFields.numberOfQuestions,
+        difficultyLevel: customFields.difficultyLevel,
+        questionModel: customFields.questionModel,
+        sources: customFields.sources,
+        objectives: customFields.objectives,
+        materials: customFields.materials,
+        instructions: customFields.instructions,
+        timeLimit: customFields.timeLimit,
+        context: customFields.context,
+        textType: customFields.textType,
+        textGenre: customFields.textGenre,
+        textLength: customFields.textLength,
+        associatedQuestions: customFields.associatedQuestions,
+        competencies: customFields.competencies,
+        readingStrategies: customFields.readingStrategies,
+        visualResources: customFields.visualResources,
+        practicalActivities: customFields.practicalActivities,
+        wordsIncluded: customFields.wordsIncluded,
+        gridFormat: customFields.gridFormat,
+        providedHints: customFields.providedHints,
+        vocabularyContext: customFields.vocabularyContext,
+        language: customFields.language,
+        associatedExercises: customFields.associatedExercises,
+        knowledgeArea: customFields.knowledgeArea,
+        complexityLevel: customFields.complexityLevel
       };
 
       console.log('📊 ContextData COMPLETO preparado para IA:', contextData);
@@ -99,7 +113,7 @@ export function useGenerateActivity() {
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [isGenerating, error]); // Adicionado isGenerating e error como dependências do useCallback
 
   return {
     generateActivity,

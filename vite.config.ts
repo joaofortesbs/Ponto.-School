@@ -18,6 +18,11 @@ export default defineConfig(({ command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Polyfill process for browser compatibility
+    'process.env': {},
+    'global': 'globalThis',
+  },
   esbuild: {
     target: 'esnext',
   },

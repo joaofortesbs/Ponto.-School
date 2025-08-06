@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from "@/lib/utils";
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -351,7 +352,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             normalizedQuestion.respostaCorreta = 0;
           }
         }
-        
+
         // Garantir que a resposta correta seja um número para múltipla escolha e V/F
         if (normalizedQuestion.type === 'multipla-escolha' && normalizedQuestion.respostaCorreta !== undefined) {
           if (typeof normalizedQuestion.respostaCorreta === 'string' && !isNaN(parseInt(normalizedQuestion.respostaCorreta))) {
