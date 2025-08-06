@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, Reorder } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Clock, BookOpen, Target, Users, FileText, Eye, EyeOff, GripVertical, AlertCircle, Circle, Edit3, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -132,7 +134,6 @@ interface Question {
   response?: string;
   correct_answer?: string;
   gabarito?: string | number; // Adicionado para o gabarito
-  numero?: number;
 }
 
 interface ExerciseListData {
@@ -182,9 +183,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
-  // Estado local das questões processadas
-  const [questoes, setQuestoes] = useState<any[]>([]);
-  const [reorderableQuestoes, setReorderableQuestoes] = useState<any[]>([]);
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
@@ -217,30 +215,67 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
 
     if (questoesDaIA && questoesDaIA.length > 0) {
-      // Processa questões da IA
-      console.log('✅ Processando', questoesDaIA.length, 'questões da IA');
-      const questoesProcessadas = questoesDaIA.map((questao, index) => {
-        console.log(`📄 Questão ${index + 1} processada:`, {
-          id: questao.id,
-          type: questao.type,
-          enunciadoLength: questao.enunciado?.length || 0,
-          hasAlternativas: !!questao.alternativas,
-          alternativasCount: questao.alternativas?.length || 0
-        });
-
-        return {
-          id: questao.id || `questao-${index + 1}`,
-          numero: index + 1,
-          enunciado: questao.enunciado || '',
-          alternativas: questao.alternativas || [],
-          respostaCorreta: questao.respostaCorreta !== undefined ? questao.respostaCorreta : 0,
-          explicacao: questao.explicacao || '',
-          type: questao.type || 'multipla-escolha'
-        };
+      console.log(`✅ Processando ${questoesDaIA.length} questões da IA`);
+      console.log('📝 Primeira questão da IA:', questoesDaIA[0]);
+      console.log('📝 Estrutura da primeira questão:', {
+        hasId: !!questoesDaIA[0].id,
+        hasType: !!questoesDaIA[0].type,
+        hasEnunciado: !!questoesDaIA[0].enunciado,
+        hasAlternativas: !!questoesDaIA[0].alternativas,
+        alternativasLength: questoesDaIA[0].alternativas ? questoesDaIA[0].alternativas.length : 0
       });
 
-      setQuestoes(questoesProcessadas);
-      setReorderableQuestoes(questoesProcessadas);
+      // Processar e validar as questões da IA
+      const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
+        const questaoProcessada: Question = {
+          id: questao.id || `questao-${index + 1}`,
+          type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
+          enunciado: questao.enunciado || questao.enunciado || questao.statement || questao.question || `Questão ${index + 1}`,
+          alternativas: questao.alternativas || questao.alternatives || questao.options,
+          respostaCorreta: questao.respostaCorreta || questao.correctAnswer || questao.correct_answer || 0,
+          explicacao: questao.explicacao || questao.explanation,
+          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any, // Permitindo string temporariamente
+          tema: questao.tema || questao.topic || data.tema || 'Tema não especificado',
+          pontos: questao.pontos,
+          tempo_estimado: questao.tempo_estimado,
+          tipo: questao.tipo,
+          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer // Inclui gabarito
+        };
+
+        // Ajuste de tipo para padronizar
+        if (questaoProcessada.type === 'multipla_escolha' || questaoProcessada.type === 'multiple-choice' || questaoProcessada.type === 'múltipla escolha') {
+          questaoProcessada.type = 'multipla-escolha';
+          // Garantir que há alternativas suficientes
+          if (!questaoProcessada.alternativas || questaoProcessada.alternativas.length < 2) {
+            console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
+            questaoProcessada.alternativas = [
+              'Opção A',
+              'Opção B',
+              'Opção C',
+              'Opção D'
+            ];
+          }
+        } else if (questaoProcessada.type === 'verdadeiro-falso' || questaoProcessada.type === 'true-false') {
+          questaoProcessada.type = 'verdadeiro-falso';
+          questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
+        } else if (questaoProcessada.type === 'discursiva' || questaoProcessada.type === 'essay') {
+          // Questões discursivas não precisam de alternativas
+          questaoProcessada.alternativas = undefined;
+        }
+
+        console.log(`📄 Questão ${index + 1} processada:`, {
+          id: questaoProcessada.id,
+          type: questaoProcessada.type,
+          enunciadoLength: questaoProcessada.enunciado?.length,
+          hasAlternativas: !!questaoProcessada.alternativas,
+          alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0
+        });
+
+        return questaoProcessada;
+      });
+
+      console.log(`✅ ${questoesProcessadasIA.length} questões processadas com sucesso`);
+      setQuestoesProcessadas(questoesProcessadasIA);
 
     } else if (isContentFromAI) {
       console.error('❌ Conteúdo marcado como da IA mas sem questões válidas');

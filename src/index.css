@@ -18,7 +18,6 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
-@import "./styles/drag-and-drop.css";
 
 /* Estilo para tópicos selecionados - apenas borda laranja (sem animação) */
 .topic-selected {
