@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, Move } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Sistema de mapeamento de dificuldade
@@ -170,6 +170,184 @@ interface ExerciseListPreviewProps {
   onQuestionSelect?: (questionIndex: number, questionId: string) => void;
 }
 
+// Componente de mini-card para grade inicial de questões
+const RenderQuestionGridCard = ({ questao, index, setSelectedQuestionIndex, setViewMode, onQuestionSelect }: { questao: Question, index: number, setSelectedQuestionIndex: React.Dispatch<React.SetStateAction<number | null>>, setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'detailed'>>, onQuestionSelect?: (questionIndex: number, questionId: string) => void }) => {
+  const difficulty = determineDifficulty(questao);
+  const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="relative cursor-pointer group"
+      onClick={() => {
+        setSelectedQuestionIndex(index);
+        setViewMode('detailed');
+        if (onQuestionSelect) {
+          onQuestionSelect(index, questao.id);
+        }
+      }}
+    >
+      <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
+            {index + 1}
+          </div>
+          <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
+            {difficultyConfig.label}
+          </Badge>
+        </div>
+        <CardContent className="p-5 pt-16 h-full flex flex-col">
+          <div className="flex-1">
+            <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
+              {questao.enunciado?.substring(0, 130)}
+              {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
+            </p>
+          </div>
+          <div className="space-y-3 mt-auto">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
+                {getTypeIcon(questao.type)}
+                <span className="ml-1.5">
+                  {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
+                   questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
+                </span>
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {questao.type === 'multipla-escolha' && questao.alternativas && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
+                    {questao.alternativas.length} alternativas
+                  </span>
+                )}
+              </div>
+              <div className="w-2 h-2 rounded-full bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
+
+// Componente de Cartão de Questão com Drag-and-Drop
+interface QuestionCardProps {
+  questao: Question;
+  index: number;
+  onReorder: (fromIndex: number, toIndex: number) => void;
+  onQuestionClick: (questao: Question) => void;
+  isSelected: boolean;
+  isAnswered: boolean;
+  getQuestionTypeIcon: (type: Question['type']) => React.ReactNode;
+  getDifficultyConfig: (difficulty?: string) => { label: string; color: string; textColor: string };
+  generateQuestionTag: (enunciado: string | undefined, alternativas: string[] | undefined) => string;
+}
+
+function QuestionCard({ questao, index, onReorder, onQuestionClick, isSelected, isAnswered, getQuestionTypeIcon, getDifficultyConfig, generateQuestionTag }: QuestionCardProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [showMoveIcon, setShowMoveIcon] = useState(false);
+  const dragRef = useRef<HTMLDivElement>(null);
+  const difficultyConfig = getDifficultyConfig(questao.dificuldade);
+  const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isDragging || (e.target as HTMLElement).closest('.move-icon')) {
+      return;
+    }
+    onQuestionClick(questao);
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    e.dataTransfer.setData('text/plain', index.toString());
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    const toIndex = index;
+
+    if (fromIndex !== toIndex) {
+      onReorder(fromIndex, toIndex);
+    }
+  };
+
+  return (
+    <motion.div
+      ref={dragRef}
+      className={`relative group/card p-4 rounded-xl cursor-pointer transition-all duration-200 border 
+                  ${isSelected
+                    ? 'bg-orange-100/20 border-orange-300 border-2 dark:bg-orange-900/30 dark:border-orange-600' 
+                    : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 dark:border-gray-700 dark:hover:bg-gray-800/50'}
+                  ${isDragging ? 'opacity-50 shadow-lg' : ''}`}
+      onClick={handleCardClick}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onMouseEnter={() => setShowMoveIcon(true)}
+      onMouseLeave={() => setShowMoveIcon(false)}
+      whileHover={{ scale: 1.02 }}
+      layout
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold 
+                        ${isAnswered ? 'bg-green-500 text-white' : isSelected ? 'bg-orange-500 text-white' : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'}`}>
+          {isAnswered ? '✓' : index + 1}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
+                {difficultyConfig.label}
+              </div>
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
+                {questionTag}
+              </Badge>
+            </div>
+            <div className="flex-shrink-0">
+              {getQuestionTypeIcon(questao.type)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 leading-relaxed font-medium">
+        {questao.enunciado}
+      </p>
+      <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center gap-2">
+          {questao.type === 'multipla-escolha' && questao.alternativas && (
+            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
+              {questao.alternativas.length} alternativas
+            </span>
+          )}
+        </div>
+      </div>
+
+      {showMoveIcon && (
+        <div 
+          className="move-icon absolute bottom-2 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center cursor-move opacity-80 hover:opacity-100 transition-opacity"
+          draggable
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Move className="w-3 h-3 text-white" />
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   data,
   isGenerating = false,
@@ -189,17 +367,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     console.log('🔄 Processando questões no ExerciseListPreview:', data);
     console.log('🔍 Estrutura completa dos dados:', JSON.stringify(data, null, 2));
 
-    // Verificar diferentes formatos de questões que podem vir da IA
     let questoesDaIA = null;
     let isContentFromAI = false;
 
-    // Verificar se o conteúdo foi gerado pela IA
     if (data.isGeneratedByAI === true || data.generatedAt) {
       isContentFromAI = true;
       console.log('✅ Conteúdo confirmado como gerado pela IA');
     }
 
-    // Buscar questões em diferentes possíveis localizações
     if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
       console.log(`✅ Questões encontradas em 'questoes': ${data.questoes.length}`);
       questoesDaIA = data.questoes;
@@ -216,16 +391,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
     if (questoesDaIA && questoesDaIA.length > 0) {
       console.log(`✅ Processando ${questoesDaIA.length} questões da IA`);
-      console.log('📝 Primeira questão da IA:', questoesDaIA[0]);
-      console.log('📝 Estrutura da primeira questão:', {
-        hasId: !!questoesDaIA[0].id,
-        hasType: !!questoesDaIA[0].type,
-        hasEnunciado: !!questoesDaIA[0].enunciado,
-        hasAlternativas: !!questoesDaIA[0].alternativas,
-        alternativasLength: questoesDaIA[0].alternativas ? questoesDaIA[0].alternativas.length : 0
-      });
-
-      // Processar e validar as questões da IA
       const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
         const questaoProcessada: Question = {
           id: questao.id || `questao-${index + 1}`,
@@ -234,52 +399,31 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           alternativas: questao.alternativas || questao.alternatives || questao.options,
           respostaCorreta: questao.respostaCorreta || questao.correctAnswer || questao.correct_answer || 0,
           explicacao: questao.explicacao || questao.explanation,
-          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any, // Permitindo string temporariamente
+          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any,
           tema: questao.tema || questao.topic || data.tema || 'Tema não especificado',
           pontos: questao.pontos,
           tempo_estimado: questao.tempo_estimado,
           tipo: questao.tipo,
-          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer // Inclui gabarito
+          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer
         };
 
-        // Ajuste de tipo para padronizar
         if (questaoProcessada.type === 'multipla_escolha' || questaoProcessada.type === 'multiple-choice' || questaoProcessada.type === 'múltipla escolha') {
           questaoProcessada.type = 'multipla-escolha';
-          // Garantir que há alternativas suficientes
           if (!questaoProcessada.alternativas || questaoProcessada.alternativas.length < 2) {
             console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
-            questaoProcessada.alternativas = [
-              'Opção A',
-              'Opção B',
-              'Opção C',
-              'Opção D'
-            ];
+            questaoProcessada.alternativas = ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
           }
         } else if (questaoProcessada.type === 'verdadeiro-falso' || questaoProcessada.type === 'true-false') {
           questaoProcessada.type = 'verdadeiro-falso';
           questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
-        } else if (questaoProcessada.type === 'discursiva' || questaoProcessada.type === 'essay') {
-          // Questões discursivas não precisam de alternativas
+        } else if (questaoProcessada.type === 'discursiva' || questao.type === 'essay') { // Adicionado questao.type para cobrir mais casos
           questaoProcessada.alternativas = undefined;
         }
-
-        console.log(`📄 Questão ${index + 1} processada:`, {
-          id: questaoProcessada.id,
-          type: questaoProcessada.type,
-          enunciadoLength: questaoProcessada.enunciado?.length,
-          hasAlternativas: !!questaoProcessada.alternativas,
-          alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0
-        });
-
         return questaoProcessada;
       });
-
-      console.log(`✅ ${questoesProcessadasIA.length} questões processadas com sucesso`);
       setQuestoesProcessadas(questoesProcessadasIA);
-
     } else if (isContentFromAI) {
       console.error('❌ Conteúdo marcado como da IA mas sem questões válidas');
-      console.error('📊 Dados recebidos:', data);
       setQuestoesProcessadas([]);
     } else {
       console.log('⚠️ Conteúdo não foi gerado pela IA, usando questões simuladas como fallback');
@@ -309,17 +453,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         id: `questao-${i}`,
         type: tipoQuestao,
         enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina || 'conteúdo geral'}`,
-        alternativas: tipoQuestao === 'multipla-escolha' ? [
-          'Alternativa A',
-          'Alternativa B',
-          'Alternativa C',
-          'Alternativa D'
-        ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
+        alternativas: tipoQuestao === 'multipla-escolha' ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
         dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as any,
         tema: activityData.tema || 'Tema não especificado'
       });
     }
-
     return questoes;
   };
 
@@ -345,11 +483,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   };
 
   const getDifficultyColor = (dificuldade?: string) => {
-    const nivel = determineDifficulty({ dificuldade: dificuldade }); // Usa a função de determinação
+    const nivel = determineDifficulty({ dificuldade: dificuldade });
     const config = DIFFICULTY_LEVELS[nivel];
-    return `${config.color} ${config.textColor}`;
+    return config;
   };
-
 
   const getTypeIcon = (type: Question['type']) => {
     switch (type) {
@@ -369,81 +506,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   }, [questoesProcessadas, onQuestionRender]);
 
-  // Componente de mini-card para grade inicial de questões
-  const renderQuestionGridCard = (questao: Question, index: number) => {
-    const difficulty = determineDifficulty(questao);
-    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
-    return (
-      <motion.div
-        key={questao.id || `questao-${index + 1}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className="relative cursor-pointer group"
-        onClick={() => {
-          setSelectedQuestionIndex(index);
-          setViewMode('detailed');
-          // Notificar o modal pai sobre a seleção da questão
-          if (onQuestionSelect) {
-            onQuestionSelect(index, questao.id);
-          }
-        }}
-      >
-        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
-          {/* Container para numeração e tag de dificuldade */}
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-            {/* Numeração da questão */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
-              {index + 1}
-            </div>
-
-            {/* Tag de dificuldade */}
-            <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
-              {difficultyConfig.label}
-            </Badge>
-          </div>
-
-          <CardContent className="p-5 pt-16 h-full flex flex-col">
-            <div className="flex-1">
-              {/* Enunciado da questão (limitado) */}
-              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
-                {questao.enunciado?.substring(0, 130)}
-                {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
-              </p>
-            </div>
-
-            {/* Informações básicas na base do card */}
-            <div className="space-y-3 mt-auto">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
-                  {getTypeIcon(questao.type)}
-                  <span className="ml-1.5">
-                    {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
-                     questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
-                  </span>
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {questao.type === 'multipla-escolha' && questao.alternativas && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
-                      {questao.alternativas.length} alternativas
-                    </span>
-                  )}
-                </div>
-
-                {/* Indicador visual de hover */}
-                <div className="w-2 h-2 rounded-full bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-
-  // Componente da grade de questões
   const renderQuestionsGrid = () => (
     <motion.div
       initial={{ opacity: 0 }}
@@ -451,22 +513,27 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
-      {/* Grade de questões */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {questoesProcessadas.map((questao, index) =>
-          renderQuestionGridCard(questao, index)
+          <RenderQuestionGridCard
+            key={questao.id || `questao-${index + 1}`}
+            questao={questao}
+            index={index}
+            setSelectedQuestionIndex={setSelectedQuestionIndex}
+            setViewMode={setViewMode}
+            onQuestionSelect={onQuestionSelect}
+          />
         )}
       </div>
 
-      {/* Informações adicionais */}
-      {consolidatedData.observacoes && (
+      {data.observacoes && (
         <Card className="border-amber-200 bg-amber-50 dark:bg-yellow-950/30 dark:border-yellow-800">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-medium text-amber-800 dark:text-yellow-200 mb-1">Observações Importantes</h4>
-                <p className="text-amber-700 dark:text-yellow-300 text-sm">{consolidatedData.observacoes}</p>
+                <p className="text-amber-700 dark:text-yellow-300 text-sm">{data.observacoes}</p>
               </div>
             </div>
           </CardContent>
@@ -477,32 +544,21 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   const renderQuestion = (questao: Question, index: number) => {
     const questionId = questao.id || `questao-${index + 1}`;
-    const difficulty = determineDifficulty(questao);
-    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+    const difficultyConfig = getDifficultyColor(questao.dificuldade);
     const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
 
-    // Extrair e processar alternativas de forma robusta
     let alternativasProcessadas = [];
-
     if (questao.type === 'multipla-escolha') {
       if (questao.alternativas && Array.isArray(questao.alternativas)) {
         alternativasProcessadas = questao.alternativas;
       } else if (questao.alternatives && Array.isArray(questao.alternatives)) {
-        alternativasProcessadas = questao.alternatives;
+        alternativasProcessadas = questao.alternativas;
       } else if (questao.options && Array.isArray(questao.options)) {
         alternativasProcessadas = questao.options;
       } else {
-        // Fallback com alternativas padrão
-        alternativasProcessadas = [
-          'Opção A',
-          'Opção B',
-          'Opção C',
-          'Opção D'
-        ];
+        alternativasProcessadas = ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
       }
     }
-
-    console.log(`🔍 Questão ${index + 1} - Alternativas processadas:`, alternativasProcessadas);
 
     return (
       <Card
@@ -540,10 +596,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             <div className="space-y-3">
               {alternativasProcessadas.length > 0 ? (
                 alternativasProcessadas.map((alternativa, altIndex) => {
-                  const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
+                  const letter = String.fromCharCode(65 + altIndex);
                   const isSelected = respostas[questao.id] === altIndex;
-
-                  // Extrair texto da alternativa de forma robusta
                   let textoAlternativa = '';
                   if (typeof alternativa === 'string') {
                     textoAlternativa = alternativa;
@@ -552,7 +606,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   } else {
                     textoAlternativa = `Alternativa ${letter}`;
                   }
-
                   return (
                     <div
                       key={altIndex}
@@ -584,9 +637,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   <p className="text-yellow-800 dark:text-yellow-200 text-sm">
                     ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
                   </p>
-                  <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-auto">
-                    {JSON.stringify(questao, null, 2)}
-                  </pre>
                 </div>
               )}
             </div>
@@ -654,8 +704,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     <div className="text-orange-800 dark:text-orange-200 whitespace-pre-wrap mb-4">
                       {questao.explicacao}
                     </div>
-
-                    {/* Gabarito da Questão */}
                     {questao.gabarito && (
                       <div className="pt-4 border-t border-orange-200 dark:border-orange-700">
                         <h5 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
@@ -691,7 +739,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     );
   };
 
-
   if (isGenerating) {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-4 dark:text-gray-300">
@@ -720,13 +767,22 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     tempoLimite: data?.tempoLimite
   };
 
-  console.log('📊 Dados consolidados finais:', consolidatedData);
+  const handleReorder = (fromIndex: number, toIndex: number) => {
+    const newQuestoes = [...questoesProcessadas];
+    const [movedItem] = newQuestoes.splice(fromIndex, 1);
+    newQuestoes.splice(toIndex, 0, movedItem);
+    setQuestoesProcessadas(newQuestoes);
+  };
+
+  const handleQuestionClick = (questao: Question) => {
+    setSelectedQuestionIndex(questoesProcessadas.findIndex(q => q.id === questao.id));
+    setViewMode('detailed');
+  };
 
   return (
     <div className="h-full">
       {viewMode === 'grid' ? (
         <div className="h-full flex flex-col">
-          {/* Grade de questões */}
           <div className="flex-1 overflow-y-auto p-6">
             {renderQuestionsGrid()}
           </div>
@@ -738,80 +794,32 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           transition={{ duration: 0.4, ease: "easeInOut" }}
           className="flex h-full"
         >
-          {/* Menu lateral de navegação das questões */}
           <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
             <div className="p-2 space-y-2">
               {questoesProcessadas.map((questao, index) => {
-                const difficulty = determineDifficulty(questao);
-                const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
-                const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
+                const difficultyConfig = getDifficultyColor(questao.dificuldade);
                 const isSelected = selectedQuestionIndex === index;
                 const isAnswered = respostas[questao.id] !== undefined;
 
-                // Função para obter o ícone do tipo de questão
-                const getQuestionTypeIcon = (type: Question['type']) => {
-                  switch (type) {
-                    case 'multipla-escolha':
-                      return <Circle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                    case 'discursiva':
-                      return <Edit3 className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                    case 'verdadeiro-falso':
-                      return <CheckCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                    default:
-                      return <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                  }
-                };
-
                 return (
-                  <button
+                  <QuestionCard
                     key={questao.id || `questao-${index}`}
-                    onClick={() => {
-                      setSelectedQuestionIndex(index);
-                      if (onQuestionSelect) {
-                        onQuestionSelect(index, questao.id);
-                      }
-                    }}
-                    className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
-                      isSelected
-                        ? 'bg-orange-100/20 border-orange-300 border-2 backdrop-blur-sm dark:bg-orange-900/30 dark:border-orange-600'
-                        : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm dark:border-gray-700 dark:hover:bg-gray-800/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isAnswered
-                          ? 'bg-green-500 text-white'
-                          : isSelected
-                            ? 'bg-orange-500 text-white'
-                            : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'
-                      }`}>
-                        {isAnswered ? '✓' : index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
-                              {difficultyConfig.label}
-                            </div>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
-                              {questionTag}
-                            </Badge>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {getQuestionTypeIcon(questao.type)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
+                    questao={questao}
+                    index={index}
+                    onReorder={handleReorder}
+                    onQuestionClick={handleQuestionClick}
+                    isSelected={isSelected}
+                    isAnswered={isAnswered}
+                    getQuestionTypeIcon={getTypeIcon}
+                    getDifficultyConfig={getDifficultyColor}
+                    generateQuestionTag={generateQuestionTag}
+                  />
                 );
               })}
             </div>
           </div>
 
-          {/* Área principal com a questão selecionada */}
           <div className="flex-1 h-full overflow-y-auto">
-            {/* Conteúdo da questão */}
             <div className="p-6">
               {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
                 renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
