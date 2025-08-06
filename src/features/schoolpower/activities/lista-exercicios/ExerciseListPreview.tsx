@@ -460,12 +460,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   // Effect para notificar quando questões são renderizadas
   useEffect(() => {
-    if (onQuestionRender && questoesProcessadas.length > 0) {
-      questoesProcessadas.forEach(questao => {
+    if (onQuestionRender && processedQuestions.length > 0) {
+      processedQuestions.forEach(questao => {
         onQuestionRender(questao.id);
       });
     }
-  }, [questoesProcessadas, onQuestionRender]);
+  }, [processedQuestions, onQuestionRender]);
 
   // Componente de mini-card para grade inicial de questões
   const renderQuestionGridCard = (questao: ProcessedQuestion, index: number) => {
