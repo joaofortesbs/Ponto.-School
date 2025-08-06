@@ -1,4 +1,3 @@
-
 export const buildListaExerciciosPrompt = (contextData: any): string => {
   const numeroQuestoes = parseInt(contextData.numeroQuestoes || contextData.numberOfQuestions || '10');
   const disciplina = contextData.disciplina || contextData.subject || 'Português';
@@ -14,7 +13,7 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
   // Determinar o tipo de questão baseado no modelo
   let tipoQuestao = 'multipla-escolha';
   const modeloLower = modeloQuestoes.toLowerCase();
-  
+
   if (modeloLower.includes('dissertativa') || modeloLower.includes('discursiva')) {
     tipoQuestao = 'discursiva';
   } else if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
@@ -32,7 +31,7 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
       "enunciado": "Questão específica sobre ${tema} para ${anoEscolar}",
       "alternativas": [
         "Alternativa A específica do tema",
-        "Alternativa B específica do tema", 
+        "Alternativa B específica do tema",
         "Alternativa C específica do tema",
         "Alternativa D específica do tema"
       ],
@@ -43,7 +42,7 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
     }`;
   } else if (tipoQuestao === 'verdadeiro-falso') {
     exemploQuestao = `{
-      "id": "questao-1", 
+      "id": "questao-1",
       "type": "verdadeiro-falso",
       "enunciado": "Afirmação sobre ${tema} para avaliar se é verdadeira ou falsa",
       "alternativas": ["Verdadeiro", "Falso"],
@@ -55,7 +54,7 @@ export const buildListaExerciciosPrompt = (contextData: any): string => {
   } else {
     exemploQuestao = `{
       "id": "questao-1",
-      "type": "discursiva", 
+      "type": "discursiva",
       "enunciado": "Questão dissertativa sobre ${tema} que exige desenvolvimento de resposta",
       "respostaCorreta": "Resposta esperada detalhada",
       "explicacao": "Critérios de avaliação e pontos importantes",
@@ -110,7 +109,7 @@ REGRAS CRÍTICAS:
 - Responda APENAS com JSON válido, sem caracteres extras ou texto adicional
 - Crie ${numeroQuestoes} questões diferentes e específicas sobre "${tema}"
 - Para múltipla escolha: exatamente 4 alternativas
-- Para verdadeiro/falso: ["Verdadeiro", "Falso"] 
+- Para verdadeiro/falso: ["Verdadeiro", "Falso"]
 - Para discursiva: sem alternativas
 - IDs únicos: "questao-1", "questao-2", etc.
 - Enunciados específicos do tema, não genéricos
@@ -121,12 +120,12 @@ IMPORTANTE: O conteúdo deve ser específico para "${tema}" em ${disciplina}, ad
 
 export const validateListaExerciciosResponse = (response: any): boolean => {
   if (!response || typeof response !== 'object') return false;
-  
+
   if (!response.questoes || !Array.isArray(response.questoes)) return false;
-  
-  return response.questoes.every((questao: any) => 
-    questao.id && 
-    questao.type && 
+
+  return response.questoes.every((questao: any) =>
+    questao.id &&
+    questao.type &&
     questao.enunciado &&
     (questao.type === 'discursiva' || questao.alternativas)
   );

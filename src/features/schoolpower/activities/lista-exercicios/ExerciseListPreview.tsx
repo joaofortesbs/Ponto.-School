@@ -135,7 +135,7 @@ interface Question {
   isCorrect?: boolean;
   response?: string;
   correct_answer?: string;
-  gabarito?: string | number; // Adicionado para o gabarito
+  gabarito?: string | number;
 }
 
 interface ExerciseListData {
@@ -252,25 +252,37 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer // Inclui gabarito
         };
 
-        // Ajuste de tipo para padronizar
-        if (questaoProcessada.type === 'multipla_escolha' || questaoProcessada.type === 'multiple-choice' || questaoProcessada.type === 'múltipla escolha') {
+        // Normalizar e validar tipos de questão - apenas 3 tipos permitidos
+        const tipoOriginal = questaoProcessada.type.toLowerCase().replace(/[_\s-]/g, '');
+        
+        if (tipoOriginal.includes('multipla') || tipoOriginal.includes('escolha') || tipoOriginal.includes('multiple') || tipoOriginal.includes('choice')) {
           questaoProcessada.type = 'multipla-escolha';
           // Garantir que há alternativas suficientes
           if (!questaoProcessada.alternativas || questaoProcessada.alternativas.length < 2) {
             console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
             questaoProcessada.alternativas = [
               'Opção A',
-              'Opção B',
+              'Opção B', 
               'Opção C',
               'Opção D'
             ];
           }
-        } else if (questaoProcessada.type === 'verdadeiro-falso' || questaoProcessada.type === 'true-false') {
+        } else if (tipoOriginal.includes('verdadeiro') || tipoOriginal.includes('falso') || tipoOriginal.includes('true') || tipoOriginal.includes('false')) {
           questaoProcessada.type = 'verdadeiro-falso';
           questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
-        } else if (questaoProcessada.type === 'discursiva' || questaoProcessada.type === 'essay') {
-          // Questões discursivas não precisam de alternativas
+        } else if (tipoOriginal.includes('discursiva') || tipoOriginal.includes('essay') || tipoOriginal.includes('dissertativa')) {
+          questaoProcessada.type = 'discursiva';
           questaoProcessada.alternativas = undefined;
+        } else {
+          // Se o tipo não for reconhecido, defaultar para múltipla escolha
+          console.warn(`⚠️ Tipo de questão não reconhecido: ${questaoProcessada.type}. Convertendo para múltipla escolha.`);
+          questaoProcessada.type = 'multipla-escolha';
+          questaoProcessada.alternativas = [
+            'Opção A',
+            'Opção B',
+            'Opção C', 
+            'Opção D'
+          ];
         }
 
         console.log(`📄 Questão ${index + 1} processada:`, {
@@ -303,16 +315,22 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     const tipos = (activityData.tipoQuestoes || 'multipla-escolha').toLowerCase();
     const numeroQuestoes = activityData.numeroQuestoes || 5;
 
+    // Apenas 3 tipos de questão permitidos
+    const tiposValidos: Question['type'][] = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'];
+
     for (let i = 1; i <= numeroQuestoes; i++) {
       let tipoQuestao: Question['type'] = 'multipla-escolha';
 
-      if (tipos.includes('mista')) {
-        const tiposDisponiveis: Question['type'][] = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'];
-        tipoQuestao = tiposDisponiveis[Math.floor(Math.random() * tiposDisponiveis.length)];
-      } else if (tipos.includes('discursiva')) {
+      if (tipos.includes('mista') || tipos.includes('misto')) {
+        // Para tipo misto, alterna entre os 3 tipos válidos
+        tipoQuestao = tiposValidos[Math.floor(Math.random() * tiposValidos.length)];
+      } else if (tipos.includes('discursiva') || tipos.includes('dissertativa')) {
         tipoQuestao = 'discursiva';
       } else if (tipos.includes('verdadeiro') || tipos.includes('falso')) {
         tipoQuestao = 'verdadeiro-falso';
+      } else {
+        // Default para múltipla escolha
+        tipoQuestao = 'multipla-escolha';
       }
 
       questoes.push({
@@ -353,12 +371,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       const apiKey = 'AIzaSyAYWJto52s6FqxnwqCgCGGSaGsv8IU_fzw';
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-      // Determinar tipo de questão
-      let questionType = 'multipla-escolha';
-      if (newQuestionData.modelo === 'Verdadeiro ou Falso') {
+      // Determinar tipo de questão - apenas 3 tipos válidos
+      let questionType: 'multipla-escolha' | 'verdadeiro-falso' | 'discursiva' = 'multipla-escolha';
+      
+      const modeloLower = newQuestionData.modelo.toLowerCase();
+      if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
         questionType = 'verdadeiro-falso';
-      } else if (newQuestionData.modelo === 'Discursiva') {
+      } else if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
         questionType = 'discursiva';
+      } else {
+        // Default para múltipla escolha
+        questionType = 'multipla-escolha';
       }
 
       const prompt = `
@@ -501,17 +524,24 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     } catch (error) {
       console.error('❌ Erro ao gerar questão:', error);
       
-      // Em caso de erro, criar uma questão de fallback
+      // Em caso de erro, criar uma questão de fallback - apenas 3 tipos válidos
+      const modeloLower = newQuestionData.modelo.toLowerCase();
+      let tipoFallback: Question['type'] = 'multipla-escolha';
+      let alternativasFallback: string[] | undefined = ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];
+      
+      if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
+        tipoFallback = 'verdadeiro-falso';
+        alternativasFallback = ['Verdadeiro', 'Falso'];
+      } else if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
+        tipoFallback = 'discursiva';
+        alternativasFallback = undefined;
+      }
+      
       const fallbackQuestion: Question = {
         id: `questao-${Date.now()}`,
-        type: (newQuestionData.modelo === 'Múltipla escolha' ? 'multipla-escolha' : 
-               newQuestionData.modelo === 'Verdadeiro ou Falso' ? 'verdadeiro-falso' : 'discursiva') as Question['type'],
+        type: tipoFallback,
         enunciado: `Questão sobre: ${newQuestionData.descricao}`,
-        alternativas: newQuestionData.modelo === 'Múltipla escolha' 
-          ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
-          : newQuestionData.modelo === 'Verdadeiro ou Falso' 
-            ? ['Verdadeiro', 'Falso'] 
-            : undefined,
+        alternativas: alternativasFallback,
         respostaCorreta: 0,
         explicacao: 'Questão gerada localmente devido a erro na API',
         dificuldade: newQuestionData.dificuldade.toLowerCase() as any,

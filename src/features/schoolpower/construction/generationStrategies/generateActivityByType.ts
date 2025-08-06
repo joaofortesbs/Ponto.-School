@@ -83,39 +83,47 @@ export const generateExerciseList = (data: ActivityFormData): string => {
   }, null, 2);
 };
 
-// Função para gerar questões baseadas nos dados do usuário
+// Função para gerar questões baseadas nos dados do usuário - apenas 3 tipos válidos
 const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
-  const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
   const questions = [];
+  const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
+
+  // Apenas 3 tipos de questão permitidos
+  const validQuestionTypes = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'] as const;
+  type ValidQuestionType = typeof validQuestionTypes[number];
 
   for (let i = 1; i <= numberOfQuestions; i++) {
-    let question;
+    // Determinar tipo de questão baseado no modelo selecionado
+    let questionType: ValidQuestionType = 'multipla-escolha';
 
-    switch (data.questionModel) {
-      case 'Múltipla Escolha':
-        question = generateMultipleChoiceQuestion(i, data);
-        break;
-      case 'Dissertativa':
-        question = generateEssayQuestion(i, data);
-        break;
-      case 'Verdadeiro/Falso':
-        question = generateTrueFalseQuestion(i, data);
-        break;
-      case 'Mista':
-        // Alternar entre tipos de questão
-        const types = ['multiple-choice', 'essay', 'true-false'];
-        const selectedType = types[i % 3];
-        if (selectedType === 'multiple-choice') {
-          question = generateMultipleChoiceQuestion(i, data);
-        } else if (selectedType === 'essay') {
-          question = generateEssayQuestion(i, data);
-        } else {
-          question = generateTrueFalseQuestion(i, data);
-        }
-        break;
-      default:
-        question = generateMultipleChoiceQuestion(i, data);
+    const modeloLower = (data.questionModel || '').toLowerCase();
+
+    if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
+      questionType = 'discursiva';
+    } else if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
+      questionType = 'verdadeiro-falso';
+    } else if (modeloLower.includes('mista') || modeloLower.includes('misto')) {
+      // Para questões mistas, alterna entre os 3 tipos
+      questionType = validQuestionTypes[Math.floor(Math.random() * validQuestionTypes.length)];
+    } else {
+      // Default para múltipla escolha
+      questionType = 'multipla-escolha';
     }
+
+    const question = {
+      id: `questao-${i}`,
+      type: questionType,
+      enunciado: `Questão ${i} sobre ${data.theme}`,
+      alternativas: questionType === 'multipla-escolha' ? [
+        'Alternativa A',
+        'Alternativa B', 
+        'Alternativa C',
+        'Alternativa D'
+      ] : questionType === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
+      respostaCorreta: 0,
+      dificuldade: data.difficultyLevel?.toLowerCase() || 'medio',
+      tema: data.theme
+    };
 
     questions.push(question);
   }
