@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,25 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -106,7 +126,6 @@ const determineDifficulty = (questao: any): keyof typeof DIFFICULTY_LEVELS => {
   return 'extremo';
 };
 
-
 interface Question {
   id: string;
   type: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
@@ -170,6 +189,98 @@ interface ExerciseListPreviewProps {
   onQuestionSelect?: (questionIndex: number, questionId: string) => void;
 }
 
+// Componente para mini-card draggable
+function SortableQuestionCard({ questao, index, onSelect }: { questao: Question; index: number; onSelect: () => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: questao.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const difficulty = determineDifficulty(questao);
+  const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+
+  return (
+    <motion.div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className={`relative cursor-grab active:cursor-grabbing group ${isDragging ? 'z-50' : ''}`}
+      onClick={onSelect}
+    >
+      <Card className={`h-56 hover:shadow-2xl transition-all duration-300 border-2 ${isDragging ? 'border-orange-400 shadow-2xl scale-105' : 'border-orange-200/60 hover:border-orange-400/80'} group-hover:scale-[1.02] dark:bg-gray-800/95 dark:border-orange-600/60 dark:hover:border-orange-500/80 rounded-3xl backdrop-blur-sm bg-gradient-to-br from-white/95 to-orange-50/30 shadow-lg overflow-hidden`}>
+        {/* Container para numeração e tag de dificuldade */}
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+          {/* Numeração da questão */}
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-bold shadow-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/30 group-hover:from-orange-600 group-hover:to-orange-700 transition-all duration-300">
+            {index + 1}
+          </div>
+
+          {/* Tag de dificuldade */}
+          <Badge className={`text-xs px-3 py-1.5 rounded-full shadow-lg font-semibold ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/30 backdrop-blur-sm`}>
+            {difficultyConfig.label}
+          </Badge>
+        </div>
+
+        <CardContent className="p-6 pt-20 h-full flex flex-col">
+          <div className="flex-1">
+            {/* Enunciado da questão (limitado) */}
+            <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-3 mb-4 leading-relaxed font-medium">
+              {questao.enunciado?.substring(0, 130)}
+              {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
+            </p>
+          </div>
+
+          {/* Informações básicas na base do card */}
+          <div className="space-y-3 mt-auto">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs px-3 py-1.5 rounded-xl bg-orange-50/80 dark:bg-orange-900/80 border-orange-300/50 dark:border-orange-600/50 text-orange-700 dark:text-orange-300 font-semibold backdrop-blur-sm">
+                {questao.type === 'multipla-escolha' && <Circle className="w-3 h-3 mr-1.5" />}
+                {questao.type === 'discursiva' && <Edit3 className="w-3 h-3 mr-1.5" />}
+                {questao.type === 'verdadeiro-falso' && <CheckCircle className="w-3 h-3 mr-1.5" />}
+                <span>
+                  {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
+                   questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
+                </span>
+              </Badge>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {questao.type === 'multipla-escolha' && questao.alternativas && (
+                  <span className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100/80 dark:bg-orange-800/60 px-2.5 py-1 rounded-lg font-semibold backdrop-blur-sm">
+                    {questao.alternativas.length} alternativas
+                  </span>
+                )}
+              </div>
+
+              {/* Indicador visual de hover */}
+              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg"></div>
+            </div>
+          </div>
+
+          {/* Indicador de drag */}
+          {isDragging && (
+            <div className="absolute inset-0 bg-orange-200/20 dark:bg-orange-900/20 rounded-3xl border-2 border-dashed border-orange-400 dark:border-orange-500"></div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   data,
   isGenerating = false,
@@ -183,6 +294,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+
+  // Configuração do DnD Kit
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Processar conteúdo gerado pela IA e extrair questões
   useEffect(() => {
@@ -350,7 +473,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     return `${config.color} ${config.textColor}`;
   };
 
-
   const getTypeIcon = (type: Question['type']) => {
     switch (type) {
       case 'multipla-escolha': return <Circle className="w-4 h-4" />;
@@ -369,79 +491,19 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   }, [questoesProcessadas, onQuestionRender]);
 
-  // Componente de mini-card para grade inicial de questões
-  const renderQuestionGridCard = (questao: Question, index: number) => {
-    const difficulty = determineDifficulty(questao);
-    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
-    return (
-      <motion.div
-        key={questao.id || `questao-${index + 1}`}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
-        className="relative cursor-pointer group"
-        onClick={() => {
-          setSelectedQuestionIndex(index);
-          setViewMode('detailed');
-          // Notificar o modal pai sobre a seleção da questão
-          if (onQuestionSelect) {
-            onQuestionSelect(index, questao.id);
-          }
-        }}
-      >
-        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-blue-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-blue-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
-          {/* Container para numeração e tag de dificuldade */}
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-            {/* Numeração da questão */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white border-2 border-white/20">
-              {index + 1}
-            </div>
+  // Função para lidar com o final do drag
+  function handleDragEnd(event: any) {
+    const { active, over } = event;
 
-            {/* Tag de dificuldade */}
-            <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
-              {difficultyConfig.label}
-            </Badge>
-          </div>
+    if (active.id !== over.id) {
+      setQuestoesProcessadas((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
 
-          <CardContent className="p-5 pt-16 h-full flex flex-col">
-            <div className="flex-1">
-              {/* Enunciado da questão (limitado) */}
-              <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
-                {questao.enunciado?.substring(0, 130)}
-                {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
-              </p>
-            </div>
-
-            {/* Informações básicas na base do card */}
-            <div className="space-y-3 mt-auto">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
-                  {getTypeIcon(questao.type)}
-                  <span className="ml-1.5">
-                    {questao.type === 'multipla-escolha' ? 'Múltipla Escolha' :
-                     questao.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
-                  </span>
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {questao.type === 'multipla-escolha' && questao.alternativas && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/60 dark:bg-gray-700/60 px-2 py-1 rounded-md font-medium">
-                      {questao.alternativas.length} alternativas
-                    </span>
-                  )}
-                </div>
-
-                {/* Indicador visual de hover */}
-                <div className="w-2 h-2 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
 
   // Componente da grade de questões
   const renderQuestionsGrid = () => (
@@ -449,24 +511,43 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="space-y-6"
+      className="space-y-8"
     >
-      {/* Grade de questões */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {questoesProcessadas.map((questao, index) =>
-          renderQuestionGridCard(questao, index)
-        )}
-      </div>
+      {/* Grade de questões com DnD */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={questoesProcessadas.map(q => q.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {questoesProcessadas.map((questao, index) => (
+              <SortableQuestionCard
+                key={questao.id}
+                questao={questao}
+                index={index}
+                onSelect={() => {
+                  setSelectedQuestionIndex(index);
+                  setViewMode('detailed');
+                  if (onQuestionSelect) {
+                    onQuestionSelect(index, questao.id);
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Informações adicionais */}
       {consolidatedData.observacoes && (
-        <Card className="border-amber-200 bg-amber-50 dark:bg-yellow-950/30 dark:border-yellow-800">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+        <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 dark:bg-gradient-to-r dark:from-yellow-950/30 dark:to-orange-950/30 dark:border-yellow-800 rounded-2xl shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="w-6 h-6 text-amber-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-amber-800 dark:text-yellow-200 mb-1">Observações Importantes</h4>
-                <p className="text-amber-700 dark:text-yellow-300 text-sm">{consolidatedData.observacoes}</p>
+                <h4 className="font-semibold text-amber-800 dark:text-yellow-200 mb-2">Observações Importantes</h4>
+                <p className="text-amber-700 dark:text-yellow-300 leading-relaxed">{consolidatedData.observacoes}</p>
               </div>
             </div>
           </CardContent>
@@ -508,36 +589,36 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       <Card
         key={questionId}
         id={`question-${questionId}`}
-        className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4 dark:bg-gray-800 dark:border-l-blue-600"
+        className="mb-6 border-l-4 border-l-orange-500 scroll-mt-4 dark:bg-gray-800 dark:border-l-orange-600 rounded-2xl shadow-lg overflow-hidden"
       >
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-4 bg-gradient-to-r from-orange-50/50 to-white dark:from-orange-900/20 dark:to-gray-800">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+              <div className="flex items-center gap-3 mb-3">
+                <Badge variant="outline" className="text-xs px-3 py-1.5 rounded-full dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 bg-orange-50 border-orange-200 text-orange-700 font-semibold">
                   Questão {index + 1}
                 </Badge>
-                <Badge className={`text-xs ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-90`}>
+                <Badge className={`text-xs px-3 py-1.5 rounded-full font-semibold ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 shadow-sm`}>
                   {difficultyConfig.label}
                 </Badge>
-                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-100/60 dark:bg-orange-900/40 px-2.5 py-1 rounded-full font-medium">
                   {getTypeIcon(questao.type)}
                   <span>{questao.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                 </div>
-                <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
+                <Badge variant="secondary" className="text-xs px-3 py-1 rounded-full dark:bg-gray-700 dark:text-gray-300 bg-orange-100 text-orange-700 font-medium">
                   {questionTag}
                 </Badge>
               </div>
-              <CardTitle className="text-base font-medium leading-relaxed text-gray-900 dark:text-white">
+              <CardTitle className="text-lg font-semibold leading-relaxed text-gray-900 dark:text-white">
                 {questao.enunciado}
               </CardTitle>
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 p-6">
           {questao.type === 'multipla-escolha' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {alternativasProcessadas.length > 0 ? (
                 alternativasProcessadas.map((alternativa, altIndex) => {
                   const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
@@ -556,31 +637,31 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   return (
                     <div
                       key={altIndex}
-                      className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                      className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
                         isSelected
-                          ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-600 shadow-sm'
-                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600'
+                          ? 'bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/30 border-orange-300 dark:border-orange-600 shadow-md'
+                          : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-gray-50 dark:hover:from-gray-700/50 dark:hover:to-orange-900/20 hover:border-orange-200 dark:hover:border-orange-600'
                       }`}
                       onClick={() => handleRespostaChange(questao.id, altIndex)}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300 ${
                         isSelected
-                          ? 'bg-orange-500 text-white border-orange-500'
-                          : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-500 shadow-lg'
+                          : 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30'
                       }`}>
                         {letter}
                       </div>
-                      <div className="flex-1 text-gray-800 dark:text-gray-200 leading-relaxed pt-1">
+                      <div className="flex-1 text-gray-800 dark:text-gray-200 leading-relaxed pt-2 font-medium">
                         {textoAlternativa}
                       </div>
                       {isSelected && (
-                        <CheckCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-1" />
+                        <CheckCircle className="w-6 h-6 text-orange-500 dark:text-orange-400 flex-shrink-0 mt-2" />
                       )}
                     </div>
                   );
                 })
               ) : (
-                <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-xl">
                   <p className="text-yellow-800 dark:text-yellow-200 text-sm">
                     ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
                   </p>
@@ -596,19 +677,19 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             <RadioGroup
               value={respostas[questao.id]?.toString() || ''}
               onValueChange={(value) => handleRespostaChange(questao.id, value)}
-              className="space-y-3"
+              className="space-y-4"
             >
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <RadioGroupItem value="true" id={`${questao.id}-true`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400" />
-                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal text-gray-700 dark:text-gray-300">
-                  <CheckCircle className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
+              <div className="flex items-center space-x-4 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:bg-orange-50/30 dark:hover:bg-orange-900/20 hover:border-orange-200 dark:hover:border-orange-600 transition-all duration-300">
+                <RadioGroupItem value="true" id={`${questao.id}-true`} className="border-orange-300 dark:border-orange-600 dark:bg-gray-700 text-orange-500 dark:text-orange-400 focus:ring-orange-500 dark:focus:ring-orange-400" />
+                <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-medium text-gray-700 dark:text-gray-300">
+                  <CheckCircle className="w-5 h-5 inline mr-3 text-green-600 dark:text-green-400" />
                   Verdadeiro
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <RadioGroupItem value="false" id={`${questao.id}-false`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400" />
-                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal text-gray-700 dark:text-gray-300">
-                  <Circle className="w-4 h-4 inline mr-2 text-red-600 dark:text-red-400" />
+              <div className="flex items-center space-x-4 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:bg-orange-50/30 dark:hover:bg-orange-900/20 hover:border-orange-200 dark:hover:border-orange-600 transition-all duration-300">
+                <RadioGroupItem value="false" id={`${questao.id}-false`} className="border-orange-300 dark:border-orange-600 dark:bg-gray-700 text-orange-500 dark:text-orange-400 focus:ring-orange-500 dark:focus:ring-orange-400" />
+                <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-medium text-gray-700 dark:text-gray-300">
+                  <Circle className="w-5 h-5 inline mr-3 text-red-600 dark:text-red-400" />
                   Falso
                 </Label>
               </div>
@@ -616,65 +697,68 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           )}
 
           {questao.type === 'discursiva' && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <Textarea
                 placeholder="Digite sua resposta aqui..."
                 value={respostas[questao.id]?.toString() || ''}
                 onChange={(e) => handleRespostaChange(questao.id, e.target.value)}
-                className="min-h-[120px] resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                className="min-h-[140px] resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl"
               />
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-900/20 px-3 py-2 rounded-lg">
                 Resposta: {respostas[questao.id]?.toString()?.length || 0} caracteres
               </div>
             </div>
           )}
 
           {questao.explicacao && (
-            <div className="mt-4">
+            <div className="mt-6">
               <div
-                className="p-3 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-400 dark:border-l-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors rounded-lg"
+                className="p-4 bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/30 border-l-4 border-l-orange-400 dark:border-l-orange-600 cursor-pointer hover:from-orange-100/70 hover:to-orange-50 dark:hover:from-orange-900/50 dark:hover:to-orange-950/40 transition-all duration-300 rounded-xl"
                 onClick={() => toggleExplicacaoExpandida(questao.id)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Explicação</div>
-                  <div className="text-blue-600 dark:text-blue-400">
+                  <div className="text-sm font-semibold text-orange-800 dark:text-orange-200 flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    Explicação
+                  </div>
+                  <div className="text-orange-600 dark:text-orange-400 font-bold text-lg">
                     {explicacoesExpandidas[questao.id] ? '−' : '+'}
                   </div>
                 </div>
                 {explicacoesExpandidas[questao.id] && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="mt-6 p-6 bg-gradient-to-r from-orange-50 to-white dark:from-orange-900/30 dark:to-gray-800 border-l-4 border-orange-500 rounded-xl shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-bold text-orange-900 dark:text-orange-100 flex items-center text-lg">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Explicação
+                        Explicação Detalhada
                       </h4>
                     </div>
-                    <div className="text-blue-800 dark:text-blue-200 whitespace-pre-wrap mb-4">
+                    <div className="text-orange-800 dark:text-orange-200 whitespace-pre-wrap mb-6 leading-relaxed">
                       {questao.explicacao}
                     </div>
 
                     {/* Gabarito da Questão */}
                     {questao.gabarito && (
-                      <div className="pt-4 border-t border-blue-200 dark:border-blue-700">
-                        <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="pt-4 border-t border-orange-200 dark:border-orange-700">
+                        <h5 className="font-bold text-orange-900 dark:text-orange-100 mb-3 flex items-center">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Gabarito
+                          Gabarito Oficial
                         </h5>
-                        <div className="text-blue-800 dark:text-blue-200 font-medium">
+                        <div className="text-orange-800 dark:text-orange-200 font-semibold">
                           {questao.tipo === 'multipla-escolha' ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            <span className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 font-bold">
                               Alternativa {questao.gabarito}
                             </span>
                           ) : questao.tipo === 'verdadeiro-falso' ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            <span className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 font-bold">
                               {questao.gabarito === 'V' || questao.gabarito === 'Verdadeiro' ? 'Verdadeiro' : 'Falso'}
                             </span>
                           ) : (
-                            <div className="text-sm whitespace-pre-wrap">
+                            <div className="text-sm whitespace-pre-wrap bg-green-50 dark:bg-green-900/30 p-4 rounded-xl border border-green-200 dark:border-green-700">
                               {questao.gabarito}
                             </div>
                           )}
@@ -691,12 +775,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     );
   };
 
-
   if (isGenerating) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 space-4 dark:text-gray-300">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p className="text-gray-600 dark:text-gray-300">Gerando lista de exercícios...</p>
+      <div className="flex flex-col items-center justify-center p-12 space-y-6 dark:text-gray-300">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+        <p className="text-gray-600 dark:text-gray-300 text-lg">Gerando lista de exercícios...</p>
       </div>
     );
   }
@@ -739,8 +822,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           className="flex h-full"
         >
           {/* Menu lateral de navegação das questões */}
-          <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
-            <div className="p-2 space-y-2">
+          <div className="w-80 bg-gradient-to-b from-orange-50 to-white border-r border-orange-200 overflow-y-auto dark:from-gray-900 dark:to-gray-800 dark:border-orange-700">
+            <div className="p-4 space-y-3">
               {questoesProcessadas.map((questao, index) => {
                 const difficulty = determineDifficulty(questao);
                 const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
@@ -752,13 +835,13 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                 const getQuestionTypeIcon = (type: Question['type']) => {
                   switch (type) {
                     case 'multipla-escolha':
-                      return <Circle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                      return <Circle className="w-4 h-4 text-orange-500 dark:text-orange-400" />;
                     case 'discursiva':
-                      return <Edit3 className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                      return <Edit3 className="w-4 h-4 text-orange-500 dark:text-orange-400" />;
                     case 'verdadeiro-falso':
-                      return <CheckCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                      return <CheckCircle className="w-4 h-4 text-orange-500 dark:text-orange-400" />;
                     default:
-                      return <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                      return <FileText className="w-4 h-4 text-orange-500 dark:text-orange-400" />;
                   }
                 };
 
@@ -771,18 +854,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                         onQuestionSelect(index, questao.id);
                       }
                     }}
-                    className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
+                    className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border-2 ${
                       isSelected
-                        ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-600'
-                        : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm dark:border-gray-700 dark:hover:bg-gray-800/50'
+                        ? 'bg-gradient-to-r from-orange-100/50 to-orange-200/30 border-orange-300 border-2 backdrop-blur-sm dark:from-orange-900/30 dark:to-orange-800/30 dark:border-orange-600 shadow-lg'
+                        : 'bg-white/80 border-orange-200/50 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-white backdrop-blur-sm dark:border-orange-700 dark:hover:from-gray-800/50 dark:hover:to-orange-900/20 dark:bg-gray-800/80 hover:border-orange-300 dark:hover:border-orange-600'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                    <div className="flex items-center gap-4">
+                      <div className={`w-8 h-8 rounded-2xl flex items-center justify-center text-sm font-bold shadow-md ${
                         isAnswered
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                           : isSelected
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
                             : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'
                       }`}>
                         {isAnswered ? '✓' : index + 1}
@@ -790,10 +873,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
+                            <div className={`font-semibold text-sm ${difficultyConfig.textColor} dark:text-white`}>
                               {difficultyConfig.label}
                             </div>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
+                            <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-orange-700 dark:text-orange-300 bg-orange-100 text-orange-700 rounded-full">
                               {questionTag}
                             </Badge>
                           </div>
@@ -812,7 +895,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           {/* Área principal com a questão selecionada */}
           <div className="flex-1 h-full overflow-y-auto">
             {/* Conteúdo da questão */}
-            <div className="p-6">
+            <div className="p-8 bg-gradient-to-b from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-950/20">
               {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
                 renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
               )}
