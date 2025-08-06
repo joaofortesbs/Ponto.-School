@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material, Video } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material, Video, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 
@@ -206,6 +206,38 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   });
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
   const [exerciseData, setExerciseData] = useState<ExerciseListData | null>(null); // Estado para os dados processados
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState<{ index: number; id: string } | null>(null);
+  const [showProgressModal, setShowProgressModal] = useState(false); // Assume que esta prop está definida em algum lugar ou é gerada
+  const [buildProgress, setBuildProgress] = useState<any>(null); // Assume que esta prop está definida em algum lugar ou é gerada
+  // Assume que 'toast' é uma função de notificação disponível no escopo
+  // const toast = useToast(); // Exemplo de como poderia ser obtido
+
+  // Função placeholder para 'toast' caso não esteja definida
+  const toast = (options: { title: string; description: string; variant: "destructive" | "default" | "secondary" | "outline" | null | undefined }) => {
+    console.log(`Toast: ${options.title} - ${options.description} (${options.variant})`);
+  };
+
+  // Função placeholder para 'generateActivity' caso não esteja definida
+  const generateActivity = async (data: any) => {
+    console.log("Simulando geração de atividade com dados:", data);
+    return {
+      ...data,
+      questoes: Array.from({ length: data.numeroQuestoes || 3 }, (_, i) => ({
+        id: `simulated-id-${i}-${Date.now()}`,
+        enunciado: `Questão simulada ${i + 1} sobre ${data.tema || 'o tema'}`,
+        type: 'multipla-escolha',
+        alternativas: ['A', 'B', 'C', 'D'],
+        respostaCorreta: i % 2,
+        dificuldade: 'medio',
+        explicacao: `Explicação para a questão simulada ${i + 1}.`,
+        tema: data.tema || 'Tema Simulado'
+      })),
+      isGeneratedByAI: true,
+      generatedAt: new Date().toISOString()
+    };
+  };
+
 
   const processQuestions = useCallback((activityData: any) => {
     console.log('🔄 Processando questões no ExerciseListPreview:', activityData);
@@ -462,7 +494,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       // Construir o prompt
       const prompt = `
-        Você é um assistente educacional especialista em criar questões para o sistema School Power, focado no currículo brasileiro. Crie uma questão educacional REAL e ESPECÍFICA com base nas seguintes informações. Retorne APENAS a resposta em formato JSON, seguindo EXATAMENTE a estrutura abaixo.
+        Você é um assistente educacional বিশেষজ্ঞ em criar questões para o sistema School Power, focado no currículo brasileiro. Crie uma questão educacional REAL e ESPECÍFICA com base nas seguintes informações. Retorne APENAS a resposta em formato JSON, seguindo EXATAMENTE a estrutura abaixo.
 
         **Informações para a Questão:**
         - **Descrição/Tópico:** ${newQuestionData.descricao}
@@ -589,7 +621,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           };
 
           // Normalizar o tipo de questão para os 3 tipos permitidos
-          const normalizedType = normalizedQuestion.type.toLowerCase().replace(/[\s_-]/g, '');
+          const normalizedType = novaQuestaoProcessada.type.toLowerCase().replace(/[\s_-]/g, '');
           if (normalizedType.includes('multipla') || normalizedType.includes('escolha') || normalizedType.includes('multiple') || normalizedType.includes('choice')) {
             novaQuestaoProcessada.type = 'multipla-escolha';
           } else if (normalizedType.includes('verdadeiro') || normalizedType.includes('falso') || normalizedType.includes('true') || normalizedType.includes('false')) {
@@ -733,7 +765,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       className="relative cursor-pointer group"
       onClick={() => setShowAddQuestionModal(true)}
     >
-      <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-orange-300/60 hover:border-orange-500/80 group-hover:scale-[1.02] bg-orange-50/30 dark:bg-orange-950/20 dark:border-orange-600/60 dark:hover:border-orange-500/80 rounded-2xl backdrop-blur-sm shadow-md">
+      <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-orange-300/60 hover:border-orange-500/80 group-hover:scale-[1.02] bg-orange-50/30 dark:bg-orange-950/20 dark:border-orange-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm shadow-md">
         <CardContent className="p-5 h-full flex flex-col items-center justify-center">
           <div className="w-16 h-16 rounded-full flex items-center justify-center bg-orange-100 dark:bg-orange-900/40 mb-4 group-hover:bg-orange-200 dark:group-hover:bg-orange-800/60 transition-colors">
             <svg className="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -897,6 +929,16 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                 {questao.enunciado}
               </CardTitle>
             </div>
+
+            {/* Botão de Excluir Questão */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-red-500 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-400/10 dark:hover:text-red-300 rounded-full w-10 h-10"
+              onClick={() => handleDeleteQuestion(index, questao.id)}
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
           </div>
         </CardHeader>
 
@@ -1470,6 +1512,87 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {showDeleteModal && questionToDelete && (
+        <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+          <DialogContent className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                </div>
+                Excluir Questão
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="py-4">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Tem certeza que deseja excluir a <strong>Questão {questionToDelete.index + 1}</strong>? 
+                Esta ação não pode ser desfeita.
+              </p>
+
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-amber-800 dark:text-amber-200 text-sm">
+                    A questão será removida permanentemente da lista de exercícios e esta alteração será salva.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button
+                variant="outline"
+                onClick={cancelDeleteQuestion}
+                className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={confirmDeleteQuestion}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Questão
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal de Progresso da Construção Automática */}
+      {showProgressModal && buildProgress && (
+        <Dialog open={showProgressModal} onOpenChange={setShowProgressModal}>
+          <DialogContent className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <RefreshCw className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
+                </div>
+                Construindo Questões...
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Aguarde enquanto as questões são geradas automaticamente.
+              </p>
+              {/* Aqui você pode adicionar um indicador de progresso mais visual, se buildProgress tiver dados */}
+              {buildProgress && (
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Progresso: {JSON.stringify(buildProgress)}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <Button variant="outline" onClick={() => setShowProgressModal(false)} className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                Fechar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
