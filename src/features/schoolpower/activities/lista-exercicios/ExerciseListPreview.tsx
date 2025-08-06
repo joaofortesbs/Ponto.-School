@@ -389,11 +389,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           }
         }}
       >
-        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-blue-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-blue-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
+        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
           {/* Container para numeração e tag de dificuldade */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
             {/* Numeração da questão */}
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white border-2 border-white/20">
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
               {index + 1}
             </div>
 
@@ -434,7 +434,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                 </div>
 
                 {/* Indicador visual de hover */}
-                <div className="w-2 h-2 rounded-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="w-2 h-2 rounded-full bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
             </div>
           </CardContent>
@@ -508,7 +508,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       <Card
         key={questionId}
         id={`question-${questionId}`}
-        className="mb-4 border-l-4 border-l-blue-500 scroll-mt-4 dark:bg-gray-800 dark:border-l-blue-600"
+        className="mb-4 border-l-4 border-l-orange-500 scroll-mt-4 dark:bg-gray-800 dark:border-l-orange-600"
       >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
@@ -558,7 +558,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                       key={altIndex}
                       className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                         isSelected
-                          ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-600 shadow-sm'
+                          ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-300 dark:border-orange-600 shadow-sm'
                           : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                       onClick={() => handleRespostaChange(questao.id, altIndex)}
@@ -574,7 +574,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                         {textoAlternativa}
                       </div>
                       {isSelected && (
-                        <CheckCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-1" />
+                        <CheckCircle className="w-5 h-5 text-orange-500 dark:text-orange-400 flex-shrink-0 mt-1" />
                       )}
                     </div>
                   );
@@ -599,14 +599,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               className="space-y-3"
             >
               <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <RadioGroupItem value="true" id={`${questao.id}-true`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400" />
+                <RadioGroupItem value="true" id={`${questao.id}-true`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-orange-500 dark:text-orange-400 focus:ring-orange-500 dark:focus:ring-orange-400" />
                 <Label htmlFor={`${questao.id}-true`} className="flex-1 cursor-pointer font-normal text-gray-700 dark:text-gray-300">
                   <CheckCircle className="w-4 h-4 inline mr-2 text-green-600 dark:text-green-400" />
                   Verdadeiro
                 </Label>
               </div>
               <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <RadioGroupItem value="false" id={`${questao.id}-false`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-blue-500 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400" />
+                <RadioGroupItem value="false" id={`${questao.id}-false`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-orange-500 dark:text-orange-400 focus:ring-orange-500 dark:focus:ring-orange-400" />
                 <Label htmlFor={`${questao.id}-false`} className="flex-1 cursor-pointer font-normal text-gray-700 dark:text-gray-300">
                   <Circle className="w-4 h-4 inline mr-2 text-red-600 dark:text-red-400" />
                   Falso
@@ -632,39 +632,39 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           {questao.explicacao && (
             <div className="mt-4">
               <div
-                className="p-3 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-l-blue-400 dark:border-l-blue-600 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors rounded-lg"
+                className="p-3 bg-orange-50 dark:bg-orange-950/30 border-l-4 border-l-orange-400 dark:border-l-orange-600 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors rounded-lg"
                 onClick={() => toggleExplicacaoExpandida(questao.id)}
               >
                 <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-blue-800 dark:text-blue-200">Explicação</div>
-                  <div className="text-blue-600 dark:text-blue-400">
+                  <div className="text-sm font-medium text-orange-800 dark:text-orange-200">Explicação</div>
+                  <div className="text-orange-600 dark:text-orange-400">
                     {explicacoesExpandidas[questao.id] ? '−' : '+'}
                   </div>
                 </div>
                 {explicacoesExpandidas[questao.id] && (
-                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg">
+                  <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center">
+                      <h4 className="font-semibold text-orange-900 dark:text-orange-100 flex items-center">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         Explicação
                       </h4>
                     </div>
-                    <div className="text-blue-800 dark:text-blue-200 whitespace-pre-wrap mb-4">
+                    <div className="text-orange-800 dark:text-orange-200 whitespace-pre-wrap mb-4">
                       {questao.explicacao}
                     </div>
 
                     {/* Gabarito da Questão */}
                     {questao.gabarito && (
-                      <div className="pt-4 border-t border-blue-200 dark:border-blue-700">
-                        <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center">
+                      <div className="pt-4 border-t border-orange-200 dark:border-orange-700">
+                        <h5 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           Gabarito
                         </h5>
-                        <div className="text-blue-800 dark:text-blue-200 font-medium">
+                        <div className="text-orange-800 dark:text-orange-200 font-medium">
                           {questao.tipo === 'multipla-escolha' ? (
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                               Alternativa {questao.gabarito}
@@ -739,7 +739,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           className="flex h-full"
         >
           {/* Menu lateral de navegação das questões */}
-          <div className="w-72 bg-slate-50 border-r border-slate-200 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+          <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
             <div className="p-2 space-y-2">
               {questoesProcessadas.map((questao, index) => {
                 const difficulty = determineDifficulty(questao);
@@ -773,7 +773,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     }}
                     className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
                       isSelected
-                        ? 'bg-blue-100/20 border-blue-300 border-2 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-600'
+                        ? 'bg-orange-100/20 border-orange-300 border-2 backdrop-blur-sm dark:bg-orange-900/30 dark:border-orange-600'
                         : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm dark:border-gray-700 dark:hover:bg-gray-800/50'
                     }`}
                   >
