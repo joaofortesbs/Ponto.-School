@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { generateActivityContent } from '../api/generateActivity';
 
@@ -88,10 +87,10 @@ export function useGenerateActivity() {
 
       // Chamar a função de geração
       const result = await generateActivityContent(activityType, contextData);
-      
+
       console.log('✅ Resultado recebido da IA:', result);
       return result;
-      
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido na geração';
       console.error('❌ Erro no useGenerateActivity:', err);

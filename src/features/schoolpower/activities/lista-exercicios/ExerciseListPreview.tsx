@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, Video, BookOpen as Material } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Sistema de mapeamento de dificuldade
@@ -76,7 +76,7 @@ const generateQuestionTag = (enunciado: string, alternativas?: string[]): string
 };
 
 // Função para determinar dificuldade baseada no conteúdo
-const determineDifficulty = (questao: any): keyof typeof DIFFICULTY_LEVELS => {
+const determineDifficulty = (questao: Partial<Question>): keyof typeof DIFFICULTY_LEVELS => {
   // Primeiro, verifica se a dificuldade está explicitamente definida
   if (questao.dificuldade) {
     const diff = questao.dificuldade.toLowerCase();
@@ -108,63 +108,74 @@ const determineDifficulty = (questao: any): keyof typeof DIFFICULTY_LEVELS => {
   return 'extremo';
 };
 
+// Helper para obter a label de dificuldade
+const getDifficultyLabel = (dificuldade?: string): string => {
+  const level = determineDifficulty({ dificuldade });
+  return DIFFICULTY_LEVELS[level].label;
+};
+
 
 interface Question {
   id: string;
   type: 'multipla-escolha' | 'discursiva' | 'verdadeiro-falso';
   enunciado?: string;
   alternativas?: string[];
-  respostaCorreta?: string | number;
+  respostaCorreta?: number; // Índice da alternativa correta
   explicacao?: string;
-  dificuldade?: 'facil' | 'medio' | 'dificil';
+  dificuldade?: string; // Pode ser 'facil', 'medio', 'dificil', 'extremo'
   tema?: string;
-  // Propriedades adicionais que podem vir da IA
+  // Propriedades adicionais que podem vir da IA ou de outros fontes
   statement?: string;
   options?: string[];
-  correctAnswer?: string | number;
+  correctAnswer?: number | string;
   explanation?: string;
   difficulty?: string;
   topic?: string;
   pontos?: number;
   tempo_estimado?: string;
-  tipo?: string;
+  tipo?: string; // Usado internamente para mapear para 'type'
   alternatives?: string[];
-  question?: string;
-  correct?: boolean;
-  texto?: string;
-  isCorrect?: boolean;
-  response?: string;
-  correct_answer?: string;
-  gabarito?: string | number;
+  question?: string; // Enunciado vindo de "question"
+  correct?: boolean; // Para V/F, pode ser boolean
+  texto?: string; // Para discursiva, pode ser a própria resposta
+  isCorrect?: boolean; // Para V/F ou múltipla escolha, se foi respondida corretamente
+  response?: string; // Resposta dada pelo usuário
+  correct_answer?: number | string; // Outra forma de resposta correta
+  gabarito?: number | string; // Outra forma de gabarito
+  criteriosAvaliacao?: string[]; // Para questões discursivas
+  respostaEsperada?: string; // Para questões discursivas
+  resposta?: boolean | string | number; // Para V/F ou resposta discursiva
 }
 
 interface ExerciseListData {
   titulo: string;
   disciplina: string;
   tema: string;
-  tipoQuestoes: string;
+  tipoQuestoes: string; // Pode ser 'misto', 'multipla-escolha', etc.
   numeroQuestoes: number;
-  dificuldade: string;
+  dificuldade: string; // Dificuldade geral da lista
   objetivos: string;
   conteudoPrograma: string;
   observacoes?: string;
-  questoes?: Question[];
+  questoes?: Question[]; // Lista de questões no formato padrão
   isGeneratedByAI?: boolean;
   generatedAt?: string;
-  descricao?: string;
+  descricao?: string; // Descrição da lista de exercícios
   anoEscolaridade?: string;
-  nivelDificuldade?: string;
+  nivelDificuldade?: string; // Similar a dificuldade, mas pode ter outra origem
   tempoLimite?: string;
   // Campos adicionais possivelmente presentes nos dados gerados pela IA
-  questions?: Question[];
+  questions?: Question[]; // Lista de questões em outro formato
   content?: {
     questoes?: Question[];
     questions?: Question[];
   };
+  subject?: string; // Disciplina em outro formato
+  theme?: string; // Tema em outro formato
 }
 
 interface ExerciseListPreviewProps {
-  data: ExerciseListData;
+  data: ExerciseListData; // Usar data como activity
   customFields?: Record<string, any>;
   isGenerating?: boolean;
   onRegenerateContent?: () => void;
@@ -173,7 +184,7 @@ interface ExerciseListPreviewProps {
 }
 
 const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
-  data,
+  data: activity, // Renomeado para 'activity' para maior clareza com o context/API
   isGenerating = false,
   onRegenerateContent,
   onQuestionRender,
@@ -189,198 +200,221 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [addQuestionTab, setAddQuestionTab] = useState<'school-power' | 'video' | 'material'>('school-power');
   const [newQuestionData, setNewQuestionData] = useState({
     descricao: '',
-    modelo: '',
-    dificuldade: ''
+    modelo: '', // Tipo de questão: 'Múltipla escolha', 'Verdadeiro ou Falso', 'Discursiva'
+    dificuldade: '' // Nível de dificuldade: 'Fácil', 'Médio', 'Difícil', 'Extremo'
   });
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  const [exerciseData, setExerciseData] = useState<ExerciseListData | null>(null); // Estado para os dados processados
 
-  // Processar conteúdo gerado pela IA e extrair questões
-  useEffect(() => {
-    console.log('🔄 Processando questões no ExerciseListPreview:', data);
-    console.log('🔍 Estrutura completa dos dados:', JSON.stringify(data, null, 2));
+  const processQuestions = useCallback((activityData: any) => {
+    console.log('🔄 Processando questões no ExerciseListPreview:', activityData);
+    console.log('🔍 Estrutura completa dos dados:', JSON.stringify(activityData, null, 2));
 
-    // Verificar diferentes formatos de questões que podem vir da IA
-    let questoesDaIA = null;
-    let isContentFromAI = false;
+    // Verificar se existe conteúdo gerado pela IA ou questões diretamente
+    let questionsData = null;
 
-    // Verificar se o conteúdo foi gerado pela IA
-    if (data.isGeneratedByAI === true || data.generatedAt) {
-      isContentFromAI = true;
-      console.log('✅ Conteúdo confirmado como gerado pela IA');
-    }
+    if (activityData?.content?.questoes && Array.isArray(activityData.content.questoes) && activityData.content.questoes.length > 0) {
+      console.log('✅ Questões encontradas na IA (content.questoes):', activityData.content.questoes.length);
+      questionsData = { ...activityData, questoes: activityData.content.questoes };
+      questionsData.isGeneratedByAI = true; // Marcar como gerado por IA
+    } else if (activityData?.content?.questions && Array.isArray(activityData.content.questions) && activityData.content.questions.length > 0) {
+      console.log('✅ Questões encontradas na IA (content.questions):', activityData.content.questions.length);
+      questionsData = { ...activityData, questoes: activityData.content.questions };
+      questionsData.isGeneratedByAI = true; // Marcar como gerado por IA
+    } else if (activityData?.questoes && Array.isArray(activityData.questoes) && activityData.questoes.length > 0) {
+      console.log('✅ Questões encontradas diretamente (questoes):', activityData.questoes.length);
+      questionsData = activityData;
+      questionsData.isGeneratedByAI = activityData.isGeneratedByAI || false; // Manter se já estiver definido
+    } else if (activityData?.questions && Array.isArray(activityData.questions) && activityData.questions.length > 0) {
+      console.log('✅ Questões encontradas diretamente (questions):', activityData.questions.length);
+      questionsData = { ...activityData, questoes: activityData.questions };
+      questionsData.isGeneratedByAI = activityData.isGeneratedByAI || false;
+    } else {
+      console.log('⚠️ Conteúdo de questões não encontrado, gerando questões simuladas como fallback');
 
-    // Buscar questões em diferentes possíveis localizações
-    if (data.questoes && Array.isArray(data.questoes) && data.questoes.length > 0) {
-      console.log(`✅ Questões encontradas em 'questoes': ${data.questoes.length}`);
-      questoesDaIA = data.questoes;
-    } else if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
-      console.log(`✅ Questões encontradas em 'questions': ${data.questions.length}`);
-      questoesDaIA = data.questions;
-    } else if (data.content && data.content.questoes && Array.isArray(data.content.questoes)) {
-      console.log(`✅ Questões encontradas em 'content.questoes': ${data.content.questoes.length}`);
-      questoesDaIA = data.content.questoes;
-    } else if (data.content && data.content.questions && Array.isArray(data.content.questions)) {
-      console.log(`✅ Questões encontradas em 'content.questions': ${data.content.questions.length}`);
-      questoesDaIA = data.content.questions;
-    }
+      // Fallback para questões simuladas
+      const simulatedQuestions: Question[] = [];
+      const numQuestions = activityData?.numeroQuestoes || 5; // Usar número de questões da atividade ou 5 como padrão
 
-    if (questoesDaIA && questoesDaIA.length > 0) {
-      console.log(`✅ Processando ${questoesDaIA.length} questões da IA`);
-      console.log('📝 Primeira questão da IA:', questoesDaIA[0]);
-      console.log('📝 Estrutura da primeira questão:', {
-        hasId: !!questoesDaIA[0].id,
-        hasType: !!questoesDaIA[0].type,
-        hasEnunciado: !!questoesDaIA[0].enunciado,
-        hasAlternativas: !!questoesDaIA[0].alternativas,
-        alternativasLength: questoesDaIA[0].alternativas ? questoesDaIA[0].alternativas.length : 0
-      });
+      for (let i = 1; i <= numQuestions; i++) {
+        const questionTypes: Question['type'][] = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'];
+        // Cicla entre os tipos de questão disponíveis
+        const questionType = questionTypes[(i - 1) % questionTypes.length];
 
-      // Processar e validar as questões da IA com validação robusta
-      const questoesProcessadasIA = questoesDaIA.map((questao, index) => {
-        console.log(`🔍 Processando questão ${index + 1}:`, questao);
-        
-        const questaoProcessada: Question = {
-          id: questao.id || `questao-${index + 1}`,
-          type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
-          enunciado: questao.enunciado || questao.statement || questao.question || `Questão ${index + 1}`,
-          alternativas: questao.alternativas || questao.alternatives || questao.options,
-          respostaCorreta: questao.respostaCorreta !== undefined ? questao.respostaCorreta : (questao.correctAnswer !== undefined ? questao.correctAnswer : (questao.correct_answer !== undefined ? questao.correct_answer : 0)),
-          explicacao: questao.explicacao || questao.explanation || 'Explicação não fornecida',
-          dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase() as any,
-          tema: questao.tema || questao.topic || data.tema || 'Tema não especificado',
-          pontos: questao.pontos,
-          tempo_estimado: questao.tempo_estimado,
-          tipo: questao.tipo,
-          gabarito: questao.gabarito || questao.respostaCorreta || questao.correctAnswer || questao.correct_answer
+        const baseQuestion: Question = {
+          id: `simulated-questao-${i}`,
+          type: questionType,
+          enunciado: `Questão simulada ${i} sobre ${activityData?.tema || 'o tema geral'}.`,
+          dificuldade: 'medio', // Dificuldade padrão
+          tema: activityData?.tema || 'Tema não especificado'
         };
 
-        // Normalizar e validar tipos de questão - apenas 3 tipos permitidos
-        const tipoOriginal = questaoProcessada.type.toLowerCase().replace(/[_\s-]/g, '');
-        
-        if (tipoOriginal.includes('multipla') || tipoOriginal.includes('escolha') || tipoOriginal.includes('multiple') || tipoOriginal.includes('choice')) {
-          questaoProcessada.type = 'multipla-escolha';
-          // Garantir que há alternativas suficientes e válidas
-          if (!questaoProcessada.alternativas || !Array.isArray(questaoProcessada.alternativas) || questaoProcessada.alternativas.length < 2) {
-            console.warn(`⚠️ Questão ${index + 1} sem alternativas suficientes, adicionando alternativas padrão`);
-            questaoProcessada.alternativas = [
-              'Primeira alternativa',
-              'Segunda alternativa', 
-              'Terceira alternativa',
-              'Quarta alternativa'
-            ];
-          } else {
-            // Validar cada alternativa individualmente
-            questaoProcessada.alternativas = questaoProcessada.alternativas.map((alt, altIndex) => {
-              if (typeof alt === 'string') return alt;
-              if (alt && typeof alt === 'object' && alt.texto) return alt.texto;
-              if (alt && typeof alt === 'object' && alt.text) return alt.text;
-              return `Alternativa ${String.fromCharCode(65 + altIndex)}`;
-            });
-          }
-        } else if (tipoOriginal.includes('verdadeiro') || tipoOriginal.includes('falso') || tipoOriginal.includes('true') || tipoOriginal.includes('false')) {
-          questaoProcessada.type = 'verdadeiro-falso';
-          questaoProcessada.alternativas = ['Verdadeiro', 'Falso'];
-          // Para V/F, garantir que resposta correta é 0 ou 1
-          if (questaoProcessada.respostaCorreta !== 0 && questaoProcessada.respostaCorreta !== 1) {
-            questaoProcessada.respostaCorreta = 0;
-          }
-        } else if (tipoOriginal.includes('discursiva') || tipoOriginal.includes('essay') || tipoOriginal.includes('dissertativa')) {
-          questaoProcessada.type = 'discursiva';
-          questaoProcessada.alternativas = undefined;
-          questaoProcessada.respostaCorreta = undefined;
-        } else {
-          // Se o tipo não for reconhecido, defaultar para múltipla escolha
-          console.warn(`⚠️ Tipo de questão não reconhecido: ${questaoProcessada.type}. Convertendo para múltipla escolha.`);
-          questaoProcessada.type = 'multipla-escolha';
-          questaoProcessada.alternativas = [
-            'Primeira alternativa',
-            'Segunda alternativa',
-            'Terceira alternativa', 
-            'Quarta alternativa'
+        if (questionType === 'multipla-escolha') {
+          baseQuestion.alternativas = [
+            `Alternativa A para a questão ${i}`,
+            `Alternativa B para a questão ${i}`,
+            `Alternativa C para a questão ${i}`,
+            `Alternativa D para a questão ${i}`
           ];
+          baseQuestion.respostaCorreta = 0; // Alternativa A como correta por padrão
+          baseQuestion.explicacao = `Explicação para a questão ${i}: Esta é uma explicação simulada detalhando por que a alternativa A é a correta.`;
+        } else if (questionType === 'verdadeiro-falso') {
+          baseQuestion.resposta = true; // Verdadeiro como padrão
+          baseQuestion.explicacao = `Explicação para a questão ${i}: Esta é uma explicação simulada para a afirmação.`;
+        } else if (questionType === 'discursiva') {
+          baseQuestion.criteriosAvaliacao = [
+            "Estrutura coerente",
+            "Argumentação clara",
+            "Conhecimento do assunto"
+          ];
+          baseQuestion.respostaEsperada = `Resposta esperada para a questão ${i}: Um bom exemplo seria explicar o conceito X com detalhes.`;
         }
 
-        // Validação final da estrutura
-        if (!questaoProcessada.enunciado || questaoProcessada.enunciado.trim() === '') {
-          questaoProcessada.enunciado = `Questão ${index + 1} sobre ${questaoProcessada.tema}`;
-        }
-
-        if (!questaoProcessada.explicacao || questaoProcessada.explicacao.trim() === '') {
-          questaoProcessada.explicacao = `Explicação para a questão ${index + 1}`;
-        }
-
-        console.log(`📄 Questão ${index + 1} processada e validada:`, {
-          id: questaoProcessada.id,
-          type: questaoProcessada.type,
-          enunciadoLength: questaoProcessada.enunciado?.length,
-          hasAlternativas: !!questaoProcessada.alternativas,
-          alternativasCount: questaoProcessada.alternativas ? questaoProcessada.alternativas.length : 0,
-          respostaCorreta: questaoProcessada.respostaCorreta,
-          hasExplicacao: !!questaoProcessada.explicacao
-        });
-
-        return questaoProcessada;
-      });
-
-      console.log(`✅ ${questoesProcessadasIA.length} questões processadas com sucesso`);
-      setQuestoesProcessadas(questoesProcessadasIA);
-
-    } else if (isContentFromAI) {
-      console.error('❌ Conteúdo marcado como da IA mas sem questões válidas');
-      console.error('📊 Dados recebidos:', data);
-      setQuestoesProcessadas([]);
-    } else {
-      console.log('⚠️ Conteúdo não foi gerado pela IA, usando questões simuladas como fallback');
-      const questoesSimuladas = gerarQuestoesSimuladas(data);
-      setQuestoesProcessadas(questoesSimuladas);
-    }
-  }, [data]);
-
-  const gerarQuestoesSimuladas = (activityData: ExerciseListData): Question[] => {
-    const questoes: Question[] = [];
-    const tipos = (activityData.tipoQuestoes || 'multipla-escolha').toLowerCase();
-    const numeroQuestoes = activityData.numeroQuestoes || 5;
-
-    // Apenas 3 tipos de questão permitidos
-    const tiposValidos: Question['type'][] = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'];
-
-    for (let i = 1; i <= numeroQuestoes; i++) {
-      let tipoQuestao: Question['type'] = 'multipla-escolha';
-
-      if (tipos.includes('mista') || tipos.includes('misto')) {
-        // Para tipo misto, alterna entre os 3 tipos válidos
-        tipoQuestao = tiposValidos[Math.floor(Math.random() * tiposValidos.length)];
-      } else if (tipos.includes('discursiva') || tipos.includes('dissertativa')) {
-        tipoQuestao = 'discursiva';
-      } else if (tipos.includes('verdadeiro') || tipos.includes('falso')) {
-        tipoQuestao = 'verdadeiro-falso';
-      } else {
-        // Default para múltipla escolha
-        tipoQuestao = 'multipla-escolha';
+        simulatedQuestions.push(baseQuestion);
       }
 
-      const questao: Question = {
-        id: `questao-${i}`,
-        type: tipoQuestao,
-        enunciado: `Questão ${i} sobre ${activityData.tema || activityData.disciplina || 'conteúdo geral'}: Esta é uma questão simulada para demonstração do formato ${tipoQuestao.replace('-', ' ')}.`,
-        alternativas: tipoQuestao === 'multipla-escolha' ? [
-          `Primeira alternativa sobre ${activityData.tema || 'o tema'}`,
-          `Segunda alternativa sobre ${activityData.tema || 'o tema'}`,
-          `Terceira alternativa sobre ${activityData.tema || 'o tema'}`,
-          `Quarta alternativa sobre ${activityData.tema || 'o tema'}`
-        ] : tipoQuestao === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
-        respostaCorreta: tipoQuestao === 'discursiva' ? undefined : 0,
-        explicacao: `Esta é a explicação para a questão ${i} do tipo ${tipoQuestao.replace('-', ' ')}. Em uma situação real, aqui estaria a justificativa detalhada da resposta.`,
-        dificuldade: (activityData.dificuldade ? activityData.dificuldade.toLowerCase() : 'medio') as any,
-        tema: activityData.tema || 'Tema não especificado'
-      };
+      console.log(`✅ ${simulatedQuestions.length} questões simuladas geradas.`);
 
-      questoes.push(questao);
+      questionsData = {
+        titulo: activityData?.titulo || 'Lista de Exercícios Simulados',
+        disciplina: activityData?.disciplina || 'Disciplina Simulada',
+        tema: activityData?.tema || 'Tema Simulado',
+        tipoQuestoes: 'misto', // Se gerou misto
+        numeroQuestoes: numQuestions,
+        dificuldade: activityData?.dificuldade || 'medio',
+        objetivos: activityData?.objetivos || '',
+        conteudoPrograma: activityData?.conteudoPrograma || '',
+        observacoes: activityData?.observacoes || 'Estas são questões simuladas, pois o conteúdo original não foi encontrado.',
+        questoes: simulatedQuestions,
+        isGeneratedByAI: false, // Indica que não foi gerado por IA
+        descricao: activityData?.descricao || 'Exercícios práticos simulados para demonstração.'
+      };
     }
 
-    console.log(`✅ ${questoes.length} questões simuladas geradas:`, questoes);
-    return questoes;
-  };
+    // Processar e normalizar as questões encontradas ou simuladas
+    if (questionsData && questionsData.questoes) {
+      console.log(`✨ Normalizando ${questionsData.questoes.length} questões.`);
+      questionsData.questoes = questionsData.questoes.map((questao: any, index: number) => {
+        // Mapeamento de propriedades comuns
+        const normalizedQuestion: Question = {
+          id: questao.id || questao.statement_id || `questao-${index}-${Date.now()}`,
+          type: (questao.type || questao.tipo || questao.question || 'multipla-escolha').toLowerCase().replace('_', '-').replace(' ', '-'),
+          enunciado: questao.enunciado || questao.statement || questao.question || questao.title || `Questão ${index + 1} sobre ${questionsData?.tema || 'o tema'}`,
+          dificuldade: (questao.dificuldade || questao.difficulty || questao.nivel || 'medio').toLowerCase(),
+          tema: questao.tema || questao.topic || questionsData?.tema || 'Tema não especificado',
+          explicacao: questao.explicacao || questao.explanation || questao.detail || 'Sem explicação detalhada.',
+          // Mapeamento de alternativas e resposta correta
+          alternativas: questao.alternativas || questao.alternatives || questao.options,
+          respostaCorreta: typeof questao.respostaCorreta === 'number' ? questao.respostaCorreta :
+                           typeof questao.correctAnswer === 'number' ? questao.correctAnswer :
+                           typeof questao.correct_answer === 'number' ? questao.correct_answer :
+                           typeof questao.gabarito === 'number' ? questao.gabarito :
+                           typeof questao.respostaCorreta === 'string' && !isNaN(parseInt(questao.respostaCorreta)) ? parseInt(questao.respostaCorreta) :
+                           typeof questao.correctAnswer === 'string' && !isNaN(parseInt(questao.correctAnswer)) ? parseInt(questao.correctAnswer) :
+                           typeof questao.correct_answer === 'string' && !isNaN(parseInt(questao.correct_answer)) ? parseInt(questao.correct_answer) :
+                           typeof questao.gabarito === 'string' && !isNaN(parseInt(questao.gabarito)) ? parseInt(questao.gabarito) :
+                           (questao.type === 'verdadeiro-falso' || questao.type === 'true-false') ? (questao.resposta === true || questao.correct === true || questao.correct_answer === 'Verdadeiro' ? 0 : 1) :
+                           (questao.type === 'discursiva' || questao.type === 'essay') ? undefined : 0, // Default para 0 se não especificado e for Múltipla Escolha
+          // Mapeamento para questões V/F e Discursivas
+          resposta: questao.resposta !== undefined ? questao.resposta : questao.texto,
+          criteriosAvaliacao: questao.criteriosAvaliacao,
+          respostaEsperada: questao.respostaEsperada,
+          // Mapeamento de outros campos
+          pontos: questao.pontos,
+          tempo_estimado: questao.tempo_estimado,
+        };
+
+        // Normalização do tipo de questão para os 3 tipos permitidos
+        const normalizedType = normalizedQuestion.type.toLowerCase().replace(/[\s_-]/g, '');
+        if (normalizedType.includes('multipla') || normalizedType.includes('escolha') || normalizedType.includes('multiple') || normalizedType.includes('choice')) {
+          normalizedQuestion.type = 'multipla-escolha';
+        } else if (normalizedType.includes('verdadeiro') || normalizedType.includes('falso') || normalizedType.includes('true') || normalizedType.includes('false')) {
+          normalizedQuestion.type = 'verdadeiro-falso';
+          // Para V/F, garantir que a resposta correta seja 0 (Verdadeiro) ou 1 (Falso)
+          if (normalizedQuestion.respostaCorreta === undefined) {
+            if (questao.resposta === true || questao.correct === true || questao.correct_answer === 'Verdadeiro') normalizedQuestion.respostaCorreta = 0;
+            else if (questao.resposta === false || questao.correct === false || questao.correct_answer === 'Falso') normalizedQuestion.respostaCorreta = 1;
+            else if (questao.gabarito === 'Verdadeiro') normalizedQuestion.respostaCorreta = 0;
+            else if (questao.gabarito === 'Falso') normalizedQuestion.respostaCorreta = 1;
+            else normalizedQuestion.respostaCorreta = 0; // Default para Verdadeiro se não especificado
+          }
+        } else if (normalizedType.includes('discursiva') || normalizedType.includes('dissertativa') || normalizedType.includes('essay')) {
+          normalizedQuestion.type = 'discursiva';
+          normalizedQuestion.alternativas = undefined; // Discursiva não tem alternativas
+          normalizedQuestion.respostaCorreta = undefined; // Discursiva não tem resposta correta como índice
+        } else {
+          console.warn(`⚠️ Tipo de questão desconhecido ou não suportado: '${normalizedQuestion.type}'. Convertendo para 'multipla-escolha'.`);
+          normalizedQuestion.type = 'multipla-escolha';
+          // Garantir que a múltipla escolha tenha um número razoável de alternativas
+          if (!normalizedQuestion.alternativas || normalizedQuestion.alternativas.length < 2) {
+            normalizedQuestion.alternativas = ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
+            normalizedQuestion.respostaCorreta = 0;
+          }
+        }
+        
+        // Garantir que a resposta correta seja um número para múltipla escolha e V/F
+        if (normalizedQuestion.type === 'multipla-escolha' && normalizedQuestion.respostaCorreta !== undefined) {
+          if (typeof normalizedQuestion.respostaCorreta === 'string' && !isNaN(parseInt(normalizedQuestion.respostaCorreta))) {
+            normalizedQuestion.respostaCorreta = parseInt(normalizedQuestion.respostaCorreta);
+          } else if (typeof normalizedQuestion.respostaCorreta !== 'number') {
+            normalizedQuestion.respostaCorreta = 0; // Default se não for número válido
+          }
+        } else if (normalizedQuestion.type === 'verdadeiro-falso' && normalizedQuestion.respostaCorreta !== undefined) {
+          if (typeof normalizedQuestion.respostaCorreta === 'string') {
+            if (normalizedQuestion.respostaCorreta.toLowerCase() === 'verdadeiro') normalizedQuestion.respostaCorreta = 0;
+            else if (normalizedQuestion.respostaCorreta.toLowerCase() === 'falso') normalizedQuestion.respostaCorreta = 1;
+            else normalizedQuestion.respostaCorreta = 0; // Default
+          } else if (typeof normalizedQuestion.respostaCorreta !== 'number') {
+             normalizedQuestion.respostaCorreta = 0; // Default se não for número válido
+          }
+        }
+
+        // Garantir que o enunciado não esteja vazio
+        if (!normalizedQuestion.enunciado || normalizedQuestion.enunciado.trim() === '') {
+          normalizedQuestion.enunciado = `Questão ${index + 1} (sem enunciado definido)`;
+        }
+
+        // Garantir que as alternativas sejam strings válidas para múltipla escolha
+        if (normalizedQuestion.type === 'multipla-escolha' && normalizedQuestion.alternativas) {
+          normalizedQuestion.alternativas = normalizedQuestion.alternativas.map((alt, altIndex) => {
+            if (typeof alt === 'string') return alt;
+            if (alt && typeof alt === 'object' && alt.texto) return alt.texto;
+            if (alt && typeof alt === 'object' && alt.text) return alt.text;
+            if (alt && typeof alt === 'object' && alt.content) return alt.content;
+            return `Alternativa ${String.fromCharCode(65 + altIndex)} Inválida`;
+          });
+        }
+
+        return normalizedQuestion;
+      });
+    }
+
+    console.log('📊 Dados finais processados:', questionsData);
+    return questionsData;
+  }, []);
+
+  // Efeito para processar os dados de 'activity' quando eles mudam
+  useEffect(() => {
+    console.log('🔄 UseEffect executado com activity:', activity);
+    if (activity) {
+      const processedData = processQuestions(activity);
+      console.log('📝 Dados processados no useEffect:', processedData);
+      setExerciseData(processedData);
+
+      // Se tiver questões válidas, atualizar o estado `questoesProcessadas`
+      if (processedData?.questoes && Array.isArray(processedData.questoes) && processedData.questoes.length > 0) {
+        console.log(`📋 Atualizando lista de questões com ${processedData.questoes.length} itens.`);
+        setQuestoesProcessadas(processedData.questoes);
+      } else {
+        console.log('🚫 Nenhuma questão válida encontrada para atualizar `questoesProcessadas`.');
+        setQuestoesProcessadas([]); // Limpar se não houver questões
+      }
+    } else {
+      console.log('ℹ️ `activity` está vazio ou indefinido, `questoesProcessadas` será limpo.');
+      setQuestoesProcessadas([]);
+      setExerciseData(null);
+    }
+  }, [activity, processQuestions]); // Dependência de processQuestions também
 
   const handleRespostaChange = (questaoId: string, resposta: string | number) => {
     setRespostas(prev => ({
@@ -392,6 +426,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const generateQuestionWithAI = async () => {
     if (!newQuestionData.descricao || !newQuestionData.modelo || !newQuestionData.dificuldade) {
       console.warn('❌ Dados incompletos para gerar questão:', newQuestionData);
+      // Exibir um feedback ao usuário
+      alert('Por favor, preencha a descrição, o tipo de questão e a dificuldade.');
       return;
     }
 
@@ -399,78 +435,98 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     setIsGeneratingQuestion(true);
 
     try {
-      const apiKey = 'AIzaSyAYWJto52s6FqxnwqCgCGGSaGsv8IU_fzw';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-
-      // Determinar tipo de questão - apenas 3 tipos válidos
-      let questionType: 'multipla-escolha' | 'verdadeiro-falso' | 'discursiva' = 'multipla-escolha';
-      
-      const modeloLower = newQuestionData.modelo.toLowerCase();
-      if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
-        questionType = 'verdadeiro-falso';
-      } else if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
-        questionType = 'discursiva';
-      } else {
-        // Default para múltipla escolha
-        questionType = 'multipla-escolha';
+      // Use uma chave API válida ou passe-a de forma segura (ex: via contexto ou env var)
+      // Substitua 'SUA_API_KEY_AQUI' pela sua chave real
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'SUA_API_KEY_AQUI';
+      if (apiKey === 'SUA_API_KEY_AQUI') {
+        console.error('❌ Chave da API do Gemini não configurada. Verifique as variáveis de ambiente.');
+        alert('Erro de configuração: Chave da API indisponível.');
+        setIsGeneratingQuestion(false);
+        return;
       }
 
-      const disciplina = consolidatedData?.disciplina || data?.subject || 'Matemática';
-      const tema = consolidatedData?.tema || data?.theme || 'Conteúdo Geral';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
+      // Determinar o tipo de questão para o prompt
+      let questionTypeForPrompt = 'multipla-escolha';
+      const modeloLower = newQuestionData.modelo.toLowerCase();
+      if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
+        questionTypeForPrompt = 'verdadeiro-falso';
+      } else if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
+        questionTypeForPrompt = 'discursiva';
+      }
+
+      const disciplina = exerciseData?.disciplina || data?.subject || 'Matemática'; // Tenta obter de dados processados ou originais
+      const tema = exerciseData?.tema || data?.theme || 'Conteúdo Geral'; // Tenta obter de dados processados ou originais
+
+      // Construir o prompt
       const prompt = `
-        Você é um especialista em educação brasileira. Crie uma questão educacional REAL e ESPECÍFICA seguindo EXATAMENTE a estrutura JSON abaixo.
-        
-        ESPECIFICAÇÕES:
-        - Descrição/Tema: ${newQuestionData.descricao}
-        - Tipo: ${newQuestionData.modelo}
-        - Dificuldade: ${newQuestionData.dificuldade}
-        - Disciplina: ${disciplina}
-        - Tema: ${tema}
-        
-        INSTRUÇÕES CRÍTICAS:
-        1. Crie uma questão REAL sobre o tema específico mencionado
-        2. O enunciado deve ser claro, objetivo e educacionalmente válido
-        3. Para múltipla escolha: crie 4 alternativas plausíveis com apenas 1 correta
-        4. Para verdadeiro/falso: crie uma afirmação clara que possa ser julgada
-        5. Para discursiva: formule uma pergunta que exija desenvolvimento
-        
-        RETORNE APENAS O JSON VÁLIDO ABAIXO (sem texto adicional):
-        
-        ${questionType === 'multipla-escolha' ? `{
-          "id": "questao-${Date.now()}",
-          "type": "multipla-escolha",
-          "enunciado": "Crie aqui um enunciado específico sobre ${newQuestionData.descricao} relacionado a ${tema} em ${disciplina}",
-          "alternativas": [
-            "Primeira alternativa específica e plausível",
-            "Segunda alternativa específica e plausível", 
-            "Terceira alternativa específica e plausível",
-            "Quarta alternativa específica e plausível"
-          ],
-          "respostaCorreta": 0,
-          "explicacao": "Explicação detalhada sobre por que a primeira alternativa está correta e as outras estão incorretas",
-          "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "${tema}"
-        }` : questionType === 'verdadeiro-falso' ? `{
-          "id": "questao-${Date.now()}",
-          "type": "verdadeiro-falso",
-          "enunciado": "Crie aqui uma afirmação específica sobre ${newQuestionData.descricao} relacionada a ${tema} em ${disciplina} para ser julgada como verdadeira ou falsa",
-          "alternativas": ["Verdadeiro", "Falso"],
-          "respostaCorreta": 0,
-          "explicacao": "Explicação detalhada sobre por que a afirmação é verdadeira ou falsa",
-          "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "${tema}"
-        }` : `{
-          "id": "questao-${Date.now()}",
-          "type": "discursiva",
-          "enunciado": "Crie aqui uma pergunta dissertativa específica sobre ${newQuestionData.descricao} relacionada a ${tema} em ${disciplina} que exija resposta elaborada",
-          "explicacao": "Critérios de avaliação e pontos importantes que devem estar presentes na resposta",
-          "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
-          "tema": "${tema}"
-        }`}
+        Você é um assistente educacional especialista em criar questões para o sistema School Power, focado no currículo brasileiro. Crie uma questão educacional REAL e ESPECÍFICA com base nas seguintes informações. Retorne APENAS a resposta em formato JSON, seguindo EXATAMENTE a estrutura abaixo.
+
+        **Informações para a Questão:**
+        - **Descrição/Tópico:** ${newQuestionData.descricao}
+        - **Tipo de Questão Desejado:** ${newQuestionData.modelo}
+        - **Nível de Dificuldade:** ${newQuestionData.dificuldade}
+        - **Disciplina:** ${disciplina}
+        - **Tema Central:** ${tema}
+
+        **Instruções Críticas:**
+        1.  **Realismo:** A questão deve ser pedagogicamente relevante e realista, não genérica.
+        2.  **Especificidade:** Use o tópico fornecido para criar uma questão pontual.
+        3.  **Formato JSON:** Responda APENAS com um objeto JSON válido. Sem texto introdutório ou conclusivo.
+        4.  **Campos do JSON:** Use os campos definidos abaixo.
+
+        **Estrutura JSON Esperada:**
+
+        *   **Para Múltipla Escolha:**
+            \`\`\`json
+            {
+              "id": "auto_generated_${Date.now()}",
+              "type": "multipla-escolha",
+              "enunciado": "Crie aqui um enunciado específico e claro...",
+              "alternativas": [
+                "Alternativa A plausível",
+                "Alternativa B plausível",
+                "Alternativa C plausível",
+                "Alternativa D plausível"
+              ],
+              "respostaCorreta": 0, // Índice da alternativa correta (0 para A, 1 para B, etc.)
+              "explicacao": "Explicação detalhada sobre a resposta correta e o porquê das incorretas.",
+              "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
+              "tema": "${tema}"
+            }
+            \`\`\`
+
+        *   **Para Verdadeiro ou Falso:**
+            \`\`\`json
+            {
+              "id": "auto_generated_${Date.now()}",
+              "type": "verdadeiro-falso",
+              "enunciado": "Crie uma afirmação clara e objetiva para ser julgada como verdadeira ou falsa...",
+              "alternativas": ["Verdadeiro", "Falso"],
+              "respostaCorreta": 0, // 0 para Verdadeiro, 1 para Falso
+              "explicacao": "Explicação detalhada sobre o porquê a afirmação é verdadeira ou falsa.",
+              "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
+              "tema": "${tema}"
+            }
+            \`\`\`
+
+        *   **Para Discursiva:**
+            \`\`\`json
+            {
+              "id": "auto_generated_${Date.now()}",
+              "type": "discursiva",
+              "enunciado": "Formule uma pergunta dissertativa que exija análise, argumentação ou desenvolvimento de ideias...",
+              "explicacao": "Critérios de avaliação e/ou pontos-chave esperados na resposta do aluno.",
+              "dificuldade": "${newQuestionData.dificuldade.toLowerCase()}",
+              "tema": "${tema}"
+            }
+            \`\`\`
+
+        **Instrução Final:** Gere o JSON correspondente ao tipo de questão solicitado.
       `;
 
-      console.log('📝 Enviando prompt para Gemini:', prompt);
+      console.log('📝 Enviando prompt para Gemini...');
 
       const response = await fetch(url, {
         method: 'POST',
@@ -487,109 +543,121 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
+        const errorData = await response.json();
+        console.error(`❌ Erro HTTP ${response.status}:`, errorData);
+        throw new Error(`Erro na API do Gemini: ${response.status} - ${errorData.error?.message || response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('📥 Resposta do Gemini:', result);
-      
-      if (result.candidates && result.candidates[0] && result.candidates[0].content) {
+      console.log('📥 Resposta bruta do Gemini:', result);
+
+      if (result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts) {
         const generatedText = result.candidates[0].content.parts[0].text;
-        console.log('📝 Texto gerado:', generatedText);
-        
-        // Extrair JSON da resposta de forma mais robusta
+        console.log('📝 Texto gerado pela IA:', generatedText);
+
+        // Tentar extrair o JSON de forma robusta
         let jsonText = generatedText.trim();
-        
-        // Remover possíveis marcações de código
-        jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-        
-        // Tentar encontrar o JSON na resposta
+        jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, ''); // Remove marcadores de código
+
+        // Tentar encontrar o objeto JSON dentro do texto
         const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+        if (jsonMatch && jsonMatch[0]) {
           jsonText = jsonMatch[0];
+        } else {
+          throw new Error('Não foi possível extrair um objeto JSON válido da resposta.');
         }
 
-        console.log('🔍 JSON extraído:', jsonText);
+        console.log('🔍 JSON extraído para processamento:', jsonText);
 
         try {
           const novaQuestaoRaw = JSON.parse(jsonText);
-          console.log('✅ Questão bruta gerada:', novaQuestaoRaw);
-          
-          // Processar e validar a questão gerada de acordo com nossa estrutura
+          console.log('✅ Questão bruta gerada (parsed):', novaQuestaoRaw);
+
+          // Processar e validar a questão gerada de acordo com nossa estrutura interna
           const novaQuestaoProcessada: Question = {
-            id: novaQuestaoRaw.id || `questao-${Date.now()}`,
-            type: questionType,
-            enunciado: novaQuestaoRaw.enunciado || `Questão sobre: ${newQuestionData.descricao}`,
-            alternativas: novaQuestaoRaw.alternativas || (
-              questionType === 'multipla-escolha' 
-                ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
-                : questionType === 'verdadeiro-falso' 
-                  ? ['Verdadeiro', 'Falso'] 
-                  : undefined
-            ),
-            respostaCorreta: novaQuestaoRaw.respostaCorreta !== undefined ? novaQuestaoRaw.respostaCorreta : 0,
-            explicacao: novaQuestaoRaw.explicacao || 'Questão gerada automaticamente',
-            dificuldade: (novaQuestaoRaw.dificuldade || newQuestionData.dificuldade.toLowerCase()) as any,
-            tema: novaQuestaoRaw.tema || tema
+            id: novaQuestaoRaw.id || `auto_generated_${Date.now()}`,
+            type: (novaQuestaoRaw.type || questionTypeForPrompt).toLowerCase().replace(/[\s_-]/g, ''),
+            enunciado: novaQuestaoRaw.enunciado || novaQuestaoRaw.statement || `Questão gerada sobre ${newQuestionData.descricao}`,
+            alternativas: novaQuestaoRaw.alternativas || novaQuestaoRaw.options,
+            respostaCorreta: novaQuestaoRaw.respostaCorreta !== undefined ? novaQuestaoRaw.respostaCorreta : (novaQuestaoRaw.correctAnswer !== undefined ? novaQuestaoRaw.correctAnswer : (novaQuestaoRaw.correct_answer !== undefined ? novaQuestaoRaw.correct_answer : undefined)),
+            explicacao: novaQuestaoRaw.explicacao || novaQuestaoRaw.explanation || 'Explicação não fornecida pela IA.',
+            dificuldade: (novaQuestaoRaw.dificuldade || newQuestionData.dificuldade.toLowerCase()).toLowerCase(),
+            tema: novaQuestaoRaw.tema || tema,
+            criteriosAvaliacao: novaQuestaoRaw.criteriosAvaliacao,
+            respostaEsperada: novaQuestaoRaw.respostaEsperada,
           };
-          
-          // Validar estrutura final da questão
-          if (!novaQuestaoProcessada.id || !novaQuestaoProcessada.type || !novaQuestaoProcessada.enunciado) {
-            throw new Error('Estrutura de questão inválida após processamento');
+
+          // Normalizar o tipo de questão para os 3 tipos permitidos
+          const normalizedType = normalizedQuestion.type.toLowerCase().replace(/[\s_-]/g, '');
+          if (normalizedType.includes('multipla') || normalizedType.includes('escolha') || normalizedType.includes('multiple') || normalizedType.includes('choice')) {
+            novaQuestaoProcessada.type = 'multipla-escolha';
+          } else if (normalizedType.includes('verdadeiro') || normalizedType.includes('falso') || normalizedType.includes('true') || normalizedType.includes('false')) {
+            novaQuestaoProcessada.type = 'verdadeiro-falso';
+            // Garantir que a resposta correta seja 0 ou 1
+            if (novaQuestaoProcessada.respostaCorreta !== undefined) {
+                if (typeof novaQuestaoProcessada.respostaCorreta === 'string') {
+                    if (novaQuestaoProcessada.respostaCorreta.toLowerCase() === 'verdadeiro') novaQuestaoProcessada.respostaCorreta = 0;
+                    else if (novaQuestaoProcessada.respostaCorreta.toLowerCase() === 'falso') novaQuestaoProcessada.respostaCorreta = 1;
+                    else novaQuestaoProcessada.respostaCorreta = 0; // Default
+                } else if (typeof novaQuestaoProcessada.respostaCorreta !== 'number') {
+                    novaQuestaoProcessada.respostaCorreta = 0; // Default
+                }
+            } else {
+                novaQuestaoProcessada.respostaCorreta = 0; // Default para Verdadeiro se não especificado
+            }
+          } else if (normalizedType.includes('discursiva') || normalizedType.includes('dissertativa') || normalizedType.includes('essay')) {
+            novaQuestaoProcessada.type = 'discursiva';
+            novaQuestaoProcessada.alternativas = undefined;
+            novaQuestaoProcessada.respostaCorreta = undefined;
+          } else {
+            novaQuestaoProcessada.type = 'multipla-escolha'; // Fallback
+            if (!novaQuestaoProcessada.alternativas || novaQuestaoProcessada.alternativas.length < 2) {
+              novaQuestaoProcessada.alternativas = ['Opção A', 'Opção B', 'Opção C', 'Opção D'];
+              novaQuestaoProcessada.respostaCorreta = 0;
+            }
           }
-          
+
+          // Validar campos essenciais
+          if (!novaQuestaoProcessada.enunciado || novaQuestaoProcessada.enunciado.trim() === '') {
+            throw new Error('Enunciado da questão gerada está vazio.');
+          }
+          if (novaQuestaoProcessada.type === 'multipla-escolha' && (!novaQuestaoProcessada.alternativas || novaQuestaoProcessada.alternativas.length < 2)) {
+             throw new Error('Questão de múltipla escolha gerada sem alternativas suficientes.');
+          }
+
           console.log('🎯 Questão processada e validada:', novaQuestaoProcessada);
-          
-          // Adicionar a nova questão à lista
+
+          // Adicionar a nova questão à lista e atualizar o estado
           setQuestoesProcessadas(prev => {
-            const novaLista = [...prev, novaQuestaoProcessada];
-            console.log('📋 Lista atualizada de questões:', novaLista);
-            return novaLista;
+            const updatedQuestions = [...prev, novaQuestaoProcessada];
+            console.log('📋 Questões atualizadas:', updatedQuestions);
+            return updatedQuestions;
           });
-          
-          // Fechar modal e limpar dados
+
+          // Fechar modal e limpar dados de entrada
           setShowAddQuestionModal(false);
           setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
-          
-          console.log('🎉 Questão adicionada com sucesso à grade!');
-          
+
+          console.log('🎉 Questão adicionada com sucesso!');
+
         } catch (parseError) {
-          console.error('❌ Erro ao fazer parse do JSON:', parseError);
-          console.error('📄 JSON problemático:', jsonText);
-          
-          // Fallback: criar questão manualmente estruturada
-          const fallbackQuestion: Question = {
-            id: `questao-${Date.now()}`,
-            type: questionType,
-            enunciado: `Questão sobre ${newQuestionData.descricao} (relacionada a ${tema})`,
-            alternativas: questionType === 'multipla-escolha' 
-              ? ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D']
-              : questionType === 'verdadeiro-falso' 
-                ? ['Verdadeiro', 'Falso'] 
-                : undefined,
-            respostaCorreta: 0,
-            explicacao: 'Esta questão foi gerada automaticamente como fallback devido a erro na API',
-            dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
-            tema: tema
-          };
-          
-          setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
-          setShowAddQuestionModal(false);
-          setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
-          
-          console.log('🔄 Questão fallback criada:', fallbackQuestion);
+          console.error('❌ Erro ao fazer parse do JSON da resposta da IA:', parseError);
+          console.error('📄 JSON problemático recebido:', jsonText);
+          // Tentar criar uma questão de fallback estruturada
+          throw new Error('Falha ao processar a resposta da IA.');
         }
       } else {
-        throw new Error('Resposta inválida do Gemini');
+        throw new Error('Resposta inválida ou incompleta da IA.');
       }
-    } catch (error) {
-      console.error('❌ Erro ao gerar questão:', error);
-      
-      // Em caso de erro, criar uma questão de fallback estruturada
+    } catch (error: any) {
+      console.error('❌ Erro ao gerar questão com IA:', error);
+      alert(`Ocorreu um erro ao gerar a questão: ${error.message}. Por favor, tente novamente.`);
+
+      // Em caso de erro, criar uma questão de fallback estruturada localmente
       const modeloLower = newQuestionData.modelo.toLowerCase();
       let tipoFallback: Question['type'] = 'multipla-escolha';
       let alternativasFallback: string[] | undefined = ['Alternativa A', 'Alternativa B', 'Alternativa C', 'Alternativa D'];
-      
+
       if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
         tipoFallback = 'verdadeiro-falso';
         alternativasFallback = ['Verdadeiro', 'Falso'];
@@ -597,22 +665,21 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         tipoFallback = 'discursiva';
         alternativasFallback = undefined;
       }
-      
+
       const fallbackQuestion: Question = {
-        id: `questao-${Date.now()}`,
+        id: `fallback-questao-${Date.now()}`,
         type: tipoFallback,
-        enunciado: `Questão sobre: ${newQuestionData.descricao} (${consolidatedData?.tema || 'Tema geral'})`,
+        enunciado: `Questão de fallback sobre: ${newQuestionData.descricao} (${exerciseData?.tema || 'Tema geral'})`,
         alternativas: alternativasFallback,
-        respostaCorreta: 0,
-        explicacao: 'Esta questão foi gerada localmente devido a erro na API. Recomenda-se revisar o conteúdo.',
-        dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
-        tema: consolidatedData?.tema || 'Tema geral'
+        respostaCorreta: tipoFallback === 'multipla-escolha' ? 0 : (tipoFallback === 'verdadeiro-falso' ? 0 : undefined),
+        explicacao: 'Esta questão foi gerada localmente devido a um erro na comunicação com a IA. Por favor, revise o conteúdo.',
+        dificuldade: newQuestionData.dificuldade.toLowerCase() || 'medio',
+        tema: exerciseData?.tema || 'Tema geral'
       };
-      
+
       setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
       setShowAddQuestionModal(false);
       setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
-      
       console.log('🔄 Questão fallback criada devido a erro:', fallbackQuestion);
     } finally {
       setIsGeneratingQuestion(false);
@@ -633,12 +700,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }));
   };
 
-  const getDifficultyColor = (dificuldade?: string) => {
-    const nivel = determineDifficulty({ dificuldade: dificuldade }); // Usa a função de determinação
-    const config = DIFFICULTY_LEVELS[nivel];
-    return `${config.color} ${config.textColor}`;
+  const getDifficultyConfig = (dificuldade?: string) => {
+    const nivel = determineDifficulty({ dificuldade });
+    return DIFFICULTY_LEVELS[nivel];
   };
-
 
   const getTypeIcon = (type: Question['type']) => {
     switch (type) {
@@ -649,7 +714,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   };
 
-  // Effect para notificar quando questões são renderizadas
+  // Effect para notificar quando questões são renderizadas (útil para tracking)
   useEffect(() => {
     if (onQuestionRender && questoesProcessadas.length > 0) {
       questoesProcessadas.forEach(questao => {
@@ -658,7 +723,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     }
   }, [questoesProcessadas, onQuestionRender]);
 
-  // Componente do card para adicionar nova questão
+  // Componente do card para adicionar nova questão (estilizado)
   const renderAddQuestionCard = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -683,10 +748,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     </motion.div>
   );
 
-  // Componente de mini-card para grade inicial de questões
+  // Componente do mini-card para grade inicial de questões
   const renderQuestionGridCard = (questao: Question, index: number) => {
-    const difficulty = determineDifficulty(questao);
-    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+    const difficultyConfig = getDifficultyConfig(questao.dificuldade);
+    const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
     return (
       <motion.div
         key={questao.id || `questao-${index + 1}`}
@@ -697,21 +762,16 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         onClick={() => {
           setSelectedQuestionIndex(index);
           setViewMode('detailed');
-          // Notificar o modal pai sobre a seleção da questão
           if (onQuestionSelect) {
             onQuestionSelect(index, questao.id);
           }
         }}
       >
-        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm bg-white/95 shadow-md">
-          {/* Container para numeração e tag de dificuldade */}
+        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] bg-white/95 dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm shadow-md">
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-            {/* Numeração da questão */}
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
               {index + 1}
             </div>
-
-            {/* Tag de dificuldade */}
             <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
               {difficultyConfig.label}
             </Badge>
@@ -719,14 +779,12 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
           <CardContent className="p-5 pt-16 h-full flex flex-col">
             <div className="flex-1">
-              {/* Enunciado da questão (limitado) */}
               <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
                 {questao.enunciado?.substring(0, 130)}
                 {questao.enunciado && questao.enunciado.length > 130 ? '...' : ''}
               </p>
             </div>
 
-            {/* Informações básicas na base do card */}
             <div className="space-y-3 mt-auto">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
@@ -746,8 +804,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     </span>
                   )}
                 </div>
-
-                {/* Indicador visual de hover */}
                 <div className="w-2 h-2 rounded-full bg-orange-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
             </div>
@@ -765,7 +821,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
-      {/* Grade de questões */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {questoesProcessadas.map((questao, index) =>
           renderQuestionGridCard(questao, index)
@@ -773,15 +828,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         {renderAddQuestionCard()}
       </div>
 
-      {/* Informações adicionais */}
-      {consolidatedData.observacoes && (
+      {exerciseData?.observacoes && (
         <Card className="border-amber-200 bg-amber-50 dark:bg-yellow-950/30 dark:border-yellow-800">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-medium text-amber-800 dark:text-yellow-200 mb-1">Observações Importantes</h4>
-                <p className="text-amber-700 dark:text-yellow-300 text-sm">{consolidatedData.observacoes}</p>
+                <p className="text-amber-700 dark:text-yellow-300 text-sm">{exerciseData.observacoes}</p>
               </div>
             </div>
           </CardContent>
@@ -792,34 +846,27 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
   const renderQuestion = (questao: Question, index: number) => {
     const questionId = questao.id || `questao-${index + 1}`;
-    const difficulty = determineDifficulty(questao);
-    const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
+    const difficultyConfig = getDifficultyConfig(questao.dificuldade);
     const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
 
-    // Extrair e processar alternativas de forma robusta
-    let alternativasProcessadas = [];
-
+    let alternativasProcessadas: string[] = [];
     if (questao.type === 'multipla-escolha') {
-      if (questao.alternativas && Array.isArray(questao.alternativas)) {
-        alternativasProcessadas = questao.alternativas;
-      } else if (questao.alternatives && Array.isArray(questao.alternatives)) {
-        alternativasProcessadas = questao.alternatives;
-      } else if (questao.options && Array.isArray(questao.options)) {
-        alternativasProcessadas = questao.options;
+      if (questao.alternativas && Array.isArray(questao.alternativas) && questao.alternativas.length > 0) {
+        alternativasProcessadas = questao.alternativas.map((alt, altIndex) => {
+          if (typeof alt === 'string') return alt;
+          if (alt && typeof alt === 'object' && alt.texto) return alt.texto;
+          if (alt && typeof alt === 'object' && alt.text) return alt.text;
+          if (alt && typeof alt === 'object' && alt.content) return alt.content;
+          return `Alternativa ${String.fromCharCode(65 + altIndex)} Inválida`;
+        });
       } else {
-        // Fallback com alternativas padrão
-        alternativasProcessadas = [
-          'Opção A',
-          'Opção B',
-          'Opção C',
-          'Opção D'
-        ];
+        alternativasProcessadas = ['Opção A', 'Opção B', 'Opção C', 'Opção D']; // Fallback
       }
     } else if (questao.type === 'verdadeiro-falso') {
       alternativasProcessadas = ['Verdadeiro', 'Falso'];
     }
 
-    console.log(`🔍 Questão ${index + 1} - Tipo: ${questao.type}, Alternativas processadas:`, alternativasProcessadas);
+    console.log(`🔍 Renderizando Questão ${index + 1} - ID: ${questao.id}, Tipo: ${questao.type}`);
 
     return (
       <Card
@@ -830,7 +877,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <Badge variant="outline" className="text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
                   Questão {index + 1}
                 </Badge>
@@ -860,16 +907,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   const letter = String.fromCharCode(65 + altIndex); // A, B, C, D...
                   const isSelected = respostas[questao.id] === altIndex;
 
-                  // Extrair texto da alternativa de forma robusta
-                  let textoAlternativa = '';
-                  if (typeof alternativa === 'string') {
-                    textoAlternativa = alternativa;
-                  } else if (alternativa && typeof alternativa === 'object') {
-                    textoAlternativa = alternativa.texto || alternativa.text || alternativa.content || alternativa.label || JSON.stringify(alternativa);
-                  } else {
-                    textoAlternativa = `Alternativa ${letter}`;
-                  }
-
                   return (
                     <div
                       key={altIndex}
@@ -888,7 +925,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                         {letter}
                       </div>
                       <div className="flex-1 text-gray-800 dark:text-gray-200 leading-relaxed pt-1">
-                        {textoAlternativa}
+                        {alternativa}
                       </div>
                       {isSelected && (
                         <CheckCircle className="w-5 h-5 text-orange-500 dark:text-orange-400 flex-shrink-0 mt-1" />
@@ -901,9 +938,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   <p className="text-yellow-800 dark:text-yellow-200 text-sm">
                     ⚠️ Alternativas não encontradas para esta questão de múltipla escolha.
                   </p>
-                  <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-auto">
-                    {JSON.stringify(questao, null, 2)}
-                  </pre>
                 </div>
               )}
             </div>
@@ -912,7 +946,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           {questao.type === 'verdadeiro-falso' && (
             <RadioGroup
               value={respostas[questao.id]?.toString() || ''}
-              onValueChange={(value) => handleRespostaChange(questao.id, value)}
+              onValueChange={(value) => handleRespostaChange(questao.id, value === 'true' ? 0 : 1)} // Converte 'true'/'false' para 0/1
               className="space-y-3"
             >
               <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -962,37 +996,36 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-orange-900 dark:text-orange-100 flex items-center">
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Explicação
+                        <Info className="w-4 h-4 mr-2" />
+                        Detalhes da Explicação
                       </h4>
                     </div>
                     <div className="text-orange-800 dark:text-orange-200 whitespace-pre-wrap mb-4">
                       {questao.explicacao}
                     </div>
 
-                    {/* Gabarito da Questão */}
-                    {questao.gabarito && (
+                    {questao.gabarito !== undefined && (
                       <div className="pt-4 border-t border-orange-200 dark:border-orange-700">
                         <h5 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
                           Gabarito
                         </h5>
                         <div className="text-orange-800 dark:text-orange-200 font-medium">
-                          {questao.tipo === 'multipla-escolha' ? (
+                          {questao.type === 'multipla-escolha' ? (
+                            typeof questao.gabarito === 'number' ? (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                Alternativa {String.fromCharCode(65 + questao.gabarito)}
+                              </span>
+                            ) : (
+                              <span className="text-red-500">{`Gabarito inválido (tipo: ${typeof questao.gabarito})`}</span>
+                            )
+                          ) : questao.type === 'verdadeiro-falso' ? (
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                              Alternativa {questao.gabarito}
-                            </span>
-                          ) : questao.tipo === 'verdadeiro-falso' ? (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                              {questao.gabarito === 'V' || questao.gabarito === 'Verdadeiro' ? 'Verdadeiro' : 'Falso'}
+                              {questao.gabarito === 0 || questao.gabarito === 'Verdadeiro' ? 'Verdadeiro' : 'Falso'}
                             </span>
                           ) : (
                             <div className="text-sm whitespace-pre-wrap">
-                              {questao.gabarito}
+                              {String(questao.gabarito)}
                             </div>
                           )}
                         </div>
@@ -1012,136 +1045,144 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   if (isGenerating) {
     return (
       <div className="flex flex-col items-center justify-center p-8 space-4 dark:text-gray-300">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <p className="text-gray-600 dark:text-gray-300">Gerando lista de exercícios...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+        <p className="text-gray-600 dark:text-gray-300 mt-3">Carregando lista de exercícios...</p>
       </div>
     );
   }
 
-  const consolidatedData = {
-    titulo: data?.titulo || 'Lista de Exercícios',
-    disciplina: data?.disciplina || 'Disciplina não especificada',
-    tema: data?.tema || 'Tema não especificado',
-    tipoQuestoes: data?.tipoQuestoes || 'multipla-escolha',
-    numeroQuestoes: data?.numeroQuestoes || 5,
-    dificuldade: data?.dificuldade || 'medio',
-    objetivos: data?.objetivos || '',
-    conteudoPrograma: data?.conteudoPrograma || '',
-    observacoes: data?.observacoes || '',
-    questoes: data?.questoes || [],
-    isGeneratedByAI: data?.isGeneratedByAI || false,
-    generatedAt: data?.generatedAt,
-    descricao: data?.descricao || 'Exercícios práticos para fixação do conteúdo',
-    anoEscolaridade: data?.anoEscolaridade,
-    nivelDificuldade: data?.nivelDificuldade,
-    tempoLimite: data?.tempoLimite
-  };
+  // Renderizar o conteúdo da grade de questões
+  const renderQuestionsGridContent = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-6"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {questoesProcessadas.map((questao, index) =>
+          renderQuestionGridCard(questao, index)
+        )}
+        {renderAddQuestionCard()}
+      </div>
 
-  console.log('📊 Dados consolidados finais:', consolidatedData);
+      {exerciseData?.observacoes && (
+        <Card className="border-amber-200 bg-amber-50 dark:bg-yellow-950/30 dark:border-yellow-800">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-amber-800 dark:text-yellow-200 mb-1">Observações Importantes</h4>
+                <p className="text-amber-700 dark:text-yellow-300 text-sm">{exerciseData.observacoes}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </motion.div>
+  );
+
+  // Renderizar o conteúdo detalhado da questão
+  const renderDetailedView = () => (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="flex h-full"
+    >
+      <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
+        <div className="p-2 space-y-2">
+          {questoesProcessadas.map((questao, index) => {
+            const difficultyConfig = getDifficultyConfig(questao.dificuldade);
+            const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
+            const isSelected = selectedQuestionIndex === index;
+            const isAnswered = respostas[questao.id] !== undefined && respostas[questao.id] !== null; // Verifica se a resposta foi dada
+
+            const getQuestionTypeIcon = (type: Question['type']) => {
+              switch (type) {
+                case 'multipla-escolha': return <Circle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                case 'discursiva': return <Edit3 className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                case 'verdadeiro-falso': return <CheckCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+                default: return <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+              }
+            };
+
+            return (
+              <button
+                key={questao.id || `questao-${index}`}
+                onClick={() => {
+                  setSelectedQuestionIndex(index);
+                  if (onQuestionSelect) {
+                    onQuestionSelect(index, questao.id);
+                  }
+                }}
+                className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
+                  isSelected
+                    ? 'bg-orange-100/20 border-orange-300 border-2 backdrop-blur-sm dark:bg-orange-900/30 dark:border-orange-600'
+                    : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm dark:border-gray-700 dark:hover:bg-gray-800/50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                    isAnswered
+                      ? 'bg-green-500 text-white'
+                      : isSelected
+                        ? 'bg-orange-500 text-white'
+                        : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'
+                  }`}>
+                    {isAnswered ? '✓' : index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
+                          {difficultyConfig.label}
+                        </div>
+                        <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
+                          {questionTag}
+                        </Badge>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {getQuestionTypeIcon(questao.type)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex-1 h-full overflow-y-auto">
+        <div className="p-6">
+          {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] ? (
+            renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+              <FileText className="w-16 h-16 mb-4" />
+              <p>Selecione uma questão no menu lateral para visualizá-la em detalhes.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <div className="h-full">
       {viewMode === 'grid' ? (
         <div className="h-full flex flex-col">
-          {/* Grade de questões */}
           <div className="flex-1 overflow-y-auto p-6">
-            {renderQuestionsGrid()}
+            {renderQuestionsGridContent()}
           </div>
         </div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="flex h-full"
-        >
-          {/* Menu lateral de navegação das questões */}
-          <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
-            <div className="p-2 space-y-2">
-              {questoesProcessadas.map((questao, index) => {
-                const difficulty = determineDifficulty(questao);
-                const difficultyConfig = DIFFICULTY_LEVELS[difficulty];
-                const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
-                const isSelected = selectedQuestionIndex === index;
-                const isAnswered = respostas[questao.id] !== undefined;
-
-                // Função para obter o ícone do tipo de questão
-                const getQuestionTypeIcon = (type: Question['type']) => {
-                  switch (type) {
-                    case 'multipla-escolha':
-                      return <Circle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                    case 'discursiva':
-                      return <Edit3 className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                    case 'verdadeiro-falso':
-                      return <CheckCircle className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                    default:
-                      return <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
-                  }
-                };
-
-                return (
-                  <button
-                    key={questao.id || `questao-${index}`}
-                    onClick={() => {
-                      setSelectedQuestionIndex(index);
-                      if (onQuestionSelect) {
-                        onQuestionSelect(index, questao.id);
-                      }
-                    }}
-                    className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
-                      isSelected
-                        ? 'bg-orange-100/20 border-orange-300 border-2 backdrop-blur-sm dark:bg-orange-900/30 dark:border-orange-600'
-                        : 'bg-transparent border border-gray-200/50 hover:bg-gray-50/30 backdrop-blur-sm dark:border-gray-700 dark:hover:bg-gray-800/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isAnswered
-                          ? 'bg-green-500 text-white'
-                          : isSelected
-                            ? 'bg-orange-500 text-white'
-                            : difficultyConfig.color + ' ' + difficultyConfig.textColor + ' dark:opacity-90'
-                      }`}>
-                        {isAnswered ? '✓' : index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`font-medium text-sm ${difficultyConfig.textColor} dark:text-white`}>
-                              {difficultyConfig.label}
-                            </div>
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
-                              {questionTag}
-                            </Badge>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {getQuestionTypeIcon(questao.type)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Área principal com a questão selecionada */}
-          <div className="flex-1 h-full overflow-y-auto">
-            {/* Conteúdo da questão */}
-            <div className="p-6">
-              {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] && (
-                renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
-              )}
-            </div>
-          </div>
-        </motion.div>
+        renderDetailedView()
       )}
 
-      {/* Modal de Adicionar Questão - Design Sofisticado */}
       <Dialog open={showAddQuestionModal} onOpenChange={setShowAddQuestionModal}>
         <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0 bg-gradient-to-br from-orange-50 via-white to-orange-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-orange-950/20 border-orange-200/50 dark:border-orange-800/50 shadow-2xl">
-          {/* Header Premium */}
           <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 px-8 py-6">
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="absolute top-0 left-0 w-full h-full">
@@ -1172,7 +1213,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           </div>
 
           <div className="p-8 overflow-y-auto max-h-[calc(95vh-120px)]">
-            {/* Tabs de navegação premium */}
             <div className="flex space-x-2 bg-gradient-to-r from-gray-50 to-orange-50/50 dark:from-gray-800 dark:to-orange-950/30 p-2 rounded-2xl mb-8 shadow-inner">
               <button
                 onClick={() => setAddQuestionTab('school-power')}
@@ -1218,10 +1258,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
               </button>
             </div>
 
-            {/* Conteúdo da tab ativa */}
             {addQuestionTab === 'school-power' && (
               <div className="space-y-8">
-                {/* Card de descrição */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-orange-100 dark:border-orange-900/30">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
@@ -1244,9 +1282,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   </div>
                 </div>
 
-                {/* Cards de configuração */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Modelo de Questão */}
                   <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-orange-100 dark:border-orange-900/30">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center">
@@ -1292,7 +1328,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                     </Select>
                   </div>
 
-                  {/* Nível de Dificuldade */}
                   <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-orange-100 dark:border-orange-900/30">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center">
@@ -1348,7 +1383,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   </div>
                 </div>
 
-                {/* Preview em tempo real */}
                 {newQuestionData.descricao && newQuestionData.modelo && newQuestionData.dificuldade && (
                   <div className="bg-gradient-to-r from-orange-50 to-orange-100/50 dark:from-orange-950/20 dark:to-orange-900/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-800">
                     <h4 className="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-3 flex items-center gap-2">
@@ -1372,7 +1406,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
                   </div>
                 )}
 
-                {/* Botões de ação */}
                 <div className="flex justify-end gap-4 pt-6 border-t border-orange-100 dark:border-orange-900/30">
                   <Button
                     variant="outline"

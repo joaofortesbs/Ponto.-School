@@ -1,136 +1,5 @@
 import { ActivityFormData, GeneratedActivity, ActivityType } from '../types/ActivityTypes';
 
-export const generateTest = (data: ActivityFormData): string => {
-  return `
-# ${data.title}
-
-**Disciplina:** ${data.subject}  
-**Tema:** ${data.theme}
-**Ano de Escolaridade:** ${data.schoolYear}
-**Nível de Dificuldade:** ${data.difficultyLevel}
-
----
-
-## Instruções Gerais
-${data.instructions || `
-1. Leia todas as questões antes de começar a responder
-2. Responda com clareza e objetividade
-3. Gerencie seu tempo adequadamente
-4. Revise suas respostas antes de entregar
-`}
-
-## Questões
-
-### Parte I - Questões Objetivas (${Math.floor(parseInt(data.numberOfQuestions || '10') * 0.6)} pontos)
-
-**Questão 1** (10 pontos)
-Sobre os conceitos fundamentais de ${data.subject} relacionados ao tema ${data.theme}, assinale a alternativa correta:
-
-a) Primeira alternativa
-b) Segunda alternativa  
-c) Terceira alternativa
-d) Quarta alternativa
-
-**Questão 2** (10 pontos)
-Analise as afirmações abaixo sobre ${data.theme} e marque V para verdadeiro e F para falso:
-
-( ) Primeira afirmação sobre o tema
-( ) Segunda afirmação sobre o tema
-( ) Terceira afirmação sobre o tema
-( ) Quarta afirmação sobre o tema
-
-### Parte II - Questões Dissertativas (${Math.floor(parseInt(data.numberOfQuestions || '10') * 0.4)} pontos)
-
-**Questão 3** (20 pontos)
-Explique detalhadamente o conceito de ${data.theme} em ${data.subject} e sua aplicação prática no contexto do ${data.schoolYear}.
-
-**Questão 4** (20 pontos)
-Desenvolva uma análise crítica sobre ${data.theme}, apresentando argumentos fundamentados baseados em ${data.sources || 'fontes confiáveis'}.
-
-## Critérios de Avaliação
-${data.evaluation || `
-- Objetivas: Resposta correta = pontuação total
-- Dissertativas: Conteúdo (60%), Organização (25%), Clareza (15%)
-`}
-
-## Materiais de Apoio
-${data.materials || 'Material didático padrão da disciplina'}
-
-## Objetivos de Aprendizagem
-${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`}
-  `;
-};
-
-export const generateExerciseList = (data: ActivityFormData): string => {
-  // Gerar questões baseadas nos dados do usuário
-  const questions = generateQuestionsBasedOnUserData(data);
-
-  return JSON.stringify({
-    title: data.title,
-    description: data.description,
-    subject: data.subject,
-    theme: data.theme,
-    schoolYear: data.schoolYear,
-    numberOfQuestions: parseInt(data.numberOfQuestions || '10'),
-    difficultyLevel: data.difficultyLevel,
-    questionModel: data.questionModel,
-    sources: data.sources,
-    questions: questions,
-    metadata: {
-      generatedAt: new Date().toISOString(),
-      activityType: 'lista-exercicios'
-    }
-  }, null, 2);
-};
-
-// Função para gerar questões baseadas nos dados do usuário - apenas 3 tipos válidos
-const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
-  const questions = [];
-  const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
-
-  // Apenas 3 tipos de questão permitidos
-  const validQuestionTypes = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'] as const;
-  type ValidQuestionType = typeof validQuestionTypes[number];
-
-  for (let i = 1; i <= numberOfQuestions; i++) {
-    // Determinar tipo de questão baseado no modelo selecionado
-    let questionType: ValidQuestionType = 'multipla-escolha';
-
-    const modeloLower = (data.questionModel || '').toLowerCase();
-
-    if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
-      questionType = 'discursiva';
-    } else if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
-      questionType = 'verdadeiro-falso';
-    } else if (modeloLower.includes('mista') || modeloLower.includes('misto')) {
-      // Para questões mistas, alterna entre os 3 tipos
-      questionType = validQuestionTypes[Math.floor(Math.random() * validQuestionTypes.length)];
-    } else {
-      // Default para múltipla escolha
-      questionType = 'multipla-escolha';
-    }
-
-    const question = {
-      id: `questao-${i}`,
-      type: questionType,
-      enunciado: `Questão ${i} sobre ${data.theme}`,
-      alternativas: questionType === 'multipla-escolha' ? [
-        'Alternativa A',
-        'Alternativa B', 
-        'Alternativa C',
-        'Alternativa D'
-      ] : questionType === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
-      respostaCorreta: 0,
-      dificuldade: data.difficultyLevel?.toLowerCase() || 'medio',
-      tema: data.theme
-    };
-
-    questions.push(question);
-  }
-
-  return questions;
-};
-
 // Gerar questão de múltipla escolha
 const generateMultipleChoiceQuestion = (questionNumber: number, data: ActivityFormData) => {
   const difficultyTemplates = {
@@ -237,6 +106,130 @@ const calculateQuestionPoints = (difficulty: string): number => {
     default: return 1;
   }
 };
+
+export const generateTest = (data: ActivityFormData): string => {
+  return `
+# ${data.title}
+
+## Instruções Gerais
+${data.instructions || `
+1. Leia todas as questões antes de começar a responder
+2. Responda com clareza e objetividade
+3. Gerencie seu tempo adequadamente
+4. Revise suas respostas antes de entregar
+`}
+
+## Questões
+### Parte I - Questões Objetivas (${Math.floor(parseInt(data.numberOfQuestions || '10') * 0.6)} pontos)
+
+**Questão 1** (10 pontos)
+Sobre os conceitos fundamentais de ${data.subject} relacionados ao tema ${data.theme}, assinale a alternativa correta:
+
+a) Primeira alternativa
+b) Segunda alternativa  
+c) Terceira alternativa
+d) Quarta alternativa
+
+**Questão 2** (10 pontos)
+Analise as afirmações abaixo sobre ${data.theme} e marque V para verdadeiro e F para falso:
+
+( ) Primeira afirmação sobre o tema
+( ) Segunda afirmação sobre o tema
+( ) Terceira afirmação sobre o tema
+( ) Quarta afirmação sobre o tema
+
+### Parte II - Questões Dissertativas (${Math.floor(parseInt(data.numberOfQuestions || '10') * 0.4)} pontos)
+
+**Questão 3** (20 pontos)
+Explique detalhadamente o conceito de ${data.theme} em ${data.subject} e sua aplicação prática no contexto do ${data.schoolYear}.
+
+**Questão 4** (20 pontos)
+Desenvolva uma análise crítica sobre ${data.theme}, apresentando argumentos fundamentados baseados em ${data.sources || 'fontes confiáveis'}.
+
+## Critérios de Avaliação
+${data.evaluation || `
+- Objetivas: Resposta correta = pontuação total
+- Dissertativas: Conteúdo (60%), Organização (25%), Clareza (15%)
+`}
+
+## Materiais de Apoio
+${data.materials || 'Material didático padrão da disciplina'}
+
+## Objetivos de Aprendizagem
+${data.objectives || `Avaliar o conhecimento dos estudantes sobre ${data.theme}`}
+  `;
+};
+
+export const generateExerciseList = (data: ActivityFormData): string => {
+  // Gerar questões baseadas nos dados do usuário
+  const questions = generateQuestionsBasedOnUserData(data);
+
+  return JSON.stringify({
+    title: data.title,
+    description: data.description,
+    subject: data.subject,
+    theme: data.theme,
+    schoolYear: data.schoolYear,
+    numberOfQuestions: parseInt(data.numberOfQuestions || '10'),
+    difficultyLevel: data.difficultyLevel,
+    questionModel: data.questionModel,
+    sources: data.sources,
+    questions: questions,
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      activityType: 'lista-exercicios'
+    }
+  }, null, 2);
+};
+
+// Função para gerar questões baseadas nos dados do usuário - apenas 3 tipos válidos
+const generateQuestionsBasedOnUserData = (data: ActivityFormData) => {
+  const questions = [];
+  const numberOfQuestions = parseInt(data.numberOfQuestions || '10');
+
+  // Apenas 3 tipos de questão permitidos
+  const validQuestionTypes = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'] as const;
+  type ValidQuestionType = typeof validQuestionTypes[number];
+
+  for (let i = 1; i <= numberOfQuestions; i++) {
+    // Determinar tipo de questão baseado no modelo selecionado
+    let questionType: ValidQuestionType = 'multipla-escolha';
+
+    const modeloLower = (data.questionModel || '').toLowerCase();
+
+    if (modeloLower.includes('discursiva') || modeloLower.includes('dissertativa')) {
+      questionType = 'discursiva';
+    } else if (modeloLower.includes('verdadeiro') || modeloLower.includes('falso')) {
+      questionType = 'verdadeiro-falso';
+    } else if (modeloLower.includes('mista') || modeloLower.includes('misto')) {
+      // Para questões mistas, alterna entre os 3 tipos
+      questionType = validQuestionTypes[Math.floor(Math.random() * validQuestionTypes.length)];
+    } else {
+      // Default para múltipla escolha
+      questionType = 'multipla-escolha';
+    }
+
+    const question = {
+      id: `questao-${i}`,
+      type: questionType,
+      enunciado: `Questão ${i} sobre ${data.theme}`,
+      alternativas: questionType === 'multipla-escolha' ? [
+        'Alternativa A',
+        'Alternativa B',
+        'Alternativa C',
+        'Alternativa D'
+      ] : questionType === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : undefined,
+      respostaCorreta: 0,
+      dificuldade: data.difficultyLevel?.toLowerCase() || 'medio',
+      tema: data.theme
+    };
+
+    questions.push(question);
+  }
+
+  return questions;
+};
+
 
 export const generateGame = (data: ActivityFormData): string => {
   return `
@@ -359,6 +352,28 @@ ${data.sources || `Bibliografia recomendada sobre ${data.theme} em ${data.subjec
   `;
 };
 
+function generateQuestionStatement(data: ActivityFormData, questionNumber: number): string {
+  const subject = data.subject || 'conteúdo';
+  const theme = data.theme || 'tema proposto';
+  const schoolYear = data.schoolYear || 'série';
+
+  return `Questão ${questionNumber} sobre ${theme}: Desenvolva uma questão de ${subject} para ${schoolYear} que explore os conceitos fundamentais relacionados ao tema "${theme}". Esta questão deve avaliar a compreensão do estudante sobre os aspectos mais importantes do conteúdo estudado.`;
+}
+
+function generateDefaultActivity(data: ActivityFormData): string {
+  return `Atividade: ${data.title || 'Atividade Educacional'}
+
+Disciplina: ${data.subject || 'Não especificada'}
+Tema: ${data.theme || 'Não especificado'}
+Ano de Escolaridade: ${data.schoolYear || 'Não especificado'}
+
+Descrição: ${data.description || 'Atividade educacional personalizada'}
+
+Objetivos: ${data.objectives || 'Não especificados'}
+Materiais: ${data.materials || 'Não especificados'}
+Instruções: ${data.instructions || 'Não especificadas'}`;
+}
+
 export const generateActivityByType = (type: ActivityType, data: ActivityFormData): GeneratedActivity => {
   let content: string;
 
@@ -372,59 +387,56 @@ export const generateActivityByType = (type: ActivityType, data: ActivityFormDat
 
       // Gerar questões baseadas no tema e disciplina
       for (let i = 1; i <= numberOfQuestions; i++) {
-        const isMultipleChoice = data.questionModel?.toLowerCase().includes('múltipla') || 
-                               data.questionModel?.toLowerCase().includes('escolha');
+        // Definir tipo de questão alternadamente
+        const questionTypes = ['multipla-escolha', 'discursiva', 'verdadeiro-falso'];
+        const questionType = questionTypes[(i - 1) % 3];
 
         const question = {
-          id: `q${i}`,
-          question: `Questão ${i} sobre ${data.theme || 'o conteúdo'}: ` +
-                   `Esta é uma questão de ${data.subject || 'Português'} para ${data.schoolYear || '6º ano'} ` +
-                   `com nível de dificuldade ${data.difficultyLevel || 'médio'}. ` +
-                   `Desenvolva um questionamento que explore o conhecimento sobre ${data.theme || 'o tema proposto'}.`,
-          type: data.questionModel || (isMultipleChoice ? 'Múltipla Escolha' : 'Dissertativa'),
-          difficulty: data.difficultyLevel || 'Médio',
-          subject: data.subject || 'Português',
-          theme: data.theme || ''
+          id: `questao-${i}`,
+          type: questionType,
+          enunciado: generateQuestionStatement(data, i),
+          dificuldade: data.difficultyLevel?.toLowerCase() || 'medio',
+          tema: data.theme || 'Tema geral',
         };
 
-        // Adicionar alternativas se for múltipla escolha
-        if (isMultipleChoice) {
-          question.options = [
-            `Primeira alternativa relacionada a ${data.theme || 'o tema'}`,
-            `Segunda alternativa sobre ${data.subject || 'a disciplina'}`,
-            `Terceira opção contextualizada para ${data.schoolYear || 'o ano escolar'}`,
-            `Quarta alternativa com nível ${data.difficultyLevel || 'médio'}`
+        // Adicionar campos específicos por tipo
+        if (questionType === 'multipla-escolha') {
+          question.alternativas = [
+            `Alternativa A relacionada ao tema ${data.theme || 'proposto'}`,
+            `Alternativa B relacionada ao tema ${data.theme || 'proposto'}`,
+            `Alternativa C relacionada ao tema ${data.theme || 'proposto'}`,
+            `Alternativa D relacionada ao tema ${data.theme || 'proposto'}`
           ];
-          question.answer = 'A';
-          question.correctAnswer = question.options[0];
-        } else {
-          question.answer = `Resposta esperada para a questão ${i}, demonstrando compreensão sobre ${data.theme || 'o tema'}.`;
+          question.respostaCorreta = 0;
+          question.explicacao = `Explicação detalhada para a questão ${i} sobre ${data.theme || 'o tema'}.`;
+        } else if (questionType === 'verdadeiro-falso') {
+          question.resposta = true;
+          question.explicacao = `Explicação para a questão ${i} de verdadeiro/falso sobre ${data.theme || 'o tema'}.`;
+        } else if (questionType === 'discursiva') {
+          question.criteriosAvaliacao = [
+            'Demonstra conhecimento do tema',
+            'Apresenta argumentação clara',
+            'Usa exemplos adequados'
+          ];
+          question.respostaEsperada = `Resposta esperada para a questão ${i} sobre ${data.theme || 'o tema'}.`;
         }
-
-        question.explanation = `Explicação detalhada para a questão ${i}: ` +
-                              `Esta questão visa avaliar o conhecimento em ${data.subject || 'Português'} ` +
-                              `sobre ${data.theme || 'o tema proposto'}, adequada para ${data.schoolYear || '6º ano'} ` +
-                              `com nível de dificuldade ${data.difficultyLevel || 'médio'}.`;
 
         questions.push(question);
       }
 
       content = JSON.stringify({
-        title: data.title,
-        description: data.description,
-        questions,
-        exercicios: questions, // Alias para compatibilidade
-        metadata: {
-          subject: data.subject,
-          theme: data.theme,
-          schoolYear: data.schoolYear,
-          difficulty: data.difficultyLevel,
-          questionModel: data.questionModel,
-          estimatedTime: `${numberOfQuestions * 4} minutos`,
-          totalQuestions: numberOfQuestions,
-          generatedAt: new Date().toISOString(),
-          type: 'lista-exercicios'
-        }
+        titulo: data.title || 'Lista de Exercícios',
+        disciplina: data.subject || 'Disciplina geral',
+        tema: data.theme || 'Tema geral',
+        tipoQuestoes: 'misto',
+        numeroQuestoes: numberOfQuestions,
+        dificuldade: data.difficultyLevel?.toLowerCase() || 'medio',
+        objetivos: data.objectives || '',
+        conteudoPrograma: data.theme || '',
+        observacoes: data.sources || '',
+        questoes: questions,
+        isGeneratedByAI: true,
+        descricao: data.description || 'Exercícios práticos para fixação do conteúdo'
       }, null, 2);
       break;
     case 'jogo':
@@ -440,7 +452,8 @@ export const generateActivityByType = (type: ActivityType, data: ActivityFormDat
       content = `# Apresentação: ${data.title}\n\nSlides sobre ${data.theme} em ${data.subject} serão criados...`;
       break;
     default:
-      content = `Tipo de atividade "${type}" não suportado ainda. Desenvolvendo estratégia personalizada...`;
+      content = generateDefaultActivity(data);
+      break;
   }
 
   return {
