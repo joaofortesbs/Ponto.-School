@@ -120,19 +120,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       case 'fácil':
       case 'básico':
       case 'basico':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
       case 'medio':
       case 'médio':
       case 'intermediário':
       case 'intermediario':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
       case 'dificil':
       case 'difícil':
       case 'avançado':
       case 'avancado':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -194,7 +194,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-[90%] h-[90%] bg-white rounded-lg shadow-2xl overflow-hidden flex flex-col"
+          className="relative w-[90%] h-[90%] bg-white dark:bg-gray-900 rounded-lg shadow-2xl overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
           style={{
             borderTopLeftRadius: '12px',
@@ -211,7 +211,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Header with Close button */}
           {isExerciseList && (
-            <div className="bg-blue-50 border-b border-blue-200 px-6 py-4 mb-0 z-10">
+            <div className="bg-blue-50 dark:bg-gray-800 border-b border-blue-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
                   <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -228,19 +228,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   <div className="flex-1">
                     {isInQuestionView && selectedQuestionIndex !== null ? (
                       <>
-                        <h2 className="text-xl font-bold text-blue-900">
+                        <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
                           Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
                         </h2>
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-blue-700 dark:text-blue-300 text-sm">
                           {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
                         </p>
                       </>
                     ) : (
                       <>
-                        <h2 className="text-xl font-bold text-blue-900">
+                        <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
                           {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
                         </h2>
-                        <p className="text-blue-700 text-sm">
+                        <p className="text-blue-700 dark:text-blue-300 text-sm">
                           {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
                         </p>
                       </>
@@ -250,7 +250,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   {/* Tags and Info */}
                   <div className="flex flex-wrap gap-2">
                     {activity?.originalData?.disciplina && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                      <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
@@ -258,7 +258,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       </Badge>
                     )}
                     {activity?.originalData?.tema && (
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                      <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
                         </svg>
@@ -266,7 +266,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       </Badge>
                     )}
                     {questionsForSidebar.length > 0 && (
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                         </svg>
@@ -282,7 +282,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   variant="ghost"
                   size="sm"
                   onClick={onClose}
-                  className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 rounded-full ml-4 flex-shrink-0"
+                  className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 hover:bg-blue-100 dark:hover:bg-blue-800 rounded-full ml-4 flex-shrink-0"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -297,7 +297,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -309,19 +309,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 60px)' }}>
             {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
             {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
-              <div className="w-64 border-r border-gray-200 bg-gray-50 overflow-y-auto flex-shrink-0">
+              <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Card */}
-                  <Card className="bg-white shadow-sm">
+                  <Card className="bg-white dark:bg-gray-700 shadow-sm">
                     <CardContent className="p-3">
                       <div className="text-sm">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Questões:</span>
-                          <span className="font-semibold">{questionsForSidebar.length}</span>
+                          <span className="text-gray-600 dark:text-gray-300">Questões:</span>
+                          <span className="font-semibold dark:text-white">{questionsForSidebar.length}</span>
                         </div>
                         <div className="flex justify-between items-center mt-1">
-                          <span className="text-gray-600">Total de pontos:</span>
-                          <span className="font-semibold">{questionsForSidebar.length}</span>
+                          <span className="text-gray-600 dark:text-gray-300">Total de pontos:</span>
+                          <span className="font-semibold dark:text-white">{questionsForSidebar.length}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -329,19 +329,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
                   {/* Questions List */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">Navegação</h4>
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Navegação</h4>
                     {questionsForSidebar.map((question, index) => (
                       <button
                         key={question.id}
                         onClick={() => scrollToQuestion(question.id, index)}
                         className={`w-full text-left p-2 text-xs rounded transition-colors ${
                           selectedQuestionId === question.id
-                            ? 'bg-blue-50 border border-blue-200 font-medium text-blue-800'
-                            : 'bg-white border border-gray-200 hover:bg-gray-50'
+                            ? 'bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 font-medium text-blue-800 dark:text-blue-200'
+                            : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       >
-                        <div className="font-medium">Questão {index + 1}</div>
-                        <div className="text-gray-500 truncate mt-1">
+                        <div className="font-medium dark:text-white">Questão {index + 1}</div>
+                        <div className="text-gray-500 dark:text-gray-400 truncate mt-1">
                           {question.enunciado?.substring(0, 40)}...
                         </div>
                       </button>
@@ -353,7 +353,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
-              <div className="h-full overflow-y-auto p-6" ref={contentRef}>
+              <div className="h-full overflow-y-auto p-6 bg-white dark:bg-gray-900" ref={contentRef}>
                 {renderActivityPreview()}
               </div>
             </div>
