@@ -11,8 +11,10 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, Video, BookOpen as Material } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from "@/lib/utils";
+
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -363,16 +365,16 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       const prompt = `
         Você é um especialista em educação. Crie uma questão educacional seguindo EXATAMENTE a estrutura JSON abaixo.
-        
+
         ESPECIFICAÇÕES:
         - Descrição/Tema: ${newQuestionData.descricao}
         - Tipo: ${newQuestionData.modelo}
         - Dificuldade: ${newQuestionData.dificuldade}
         - Disciplina: ${data?.disciplina || 'Matemática'}
         - Tema: ${data?.tema || 'Conteúdo Geral'}
-        
+
         RETORNE APENAS O JSON VÁLIDO ABAIXO (sem texto adicional):
-        
+
         ${questionType === 'multipla-escolha' ? `{
           "id": "questao-${Date.now()}",
           "type": "multipla-escolha",
@@ -428,17 +430,17 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       const result = await response.json();
       console.log('📥 Resposta do Gemini:', result);
-      
+
       if (result.candidates && result.candidates[0] && result.candidates[0].content) {
         const generatedText = result.candidates[0].content.parts[0].text;
         console.log('📝 Texto gerado:', generatedText);
-        
+
         // Extrair JSON da resposta de forma mais robusta
         let jsonText = generatedText.trim();
-        
+
         // Remover possíveis marcações de código
         jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-        
+
         // Tentar encontrar o JSON na resposta
         const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -450,29 +452,29 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         try {
           const novaQuestao = JSON.parse(jsonText);
           console.log('✅ Questão gerada com sucesso:', novaQuestao);
-          
+
           // Validar estrutura da questão
           if (!novaQuestao.id || !novaQuestao.type || !novaQuestao.enunciado) {
             throw new Error('Estrutura de questão inválida');
           }
-          
+
           // Adicionar a nova questão à lista
           setQuestoesProcessadas(prev => {
             const novaLista = [...prev, novaQuestao];
             console.log('📋 Lista atualizada de questões:', novaLista);
             return novaLista;
           });
-          
+
           // Fechar modal e limpar dados
           setShowAddQuestionModal(false);
           setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
-          
+
           console.log('🎉 Questão adicionada com sucesso à grade!');
-          
+
         } catch (parseError) {
           console.error('❌ Erro ao fazer parse do JSON:', parseError);
           console.error('📄 JSON problemático:', jsonText);
-          
+
           // Fallback: criar questão manualmente
           const fallbackQuestion: Question = {
             id: `questao-${Date.now()}`,
@@ -488,11 +490,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
             tema: data?.tema || 'Tema geral'
           };
-          
+
           setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
           setShowAddQuestionModal(false);
           setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
-          
+
           console.log('🔄 Questão fallback criada:', fallbackQuestion);
         }
       } else {
@@ -500,7 +502,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       }
     } catch (error) {
       console.error('❌ Erro ao gerar questão:', error);
-      
+
       // Em caso de erro, criar uma questão de fallback
       const fallbackQuestion: Question = {
         id: `questao-${Date.now()}`,
@@ -517,11 +519,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         dificuldade: newQuestionData.dificuldade.toLowerCase() as any,
         tema: data?.tema || 'Tema geral'
       };
-      
+
       setQuestoesProcessadas(prev => [...prev, fallbackQuestion]);
       setShowAddQuestionModal(false);
       setNewQuestionData({ descricao: '', modelo: '', dificuldade: '' });
-      
+
       console.log('🔄 Questão fallback criada devido a erro:', fallbackQuestion);
     } finally {
       setIsGeneratingQuestion(false);
