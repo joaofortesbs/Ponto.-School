@@ -1,3 +1,4 @@
+
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
 
@@ -201,14 +202,9 @@ export const generateActivityContent = async (
   activityType: string,
   contextData: any
 ): Promise<any> => {
-  console.log('🚀 Iniciando geração de atividade:', { activityType, contextData });
-
   try {
-    // Verificação de configuração da API com múltiplas fontes
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 
-                   process.env.VITE_GEMINI_API_KEY || 
-                   import.meta.env.VITE_GEMINI_API_KEY ||
-                   'AIzaSyBvQScT7BVFJAJmGVQHHI5BXgApSMjY_iM';
+    console.log('🤖 Iniciando geração de conteúdo com Gemini para:', activityType);
+    console.log('📋 Dados de contexto completos:', JSON.stringify(contextData, null, 2));
 
     const geminiClient = new GeminiClient();
 

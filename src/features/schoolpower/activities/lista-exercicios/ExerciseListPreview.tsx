@@ -436,16 +436,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     setIsGeneratingQuestion(true);
 
     try {
-      // Verificar múltiplas fontes para a chave da API
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 
-                     process.env.VITE_GEMINI_API_KEY || 
-                     import.meta.env.VITE_GEMINI_API_KEY ||
-                     'AIzaSyBvQScT7BVFJAJmGVQHHI5BXgApSMjY_iM'; // Chave de fallback
-      
-      if (!apiKey || apiKey === 'SUA_API_KEY_AQUI') {
-        console.error('❌ Chave da API do Gemini não configurada.');
-        // Usar chave de fallback para desenvolvimento
-        console.log('🔄 Usando chave de fallback para desenvolvimento...');
+      // Use uma chave API válida ou passe-a de forma segura (ex: via contexto ou env var)
+      // Substitua 'SUA_API_KEY_AQUI' pela sua chave real
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'SUA_API_KEY_AQUI';
+      if (apiKey === 'SUA_API_KEY_AQUI') {
+        console.error('❌ Chave da API do Gemini não configurada. Verifique as variáveis de ambiente.');
+        alert('Erro de configuração: Chave da API indisponível.');
+        setIsGeneratingQuestion(false);
+        return;
       }
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
