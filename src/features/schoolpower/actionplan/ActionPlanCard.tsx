@@ -32,55 +32,86 @@ const getActivityName = (id: string): string => {
 
 // Função para renderizar campos específicos do plano-aula
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
-  const {
-    'Objetivo Principal': objetivo,
-    'Materiais Necessários': materiais,
-    'Recursos Adicionais': recursos,
-    'Tempo Estimado': tempo,
-    'Nível de Dificuldade': nivel,
-    'Palavras-chave': palavrasChave
-  } = customFields;
+  console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
+  
+  const objetivo = customFields['Objetivo Principal'] || customFields['objetivoPrincipal'] || customFields['Objetivos'] || customFields['Objetivo Geral'];
+  const materiais = customFields['Materiais Necessários'] || customFields['materiaisNecessarios'] || customFields['Recursos'] || customFields['Materiais/Recursos'];
+  const recursos = customFields['Recursos Adicionais'] || customFields['recursosAdicionais'];
+  const tempo = customFields['Tempo Estimado'] || customFields['tempoEstimado'] || customFields['Carga Horária'];
+  const nivel = customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'];
+  const palavrasChave = customFields['Palavras-chave'] || customFields['palavrasChave'];
+  const tema = customFields['Tema'] || customFields['tema'];
+  const disciplina = customFields['Disciplina'] || customFields['componenteCurricular'];
+  const anoSerie = customFields['Público-Alvo'] || customFields['anoSerie'];
 
   return (
-    <>
+    <div className="space-y-3">
+      {/* Informações principais em destaque */}
+      {tema && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema Central</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tema}</div>
+        </div>
+      )}
+
+      {/* Informações básicas */}
+      <div className="grid grid-cols-2 gap-2">
+        {disciplina && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
+          </div>
+        )}
+        {anoSerie && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-Alvo</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoSerie}</div>
+          </div>
+        )}
+      </div>
+
       {objetivo && (
-        <div className="w-full mb-2">
+        <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivo Principal</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivo}</div>
         </div>
       )}
+
       {materiais && (
-        <div className="w-full mb-2">
+        <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Materiais Necessários</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{materiais}</div>
         </div>
       )}
+
       {recursos && (
-        <div className="w-full mb-2">
+        <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recursos Adicionais</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{recursos}</div>
         </div>
       )}
+
+      {/* Tags e informações complementares */}
       {(tempo || nivel || palavrasChave) && (
         <div className="flex flex-wrap gap-2 w-full">
           {tempo && (
-            <Badge variant="outline" className="text-xs px-2 py-1">
-              Tempo: {tempo}
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
+              ⏱️ {tempo}
             </Badge>
           )}
           {nivel && (
-            <Badge variant="outline" className="text-xs px-2 py-1">
-              Nível: {nivel}
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
+              📊 {nivel}
             </Badge>
           )}
           {palavrasChave && (
-            <Badge variant="outline" className="text-xs px-2 py-1">
-              Tags: {palavrasChave}
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 border-purple-200 text-purple-700">
+              🏷️ {palavrasChave}
             </Badge>
           )}
         </div>
       )}
-    </>
+    </div>
   );
 };
 

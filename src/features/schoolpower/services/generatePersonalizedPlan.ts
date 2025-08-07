@@ -71,98 +71,98 @@ function buildGeminiPrompt(
     // Construir o prompt para a Gemini
     const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
 
-Aqui estão as informações coletadas:
+Here are the collected information:
 
-DADOS:
-- Pedido: "${initialMessage}"
-- Matérias e temas: ${contextualizationData?.subjects || 'Geral'}
-- Público: ${contextualizationData?.audience || 'Estudantes'}
-- Restrições: "${contextualizationData?.restrictions || 'undefined'}"
-- Datas importantes: "${contextualizationData?.dates || 'undefined'}"
-- Observações: ${contextualizationData?.notes || 'Nenhuma'}
+DATA:
+- Request: "${initialMessage}"
+- Subjects and themes: ${contextualizationData?.subjects || 'General'}
+- Audience: ${contextualizationData?.audience || 'Students'}
+- Restrictions: "${contextualizationData?.restrictions || 'undefined'}"
+- Important dates: "${contextualizationData?.dates || 'undefined'}"
+- Observations: ${contextualizationData?.notes || 'None'}
 
-ATIVIDADES DISPONÍVEIS: ${activitiesString}
+AVAILABLE ACTIVITIES: ${activitiesString}
 
-CAMPOS PERSONALIZADOS POR ATIVIDADE:
+CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
 
-INSTRUÇÕES:
-1. Analise cuidadosamente o pedido e as informações fornecidas
-2. Selecione APENAS atividades da lista disponível que sejam relevantes para o pedido
-3. Gere um plano de ação ABRANGENTE com 15-50 atividades diferentes conforme a complexidade do pedido
-4. Cada atividade deve ter um título personalizado e descritivo
-5. A descrição deve ser específica e detalhada para o contexto fornecido
-6. Use os IDs exatos das atividades disponíveis
-7. Varie a duração e dificuldade conforme apropriado
-8. OBRIGATÓRIO: Para cada atividade, preencha TODOS os campos personalizados listados acima para aquele ID específico
-9. Os campos personalizados devem conter dados realistas, contextualizados e específicos - NUNCA deixe vazio ou genérico
-10. Todos os campos extras devem ser strings (texto simples)
-11. Priorize diversidade de tipos de atividades para um plano completo e abrangente
+INSTRUCTIONS:
+1. Carefully analyze the request and provided information
+2. Select ONLY activities from the available list that are relevant to the request
+3. Generate a COMPREHENSIVE action plan with 15-50 different activities according to the request complexity
+4. Each activity must have a personalized and descriptive title
+5. The description must be specific and detailed for the given context
+6. Use the exact IDs of the available activities
+7. Vary duration and difficulty as appropriate
+8. MANDATORY: For each activity, fill ALL custom fields listed above for that specific ID
+9. Custom fields must contain realistic, contextualized, and specific data - NEVER leave them empty or generic
+10. All extra fields must be strings (plain text)
+11. Prioritize diversity of activity types for a complete and comprehensive plan
 
-FORMATO DE RESPOSTA (JSON):
-Retorne APENAS um array JSON válido com as atividades selecionadas, seguindo exatamente este formato:
+RESPONSE FORMAT (JSON):
+Return ONLY a valid JSON array with the selected activities, following this exact format:
 
 [
   {
-    "id": "id-da-atividade-exato",
-    "title": "Título personalizado da atividade",
-    "description": "Descrição específica e detalhada da atividade para este contexto",
+    "id": "exact-activity-id",
+    "title": "Personalized activity title",
+    "description": "Specific and detailed activity description for this context",
     "duration": "XX min",
-    "difficulty": "Fácil/Médio/Difícil",
-    "category": "Categoria da disciplina",
-    "type": "atividade",
-    "Campo Personalizado 1": "Valor específico e realista",
-    "Campo Personalizado 2": "Valor específico e realista",
-    "Campo Personalizado N": "Valor específico e realista"
+    "difficulty": "Easy/Medium/Hard",
+    "category": "Subject category",
+    "type": "activity",
+    "Custom Field 1": "Specific and realistic value",
+    "Custom Field 2": "Specific and realistic value",
+    "Custom Field N": "Specific and realistic value"
   }
 ]
 
-EXEMPLO para lista-exercicios:
+EXAMPLE for exercise-list:
 {
   "id": "lista-exercicios",
-  "title": "Lista de Exercícios: Substantivos e Verbos",
-  "description": "Elaboração de uma lista de exercícios abrangendo a identificação, classificação e uso de substantivos e verbos em diferentes contextos.",
+  "title": "Exercise List: Nouns and Verbs",
+  "description": "Development of an exercise list covering the identification, classification, and use of nouns and verbs in different contexts.",
   "duration": "30 min",
-  "difficulty": "Médio",
-  "category": "Gramática",
-  "type": "atividade",
-  "Quantidade de Questões": "10 questões mistas entre substantivos comuns e próprios, além de verbos regulares",
-  "Tema": "Substantivos e Verbos",
-  "Disciplina": "Língua Portuguesa",
-  "Ano de Escolaridade": "6º Ano",
-  "Nível de Dificuldade": "Intermediário",
-  "Modelo de Questões": "Objetivas e dissertativas",
-  "Fontes": "Livro didático Projeto Ápis e site TodaMatéria"
+  "difficulty": "Medium",
+  "category": "Grammar",
+  "type": "activity",
+  "Number of Questions": "10 mixed questions involving common and proper nouns, as well as regular verbs",
+  "Theme": "Nouns and Verbs",
+  "Subject": "Portuguese Language",
+  "Grade Level": "6th Grade",
+  "Difficulty Level": "Intermediate",
+  "Question Model": "Objective and essay questions",
+  "Sources": "Projeto Ápis textbook and site TodaMatéria"
 }
 
-LEMBRE-SE: 
-- TODOS os campos personalizados DEVEM ser preenchidos para CADA atividade
-- Os valores devem ser específicos, detalhados e contextualizados
-- NUNCA deixe um campo vazio ou com valor genérico
-- Cada atividade deve ter TODOS os seus campos personalizados preenchidos
+REMEMBER: 
+- ALL custom fields MUST be filled for EACH activity
+- Values must be specific, detailed, and contextualized
+- NEVER leave a field empty or with a generic value
+- Each activity must have ALL its custom fields filled
 
-IMPORTANTE: 
-- Use APENAS os IDs disponíveis na lista
-- PREENCHA TODOS os campos personalizados para cada atividade
-- Os dados dos campos devem ser específicos, realistas e contextualizados
-- NÃO inclua explicações antes ou depois do JSON
-- NÃO use markdown ou formatação
-- Retorne APENAS o array JSON válido`;
+IMPORTANT: 
+- Use ONLY available IDs from the list
+- FILL ALL custom fields for each activity
+- Field data must be specific, realistic, and contextualized
+- DO NOT include explanations before or after the JSON
+- DO NOT use markdown or formatting
+- Return ONLY the valid JSON array`;
 
   return prompt;
 }
 
 /**
- * Faz a chamada para a API Gemini
+ * Makes the call to the Gemini API
  */
 async function callGeminiAPI(prompt: string): Promise<string> {
-  console.log('🚀 Fazendo chamada para API Gemini...');
-  console.log('📤 Prompt enviado (primeiros 300 chars):', prompt.substring(0, 300));
-  console.log('🔑 API Key disponível:', !!GEMINI_API_KEY);
-  console.log('🌐 URL da API:', GEMINI_API_URL);
+  console.log('🚀 Making call to Gemini API...');
+  console.log('📤 Sent Prompt (first 300 chars):', prompt.substring(0, 300));
+  console.log('🔑 API Key available:', !!GEMINI_API_KEY);
+  console.log('🌐 API URL:', GEMINI_API_URL);
 
   if (!GEMINI_API_KEY) {
-    throw new Error('API Key do Gemini não está configurada');
+    throw new Error('Gemini API Key is not configured');
   }
 
   try {
@@ -173,10 +173,10 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         }]
       }],
       generationConfig: {
-        temperature: 0.3, // Reduzido para respostas mais consistentes
+        temperature: 0.3, // Reduced for more consistent responses
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 32768, // Significativamente aumentado para suportar 50+ atividades
+        maxOutputTokens: 32768, // Significantly increased to support 50+ activities
       }
     };
 
@@ -192,79 +192,79 @@ async function callGeminiAPI(prompt: string): Promise<string> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Erro na resposta da API Gemini:', response.status, errorText);
-      throw new Error(`Erro na API Gemini: ${response.status} - ${errorText}`);
+      console.error('❌ Error in Gemini API response:', response.status, errorText);
+      throw new Error(`Gemini API Error: ${response.status} - ${errorText}`);
     }
 
     const data: GeminiResponse = await response.json();
-    console.log('📥 Resposta bruta da Gemini:', data);
+    console.log('📥 Raw Gemini response:', data);
 
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!generatedText) {
-      console.error('❌ Resposta vazia da API Gemini');
-      throw new Error('Resposta vazia da API Gemini');
+      console.error('❌ Empty response from Gemini API');
+      throw new Error('Empty response from Gemini API');
     }
 
-    console.log('✅ Texto gerado pela Gemini:', generatedText);
+    console.log('✅ Text generated by Gemini:', generatedText);
     return generatedText;
 
   } catch (error) {
-    console.error('❌ Erro ao chamar API Gemini:', error);
+    console.error('❌ Error calling Gemini API:', error);
     throw error;
   }
 }
 
 /**
- * Processa e limpa a resposta da Gemini
+ * Processes and cleans the Gemini response
  */
 function parseGeminiResponse(responseText: string): GeminiActivityResponse[] {
-  console.log('🔍 Processando resposta da Gemini...');
+  console.log('🔍 Processing Gemini response...');
 
   try {
-    // Remove markdown e outros caracteres indesejados
+    // Removes markdown and other unwanted characters
     let cleanedText = responseText.trim();
 
-    // Remove blocos de código markdown se existirem
+    // Removes markdown code blocks if they exist
     cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
 
-    // Remove quebras de linha extras
+    // Removes extra line breaks
     cleanedText = cleanedText.trim();
 
-    console.log('🧹 Texto limpo:', cleanedText);
+    console.log('🧹 Cleaned text:', cleanedText);
 
-    // Tenta fazer parse do JSON
+    // Attempts to parse the JSON
     const parsedActivities: GeminiActivityResponse[] = JSON.parse(cleanedText);
 
     if (!Array.isArray(parsedActivities)) {
-      throw new Error('Resposta não é um array válido');
+      throw new Error('Response is not a valid array');
     }
 
-    console.log('✅ Atividades parseadas:', parsedActivities);
+    console.log('✅ Parsed activities:', parsedActivities);
     return parsedActivities;
 
   } catch (error) {
-    console.error('❌ Erro ao fazer parse da resposta:', error);
-    console.error('📝 Texto original:', responseText);
-    throw new Error('Erro ao processar resposta da IA');
+    console.error('❌ Error parsing response:', error);
+    console.error('📝 Original text:', responseText);
+    throw new Error('Error processing AI response');
   }
 }
 
 /**
- * Converte resposta da Gemini para formato ActionPlanItem
+ * Converts Gemini response to ActionPlanItem format
  */
 function convertToActionPlanItems(
   geminiActivities: GeminiActivityResponse[], 
   allowedActivities: typeof schoolPowerActivities
 ): ActionPlanItem[] {
-  console.log('🔄 Convertendo atividades para ActionPlanItems...');
+  console.log('🔄 Converting activities to ActionPlanItems...');
 
   return geminiActivities.map(activity => {
-    // Busca a atividade original no JSON para validação
+    // Finds the original activity in the JSON for validation
     const originalActivity = allowedActivities.find(a => a.id === activity.id);
 
     if (!originalActivity) {
-      console.warn(`⚠️ Atividade não encontrada: ${activity.id}`);
+      console.warn(`⚠️ Activity not found: ${activity.id}`);
       return null;
     }
 
@@ -277,21 +277,21 @@ function convertToActionPlanItems(
       customFields: activity.customFields || {}
     };
 
-    console.log('✅ ActionPlanItem criado:', actionPlanItem);
+    console.log('✅ ActionPlanItem created:', actionPlanItem);
     return actionPlanItem;
   }).filter((item): item is ActionPlanItem => item !== null);
 }
 
 /**
- * Gera um plano de ação de fallback caso a API falhe
+ * Generates a fallback plan if the API fails
  */
 function generateFallbackPlan(
   initialMessage: string, 
   contextualizationData: ContextualizationData
 ): ActionPlanItem[] {
-  console.log('🔄 Gerando plano de fallback...');
+  console.log('🔄 Generating fallback plan...');
 
-  // Seleciona atividades relevantes baseadas em palavras-chave
+  // Selects relevant activities based on keywords
   const keywords = [
     initialMessage.toLowerCase(),
     contextualizationData.subjects?.toLowerCase() || '',
@@ -308,7 +308,7 @@ function generateFallbackPlan(
     );
   });
 
-  // Se não encontrar atividades específicas, usa as mais populares
+  // If no specific activities are found, uses the most popular ones
   if (relevantActivities.length === 0) {
     relevantActivities = schoolPowerActivities.filter(activity => 
       activity.enabled && [
@@ -331,64 +331,64 @@ function generateFallbackPlan(
     );
   }
 
-  // Remove limite para permitir geração de mais atividades conforme necessário
+  // Removes limit to allow generation of more activities as needed
   // relevantActivities = relevantActivities.slice(0, 35);
 
   const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
     id: activity.id,
-    title: `${activity.name} - ${contextualizationData.subjects || 'Personalizado'}`,
-    description: `${activity.description} Baseado em: "${initialMessage.substring(0, 100)}..."`,
+    title: `${activity.name} - ${contextualizationData.subjects || 'Personalized'}`,
+    description: `${activity.description} Based on: "${initialMessage.substring(0, 100)}..."`,
     approved: false
   }));
 
-  console.log('✅ Plano de fallback gerado:', fallbackPlan);
+  console.log('✅ Fallback plan generated:', fallbackPlan);
   return fallbackPlan;
 }
 
 /**
- * Função principal para gerar plano personalizado
+ * Main function to generate a personalized plan
  */
 export async function generatePersonalizedPlan(
   initialMessage: string,
   contextualizationData: ContextualizationData
 ): Promise<ActionPlanItem[]> {
-  console.log('🤖 Iniciando geração de plano personalizado...');
-  console.log('📝 Dados de entrada:', { initialMessage, contextualizationData });
+  console.log('🤖 Starting personalized plan generation...');
+  console.log('📝 Input data:', { initialMessage, contextualizationData });
 
   try {
-    // Validação dos dados de entrada
+    // Validation of input data
     if (!initialMessage?.trim()) {
-      throw new Error('Mensagem inicial é obrigatória');
+      throw new Error('Initial message is mandatory');
     }
 
     if (!contextualizationData) {
-      throw new Error('Dados de contextualização são obrigatórios');
+      throw new Error('Contextualization data is mandatory');
     }
 
-    // Carrega atividades permitidas
-    console.log('📚 Atividades disponíveis:', schoolPowerActivities.length);
+    // Loads allowed activities
+    console.log('📚 Available activities:', schoolPowerActivities.length);
 
-    // Constrói o prompt estruturado
+    // Builds the structured prompt
     const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities);
-    console.log('📝 Prompt construído com sucesso');
+    console.log('📝 Prompt built successfully');
 
-    // Chama a API Gemini
+    // Calls the Gemini API
     const geminiResponse = await callGeminiAPI(prompt);
 
-    // Processa a resposta
+    // Processes the response
     const geminiActivities = parseGeminiResponse(geminiResponse);
 
-    // Valida as atividades retornadas
+    // Validates the returned activities
     const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
 
 
 
-    // Mapear atividades validadas para o formato do ActionPlanItem
+    // Maps validated activities to the ActionPlanItem format
     const actionPlanItems = validatedActivities.map(activityData => {
-        // Extrair campos personalizados da atividade
+        // Extracts custom fields from the activity
         const customFields: Record<string, string> = {};
 
-        // Pegar todos os campos que não são padrões do sistema
+        // Gets all fields that are not standard system fields
         const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
 
         Object.keys(activityData).forEach(key => {
@@ -397,7 +397,7 @@ export async function generatePersonalizedPlan(
             }
         });
 
-        console.log(`✅ Campos personalizados extraídos para ${activityData.id}:`, customFields);
+        console.log(`✅ Custom fields extracted for ${activityData.id}:`, customFields);
 
         const activity = {
           id: activityData.id,
@@ -410,32 +410,32 @@ export async function generatePersonalizedPlan(
           customFields: customFields || {},
           approved: true,
           isTrilhasEligible: true,
-          isBuilt: false, // Será marcado como true após construção automática
+          isBuilt: false, // Will be marked as true after automatic build
           builtAt: null
         };
 
-        console.log(`✅ ActionPlanItem completo criado para ${activityData.id}:`, activity);
+        console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, activity);
         return activity;
     });
 
     if (validatedActivities.length === 0) {
-      console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
+      console.warn('⚠️ No valid activities returned, using fallback');
       return generateFallbackPlan(initialMessage, contextualizationData);
     }
 
-    console.log(`✅ Total de atividades validadas geradas: ${validatedActivities.length}`);
+    console.log(`✅ Total validated activities generated: ${validatedActivities.length}`);
 
-    // Converte para ActionPlanItems
+    // Converts to ActionPlanItems
     const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
 
-    console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems);
+    console.log('✅ Personalized plan generated successfully:', actionPlanItems);
     return actionPlanItems;
 
   } catch (error) {
-    console.error('❌ Erro ao gerar plano personalizado:', error);
+    console.error('❌ Error generating personalized plan:', error);
 
-    // Em caso de erro, retorna o plano de fallback
-    console.log('🔄 Usando plano de fallback devido ao erro');
+    // In case of error, returns the fallback plan
+    console.log('🔄 Using fallback plan due to error');
     return generateFallbackPlan(initialMessage, contextualizationData);
   }
 }

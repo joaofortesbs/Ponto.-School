@@ -10,6 +10,13 @@ export interface PlanoAulaFields {
   perfilTurma: string;
   tipoAula: string;
   observacoesProfessor: string;
+  // Novos campos para o mini-card
+  objetivoPrincipal: string;
+  materiaisNecessarios: string;
+  recursosAdicionais: string;
+  tempoEstimado: string;
+  nivelDificuldade: string;
+  palavrasChave: string;
 }
 
 export const planoAulaFieldMapping = {
@@ -21,7 +28,13 @@ export const planoAulaFieldMapping = {
     'Objetivos': 'objetivoGeral',
     'Metodologia': 'tipoAula',
     'Recursos': 'materiaisRecursos',
-    'Avaliação': 'observacoesProfessor'
+    'Avaliação': 'observacoesProfessor',
+    'Objetivo Principal': 'objetivoPrincipal',
+    'Materiais Necessários': 'materiaisNecessarios',
+    'Recursos Adicionais': 'recursosAdicionais',
+    'Tempo Estimado': 'tempoEstimado',
+    'Nível de Dificuldade': 'nivelDificuldade',
+    'Palavras-chave': 'palavrasChave'
   },
   
   // Campos de saída que serão exibidos no mini-card
@@ -35,7 +48,13 @@ export const planoAulaFieldMapping = {
     materiaisRecursos: 'Materiais/Recursos',
     perfilTurma: 'Perfil da Turma',
     tipoAula: 'Tipo de Aula',
-    observacoesProfessor: 'Observações'
+    observacoesProfessor: 'Observações',
+    objetivoPrincipal: 'Objetivo Principal',
+    materiaisNecessarios: 'Materiais Necessários',
+    recursosAdicionais: 'Recursos Adicionais',
+    tempoEstimado: 'Tempo Estimado',
+    nivelDificuldade: 'Nível de Dificuldade',
+    palavrasChave: 'Palavras-chave'
   },
 
   // Valores padrão quando não informados
@@ -43,7 +62,9 @@ export const planoAulaFieldMapping = {
     cargaHoraria: '1 aula de 50 minutos',
     habilidadesBNCC: 'A definir conforme BNCC',
     perfilTurma: 'Turma padrão',
-    tipoAula: 'Aula expositiva dialogada'
+    tipoAula: 'Aula expositiva dialogada',
+    tempoEstimado: '50 min',
+    nivelDificuldade: 'Médio'
   }
 };
 
@@ -60,6 +81,13 @@ export function transformPlanoAulaData(customFields: Record<string, string>): Pl
     materiaisRecursos: customFields['Recursos'] || customFields['materiaisRecursos'] || '',
     perfilTurma: customFields['Perfil da Turma'] || customFields['perfilTurma'] || mapping.defaultValues.perfilTurma,
     tipoAula: customFields['Metodologia'] || customFields['tipoAula'] || mapping.defaultValues.tipoAula,
-    observacoesProfessor: customFields['Avaliação'] || customFields['observacoesProfessor'] || ''
+    observacoesProfessor: customFields['Avaliação'] || customFields['observacoesProfessor'] || '',
+    // Novos campos para o mini-card
+    objetivoPrincipal: customFields['Objetivo Principal'] || customFields['objetivoPrincipal'] || customFields['Objetivos'] || '',
+    materiaisNecessarios: customFields['Materiais Necessários'] || customFields['materiaisNecessarios'] || customFields['Recursos'] || '',
+    recursosAdicionais: customFields['Recursos Adicionais'] || customFields['recursosAdicionais'] || '',
+    tempoEstimado: customFields['Tempo Estimado'] || customFields['tempoEstimado'] || mapping.defaultValues.tempoEstimado,
+    nivelDificuldade: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || mapping.defaultValues.nivelDificuldade,
+    palavrasChave: customFields['Palavras-chave'] || customFields['palavrasChave'] || ''
   };
 }
