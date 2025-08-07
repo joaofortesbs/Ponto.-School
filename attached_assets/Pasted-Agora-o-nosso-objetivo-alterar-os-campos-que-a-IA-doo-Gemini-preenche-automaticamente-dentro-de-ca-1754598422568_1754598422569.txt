@@ -1,0 +1,63 @@
+Agora o nosso objetivo é alterar os campos que a IA doo Gemini preenche automaticamente dentro de cada mini-card que representa as respectivas sugestões de atividades que a IA sugeriu dentro da interface de Plano de Ação, de dentro do Card de Constução! Precisamos alterar especificamente os campos da atividades cujo o respectivo ID é "plano-aula"! Se necessário crie os arquivos específicos para a atividade de Planos de Aula, como por exemplo um arquivo de "src/features/schoolpower/activities/"! é extremamente importante que você não altere os campos que a IA está preenchendo dentro da interface de Plano de Ação, das outras atividades (IDs), ou seja, você precisa criar um sistema único e exclusivo da atividade de Planos de Aula (plano-aula), de manira individualizada para que seja realmente personalizada! Analise como os sistemas e arquivos estão funcionanado atualmente, para que você não prejudique as funcionalidades já existentes, e não altere coisas fora de contexto! Analise a imagem que eu te enviei como exemplo!!!!!!! Precisamos fazer que os campos que a IA preenche nessa atividade de Plano de Aula, seja os que eu vou te passar a seguir:
+
+Novos campos que a IA vai preencher e mostrar dentro do mini-card da atividade cujo o ID é "plano-aula":
+
+1. Tema ou Tópico Central da Aula
+
+Exemplo: “Cadeias Alimentares”, “Revolução Francesa”, “Funções do 1º Grau”
+
+Uso: É a base de toda a construção do plano.
+
+2. Ano ou Série Escolar
+
+Exemplo: 7º ano do Ensino Fundamental, 2º ano do Ensino Médio
+
+Uso: A IA adapta a linguagem, profundidade e estratégias para o nível certo.
+
+3. Componente Curricular
+
+Exemplo: Ciências, Matemática, História, Geografia, Filosofia, etc.
+
+Uso: Define a área do conhecimento para direcionar as competências.
+
+4. Carga Horária (tempo estimado da aula)
+
+Exemplo: 1 aula de 50 minutos, 2 aulas de 45 minutos
+
+Uso: A IA ajusta a quantidade de etapas, tempo de cada atividade e ritmo.
+
+5. Habilidades da BNCC (ou Competências Desejadas)
+
+Exemplo: EF07CI05, EM13CHS104, etc.
+
+Uso: Direciona os objetivos pedagógicos — pode ser preenchido pela IA com base no tema e ano.
+
+6. Objetivo Geral da Aula
+
+Exemplo: “Compreender os conceitos de cadeia alimentar e suas implicações no ecossistema”
+
+Uso: É o norte pedagógico do plano. Pode ser preenchido pela IA com base nos campos anteriores.
+
+7. Materiais ou Recursos Disponíveis
+
+Exemplo: Computador, projetor, livros, papel, lápis, internet, vídeos etc.
+
+Uso: Define o formato das atividades. A IA só sugere o que o professor pode usar.
+
+8. Perfil da Turma (opcional, mas recomendável)
+
+Exemplo: “Turma participativa, mas com dificuldade de concentração”; “Baixa alfabetização digital”
+
+Uso: A IA pode adaptar estratégias inclusivas e gamificadas para diferentes perfis.
+
+9. Tipo de Aula Desejado (opcional)
+
+Exemplo: Aula expositiva, aula prática, aula investigativa, aula com gamificação, etc.
+
+Uso: Permite à IA moldar a estrutura metodológica da aula.
+
+10. Observações do Professor (opcional)
+
+Campo livre para anotações pesso
+
+[Analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!]
