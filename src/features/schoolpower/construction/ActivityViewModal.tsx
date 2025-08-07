@@ -50,7 +50,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
-    console.log(`🎯 ActivityViewModal: Selecionando questão ${questionIndex + 1} (ID: ${questionId})`);
     setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
@@ -165,9 +164,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       case 'lista-exercicios':
         return (
           <ExerciseListPreview
-            data={activity?.originalData || activity}
+            data={previewData}
+            customFields={previewData.customFields}
             onQuestionSelect={handleQuestionSelect}
-            key={`exercise-preview-${activity?.id}-${Date.now()}`}
           />
         );
 
