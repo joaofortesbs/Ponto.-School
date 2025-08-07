@@ -212,6 +212,19 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [buildProgress, setBuildProgress] = useState<any>(null);
   const [deletedQuestionIds, setDeletedQuestionIds] = useState<Set<string>>(new Set());
 
+  // Função para limpar dados de exclusão do localStorage (útil para depuração)
+  const clearDeletedQuestionsCache = useCallback(() => {
+    try {
+      localStorage.removeItem(`deleted_questions_${activity?.id || 'current'}`);
+      localStorage.removeItem(`activity_${activity?.id || 'current'}`);
+      localStorage.removeItem(`original_activity_${activity?.id || 'current'}`);
+      setDeletedQuestionIds(new Set());
+      console.log('🧹 Cache de questões excluídas limpo');
+    } catch (error) {
+      console.warn('⚠️ Erro ao limpar cache:', error);
+    }
+  }, [activity?.id]);
+
   // Função de toast funcional
   const toast = (options: { title: string; description: string; variant?: "destructive" | "default" | "secondary" | "outline" }) => {
     console.log(`Toast: ${options.title} - ${options.description} (${options.variant || 'default'})`);
@@ -242,6 +255,15 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     setDeletedQuestionIds(prev => {
       const newDeletedIds = new Set([...prev, questionToDelete.id]);
       console.log(`🗑️ IDs de questões excluídas atualizados:`, Array.from(newDeletedIds));
+      
+      // Persistir IDs excluídos no localStorage
+      try {
+        localStorage.setItem(`deleted_questions_${activity?.id || 'current'}`, JSON.stringify(Array.from(newDeletedIds)));
+        console.log(`💾 IDs de questões excluídas salvos no localStorage`);
+      } catch (error) {
+        console.warn('⚠️ Erro ao salvar IDs excluídos no localStorage:', error);
+      }
+      
       return newDeletedIds;
     });
 
@@ -262,7 +284,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       return questoesFiltradas;
     });
 
-    // Persistir a exclusão no localStorage ou dados da atividade se necessário
+    // Atualizar dados da atividade para remover a questão permanentemente
     if (exerciseData) {
       const updatedData = {
         ...exerciseData,
@@ -270,12 +292,28 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       };
       setExerciseData(updatedData);
       
-      // Salvar no localStorage se necessário
+      // Salvar dados atualizados no localStorage
       try {
         localStorage.setItem(`activity_${activity?.id || 'current'}`, JSON.stringify(updatedData));
-        console.log(`💾 Dados da atividade salvos no localStorage após exclusão`);
+        console.log(`💾 Dados da atividade atualizados salvos no localStorage após exclusão`);
       } catch (error) {
-        console.warn('⚠️ Erro ao salvar dados no localStorage:', error);
+        console.warn('⚠️ Erro ao salvar dados atualizados no localStorage:', error);
+      }
+
+      // Também atualizar os dados originais da atividade para refletir a exclusão
+      if (typeof activity === 'object' && activity !== null) {
+        const updatedActivity = {
+          ...activity,
+          questoes: activity.questoes?.filter((questao: any) => questao.id !== questionToDelete.id) || []
+        };
+        
+        // Persistir também nos dados da atividade original
+        try {
+          localStorage.setItem(`original_activity_${activity?.id || 'current'}`, JSON.stringify(updatedActivity));
+          console.log(`💾 Dados originais da atividade atualizados no localStorage`);
+        } catch (error) {
+          console.warn('⚠️ Erro ao salvar dados originais atualizados:', error);
+        }
       }
     }
 
@@ -497,6 +535,21 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       });
     }
 
+    // Aplicar filtro de questões excluídas se houver dados salvos
+    if (questionsData && questionsData.questoes) {
+      try {
+        const savedDeletedIds = localStorage.getItem(`deleted_questions_${activityData?.id || 'current'}`);
+        if (savedDeletedIds) {
+          const deletedIds = new Set(JSON.parse(savedDeletedIds));
+          const originalCount = questionsData.questoes.length;
+          questionsData.questoes = questionsData.questoes.filter((questao: any) => !deletedIds.has(questao.id));
+          console.log(`🗑️ Filtradas ${originalCount - questionsData.questoes.length} questões excluídas. Restaram ${questionsData.questoes.length} questões.`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao aplicar filtro de questões excluídas:', error);
+      }
+    }
+
     console.log('📊 Dados finais processados:', questionsData);
     return questionsData;
   }, []);
@@ -505,7 +558,32 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   useEffect(() => {
     console.log('🔄 UseEffect executado com activity:', activity);
     if (activity) {
-      const processedData = processQuestions(activity);
+      // Verificar se há dados atualizados no localStorage primeiro
+      let activityData = activity;
+      try {
+        const savedActivityData = localStorage.getItem(`activity_${activity?.id || 'current'}`);
+        if (savedActivityData) {
+          const parsedData = JSON.parse(savedActivityData);
+          console.log('📱 Dados da atividade carregados do localStorage:', parsedData);
+          activityData = parsedData;
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao carregar dados da atividade do localStorage:', error);
+      }
+
+      // Carregar IDs de questões excluídas do localStorage
+      try {
+        const savedDeletedIds = localStorage.getItem(`deleted_questions_${activity?.id || 'current'}`);
+        if (savedDeletedIds) {
+          const deletedIds = JSON.parse(savedDeletedIds);
+          console.log('🗑️ IDs de questões excluídas carregados do localStorage:', deletedIds);
+          setDeletedQuestionIds(new Set(deletedIds));
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao carregar IDs excluídos do localStorage:', error);
+      }
+
+      const processedData = processQuestions(activityData);
       console.log('📝 Dados processados no useEffect:', processedData);
       setExerciseData(processedData);
 

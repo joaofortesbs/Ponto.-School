@@ -164,9 +164,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       case 'lista-exercicios':
         return (
           <ExerciseListPreview
-            data={previewData}
-            customFields={previewData.customFields}
+            data={activity?.originalData || activity}
             onQuestionSelect={handleQuestionSelect}
+            key={`exercise-preview-${activity?.id}-${Date.now()}`}
           />
         );
 
