@@ -36,25 +36,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
-  // Resetar estado do sidebar quando o modal abre e sincronizar dados
+  // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
     if (isOpen) {
       setShowSidebar(false);
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-
-      // Forçar uma atualização dos dados do localStorage se necessário
-      if (activity?.id) {
-        const currentStoredData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-        console.log('🔄 Dados sincronizados ao abrir modal:', {
-          activityId: activity.id,
-          hasStoredQuestoes: !!currentStoredData.questoes,
-          questoesCount: currentStoredData.questoes?.length || 0
-        });
-      }
     }
-  }, [isOpen, activity?.id]);
+  }, [isOpen]);
 
   if (!isOpen || !activity) return null;
 
@@ -153,11 +143,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
 
-    // Preparar dados para o preview com prioridade para dados salvos (incluindo exclusões)
+    // Preparar dados para o preview EXATAMENTE como no modal de edição
     const previewData = {
       ...activity.originalData,
-      // Priorizar dados salvos que podem conter questões modificadas/excluídas
-      ...(Object.keys(storedData).length > 0 ? storedData : {}),
+      ...storedData,
       title: activity.personalizedTitle || activity.title || storedData.title,
       description: activity.personalizedDescription || activity.description || storedData.description,
       customFields: {
@@ -165,22 +154,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         ...storedFields
       },
       type: activityType,
-      // Para questões, sempre priorizar dados salvos se existirem
-      questoes: storedData.questoes || activity.originalData?.questoes,
-      questions: storedData.questions || activity.originalData?.questions,
-      exercicios: storedData.exercicios || activity.originalData?.exercicios,
-      content: storedData.content || activity.originalData?.content,
-      // Garantir que o número de questões seja atualizado
-      numeroQuestoes: storedData.questoes?.length || activity.originalData?.numeroQuestoes || activity.originalData?.questoes?.length || 0
+      // Incluir todos os campos que podem estar no originalData
+      exercicios: activity.originalData?.exercicios || storedData.exercicios,
+      questions: activity.originalData?.questions || storedData.questions,
+      content: activity.originalData?.content || storedData.content
     };
-
-    // Log para debug
-    console.log('🔍 Dados preparados para o preview:', {
-      activityId: activity.id,
-      hasStoredData: Object.keys(storedData).length > 0,
-      questoesCount: previewData.questoes?.length || 0,
-      originalCount: activity.originalData?.questoes?.length || 0
-    });
 
     switch (activityType) {
       case 'lista-exercicios':

@@ -238,37 +238,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
     console.log(`🗑️ Confirmando exclusão da questão ${questionToDelete.index + 1} (ID: ${questionToDelete.id})`);
 
-    // Atualizar tanto o estado local quanto os dados da atividade
-    const updateActivityData = (currentData: any) => {
-      if (!currentData) return null;
-      
-      const updatedQuestoes = currentData.questoes?.filter((questao: any) => questao.id !== questionToDelete.id) || [];
-      
-      return {
-        ...currentData,
-        questoes: updatedQuestoes,
-        numeroQuestoes: updatedQuestoes.length // Atualizar o contador
-      };
-    };
-
-    // Atualizar exerciseData
-    setExerciseData(prev => {
-      const updated = updateActivityData(prev);
-      
-      // Persistir no localStorage imediatamente
-      if (updated && activity?.id) {
-        try {
-          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updated));
-          console.log(`💾 Dados da atividade salvos no localStorage após exclusão`);
-        } catch (error) {
-          console.warn('⚠️ Erro ao salvar dados no localStorage:', error);
-        }
-      }
-      
-      return updated;
+    // Adiciona o ID da questão excluída ao estado
+    setDeletedQuestionIds(prev => {
+      const newDeletedIds = new Set([...prev, questionToDelete.id]);
+      console.log(`🗑️ IDs de questões excluídas atualizados:`, Array.from(newDeletedIds));
+      return newDeletedIds;
     });
 
-    // Atualizar questoesProcessadas
+    // Remove imediatamente a questão da lista processada
     setQuestoesProcessadas(prevQuestoes => {
       const questoesFiltradas = prevQuestoes.filter(questao => questao.id !== questionToDelete.id);
       console.log(`✅ Questão ${questionToDelete.index + 1} excluída com sucesso. Total de questões restantes: ${questoesFiltradas.length}`);
@@ -285,12 +262,22 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       return questoesFiltradas;
     });
 
-    // Adicionar ao conjunto de IDs excluídos para controle adicional
-    setDeletedQuestionIds(prev => {
-      const newDeletedIds = new Set([...prev, questionToDelete.id]);
-      console.log(`🗑️ IDs de questões excluídas atualizados:`, Array.from(newDeletedIds));
-      return newDeletedIds;
-    });
+    // Persistir a exclusão no localStorage ou dados da atividade se necessário
+    if (exerciseData) {
+      const updatedData = {
+        ...exerciseData,
+        questoes: exerciseData.questoes?.filter(questao => questao.id !== questionToDelete.id) || []
+      };
+      setExerciseData(updatedData);
+      
+      // Salvar no localStorage se necessário
+      try {
+        localStorage.setItem(`activity_${activity?.id || 'current'}`, JSON.stringify(updatedData));
+        console.log(`💾 Dados da atividade salvos no localStorage após exclusão`);
+      } catch (error) {
+        console.warn('⚠️ Erro ao salvar dados no localStorage:', error);
+      }
+    }
 
     // Fecha o modal e limpa o estado
     setShowDeleteModal(false);
@@ -334,14 +321,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     // Verificar se existe conteúdo gerado pela IA ou questões diretamente
     let questionsData = null;
 
-    // Verificar se existe dados salvos no localStorage com questões já processadas
-    const savedData = activity?.id ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}') : {};
-    
-    if (savedData?.questoes && Array.isArray(savedData.questoes) && savedData.questoes.length > 0) {
-      console.log('✅ Questões encontradas no localStorage (já processadas):', savedData.questoes.length);
-      questionsData = savedData;
-      questionsData.isGeneratedByAI = savedData.isGeneratedByAI || false;
-    } else if (activityData?.content?.questoes && Array.isArray(activityData.content.questoes) && activityData.content.questoes.length > 0) {
+    if (activityData?.content?.questoes && Array.isArray(activityData.content.questoes) && activityData.content.questoes.length > 0) {
       console.log('✅ Questões encontradas na IA (content.questoes):', activityData.content.questoes.length);
       questionsData = { ...activityData, questoes: activityData.content.questoes };
       questionsData.isGeneratedByAI = true; // Marcar como gerado por IA
@@ -533,22 +513,14 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       if (processedData?.questoes && Array.isArray(processedData.questoes) && processedData.questoes.length > 0) {
         console.log(`📋 Atualizando lista de questões com ${processedData.questoes.length} itens.`);
         setQuestoesProcessadas(processedData.questoes);
-        // Limpar IDs excluídos quando recarregamos questões do source
-        setDeletedQuestionIds(new Set());
       } else {
         console.log('🚫 Nenhuma questão válida encontrada para atualizar `questoesProcessadas`.');
         setQuestoesProcessadas([]); // Limpar se não houver questões
-        setDeletedQuestionIds(new Set());
       }
-      
-      // Reset outros estados relacionados
-      setSelectedQuestionIndex(null);
-      setViewMode('grid');
     } else {
       console.log('ℹ️ `activity` está vazio ou indefinido, `questoesProcessadas` será limpo.');
       setQuestoesProcessadas([]);
       setExerciseData(null);
-      setDeletedQuestionIds(new Set());
     }
   }, [activity, processQuestions]); // Dependência de processQuestions também
 
