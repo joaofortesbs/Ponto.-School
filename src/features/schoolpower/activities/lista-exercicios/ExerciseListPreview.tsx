@@ -239,17 +239,49 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     console.log(`🗑️ Confirmando exclusão da questão ${questionToDelete.index + 1} (ID: ${questionToDelete.id})`);
 
     // Adiciona o ID da questão excluída ao estado
-    setDeletedQuestionIds(prev => new Set([...prev, questionToDelete.id]));
+    setDeletedQuestionIds(prev => {
+      const newDeletedIds = new Set([...prev, questionToDelete.id]);
+      console.log(`🗑️ IDs de questões excluídas atualizados:`, Array.from(newDeletedIds));
+      return newDeletedIds;
+    });
 
-    // Remove a questão da lista visual e atualiza o estado de questões processadas se necessário
-    // As questões serão filtradas no useEffect quando `deletedQuestionIds` mudar.
+    // Remove imediatamente a questão da lista processada
+    setQuestoesProcessadas(prevQuestoes => {
+      const questoesFiltradas = prevQuestoes.filter(questao => questao.id !== questionToDelete.id);
+      console.log(`✅ Questão ${questionToDelete.index + 1} excluída com sucesso. Total de questões restantes: ${questoesFiltradas.length}`);
+      
+      // Ajustar selectedQuestionIndex se necessário
+      if (selectedQuestionIndex !== null) {
+        if (selectedQuestionIndex >= questoesFiltradas.length) {
+          const newIndex = questoesFiltradas.length > 0 ? Math.max(0, questoesFiltradas.length - 1) : null;
+          console.log(`🔄 Ajustando selectedQuestionIndex de ${selectedQuestionIndex} para ${newIndex}`);
+          setSelectedQuestionIndex(newIndex);
+        }
+      }
+      
+      return questoesFiltradas;
+    });
+
+    // Persistir a exclusão no localStorage ou dados da atividade se necessário
+    if (exerciseData) {
+      const updatedData = {
+        ...exerciseData,
+        questoes: exerciseData.questoes?.filter(questao => questao.id !== questionToDelete.id) || []
+      };
+      setExerciseData(updatedData);
+      
+      // Salvar no localStorage se necessário
+      try {
+        localStorage.setItem(`activity_${activity?.id || 'current'}`, JSON.stringify(updatedData));
+        console.log(`💾 Dados da atividade salvos no localStorage após exclusão`);
+      } catch (error) {
+        console.warn('⚠️ Erro ao salvar dados no localStorage:', error);
+      }
+    }
 
     // Fecha o modal e limpa o estado
     setShowDeleteModal(false);
     setQuestionToDelete(null);
-
-    // Se estamos na visualização detalhada e a questão selecionada foi excluída
-    // O useEffect cuidará do ajuste do índice selecionado após a re-renderização com base em `deletedQuestionIds`.
 
     // Mostra notificação de sucesso
     toast({
@@ -258,7 +290,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       variant: "default"
     });
 
-    console.log(`✅ Questão ${questionToDelete.index + 1} marcada como excluída. ID: ${questionToDelete.id}`);
+    console.log(`✅ Questão ${questionToDelete.index + 1} permanentemente excluída. ID: ${questionToDelete.id}`);
   };
 
   // Função placeholder para 'generateActivity' caso não esteja definida
@@ -491,6 +523,26 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       setExerciseData(null);
     }
   }, [activity, processQuestions]); // Dependência de processQuestions também
+
+  // Efeito separado para filtrar questões excluídas
+  useEffect(() => {
+    if (deletedQuestionIds.size > 0) {
+      console.log(`🗑️ Filtrando questões excluídas. IDs excluídos:`, Array.from(deletedQuestionIds));
+      setQuestoesProcessadas(prevQuestoes => {
+        const questoesFiltradas = prevQuestoes.filter(questao => !deletedQuestionIds.has(questao.id));
+        console.log(`✅ Questões filtradas. Total restante: ${questoesFiltradas.length}`);
+        
+        // Ajustar selectedQuestionIndex se necessário
+        if (selectedQuestionIndex !== null && selectedQuestionIndex >= questoesFiltradas.length) {
+          const newIndex = questoesFiltradas.length > 0 ? Math.max(0, questoesFiltradas.length - 1) : null;
+          console.log(`🔄 Ajustando selectedQuestionIndex de ${selectedQuestionIndex} para ${newIndex}`);
+          setSelectedQuestionIndex(newIndex);
+        }
+        
+        return questoesFiltradas;
+      });
+    }
+  }, [deletedQuestionIds, selectedQuestionIndex]);
 
   const handleRespostaChange = (questaoId: string, resposta: string | number) => {
     setRespostas(prev => ({
@@ -1144,6 +1196,9 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     );
   }
 
+  // Filtrar questões não excluídas para renderização
+  const questoesParaRenderizar = questoesProcessadas.filter(questao => !deletedQuestionIds.has(questao.id));
+
   // Renderizar o conteúdo da grade de questões
   const renderQuestionsGridContent = () => (
     <motion.div
@@ -1153,7 +1208,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       className="space-y-6"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {questoesProcessadas.map((questao, index) =>
+        {questoesParaRenderizar.map((questao, index) =>
           renderQuestionGridCard(questao, index)
         )}
         {renderAddQuestionCard()}
@@ -1185,7 +1240,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     >
       <div className="w-72 bg-orange-50/30 border-r border-orange-200/50 overflow-y-auto dark:bg-gray-900 dark:border-gray-700">
         <div className="p-2 space-y-2">
-          {questoesProcessadas.map((questao, index) => {
+          {questoesParaRenderizar.map((questao, index) => {
             const difficultyConfig = getDifficultyConfig(questao.dificuldade);
             const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
             const isSelected = selectedQuestionIndex === index;
@@ -1249,8 +1304,8 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
 
       <div className="flex-1 h-full overflow-y-auto">
         <div className="p-6">
-          {selectedQuestionIndex !== null && questoesProcessadas[selectedQuestionIndex] ? (
-            renderQuestion(questoesProcessadas[selectedQuestionIndex], selectedQuestionIndex)
+          {selectedQuestionIndex !== null && questoesParaRenderizar[selectedQuestionIndex] ? (
+            renderQuestion(questoesParaRenderizar[selectedQuestionIndex], selectedQuestionIndex)
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
               <FileText className="w-16 h-16 mb-4" />
