@@ -1947,3 +1947,5 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = ({
     </Card>
   );
 };
+
+export default ExerciseListPreview;
