@@ -351,58 +351,42 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             if (activity?.id === 'plano-aula') {
               console.log('📚 Processando dados específicos de Plano de Aula');
               
-              try {
-                // Importar o processador dinamicamente
-                const { processPlanoAulaData } = await import('../../activities/plano-aula/planoAulaProcessor');
-                
-                const planoAulaActivity = {
-                  id: activity.id,
-                  title: consolidatedData.title || activity.title || '',
-                  description: consolidatedData.description || activity.description || '',
-                  customFields: consolidatedCustomFields,
-                  personalizedTitle: activity.personalizedTitle,
-                  personalizedDescription: activity.personalizedDescription
-                };
-                
-                enrichedFormData = processPlanoAulaData(planoAulaActivity);
-                console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
-              } catch (error) {
-                console.error('❌ Erro ao importar processador de Plano de Aula:', error);
-                // Fallback para dados básicos
-                enrichedFormData = {
-                  title: consolidatedData.title || activity.title || '',
-                  description: consolidatedData.description || activity.description || '',
-                  subject: consolidatedCustomFields['Componente Curricular'] || consolidatedCustomFields['disciplina'] || 'Português',
-                  theme: consolidatedCustomFields['Tema ou Tópico Central'] || consolidatedCustomFields['tema'] || '',
-                  schoolYear: consolidatedCustomFields['Ano/Série Escolar'] || consolidatedCustomFields['anoEscolaridade'] || '',
-                  numberOfQuestions: '10',
-                  difficultyLevel: consolidatedCustomFields['Tipo de Aula'] || 'Médio',
-                  questionModel: '',
-                  sources: '',
-                  objectives: consolidatedCustomFields['Objetivo Geral'] || '',
-                  materials: consolidatedCustomFields['Materiais/Recursos'] || '',
-                  instructions: '',
-                  evaluation: consolidatedCustomFields['Observações do Professor'] || '',
-                  timeLimit: consolidatedCustomFields['Carga Horária'] || '',
-                  context: consolidatedCustomFields['Perfil da Turma'] || '',
-                  textType: '',
-                  textGenre: '',
-                  textLength: '',
-                  associatedQuestions: '',
-                  competencies: consolidatedCustomFields['Habilidades BNCC'] || '',
-                  readingStrategies: '',
-                  visualResources: '',
-                  practicalActivities: '',
-                  wordsIncluded: '',
-                  gridFormat: '',
-                  providedHints: '',
-                  vocabularyContext: '',
-                  language: '',
-                  associatedExercises: '',
-                  knowledgeArea: '',
-                  complexityLevel: ''
-                };
-              }
+              // Processar dados do Plano de Aula diretamente sem import dinâmico
+              enrichedFormData = {
+                title: consolidatedData.title || activity.title || '',
+                description: consolidatedData.description || activity.description || '',
+                subject: consolidatedCustomFields['Componente Curricular'] || consolidatedCustomFields['disciplina'] || 'Português',
+                theme: consolidatedCustomFields['Tema ou Tópico Central'] || consolidatedCustomFields['tema'] || '',
+                schoolYear: consolidatedCustomFields['Ano/Série Escolar'] || consolidatedCustomFields['anoEscolaridade'] || '',
+                numberOfQuestions: '10',
+                difficultyLevel: consolidatedCustomFields['Tipo de Aula'] || 'Médio',
+                questionModel: '',
+                sources: '',
+                objectives: consolidatedCustomFields['Objetivo Geral'] || '',
+                materials: consolidatedCustomFields['Materiais/Recursos'] || '',
+                instructions: '',
+                evaluation: consolidatedCustomFields['Observações do Professor'] || '',
+                timeLimit: consolidatedCustomFields['Carga Horária'] || '',
+                context: consolidatedCustomFields['Perfil da Turma'] || '',
+                textType: '',
+                textGenre: '',
+                textLength: '',
+                associatedQuestions: '',
+                competencies: consolidatedCustomFields['Habilidades BNCC'] || '',
+                readingStrategies: '',
+                visualResources: '',
+                practicalActivities: '',
+                wordsIncluded: '',
+                gridFormat: '',
+                providedHints: '',
+                vocabularyContext: '',
+                language: '',
+                associatedExercises: '',
+                knowledgeArea: '',
+                complexityLevel: ''
+              };
+              
+              console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
             } else {
             // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
               enrichedFormData = {
