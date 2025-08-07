@@ -1030,21 +1030,25 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         {...attributes}
       >
         <Card className={`h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] bg-white/95 dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm shadow-md ${isDragging ? 'shadow-2xl scale-105 border-orange-500' : ''}`}>
-          {/* Drag Handle */}
-          <div 
-            className="absolute top-2 right-2 p-1 rounded bg-white/80 dark:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing z-20"
-            {...listeners}
-          >
-            <GripVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-          </div>
-
-          <div className="absolute top-3 left-3 right-12 flex items-center justify-between z-10">
+          <div className="absolute top-3 left-3 z-10">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
               {index + 1}
             </div>
-            <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20`}>
+          </div>
+
+          {/* Tag de dificuldade que se move no hover e mostra o grip */}
+          <div className="absolute top-3 right-3 flex items-center gap-2 z-10 transition-all duration-300 group-hover:right-8">
+            <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20 transition-all duration-300`}>
               {difficultyConfig.label}
             </Badge>
+            
+            {/* Drag Handle que aparece no hover */}
+            <div 
+              className="p-1 rounded bg-white/80 dark:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing"
+              {...listeners}
+            >
+              <GripVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </div>
           </div>
 
           <CardContent 
