@@ -210,6 +210,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questionToDelete, setQuestionToDelete] = useState<{ index: number; id: string } | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [buildProgress, setBuildProgress] = useState<any>(null);
+  const [deletedQuestionIds, setDeletedQuestionIds] = useState<Set<string>>(new Set());
 
   // Função de toast funcional
   const toast = (options: { title: string; description: string; variant?: "destructive" | "default" | "secondary" | "outline" }) => {
@@ -236,52 +237,19 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     if (!questionToDelete) return;
 
     console.log(`🗑️ Confirmando exclusão da questão ${questionToDelete.index + 1} (ID: ${questionToDelete.id})`);
-    
-    // Remove a questão da lista
-    const updatedQuestions = questoesProcessadas.filter((_, index) => index !== questionToDelete.index);
-    setQuestoesProcessadas(updatedQuestions);
 
-    // Remove respostas relacionadas à questão excluída
-    setRespostas(prev => {
-      const newRespostas = { ...prev };
-      delete newRespostas[questionToDelete.id];
-      return newRespostas;
-    });
+    // Adiciona o ID da questão excluída ao estado
+    setDeletedQuestionIds(prev => new Set([...prev, questionToDelete.id]));
 
-    // Remove estados de expansão
-    setQuestoesExpandidas(prev => {
-      const newExpanded = { ...prev };
-      delete newExpanded[questionToDelete.id];
-      return newExpanded;
-    });
-
-    setExplicacoesExpandidas(prev => {
-      const newExpanded = { ...prev };
-      delete newExpanded[questionToDelete.id];
-      return newExpanded;
-    });
-
-    // Atualiza os dados do exercício se necessário
-    if (exerciseData) {
-      const updatedExerciseData = {
-        ...exerciseData,
-        questoes: updatedQuestions,
-        numeroQuestoes: updatedQuestions.length
-      };
-      setExerciseData(updatedExerciseData);
-    }
+    // Remove a questão da lista visual e atualiza o estado de questões processadas se necessário
+    // As questões serão filtradas no useEffect quando `deletedQuestionIds` mudar.
 
     // Fecha o modal e limpa o estado
     setShowDeleteModal(false);
     setQuestionToDelete(null);
 
     // Se estamos na visualização detalhada e a questão selecionada foi excluída
-    if (selectedQuestionIndex === questionToDelete.index) {
-      setSelectedQuestionIndex(null);
-    } else if (selectedQuestionIndex !== null && selectedQuestionIndex > questionToDelete.index) {
-      // Ajusta o índice se uma questão anterior foi excluída
-      setSelectedQuestionIndex(selectedQuestionIndex - 1);
-    }
+    // O useEffect cuidará do ajuste do índice selecionado após a re-renderização com base em `deletedQuestionIds`.
 
     // Mostra notificação de sucesso
     toast({
@@ -290,7 +258,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       variant: "default"
     });
 
-    console.log(`✅ Questão ${questionToDelete.index + 1} excluída com sucesso. Total de questões restantes: ${updatedQuestions.length}`);
+    console.log(`✅ Questão ${questionToDelete.index + 1} marcada como excluída. ID: ${questionToDelete.id}`);
   };
 
   // Função placeholder para 'generateActivity' caso não esteja definida
@@ -1685,4 +1653,297 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   );
 };
 
-export default ExerciseListPreview;
+// Placeholder para QuestionRenderer, caso não esteja definido em outro lugar
+// Se QuestionRenderer já existe em um arquivo separado, esta definição pode ser removida
+// ou ajustada para importação.
+interface QuestionRendererProps {
+  question: Question;
+  questionNumber: number;
+  showAnswers: boolean;
+  onDelete: () => void;
+  onEdit: (field: string, value: any) => void;
+  isEditing: boolean;
+  editingField: string | null;
+  tempValues: { [key: string]: any };
+  onSave: () => void;
+  onCancel: () => void;
+  onTempValueChange: (field: string, value: any) => void;
+}
+
+const QuestionRenderer: React.FC<QuestionRendererProps> = ({
+  question,
+  questionNumber,
+  showAnswers,
+  onDelete,
+  onEdit,
+  isEditing,
+  editingField,
+  tempValues,
+  onSave,
+  onCancel,
+  onTempValueChange
+}) => {
+  const difficultyConfig = determineDifficulty({ dificuldade: question.dificuldade });
+  const questionTag = generateQuestionTag(question.enunciado, question.alternativas);
+
+  const handleInputChange = (field: string, value: string | string[]) => {
+    onTempValueChange(field, value);
+  };
+
+  return (
+    <Card className="mb-4 border-l-4 border-l-orange-500 scroll-mt-4 dark:bg-gray-800 dark:border-l-orange-600 h-full flex flex-col">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <Badge variant="outline" className="text-xs dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+                Questão {questionNumber}
+              </Badge>
+              <Badge className={`text-xs ${DIFFICULTY_LEVELS[difficultyConfig].color} ${DIFFICULTY_LEVELS[difficultyConfig].textColor} dark:opacity-90`}>
+                {DIFFICULTY_LEVELS[difficultyConfig].label}
+              </Badge>
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                {getTypeIcon(question.type)}
+                <span>{question.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+              </div>
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 dark:bg-gray-700 dark:text-gray-300">
+                {questionTag}
+              </Badge>
+            </div>
+            <CardTitle className="text-base font-medium leading-relaxed text-gray-900 dark:text-white">
+              {isEditing && editingField === 'enunciado' ? (
+                <Textarea
+                  value={tempValues['enunciado'] || question.enunciado}
+                  onChange={(e) => handleInputChange('enunciado', e.target.value)}
+                  className="min-h-[80px] resize-none text-base border-orange-200 dark:border-orange-800 focus:border-orange-400 dark:focus:border-orange-600 focus:ring-orange-400/20"
+                />
+              ) : (
+                question.enunciado
+              )}
+            </CardTitle>
+          </div>
+
+          <div className="flex-shrink-0 ml-3 flex items-center gap-2">
+            {!isEditing && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300 rounded-full w-10 h-10 border border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                title={`Excluir Questão ${questionNumber}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+
+            {isEditing ? (
+              <>
+                <Button variant="outline" onClick={onCancel} className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full w-10 h-10">
+                  <X className="w-4 h-4" />
+                </Button>
+                <Button onClick={onSave} className="bg-orange-500 hover:bg-orange-600 text-white rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-200">
+                  <CheckCircle className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit('enunciado', question.enunciado);
+                }}
+                className="text-gray-500 hover:bg-gray-100 hover:text-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 rounded-full w-10 h-10 border border-gray-200 dark:border-gray-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                title={`Editar Questão ${questionNumber}`}
+              >
+                <Edit3 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0 flex-1 flex flex-col">
+        {question.type === 'multipla-escolha' && (
+          <div className="space-y-3">
+            {(question.alternativas || []).map((alternativa, altIndex) => {
+              const letter = String.fromCharCode(65 + altIndex);
+              const isCorrect = question.respostaCorreta === altIndex;
+              const isSelected = false; // Lógica de seleção do usuário não implementada aqui
+
+              return (
+                <div
+                  key={altIndex}
+                  className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                    isEditing && editingField === `alternativa-${altIndex}` ? 'border-orange-300 bg-orange-50 dark:bg-orange-950/30' :
+                    'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                    isEditing && editingField === `alternativa-${altIndex}` ? 'bg-orange-500 text-white border-orange-500' :
+                    isCorrect && showAnswers ? 'bg-green-500 text-white border-green-500' :
+                    'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                  }`}>
+                    {isEditing && editingField === `alternativa-${altIndex}` ? (
+                      <Input
+                        value={tempValues[`alternativa-${altIndex}`] || alternativa}
+                        onChange={(e) => handleInputChange(`alternativa-${altIndex}`, e.target.value)}
+                        className="h-7 w-7 p-0 text-center border-none focus:ring-0 focus:bg-orange-100"
+                      />
+                    ) : (
+                      letter
+                    )}
+                  </div>
+                  <div className="flex-1 text-gray-800 dark:text-gray-200 leading-relaxed pt-1">
+                    {isEditing && editingField === `alternativa-${altIndex}` ? (
+                      <Input
+                        value={tempValues[`alternativa-${altIndex}`] || alternativa}
+                        onChange={(e) => handleInputChange(`alternativa-${altIndex}`, e.target.value)}
+                        className="h-8 p-0 border-none focus:ring-0 focus:bg-orange-100"
+                      />
+                    ) : (
+                      alternativa
+                    )}
+                  </div>
+                  {isCorrect && showAnswers && (
+                    <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {question.type === 'verdadeiro-falso' && (
+          <div className="space-y-3">
+            {['Verdadeiro', 'Falso'].map((label, index) => {
+              const isCorrect = question.respostaCorreta === index;
+              const isSelected = false; // Lógica de seleção do usuário não implementada aqui
+              return (
+                <div
+                  key={index}
+                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
+                    isEditing && editingField === 'resposta' ? (question.resposta === (index === 0) ? 'border-orange-300 bg-orange-50 dark:bg-orange-950/30' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800') :
+                    'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                  }`}
+                >
+                  {isEditing && editingField === 'resposta' ? (
+                    <RadioGroup
+                      value={tempValues['resposta']?.toString() ?? ''}
+                      onValueChange={(val) => handleInputChange('resposta', val === 'true' ? 0 : 1)}
+                      className="flex items-center space-x-3"
+                    >
+                      <RadioGroupItem value={index === 0 ? 'true' : 'false'} id={`${question.id}-${index}`} className="border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-orange-500 focus:ring-orange-500" />
+                      <Label htmlFor={`${question.id}-${index}`} className={`flex-1 font-normal cursor-pointer ${index === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {label}
+                      </Label>
+                    </RadioGroup>
+                  ) : (
+                    <>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                        isCorrect && showAnswers ? 'bg-green-500 text-white border-green-500' :
+                        'bg-white dark:bg-gray-700 text-gray-600 dark:border-gray-600'
+                      }`}>
+                        {isCorrect && showAnswers ? <CheckCircle className="w-4 h-4" /> : label.startsWith('V') ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Circle className="w-4 h-4 text-red-500" />}
+                      </div>
+                      <Label htmlFor={`${question.id}-${index}`} className={`flex-1 font-normal cursor-pointer ${index === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {label}
+                      </Label>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {question.type === 'discursiva' && (
+          <div className="space-y-3 flex-1 flex flex-col">
+            {isEditing && editingField === 'enunciado' ? (
+              <></> // Enunciado já é tratado no CardHeader
+            ) : (
+              <Textarea
+                placeholder="Digite sua resposta aqui..."
+                value={isEditing && editingField === 'resposta' ? (tempValues['resposta'] || question.resposta) : question.resposta}
+                onChange={(e) => isEditing && editingField === 'resposta' && handleInputChange('resposta', e.target.value)}
+                readOnly={!isEditing || editingField !== 'resposta'}
+                className="min-h-[120px] resize-none flex-1 border-orange-200 dark:border-orange-800 focus:border-orange-400 dark:focus:border-orange-600 focus:ring-orange-400/20 dark:bg-gray-800 dark:text-gray-300"
+              />
+            )}
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-auto">
+              Resposta: { (isEditing && editingField === 'resposta' ? tempValues['resposta'] : question.resposta)?.toString()?.length || 0 } caracteres
+            </div>
+          </div>
+        )}
+
+        {question.explicacao && (
+          <div className="mt-4">
+            <div
+              className="p-3 bg-orange-50 dark:bg-orange-950/30 border-l-4 border-l-orange-400 dark:border-l-orange-600 cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/50 transition-colors rounded-lg"
+              onClick={() => toggleExplicacaoExpandida(question.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium text-orange-800 dark:text-orange-200">Explicação</div>
+                <div className="text-orange-600 dark:text-orange-400">
+                  {explicacoesExpandidas[question.id] ? '−' : '+'}
+                </div>
+              </div>
+              {explicacoesExpandidas[question.id] && (
+                <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-orange-900 dark:text-orange-100 flex items-center">
+                      <Info className="w-4 h-4 mr-2" />
+                      Detalhes da Explicação
+                    </h4>
+                  </div>
+                  <div className="text-orange-800 dark:text-orange-200 whitespace-pre-wrap mb-4">
+                    {isEditing && editingField === 'explicacao' ? (
+                      <Textarea
+                        value={tempValues['explicacao'] || question.explicacao}
+                        onChange={(e) => handleInputChange('explicacao', e.target.value)}
+                        className="min-h-[80px] resize-none text-base border-orange-200 dark:border-orange-800 focus:border-orange-400 dark:focus:border-orange-600 focus:ring-orange-400/20"
+                      />
+                    ) : (
+                      question.explicacao
+                    )}
+                  </div>
+
+                  {(question.respostaCorreta !== undefined || question.gabarito !== undefined) && (
+                    <div className="pt-4 border-t border-orange-200 dark:border-orange-700">
+                      <h5 className="font-semibold text-orange-900 dark:text-orange-100 mb-2 flex items-center">
+                        <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                        Gabarito
+                      </h5>
+                      <div className="text-orange-800 dark:text-orange-200 font-medium">
+                        {question.type === 'multipla-escolha' ? (
+                          typeof question.respostaCorreta === 'number' ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                              Alternativa {String.fromCharCode(65 + question.respostaCorreta)}
+                            </span>
+                          ) : (
+                            <span className="text-red-500">{`Gabarito inválido (tipo: ${typeof question.respostaCorreta})`}</span>
+                          )
+                        ) : question.type === 'verdadeiro-falso' ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            {question.respostaCorreta === 0 ? 'Verdadeiro' : 'Falso'}
+                          </span>
+                        ) : (
+                          <div className="text-sm whitespace-pre-wrap">
+                            {String(question.respostaCorreta)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
