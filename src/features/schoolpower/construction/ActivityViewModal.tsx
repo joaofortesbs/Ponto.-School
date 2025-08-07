@@ -53,6 +53,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
+    setShowSidebar(true); // Ensure sidebar is visible when a question is selected
   };
 
   // Função para rolar para uma questão específica
@@ -313,7 +314,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
             {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
-            {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
+            {isExerciseList && questionsForSidebar.length > 0 && showSidebar && !isInQuestionView && (
               <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Card */}
