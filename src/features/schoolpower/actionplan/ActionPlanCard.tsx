@@ -34,83 +34,97 @@ const getActivityName = (id: string): string => {
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
   
-  const objetivo = customFields['Objetivo Principal'] || customFields['objetivoPrincipal'] || customFields['Objetivos'] || customFields['Objetivo Geral'];
-  const materiais = customFields['Materiais Necessários'] || customFields['materiaisNecessarios'] || customFields['Recursos'] || customFields['Materiais/Recursos'];
-  const recursos = customFields['Recursos Adicionais'] || customFields['recursosAdicionais'];
-  const tempo = customFields['Tempo Estimado'] || customFields['tempoEstimado'] || customFields['Carga Horária'];
-  const nivel = customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'];
-  const palavrasChave = customFields['Palavras-chave'] || customFields['palavrasChave'];
-  const tema = customFields['Tema'] || customFields['tema'];
-  const disciplina = customFields['Disciplina'] || customFields['componenteCurricular'];
-  const anoSerie = customFields['Público-Alvo'] || customFields['anoSerie'];
+  const tema = customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema'];
+  const anoSerie = customFields['Ano/Série Escolar'] || customFields['Público-Alvo'];
+  const componenteCurricular = customFields['Componente Curricular'] || customFields['Disciplina'];
+  const cargaHoraria = customFields['Carga Horária'] || customFields['Tempo Estimado'];
+  const habilidadesBNCC = customFields['Habilidades BNCC'];
+  const objetivoGeral = customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem'];
+  const materiaisRecursos = customFields['Materiais/Recursos'] || customFields['Recursos'];
+  const perfilTurma = customFields['Perfil da Turma'];
+  const tipoAula = customFields['Tipo de Aula'] || customFields['Metodologia'];
+  const observacoes = customFields['Observações do Professor'] || customFields['Observações'];
 
   return (
     <div className="space-y-3">
-      {/* Informações principais em destaque */}
+      {/* Tema Central em destaque */}
       {tema && (
         <div className="w-full">
-          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema Central</div>
+          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema ou Tópico Central</div>
           <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tema}</div>
         </div>
       )}
 
       {/* Informações básicas */}
       <div className="grid grid-cols-2 gap-2">
-        {disciplina && (
+        {componenteCurricular && (
           <div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
-            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Componente Curricular</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{componenteCurricular}</div>
           </div>
         )}
         {anoSerie && (
           <div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-Alvo</div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ano/Série Escolar</div>
             <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoSerie}</div>
           </div>
         )}
       </div>
 
-      {objetivo && (
+      {objetivoGeral && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivo Principal</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivo}</div>
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivo Geral</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivoGeral}</div>
         </div>
       )}
 
-      {materiais && (
+      {materiaisRecursos && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Materiais Necessários</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{materiais}</div>
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Materiais/Recursos</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{materiaisRecursos}</div>
         </div>
       )}
 
-      {recursos && (
+      {perfilTurma && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recursos Adicionais</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{recursos}</div>
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Perfil da Turma</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{perfilTurma}</div>
         </div>
       )}
 
       {/* Tags e informações complementares */}
-      {(tempo || nivel || palavrasChave) && (
-        <div className="flex flex-wrap gap-2 w-full">
-          {tempo && (
-            <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
-              ⏱️ {tempo}
-            </Badge>
-          )}
-          {nivel && (
-            <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
-              📊 {nivel}
-            </Badge>
-          )}
-          {palavrasChave && (
+      <div className="space-y-2">
+        {(cargaHoraria || tipoAula) && (
+          <div className="flex flex-wrap gap-2 w-full">
+            {cargaHoraria && (
+              <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
+                ⏱️ {cargaHoraria}
+              </Badge>
+            )}
+            {tipoAula && (
+              <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
+                📚 {tipoAula}
+              </Badge>
+            )}
+          </div>
+        )}
+        
+        {habilidadesBNCC && (
+          <div className="w-full">
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Habilidades BNCC</div>
             <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 border-purple-200 text-purple-700">
-              🏷️ {palavrasChave}
+              🎯 {habilidadesBNCC}
             </Badge>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+
+        {observacoes && (
+          <div className="w-full">
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Observações do Professor</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{observacoes}</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

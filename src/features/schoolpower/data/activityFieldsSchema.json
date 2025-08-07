@@ -1,4 +1,3 @@
-
 {
   "lista-exercicios": {
     "fields": [
@@ -9,6 +8,30 @@
       "Nível de Dificuldade",
       "Modelo de Questões",
       "Fontes"
+    ]
+  },
+  "plano-aula": {
+    "fields": [
+      "Tema ou Tópico Central",
+      "Ano/Série Escolar",
+      "Componente Curricular", 
+      "Carga Horária",
+      "Habilidades BNCC",
+      "Objetivo Geral",
+      "Materiais/Recursos",
+      "Perfil da Turma",
+      "Tipo de Aula",
+      "Observações do Professor"
+    ]
+  },
+  "resumo": {
+    "fields": [
+      "Tema Principal",
+      "Fonte do Conteúdo",
+      "Extensão do Resumo",
+      "Palavras-chave",
+      "Nível de Detalhamento",
+      "Público-Alvo"
     ]
   },
   "prova": {
@@ -62,6 +85,16 @@
       "Critérios de Avaliação"
     ]
   },
+  "apresentacao-slides": {
+    "fields": [
+      "Número de Slides",
+      "Tema Central",
+      "Conteúdo dos Slides",
+      "Recursos Visuais",
+      "Estilo da Apresentação",
+      "Software Utilizado"
+    ]
+  },
   "proposta-redacao": {
     "fields": [
       "Gênero Textual",
@@ -100,6 +133,16 @@
       "Nível de Dificuldade",
       "Contexto de Uso",
       "Exercícios Associados"
+    ]
+  },
+  "palavra-cruzada": {
+    "fields": [
+      "Tema das Palavras",
+      "Quantidade de Palavras",
+      "Nível de Dificuldade",
+      "Tamanho da Grade",
+      "Dicas Horizontais",
+      "Dicas Verticais"
     ]
   },
   "exemplos-contextualizados": {

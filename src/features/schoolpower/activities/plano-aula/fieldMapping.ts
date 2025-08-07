@@ -10,61 +10,57 @@ export interface PlanoAulaFields {
   perfilTurma: string;
   tipoAula: string;
   observacoesProfessor: string;
-  // Novos campos para o mini-card
-  objetivoPrincipal: string;
-  materiaisNecessarios: string;
-  recursosAdicionais: string;
-  tempoEstimado: string;
-  nivelDificuldade: string;
-  palavrasChave: string;
 }
 
 export const planoAulaFieldMapping = {
   // Campos de entrada que vêm da IA ou dados existentes
   inputFields: {
+    'Tema ou Tópico Central': 'tema',
+    'Tema Central': 'tema',
     'Tema': 'tema',
+    'Ano/Série Escolar': 'anoSerie',
     'Público-Alvo': 'anoSerie',
+    'Ano de Escolaridade': 'anoSerie',
+    'Componente Curricular': 'componenteCurricular',
     'Disciplina': 'componenteCurricular',
-    'Objetivos': 'objetivoGeral',
-    'Metodologia': 'tipoAula',
+    'Carga Horária': 'cargaHoraria',
+    'Tempo Estimado': 'cargaHoraria',
+    'Habilidades BNCC': 'habilidadesBNCC',
+    'Objetivo Geral': 'objetivoGeral',
+    'Objetivos de Aprendizagem': 'objetivoGeral',
+    'Objetivo Principal': 'objetivoGeral',
+    'Materiais/Recursos': 'materiaisRecursos',
     'Recursos': 'materiaisRecursos',
-    'Avaliação': 'observacoesProfessor',
-    'Objetivo Principal': 'objetivoPrincipal',
-    'Materiais Necessários': 'materiaisNecessarios',
-    'Recursos Adicionais': 'recursosAdicionais',
-    'Tempo Estimado': 'tempoEstimado',
-    'Nível de Dificuldade': 'nivelDificuldade',
-    'Palavras-chave': 'palavrasChave'
+    'Materiais Necessários': 'materiaisRecursos',
+    'Perfil da Turma': 'perfilTurma',
+    'Tipo de Aula': 'tipoAula',
+    'Metodologia': 'tipoAula',
+    'Observações do Professor': 'observacoesProfessor',
+    'Observações': 'observacoesProfessor',
+    'Avaliação': 'observacoesProfessor'
   },
   
   // Campos de saída que serão exibidos no mini-card
   displayFields: {
-    tema: 'Tema',
-    anoSerie: 'Ano/Série',
-    componenteCurricular: 'Disciplina',
+    tema: 'Tema ou Tópico Central',
+    anoSerie: 'Ano/Série Escolar',
+    componenteCurricular: 'Componente Curricular',
     cargaHoraria: 'Carga Horária',
     habilidadesBNCC: 'Habilidades BNCC',
     objetivoGeral: 'Objetivo Geral',
     materiaisRecursos: 'Materiais/Recursos',
     perfilTurma: 'Perfil da Turma',
     tipoAula: 'Tipo de Aula',
-    observacoesProfessor: 'Observações',
-    objetivoPrincipal: 'Objetivo Principal',
-    materiaisNecessarios: 'Materiais Necessários',
-    recursosAdicionais: 'Recursos Adicionais',
-    tempoEstimado: 'Tempo Estimado',
-    nivelDificuldade: 'Nível de Dificuldade',
-    palavrasChave: 'Palavras-chave'
+    observacoesProfessor: 'Observações do Professor'
   },
 
   // Valores padrão quando não informados
   defaultValues: {
     cargaHoraria: '1 aula de 50 minutos',
     habilidadesBNCC: 'A definir conforme BNCC',
-    perfilTurma: 'Turma padrão',
+    perfilTurma: 'Turma padrão do ano/série',
     tipoAula: 'Aula expositiva dialogada',
-    tempoEstimado: '50 min',
-    nivelDificuldade: 'Médio'
+    observacoesProfessor: 'Considerar o ritmo individual dos alunos'
   }
 };
 
@@ -72,22 +68,15 @@ export function transformPlanoAulaData(customFields: Record<string, string>): Pl
   const mapping = planoAulaFieldMapping;
   
   return {
-    tema: customFields['Tema'] || customFields['tema'] || '',
-    anoSerie: customFields['Público-Alvo'] || customFields['anoSerie'] || '',
-    componenteCurricular: customFields['Disciplina'] || customFields['componenteCurricular'] || '',
-    cargaHoraria: customFields['Carga Horária'] || customFields['cargaHoraria'] || mapping.defaultValues.cargaHoraria,
-    habilidadesBNCC: customFields['Habilidades BNCC'] || customFields['habilidadesBNCC'] || mapping.defaultValues.habilidadesBNCC,
-    objetivoGeral: customFields['Objetivos'] || customFields['objetivoGeral'] || '',
-    materiaisRecursos: customFields['Recursos'] || customFields['materiaisRecursos'] || '',
-    perfilTurma: customFields['Perfil da Turma'] || customFields['perfilTurma'] || mapping.defaultValues.perfilTurma,
-    tipoAula: customFields['Metodologia'] || customFields['tipoAula'] || mapping.defaultValues.tipoAula,
-    observacoesProfessor: customFields['Avaliação'] || customFields['observacoesProfessor'] || '',
-    // Novos campos para o mini-card
-    objetivoPrincipal: customFields['Objetivo Principal'] || customFields['objetivoPrincipal'] || customFields['Objetivos'] || '',
-    materiaisNecessarios: customFields['Materiais Necessários'] || customFields['materiaisNecessarios'] || customFields['Recursos'] || '',
-    recursosAdicionais: customFields['Recursos Adicionais'] || customFields['recursosAdicionais'] || '',
-    tempoEstimado: customFields['Tempo Estimado'] || customFields['tempoEstimado'] || mapping.defaultValues.tempoEstimado,
-    nivelDificuldade: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || mapping.defaultValues.nivelDificuldade,
-    palavrasChave: customFields['Palavras-chave'] || customFields['palavrasChave'] || ''
+    tema: customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema'] || '',
+    anoSerie: customFields['Ano/Série Escolar'] || customFields['Público-Alvo'] || customFields['Ano de Escolaridade'] || '',
+    componenteCurricular: customFields['Componente Curricular'] || customFields['Disciplina'] || '',
+    cargaHoraria: customFields['Carga Horária'] || customFields['Tempo Estimado'] || mapping.defaultValues.cargaHoraria,
+    habilidadesBNCC: customFields['Habilidades BNCC'] || mapping.defaultValues.habilidadesBNCC,
+    objetivoGeral: customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem'] || customFields['Objetivo Principal'] || '',
+    materiaisRecursos: customFields['Materiais/Recursos'] || customFields['Recursos'] || customFields['Materiais Necessários'] || '',
+    perfilTurma: customFields['Perfil da Turma'] || mapping.defaultValues.perfilTurma,
+    tipoAula: customFields['Tipo de Aula'] || customFields['Metodologia'] || mapping.defaultValues.tipoAula,
+    observacoesProfessor: customFields['Observações do Professor'] || customFields['Observações'] || customFields['Avaliação'] || mapping.defaultValues.observacoesProfessor
   };
 }

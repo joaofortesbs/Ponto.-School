@@ -26,25 +26,21 @@ export class PlanoAulaProcessor {
     const cargaHoraria = this.inferCargaHoraria(baseData.tema);
     const objetivoGeral = this.generateObjective(baseData.tema, baseData.anoSerie);
     const materiaisRecursos = this.suggestMaterials(baseData.tema, baseData.componenteCurricular);
+    const habilidadesBNCC = this.suggestBNCCHabilities(baseData.componenteCurricular, baseData.anoSerie);
+    const tipoAula = this.suggestClassType(baseData.tema, baseData.componenteCurricular);
+    const perfilTurma = this.inferClassProfile(baseData.anoSerie);
     
     const enhancedFields: Record<string, string> = {
-      'Tema': baseData.tema,
-      'Público-Alvo': baseData.anoSerie,
-      'Disciplina': baseData.componenteCurricular,
+      'Tema ou Tópico Central': baseData.tema,
+      'Ano/Série Escolar': baseData.anoSerie,
+      'Componente Curricular': baseData.componenteCurricular,
       'Carga Horária': cargaHoraria,
-      'Habilidades BNCC': this.suggestBNCCHabilities(baseData.componenteCurricular, baseData.anoSerie),
+      'Habilidades BNCC': habilidadesBNCC,
       'Objetivo Geral': objetivoGeral,
       'Materiais/Recursos': materiaisRecursos,
-      'Perfil da Turma': 'Turma mista com diferentes níveis de aprendizado',
-      'Tipo de Aula': this.suggestClassType(baseData.tema, baseData.componenteCurricular),
-      'Observações': baseData.restricoes || 'Considerar o ritmo individual dos alunos',
-      // Campos específicos para o mini-card
-      'Objetivo Principal': objetivoGeral,
-      'Materiais Necessários': materiaisRecursos,
-      'Recursos Adicionais': this.suggestAdditionalResources(baseData.componenteCurricular),
-      'Tempo Estimado': cargaHoraria,
-      'Nível de Dificuldade': this.inferDifficulty(baseData.anoSerie),
-      'Palavras-chave': this.generateKeywords(baseData.tema, baseData.componenteCurricular)
+      'Perfil da Turma': perfilTurma,
+      'Tipo de Aula': tipoAula,
+      'Observações do Professor': baseData.restricoes || 'Considerar o ritmo individual dos alunos e adaptar conforme necessário'
     };
 
     console.log('✅ [PlanoAulaProcessor] Campos gerados:', enhancedFields);
@@ -53,10 +49,12 @@ export class PlanoAulaProcessor {
   }
 
   private static inferCargaHoraria(tema: string): string {
-    if (tema.toLowerCase().includes('introdução') || tema.toLowerCase().includes('conceito')) {
+    if (tema.toLowerCase().includes('introdução') || tema.toLowerCase().includes('conceito básico')) {
       return '1 aula de 50 minutos';
-    } else if (tema.toLowerCase().includes('prática') || tema.toLowerCase().includes('exercício')) {
+    } else if (tema.toLowerCase().includes('prática') || tema.toLowerCase().includes('exercício') || tema.toLowerCase().includes('laboratório')) {
       return '2 aulas de 45 minutos';
+    } else if (tema.toLowerCase().includes('projeto') || tema.toLowerCase().includes('pesquisa')) {
+      return '3 aulas de 50 minutos';
     }
     return '1 aula de 50 minutos';
   }
@@ -67,98 +65,87 @@ export class PlanoAulaProcessor {
     
     if (disciplinaLower.includes('matemática')) {
       if (serie.includes('9º') || serie.includes('nono')) {
-        return 'EF09MA04, EF09MA05, EF09MA06';
+        return 'EF09MA04, EF09MA05, EF09MA06 - Resolver e elaborar problemas com números racionais positivos na representação decimal';
       } else if (serie.includes('8º') || serie.includes('oitavo')) {
-        return 'EF08MA04, EF08MA05, EF08MA06';
+        return 'EF08MA04, EF08MA05, EF08MA06 - Resolver e elaborar problemas, envolvendo cálculo de porcentagens';
+      } else if (serie.includes('7º') || serie.includes('sétimo')) {
+        return 'EF07MA04, EF07MA05, EF07MA06 - Resolver e elaborar problemas que envolvam operações com números inteiros';
       }
-      return 'A definir conforme série específica';
+      return 'A definir conforme série específica - Competências matemáticas da BNCC';
     } else if (disciplinaLower.includes('português') || disciplinaLower.includes('língua')) {
-      return 'EF69LP01, EF69LP02, EF69LP03';
+      if (serie.includes('9º') || serie.includes('nono')) {
+        return 'EF69LP01, EF69LP02, EF69LP03 - Diferenciar liberdade de expressão de discursos de ódio';
+      } else if (serie.includes('8º') || serie.includes('oitavo')) {
+        return 'EF89LP01, EF89LP02, EF89LP03 - Analisar os interesses que movem o campo jornalístico';
+      }
+      return 'EF69LP01, EF69LP02, EF69LP03 - Competências de linguagem da BNCC';
     } else if (disciplinaLower.includes('ciências')) {
-      return 'EF07CI01, EF07CI02, EF07CI03';
+      if (serie.includes('9º') || serie.includes('nono')) {
+        return 'EF09CI01, EF09CI02, EF09CI03 - Classificar as radiações eletromagnéticas por suas frequências';
+      } else if (serie.includes('8º') || serie.includes('oitavo')) {
+        return 'EF08CI01, EF08CI02, EF08CI03 - Identificar e classificar diferentes fontes e tipos de energia';
+      }
+      return 'EF07CI01, EF07CI02, EF07CI03 - Competências científicas da BNCC';
+    } else if (disciplinaLower.includes('história')) {
+      return 'EF09HI01, EF09HI02, EF09HI03 - Descrever e contextualizar os principais aspectos sociais, culturais, econômicos e políticos';
+    } else if (disciplinaLower.includes('geografia')) {
+      return 'EF09GE01, EF09GE02, EF09GE03 - Analisar criticamente de que forma a hegemonia europeia foi exercida em várias regiões do planeta';
     }
     
-    return 'A definir conforme BNCC específica da disciplina';
+    return 'A definir conforme BNCC específica da disciplina e série';
   }
 
   private static generateObjective(tema: string, anoSerie: string): string {
-    return `Compreender e aplicar os conceitos relacionados a ${tema}, desenvolvendo habilidades adequadas ao nível ${anoSerie}`;
+    return `Proporcionar aos alunos do ${anoSerie} a compreensão e aplicação dos conceitos relacionados a ${tema}, desenvolvendo habilidades cognitivas, procedimentais e atitudinais adequadas ao nível educacional, promovendo o pensamento crítico e a capacidade de análise.`;
   }
 
   private static suggestMaterials(tema: string, disciplina: string): string {
-    const materials = ['Lousa', 'Projetor', 'Livro didático'];
+    const basicMaterials = ['Quadro branco', 'Projetor multimídia', 'Livro didático'];
     
     if (disciplina.toLowerCase().includes('matemática')) {
-      materials.push('Calculadora', 'Régua', 'Compasso');
-    } else if (disciplina.toLowerCase().includes('ciências')) {
-      materials.push('Microscópio', 'Materiais de laboratório');
-    } else if (disciplina.toLowerCase().includes('português')) {
-      materials.push('Textos diversos', 'Dicionário');
+      basicMaterials.push('Calculadora científica', 'Régua e compasso', 'Material dourado', 'Softwares matemáticos');
+    } else if (disciplina.toLowerCase().includes('ciências') || disciplina.toLowerCase().includes('física') || disciplina.toLowerCase().includes('química')) {
+      basicMaterials.push('Kit de laboratório', 'Microscópio', 'Materiais para experimentos', 'Modelos didáticos');
+    } else if (disciplina.toLowerCase().includes('português') || disciplina.toLowerCase().includes('literatura')) {
+      basicMaterials.push('Textos diversos', 'Dicionário', 'Gramática', 'Obras literárias');
+    } else if (disciplina.toLowerCase().includes('história')) {
+      basicMaterials.push('Atlas histórico', 'Documentos históricos', 'Timeline', 'Mapas');
+    } else if (disciplina.toLowerCase().includes('geografia')) {
+      basicMaterials.push('Atlas geográfico', 'Mapas', 'Globo terrestre', 'Imagens de satélite');
     }
     
-    return materials.join(', ');
+    return basicMaterials.join(', ');
   }
 
   private static suggestClassType(tema: string, disciplina: string): string {
-    if (tema.toLowerCase().includes('prática') || tema.toLowerCase().includes('experimento')) {
+    if (tema.toLowerCase().includes('prática') || tema.toLowerCase().includes('experimento') || tema.toLowerCase().includes('laboratório')) {
       return 'Aula prática experimental';
-    } else if (tema.toLowerCase().includes('análise') || tema.toLowerCase().includes('discussão')) {
+    } else if (tema.toLowerCase().includes('análise') || tema.toLowerCase().includes('discussão') || tema.toLowerCase().includes('debate')) {
       return 'Aula dialogada e participativa';
     } else if (disciplina.toLowerCase().includes('matemática')) {
       return 'Aula expositiva com resolução de exercícios';
+    } else if (disciplina.toLowerCase().includes('educação física')) {
+      return 'Aula prática esportiva';
+    } else if (disciplina.toLowerCase().includes('arte') || disciplina.toLowerCase().includes('música')) {
+      return 'Aula prática artística';
     }
     
-    return 'Aula expositiva dialogada';
+    return 'Aula expositiva dialogada com atividades práticas';
   }
 
-  private static suggestAdditionalResources(disciplina: string): string {
-    const disciplinaLower = disciplina.toLowerCase();
-    
-    if (disciplinaLower.includes('matemática')) {
-      return 'Software de geometria, simuladores matemáticos, jogos lógicos';
-    } else if (disciplinaLower.includes('ciências') || disciplinaLower.includes('física') || disciplinaLower.includes('química')) {
-      return 'Simuladores virtuais, vídeos explicativos, experimentos online';
-    } else if (disciplinaLower.includes('português') || disciplinaLower.includes('literatura')) {
-      return 'Biblioteca digital, audiolivros, ferramentas de escrita colaborativa';
-    } else if (disciplinaLower.includes('história') || disciplinaLower.includes('geografia')) {
-      return 'Mapas interativos, documentários, timeline digital';
-    }
-    
-    return 'Recursos digitais complementares, vídeos educativos';
-  }
-
-  private static inferDifficulty(anoSerie: string): string {
+  private static inferClassProfile(anoSerie: string): string {
     const serie = anoSerie.toLowerCase();
     
-    if (serie.includes('1º') || serie.includes('2º') || serie.includes('primeiro') || serie.includes('segundo')) {
-      return 'Básico';
-    } else if (serie.includes('8º') || serie.includes('9º') || serie.includes('oitavo') || serie.includes('nono')) {
-      return 'Intermediário';
-    } else if (serie.includes('médio') || serie.includes('3º')) {
-      return 'Avançado';
+    if (serie.includes('1º') || serie.includes('2º') || serie.includes('3º') || serie.includes('fundamental i')) {
+      return 'Turma do Ensino Fundamental I - Faixa etária de 6 a 10 anos, em processo de alfabetização e letramento';
+    } else if (serie.includes('4º') || serie.includes('5º')) {
+      return 'Turma do Ensino Fundamental I - Faixa etária de 9 a 11 anos, consolidando habilidades básicas';
+    } else if (serie.includes('6º') || serie.includes('7º') || serie.includes('8º') || serie.includes('9º') || serie.includes('fundamental ii')) {
+      return 'Turma do Ensino Fundamental II - Adolescentes em desenvolvimento, com diferentes ritmos de aprendizagem';
+    } else if (serie.includes('1ª') || serie.includes('2ª') || serie.includes('3ª') || serie.includes('médio')) {
+      return 'Turma do Ensino Médio - Jovens em preparação para vestibular e mercado de trabalho';
     }
     
-    return 'Médio';
-  }
-
-  private static generateKeywords(tema: string, disciplina: string): string {
-    const keywords = [];
-    
-    // Adiciona palavras-chave baseadas no tema
-    if (tema.toLowerCase().includes('equação')) {
-      keywords.push('equações', 'álgebra', 'resolução');
-    }
-    if (tema.toLowerCase().includes('função')) {
-      keywords.push('funções', 'gráficos', 'domínio');
-    }
-    
-    // Adiciona palavras-chave baseadas na disciplina
-    if (disciplina.toLowerCase().includes('matemática')) {
-      keywords.push('cálculo', 'números', 'operações');
-    } else if (disciplina.toLowerCase().includes('português')) {
-      keywords.push('gramática', 'texto', 'interpretação');
-    }
-    
-    return keywords.length > 0 ? keywords.join(', ') : 'educação, aprendizagem';
+    return 'Turma heterogênea com diferentes níveis de conhecimento e ritmos de aprendizagem';
   }
 }

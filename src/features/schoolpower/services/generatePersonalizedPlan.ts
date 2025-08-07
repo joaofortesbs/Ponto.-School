@@ -68,6 +68,23 @@ function buildGeminiPrompt(
       return `${activityId}: [${fields.join(', ')}]`;
     }).join('\n');
 
+    // Adicionar informações específicas para plano-aula
+    const planoAulaSpecificInfo = `
+ATENÇÃO ESPECIAL PARA PLANO-AULA:
+Os campos obrigatórios são EXATAMENTE:
+- Tema ou Tópico Central
+- Ano/Série Escolar  
+- Componente Curricular
+- Carga Horária
+- Habilidades BNCC
+- Objetivo Geral
+- Materiais/Recursos
+- Perfil da Turma
+- Tipo de Aula
+- Observações do Professor
+
+USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
+
     // Construir o prompt para a Gemini
     const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
 
@@ -85,6 +102,8 @@ AVAILABLE ACTIVITIES: ${activitiesString}
 
 CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
+
+${planoAulaSpecificInfo}
 
 INSTRUCTIONS:
 1. Carefully analyze the request and provided information
