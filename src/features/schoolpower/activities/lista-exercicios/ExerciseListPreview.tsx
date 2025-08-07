@@ -242,6 +242,33 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     setDeletedQuestionIds(prev => {
       const newDeletedIds = new Set([...prev, questionToDelete.id]);
       console.log(`🗑️ IDs de questões excluídas atualizados:`, Array.from(newDeletedIds));
+      
+      // Persistir as exclusões no localStorage de forma robusta
+      try {
+        const activityId = activity?.id || 'current';
+        const deletedIdsArray = Array.from(newDeletedIds);
+        
+        // Salvar especificamente as questões excluídas
+        localStorage.setItem(`activity_deleted_questions_${activityId}`, JSON.stringify(deletedIdsArray));
+        console.log(`💾 IDs de questões excluídas salvos no localStorage:`, deletedIdsArray);
+        
+        // Atualizar dados da atividade também
+        if (exerciseData) {
+          const questoesFiltradas = exerciseData.questoes?.filter(questao => !newDeletedIds.has(questao.id)) || [];
+          const updatedData = {
+            ...exerciseData,
+            questoes: questoesFiltradas,
+            deletedQuestionIds: deletedIdsArray // Adicionar explicitamente os IDs excluídos
+          };
+          
+          localStorage.setItem(`activity_${activityId}`, JSON.stringify(updatedData));
+          setExerciseData(updatedData);
+          console.log(`💾 Dados completos da atividade atualizados no localStorage`);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao salvar exclusões no localStorage:', error);
+      }
+      
       return newDeletedIds;
     });
 
@@ -261,23 +288,6 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       
       return questoesFiltradas;
     });
-
-    // Persistir a exclusão no localStorage ou dados da atividade se necessário
-    if (exerciseData) {
-      const updatedData = {
-        ...exerciseData,
-        questoes: exerciseData.questoes?.filter(questao => questao.id !== questionToDelete.id) || []
-      };
-      setExerciseData(updatedData);
-      
-      // Salvar no localStorage se necessário
-      try {
-        localStorage.setItem(`activity_${activity?.id || 'current'}`, JSON.stringify(updatedData));
-        console.log(`💾 Dados da atividade salvos no localStorage após exclusão`);
-      } catch (error) {
-        console.warn('⚠️ Erro ao salvar dados no localStorage:', error);
-      }
-    }
 
     // Fecha o modal e limpa o estado
     setShowDeleteModal(false);
@@ -512,37 +522,53 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       // Se tiver questões válidas, atualizar o estado `questoesProcessadas`
       if (processedData?.questoes && Array.isArray(processedData.questoes) && processedData.questoes.length > 0) {
         console.log(`📋 Atualizando lista de questões com ${processedData.questoes.length} itens.`);
-        setQuestoesProcessadas(processedData.questoes);
+        
+        // Carregar questões excluídas do localStorage
+        try {
+          const activityId = activity.id || 'current';
+          const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activityId}`);
+          
+          if (deletedQuestionsJson) {
+            const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+            console.log(`🔍 Questões excluídas carregadas do localStorage:`, deletedQuestionIds);
+            
+            // Filtrar questões excluídas antes de definir o estado
+            const questoesFiltradas = processedData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Aplicando filtro de exclusões. ${processedData.questoes.length} questões originais -> ${questoesFiltradas.length} questões após filtro`);
+            
+            setQuestoesProcessadas(questoesFiltradas);
+            setDeletedQuestionIds(new Set(deletedQuestionIds));
+          } else {
+            console.log('📋 Nenhuma exclusão encontrada no localStorage, carregando todas as questões');
+            setQuestoesProcessadas(processedData.questoes);
+            setDeletedQuestionIds(new Set());
+          }
+        } catch (error) {
+          console.warn('⚠️ Erro ao carregar exclusões do localStorage:', error);
+          setQuestoesProcessadas(processedData.questoes);
+          setDeletedQuestionIds(new Set());
+        }
       } else {
         console.log('🚫 Nenhuma questão válida encontrada para atualizar `questoesProcessadas`.');
         setQuestoesProcessadas([]); // Limpar se não houver questões
+        setDeletedQuestionIds(new Set());
       }
     } else {
       console.log('ℹ️ `activity` está vazio ou indefinido, `questoesProcessadas` será limpo.');
       setQuestoesProcessadas([]);
       setExerciseData(null);
+      setDeletedQuestionIds(new Set());
     }
   }, [activity, processQuestions]); // Dependência de processQuestions também
 
-  // Efeito separado para filtrar questões excluídas
+  // Efeito para ajustar selectedQuestionIndex quando questões são filtradas
   useEffect(() => {
-    if (deletedQuestionIds.size > 0) {
-      console.log(`🗑️ Filtrando questões excluídas. IDs excluídos:`, Array.from(deletedQuestionIds));
-      setQuestoesProcessadas(prevQuestoes => {
-        const questoesFiltradas = prevQuestoes.filter(questao => !deletedQuestionIds.has(questao.id));
-        console.log(`✅ Questões filtradas. Total restante: ${questoesFiltradas.length}`);
-        
-        // Ajustar selectedQuestionIndex se necessário
-        if (selectedQuestionIndex !== null && selectedQuestionIndex >= questoesFiltradas.length) {
-          const newIndex = questoesFiltradas.length > 0 ? Math.max(0, questoesFiltradas.length - 1) : null;
-          console.log(`🔄 Ajustando selectedQuestionIndex de ${selectedQuestionIndex} para ${newIndex}`);
-          setSelectedQuestionIndex(newIndex);
-        }
-        
-        return questoesFiltradas;
-      });
+    if (selectedQuestionIndex !== null && selectedQuestionIndex >= questoesProcessadas.length) {
+      const newIndex = questoesProcessadas.length > 0 ? Math.max(0, questoesProcessadas.length - 1) : null;
+      console.log(`🔄 Ajustando selectedQuestionIndex de ${selectedQuestionIndex} para ${newIndex} devido ao número de questões (${questoesProcessadas.length})`);
+      setSelectedQuestionIndex(newIndex);
     }
-  }, [deletedQuestionIds, selectedQuestionIndex]);
+  }, [questoesProcessadas.length, selectedQuestionIndex]);
 
   const handleRespostaChange = (questaoId: string, resposta: string | number) => {
     setRespostas(prev => ({

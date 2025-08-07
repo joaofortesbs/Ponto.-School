@@ -101,6 +101,18 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       questoes = previewData.content.questions;
     }
 
+    // Aplicar filtro de exclusões
+    try {
+      const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+      if (deletedQuestionsJson) {
+        const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+        questoes = questoes.filter(questao => !deletedQuestionIds.includes(questao.id || `questao-${questoes.indexOf(questao) + 1}`));
+        console.log(`🔍 Sidebar: Questões filtradas para navegação. ${questoes.length} questões restantes após exclusões`);
+      }
+    } catch (error) {
+      console.warn('⚠️ Erro ao aplicar filtro de exclusões no sidebar:', error);
+    }
+
     return questoes.map((questao, index) => ({
       id: questao.id || `questao-${index + 1}`,
       numero: index + 1,
@@ -144,7 +156,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
 
     // Preparar dados para o preview EXATAMENTE como no modal de edição
-    const previewData = {
+    let previewData = {
       ...activity.originalData,
       ...storedData,
       title: activity.personalizedTitle || activity.title || storedData.title,
@@ -159,6 +171,43 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       questions: activity.originalData?.questions || storedData.questions,
       content: activity.originalData?.content || storedData.content
     };
+
+    // Para lista de exercícios, aplicar filtros de exclusão
+    if (activityType === 'lista-exercicios') {
+      try {
+        const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+        if (deletedQuestionsJson) {
+          const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+          console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
+          
+          // Filtrar questões excluídas em todas as possíveis localizações
+          if (previewData.questoes && Array.isArray(previewData.questoes)) {
+            previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
+          }
+          
+          if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
+            previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
+          }
+          
+          if (previewData.questions && Array.isArray(previewData.questions)) {
+            previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
+          }
+          
+          if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
+            previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
+          }
+          
+          // Adicionar os IDs excluídos aos dados para referência
+          previewData.deletedQuestionIds = deletedQuestionIds;
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+      }
+    }
 
     switch (activityType) {
       case 'lista-exercicios':
