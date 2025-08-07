@@ -11,9 +11,33 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material, Video, Trash2 } from 'lucide-react';
+import { CheckCircle, Circle, Edit3, FileText, Clock, GraduationCap, BookOpen, Target, List, AlertCircle, RefreshCw, Hash, Zap, HelpCircle, Info, X, Wand2, BookOpen as Material, Video, Trash2, GripVertical } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
+
+// Importações para drag and drop
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Sistema de mapeamento de dificuldade
 const DIFFICULTY_LEVELS = {
@@ -211,6 +235,20 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [buildProgress, setBuildProgress] = useState<any>(null);
   const [deletedQuestionIds, setDeletedQuestionIds] = useState<Set<string>>(new Set());
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [draggedQuestion, setDraggedQuestion] = useState<Question | null>(null);
+
+  // Configuração dos sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Função de toast funcional
   const toast = (options: { title: string; description: string; variant?: "destructive" | "default" | "secondary" | "outline" }) => {
@@ -301,6 +339,65 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     });
 
     console.log(`✅ Questão ${questionToDelete.index + 1} permanentemente excluída. ID: ${questionToDelete.id}`);
+  };
+
+  // Funções para drag and drop
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as string);
+    
+    // Encontrar a questão que está sendo arrastada
+    const draggedQ = questoesProcessadas.find(q => q.id === active.id);
+    setDraggedQuestion(draggedQ || null);
+    
+    console.log(`🔄 Iniciando drag da questão: ${active.id}`);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setQuestoesProcessadas((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over?.id);
+
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        
+        console.log(`🔄 Reordenando questões: movendo questão ${oldIndex + 1} para posição ${newIndex + 1}`);
+        
+        // Salvar nova ordem no localStorage
+        try {
+          const activityId = activity?.id || 'current';
+          if (exerciseData) {
+            const updatedData = {
+              ...exerciseData,
+              questoes: newOrder
+            };
+            localStorage.setItem(`activity_${activityId}`, JSON.stringify(updatedData));
+            setExerciseData(updatedData);
+            console.log(`💾 Nova ordem das questões salva no localStorage`);
+          }
+        } catch (error) {
+          console.warn('⚠️ Erro ao salvar nova ordem no localStorage:', error);
+        }
+
+        // Ajustar selectedQuestionIndex se necessário
+        if (selectedQuestionIndex !== null) {
+          if (selectedQuestionIndex === oldIndex) {
+            setSelectedQuestionIndex(newIndex);
+          } else if (selectedQuestionIndex > oldIndex && selectedQuestionIndex <= newIndex) {
+            setSelectedQuestionIndex(selectedQuestionIndex - 1);
+          } else if (selectedQuestionIndex < oldIndex && selectedQuestionIndex >= newIndex) {
+            setSelectedQuestionIndex(selectedQuestionIndex + 1);
+          }
+        }
+
+        return newOrder;
+      });
+    }
+
+    setActiveId(null);
+    setDraggedQuestion(null);
   };
 
   // Função placeholder para 'generateActivity' caso não esteja definida
@@ -902,27 +999,46 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     </motion.div>
   );
 
-  // Componente do mini-card para grade inicial de questões
-  const renderQuestionGridCard = (questao: Question, index: number) => {
+  // Componente SortableQuestionCard
+  const SortableQuestionCard = ({ questao, index }: { questao: Question; index: number }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: questao.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
     const difficultyConfig = getDifficultyConfig(questao.dificuldade);
     const questionTag = generateQuestionTag(questao.enunciado, questao.alternativas);
+
     return (
       <motion.div
-        key={questao.id || `questao-${index + 1}`}
+        ref={setNodeRef}
+        style={style}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         className="relative cursor-pointer group"
-        onClick={() => {
-          setSelectedQuestionIndex(index);
-          setViewMode('detailed');
-          if (onQuestionSelect) {
-            onQuestionSelect(index, questao.id);
-          }
-        }}
+        {...attributes}
       >
-        <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] bg-white/95 dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm shadow-md">
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+        <Card className={`h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] bg-white/95 dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm shadow-md ${isDragging ? 'shadow-2xl scale-105 border-orange-500' : ''}`}>
+          {/* Drag Handle */}
+          <div 
+            className="absolute top-2 right-2 p-1 rounded bg-white/80 dark:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing z-20"
+            {...listeners}
+          >
+            <GripVertical className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          </div>
+
+          <div className="absolute top-3 left-3 right-12 flex items-center justify-between z-10">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
               {index + 1}
             </div>
@@ -931,7 +1047,18 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             </Badge>
           </div>
 
-          <CardContent className="p-5 pt-16 h-full flex flex-col">
+          <CardContent 
+            className="p-5 pt-16 h-full flex flex-col"
+            onClick={() => {
+              if (!isDragging) {
+                setSelectedQuestionIndex(index);
+                setViewMode('detailed');
+                if (onQuestionSelect) {
+                  onQuestionSelect(index, questao.id);
+                }
+              }
+            }}
+          >
             <div className="flex-1">
               <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
                 {questao.enunciado?.substring(0, 130)}
@@ -965,6 +1092,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         </Card>
       </motion.div>
     );
+  };
+
+  // Componente do mini-card para grade inicial de questões (fallback para quando drag não está ativo)
+  const renderQuestionGridCard = (questao: Question, index: number) => {
+    return <SortableQuestionCard questao={questao} index={index} />;
   };
 
   // Componente da grade de questões
@@ -1233,12 +1365,58 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {questoesParaRenderizar.map((questao, index) =>
-          renderQuestionGridCard(questao, index)
-        )}
-        {renderAddQuestionCard()}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext 
+          items={questoesParaRenderizar.map(q => q.id)} 
+          strategy={rectSortingStrategy}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {questoesParaRenderizar.map((questao, index) =>
+              renderQuestionGridCard(questao, index)
+            )}
+            {renderAddQuestionCard()}
+          </div>
+        </SortableContext>
+
+        <DragOverlay>
+          {activeId && draggedQuestion ? (
+            <Card className="h-52 shadow-2xl border-2 border-orange-500 bg-white/95 dark:bg-gray-800/90 rounded-2xl backdrop-blur-sm transform rotate-3 scale-105">
+              <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white border-2 border-white/20">
+                  {questoesParaRenderizar.findIndex(q => q.id === activeId) + 1}
+                </div>
+                <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${getDifficultyConfig(draggedQuestion.dificuldade).color} ${getDifficultyConfig(draggedQuestion.dificuldade).textColor} dark:opacity-95 border border-white/20`}>
+                  {getDifficultyConfig(draggedQuestion.dificuldade).label}
+                </Badge>
+              </div>
+              <CardContent className="p-5 pt-16 h-full flex flex-col">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-4 leading-relaxed font-medium">
+                    {draggedQuestion.enunciado?.substring(0, 130)}
+                    {draggedQuestion.enunciado && draggedQuestion.enunciado.length > 130 ? '...' : ''}
+                  </p>
+                </div>
+                <div className="space-y-3 mt-auto">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs px-3 py-1 rounded-lg bg-gray-50/80 dark:bg-gray-700/80 border-gray-300/50 dark:border-gray-600/50 text-gray-600 dark:text-gray-300 font-medium">
+                      {getTypeIcon(draggedQuestion.type)}
+                      <span className="ml-1.5">
+                        {draggedQuestion.type === 'multipla-escolha' ? 'Múltipla Escolha' :
+                         draggedQuestion.type === 'verdadeiro-falso' ? 'V ou F' : 'Discursiva'}
+                      </span>
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {exerciseData?.observacoes && (
         <Card className="border-amber-200 bg-amber-50 dark:bg-yellow-950/30 dark:border-yellow-800">
