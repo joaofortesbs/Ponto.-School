@@ -1037,11 +1037,11 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           </div>
 
           {/* Tag de dificuldade que se move no hover e mostra o grip */}
-          <div className="absolute top-3 right-3 flex items-center gap-2 z-10 transition-all duration-300 group-hover:right-8">
+          <div className="absolute top-3 right-0 flex items-center gap-2 z-10 transition-all duration-300 group-hover:right-8">
             <Badge className={`text-xs px-3 py-1 rounded-full shadow-md font-medium ${difficultyConfig.color} ${difficultyConfig.textColor} dark:opacity-95 border border-white/20 transition-all duration-300`}>
               {difficultyConfig.label}
             </Badge>
-            
+
             {/* Drag Handle que aparece no hover */}
             <div 
               className="p-1 rounded bg-white/80 dark:bg-gray-700/80 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing"
