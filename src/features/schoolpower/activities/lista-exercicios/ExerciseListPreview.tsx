@@ -197,6 +197,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [questoesProcessadas, setQuestoesProcessadas] = useState<Question[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'detailed'>('grid');
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
   const [addQuestionTab, setAddQuestionTab] = useState<'school-power' | 'video' | 'material'>('school-power');
   const [newQuestionData, setNewQuestionData] = useState({
@@ -211,6 +212,7 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [buildProgress, setBuildProgress] = useState<any>(null);
   const [deletedQuestionIds, setDeletedQuestionIds] = useState<Set<string>>(new Set());
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Função para limpar dados de exclusão do localStorage (útil para depuração)
   const clearDeletedQuestionsCache = useCallback(() => {
@@ -591,16 +593,27 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
       if (processedData?.questoes && Array.isArray(processedData.questoes) && processedData.questoes.length > 0) {
         console.log(`📋 Atualizando lista de questões com ${processedData.questoes.length} itens.`);
         setQuestoesProcessadas(processedData.questoes);
+        
+        // Resetar seleção se a questão selecionada não existir mais
+        if (selectedQuestionIndex !== null && selectedQuestionIndex >= processedData.questoes.length) {
+          console.log(`🔄 Ajustando índice de questão selecionada de ${selectedQuestionIndex} para null`);
+          setSelectedQuestionIndex(null);
+          setSelectedQuestionId(null);
+        }
       } else {
         console.log('🚫 Nenhuma questão válida encontrada para atualizar `questoesProcessadas`.');
         setQuestoesProcessadas([]); // Limpar se não houver questões
+        setSelectedQuestionIndex(null);
+        setSelectedQuestionId(null);
       }
     } else {
       console.log('ℹ️ `activity` está vazio ou indefinido, `questoesProcessadas` será limpo.');
       setQuestoesProcessadas([]);
       setExerciseData(null);
+      setSelectedQuestionIndex(null);
+      setSelectedQuestionId(null);
     }
-  }, [activity, processQuestions]); // Dependência de processQuestions também
+  }, [activity]); // Removido processQuestions da dependência para evitar loops
 
   // Efeito separado para filtrar questões excluídas
   useEffect(() => {
@@ -954,6 +967,33 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     </motion.div>
   );
 
+  // Função para lidar com seleção de questão de forma otimizada
+  const handleQuestionSelection = useCallback((index: number, questionId: string) => {
+    console.log(`🎯 Selecionando questão ${index + 1} (ID: ${questionId})`);
+    
+    if (isNavigating) {
+      console.log('⏳ Navegação em andamento, ignorando clique');
+      return;
+    }
+
+    setIsNavigating(true);
+    
+    // Atualizar estados de forma síncrona
+    setSelectedQuestionIndex(index);
+    setSelectedQuestionId(questionId);
+    setViewMode('detailed');
+    
+    // Chamar callback se disponível
+    if (onQuestionSelect) {
+      onQuestionSelect(index, questionId);
+    }
+    
+    // Reset do flag de navegação após um pequeno delay
+    setTimeout(() => {
+      setIsNavigating(false);
+    }, 100);
+  }, [onQuestionSelect, isNavigating]);
+
   // Componente do mini-card para grade inicial de questões
   const renderQuestionGridCard = (questao: Question, index: number) => {
     const difficultyConfig = getDifficultyConfig(questao.dificuldade);
@@ -965,12 +1005,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         className="relative cursor-pointer group"
-        onClick={() => {
-          setSelectedQuestionIndex(index);
-          setViewMode('detailed');
-          if (onQuestionSelect) {
-            onQuestionSelect(index, questao.id);
-          }
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleQuestionSelection(index, questao.id);
         }}
       >
         <Card className="h-52 hover:shadow-xl transition-all duration-300 border-2 border-gray-200/60 hover:border-orange-400/60 group-hover:scale-[1.02] bg-white/95 dark:bg-gray-800/90 dark:border-gray-600/60 dark:hover:border-orange-500/60 rounded-2xl backdrop-blur-sm shadow-md">
@@ -1308,6 +1346,32 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
     </motion.div>
   );
 
+  // Função para navegação no sidebar sem mudança de modo
+  const handleSidebarQuestionSelect = useCallback((index: number, questionId: string) => {
+    console.log(`📋 Navegação no sidebar para questão ${index + 1} (ID: ${questionId})`);
+    
+    if (isNavigating) {
+      console.log('⏳ Navegação em andamento, ignorando clique do sidebar');
+      return;
+    }
+
+    setIsNavigating(true);
+    
+    // Apenas atualizar a questão selecionada, SEM mudar o modo de visualização
+    setSelectedQuestionIndex(index);
+    setSelectedQuestionId(questionId);
+    
+    // Chamar callback se disponível
+    if (onQuestionSelect) {
+      onQuestionSelect(index, questionId);
+    }
+    
+    // Reset do flag de navegação
+    setTimeout(() => {
+      setIsNavigating(false);
+    }, 100);
+  }, [onQuestionSelect, isNavigating]);
+
   // Renderizar o conteúdo detalhado da questão
   const renderDetailedView = () => (
     <motion.div
@@ -1336,11 +1400,10 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
             return (
               <button
                 key={questao.id || `questao-${index}`}
-                onClick={() => {
-                  setSelectedQuestionIndex(index);
-                  if (onQuestionSelect) {
-                    onQuestionSelect(index, questao.id);
-                  }
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSidebarQuestionSelect(index, questao.id);
                 }}
                 className={`w-full text-left p-3 rounded-xl transition-all duration-200 border ${
                   isSelected
@@ -1404,7 +1467,40 @@ const ExerciseListPreview: React.FC<ExerciseListPreviewProps> = ({
           </div>
         </div>
       ) : (
-        renderDetailedView()
+        <div className="h-full flex flex-col">
+          {/* Header com botão de voltar */}
+          <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-4 py-3 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                console.log('🔙 Voltando para a grade de questões');
+                setViewMode('grid');
+                setSelectedQuestionIndex(null);
+                setSelectedQuestionId(null);
+              }}
+              className="text-orange-600 hover:bg-orange-100 dark:text-orange-400 dark:hover:bg-orange-900/20"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Voltar para Grade
+            </Button>
+            
+            {selectedQuestionIndex !== null && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
+                  Questão {selectedQuestionIndex + 1} de {questoesParaRenderizar.length}
+                </Badge>
+              </div>
+            )}
+          </div>
+          
+          {/* Conteúdo detalhado */}
+          <div className="flex-1 overflow-hidden">
+            {renderDetailedView()}
+          </div>
+        </div>
       )}
 
       <Dialog open={showAddQuestionModal} onOpenChange={setShowAddQuestionModal}>

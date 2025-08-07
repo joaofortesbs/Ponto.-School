@@ -50,6 +50,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
+    console.log(`🎯 ActivityViewModal: Selecionando questão ${questionIndex + 1} (ID: ${questionId})`);
     setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
