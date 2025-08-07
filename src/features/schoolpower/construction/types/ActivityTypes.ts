@@ -12,25 +12,35 @@ export interface ActivityFormData {
   materials: string;
   instructions: string;
   evaluation: string;
-  timeLimit: string;
-  context: string;
-  textType: string;
-  textGenre: string;
-  textLength: string;
-  associatedQuestions: string;
-  competencies: string;
-  readingStrategies: string;
-  visualResources: string;
-  practicalActivities: string;
-  wordsIncluded: string;
-  gridFormat: string;
-  providedHints: string;
-  vocabularyContext: string;
-  language: string;
-  associatedExercises: string;
-  knowledgeArea: string;
-  complexityLevel: string;
-  customFields?: Record<string, any>;
+  timeLimit?: string;
+  context?: string;
+  textType?: string;
+  textGenre?: string;
+  textLength?: string;
+  associatedQuestions?: string;
+  competencies?: string;
+  readingStrategies?: string;
+  visualResources?: string;
+  practicalActivities?: string;
+  wordsIncluded?: string;
+  gridFormat?: string;
+  providedHints?: string;
+  vocabularyContext?: string;
+  language?: string;
+  associatedExercises?: string;
+  knowledgeArea?: string;
+  complexityLevel?: string;
+  // Campos específicos para Plano de Aula
+  tema?: string;
+  anoSerie?: string;
+  componenteCurricular?: string;
+  cargaHoraria?: string;
+  habilidadesBNCC?: string;
+  objetivoGeral?: string;
+  materiaisRecursos?: string;
+  perfilTurma?: string;
+  tipoAula?: string;
+  observacoesProfessor?: string;
 }
 
 export interface GeneratedActivity {
