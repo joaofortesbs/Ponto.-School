@@ -9,6 +9,37 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, BookOpen, Target, Trash2, Plus, X } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/use-toast";
+
+// Dummy types for demonstration, replace with actual types if available
+type ActionPlanActivity = {
+  id: string;
+  title: string;
+  description: string;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+  customFields?: Record<string, string>;
+  approved?: boolean;
+  isBuilt?: boolean;
+  builtAt?: Date | null;
+};
+
+type ConstructionActivity = {
+  id: string;
+  title: string;
+  description: string;
+  customFields?: Record<string, string>;
+  approved: boolean;
+  isTrilhasEligible?: boolean;
+  isBuilt: boolean;
+  builtAt: Date | null;
+};
+
+// Mock activities state and onApprove handler for compilation
+// In a real scenario, these would be passed as props or managed by a parent component
+const activities: ActionPlanActivity[] = [];
+const onApprove = (activity: ConstructionActivity) => {};
+let setActivities: React.Dispatch<React.SetStateAction<ActionPlanActivity[]>>;
 
 export interface ActionPlanItem {
   id: string;
@@ -33,7 +64,7 @@ const getActivityName = (id: string): string => {
 // Função para renderizar campos específicos do plano-aula
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
-  
+
   const tema = customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema'];
   const anoSerie = customFields['Ano/Série Escolar'] || customFields['Público-Alvo'];
   const componenteCurricular = customFields['Componente Curricular'] || customFields['Disciplina'];
@@ -108,7 +139,7 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
             )}
           </div>
         )}
-        
+
         {habilidadesBNCC && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Habilidades BNCC</div>
@@ -137,6 +168,9 @@ interface ActionPlanCardProps {
 
 export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: ActionPlanCardProps) {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  // Estado local para atividades, usado para o handleApproveActivity
+  const [activitiesState, setActivitiesState] = useState<ActionPlanActivity[]>(actionPlan as ActionPlanActivity[]);
+
 
   console.log('🎯 ActionPlanCard renderizado com:', { actionPlan, isLoading });
 
@@ -203,6 +237,78 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
     console.log('🔙 Voltando para o início');
     window.location.reload();
   };
+
+  // Funcao para processar a aprovacao de uma atividade e salvar dados para preenchimento automatico
+  const handleApproveActivity = (activity: ActionPlanActivity) => {
+      console.log('✅ Aprovando atividade:', activity);
+
+      // Buscar dados completos da atividade
+      const fullActivity = activitiesState.find(a => a.id === activity.id);
+      if (!fullActivity) {
+        console.error('❌ Atividade não encontrada:', activity.id);
+        return;
+      }
+
+      const approvedActivity: ConstructionActivity = {
+        id: activity.id,
+        title: activity.personalizedTitle || activity.title,
+        description: activity.personalizedDescription || activity.description,
+        customFields: fullActivity.customFields || {},
+        approved: true,
+        isTrilhasEligible: true,
+        isBuilt: false,
+        builtAt: null
+      };
+
+      console.log('📊 Atividade aprovada com dados completos:', approvedActivity);
+
+      // Salvar dados específicos para preenchimento automático
+      if (activity.id === 'plano-aula') {
+        console.log('📚 Salvando dados específicos do Plano de Aula para preenchimento automático');
+
+        const autoDataKey = `auto_activity_data_${activity.id}`;
+        const autoData = {
+          formData: {
+            title: activity.personalizedTitle || activity.title,
+            description: activity.personalizedDescription || activity.description,
+            subject: fullActivity.customFields?.['Componente Curricular'] || fullActivity.customFields?.['Disciplina'] || 'Português',
+            theme: fullActivity.customFields?.['Tema ou Tópico Central'] || fullActivity.customFields?.['Tema'] || '',
+            schoolYear: fullActivity.customFields?.['Ano/Série Escolar'] || fullActivity.customFields?.['Ano de Escolaridade'] || '',
+            timeLimit: fullActivity.customFields?.['Carga Horária'] || fullActivity.customFields?.['Tempo Limite'] || '',
+            competencies: fullActivity.customFields?.['Habilidades BNCC'] || fullActivity.customFields?.['Competências'] || '',
+            objectives: fullActivity.customFields?.['Objetivo Geral'] || fullActivity.customFields?.['Objetivos'] || '',
+            materials: fullActivity.customFields?.['Materiais/Recursos'] || fullActivity.customFields?.['Materiais'] || '',
+            context: fullActivity.customFields?.['Perfil da Turma'] || fullActivity.customFields?.['Contexto'] || '',
+            difficultyLevel: fullActivity.customFields?.['Tipo de Aula'] || '',
+            evaluation: fullActivity.customFields?.['Observações do Professor'] || fullActivity.customFields?.['Observações'] || ''
+          },
+          customFields: fullActivity.customFields || {},
+          originalActivity: fullActivity,
+          actionPlanActivity: activity,
+          activityType: 'plano-aula',
+          timestamp: Date.now()
+        };
+
+        localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+        console.log('💾 Dados salvos para preenchimento automático:', autoData);
+      }
+
+      // Salvar no localStorage
+      const existingActivities = JSON.parse(localStorage.getItem('approvedActivities') || '[]');
+      const updatedActivities = [...existingActivities.filter((a: any) => a.id !== activity.id), approvedActivity];
+      localStorage.setItem('approvedActivities', JSON.stringify(updatedActivities));
+
+      // Atualizar estado local
+      onApprove(approvedActivity);
+
+      // Remover da lista de atividades pendentes
+      setActivitiesState(prev => prev.filter(a => a.id !== activity.id));
+
+      toast({
+        title: "Atividade aprovada!",
+        description: `${approvedActivity.title} foi adicionada à grade de construção.`,
+      });
+    };
 
   if (isLoading) {
     return (
@@ -278,7 +384,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
       {/* Lista de Atividades */}
       <div className="space-y-3 mb-8 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: '400px' }}>
-        {actionPlan.length === 0 ? (
+        {activitiesState.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🤖</div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -295,7 +401,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
             </button>
           </div>
         ) : (
-          actionPlan.map((item, index) => {
+          activitiesState.map((item, index) => {
             const Icon = getIconByActivityId(item.id);
 
 
@@ -306,7 +412,11 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(index * 0.05, 0.5) }}
                 className="relative bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border-2 transition-all duration-300 cursor-pointer hover:shadow-xl border-gray-200 dark:border-gray-700 hover:border-[#FF6B00]/50"
-                onClick={() => handleItemToggle(item.id)}
+                onClick={() => {
+                  handleItemToggle(item.id);
+                  // Chama handleApproveActivity quando o item é clicado para aprovação
+                  handleApproveActivity(item);
+                }}
                 style={{ minHeight: '120px' }}
               >
                 {isActivityEligibleForTrilhas(item.id) && (

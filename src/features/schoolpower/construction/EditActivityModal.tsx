@@ -344,8 +344,29 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           console.log('🔀 Dados consolidados:', consolidatedData);
           console.log('🗂️ Custom fields consolidados:', consolidatedCustomFields);
 
-          // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
-          const enrichedFormData = {
+          // Processamento específico para Plano de Aula
+          let enrichedFormData: ActivityFormData;
+          
+          if (activity?.id === 'plano-aula') {
+            console.log('📚 Processando dados específicos de Plano de Aula');
+            
+            // Importar o processador dinamicamente
+            const { processPlanoAulaData } = await import('../../activities/plano-aula/planoAulaProcessor');
+            
+            const planoAulaActivity = {
+              id: activity.id,
+              title: consolidatedData.title || activity.title || '',
+              description: consolidatedData.description || activity.description || '',
+              customFields: consolidatedCustomFields,
+              personalizedTitle: activity.personalizedTitle,
+              personalizedDescription: activity.personalizedDescription
+            };
+            
+            enrichedFormData = processPlanoAulaData(planoAulaActivity);
+            console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
+          } else {
+            // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
+            enrichedFormData = {
             title: consolidatedData.title || autoFormData.title || '',
             description: consolidatedData.description || autoFormData.description || '',
             subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Português',
@@ -378,19 +399,25 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
             knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
             complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || ''
-          };
+            };
+          }
 
           console.log('✅ Formulário será preenchido com:', enrichedFormData);
           setFormData(enrichedFormData);
 
-          // Marcar como preenchido automaticamente pela IA
+          // Marcar como preenchido automaticamente pela IA (especialmente para Plano de Aula)
           if (onUpdateActivity) {
             const activityWithAutoFlag = {
               ...activity,
-              preenchidoAutomaticamente: true
+              preenchidoAutomaticamente: true,
+              dataSource: activity?.id === 'plano-aula' ? 'action-plan-plano-aula' : 'action-plan-generic'
             };
             onUpdateActivity(activityWithAutoFlag);
             console.log('🏷️ Atividade marcada como preenchida automaticamente');
+            
+            if (activity?.id === 'plano-aula') {
+              console.log('📚 Plano de Aula configurado com dados específicos do Action Plan');
+            }
           }
 
           // Aguardar um momento antes de limpar para garantir que o estado foi atualizado

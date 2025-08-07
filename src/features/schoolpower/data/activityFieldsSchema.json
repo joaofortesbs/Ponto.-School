@@ -3,7 +3,7 @@
     "fields": [
       "Quantidade de Questões",
       "Tema",
-      "Disciplina", 
+      "Disciplina",
       "Ano de Escolaridade",
       "Nível de Dificuldade",
       "Modelo de Questões",
@@ -14,7 +14,7 @@
     "fields": [
       "Tema ou Tópico Central",
       "Ano/Série Escolar",
-      "Componente Curricular", 
+      "Componente Curricular",
       "Carga Horária",
       "Habilidades BNCC",
       "Objetivo Geral",
@@ -39,7 +39,7 @@
       "Quantidade de Questões",
       "Tema",
       "Disciplina",
-      "Ano de Escolaridade", 
+      "Ano de Escolaridade",
       "Tipo de Avaliação",
       "Tempo de Prova",
       "Critérios de Correção"

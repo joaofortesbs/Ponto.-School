@@ -12,6 +12,20 @@ export interface PlanoAulaFields {
   observacoesProfessor: string;
 }
 
+// Mapeamento de campos do Action Plan para formulário do modal
+export const planoAulaFieldMapping = {
+  'Tema ou Tópico Central': 'theme',
+  'Ano/Série Escolar': 'schoolYear', 
+  'Componente Curricular': 'subject',
+  'Carga Horária': 'timeLimit',
+  'Habilidades BNCC': 'competencies',
+  'Objetivo Geral': 'objectives',
+  'Materiais/Recursos': 'materials',
+  'Perfil da Turma': 'context',
+  'Tipo de Aula': 'difficultyLevel',
+  'Observações do Professor': 'evaluation'
+};
+
 export const planoAulaFieldMapping = {
   // Campos de entrada que vêm da IA ou dados existentes
   inputFields: {

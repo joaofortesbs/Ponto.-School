@@ -97,6 +97,35 @@ export function useGenerateActivity() {
         complexityLevel: customFields.complexityLevel
       };
 
+      // Lógica específica para Plano de Aula
+      if (activityType === 'plano-aula') {
+        console.log('📚 Processando dados específicos do Plano de Aula');
+
+        // Garantir que todos os campos necessários estão presentes e mapeados corretamente
+        const planoAulaData = {
+          ...customFields, // Mantém todos os campos originais
+          activityType: 'plano-aula',
+          contextData: {
+            tema: customFields.theme || customFields.contextData?.tema || '',
+            anoSerie: customFields.schoolYear || customFields.contextData?.anoSerie || '',
+            componenteCurricular: customFields.subject || customFields.contextData?.componenteCurricular || '',
+            cargaHoraria: customFields.timeLimit || customFields.contextData?.cargaHoraria || '',
+            habilidadesBNCC: customFields.competencies || customFields.contextData?.habilidadesBNCC || '',
+            objetivoGeral: customFields.objectives || customFields.contextData?.objetivoGeral || '',
+            materiaisRecursos: customFields.materials || customFields.contextData?.materiaisRecursos || '',
+            perfilTurma: customFields.context || customFields.contextData?.perfilTurma || '',
+            tipoAula: customFields.difficultyLevel || customFields.contextData?.tipoAula || '',
+            observacoesProfessor: customFields.evaluation || customFields.contextData?.observacoesProfessor || '' // Assumindo que 'evaluation' pode ser usado para observações
+          }
+        };
+
+        console.log('📋 Dados específicos do Plano de Aula preparados:', planoAulaData);
+        // Substitui os customFields originais pelos dados específicos do plano de aula formatados
+        Object.assign(contextData, planoAulaData.contextData);
+        // Certifica que o tipo de atividade está correto nos dados passados para a API
+        contextData.activityType = 'plano-aula';
+      }
+
       console.log('📊 ContextData COMPLETO preparado para IA:', contextData);
 
       // Chamar a função de geração

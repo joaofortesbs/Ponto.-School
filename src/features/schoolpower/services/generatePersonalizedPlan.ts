@@ -42,7 +42,7 @@ interface GeminiActivityResponse {
  * Constrói o prompt otimizado para a API Gemini
  */
 function buildGeminiPrompt(
-  initialMessage: string, 
+  initialMessage: string,
   contextualizationData: ContextualizationData,
   allowedActivities: typeof schoolPowerActivities
 ): string {
@@ -73,7 +73,7 @@ function buildGeminiPrompt(
 ATENÇÃO ESPECIAL PARA PLANO-AULA:
 Os campos obrigatórios são EXATAMENTE:
 - Tema ou Tópico Central
-- Ano/Série Escolar  
+- Ano/Série Escolar
 - Componente Curricular
 - Carga Horária
 - Habilidades BNCC
@@ -86,7 +86,7 @@ Os campos obrigatórios são EXATAMENTE:
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
     // Construir o prompt para a Gemini
-    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo. 
+    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
 Here are the collected information:
 
@@ -154,13 +154,13 @@ EXAMPLE for exercise-list:
   "Sources": "Projeto Ápis textbook and site TodaMatéria"
 }
 
-REMEMBER: 
+REMEMBER:
 - ALL custom fields MUST be filled for EACH activity
 - Values must be specific, detailed, and contextualized
 - NEVER leave a field empty or with a generic value
 - Each activity must have ALL its custom fields filled
 
-IMPORTANT: 
+IMPORTANT:
 - Use ONLY available IDs from the list
 - FILL ALL custom fields for each activity
 - Field data must be specific, realistic, and contextualized
@@ -273,7 +273,7 @@ function parseGeminiResponse(responseText: string): GeminiActivityResponse[] {
  * Converts Gemini response to ActionPlanItem format
  */
 function convertToActionPlanItems(
-  geminiActivities: GeminiActivityResponse[], 
+  geminiActivities: GeminiActivityResponse[],
   allowedActivities: typeof schoolPowerActivities
 ): ActionPlanItem[] {
   console.log('🔄 Converting activities to ActionPlanItems...');
@@ -305,7 +305,7 @@ function convertToActionPlanItems(
  * Generates a fallback plan if the API fails
  */
 function generateFallbackPlan(
-  initialMessage: string, 
+  initialMessage: string,
   contextualizationData: ContextualizationData
 ): ActionPlanItem[] {
   console.log('🔄 Generating fallback plan...');
@@ -329,7 +329,7 @@ function generateFallbackPlan(
 
   // If no specific activities are found, uses the most popular ones
   if (relevantActivities.length === 0) {
-    relevantActivities = schoolPowerActivities.filter(activity => 
+    relevantActivities = schoolPowerActivities.filter(activity =>
       activity.enabled && [
         'lista-exercicios',
         'resumo',
