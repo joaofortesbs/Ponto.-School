@@ -29,7 +29,20 @@ interface PlanoAulaPreviewProps {
 const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
   const [activeSection, setActiveSection] = useState<string>('visao-geral');
 
-  if (!data) {
+  console.log('🔍 PlanoAulaPreview - Data recebida:', data);
+  console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
+
+  // Tenta usar data primeiro, depois activityData, e por último dados padrão
+  const planoData = data || activityData;
+
+  console.log('📚 PlanoAulaPreview - Estrutura dos dados:', {
+    hasData: !!planoData,
+    hasVisaoGeral: planoData?.visao_geral,
+    hasTitle: planoData?.titulo || planoData?.title,
+    dataStructure: planoData ? Object.keys(planoData) : []
+  });
+
+  if (!planoData) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -43,7 +56,92 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     );
   }
 
-  const plano = data;
+  // Se não tem estrutura de plano completo, cria uma estrutura básica
+  let plano = planoData;
+  if (!plano.visao_geral && (plano.titulo || plano.title)) {
+    plano = {
+      visao_geral: {
+        disciplina: plano.disciplina || plano.subject || 'Disciplina',
+        tema: plano.tema || plano.theme || plano.titulo || plano.title || 'Tema',
+        serie: plano.anoEscolaridade || plano.schoolYear || 'Série',
+        tempo: plano.tempoLimite || plano.timeLimit || 'Tempo',
+        metodologia: plano.tipoAula || plano.difficultyLevel || 'Metodologia',
+        recursos: plano.materiais ? [plano.materiais] : ['Recursos não especificados'],
+        sugestoes_ia: ['Plano de aula personalizado']
+      },
+      objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
+        descricao: typeof obj === 'string' ? obj : obj.descricao || obj,
+        habilidade_bncc: plano.competencias || 'BNCC não especificada',
+        sugestao_reescrita: '',
+        atividade_relacionada: ''
+      })) : [{
+        descricao: plano.objetivos,
+        habilidade_bncc: plano.competencias || 'BNCC não especificada',
+        sugestao_reescrita: '',
+        atividade_relacionada: ''
+      }]) : [{
+        descricao: 'Objetivo não especificado',
+        habilidade_bncc: 'BNCC não especificada',
+        sugestao_reescrita: '',
+        atividade_relacionada: ''
+      }],
+      metodologia: {
+        nome: plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
+        descricao: plano.descricao || plano.description || 'Descrição da metodologia',
+        alternativas: ['Aula expositiva', 'Atividades práticas'],
+        simulacao_de_aula: 'Simulação disponível',
+        explicacao_em_video: 'Video explicativo disponível'
+      },
+      desenvolvimento: [
+        {
+          etapa: 1,
+          titulo: 'Introdução',
+          descricao: 'Apresentação do tema',
+          tipo_interacao: 'Exposição',
+          tempo_estimado: '15 min',
+          recurso_gerado: 'Slides',
+          nota_privada_professor: 'Contextualizar o tema'
+        },
+        {
+          etapa: 2,
+          titulo: 'Desenvolvimento',
+          descricao: 'Explicação do conteúdo principal',
+          tipo_interacao: 'Interativa',
+          tempo_estimado: '25 min',
+          recurso_gerado: 'Material didático',
+          nota_privada_professor: 'Verificar compreensão'
+        },
+        {
+          etapa: 3,
+          titulo: 'Finalização',
+          descricao: 'Síntese e avaliação',
+          tipo_interacao: 'Avaliativa',
+          tempo_estimado: '10 min',
+          recurso_gerado: 'Atividade de fixação',
+          nota_privada_professor: 'Aplicar avaliação'
+        }
+      ],
+      atividades: [
+        {
+          nome: 'Atividade Principal',
+          tipo: 'Prática',
+          ref_objetivos: [1],
+          visualizar_como_aluno: 'Atividade interativa',
+          sugestoes_ia: ['Personalize conforme necessário']
+        }
+      ],
+      avaliacao: {
+        criterios: plano.evaluation || 'Critérios não especificados',
+        instrumentos: ['Observação', 'Participação'],
+        feedback: 'Feedback personalizado'
+      },
+      recursos_extras: {
+        materiais_complementares: plano.materiais ? [plano.materiais] : ['Material não especificado'],
+        tecnologias: ['Quadro', 'Projetor'],
+        referencias: ['Bibliografia básica']
+      }
+    };
+  };
 
   return (
     <div className="h-full overflow-hidden bg-white dark:bg-gray-900">

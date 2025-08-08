@@ -179,33 +179,51 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (deletedQuestionsJson) {
           const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
           console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
-          
+
           // Filtrar questões excluídas em todas as possíveis localizações
           if (previewData.questoes && Array.isArray(previewData.questoes)) {
             previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
             console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
           }
-          
+
           if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
             previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
             console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
           }
-          
+
           if (previewData.questions && Array.isArray(previewData.questions)) {
             previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
             console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
           }
-          
+
           if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
             previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
             console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
           }
-          
+
           // Adicionar os IDs excluídos aos dados para referência
           previewData.deletedQuestionIds = deletedQuestionIds;
         }
       } catch (error) {
         console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+      }
+    }
+
+    // Tratamento específico para Plano de Aula, buscando dados no cache
+    if (activityType === 'plano-aula') {
+      const cacheKey = `schoolpower_plano-aula_content`;
+      const cachedContent = localStorage.getItem(cacheKey);
+      if (cachedContent) {
+        try {
+          const parsedContent = JSON.parse(cachedContent);
+          console.log('📚 Conteúdo do plano-aula carregado do cache:', parsedContent);
+          // Mescla o conteúdo do cache com os dados existentes, priorizando o cache
+          previewData = { ...previewData, ...parsedContent };
+        } catch (error) {
+          console.error('❌ Erro ao carregar plano-aula do cache:', error);
+        }
+      } else {
+        console.log('ℹ️ Nenhum conteúdo de plano-aula encontrado no cache.');
       }
     }
 

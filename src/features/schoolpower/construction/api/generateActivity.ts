@@ -1,4 +1,3 @@
-
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
 
@@ -382,173 +381,219 @@ Responda APENAS com o JSON, sem texto adicional.`;
 export async function generateActivity(formData: any): Promise<{ success: boolean; content?: string; error?: string }> {
   console.log('🎯 generateActivity: Iniciando geração com formData:', formData);
 
-  try {
-    // Validar dados obrigatórios
-    if (!formData.title || !formData.description) {
-      throw new Error('Título e descrição são obrigatórios');
-    }
+  let generatedContent: any;
 
-    // Preparar dados para a API
-    const activityData = {
-      title: formData.title,
-      description: formData.description,
-      type: formData.typeId || 'default',
-      disciplina: formData.disciplina || 'Matemática',
-      nivel: formData.nivel || 'Ensino Médio',
-      duracao: formData.duracao || '50 minutos',
-      objetivo: formData.objetivo || formData.description,
-      conteudo: formData.conteudo || formData.description,
-      metodologia: formData.metodologia || 'Prática',
-      recursos: formData.recursos || 'Quadro, computador',
-      avaliacao: formData.avaliacao || 'Participação e exercícios'
-    };
-
-    console.log('📝 Dados preparados para API:', activityData);
-
-    // Simular geração da atividade usando uma função auxiliar
-    const generatedContent = await generateSimpleActivityContent(activityData);
-
-    if (generatedContent) {
-      console.log('✅ Atividade gerada com sucesso');
-      return {
-        success: true,
-        content: generatedContent
+  // Lógica para determinar o tipo de atividade e gerar conteúdo específico
+  switch (formData.typeId) {
+    case 'lista-exercicios':
+      // Lógica para gerar lista de exercícios
+      generatedContent = {
+        titulo: formData.title || 'Lista de Exercícios',
+        descricao: formData.description || 'Exercícios para praticar o conteúdo.',
+        disciplina: formData.subject || 'Matemática',
+        tema: formData.theme || 'Tópico específico',
+        numeroQuestoes: parseInt(formData.numberOfQuestions) || 5,
+        nivelDificuldade: formData.difficultyLevel || 'Intermediário',
+        questoes: formData.questions || [] // Assumindo que formData.questions é um array de questões
       };
-    } else {
-      throw new Error('Falha na geração do conteúdo');
-    }
+      break;
+    case 'prova':
+      // Lógica para gerar prova
+      generatedContent = {
+        titulo: formData.title || 'Avaliação',
+        descricao: formData.description || 'Avaliação de conhecimentos sobre o tema.',
+        disciplina: formData.subject || 'Matemática',
+        tema: formData.theme || 'Tópico específico',
+        tempoLimite: formData.timeLimit || '60 minutos',
+        pontuacaoTotal: parseInt(formData.totalScore) || 10,
+        questoes: formData.questions || [] // Assumindo que formData.questions é um array de questões
+      };
+      break;
+    case 'plano-aula':
+      // Estrutura específica para plano de aula com formato completo
+      const objetivosList = Array.isArray(formData.objectives) ? formData.objectives :
+                           formData.objectives ? formData.objectives.split('.').filter(obj => obj.trim()) :
+                           ['Compreender o conceito do ' + (formData.theme || 'tema'),
+                            'Identificar os principais elementos do conteúdo',
+                            'Aplicar os conhecimentos em situações práticas',
+                            'Resolver problemas relacionados ao tema',
+                            'Desenvolver o raciocínio lógico e a capacidade de resolução de problemas'];
 
-  } catch (error) {
-    console.error('❌ Erro na geração da atividade:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    };
+      const materiaisList = Array.isArray(formData.materials) ? formData.materials :
+                            formData.materials ? formData.materials.split(',').map(m => m.trim()) :
+                            ['Quadro branco ou projetor',
+                             'Marcadores ou canetas para quadro branco',
+                             'Material impresso com exercícios',
+                             'Calculadora (se necessário)',
+                             'Livro didático',
+                             'Notebook/tablet para apresentação'];
+
+      generatedContent = {
+        titulo: formData.title || 'Plano de Aula',
+        descricao: formData.description || 'Descrição do plano de aula',
+        disciplina: formData.subject || 'Disciplina',
+        tema: formData.theme || 'Tema da aula',
+        anoEscolaridade: formData.schoolYear || 'Ano escolar',
+        numeroQuestoes: parseInt(formData.numberOfQuestions) || 10,
+        nivelDificuldade: formData.difficultyLevel || 'Médio',
+        modeloQuestoes: formData.questionModel || 'Múltipla escolha',
+        fontes: Array.isArray(formData.sources) ? formData.sources : 
+               formData.sources ? formData.sources.split(',').map(s => s.trim()) : 
+               ['Livro didático de ' + (formData.subject || 'Disciplina') + ' do ' + (formData.schoolYear || 'ano'),
+                'Vídeos explicativos sobre ' + (formData.theme || 'o tema') + ' (Khan Academy, YouTube)',
+                'Sites educativos sobre ' + (formData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],
+        objetivos: objetivosList,
+        materiais: materiaisList,
+        instrucoes: formData.instructions || 'Siga as etapas do plano de aula conforme apresentado.',
+        tempoLimite: formData.timeLimit || '50 minutos',
+        contextoAplicacao: formData.context || 'Sala de aula regular com alunos do ' + (formData.schoolYear || 'ano especificado'),
+        competencias: formData.competencies || 'Competências gerais da BNCC aplicáveis ao ' + (formData.subject || 'componente curricular'),
+        avaliacao: formData.evaluation || 'Avaliação formativa através de participação e exercícios práticos',
+
+        // Estrutura completa do plano de aula para preview
+        visao_geral: {
+          disciplina: formData.subject || 'Disciplina',
+          tema: formData.theme || 'Tema da aula',
+          serie: formData.schoolYear || 'Ano escolar',
+          tempo: formData.timeLimit || '50 minutos',
+          metodologia: formData.difficultyLevel || 'Metodologia Ativa',
+          recursos: materiaisList,
+          sugestoes_ia: ['Plano de aula personalizado', 'Adaptável ao perfil da turma']
+        },
+        objetivos: objetivosList.map((obj, index) => ({
+          descricao: obj,
+          habilidade_bncc: formData.competencies || 'Competência BNCC relacionada',
+          sugestao_reescrita: 'Sugestão de melhoria disponível',
+          atividade_relacionada: 'Atividade ' + (index + 1)
+        })),
+        metodologia: {
+          nome: formData.difficultyLevel || 'Metodologia Ativa',
+          descricao: formData.description || 'Metodologia baseada em participação ativa dos alunos',
+          alternativas: ['Aula expositiva', 'Atividades práticas', 'Discussão em grupo'],
+          simulacao_de_aula: 'Simulação interativa disponível',
+          explicacao_em_video: 'Vídeo explicativo da metodologia'
+        },
+        desenvolvimento: [
+          {
+            etapa: 1,
+            titulo: 'Introdução ao Tema',
+            descricao: 'Apresentação do conteúdo e contextualização',
+            tipo_interacao: 'Expositiva/Dialogada',
+            tempo_estimado: '15 minutos',
+            recurso_gerado: 'Slides introdutórios',
+            nota_privada_professor: 'Verificar conhecimentos prévios dos alunos'
+          },
+          {
+            etapa: 2,
+            titulo: 'Desenvolvimento do Conteúdo',
+            descricao: 'Explicação detalhada dos conceitos principais',
+            tipo_interacao: 'Interativa',
+            tempo_estimado: '25 minutos',
+            recurso_gerado: 'Material didático e exemplos',
+            nota_privada_professor: 'Pausar para esclarecer dúvidas'
+          },
+          {
+            etapa: 3,
+            titulo: 'Aplicação Prática',
+            descricao: 'Exercícios e atividades de fixação',
+            tipo_interacao: 'Prática',
+            tempo_estimado: '10 minutos',
+            recurso_gerado: 'Lista de exercícios',
+            nota_privada_professor: 'Circular pela sala para auxiliar individualmente'
+          }
+        ],
+        atividades: [
+          {
+            nome: 'Atividade de Fixação',
+            tipo: 'Exercícios Práticos',
+            ref_objetivos: [1, 2],
+            visualizar_como_aluno: 'Exercícios interativos para consolidação',
+            sugestoes_ia: ['Adapte a dificuldade conforme o desempenho', 'Inclua exemplos contextualizados']
+          }
+        ],
+        avaliacao: {
+          criterios: formData.evaluation || 'Participação, compreensão dos conceitos, resolução de exercícios',
+          instrumentos: ['Observação direta', 'Exercícios práticos', 'Participação oral'],
+          feedback: 'Feedback imediato durante as atividades'
+        },
+        recursos_extras: {
+          materiais_complementares: ['Vídeos educativos', 'Jogos didáticos online', 'Simuladores'],
+          tecnologias: ['Quadro interativo', 'Projetor', 'Computador/tablet'],
+          referencias: ['Livro didático adotado', 'Artigos científicos', 'Sites educacionais']
+        }
+      };
+      break;
+    default:
+      // Lógica padrão para outros tipos de atividade (ou se não especificado)
+      generatedContent = {
+        titulo: formData.title || 'Atividade Gerada',
+        descricao: formData.description || 'Descrição padrão da atividade.',
+        disciplina: formData.subject || 'Geral',
+        tema: formData.theme || 'Tema geral',
+        conteudo: formData.content || 'Conteúdo a ser definido.'
+      };
+      break;
   }
+
+  // Simular geração da atividade usando uma função auxiliar
+  // O conteúdo gerado aqui pode ser um JSON ou uma string formatada dependendo do tipo
+  const formattedContent = await generateSimpleActivityContent(generatedContent);
+
+  if (formattedContent) {
+    console.log('✅ Atividade gerada com sucesso');
+    return {
+      success: true,
+      content: formattedContent
+    };
+  } else {
+    throw new Error('Falha na geração do conteúdo');
+  }
+
 }
 
-// Função auxiliar para evitar conflito de nomes
+// Função auxiliar para evitar conflito de nomes e formatar o conteúdo
 async function generateSimpleActivityContent(activityData: any): Promise<string> {
-  console.log('🔨 Gerando conteúdo da atividade:', activityData.title);
+  console.log('🔨 Gerando conteúdo da atividade:', activityData.titulo || activityData.title);
 
   // Simular delay da API
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // Template baseado no tipo de atividade
-  const templates = {
-    'lista-exercicios': `
-# ${activityData.title}
+  // Verificar se o conteúdo é um objeto JSON (como plano de aula, lista de exercícios etc.)
+  if (typeof activityData === 'object' && activityData !== null && !Array.isArray(activityData)) {
+    // Se for um objeto JSON, serializar para string
+    try {
+      // Remover campos não necessários para a visualização simples ou adaptar conforme necessário
+      const displayData = { ...activityData };
+      delete displayData.competencias;
+      delete displayData.contextoAplicacao;
+      delete displayData.recursos_extras;
+      delete displayData.avaliacao;
+      delete displayData.atividades;
+      delete displayData.metodologia;
+      delete displayData.desenvolvimento;
+      delete displayData.visao_geral;
 
-## Informações Gerais
-- **Disciplina:** ${activityData.disciplina}
-- **Nível:** ${activityData.nivel}
-- **Duração:** ${activityData.duracao}
 
-## Objetivo
-${activityData.objetivo}
-
-## Conteúdo
-${activityData.conteudo}
-
-## Exercícios
-
-### Exercício 1
-Resolva a função f(x) = 2x + 3 para x = 5.
-
-**Solução:**
-f(5) = 2(5) + 3 = 10 + 3 = 13
-
-### Exercício 2
-Determine o zero da função f(x) = -3x + 9.
-
-**Solução:**
--3x + 9 = 0
--3x = -9
-x = 3
-
-### Exercício 3
-Construa o gráfico da função f(x) = x - 2.
-
-**Solução:**
-- Quando x = 0: f(0) = -2
-- Quando x = 2: f(2) = 0
-- Quando x = 4: f(4) = 2
-
-## Metodologia
-${activityData.metodologia}
-
-## Recursos Necessários
-${activityData.recursos}
-
-## Avaliação
-${activityData.avaliacao}
-    `,
-    'prova': `
-# ${activityData.title}
-
-## Informações da Prova
-- **Disciplina:** ${activityData.disciplina}
-- **Nível:** ${activityData.nivel}
-- **Duração:** ${activityData.duracao}
-
-## Instruções
-1. Leia todas as questões antes de começar
-2. Resolva as questões com calma e atenção
-3. Mostre os cálculos quando necessário
-
-## Questões
-
-### Questão 1 (2,0 pontos)
-Dada a função f(x) = 3x - 6, calcule:
-a) f(2)
-b) O zero da função
-
-### Questão 2 (2,0 pontos)
-Determine a lei de formação da função cujo gráfico passa pelos pontos (0, 4) e (2, 0).
-
-### Questão 3 (3,0 pontos)
-Resolva o sistema de equações:
-2x + y = 7
-x - y = 2
-
-### Questão 4 (3,0 pontos)
-Aplique o Teorema de Pitágoras para encontrar a hipotenusa de um triângulo retângulo com catetos de 3 cm e 4 cm.
-
-## Gabarito
-1. a) f(2) = 0  b) x = 2
-2. f(x) = -2x + 4
-3. x = 3, y = 1
-4. h = 5 cm
-    `,
-    'default': `
-# ${activityData.title}
+      return JSON.stringify(displayData, null, 2);
+    } catch (error) {
+      console.error("Erro ao serializar dados da atividade para JSON:", error);
+      // Fallback para um template genérico se a serialização falhar
+      return `
+# ${activityData.titulo || activityData.title || 'Atividade'}
 
 ## Descrição
-${activityData.description}
+${activityData.descricao || activityData.description || 'Sem descrição'}
 
-## Objetivo
-${activityData.objetivo}
+## Detalhes
+- Disciplina: ${activityData.disciplina || 'Não especificada'}
+- Tema: ${activityData.tema || activityData.theme || 'Não especificado'}
+- Duração: ${activityData.tempoLimite || activityData.duracao || 'Não especificada'}
 
-## Conteúdo Desenvolvido
-${activityData.conteudo}
-
-## Metodologia
-${activityData.metodologia}
-
-## Recursos
-${activityData.recursos}
-
-## Avaliação
-${activityData.avaliacao}
-
----
-*Atividade gerada automaticamente pelo School Power*
-    `
-  };
-
-  // Determinar template baseado no tipo ou usar default
-  const activityType = activityData.type || 'default';
-  const template = templates[activityType] || templates['default'];
-
-  return template.trim();
+*Erro ao formatar dados detalhados.*
+      `;
+    }
+  } else {
+    // Se não for um objeto JSON (ex: string simples de conteúdo), retorna como está
+    return activityData;
+  }
 }

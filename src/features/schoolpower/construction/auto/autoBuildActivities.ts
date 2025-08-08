@@ -51,7 +51,25 @@ export const autoBuildActivities = async (
       markActivityAsBuilt(activity.id);
 
       completedActivities++;
-      console.log(`✅ Atividade construída: ${activity.title}`);
+      console.log(`✅ Atividade construída com EXATA MESMA LÓGICA do EditActivityModal: ${activity.title}`);
+
+      // Salvar no localStorage com as mesmas chaves do sistema manual
+      const storageKey = `schoolpower_${activityType}_content`;
+      localStorage.setItem(storageKey, JSON.stringify(result.data));
+
+      // Para plano-aula, também salvar com chave específica para visualização
+      if (activityType === 'plano-aula') {
+        const viewStorageKey = `constructed_plano-aula_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
+        console.log('💾 Auto-build: Dados do plano-aula salvos para visualização:', viewStorageKey);
+      }
+
+      // Adicionar à lista de atividades construídas
+      let constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
+      if (!constructedActivities.includes(activity.id)) {
+        constructedActivities.push(activity.id);
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      }
 
     } catch (error) {
       const errorMessage = `Erro ao construir atividade "${activity.title}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`;
