@@ -1,6 +1,7 @@
+
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, Users, Clock, Download } from 'lucide-react'; // Import Eye and other icons
+import { X, Eye, BookOpen, Users, Clock, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,10 +10,8 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 
-// Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
-// This is a placeholder, replace with actual implementation if needed.
+// Helper function to get activity icon
 const getActivityIcon = (activityId: string) => {
-  // Example: return an icon component based on activityId
   return ({ className }: { className: string }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c0-1.707.833-3.123 2.12-4.119C15.387 2.507 17.017 2 19 2s3.613.507 4.88-1.881C24.833 1.707 24 3.123 24 5v10a2 2 0 01-2 2H2a2 2 0 01-2-2V5c0-1.877.847-3.293 2.12-4.119C4.167 0.507 5.993 0 8 0s3.833.507 5.12 1.881C14.833 1.707 14 3.123 14 5v10z" />
@@ -21,7 +20,6 @@ const getActivityIcon = (activityId: string) => {
   );
 };
 
-
 interface ActivityViewModalProps {
   isOpen: boolean;
   activity: ConstructionActivity | null;
@@ -29,6 +27,7 @@ interface ActivityViewModalProps {
 }
 
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
+  // Estados básicos primeiro
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -37,11 +36,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
-  // Sempre determinar o tipo de atividade PRIMEIRO, antes de qualquer hook
+  // Early return se não há dados necessários
+  if (!isOpen || !activity) return null;
+
+  // Determinação do tipo de atividade - SEMPRE após o early return
   const activityType = activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
   const isExerciseList = activityType === 'lista-exercicios';
 
-  // Função específica para carregar dados do Plano de Aula - sempre definida
+  // Função específica para carregar dados do Plano de Aula
   const loadPlanoAulaData = React.useCallback((activityId: string) => {
     if (!activityId) return null;
     
@@ -71,7 +73,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return null;
   }, []);
 
-  // Resetar estado do sidebar quando o modal abre - sempre executado
+  // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
     if (isOpen && activity) {
       setShowSidebar(false);
@@ -113,7 +115,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   }, []);
 
-  // Obter questões para o sidebar - sempre executado
+  // Obter questões para o sidebar
   const questionsForSidebar = React.useMemo(() => {
     if (!activity || activityType !== 'lista-exercicios') {
       return [];
@@ -164,15 +166,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }));
   }, [activity, activityType]);
 
-  // Sempre chamar useMemo, independente do estado do modal
+  // Dados armazenados para plano de aula
   const storedData = React.useMemo(() => {
     if (!activity || activityType !== 'plano-aula') {
       return null;
     }
     return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
   }, [activity?.id, activityType]);
-
-  if (!isOpen || !activity) return null;
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
@@ -396,7 +396,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
     }
-  }, [activity, activityType]);
+  }, [activity, activityType, handleQuestionSelect]);
 
   return (
     <AnimatePresence>
@@ -420,8 +420,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             borderBottomRightRadius: '12px',
           }}
         >
-
-
           {/* Header with Close button */}
           {isExerciseList && (
             <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
@@ -486,7 +484,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         {questionsForSidebar.length} questões
                       </Badge>
                     )}
-
                   </div>
                 </div>
 
@@ -557,7 +554,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               </div>
             </div>
           )}
-
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
