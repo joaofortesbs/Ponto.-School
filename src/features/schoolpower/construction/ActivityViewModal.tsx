@@ -29,35 +29,25 @@ interface ActivityViewModalProps {
 }
 
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
-  // Estados sempre definidos primeiro
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
-  // Ref sempre definida
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // Determinar tipo de atividade - sempre calculado
-  const activityType = activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
-  const isExerciseList = activityType === 'lista-exercicios';
-  const isPlanoAula = activityType === 'plano-aula';
-
-  // Função específica para carregar dados do Plano de Aula - sempre definida
-  const loadPlanoAulaData = React.useCallback((activityId: string) => {
-    if (!activityId) return null;
-
+  // Função específica para carregar dados do Plano de Aula
+  const loadPlanoAulaData = (activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
-
+    
     const cacheKeys = [
       `constructed_plano-aula_${activityId}`,
       `schoolpower_plano-aula_content`,
       `activity_${activityId}`,
       `activity_fields_${activityId}`
     ];
-
+    
     for (const key of cacheKeys) {
       const data = localStorage.getItem(key);
       if (data) {
@@ -70,10 +60,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
     }
-
+    
     console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
     return null;
-  }, []); // Dependências vazias para garantir que a função não mude
+  };
 
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
@@ -82,13 +72,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-
+      
       // Se for plano-aula, tentar carregar dados específicos
-      if (isPlanoAula && activity?.id) {
-        loadPlanoAulaData(activity.id); // Chamada da função carregada com useCallback
+      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
+        const planoData = loadPlanoAulaData(activity.id);
+        if (planoData) {
+          console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
+        }
       }
     }
-  }, [isOpen, activity, isPlanoAula, loadPlanoAulaData]); // Adicionado isPlanoAula e loadPlanoAulaData às dependências
+  }, [isOpen, activity]);
 
   if (!isOpen || !activity) return null;
 
@@ -117,10 +110,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   };
 
   // Obter questões para o sidebar
-  const getQuestionsForSidebar = React.useCallback(() => { // Usando useCallback para otimização
-    const activityTypeForQuestions = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+  const getQuestionsForSidebar = () => {
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
-    if (activityTypeForQuestions !== 'lista-exercicios') return [];
+    if (activityType !== 'lista-exercicios') return [];
 
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
 
@@ -165,10 +158,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       completed: false, // Pode ser expandido para rastrear progresso
       enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
     }));
-  }, [activity]); // Adicionado 'activity' como dependência
+  };
 
   const questionsForSidebar = getQuestionsForSidebar();
-  // const isExerciseList = activityType === 'lista-exercicios'; // Já definida anteriormente
+  const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
@@ -192,8 +185,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  const renderActivityPreview = React.useCallback(() => { // Usando useCallback para otimização
-    // activityType e isExerciseList já estão disponíveis no escopo da função principal
+  const renderActivityPreview = () => {
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+
     console.log('🎭 ActivityViewModal: Renderizando preview para tipo:', activityType);
     console.log('🎭 ActivityViewModal: Dados da atividade:', activity);
 
@@ -222,7 +216,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     };
 
     // Para lista de exercícios, aplicar filtros de exclusão
-    if (isExerciseList) {
+    if (activityType === 'lista-exercicios') {
       try {
         const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
         if (deletedQuestionsJson) {
@@ -259,17 +253,17 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
 
     // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
-    if (isPlanoAula) {
+    if (activityType === 'plano-aula') {
       console.log('📚 ActivityViewModal: Processando Plano de Aula');
-
+      
       // Prioridade 1: Cache específico do plano-aula construído
       const constructedPlanoKey = `constructed_plano-aula_${activity.id}`;
       const constructedPlanoContent = localStorage.getItem(constructedPlanoKey);
-
+      
       // Prioridade 2: Cache geral do plano-aula
       const generalCacheKey = `schoolpower_plano-aula_content`;
       const generalCachedContent = localStorage.getItem(generalCacheKey);
-
+      
       // Prioridade 3: Cache da atividade específica
       const activityCacheKey = `activity_${activity.id}`;
       const activityCachedContent = localStorage.getItem(activityCacheKey);
@@ -318,8 +312,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Se encontrou conteúdo, mesclar com os dados existentes
       if (planoContent) {
         console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
-        previewData = {
-          ...previewData,
+        previewData = { 
+          ...previewData, 
           ...planoContent,
           // Garantir que os dados essenciais sejam preservados
           id: activity.id,
@@ -329,10 +323,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         };
       } else {
         console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
-
+        
         // Como fallback, criar uma estrutura completa baseada nos dados da atividade
         const customFields = activity.customFields || {};
-
+        
         previewData = {
           ...previewData,
           titulo: activity.title || activity.personalizedTitle || 'Plano de Aula',
@@ -380,7 +374,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         return (
           <PlanoAulaPreview
             data={previewData}
-            activityData={activity} // Passa a atividade original para o preview
+            activityData={activity}
           />
         );
 
@@ -393,8 +387,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
     }
-  }, [activity, activityType, isExerciseList, isPlanoAula, handleQuestionSelect, loadPlanoAulaData]); // Adicionando dependências necessárias
-
+  };
 
   return (
     <AnimatePresence>
@@ -419,110 +412,88 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }}
         >
 
-          {/* Header Conditional Rendering */}
-          {isExerciseList ? (
-            // Header for List of Exercises
-            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10 flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  {isInQuestionView && selectedQuestionIndex !== null ? (
-                    <span className="text-white font-bold text-sm">
-                      {selectedQuestionIndex + 1}
-                    </span>
-                  ) : (
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  )}
-                </div>
-                <div className="flex-1">
-                  {isInQuestionView && selectedQuestionIndex !== null ? (
-                    <>
-                      <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
-                        Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
-                      </h2>
-                      <p className="text-orange-700 dark:text-orange-300 text-sm">
-                        {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
-                        {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
-                      </h2>
-                      <p className="text-orange-700 dark:text-orange-300 text-sm">
-                        {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
-                      </p>
-                    </>
-                  )}
+
+          {/* Header with Close button */}
+          {isExerciseList && (
+            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                    {isInQuestionView && selectedQuestionIndex !== null ? (
+                      <span className="text-white font-bold text-sm">
+                        {selectedQuestionIndex + 1}
+                      </span>
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    {isInQuestionView && selectedQuestionIndex !== null ? (
+                      <>
+                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
+                          Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
+                        </h2>
+                        <p className="text-orange-700 dark:text-orange-300 text-sm">
+                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
+                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
+                        </h2>
+                        <p className="text-orange-700 dark:text-orange-300 text-sm">
+                          {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Tags and Info */}
+                  <div className="flex flex-wrap gap-2">
+                    {activity?.originalData?.disciplina && (
+                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        {activity.originalData.disciplina}
+                      </Badge>
+                    )}
+                    {activity?.originalData?.tema && (
+                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
+                        </svg>
+                        {activity.originalData.tema}
+                      </Badge>
+                    )}
+                    {questionsForSidebar.length > 0 && (
+                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        {questionsForSidebar.length} questões
+                      </Badge>
+                    )}
+
+                  </div>
                 </div>
 
-                {/* Tags and Info */}
-                <div className="flex flex-wrap gap-2">
-                  {activity?.originalData?.disciplina && (
-                    <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                      {activity.originalData.disciplina}
-                    </Badge>
-                  )}
-                  {activity?.originalData?.tema && (
-                    <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
-                      </svg>
-                      {activity.originalData.tema}
-                    </Badge>
-                  )}
-                  {questionsForSidebar.length > 0 && (
-                    <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                      </svg>
-                      {questionsForSidebar.length} questões
-                    </Badge>
-                  )}
-
-                </div>
+                {/* Close button - positioned in the extreme right */}
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                </button>
               </div>
+            </div>
+          )}
 
-              {/* Close button - positioned in the extreme right */}
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-          ) : isPlanoAula ? (
-            // Header for Plano de Aula - Using the Modal's main header structure
-            <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-gray-800/50 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg">
-                  {/* Icon for Plano de Aula */}
-                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-6-4v6m0-6l-6-6m6 6l6-6" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-orange-900 dark:text-white">
-                    {activity?.personalizedTitle || activity?.title || 'Plano de Aula'}
-                  </h2>
-                  <p className="text-sm text-orange-700 dark:text-gray-300">
-                    {activity?.personalizedDescription || activity?.description || 'Detalhes da atividade de plano de aula'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-          ) : (
-            // Default Header for other activity types
+          {/* Non-Exercise List Header */}
+          {!isExerciseList && (
             <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-gray-800/50 relative z-10">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg">
