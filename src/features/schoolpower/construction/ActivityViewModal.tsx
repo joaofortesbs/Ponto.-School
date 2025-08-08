@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye } from 'lucide-react'; // Import Eye component
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,18 +36,20 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
+  const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+
 
   // Função específica para carregar dados do Plano de Aula
   const loadPlanoAulaData = (activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
-    
+
     const cacheKeys = [
       `constructed_plano-aula_${activityId}`,
       `schoolpower_plano-aula_content`,
       `activity_${activityId}`,
       `activity_fields_${activityId}`
     ];
-    
+
     for (const key of cacheKeys) {
       const data = localStorage.getItem(key);
       if (data) {
@@ -60,7 +62,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
     }
-    
+
     console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
     return null;
   };
@@ -72,7 +74,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      
+
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
@@ -162,6 +164,34 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const questionsForSidebar = getQuestionsForSidebar();
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
+  const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+
+  // Função para obter o título da atividade
+  const getActivityTitle = () => {
+    if (activityType === 'plano-aula') {
+      const planoTitle = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.titulo || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.title || activity.title || activity.personalizedTitle || 'Plano de Aula' : activity.title || activity.personalizedTitle || 'Plano de Aula';
+      const tema = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.tema || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.['Tema ou Tópico Central'] || '' : '';
+      return tema ? `${planoTitle}: ${tema}` : planoTitle;
+    }
+    return activity.title || activity.personalizedTitle || 'Atividade';
+  };
+
+  // Função para obter informações adicionais do Plano de Aula para o cabeçalho
+  const getPlanoAulaHeaderInfo = () => {
+    if (activityType !== 'plano-aula') return null;
+
+    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+
+    const disciplina = storedData?.disciplina || storedData?.['Componente Curricular'] || 'Matemática';
+    const anoEscolar = storedData?.ano_escolar || storedData?.['Ano Escolar'] || '6° ano';
+    const duracao = storedData?.duracao || storedData?.['Duração da Aula'] || '2 aulas de 50 minutos';
+
+    return {
+      disciplina,
+      anoEscolar,
+      duracao
+    };
+  };
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
@@ -186,14 +216,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   };
 
   const renderActivityPreview = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
-    console.log('🎭 ActivityViewModal: Renderizando preview para tipo:', activityType);
-    console.log('🎭 ActivityViewModal: Dados da atividade:', activity);
-
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-    const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
+    const storedFields = JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}');
 
     console.log('💾 ActivityViewModal: Dados armazenados:', storedData);
     console.log('🗂️ ActivityViewModal: Campos armazenados:', storedFields);
@@ -255,15 +280,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
     if (activityType === 'plano-aula') {
       console.log('📚 ActivityViewModal: Processando Plano de Aula');
-      
+
       // Prioridade 1: Cache específico do plano-aula construído
       const constructedPlanoKey = `constructed_plano-aula_${activity.id}`;
       const constructedPlanoContent = localStorage.getItem(constructedPlanoKey);
-      
+
       // Prioridade 2: Cache geral do plano-aula
       const generalCacheKey = `schoolpower_plano-aula_content`;
       const generalCachedContent = localStorage.getItem(generalCacheKey);
-      
+
       // Prioridade 3: Cache da atividade específica
       const activityCacheKey = `activity_${activity.id}`;
       const activityCachedContent = localStorage.getItem(activityCacheKey);
@@ -323,10 +348,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         };
       } else {
         console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
-        
+
         // Como fallback, criar uma estrutura completa baseada nos dados da atividade
         const customFields = activity.customFields || {};
-        
+
         previewData = {
           ...previewData,
           titulo: activity.title || activity.personalizedTitle || 'Plano de Aula',
@@ -399,19 +424,21 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white dark:bg-gray-900 rounded-lg shadow-xl dark:shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden border dark:border-gray-700"
+          className={`max-w-6xl w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          style={{
-            borderTopLeftRadius: '12px',
-            borderTopRightRadius: '12px',
-            borderBottomLeftRadius: '12px',
-            borderBottomRightRadius: '12px',
-          }}
         >
-
+          {/* Aplicar background laranja no cabeçalho quando for Plano de Aula */}
+          <style jsx>{`
+            .modal-header {
+              background: ${activityType === 'plano-aula'
+                ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
+                : 'transparent'
+              };
+            }
+          `}</style>
 
           {/* Header with Close button */}
           {isExerciseList && (
@@ -494,26 +521,88 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Non-Exercise List Header */}
           {!isExerciseList && (
-            <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-gray-800/50 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg">
-                  <Eye className="w-5 h-5 text-orange-500" />
+            <div className="modal-header flex items-center justify-between p-6 border-b">
+              <div className="flex items-center gap-3 flex-1">
+                <div className={`p-2 rounded-lg ${
+                  activityType === 'plano-aula'
+                    ? 'bg-orange-100'
+                    : isLightMode ? 'bg-blue-100' : 'bg-blue-900/30'
+                }`}>
+                  <BookOpen className={`h-6 w-6 ${
+                    activityType === 'plano-aula'
+                      ? 'text-orange-600'
+                      : isLightMode ? 'text-blue-600' : 'text-blue-400'
+                  }`} />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold text-orange-900 dark:text-white">
-                    Visualizar Atividade
+                <div className="flex-1">
+                  <h2 className={`text-xl font-semibold ${
+                    activityType === 'plano-aula' ? 'text-white' : ''
+                  }`}>
+                    {getActivityTitle()}
                   </h2>
-                  <p className="text-sm text-orange-700 dark:text-gray-300">
-                    {activity?.title || 'Atividade Gerada'}
-                  </p>
+                  {activityType === 'plano-aula' ? (
+                    <div className="flex items-center gap-4 mt-1">
+                      {(() => {
+                        const headerInfo = getPlanoAulaHeaderInfo();
+                        return headerInfo ? (
+                          <>
+                            <div className="flex items-center gap-1 text-white/90 text-sm">
+                              <BookOpen className="h-4 w-4" />
+                              <span>{headerInfo.disciplina} (Integrado com Português)</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-white/90 text-sm">
+                              <GraduationCap className="h-4 w-4" />
+                              <span>{headerInfo.anoEscolar}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-white/90 text-sm">
+                              <Clock className="h-4 w-4" />
+                              <span>{headerInfo.duracao}</span>
+                            </div>
+                          </>
+                        ) : null;
+                      })()}
+                    </div>
+                  ) : (
+                    <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {activity.description || activity.personalizedDescription || 'Visualizar atividade'}
+                    </p>
+                  )}
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
+              <div className="flex items-center gap-2">
+                {activityType === 'plano-aula' && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Exportar PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    >
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Simular Aula
+                    </Button>
+                  </>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  className={`${
+                    activityType === 'plano-aula'
+                      ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                      : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
+                  }`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +17,8 @@ import {
   ChevronRight,
   Brain,
   Activity,
-  CheckCircle
+  CheckCircle,
+  GraduationCap
 } from 'lucide-react';
 
 interface PlanoAulaPreviewProps {
@@ -77,7 +77,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   let plano = planoData;
   if (!plano.visao_geral) {
     console.log('🔨 PlanoAulaPreview - Criando estrutura básica do plano');
-    
+
     plano = {
       titulo: plano.titulo || plano.title || 'Plano de Aula',
       descricao: plano.descricao || plano.description || 'Descrição do plano de aula',
@@ -162,7 +162,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         referencias: ['Bibliografia básica']
       }
     };
-    
+
     console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
   };
 
@@ -212,26 +212,26 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                 </div>
                 Informações Gerais
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Disciplina</label>
                     <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.disciplina || plano.disciplina}</p>
                   </div>
-                  
+
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Série/Ano</label>
                     <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.serie || plano.serie}</p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Tempo</label>
                     <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.tempo || plano.tempo}</p>
                   </div>
-                  
+
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                     <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Metodologia</label>
                     <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.metodologia || plano.metodologia}</p>
@@ -287,7 +287,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                 Adicionar Objetivo
               </Button>
             </div>
-            
+
             <div className="space-y-4">
               {(plano.objetivos || []).map((objetivo: any, index: number) => (
                 <Card key={index} className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
@@ -303,7 +303,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                           )}
                         </div>
                         <p className="text-gray-800 dark:text-gray-200 mb-3 text-base leading-relaxed">{objetivo.descricao}</p>
-                        
+
                         {objetivo.atividade_relacionada && (
                           <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg mb-3">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -311,7 +311,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                             </p>
                           </div>
                         )}
-                        
+
                         {objetivo.sugestao_reescrita && (
                           <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
                             <strong className="text-yellow-800 dark:text-yellow-200 block mb-1">Sugestão de reescrita:</strong>
@@ -431,11 +431,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                             </Badge>
                           </div>
                         </div>
-                        
+
                         <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
                           <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed">{etapa.descricao}</p>
                         </div>
-                        
+
                         {etapa.recurso_gerado && (
                           <div className="bg-white dark:bg-gray-700 p-3 rounded-lg mb-3 border border-gray-200 dark:border-gray-600">
                             <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Recurso gerado: </span>
@@ -497,7 +497,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                             {atividade.tipo}
                           </Badge>
                         </div>
-                        
+
                         {atividade.ref_objetivos && atividade.ref_objetivos.length > 0 && (
                           <div className="mb-3">
                             <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 block mb-2">Objetivos relacionados:</span>
@@ -536,7 +536,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex flex-col gap-2 ml-4">
                         <Button size="sm" variant="outline" className="border-indigo-300 text-indigo-600 hover:bg-indigo-50">
                           <Eye className="w-4 h-4 mr-2" />
@@ -606,7 +606,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               {sidebarSections.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
-                
+
                 return (
                   <button
                     key={section.id}
