@@ -37,8 +37,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
-  // Função específica para carregar dados do Plano de Aula
+  // Função específica para carregar dados do Plano de Aula - sempre definida
   const loadPlanoAulaData = React.useCallback((activityId: string) => {
+    if (!activityId) return null;
+    
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
 
     const cacheKeys = [
@@ -65,7 +67,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return null;
   }, []);
 
-  // Resetar estado do sidebar quando o modal abre
+  // Resetar estado do sidebar quando o modal abre - sempre executado
   React.useEffect(() => {
     if (isOpen && activity) {
       setShowSidebar(false);
@@ -74,14 +76,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setIsInQuestionView(false);
 
       // Se for plano-aula, tentar carregar dados específicos
-      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
+      if (activityType === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
         if (planoData) {
           console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
         }
       }
     }
-  }, [isOpen, activity]);
+  }, [isOpen, activity, activityType, loadPlanoAulaData]);
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = React.useCallback((questionIndex: number, questionId: string) => {
@@ -107,13 +109,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   }, []);
 
-  // Obter questões para o sidebar
+  // Obter questões para o sidebar - sempre executado
   const questionsForSidebar = React.useMemo(() => {
-    if (!activity) return [];
-    
-    const currentActivityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
-    if (currentActivityType !== 'lista-exercicios') return [];
+    if (!activity || activityType !== 'lista-exercicios') {
+      return [];
+    }
 
     const storedActivityData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
 
@@ -158,21 +158,21 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       completed: false,
       enunciado: questao.enunciado || questao.statement || 'Sem enunciado'
     }));
-  }, [activity]);
+  }, [activity, activityType]);
+
+  // Sempre determinar o tipo de atividade antes de qualquer hook
+  const activityType = activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
+  const isExerciseList = activityType === 'lista-exercicios';
+  
+  // Sempre chamar useMemo, independente do estado do modal
+  const storedData = React.useMemo(() => {
+    if (!activity || activityType !== 'plano-aula') {
+      return null;
+    }
+    return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+  }, [activity?.id, activityType]);
 
   if (!isOpen || !activity) return null;
-
-  
-  const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
-  const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-  
-  // Sempre chamar useMemo, mas retornar null quando não for plano-aula
-  const storedData = React.useMemo(() => {
-    if (activityType === 'plano-aula') {
-      return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-    }
-    return null;
-  }, [activity.id, activityType]);
 
 
   const getDifficultyColor = (dificuldade: string) => {
