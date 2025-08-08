@@ -597,7 +597,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       </div>
 
       {/* Layout Principal */}
-      <div className="flex flex-1 h-[calc(100vh-140px)]">
+      <div className="flex flex-1 h-full">
         {/* Sidebar de Navegação */}
         <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-lg">
           <div className="p-4">
