@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
+import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -36,6 +37,34 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
+  // Função específica para carregar dados do Plano de Aula
+  const loadPlanoAulaData = (activityId: string) => {
+    console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
+    
+    const cacheKeys = [
+      `constructed_plano-aula_${activityId}`,
+      `schoolpower_plano-aula_content`,
+      `activity_${activityId}`,
+      `activity_fields_${activityId}`
+    ];
+    
+    for (const key of cacheKeys) {
+      const data = localStorage.getItem(key);
+      if (data) {
+        try {
+          const parsedData = JSON.parse(data);
+          console.log(`✅ Dados encontrados em ${key}:`, parsedData);
+          return parsedData;
+        } catch (error) {
+          console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
+        }
+      }
+    }
+    
+    console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
+    return null;
+  };
+
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
     if (isOpen) {
@@ -43,8 +72,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
+      
+      // Se for plano-aula, tentar carregar dados específicos
+      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
+        const planoData = loadPlanoAulaData(activity.id);
+        if (planoData) {
+          console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
+        }
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, activity]);
 
   if (!isOpen || !activity) return null;
 
@@ -151,9 +188,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const renderActivityPreview = () => {
     const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
+    console.log('🎭 ActivityViewModal: Renderizando preview para tipo:', activityType);
+    console.log('🎭 ActivityViewModal: Dados da atividade:', activity);
+
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}');
+
+    console.log('💾 ActivityViewModal: Dados armazenados:', storedData);
+    console.log('🗂️ ActivityViewModal: Campos armazenados:', storedFields);
 
     // Preparar dados para o preview EXATAMENTE como no modal de edição
     let previewData = {
@@ -209,23 +252,112 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       }
     }
 
-    // Tratamento específico para Plano de Aula, buscando dados no cache
+    // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
     if (activityType === 'plano-aula') {
-      const cacheKey = `schoolpower_plano-aula_content`;
-      const cachedContent = localStorage.getItem(cacheKey);
-      if (cachedContent) {
+      console.log('📚 ActivityViewModal: Processando Plano de Aula');
+      
+      // Prioridade 1: Cache específico do plano-aula construído
+      const constructedPlanoKey = `constructed_plano-aula_${activity.id}`;
+      const constructedPlanoContent = localStorage.getItem(constructedPlanoKey);
+      
+      // Prioridade 2: Cache geral do plano-aula
+      const generalCacheKey = `schoolpower_plano-aula_content`;
+      const generalCachedContent = localStorage.getItem(generalCacheKey);
+      
+      // Prioridade 3: Cache da atividade específica
+      const activityCacheKey = `activity_${activity.id}`;
+      const activityCachedContent = localStorage.getItem(activityCacheKey);
+
+      console.log('🔍 ActivityViewModal: Verificando caches de plano-aula:', {
+        constructedExists: !!constructedPlanoContent,
+        generalExists: !!generalCachedContent,
+        activityExists: !!activityCachedContent
+      });
+
+      let planoContent = null;
+
+      // Tentar carregar o conteúdo construído específico primeiro
+      if (constructedPlanoContent) {
         try {
-          const parsedContent = JSON.parse(cachedContent);
-          console.log('📚 Conteúdo do plano-aula carregado do cache:', parsedContent);
-          // Mescla o conteúdo do cache com os dados existentes, priorizando o cache
-          previewData = { ...previewData, ...parsedContent };
+          planoContent = JSON.parse(constructedPlanoContent);
+          console.log('✅ Conteúdo específico do plano-aula carregado:', planoContent);
         } catch (error) {
-          console.error('❌ Erro ao carregar plano-aula do cache:', error);
+          console.error('❌ Erro ao carregar conteúdo específico do plano-aula:', error);
         }
+      }
+
+      // Se não encontrou, tentar o cache geral
+      if (!planoContent && generalCachedContent) {
+        try {
+          planoContent = JSON.parse(generalCachedContent);
+          console.log('✅ Conteúdo geral do plano-aula carregado:', planoContent);
+        } catch (error) {
+          console.error('❌ Erro ao carregar conteúdo geral do plano-aula:', error);
+        }
+      }
+
+      // Se não encontrou, tentar o cache da atividade
+      if (!planoContent && activityCachedContent) {
+        try {
+          const activityContent = JSON.parse(activityCachedContent);
+          if (activityContent && typeof activityContent === 'object') {
+            planoContent = activityContent;
+            console.log('✅ Conteúdo da atividade do plano-aula carregado:', planoContent);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao carregar conteúdo da atividade do plano-aula:', error);
+        }
+      }
+
+      // Se encontrou conteúdo, mesclar com os dados existentes
+      if (planoContent) {
+        console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
+        previewData = { 
+          ...previewData, 
+          ...planoContent,
+          // Garantir que os dados essenciais sejam preservados
+          id: activity.id,
+          type: activityType,
+          title: planoContent.titulo || planoContent.title || previewData.title,
+          description: planoContent.descricao || planoContent.description || previewData.description
+        };
       } else {
-        console.log('ℹ️ Nenhum conteúdo de plano-aula encontrado no cache.');
+        console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
+        
+        // Como fallback, criar uma estrutura completa baseada nos dados da atividade
+        const customFields = activity.customFields || {};
+        
+        previewData = {
+          ...previewData,
+          titulo: activity.title || activity.personalizedTitle || 'Plano de Aula',
+          descricao: activity.description || activity.personalizedDescription || 'Descrição do plano de aula',
+          disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
+          tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Aula',
+          serie: customFields['Ano/Série Escolar'] || customFields['serie'] || '9º Ano',
+          tempo: customFields['Carga Horária'] || customFields['tempo'] || '50 minutos',
+          metodologia: customFields['Tipo de Aula'] || customFields['metodologia'] || 'Aula Expositiva',
+          recursos: customFields['Materiais/Recursos'] ? [customFields['Materiais/Recursos']] : ['Quadro', 'Livro didático'],
+          objetivos: customFields['Objetivo Geral'] || customFields['objetivos'] || 'Compreender o conteúdo proposto',
+          materiais: customFields['Materiais/Recursos'] || customFields['materiais'] || 'Material didático',
+          observacoes: customFields['Observações do Professor'] || customFields['observacoes'] || 'Observações do professor',
+          competencias: customFields['Habilidades BNCC'] || customFields['competencias'] || 'Competências da BNCC',
+          contexto: customFields['Perfil da Turma'] || customFields['contexto'] || 'Turma regular',
+          // Adicionar estrutura completa do plano
+          visao_geral: {
+            disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
+            tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Aula',
+            serie: customFields['Ano/Série Escolar'] || customFields['serie'] || '9º Ano',
+            tempo: customFields['Carga Horária'] || customFields['tempo'] || '50 minutos',
+            metodologia: customFields['Tipo de Aula'] || customFields['metodologia'] || 'Aula Expositiva',
+            recursos: customFields['Materiais/Recursos'] ? [customFields['Materiais/Recursos']] : ['Quadro', 'Livro didático'],
+            sugestoes_ia: ['Plano de aula baseado nas informações fornecidas']
+          }
+        };
+        console.log('🔄 Usando dados de fallback completos para plano-aula:', previewData);
       }
     }
+
+    console.log('📊 ActivityViewModal: Dados finais para preview:', previewData);
 
     switch (activityType) {
       case 'lista-exercicios':
@@ -234,6 +366,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             data={previewData}
             customFields={previewData.customFields}
             onQuestionSelect={handleQuestionSelect}
+          />
+        );
+
+      case 'plano-aula':
+        console.log('📚 Renderizando PlanoAulaPreview com dados:', previewData);
+        return (
+          <PlanoAulaPreview
+            data={previewData}
+            activityData={activity}
           />
         );
 

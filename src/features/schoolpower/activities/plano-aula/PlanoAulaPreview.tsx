@@ -39,10 +39,27 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     hasData: !!planoData,
     hasVisaoGeral: planoData?.visao_geral,
     hasTitle: planoData?.titulo || planoData?.title,
-    dataStructure: planoData ? Object.keys(planoData) : []
+    dataStructure: planoData ? Object.keys(planoData) : [],
+    fullData: planoData
   });
 
-  if (!planoData) {
+  console.log('🎯 PlanoAulaPreview - Análise detalhada dos dados:');
+  console.log('  - Título:', planoData?.titulo || planoData?.title);
+  console.log('  - Descrição:', planoData?.descricao || planoData?.description);
+  console.log('  - Disciplina:', planoData?.disciplina || planoData?.visao_geral?.disciplina);
+  console.log('  - Tema:', planoData?.tema || planoData?.visao_geral?.tema);
+  console.log('  - Série:', planoData?.serie || planoData?.visao_geral?.serie);
+  console.log('  - Tempo:', planoData?.tempo || planoData?.visao_geral?.tempo);
+  console.log('  - Metodologia:', planoData?.metodologia || planoData?.visao_geral?.metodologia);
+  console.log('  - Recursos:', planoData?.recursos || planoData?.visao_geral?.recursos);
+  console.log('  - Objetivos:', planoData?.objetivos);
+  console.log('  - Materiais:', planoData?.materiais);
+  console.log('  - Observações:', planoData?.observacoes);
+  console.log('  - Competências:', planoData?.competencias);
+  console.log('  - Contexto:', planoData?.contexto);
+
+  if (!planoData || (typeof planoData === 'object' && Object.keys(planoData).length === 0)) {
+    console.log('⚠️ PlanoAulaPreview - Dados vazios ou inválidos, exibindo estado vazio');
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -58,15 +75,19 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   // Se não tem estrutura de plano completo, cria uma estrutura básica
   let plano = planoData;
-  if (!plano.visao_geral && (plano.titulo || plano.title)) {
+  if (!plano.visao_geral) {
+    console.log('🔨 PlanoAulaPreview - Criando estrutura básica do plano');
+    
     plano = {
+      titulo: plano.titulo || plano.title || 'Plano de Aula',
+      descricao: plano.descricao || plano.description || 'Descrição do plano de aula',
       visao_geral: {
         disciplina: plano.disciplina || plano.subject || 'Disciplina',
         tema: plano.tema || plano.theme || plano.titulo || plano.title || 'Tema',
-        serie: plano.anoEscolaridade || plano.schoolYear || 'Série',
-        tempo: plano.tempoLimite || plano.timeLimit || 'Tempo',
-        metodologia: plano.tipoAula || plano.difficultyLevel || 'Metodologia',
-        recursos: plano.materiais ? [plano.materiais] : ['Recursos não especificados'],
+        serie: plano.serie || plano.anoEscolaridade || plano.schoolYear || 'Série',
+        tempo: plano.tempo || plano.tempoLimite || plano.timeLimit || 'Tempo',
+        metodologia: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia',
+        recursos: plano.recursos || (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
         sugestoes_ia: ['Plano de aula personalizado']
       },
       objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
@@ -80,19 +101,19 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         sugestao_reescrita: '',
         atividade_relacionada: ''
       }]) : [{
-        descricao: 'Objetivo não especificado',
-        habilidade_bncc: 'BNCC não especificada',
+        descricao: plano.objetivos || 'Objetivo não especificado',
+        habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
       }],
       metodologia: {
-        nome: plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
-        descricao: plano.descricao || plano.description || 'Descrição da metodologia',
+        nome: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
+        descricao: plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
         alternativas: ['Aula expositiva', 'Atividades práticas'],
         simulacao_de_aula: 'Simulação disponível',
         explicacao_em_video: 'Video explicativo disponível'
       },
-      desenvolvimento: [
+      desenvolvimento: plano.desenvolvimento || [
         {
           etapa: 1,
           titulo: 'Introdução',
@@ -121,7 +142,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           nota_privada_professor: 'Aplicar avaliação'
         }
       ],
-      atividades: [
+      atividades: plano.atividades || [
         {
           nome: 'Atividade Principal',
           tipo: 'Prática',
@@ -131,7 +152,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         }
       ],
       avaliacao: {
-        criterios: plano.evaluation || 'Critérios não especificados',
+        criterios: plano.avaliacao || plano.observacoes || plano.evaluation || 'Critérios não especificados',
         instrumentos: ['Observação', 'Participação'],
         feedback: 'Feedback personalizado'
       },
@@ -141,6 +162,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         referencias: ['Bibliografia básica']
       }
     };
+    
+    console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
   };
 
   return (
@@ -149,19 +172,21 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2">{plano.titulo || plano.visao_geral?.tema}</h1>
+            <h1 className="text-2xl font-bold mb-2">
+              {plano.titulo || plano.title || plano.visao_geral?.tema || 'Plano de Aula'}
+            </h1>
             <div className="flex items-center gap-4 text-orange-100">
               <span className="flex items-center gap-1">
                 <BookOpen className="w-4 h-4" />
-                {plano.disciplina || plano.visao_geral?.disciplina}
+                {plano.disciplina || plano.visao_geral?.disciplina || 'Disciplina'}
               </span>
               <span className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                {plano.serie || plano.visao_geral?.serie}
+                {plano.serie || plano.visao_geral?.serie || 'Série'}
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {plano.tempo || plano.visao_geral?.tempo}
+                {plano.tempo || plano.visao_geral?.tempo || 'Tempo'}
               </span>
             </div>
           </div>
