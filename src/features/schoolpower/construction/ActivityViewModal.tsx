@@ -1,7 +1,6 @@
-
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, Users, Clock, Download } from 'lucide-react';
+import { X, Eye } from 'lucide-react'; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,8 +9,10 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 
-// Helper function to get activity icon
+// Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
+// This is a placeholder, replace with actual implementation if needed.
 const getActivityIcon = (activityId: string) => {
+  // Example: return an icon component based on activityId
   return ({ className }: { className: string }) => (
     <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c0-1.707.833-3.123 2.12-4.119C15.387 2.507 17.017 2 19 2s3.613.507 4.88-1.881C24.833 1.707 24 3.123 24 5v10a2 2 0 01-2 2H2a2 2 0 01-2-2V5c0-1.877.847-3.293 2.12-4.119C4.167 0.507 5.993 0 8 0s3.833.507 5.12 1.881C14.833 1.707 14 3.123 14 5v10z" />
@@ -20,6 +21,7 @@ const getActivityIcon = (activityId: string) => {
   );
 };
 
+
 interface ActivityViewModalProps {
   isOpen: boolean;
   activity: ConstructionActivity | null;
@@ -27,7 +29,6 @@ interface ActivityViewModalProps {
 }
 
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
-  // Estados básicos primeiro
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -36,26 +37,17 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
-  // Early return se não há dados necessários
-  if (!isOpen || !activity) return null;
-
-  // Determinação do tipo de atividade - SEMPRE após o early return
-  const activityType = activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
-  const isExerciseList = activityType === 'lista-exercicios';
-
   // Função específica para carregar dados do Plano de Aula
-  const loadPlanoAulaData = React.useCallback((activityId: string) => {
-    if (!activityId) return null;
-    
+  const loadPlanoAulaData = (activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
-
+    
     const cacheKeys = [
       `constructed_plano-aula_${activityId}`,
       `schoolpower_plano-aula_content`,
       `activity_${activityId}`,
       `activity_fields_${activityId}`
     ];
-
+    
     for (const key of cacheKeys) {
       const data = localStorage.getItem(key);
       if (data) {
@@ -68,38 +60,40 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
     }
-
+    
     console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
     return null;
-  }, []);
+  };
 
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
-    if (isOpen && activity) {
+    if (isOpen) {
       setShowSidebar(false);
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-
+      
       // Se for plano-aula, tentar carregar dados específicos
-      if (activityType === 'plano-aula') {
+      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
         if (planoData) {
           console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
         }
       }
     }
-  }, [isOpen, activity, activityType, loadPlanoAulaData]);
+  }, [isOpen, activity]);
+
+  if (!isOpen || !activity) return null;
 
   // Função para lidar com seleção de questão
-  const handleQuestionSelect = React.useCallback((questionIndex: number, questionId: string) => {
+  const handleQuestionSelect = (questionIndex: number, questionId: string) => {
     setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
-  }, []);
+  };
 
   // Função para rolar para uma questão específica
-  const scrollToQuestion = React.useCallback((questionId: string, questionIndex?: number) => {
+  const scrollToQuestion = (questionId: string, questionIndex?: number) => {
     setSelectedQuestionId(questionId);
     if (questionIndex !== undefined) {
       setSelectedQuestionIndex(questionIndex);
@@ -113,19 +107,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         inline: 'nearest'
       });
     }
-  }, []);
+  };
 
   // Obter questões para o sidebar
-  const questionsForSidebar = React.useMemo(() => {
-    if (!activity || activityType !== 'lista-exercicios') {
-      return [];
-    }
+  const getQuestionsForSidebar = () => {
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
-    const storedActivityData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+    if (activityType !== 'lista-exercicios') return [];
+
+    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
 
     const previewData = {
       ...activity.originalData,
-      ...storedActivityData,
+      ...storedData,
       customFields: {
         ...activity.customFields,
         ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
@@ -161,18 +155,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       numero: index + 1,
       dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
       tipo: questao.type || questao.tipo || 'multipla-escolha',
-      completed: false,
-      enunciado: questao.enunciado || questao.statement || 'Sem enunciado'
+      completed: false, // Pode ser expandido para rastrear progresso
+      enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
     }));
-  }, [activity, activityType]);
+  };
 
-  // Dados armazenados para plano de aula
-  const storedData = React.useMemo(() => {
-    if (!activity || activityType !== 'plano-aula') {
-      return null;
-    }
-    return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
-  }, [activity?.id, activityType]);
+  const questionsForSidebar = getQuestionsForSidebar();
+  const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
@@ -196,7 +185,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  const renderActivityPreview = React.useCallback(() => {
+  const renderActivityPreview = () => {
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+
     console.log('🎭 ActivityViewModal: Renderizando preview para tipo:', activityType);
     console.log('🎭 ActivityViewModal: Dados da atividade:', activity);
 
@@ -264,15 +255,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
     if (activityType === 'plano-aula') {
       console.log('📚 ActivityViewModal: Processando Plano de Aula');
-
+      
       // Prioridade 1: Cache específico do plano-aula construído
       const constructedPlanoKey = `constructed_plano-aula_${activity.id}`;
       const constructedPlanoContent = localStorage.getItem(constructedPlanoKey);
-
+      
       // Prioridade 2: Cache geral do plano-aula
       const generalCacheKey = `schoolpower_plano-aula_content`;
       const generalCachedContent = localStorage.getItem(generalCacheKey);
-
+      
       // Prioridade 3: Cache da atividade específica
       const activityCacheKey = `activity_${activity.id}`;
       const activityCachedContent = localStorage.getItem(activityCacheKey);
@@ -332,10 +323,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         };
       } else {
         console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
-
+        
         // Como fallback, criar uma estrutura completa baseada nos dados da atividade
         const customFields = activity.customFields || {};
-
+        
         previewData = {
           ...previewData,
           titulo: activity.title || activity.personalizedTitle || 'Plano de Aula',
@@ -396,7 +387,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
     }
-  }, [activity, activityType, handleQuestionSelect]);
+  };
 
   return (
     <AnimatePresence>
@@ -420,6 +411,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             borderBottomRightRadius: '12px',
           }}
         >
+
+
           {/* Header with Close button */}
           {isExerciseList && (
             <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
@@ -484,6 +477,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         {questionsForSidebar.length} questões
                       </Badge>
                     )}
+
                   </div>
                 </div>
 
@@ -500,60 +494,29 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Non-Exercise List Header */}
           {!isExerciseList && (
-            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
+            <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-gray-800/50 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg">
+                  <Eye className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
                   <h2 className="text-xl font-bold text-orange-900 dark:text-white">
                     Visualizar Atividade
                   </h2>
                   <p className="text-sm text-orange-700 dark:text-gray-300">
                     {activity?.title || 'Atividade Gerada'}
                   </p>
-                  {/* Informações específicas do Plano de Aula */}
-                  {activityType === 'plano-aula' && storedData && (
-                    <div className="flex items-center gap-6 text-sm mt-3">
-                      <span className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300 px-3 py-1 rounded-full">
-                        <BookOpen className="w-4 h-4" />
-                        {storedData.disciplina || 'Disciplina'}
-                      </span>
-                      <span className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
-                        <Users className="w-4 h-4" />
-                        {storedData.anoEscolaridade || storedData.serie || 'Série'}
-                      </span>
-                      <span className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 px-3 py-1 rounded-full">
-                        <Clock className="w-4 h-4" />
-                        {storedData.tempoLimite || storedData.tempo || '50 minutos'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 ml-6">
-                  <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300 px-3 py-1">
-                    Atividade Concluída
-                  </Badge>
-                  {/* Botões específicos do Plano de Aula */}
-                  {activityType === 'plano-aula' && (
-                    <>
-                      <Button variant="outline" size="sm" className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20">
-                        <Download className="w-4 h-4 mr-2" />
-                        Exportar PDF
-                      </Button>
-                      <Button variant="outline" size="sm" className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20">
-                        <Eye className="w-4 h-4 mr-2" />
-                        Simular Aula
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    onClick={onClose}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  </Button>
                 </div>
               </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
             </div>
           )}
+
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
