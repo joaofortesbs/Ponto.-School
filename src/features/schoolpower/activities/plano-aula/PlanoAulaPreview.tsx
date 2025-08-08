@@ -561,6 +561,41 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* Header do Plano */}
+      <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FFA500] text-white p-6 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold mb-3 text-white drop-shadow-sm">
+              {plano.titulo || plano.title || plano.visao_geral?.tema || 'Plano de Aula'}
+            </h1>
+            <div className="flex items-center gap-6 text-orange-100">
+              <span className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                <BookOpen className="w-4 h-4" />
+                {plano.disciplina || plano.visao_geral?.disciplina || 'Disciplina'}
+              </span>
+              <span className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                <Users className="w-4 h-4" />
+                {plano.serie || plano.visao_geral?.serie || 'Série'}
+              </span>
+              <span className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                <Clock className="w-4 h-4" />
+                {plano.tempo || plano.visao_geral?.tempo || 'Tempo'}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+              <Download className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
+            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+              <Eye className="w-4 h-4 mr-2" />
+              Simular Aula
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Layout Principal */}
       <div className="flex flex-1 h-[calc(100vh-140px)]">
         {/* Sidebar de Navegação */}
