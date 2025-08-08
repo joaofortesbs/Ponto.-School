@@ -58,34 +58,71 @@ export function processPlanoAulaData(activity: PlanoAulaActivity): ActivityFormD
     complexityLevel: ''
   };
 
-  // Mapear campos customizados para os campos do formulário
-  Object.entries(planoAulaFieldMapping).forEach(([customFieldKey, formFieldKey]) => {
-    const value = customFields[customFieldKey];
-    if (value && formFieldKey in formData) {
-      (formData as any)[formFieldKey] = value;
-      console.log(`✅ Mapeado: ${customFieldKey} -> ${formFieldKey} = ${value}`);
-    }
-  });
-
-  // Mapear campos adicionais que podem ter nomes diferentes
-  const additionalMappings = {
+  // Mapear campos customizados com prioridade
+  const fieldMappings = {
+    // Mapeamentos principais
+    'Tema ou Tópico Central': 'theme',
+    'Tema Central': 'theme',
     'Tema': 'theme',
+    'tema': 'theme',
+    
+    'Componente Curricular': 'subject',
     'Disciplina': 'subject',
+    'disciplina': 'subject',
+    
+    'Ano/Série Escolar': 'schoolYear',
+    'Público-Alvo': 'schoolYear',
     'Ano de Escolaridade': 'schoolYear',
+    'anoEscolaridade': 'schoolYear',
+    
+    'Objetivo Geral': 'objectives',
+    'Objetivos de Aprendizagem': 'objectives',
+    'Objetivo Principal': 'objectives',
     'Objetivos': 'objectives',
+    'objetivos': 'objectives',
+    
+    'Materiais/Recursos': 'materials',
+    'Recursos': 'materials',
+    'Materiais Necessários': 'materials',
     'Materiais': 'materials',
-    'Instruções': 'instructions',
-    'Critérios de Avaliação': 'evaluation',
+    'materiais': 'materials',
+    
+    'Habilidades BNCC': 'competencies',
+    'Competências': 'competencies',
+    'competencias': 'competencies',
+    
+    'Carga Horária': 'timeLimit',
+    'Tempo Estimado': 'timeLimit',
     'Tempo Limite': 'timeLimit',
+    'tempoLimite': 'timeLimit',
+    
+    'Perfil da Turma': 'context',
     'Contexto': 'context',
-    'Competências': 'competencies'
+    'contexto': 'context',
+    
+    'Tipo de Aula': 'difficultyLevel',
+    'Metodologia': 'difficultyLevel',
+    'tipoAula': 'difficultyLevel',
+    
+    'Observações do Professor': 'evaluation',
+    'Observações': 'evaluation',
+    'Avaliação': 'evaluation',
+    'observacoes': 'evaluation',
+    
+    'Instruções': 'instructions',
+    'instrucoes': 'instructions',
+    
+    'Fontes': 'sources',
+    'Referencias': 'sources',
+    'fontes': 'sources'
   };
 
-  Object.entries(additionalMappings).forEach(([customFieldKey, formFieldKey]) => {
+  // Aplicar mapeamentos com log detalhado
+  Object.entries(fieldMappings).forEach(([customFieldKey, formFieldKey]) => {
     const value = customFields[customFieldKey];
-    if (value && formFieldKey in formData && !formData[formFieldKey as keyof ActivityFormData]) {
+    if (value && value.trim() && formFieldKey in formData) {
       (formData as any)[formFieldKey] = value;
-      console.log(`✅ Mapeamento adicional: ${customFieldKey} -> ${formFieldKey} = ${value}`);
+      console.log(`✅ Mapeado: ${customFieldKey} -> ${formFieldKey} = ${value}`);
     }
   });
 

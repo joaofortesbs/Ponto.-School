@@ -107,40 +107,113 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   useEffect(() => {
     if (activity && isOpen) {
       console.log('🔄 Atualizando dados do modal com atividade:', activity);
+      console.log('🗂️ Custom fields recebidos:', activity.customFields);
 
-      setFormData({
-        title: activity.title || activity.personalizedTitle || '',
-        description: activity.description || activity.personalizedDescription || '',
-        subject: activity.customFields?.disciplina || '',
-        theme: activity.customFields?.tema || activity.personalizedTitle || activity.title || '',
-        schoolYear: activity.customFields?.anoEscolaridade || '',
-        numberOfQuestions: activity.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
-        difficultyLevel: activity.customFields?.tempoLimite || '',
-        questionModel: '',
-        sources: '',
-        objectives: activity.description || activity.personalizedDescription || '',
-        materials: activity.customFields?.fontes || '',
-        instructions: activity.customFields?.contextoAplicacao || '',
-        evaluation: activity.customFields?.modeloQuestoes || '',
-        timeLimit: '',
-        context: '',
-        textType: '',
-        textGenre: '',
-        textLength: '',
-        associatedQuestions: '',
-        competencies: '',
-        readingStrategies: '',
-        visualResources: '',
-        practicalActivities: '',
-        wordsIncluded: '',
-        gridFormat: '',
-        providedHints: '',
-        vocabularyContext: '',
-        language: '',
-        associatedExercises: '',
-        knowledgeArea: '',
-        complexityLevel: ''
-      });
+      const customFields = activity.customFields || {};
+
+      if (activity.id === 'plano-aula') {
+        console.log('📚 Inicializando formulário para plano-aula');
+        
+        const planoAulaFormData = {
+          title: activity.personalizedTitle || activity.title || '',
+          description: activity.personalizedDescription || activity.description || '',
+          subject: customFields['Componente Curricular'] || 
+                   customFields['disciplina'] || 
+                   customFields['Disciplina'] || 
+                   'Matemática',
+          theme: customFields['Tema ou Tópico Central'] || 
+                 customFields['Tema Central'] ||
+                 customFields['tema'] || 
+                 customFields['Tema'] || '',
+          schoolYear: customFields['Ano/Série Escolar'] || 
+                     customFields['Público-Alvo'] ||
+                     customFields['anoEscolaridade'] || 
+                     customFields['Ano de Escolaridade'] || '',
+          numberOfQuestions: '1',
+          difficultyLevel: customFields['Tipo de Aula'] || 
+                          customFields['Metodologia'] ||
+                          customFields['tipoAula'] || 'Expositiva',
+          questionModel: '',
+          sources: customFields['Fontes'] || customFields['fontes'] || '',
+          objectives: customFields['Objetivo Geral'] || 
+                     customFields['Objetivos de Aprendizagem'] ||
+                     customFields['Objetivo Principal'] ||
+                     customFields['objetivos'] || '',
+          materials: customFields['Materiais/Recursos'] || 
+                    customFields['Recursos'] ||
+                    customFields['Materiais Necessários'] ||
+                    customFields['materiais'] || '',
+          instructions: customFields['Instruções'] || 
+                       customFields['Metodologia'] ||
+                       customFields['instrucoes'] || '',
+          evaluation: customFields['Observações do Professor'] || 
+                     customFields['Observações'] ||
+                     customFields['Avaliação'] ||
+                     customFields['observacoes'] || '',
+          timeLimit: customFields['Carga Horária'] || 
+                    customFields['Tempo Estimado'] ||
+                    customFields['tempoLimite'] || '',
+          context: customFields['Perfil da Turma'] || 
+                  customFields['Contexto'] ||
+                  customFields['contexto'] || '',
+          textType: '',
+          textGenre: '',
+          textLength: '',
+          associatedQuestions: '',
+          competencies: customFields['Habilidades BNCC'] || 
+                       customFields['Competências'] ||
+                       customFields['competencias'] || '',
+          readingStrategies: '',
+          visualResources: '',
+          practicalActivities: '',
+          wordsIncluded: '',
+          gridFormat: '',
+          providedHints: '',
+          vocabularyContext: '',
+          language: '',
+          associatedExercises: '',
+          knowledgeArea: '',
+          complexityLevel: ''
+        };
+
+        console.log('📝 Dados iniciais mapeados para plano-aula:', planoAulaFormData);
+        setFormData(planoAulaFormData);
+      } else {
+        // Para outras atividades
+        setFormData({
+          title: activity.title || activity.personalizedTitle || '',
+          description: activity.description || activity.personalizedDescription || '',
+          subject: customFields?.disciplina || '',
+          theme: customFields?.tema || activity.personalizedTitle || activity.title || '',
+          schoolYear: customFields?.anoEscolaridade || '',
+          numberOfQuestions: customFields?.nivelDificuldade?.toLowerCase() || 'medium',
+          difficultyLevel: customFields?.tempoLimite || '',
+          questionModel: '',
+          sources: '',
+          objectives: activity.description || activity.personalizedDescription || '',
+          materials: customFields?.fontes || '',
+          instructions: customFields?.contextoAplicacao || '',
+          evaluation: customFields?.modeloQuestoes || '',
+          timeLimit: '',
+          context: '',
+          textType: '',
+          textGenre: '',
+          textLength: '',
+          associatedQuestions: '',
+          competencies: '',
+          readingStrategies: '',
+          visualResources: '',
+          practicalActivities: '',
+          wordsIncluded: '',
+          gridFormat: '',
+          providedHints: '',
+          vocabularyContext: '',
+          language: '',
+          associatedExercises: '',
+          knowledgeArea: '',
+          complexityLevel: ''
+        });
+      }
     }
   }, [activity, isOpen]);
 
@@ -350,29 +423,60 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             
             if (activity?.id === 'plano-aula') {
               console.log('📚 Processando dados específicos de Plano de Aula');
+              console.log('🗂️ Custom fields consolidados para plano-aula:', consolidatedCustomFields);
               
-              // Processar dados do Plano de Aula diretamente sem import dinâmico
+              // Processar dados do Plano de Aula com mapeamento completo
               enrichedFormData = {
-                title: consolidatedData.title || activity.title || '',
-                description: consolidatedData.description || activity.description || '',
-                subject: consolidatedCustomFields['Componente Curricular'] || consolidatedCustomFields['disciplina'] || 'Português',
-                theme: consolidatedCustomFields['Tema ou Tópico Central'] || consolidatedCustomFields['tema'] || '',
-                schoolYear: consolidatedCustomFields['Ano/Série Escolar'] || consolidatedCustomFields['anoEscolaridade'] || '',
-                numberOfQuestions: '10',
-                difficultyLevel: consolidatedCustomFields['Tipo de Aula'] || 'Médio',
-                questionModel: '',
-                sources: '',
-                objectives: consolidatedCustomFields['Objetivo Geral'] || '',
-                materials: consolidatedCustomFields['Materiais/Recursos'] || '',
-                instructions: '',
-                evaluation: consolidatedCustomFields['Observações do Professor'] || '',
-                timeLimit: consolidatedCustomFields['Carga Horária'] || '',
-                context: consolidatedCustomFields['Perfil da Turma'] || '',
+                title: consolidatedData.personalizedTitle || consolidatedData.title || activity.personalizedTitle || activity.title || '',
+                description: consolidatedData.personalizedDescription || consolidatedData.description || activity.personalizedDescription || activity.description || '',
+                subject: consolidatedCustomFields['Componente Curricular'] || 
+                         consolidatedCustomFields['disciplina'] || 
+                         consolidatedCustomFields['Disciplina'] || 
+                         'Matemática',
+                theme: consolidatedCustomFields['Tema ou Tópico Central'] || 
+                       consolidatedCustomFields['Tema Central'] ||
+                       consolidatedCustomFields['tema'] || 
+                       consolidatedCustomFields['Tema'] || '',
+                schoolYear: consolidatedCustomFields['Ano/Série Escolar'] || 
+                           consolidatedCustomFields['Público-Alvo'] ||
+                           consolidatedCustomFields['anoEscolaridade'] || 
+                           consolidatedCustomFields['Ano de Escolaridade'] || '',
+                numberOfQuestions: '1', // Não aplicável para plano de aula
+                difficultyLevel: consolidatedCustomFields['Tipo de Aula'] || 
+                                consolidatedCustomFields['Metodologia'] ||
+                                consolidatedCustomFields['tipoAula'] || 'Expositiva',
+                questionModel: '', // Não aplicável para plano de aula
+                sources: consolidatedCustomFields['Fontes'] || 
+                        consolidatedCustomFields['Referencias'] ||
+                        consolidatedCustomFields['fontes'] || '',
+                objectives: consolidatedCustomFields['Objetivo Geral'] || 
+                           consolidatedCustomFields['Objetivos de Aprendizagem'] ||
+                           consolidatedCustomFields['Objetivo Principal'] ||
+                           consolidatedCustomFields['objetivos'] || '',
+                materials: consolidatedCustomFields['Materiais/Recursos'] || 
+                          consolidatedCustomFields['Recursos'] ||
+                          consolidatedCustomFields['Materiais Necessários'] ||
+                          consolidatedCustomFields['materiais'] || '',
+                instructions: consolidatedCustomFields['Instruções'] || 
+                             consolidatedCustomFields['Metodologia'] ||
+                             consolidatedCustomFields['instrucoes'] || '',
+                evaluation: consolidatedCustomFields['Observações do Professor'] || 
+                           consolidatedCustomFields['Observações'] ||
+                           consolidatedCustomFields['Avaliação'] ||
+                           consolidatedCustomFields['observacoes'] || '',
+                timeLimit: consolidatedCustomFields['Carga Horária'] || 
+                          consolidatedCustomFields['Tempo Estimado'] ||
+                          consolidatedCustomFields['tempoLimite'] || '',
+                context: consolidatedCustomFields['Perfil da Turma'] || 
+                        consolidatedCustomFields['Contexto'] ||
+                        consolidatedCustomFields['contexto'] || '',
                 textType: '',
                 textGenre: '',
                 textLength: '',
                 associatedQuestions: '',
-                competencies: consolidatedCustomFields['Habilidades BNCC'] || '',
+                competencies: consolidatedCustomFields['Habilidades BNCC'] || 
+                             consolidatedCustomFields['Competências'] ||
+                             consolidatedCustomFields['competencias'] || '',
                 readingStrategies: '',
                 visualResources: '',
                 practicalActivities: '',
@@ -387,6 +491,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               };
               
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
+              console.log('📝 Campos mapeados:');
+              console.log('  - Título:', enrichedFormData.title);
+              console.log('  - Descrição:', enrichedFormData.description);
+              console.log('  - Tema:', enrichedFormData.theme);
+              console.log('  - Componente Curricular:', enrichedFormData.subject);
+              console.log('  - Ano/Série:', enrichedFormData.schoolYear);
+              console.log('  - Objetivos:', enrichedFormData.objectives);
+              console.log('  - Materiais:', enrichedFormData.materials);
+              console.log('  - Carga Horária:', enrichedFormData.timeLimit);
+              console.log('  - Habilidades BNCC:', enrichedFormData.competencies);
+              console.log('  - Perfil da Turma:', enrichedFormData.context);
+              console.log('  - Tipo de Aula:', enrichedFormData.difficultyLevel);
+              console.log('  - Observações:', enrichedFormData.evaluation);
             } else {
             // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
               enrichedFormData = {
@@ -501,39 +618,110 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           console.log('📊 Dados da atividade para preenchimento:', activityData);
           console.log('🗂️ Custom fields disponíveis:', customFields);
 
-          const directFormData = {
-            title: activityData.title || '',
-            description: activityData.description || '',
-            subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
-            theme: customFields['Tema'] || customFields['tema'] || '',
-            schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '',
-            numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || '10',
-            difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
-            questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || '',
-            sources: customFields['Fontes'] || customFields['fontes'] || '',
-            objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
-            materials: customFields['Materiais'] || customFields['materiais'] || '',
-            instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
-            evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || '',
-            timeLimit: customFields['Tempo Limite'] || '',
-            context: customFields['Contexto de Aplicação'] || '',
-            textType: '',
-            textGenre: '',
-            textLength: '',
-            associatedQuestions: '',
-            competencies: '',
-            readingStrategies: '',
-            visualResources: '',
-            practicalActivities: '',
-            wordsIncluded: '',
-            gridFormat: '',
-            providedHints: '',
-            vocabularyContext: '',
-            language: '',
-            associatedExercises: '',
-            knowledgeArea: '',
-            complexityLevel: ''
-          };
+          let directFormData: ActivityFormData;
+
+          if (activity?.id === 'plano-aula') {
+            console.log('📚 Processando dados diretos de Plano de Aula');
+            
+            directFormData = {
+              title: activityData.personalizedTitle || activityData.title || '',
+              description: activityData.personalizedDescription || activityData.description || '',
+              subject: customFields['Componente Curricular'] || 
+                       customFields['disciplina'] || 
+                       customFields['Disciplina'] || 
+                       'Matemática',
+              theme: customFields['Tema ou Tópico Central'] || 
+                     customFields['Tema Central'] ||
+                     customFields['tema'] || 
+                     customFields['Tema'] || '',
+              schoolYear: customFields['Ano/Série Escolar'] || 
+                         customFields['Público-Alvo'] ||
+                         customFields['anoEscolaridade'] || 
+                         customFields['Ano de Escolaridade'] || '',
+              numberOfQuestions: '1',
+              difficultyLevel: customFields['Tipo de Aula'] || 
+                              customFields['Metodologia'] ||
+                              customFields['tipoAula'] || 'Expositiva',
+              questionModel: '',
+              sources: customFields['Fontes'] || customFields['fontes'] || '',
+              objectives: customFields['Objetivo Geral'] || 
+                         customFields['Objetivos de Aprendizagem'] ||
+                         customFields['Objetivo Principal'] ||
+                         customFields['objetivos'] || '',
+              materials: customFields['Materiais/Recursos'] || 
+                        customFields['Recursos'] ||
+                        customFields['Materiais Necessários'] ||
+                        customFields['materiais'] || '',
+              instructions: customFields['Instruções'] || 
+                           customFields['Metodologia'] ||
+                           customFields['instrucoes'] || '',
+              evaluation: customFields['Observações do Professor'] || 
+                         customFields['Observações'] ||
+                         customFields['Avaliação'] ||
+                         customFields['observacoes'] || '',
+              timeLimit: customFields['Carga Horária'] || 
+                        customFields['Tempo Estimado'] ||
+                        customFields['tempoLimite'] || '',
+              context: customFields['Perfil da Turma'] || 
+                      customFields['Contexto'] ||
+                      customFields['contexto'] || '',
+              textType: '',
+              textGenre: '',
+              textLength: '',
+              associatedQuestions: '',
+              competencies: customFields['Habilidades BNCC'] || 
+                           customFields['Competências'] ||
+                           customFields['competencias'] || '',
+              readingStrategies: '',
+              visualResources: '',
+              practicalActivities: '',
+              wordsIncluded: '',
+              gridFormat: '',
+              providedHints: '',
+              vocabularyContext: '',
+              language: '',
+              associatedExercises: '',
+              knowledgeArea: '',
+              complexityLevel: ''
+            };
+            
+            console.log('📝 Dados diretos processados para plano-aula:', directFormData);
+          } else {
+            // Para outras atividades
+            directFormData = {
+              title: activityData.title || '',
+              description: activityData.description || '',
+              subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
+              theme: customFields['Tema'] || customFields['tema'] || '',
+              schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '',
+              numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || '10',
+              difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+              questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || '',
+              sources: customFields['Fontes'] || customFields['fontes'] || '',
+              objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
+              materials: customFields['Materiais'] || customFields['materiais'] || '',
+              instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
+              evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || '',
+              timeLimit: customFields['Tempo Limite'] || '',
+              context: customFields['Contexto de Aplicação'] || '',
+              textType: '',
+              textGenre: '',
+              textLength: '',
+              associatedQuestions: '',
+              competencies: '',
+              readingStrategies: '',
+              visualResources: '',
+              practicalActivities: '',
+              wordsIncluded: '',
+              gridFormat: '',
+              providedHints: '',
+              vocabularyContext: '',
+              language: '',
+              associatedExercises: '',
+              knowledgeArea: '',
+              complexityLevel: ''
+            };
+          }
 
           setFormData(directFormData);
           console.log('📝 Formulário preenchido com dados diretos:', directFormData);
