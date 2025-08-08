@@ -40,9 +40,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     hasVisaoGeral: planoData?.visao_geral,
     hasTitle: planoData?.titulo || planoData?.title,
     dataStructure: planoData ? Object.keys(planoData) : [],
-    fullData: planoData,
-    isFromGemini: planoData?.titulo && planoData?.visao_geral && planoData?.objetivos,
-    hasRealContent: planoData && typeof planoData === 'object' && Object.keys(planoData).length > 5
+    fullData: planoData
   });
 
   console.log('🎯 PlanoAulaPreview - Análise detalhada dos dados:');
@@ -60,7 +58,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   console.log('  - Competências:', planoData?.competencias);
   console.log('  - Contexto:', planoData?.contexto);
 
-  if (!planoData || (typeof planoData === 'object' && Object.keys(planoData).length <= 2)) {
+  if (!planoData || (typeof planoData === 'object' && Object.keys(planoData).length === 0)) {
     console.log('⚠️ PlanoAulaPreview - Dados vazios ou inválidos, exibindo estado vazio');
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
@@ -68,12 +66,9 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
           Plano de Aula não gerado
         </h3>
-        <p className="text-gray-500 dark:text-gray-500 mb-4">
-          Preencha os campos e clique em "Construir Atividade" para gerar o plano de aula personalizado
+        <p className="text-gray-500 dark:text-gray-500">
+          Preencha os campos e clique em "Construir Atividade" para gerar o plano de aula
         </p>
-        <div className="text-sm text-gray-400 dark:text-gray-600">
-          O sistema utilizará IA Gemini para criar um plano completo e personalizado
-        </div>
       </div>
     );
   }

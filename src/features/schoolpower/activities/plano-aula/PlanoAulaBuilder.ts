@@ -1,8 +1,9 @@
 
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
-import { GeminiClient } from '@/utils/api/geminiClient';
 
 export interface PlanoAulaData {
+  // Dados de entrada do formulário
+  titulo: string;
   disciplina: string;
   tema: string;
   serie: string;
@@ -16,8 +17,6 @@ export interface PlanoAulaData {
 }
 
 export interface PlanoAulaResponse {
-  titulo: string;
-  descricao: string;
   visao_geral: {
     disciplina: string;
     tema: string;
@@ -56,285 +55,213 @@ export interface PlanoAulaResponse {
     visualizar_como_aluno: string;
     sugestoes_ia: string[];
   }>;
-  avaliacao: {
-    criterios: string;
-    instrumentos: string[];
-    feedback: string;
-  };
-  recursos_extras: {
-    materiais_complementares: string[];
-    tecnologias: string[];
-    referencias: string[];
-  };
 }
 
 export class PlanoAulaBuilder {
-  private static geminiClient = new GeminiClient();
-
   /**
-   * Formata dados do formulário para envio à IA
+   * Converte dados do formulário para o formato de entrada da IA
    */
   static formatDataForAI(formData: ActivityFormData): PlanoAulaData {
-    console.log('📊 PlanoAulaBuilder - Formatando dados para IA:', formData);
-
     return {
+      titulo: formData.title || 'Plano de Aula',
       disciplina: formData.subject || 'Disciplina não especificada',
       tema: formData.theme || 'Tema não especificado',
       serie: formData.schoolYear || 'Série não especificada',
       cargaHoraria: formData.timeLimit || '50 minutos',
-      habilidadesBNCC: formData.competencies || 'Competências da BNCC',
-      objetivoGeral: formData.objectives || 'Objetivo geral não especificado',
-      materiaisRecursos: formData.materials || 'Materiais básicos',
-      perfilTurma: formData.context || 'Turma heterogênea',
-      tipoAula: formData.difficultyLevel || 'Metodologia ativa',
-      observacoesProfessor: formData.evaluation || 'Observações gerais'
+      habilidadesBNCC: formData.competencies || 'A definir conforme BNCC',
+      objetivoGeral: formData.objectives || 'Objetivo não especificado',
+      materiaisRecursos: formData.materials || 'Materiais a definir',
+      perfilTurma: formData.context || 'Turma padrão',
+      tipoAula: formData.difficultyLevel || 'Aula expositiva dialogada',
+      observacoesProfessor: formData.evaluation || 'Sem observações adicionais'
     };
   }
 
   /**
-   * Gera prompt estruturado para o Gemini
+   * Gera o prompt estruturado para o Gemini
    */
-  static generatePrompt(planoData: PlanoAulaData): string {
-    return `Você é um especialista em educação brasileira e criação de planos de aula. Crie um plano de aula COMPLETO e DETALHADO baseado nos dados específicos fornecidos.
+  static generatePrompt(data: PlanoAulaData): string {
+    const promptData = JSON.stringify(data, null, 2);
+    
+    return `Você é um planejador pedagógico especialista da School Power. Com base nos seguintes dados do professor, construa um plano de aula completo dividido em: Visão Geral, Objetivos, Metodologia, Desenvolvimento e Atividades.
 
-DADOS ESPECÍFICOS DO PLANO:
-- Disciplina: ${planoData.disciplina}
-- Tema: ${planoData.tema}
-- Série/Ano: ${planoData.serie}
-- Carga Horária: ${planoData.cargaHoraria}
-- Habilidades BNCC: ${planoData.habilidadesBNCC}
-- Objetivo Geral: ${planoData.objetivoGeral}
-- Materiais/Recursos: ${planoData.materiaisRecursos}
-- Perfil da Turma: ${planoData.perfilTurma}
-- Tipo de Aula: ${planoData.tipoAula}
-- Observações: ${planoData.observacoesProfessor}
+${promptData}
 
-Crie um plano de aula seguindo EXATAMENTE esta estrutura JSON:
+O plano de aula deve ser aplicável, dinâmico, moderno e atender à BNCC. Use linguagem clara e gere sugestões inteligentes em cada seção.
+
+IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
 
 {
-  "titulo": "Título específico do plano de aula",
-  "descricao": "Descrição detalhada do plano",
   "visao_geral": {
-    "disciplina": "${planoData.disciplina}",
-    "tema": "${planoData.tema}",
-    "serie": "${planoData.serie}",
-    "tempo": "${planoData.cargaHoraria}",
-    "metodologia": "Metodologia pedagógica específica",
-    "recursos": ["Lista", "de", "recursos", "necessários"],
-    "sugestoes_ia": ["Sugestões", "específicas", "da", "IA"]
+    "disciplina": "${data.disciplina}",
+    "tema": "${data.tema}",
+    "serie": "${data.serie}",
+    "tempo": "${data.cargaHoraria}",
+    "metodologia": "Nome da metodologia pedagógica apropriada",
+    "recursos": ["recurso1", "recurso2", "recurso3"],
+    "sugestoes_ia": ["sugestão1", "sugestão2"]
   },
   "objetivos": [
     {
-      "descricao": "Objetivo de aprendizagem específico e mensurável",
-      "habilidade_bncc": "Código e descrição da habilidade BNCC relacionada",
-      "sugestao_reescrita": "Sugestão de melhoria para o objetivo",
+      "descricao": "Objetivo específico de aprendizagem",
+      "habilidade_bncc": "Código da habilidade BNCC",
+      "sugestao_reescrita": "Versão alternativa do objetivo",
       "atividade_relacionada": "Atividade que desenvolve este objetivo"
     }
   ],
   "metodologia": {
-    "nome": "Nome da metodologia escolhida",
-    "descricao": "Descrição detalhada da abordagem pedagógica",
-    "alternativas": ["Metodologia alternativa 1", "Metodologia alternativa 2"],
-    "simulacao_de_aula": "Descrição de como simular a aula",
-    "explicacao_em_video": "Roteiro para vídeo explicativo"
+    "nome": "Nome da metodologia ativa",
+    "descricao": "Descrição detalhada da metodologia",
+    "alternativas": ["metodologia1", "metodologia2"],
+    "simulacao_de_aula": "Descrição de como seria a aula com essa metodologia",
+    "explicacao_em_video": "Descrição do que seria mostrado no vídeo explicativo"
   },
   "desenvolvimento": [
     {
       "etapa": 1,
-      "titulo": "Título da etapa",
+      "titulo": "Nome da etapa",
       "descricao": "Descrição detalhada da etapa",
-      "tipo_interacao": "Tipo de interação (expositiva, interativa, etc.)",
-      "tempo_estimado": "Tempo estimado",
-      "recurso_gerado": "Recurso específico gerado",
-      "nota_privada_professor": "Orientação exclusiva para o professor"
+      "tipo_interacao": "tipo de interação (discussão, individual, grupo)",
+      "tempo_estimado": "tempo em minutos",
+      "recurso_gerado": "tipo de recurso necessário",
+      "nota_privada_professor": "orientação específica para o professor"
     }
   ],
   "atividades": [
     {
       "nome": "Nome da atividade",
-      "tipo": "Tipo da atividade",
+      "tipo": "tipo da atividade (interativa, individual, grupo)",
       "ref_objetivos": [1, 2],
-      "visualizar_como_aluno": "Como o aluno verá esta atividade",
-      "sugestoes_ia": ["Sugestão 1", "Sugestão 2"]
+      "visualizar_como_aluno": "descrição da experiência do aluno",
+      "sugestoes_ia": ["sugestão1", "sugestão2"]
     }
-  ],
-  "avaliacao": {
-    "criterios": "Critérios específicos de avaliação",
-    "instrumentos": ["Instrumento 1", "Instrumento 2"],
-    "feedback": "Como dar feedback aos alunos"
-  },
-  "recursos_extras": {
-    "materiais_complementares": ["Material 1", "Material 2"],
-    "tecnologias": ["Tecnologia 1", "Tecnologia 2"],
-    "referencias": ["Referência 1", "Referência 2"]
-  }
-}
-
-IMPORTANTE:
-- Seja específico e detalhado em cada seção
-- Use os dados fornecidos como base para personalização
-- Crie pelo menos 3 objetivos de aprendizagem
-- Desenvolva pelo menos 3 etapas de desenvolvimento
-- Sugira pelo menos 2 atividades práticas
-- Retorne APENAS o JSON válido, sem explicações adicionais
-- Garanta que todos os campos sejam preenchidos com conteúdo real e útil`;
+  ]
+}`;
   }
 
   /**
-   * Chama a API Gemini para gerar o plano
+   * Valida e processa a resposta da IA
    */
-  static async callGeminiAPI(prompt: string): Promise<string> {
-    console.log('🤖 PlanoAulaBuilder - Chamando API Gemini');
-
+  static processAIResponse(response: string): PlanoAulaResponse {
     try {
-      const response = await this.geminiClient.generate({
-        prompt,
-        temperature: 0.7,
-        maxTokens: 4096,
-        topP: 0.9,
-        topK: 40
-      });
+      // Remove possíveis marcadores de código e limpa a resposta
+      const cleanedResponse = response
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
 
-      if (!response.success) {
-        throw new Error(response.error || 'Erro na API Gemini');
+      const parsed = JSON.parse(cleanedResponse);
+
+      // Validação básica da estrutura
+      if (!parsed.visao_geral || !parsed.objetivos || !parsed.metodologia || 
+          !parsed.desenvolvimento || !parsed.atividades) {
+        throw new Error('Estrutura JSON inválida - campos obrigatórios ausentes');
       }
 
-      console.log('✅ PlanoAulaBuilder - Resposta recebida do Gemini');
-      return response.result;
+      // Garantir que arrays existam
+      if (!Array.isArray(parsed.objetivos)) parsed.objetivos = [];
+      if (!Array.isArray(parsed.desenvolvimento)) parsed.desenvolvimento = [];
+      if (!Array.isArray(parsed.atividades)) parsed.atividades = [];
+      if (!Array.isArray(parsed.visao_geral.recursos)) parsed.visao_geral.recursos = [];
+      if (!Array.isArray(parsed.visao_geral.sugestoes_ia)) parsed.visao_geral.sugestoes_ia = [];
+
+      return parsed as PlanoAulaResponse;
     } catch (error) {
-      console.error('❌ PlanoAulaBuilder - Erro na API Gemini:', error);
-      throw error;
+      console.error('Erro ao processar resposta da IA:', error);
+      console.error('Resposta recebida:', response);
+      
+      // Retornar estrutura de fallback
+      return PlanoAulaBuilder.createFallbackResponse();
     }
-  }
-
-  /**
-   * Processa a resposta da IA
-   */
-  static processAIResponse(aiResponse: string): PlanoAulaResponse {
-    console.log('🔧 PlanoAulaBuilder - Processando resposta da IA');
-
-    try {
-      // Limpar a resposta
-      let cleanResponse = aiResponse.trim();
-      
-      // Remover markdown se presente
-      cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      
-      // Tentar fazer parse do JSON
-      const parsedResponse = JSON.parse(cleanResponse);
-      
-      console.log('✅ PlanoAulaBuilder - Resposta processada com sucesso');
-      return parsedResponse;
-      
-    } catch (error) {
-      console.error('❌ PlanoAulaBuilder - Erro ao processar resposta:', error);
-      console.log('📝 Resposta bruta:', aiResponse);
-      
-      // Retornar resposta de fallback
-      return this.createFallbackResponse();
-    }
-  }
-
-  /**
-   * Formata o plano para exibição no preview
-   */
-  static formatForPreview(planoResponse: PlanoAulaResponse): any {
-    console.log('🎨 PlanoAulaBuilder - Formatando para preview');
-
-    return {
-      titulo: planoResponse.titulo,
-      descricao: planoResponse.descricao,
-      visao_geral: planoResponse.visao_geral,
-      objetivos: planoResponse.objetivos,
-      metodologia: planoResponse.metodologia,
-      desenvolvimento: planoResponse.desenvolvimento,
-      atividades: planoResponse.atividades,
-      avaliacao: planoResponse.avaliacao,
-      recursos_extras: planoResponse.recursos_extras
-    };
   }
 
   /**
    * Cria uma resposta de fallback em caso de erro
    */
   static createFallbackResponse(): PlanoAulaResponse {
-    console.log('🔄 PlanoAulaBuilder - Criando resposta de fallback');
-
     return {
-      titulo: "Plano de Aula Personalizado",
-      descricao: "Plano de aula criado automaticamente pelo sistema",
       visao_geral: {
-        disciplina: "Disciplina",
-        tema: "Tema da aula",
-        serie: "Série/Ano",
-        tempo: "50 minutos",
-        metodologia: "Metodologia Ativa",
-        recursos: ["Quadro", "Projetor", "Material didático"],
-        sugestoes_ia: ["Plano personalizado", "Adaptável à turma"]
+        disciplina: 'Disciplina não especificada',
+        tema: 'Tema não especificado',
+        serie: 'Série não especificada',
+        tempo: '50 minutos',
+        metodologia: 'Aula expositiva dialogada',
+        recursos: ['Quadro', 'Material didático', 'Projetor'],
+        sugestoes_ia: ['Adicione recursos visuais', 'Considere atividades interativas']
       },
       objetivos: [
         {
-          descricao: "Compreender os conceitos fundamentais do tema",
-          habilidade_bncc: "Competência específica da BNCC",
-          sugestao_reescrita: "Objetivo claro e mensurável",
-          atividade_relacionada: "Atividade prática relacionada"
+          descricao: 'Objetivo geral de aprendizagem a ser definido',
+          habilidade_bncc: 'A definir conforme BNCC',
+          sugestao_reescrita: 'Reescreva com linguagem mais específica',
+          atividade_relacionada: 'Atividade prática relacionada'
         }
       ],
       metodologia: {
-        nome: "Metodologia Ativa",
-        descricao: "Abordagem centrada no aluno com participação ativa",
-        alternativas: ["Aula expositiva", "Aprendizagem colaborativa"],
-        simulacao_de_aula: "Simulação disponível",
-        explicacao_em_video: "Vídeo explicativo disponível"
+        nome: 'Metodologia Tradicional',
+        descricao: 'Aula expositiva com participação dos alunos',
+        alternativas: ['Sala de aula invertida', 'Aprendizagem baseada em problemas'],
+        simulacao_de_aula: 'Aula com apresentação do conteúdo e discussão',
+        explicacao_em_video: 'Vídeo explicativo sobre a metodologia'
       },
       desenvolvimento: [
         {
           etapa: 1,
-          titulo: "Introdução",
-          descricao: "Apresentação do tema e objetivos",
-          tipo_interacao: "Expositiva",
-          tempo_estimado: "15 minutos",
-          recurso_gerado: "Slides introdutórios",
-          nota_privada_professor: "Verificar conhecimentos prévios"
+          titulo: 'Introdução',
+          descricao: 'Apresentação do tema e objetivos',
+          tipo_interacao: 'discussão',
+          tempo_estimado: '10 minutos',
+          recurso_gerado: 'slide introdutório',
+          nota_privada_professor: 'Verificar conhecimentos prévios'
         },
         {
           etapa: 2,
-          titulo: "Desenvolvimento",
-          descricao: "Exploração do conteúdo principal",
-          tipo_interacao: "Interativa",
-          tempo_estimado: "25 minutos",
-          recurso_gerado: "Atividade prática",
-          nota_privada_professor: "Acompanhar participação dos alunos"
+          titulo: 'Desenvolvimento',
+          descricao: 'Exposição do conteúdo principal',
+          tipo_interacao: 'explicação',
+          tempo_estimado: '25 minutos',
+          recurso_gerado: 'material de apoio',
+          nota_privada_professor: 'Manter atenção dos alunos'
         },
         {
           etapa: 3,
-          titulo: "Conclusão",
-          descricao: "Síntese e avaliação",
-          tipo_interacao: "Colaborativa",
-          tempo_estimado: "10 minutos",
-          recurso_gerado: "Resumo visual",
-          nota_privada_professor: "Avaliar compreensão geral"
+          titulo: 'Conclusão',
+          descricao: 'Síntese e avaliação',
+          tipo_interacao: 'discussão',
+          tempo_estimado: '15 minutos',
+          recurso_gerado: 'atividade de fixação',
+          nota_privada_professor: 'Verificar aprendizagem'
         }
       ],
       atividades: [
         {
-          nome: "Atividade Principal",
-          tipo: "Prática",
+          nome: 'Discussão em grupo',
+          tipo: 'interativa',
           ref_objetivos: [1],
-          visualizar_como_aluno: "Atividade interativa e engajante",
-          sugestoes_ia: ["Personalizar conforme necessário", "Adaptar ao nível da turma"]
+          visualizar_como_aluno: 'Participação em discussão orientada',
+          sugestoes_ia: ['Adicionar roteiro de discussão', 'Incluir avaliação por pares']
         }
-      ],
-      avaliacao: {
-        criterios: "Participação, compreensão e aplicação dos conceitos",
-        instrumentos: ["Observação", "Atividades práticas"],
-        feedback: "Feedback contínuo e construtivo"
-      },
-      recursos_extras: {
-        materiais_complementares: ["Textos de apoio", "Exercícios extras"],
-        tecnologias: ["Projetor", "Computador"],
-        referencias: ["Bibliografia básica", "Sites educacionais"]
-      }
+      ]
+    };
+  }
+
+  /**
+   * Formata o plano para exibição no preview
+   */
+  static formatForPreview(planoResponse: PlanoAulaResponse) {
+    return {
+      titulo: planoResponse.visao_geral.tema,
+      disciplina: planoResponse.visao_geral.disciplina,
+      serie: planoResponse.visao_geral.serie,
+      tempo: planoResponse.visao_geral.tempo,
+      metodologia: planoResponse.metodologia.nome,
+      recursos: planoResponse.visao_geral.recursos,
+      objetivos: planoResponse.objetivos,
+      desenvolvimento: planoResponse.desenvolvimento,
+      atividades: planoResponse.atividades,
+      sugestoes_ia: planoResponse.visao_geral.sugestoes_ia,
+      isGeneratedByAI: true,
+      generatedAt: new Date().toISOString()
     };
   }
 }

@@ -1,11 +1,9 @@
+
 // Configuração centralizada das chaves de API
 export const API_KEYS = {
-  GEMINI: import.meta.env.VITE_GOOGLE_GEMINI_API_KEY ||
-          process.env.VITE_GOOGLE_GEMINI_API_KEY ||
-          localStorage.getItem('gemini_api_key') ||
-          sessionStorage.getItem('gemini_api_key') || '',
-  CLAUDE: import.meta.env.VITE_ANTHROPIC_API_KEY || ''
-};
+  GEMINI: 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4',
+  CLAUDE: '', // Adicionar quando disponível
+} as const;
 
 // URLs base das APIs
 export const API_URLS = {
