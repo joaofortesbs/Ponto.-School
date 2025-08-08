@@ -38,7 +38,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
   // Função específica para carregar dados do Plano de Aula
-  const loadPlanoAulaData = (activityId: string) => {
+  const loadPlanoAulaData = React.useCallback((activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
 
     const cacheKeys = [
@@ -63,11 +63,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
     console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
     return null;
-  };
+  }, []);
 
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && activity) {
       setShowSidebar(false);
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
@@ -83,17 +83,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   }, [isOpen, activity]);
 
-  if (!isOpen || !activity) return null;
-
   // Função para lidar com seleção de questão
-  const handleQuestionSelect = (questionIndex: number, questionId: string) => {
+  const handleQuestionSelect = React.useCallback((questionIndex: number, questionId: string) => {
     setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
-  };
+  }, []);
 
   // Função para rolar para uma questão específica
-  const scrollToQuestion = (questionId: string, questionIndex?: number) => {
+  const scrollToQuestion = React.useCallback((questionId: string, questionIndex?: number) => {
     setSelectedQuestionId(questionId);
     if (questionIndex !== undefined) {
       setSelectedQuestionIndex(questionIndex);
@@ -107,19 +105,21 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         inline: 'nearest'
       });
     }
-  };
+  }, []);
 
   // Obter questões para o sidebar
-  const getQuestionsForSidebar = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+  const questionsForSidebar = React.useMemo(() => {
+    if (!activity) return [];
+    
+    const currentActivityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
-    if (activityType !== 'lista-exercicios') return [];
+    if (currentActivityType !== 'lista-exercicios') return [];
 
-    const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+    const storedActivityData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
 
     const previewData = {
       ...activity.originalData,
-      ...storedData,
+      ...storedActivityData,
       customFields: {
         ...activity.customFields,
         ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
@@ -155,14 +155,18 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       numero: index + 1,
       dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
       tipo: questao.type || questao.tipo || 'multipla-escolha',
-      completed: false, // Pode ser expandido para rastrear progresso
-      enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
+      completed: false,
+      enunciado: questao.enunciado || questao.statement || 'Sem enunciado'
     }));
-  };
+  }, [activity]);
 
-  const questionsForSidebar = getQuestionsForSidebar();
+  if (!isOpen || !activity) return null;
+
+  
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
   const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+  
+  // Sempre chamar useMemo, mas retornar null quando não for plano-aula
   const storedData = React.useMemo(() => {
     if (activityType === 'plano-aula') {
       return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
@@ -193,7 +197,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  const renderActivityPreview = () => {
+  const renderActivityPreview = React.useCallback(() => {
     console.log('🎭 ActivityViewModal: Renderizando preview para tipo:', activityType);
     console.log('🎭 ActivityViewModal: Dados da atividade:', activity);
 
@@ -393,7 +397,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
     }
-  };
+  }, [activity, activityType]);
 
   return (
     <AnimatePresence>
