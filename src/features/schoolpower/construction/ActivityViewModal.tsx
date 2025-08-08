@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye } from 'lucide-react'; // Import Eye component
+import { X, Eye, BookOpen, Users, Clock, Download } from 'lucide-react'; // Import Eye and other icons
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,14 +40,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   // Função específica para carregar dados do Plano de Aula
   const loadPlanoAulaData = (activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
-    
+
     const cacheKeys = [
       `constructed_plano-aula_${activityId}`,
       `schoolpower_plano-aula_content`,
       `activity_${activityId}`,
       `activity_fields_${activityId}`
     ];
-    
+
     for (const key of cacheKeys) {
       const data = localStorage.getItem(key);
       if (data) {
@@ -60,7 +60,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
     }
-    
+
     console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
     return null;
   };
@@ -72,7 +72,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      
+
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
@@ -162,6 +162,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const questionsForSidebar = getQuestionsForSidebar();
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
+  const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+  const storedData = React.useMemo(() => {
+    if (activityType === 'plano-aula') {
+      return JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
+    }
+    return null;
+  }, [activity.id, activityType]);
+
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
@@ -186,8 +194,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   };
 
   const renderActivityPreview = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
     console.log('🎭 ActivityViewModal: Renderizando preview para tipo:', activityType);
     console.log('🎭 ActivityViewModal: Dados da atividade:', activity);
 
@@ -255,15 +261,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
     if (activityType === 'plano-aula') {
       console.log('📚 ActivityViewModal: Processando Plano de Aula');
-      
+
       // Prioridade 1: Cache específico do plano-aula construído
       const constructedPlanoKey = `constructed_plano-aula_${activity.id}`;
       const constructedPlanoContent = localStorage.getItem(constructedPlanoKey);
-      
+
       // Prioridade 2: Cache geral do plano-aula
       const generalCacheKey = `schoolpower_plano-aula_content`;
       const generalCachedContent = localStorage.getItem(generalCacheKey);
-      
+
       // Prioridade 3: Cache da atividade específica
       const activityCacheKey = `activity_${activity.id}`;
       const activityCachedContent = localStorage.getItem(activityCacheKey);
@@ -323,10 +329,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         };
       } else {
         console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
-        
+
         // Como fallback, criar uma estrutura completa baseada nos dados da atividade
         const customFields = activity.customFields || {};
-        
+
         previewData = {
           ...previewData,
           titulo: activity.title || activity.personalizedTitle || 'Plano de Aula',
@@ -494,26 +500,58 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
           {/* Non-Exercise List Header */}
           {!isExerciseList && (
-            <div className="flex justify-end p-6 border-b border-gray-200 dark:border-gray-700 bg-orange-50 dark:bg-gray-800/50 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/10 dark:bg-orange-500/20 rounded-lg">
-                  <Eye className="w-5 h-5 text-orange-500" />
-                </div>
-                <div>
+            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
                   <h2 className="text-xl font-bold text-orange-900 dark:text-white">
                     Visualizar Atividade
                   </h2>
                   <p className="text-sm text-orange-700 dark:text-gray-300">
                     {activity?.title || 'Atividade Gerada'}
                   </p>
+                  {/* Informações específicas do Plano de Aula */}
+                  {activityType === 'plano-aula' && storedData && (
+                    <div className="flex items-center gap-6 text-sm mt-3">
+                      <span className="flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300 px-3 py-1 rounded-full">
+                        <BookOpen className="w-4 h-4" />
+                        {storedData.disciplina || 'Disciplina'}
+                      </span>
+                      <span className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
+                        <Users className="w-4 h-4" />
+                        {storedData.anoEscolaridade || storedData.serie || 'Série'}
+                      </span>
+                      <span className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 px-3 py-1 rounded-full">
+                        <Clock className="w-4 h-4" />
+                        {storedData.tempoLimite || storedData.tempo || '50 minutos'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 ml-6">
+                  <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700 dark:text-green-300 px-3 py-1">
+                    Atividade Concluída
+                  </Badge>
+                  {/* Botões específicos do Plano de Aula */}
+                  {activityType === 'plano-aula' && (
+                    <>
+                      <Button variant="outline" size="sm" className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                        <Download className="w-4 h-4 mr-2" />
+                        Exportar PDF
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20">
+                        <Eye className="w-4 h-4 mr-2" />
+                        Simular Aula
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  </Button>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-              </button>
             </div>
           )}
 
