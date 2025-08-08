@@ -16,6 +16,7 @@ import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
+import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 interface EditActivityModalProps {
@@ -1524,7 +1525,12 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
                   {isContentLoaded && generatedContent ? (
-                    activity?.id === 'lista-exercicios' ? (
+                    activity?.id === 'plano-aula' ? (
+                      <PlanoAulaPreview 
+                        data={generatedContent}
+                        activityData={activity}
+                      />
+                    ) : activity?.id === 'lista-exercicios' ? (
                       <ExerciseListPreview 
                         data={processExerciseListData(formData, generatedContent)}
                         content={generatedContent}
