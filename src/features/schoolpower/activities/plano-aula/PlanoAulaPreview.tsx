@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { 
   BookOpen, 
@@ -18,7 +17,8 @@ import {
   Plus,
   ChevronRight,
   Brain,
-  Activity
+  Activity,
+  CheckCircle
 } from 'lucide-react';
 
 interface PlanoAulaPreviewProps {
@@ -166,271 +166,296 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
   };
 
-  return (
-    <div className="h-full overflow-hidden bg-white dark:bg-gray-900">
-      {/* Header do Plano */}
-      <div className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">
-              {plano.titulo || plano.title || plano.visao_geral?.tema || 'Plano de Aula'}
-            </h1>
-            <div className="flex items-center gap-4 text-orange-100">
-              <span className="flex items-center gap-1">
-                <BookOpen className="w-4 h-4" />
-                {plano.disciplina || plano.visao_geral?.disciplina || 'Disciplina'}
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-4 h-4" />
-                {plano.serie || plano.visao_geral?.serie || 'Série'}
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {plano.tempo || plano.visao_geral?.tempo || 'Tempo'}
-              </span>
+  // Seções de navegação lateral
+  const sidebarSections = [
+    {
+      id: 'visao-geral',
+      label: 'Visão Geral',
+      icon: BookOpen,
+      description: 'Informações gerais do plano'
+    },
+    {
+      id: 'objetivos',
+      label: 'Objetivos',
+      icon: Target,
+      description: 'Objetivos de aprendizagem'
+    },
+    {
+      id: 'metodologia',
+      label: 'Metodologia',
+      icon: Brain,
+      description: 'Abordagem pedagógica'
+    },
+    {
+      id: 'desenvolvimento',
+      label: 'Desenvolvimento',
+      icon: Activity,
+      description: 'Etapas da aula'
+    },
+    {
+      id: 'atividades',
+      label: 'Atividades',
+      icon: Play,
+      description: 'Atividades práticas'
+    }
+  ];
+
+  const renderSectionContent = () => {
+    switch (activeSection) {
+      case 'visao-geral':
+        return (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 rounded-xl border border-orange-200 dark:border-orange-700">
+              <h3 className="text-xl font-bold text-orange-900 dark:text-orange-100 mb-4 flex items-center gap-3">
+                <div className="p-2 bg-orange-500 rounded-lg">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                Informações Gerais
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Disciplina</label>
+                    <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.disciplina || plano.disciplina}</p>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Série/Ano</label>
+                    <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.serie || plano.serie}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Tempo</label>
+                    <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.tempo || plano.tempo}</p>
+                  </div>
+                  
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 block">Metodologia</label>
+                    <p className="text-lg font-medium text-gray-900 dark:text-gray-100">{plano.visao_geral?.metodologia || plano.metodologia}</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator className="my-6" />
+
+              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 block">Recursos Necessários</label>
+                <div className="flex flex-wrap gap-2">
+                  {(plano.visao_geral?.recursos || plano.recursos || []).map((recurso: string, index: number) => (
+                    <Badge key={index} variant="outline" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30 px-3 py-1">
+                      {recurso}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {(plano.visao_geral?.sugestoes_ia || plano.sugestoes_ia) && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700 mt-4">
+                  <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5" />
+                    Sugestões da IA
+                  </h4>
+                  <ul className="space-y-2">
+                    {(plano.visao_geral?.sugestoes_ia || plano.sugestoes_ia || []).map((sugestao: string, index: number) => (
+                      <li key={index} className="text-blue-700 dark:text-blue-300 text-sm flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        {sugestao}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar PDF
-            </Button>
-            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              <Eye className="w-4 h-4 mr-2" />
-              Simular Aula
-            </Button>
-          </div>
-        </div>
-      </div>
+        );
 
-      {/* Navegação por Tabs */}
-      <div className="flex-1 overflow-hidden">
-        <Tabs value={activeSection} onValueChange={setActiveSection} className="h-full flex flex-col">
-          <TabsList className="grid grid-cols-5 w-full bg-gray-100 dark:bg-gray-800">
-            <TabsTrigger value="visao-geral" className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              Visão Geral
-            </TabsTrigger>
-            <TabsTrigger value="objetivos" className="flex items-center gap-2">
-              <Target className="w-4 h-4" />
-              Objetivos
-            </TabsTrigger>
-            <TabsTrigger value="metodologia" className="flex items-center gap-2">
-              <Brain className="w-4 h-4" />
-              Metodologia
-            </TabsTrigger>
-            <TabsTrigger value="desenvolvimento" className="flex items-center gap-2">
-              <Activity className="w-4 h-4" />
-              Desenvolvimento
-            </TabsTrigger>
-            <TabsTrigger value="atividades" className="flex items-center gap-2">
-              <Play className="w-4 h-4" />
-              Atividades
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex-1 overflow-y-auto p-6">
-            {/* Visão Geral */}
-            <TabsContent value="visao-geral" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-[#FF6B00]" />
-                    Visão Geral do Plano
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Disciplina</label>
-                      <p className="text-lg font-semibold">{plano.visao_geral?.disciplina || plano.disciplina}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Série/Ano</label>
-                      <p className="text-lg font-semibold">{plano.visao_geral?.serie || plano.serie}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tempo</label>
-                      <p className="text-lg font-semibold">{plano.visao_geral?.tempo || plano.tempo}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Metodologia</label>
-                      <p className="text-lg font-semibold">{plano.visao_geral?.metodologia || plano.metodologia}</p>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Recursos Necessários</label>
-                    <div className="flex flex-wrap gap-2">
-                      {(plano.visao_geral?.recursos || plano.recursos || []).map((recurso: string, index: number) => (
-                        <Badge key={index} variant="outline" className="border-[#FF6B00] text-[#FF6B00]">
-                          {recurso}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {(plano.visao_geral?.sugestoes_ia || plano.sugestoes_ia) && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                      <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
-                        <Lightbulb className="w-4 h-4" />
-                        Sugestões da IA
-                      </h4>
-                      <ul className="space-y-1">
-                        {(plano.visao_geral?.sugestoes_ia || plano.sugestoes_ia || []).map((sugestao: string, index: number) => (
-                          <li key={index} className="text-blue-700 dark:text-blue-300 text-sm">• {sugestao}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Objetivos */}
-            <TabsContent value="objetivos" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Objetivos de Aprendizagem</h3>
-                <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF8C40]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Objetivo
-                </Button>
-              </div>
-              
+      case 'objetivos':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                <div className="p-2 bg-green-500 rounded-lg">
+                  <Target className="w-5 h-5 text-white" />
+                </div>
+                Objetivos de Aprendizagem
+              </h3>
+              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Objetivo
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
               {(plano.objetivos || []).map((objetivo: any, index: number) => (
-                <Card key={index}>
-                  <CardContent className="p-4">
+                <Card key={index} className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge className="bg-[#FF6B00] text-white">Objetivo {index + 1}</Badge>
+                        <div className="flex items-center gap-3 mb-3">
+                          <Badge className="bg-green-500 text-white font-medium px-3 py-1">Objetivo {index + 1}</Badge>
                           {objetivo.habilidade_bncc && (
-                            <Badge variant="outline">{objetivo.habilidade_bncc}</Badge>
+                            <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50 dark:border-green-600 dark:text-green-300 dark:bg-green-900/30">
+                              {objetivo.habilidade_bncc}
+                            </Badge>
                           )}
                         </div>
-                        <p className="text-gray-800 dark:text-gray-200 mb-2">{objetivo.descricao}</p>
+                        <p className="text-gray-800 dark:text-gray-200 mb-3 text-base leading-relaxed">{objetivo.descricao}</p>
+                        
                         {objetivo.atividade_relacionada && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            <strong>Atividade relacionada:</strong> {objetivo.atividade_relacionada}
-                          </p>
+                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg mb-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <strong className="text-gray-800 dark:text-gray-200">Atividade relacionada:</strong> {objetivo.atividade_relacionada}
+                            </p>
+                          </div>
                         )}
+                        
                         {objetivo.sugestao_reescrita && (
-                          <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm">
-                            <strong className="text-yellow-800 dark:text-yellow-200">Sugestão de reescrita:</strong>
-                            <p className="text-yellow-700 dark:text-yellow-300">{objetivo.sugestao_reescrita}</p>
+                          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                            <strong className="text-yellow-800 dark:text-yellow-200 block mb-1">Sugestão de reescrita:</strong>
+                            <p className="text-yellow-700 dark:text-yellow-300 text-sm">{objetivo.sugestao_reescrita}</p>
                           </div>
                         )}
                       </div>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="ml-4 border-green-300 text-green-600 hover:bg-green-50">
                         Gerar Atividade
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
-            </TabsContent>
+            </div>
+          </div>
+        );
 
-            {/* Metodologia */}
-            <TabsContent value="metodologia" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-[#FF6B00]" />
-                    {plano.metodologia?.nome || 'Metodologia'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-gray-700 dark:text-gray-300">
+      case 'metodologia':
+        return (
+          <div className="space-y-6">
+            <Card className="border-l-4 border-l-purple-500 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-purple-500 rounded-lg">
+                    <Brain className="w-5 h-5 text-white" />
+                  </div>
+                  {plano.metodologia?.nome || 'Metodologia'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-5 rounded-xl border border-purple-200 dark:border-purple-700">
+                  <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed">
                     {plano.metodologia?.descricao || 'Descrição da metodologia não disponível'}
                   </p>
+                </div>
 
-                  <div className="flex gap-2">
-                    <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF8C40]">
-                      <Play className="w-4 h-4 mr-2" />
-                      Simular Aula
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Vídeo Explicativo
-                    </Button>
+                <div className="flex gap-3">
+                  <Button size="sm" className="bg-purple-500 hover:bg-purple-600 text-white flex-shrink-0">
+                    <Play className="w-4 h-4 mr-2" />
+                    Simular Aula
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Vídeo Explicativo
+                  </Button>
+                </div>
+
+                {plano.metodologia?.alternativas && plano.metodologia.alternativas.length > 0 && (
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Metodologias Alternativas</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {plano.metodologia.alternativas.map((alt: string, index: number) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline" 
+                          className="cursor-pointer hover:bg-purple-50 border-purple-300 text-purple-700 transition-colors"
+                        >
+                          {alt}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
+                )}
 
-                  {plano.metodologia?.alternativas && plano.metodologia.alternativas.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2">Metodologias Alternativas</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {plano.metodologia.alternativas.map((alt: string, index: number) => (
-                          <Badge key={index} variant="outline" className="cursor-pointer hover:bg-gray-100">
-                            {alt}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                {plano.metodologia?.simulacao_de_aula && (
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                      <Play className="w-4 h-4" />
+                      Simulação da Aula
+                    </h4>
+                    <p className="text-green-700 dark:text-green-300 text-sm">
+                      {plano.metodologia.simulacao_de_aula}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
 
-                  {plano.metodologia?.simulacao_de_aula && (
-                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                      <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">Simulação da Aula</h4>
-                      <p className="text-green-700 dark:text-green-300 text-sm">
-                        {plano.metodologia.simulacao_de_aula}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+      case 'desenvolvimento':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                <div className="p-2 bg-blue-500 rounded-lg">
+                  <Activity className="w-5 h-5 text-white" />
+                </div>
+                Etapas de Desenvolvimento
+              </h3>
+              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Etapa
+              </Button>
+            </div>
 
-            {/* Desenvolvimento */}
-            <TabsContent value="desenvolvimento" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Etapas de Desenvolvimento</h3>
-                <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF8C40]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Etapa
-                </Button>
-              </div>
-
+            <div className="space-y-6">
               {(plano.desenvolvimento || []).map((etapa: any, index: number) => (
-                <Card key={index} className="relative">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
+                <Card key={index} className="relative border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-6">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-[#FF6B00] text-white rounded-full flex items-center justify-center font-bold">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                           {etapa.etapa || index + 1}
                         </div>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-lg">{etapa.titulo}</h4>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{etapa.tipo_interacao}</Badge>
-                            <Badge className="bg-blue-100 text-blue-800">{etapa.tempo_estimado}</Badge>
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-bold text-xl text-gray-900 dark:text-gray-100">{etapa.titulo}</h4>
+                          <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:bg-blue-900/30 px-3 py-1">
+                              {etapa.tipo_interacao}
+                            </Badge>
+                            <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 px-3 py-1">
+                              {etapa.tempo_estimado}
+                            </Badge>
                           </div>
                         </div>
-                        <p className="text-gray-700 dark:text-gray-300 mb-3">{etapa.descricao}</p>
+                        
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
+                          <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed">{etapa.descricao}</p>
+                        </div>
                         
                         {etapa.recurso_gerado && (
-                          <div className="mb-2">
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Recurso: </span>
-                            <span className="text-sm">{etapa.recurso_gerado}</span>
+                          <div className="bg-white dark:bg-gray-700 p-3 rounded-lg mb-3 border border-gray-200 dark:border-gray-600">
+                            <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Recurso gerado: </span>
+                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{etapa.recurso_gerado}</span>
                           </div>
                         )}
 
                         {etapa.nota_privada_professor && (
-                          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded text-sm">
-                            <strong className="text-yellow-800 dark:text-yellow-200">Nota para o professor:</strong>
-                            <p className="text-yellow-700 dark:text-yellow-300">{etapa.nota_privada_professor}</p>
+                          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700 mb-4">
+                            <strong className="text-yellow-800 dark:text-yellow-200 block mb-2">Nota para o professor:</strong>
+                            <p className="text-yellow-700 dark:text-yellow-300 text-sm">{etapa.nota_privada_professor}</p>
                           </div>
                         )}
 
-                        <div className="flex gap-2 mt-3">
-                          <Button size="sm" variant="outline">
+                        <div className="flex gap-3">
+                          <Button size="sm" variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
                             <FileText className="w-4 h-4 mr-2" />
                             Gerar Slides
                           </Button>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" className="border-green-300 text-green-600 hover:bg-green-50">
                             <Plus className="w-4 h-4 mr-2" />
                             Gerar Recurso
                           </Button>
@@ -440,63 +465,84 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                   </CardContent>
                 </Card>
               ))}
-            </TabsContent>
+            </div>
+          </div>
+        );
 
-            {/* Atividades */}
-            <TabsContent value="atividades" className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Atividades da Aula</h3>
-                <Button size="sm" className="bg-[#FF6B00] hover:bg-[#FF8C40]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Atividade
-                </Button>
-              </div>
+      case 'atividades':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+                <div className="p-2 bg-indigo-500 rounded-lg">
+                  <Play className="w-5 h-5 text-white" />
+                </div>
+                Atividades da Aula
+              </h3>
+              <Button size="sm" className="bg-indigo-500 hover:bg-indigo-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Atividade
+              </Button>
+            </div>
 
+            <div className="space-y-4">
               {(plano.atividades || []).map((atividade: any, index: number) => (
-                <Card key={index}>
-                  <CardContent className="p-4">
+                <Card key={index} className="border-l-4 border-l-indigo-500 shadow-md hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold">{atividade.nome}</h4>
-                          <Badge className="bg-green-100 text-green-800">{atividade.tipo}</Badge>
+                        <div className="flex items-center gap-3 mb-3">
+                          <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">{atividade.nome}</h4>
+                          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 px-3 py-1">
+                            {atividade.tipo}
+                          </Badge>
                         </div>
                         
                         {atividade.ref_objetivos && atividade.ref_objetivos.length > 0 && (
-                          <div className="mb-2">
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Objetivos relacionados: </span>
-                            <div className="flex gap-1 mt-1">
+                          <div className="mb-3">
+                            <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 block mb-2">Objetivos relacionados:</span>
+                            <div className="flex flex-wrap gap-2">
                               {atividade.ref_objetivos.map((obj: number) => (
-                                <Badge key={obj} variant="outline" size="sm">Objetivo {obj}</Badge>
+                                <Badge key={obj} variant="outline" size="sm" className="border-indigo-300 text-indigo-700 bg-indigo-50 dark:border-indigo-600 dark:text-indigo-300 dark:bg-indigo-900/30">
+                                  Objetivo {obj}
+                                </Badge>
                               ))}
                             </div>
                           </div>
                         )}
 
                         {atividade.visualizar_como_aluno && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            <strong>Experiência do aluno:</strong> {atividade.visualizar_como_aluno}
-                          </p>
+                          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-3">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <strong className="text-gray-800 dark:text-gray-200">Experiência do aluno:</strong> {atividade.visualizar_como_aluno}
+                            </p>
+                          </div>
                         )}
 
                         {atividade.sugestoes_ia && atividade.sugestoes_ia.length > 0 && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-sm">
-                            <strong className="text-blue-800 dark:text-blue-200">Sugestões da IA:</strong>
-                            <ul className="mt-1">
+                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                            <strong className="text-blue-800 dark:text-blue-200 block mb-2 flex items-center gap-2">
+                              <Lightbulb className="w-4 h-4" />
+                              Sugestões da IA:
+                            </strong>
+                            <ul className="space-y-1">
                               {atividade.sugestoes_ia.map((sugestao: string, idx: number) => (
-                                <li key={idx} className="text-blue-700 dark:text-blue-300">• {sugestao}</li>
+                                <li key={idx} className="text-blue-700 dark:text-blue-300 text-sm flex items-start gap-2">
+                                  <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                  {sugestao}
+                                </li>
                               ))}
                             </ul>
                           </div>
                         )}
                       </div>
                       
-                      <div className="flex flex-col gap-2">
-                        <Button size="sm" variant="outline">
+                      <div className="flex flex-col gap-2 ml-4">
+                        <Button size="sm" variant="outline" className="border-indigo-300 text-indigo-600 hover:bg-indigo-50">
                           <Eye className="w-4 h-4 mr-2" />
                           Visualizar
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-50">
                           Substituir
                         </Button>
                       </div>
@@ -504,9 +550,118 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                   </CardContent>
                 </Card>
               ))}
-            </TabsContent>
+            </div>
           </div>
-        </Tabs>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* Header do Plano */}
+      <div className="bg-gradient-to-r from-[#FF6B00] via-[#FF8C40] to-[#FFA500] text-white p-6 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold mb-3 text-white drop-shadow-sm">
+              {plano.titulo || plano.title || plano.visao_geral?.tema || 'Plano de Aula'}
+            </h1>
+            <div className="flex items-center gap-6 text-orange-100">
+              <span className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                <BookOpen className="w-4 h-4" />
+                {plano.disciplina || plano.visao_geral?.disciplina || 'Disciplina'}
+              </span>
+              <span className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                <Users className="w-4 h-4" />
+                {plano.serie || plano.visao_geral?.serie || 'Série'}
+              </span>
+              <span className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+                <Clock className="w-4 h-4" />
+                {plano.tempo || plano.visao_geral?.tempo || 'Tempo'}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+              <Download className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
+            <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm">
+              <Eye className="w-4 h-4 mr-2" />
+              Simular Aula
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Layout Principal */}
+      <div className="flex flex-1 h-[calc(100vh-140px)]">
+        {/* Sidebar de Navegação */}
+        <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-lg">
+          <div className="p-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Seções do Plano</h2>
+            <div className="space-y-3">
+              {sidebarSections.map((section) => {
+                const Icon = section.icon;
+                const isActive = activeSection === section.id;
+                
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={`w-full text-left p-4 rounded-xl transition-all duration-200 group ${
+                      isActive
+                        ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-lg transform scale-[1.02]'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        isActive 
+                          ? 'bg-white/20' 
+                          : 'bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600'
+                      }`}>
+                        <Icon className={`w-5 h-5 ${
+                          isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+                        }`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold ${
+                          isActive ? 'text-white' : 'text-gray-900 dark:text-gray-100'
+                        }`}>
+                          {section.label}
+                        </h3>
+                        <p className={`text-sm ${
+                          isActive ? 'text-orange-100' : 'text-gray-500 dark:text-gray-400'
+                        }`}>
+                          {section.description}
+                        </p>
+                      </div>
+                      {isActive && (
+                        <ChevronRight className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Área de Conteúdo Principal */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <div className="p-8">
+              <Card className="shadow-xl border-0 bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
+                <CardContent className="p-8">
+                  {renderSectionContent()}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
