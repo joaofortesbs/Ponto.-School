@@ -1,0 +1,172 @@
+📌 LÓGICA GERAL DO FUNCIONAMENTO DO SISTEMA DE PLANO DE AULA (SCHOOL POWER)
+
+Entrada de Dados (Campos Obrigatórios + Opcionais)
+Estes dados virão de formulários preenchidos pelo professor ou por comando da IA. Devem ser salvos em formato JSON estruturado para análise.
+
+Envio para a IA Gemini (Prompting + Processamento)
+
+Após o preenchimento dos campos, a plataforma envia para o Gemini um prompt estruturado com o seguinte padrão (exemplo):
+
+Prompt estruturado:
+"""
+Você é um planejador pedagógico especialista da School Power. Com base nos seguintes dados do professor, construa um plano de aula completo dividido em: Visão Geral, Objetivos, Metodologia, Desenvolvimento e Atividades.
+
+{JSON com os dados coletados acima}
+
+O plano de aula deve ser aplicável, dinâmico, moderno e atender à BNCC. Use linguagem clara e gere sugestões inteligentes em cada seção.
+"""
+
+O Gemini então devolve um JSON estruturado da seguinte forma:
+
+{
+"visao_geral": {
+"disciplina": "...",
+"tema": "...",
+"serie": "...",
+"tempo": "...",
+"metodologia": "...",
+"recursos": ["...", "..."],
+"sugestoes_ia": ["Você não adicionou recurso visual – deseja que eu sugira um vídeo?"]
+},
+"objetivos": [
+{
+"descricao": "Compreender o contexto social da Revolução Francesa",
+"habilidade_bncc": "EF09HI07",
+"sugestao_reescrita": "...",
+"atividade_relacionada": "quiz interativo sobre causas da revolução"
+},
+...
+],
+"metodologia": {
+"nome": "Sala de Aula Invertida",
+"descricao": "...",
+"alternativas": [...],
+"simulacao_de_aula": "...",
+"explicacao_em_video": "url ou texto"
+},
+"desenvolvimento": [
+{
+"etapa": 1,
+"titulo": "Abertura com pergunta norteadora",
+"descricao": "...",
+"tipo_interacao": "discussão",
+"tempo_estimado": "10 min",
+"recurso_gerado": "slide + imagem",
+"nota_privada_professor": "..."
+},
+...
+],
+"atividades": [
+{
+"nome": "Debate entre grupos",
+"tipo": "interativa",
+"ref_objetivos": [1, 3],
+"visualizar_como_aluno": "url ou simulação",
+"sugestoes_ia": ["Substituir atividade", "Complementar com infográfico"]
+}
+]
+}
+
+Construção da Interface Dinâmica na Plataforma
+
+Baseado nesse JSON completo, a plataforma monta a interface do Plano de Aula com base nas seguintes regras de renderização:
+
+🔷 Visão Geral:
+
+Exibir ícones e campos destacados
+
+Botão “Exportar como PDF”
+
+Mensagem inteligente: “Deseja que eu gere um vídeo resumo?”
+
+🔷 Objetivos:
+
+Lista numerada
+
+Tag da habilidade BNCC
+
+Botão: “+ Adicionar novo objetivo”
+
+Botão por item: “Gerar atividade relacionada”
+
+Sugestão de reescrita pelo Gemini
+
+🔷 Metodologia:
+
+Nome da metodologia ativa + descrição
+
+Botão: “Simular aula com essa metodologia”
+
+Lista suspensa: trocar por outras metodologias
+
+Vídeo explicativo (gerado ou incorporado pela IA)
+
+🔷 Desenvolvimento:
+
+Cards por etapa (com ícones, tempos, tipo de interação)
+
+Drag & drop
+
+Botão: “Transformar etapa em slides”
+
+Botão: “Gerar recurso para etapa”
+
+Notas privadas
+
+🔷 Atividades:
+
+Cards com tipo da atividade (quiz, debate etc.)
+
+Tags com objetivos correspondentes
+
+Botão: “Visualizar como aluno”
+
+Botão: “Substituir por outra”
+
+Sugestões inteligentes da IA (ex: "Atividade reforça objetivo 2")
+
+Ações Inteligentes da IA (em tempo real)
+
+Durante toda a navegação/interação do professor com o plano de aula, a IA pode:
+
+Detectar ausência de algum recurso e sugerir adicionar (vídeo, imagem, artigo, quiz etc.)
+
+Reescrever qualquer parte com linguagem mais acessível
+
+Sugerir simulações, mapas mentais, infográficos, slides etc.
+
+Propor substituição de atividades por versões mais engajadoras
+
+Adaptar metodologia a alunos com dificuldades específicas
+
+Exportações
+
+Exportar Plano como PDF
+
+Exportar como Apresentação (slides por etapa de desenvolvimento)
+
+Exportar como arquivo SCORM (para uso em LMS externos, no futuro)
+
+Salvamento e Histórico
+
+Plano de Aula salvo automaticamente na conta do professor
+
+Histórico de versões
+
+Possibilidade de duplicar plano
+
+Compartilhar com outros professores da plataforma
+
+📌 RESUMO DO FLUXO DO SISTEMA:
+
+Usuário preenche campos básicos ou pede para a IA preencher
+
+Sistema envia dados estruturados para a IA (Gemini)
+
+IA responde com um JSON completo com plano de aula dividido por seção
+
+Plataforma monta a interface com base nos dados recebidos
+
+IA continua interagindo com o professor conforme ele explora o plano
+
+Usuário pode editar tudo, exportar, salvar, duplicar e compartilhar
