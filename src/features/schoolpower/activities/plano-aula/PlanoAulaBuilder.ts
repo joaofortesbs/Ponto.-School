@@ -249,7 +249,7 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
    * Formata o plano para exibição no preview
    */
   static formatForPreview(planoResponse: PlanoAulaResponse) {
-    return {
+    const formatted = {
       titulo: planoResponse.visao_geral.tema,
       disciplina: planoResponse.visao_geral.disciplina,
       serie: planoResponse.visao_geral.serie,
@@ -260,8 +260,18 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
       desenvolvimento: planoResponse.desenvolvimento,
       atividades: planoResponse.atividades,
       sugestoes_ia: planoResponse.visao_geral.sugestoes_ia,
+      
+      // Manter estrutura original também para compatibilidade
+      visao_geral: planoResponse.visao_geral,
+      metodologia_completa: planoResponse.metodologia,
+      
+      // Metadados
       isGeneratedByAI: true,
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
+      activityType: 'plano-aula'
     };
+
+    console.log('🎨 [PlanoAulaBuilder] Dados formatados para preview:', formatted);
+    return formatted;
   }
 }

@@ -900,25 +900,34 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       setGeneratedContent(processedContent);
       setIsContentLoaded(true);
 
-      // Salvar no localStorage
-      localStorage.setItem(`activity_${activity?.id}`, JSON.stringify({
+      // Salvar no localStorage com estrutura específica para cada tipo de atividade
+      const savedData = {
         generatedAt: new Date().toISOString(),
         activityId: activity?.id,
         activityTitle: activity?.title,
+        activityType: activity?.id,
         isGenerated: true,
+        isGeneratedByAI: true,
         formData: formData,
         ...processedContent
-      }));
+      };
 
-      // Marcar como construída
+      console.log('💾 Salvando dados no localStorage:', savedData);
+      localStorage.setItem(`activity_${activity?.id}`, JSON.stringify(savedData));
+
+      // Marcar como construída com dados específicos
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity?.id] = {
         ...activity,
         isBuilt: true,
         builtAt: new Date().toISOString(),
-        generatedContent: processedContent
+        generatedContent: processedContent,
+        activityType: activity?.id,
+        lastModified: new Date().toISOString()
       };
       localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      
+      console.log('✅ Atividade marcada como construída no cache:', constructedActivities[activity?.id]);
 
       // Marcar atividade como construída
       if (activity && onUpdateActivity) {

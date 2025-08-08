@@ -39,31 +39,79 @@ export const useGenerateActivity = ({ activityId, activityType }: UseGenerateAct
       // Lógica específica para plano de aula
       if (activityId === 'plano-aula') {
         console.log('📚 Gerando Plano de Aula...');
-        // Utiliza a nova classe PlanoAulaGenerator
-        return await PlanoAulaGenerator.generatePlanoAula(formData);
+        const result = await PlanoAulaGenerator.generatePlanoAula(formData);
+        console.log('✅ Plano de Aula gerado com sucesso:', result);
+        
+        // Salvar resultado específico para plano de aula
+        if (result) {
+          localStorage.setItem(`activity_${activityId}`, JSON.stringify({
+            ...result,
+            activityId,
+            activityType: 'plano-aula',
+            generatedAt: new Date().toISOString(),
+            isGeneratedByAI: true
+          }));
+        }
+        
+        return result;
       }
 
       // Lógica específica para lista de exercícios
       if (activityId === 'lista-exercicios') {
-        return await generateExerciseList(formData);
+        console.log('📝 Gerando Lista de Exercícios...');
+        const result = await generateExerciseList(formData);
+        console.log('✅ Lista de Exercícios gerada com sucesso:', result);
+        return result;
       }
 
       // Lógica genérica para outras atividades
-      // Usa a função original importada 'generateActivityContent'
-      return await generateGenericActivity(formData);
+      console.log('🔧 Gerando atividade genérica...');
+      const result = await generateGenericActivity(formData);
+      console.log('✅ Atividade genérica gerada com sucesso:', result);
+      return result;
 
     } catch (error: any) {
       console.error('❌ Erro na geração da atividade:', error);
       setError(error.message || 'Erro desconhecido na geração da atividade');
-      // Lançar o erro para que possa ser tratado pelo chamador, se necessário
       throw error;
     } finally {
       setIsGenerating(false);
     }
-  }, [activityId, activityType]); // Dependências do useCallback mantidas
+  }, [activityId, activityType]);
+
+  const loadSavedContent = useCallback(() => {
+    console.log('🔄 Carregando conteúdo salvo para:', activityId);
+    const savedContent = localStorage.getItem(`activity_${activityId}`);
+    
+    if (savedContent) {
+      try {
+        const parsed = JSON.parse(savedContent);
+        console.log('✅ Conteúdo salvo carregado:', parsed);
+        return parsed;
+      } catch (error) {
+        console.error('❌ Erro ao carregar conteúdo salvo:', error);
+      }
+    }
+    
+    return null;
+  }, [activityId]);
+
+  const clearContent = useCallback(() => {
+    console.log('🗑️ Limpando conteúdo para:', activityId);
+    localStorage.removeItem(`activity_${activityId}`);
+    
+    // Limpar também do cache de atividades construídas
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    if (constructedActivities[activityId]) {
+      delete constructedActivities[activityId];
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+    }
+  }, [activityId]);
 
   return {
     generateActivity,
+    loadSavedContent,
+    clearContent,
     isGenerating,
     error
   };

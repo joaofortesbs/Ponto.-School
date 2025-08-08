@@ -33,7 +33,18 @@ export class PlanoAulaGenerator {
       const formattedPlan = PlanoAulaBuilder.formatForPreview(processedPlan);
       console.log('🎨 Plano formatado para preview:', formattedPlan);
 
-      return formattedPlan;
+      // 6. Garantir estrutura consistente
+      const finalPlan = {
+        ...formattedPlan,
+        activityId: 'plano-aula',
+        activityType: 'plano-aula',
+        isGeneratedByAI: true,
+        generatedAt: new Date().toISOString(),
+        formData: formData
+      };
+
+      console.log('📋 Plano final gerado:', finalPlan);
+      return finalPlan;
 
     } catch (error) {
       console.error('❌ Erro na geração do plano de aula:', error);

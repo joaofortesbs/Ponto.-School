@@ -29,7 +29,10 @@ interface PlanoAulaPreviewProps {
 const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
   const [activeSection, setActiveSection] = useState<string>('visao-geral');
 
+  console.log('📚 [PlanoAulaPreview] Renderizando com dados:', { data, activityData });
+
   if (!data) {
+    console.log('⚠️ [PlanoAulaPreview] Nenhum dado fornecido');
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -44,6 +47,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   }
 
   const plano = data;
+  console.log('📋 [PlanoAulaPreview] Dados do plano processados:', plano);
 
   return (
     <div className="h-full overflow-hidden bg-white dark:bg-gray-900">
