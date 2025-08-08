@@ -1,132 +1,175 @@
 
-export interface PlanoAulaValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
 export class PlanoAulaValidator {
   /**
-   * Valida a estrutura completa de um plano de aula
+   * Valida se os dados básicos do plano de aula estão corretos
    */
-  static validatePlanoAula(data: any): PlanoAulaValidationResult {
+  static validateBasicData(data: any): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    const warnings: string[] = [];
 
-    console.log('🔍 [PlanoAulaValidator] Validando dados:', data);
-
-    // Validações obrigatórias
-    if (!data) {
-      errors.push('Dados do plano de aula não fornecidos');
-      return { isValid: false, errors, warnings };
+    if (!data.titulo || typeof data.titulo !== 'string' || data.titulo.trim().length === 0) {
+      errors.push('Título é obrigatório');
     }
 
-    // Validar visão geral
-    if (!data.visao_geral && !data.titulo) {
-      errors.push('Visão geral ou título do plano é obrigatório');
+    if (!data.disciplina || typeof data.disciplina !== 'string' || data.disciplina.trim().length === 0) {
+      errors.push('Disciplina é obrigatória');
     }
 
-    if (data.visao_geral) {
-      if (!data.visao_geral.disciplina && !data.disciplina) {
-        warnings.push('Disciplina não especificada');
+    if (!data.tema || typeof data.tema !== 'string' || data.tema.trim().length === 0) {
+      errors.push('Tema é obrigatório');
+    }
+
+    if (!data.serie || typeof data.serie !== 'string' || data.serie.trim().length === 0) {
+      errors.push('Série/Ano é obrigatório');
+    }
+
+    if (!data.objetivoGeral || typeof data.objetivoGeral !== 'string' || data.objetivoGeral.trim().length === 0) {
+      errors.push('Objetivo Geral é obrigatório');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Valida se a resposta da IA está no formato esperado
+   */
+  static validateAIResponse(response: any): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!response || typeof response !== 'object') {
+      errors.push('Resposta da IA é inválida');
+      return { isValid: false, errors };
+    }
+
+    // Validar seções obrigatórias
+    const requiredSections = ['visao_geral', 'objetivos', 'metodologia', 'desenvolvimento', 'atividades'];
+    
+    for (const section of requiredSections) {
+      if (!response[section]) {
+        errors.push(`Seção '${section}' está ausente`);
       }
-      if (!data.visao_geral.tema && !data.titulo) {
-        warnings.push('Tema não especificado');
+    }
+
+    // Validar estrutura da visão geral
+    if (response.visao_geral) {
+      const requiredFields = ['disciplina', 'tema', 'serie', 'tempo', 'metodologia'];
+      for (const field of requiredFields) {
+        if (!response.visao_geral[field]) {
+          errors.push(`Campo '${field}' da visão geral está ausente`);
+        }
       }
-      if (!data.visao_geral.serie && !data.serie) {
-        warnings.push('Série/Ano não especificado');
+      
+      if (!Array.isArray(response.visao_geral.recursos)) {
+        errors.push('Campo "recursos" deve ser um array');
       }
     }
 
     // Validar objetivos
-    if (!data.objetivos || !Array.isArray(data.objetivos) || data.objetivos.length === 0) {
-      warnings.push('Nenhum objetivo de aprendizagem definido');
-    }
-
-    // Validar metodologia
-    if (!data.metodologia) {
-      warnings.push('Metodologia não especificada');
+    if (response.objetivos && !Array.isArray(response.objetivos)) {
+      errors.push('Campo "objetivos" deve ser um array');
     }
 
     // Validar desenvolvimento
-    if (!data.desenvolvimento || !Array.isArray(data.desenvolvimento) || data.desenvolvimento.length === 0) {
-      warnings.push('Nenhuma etapa de desenvolvimento definida');
+    if (response.desenvolvimento && !Array.isArray(response.desenvolvimento)) {
+      errors.push('Campo "desenvolvimento" deve ser um array');
     }
 
     // Validar atividades
-    if (!data.atividades || !Array.isArray(data.atividades) || data.atividades.length === 0) {
-      warnings.push('Nenhuma atividade específica definida');
+    if (response.atividades && !Array.isArray(response.atividades)) {
+      errors.push('Campo "atividades" deve ser um array');
     }
 
-    const isValid = errors.length === 0;
-
-    console.log('✅ [PlanoAulaValidator] Resultado da validação:', {
-      isValid,
-      errorsCount: errors.length,
-      warningsCount: warnings.length
-    });
-
-    return { isValid, errors, warnings };
-  }
-
-  /**
-   * Normaliza dados do plano de aula para garantir estrutura consistente
-   */
-  static normalizePlanoAula(data: any): any {
-    console.log('🔄 [PlanoAulaValidator] Normalizando dados:', data);
-
-    if (!data) return null;
-
-    // Se os dados já estão na estrutura correta, retornar como estão
-    if (data.visao_geral && data.objetivos && data.metodologia && data.desenvolvimento && data.atividades) {
-      console.log('✅ Dados já normalizados');
-      return data;
-    }
-
-    // Normalizar dados para estrutura padrão
-    const normalized = {
-      titulo: data.titulo || data.visao_geral?.tema || 'Plano de Aula',
-      disciplina: data.disciplina || data.visao_geral?.disciplina || 'Disciplina não especificada',
-      serie: data.serie || data.visao_geral?.serie || 'Série não especificada',
-      tempo: data.tempo || data.visao_geral?.tempo || '50 minutos',
-      metodologia: data.metodologia?.nome || data.metodologia || 'Metodologia não especificada',
-      recursos: data.recursos || data.visao_geral?.recursos || [],
-      objetivos: data.objetivos || [],
-      desenvolvimento: data.desenvolvimento || [],
-      atividades: data.atividades || [],
-      sugestoes_ia: data.sugestoes_ia || data.visao_geral?.sugestoes_ia || [],
-      visao_geral: data.visao_geral || {
-        disciplina: data.disciplina || 'Disciplina não especificada',
-        tema: data.titulo || 'Plano de Aula',
-        serie: data.serie || 'Série não especificada',
-        tempo: data.tempo || '50 minutos',
-        metodologia: data.metodologia?.nome || data.metodologia || 'Metodologia não especificada',
-        recursos: data.recursos || [],
-        sugestoes_ia: data.sugestoes_ia || []
-      },
-      isGeneratedByAI: data.isGeneratedByAI || false,
-      generatedAt: data.generatedAt || new Date().toISOString()
+    return {
+      isValid: errors.length === 0,
+      errors
     };
-
-    console.log('🔄 Dados normalizados:', normalized);
-    return normalized;
   }
 
   /**
-   * Verifica se os dados são de um plano de aula válido
+   * Sanitiza dados de entrada removendo caracteres perigosos
    */
-  static isPlanoAulaData(data: any): boolean {
-    if (!data) return false;
+  static sanitizeInput(data: any): any {
+    if (typeof data === 'string') {
+      return data.trim().replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    }
 
-    // Verificar se contém pelo menos algumas propriedades de plano de aula
-    const hasPlanoAulaProperties = 
-      data.visao_geral || 
-      data.objetivos || 
-      data.metodologia || 
-      data.desenvolvimento || 
-      data.atividades ||
-      (data.titulo && data.disciplina);
+    if (Array.isArray(data)) {
+      return data.map(item => this.sanitizeInput(item));
+    }
 
-    return hasPlanoAulaProperties;
+    if (typeof data === 'object' && data !== null) {
+      const sanitized: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        sanitized[key] = this.sanitizeInput(value);
+      }
+      return sanitized;
+    }
+
+    return data;
+  }
+
+  /**
+   * Valida se uma seção específica do plano está completa
+   */
+  static validateSection(sectionName: string, sectionData: any): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    switch (sectionName) {
+      case 'visao_geral':
+        if (!sectionData.disciplina) errors.push('Disciplina é obrigatória');
+        if (!sectionData.tema) errors.push('Tema é obrigatório');
+        if (!sectionData.serie) errors.push('Série é obrigatória');
+        if (!sectionData.tempo) errors.push('Tempo é obrigatório');
+        break;
+
+      case 'objetivos':
+        if (!Array.isArray(sectionData) || sectionData.length === 0) {
+          errors.push('Pelo menos um objetivo é obrigatório');
+        } else {
+          sectionData.forEach((obj: any, index: number) => {
+            if (!obj.descricao) {
+              errors.push(`Objetivo ${index + 1} precisa de uma descrição`);
+            }
+          });
+        }
+        break;
+
+      case 'desenvolvimento':
+        if (!Array.isArray(sectionData) || sectionData.length === 0) {
+          errors.push('Pelo menos uma etapa de desenvolvimento é obrigatória');
+        } else {
+          sectionData.forEach((etapa: any, index: number) => {
+            if (!etapa.titulo) {
+              errors.push(`Etapa ${index + 1} precisa de um título`);
+            }
+            if (!etapa.descricao) {
+              errors.push(`Etapa ${index + 1} precisa de uma descrição`);
+            }
+          });
+        }
+        break;
+
+      case 'atividades':
+        if (!Array.isArray(sectionData) || sectionData.length === 0) {
+          errors.push('Pelo menos uma atividade é obrigatória');
+        } else {
+          sectionData.forEach((atividade: any, index: number) => {
+            if (!atividade.nome) {
+              errors.push(`Atividade ${index + 1} precisa de um nome`);
+            }
+            if (!atividade.tipo) {
+              errors.push(`Atividade ${index + 1} precisa de um tipo`);
+            }
+          });
+        }
+        break;
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 }
