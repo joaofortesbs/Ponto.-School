@@ -37,6 +37,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
 
+  // Sempre determinar o tipo de atividade PRIMEIRO, antes de qualquer hook
+  const activityType = activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
+  const isExerciseList = activityType === 'lista-exercicios';
+
   // Função específica para carregar dados do Plano de Aula - sempre definida
   const loadPlanoAulaData = React.useCallback((activityId: string) => {
     if (!activityId) return null;
@@ -160,10 +164,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }));
   }, [activity, activityType]);
 
-  // Sempre determinar o tipo de atividade antes de qualquer hook
-  const activityType = activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
-  const isExerciseList = activityType === 'lista-exercicios';
-  
   // Sempre chamar useMemo, independente do estado do modal
   const storedData = React.useMemo(() => {
     if (!activity || activityType !== 'plano-aula') {
@@ -173,7 +173,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   }, [activity?.id, activityType]);
 
   if (!isOpen || !activity) return null;
-
 
   const getDifficultyColor = (dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
