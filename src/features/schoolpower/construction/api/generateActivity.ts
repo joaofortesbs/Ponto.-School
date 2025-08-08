@@ -410,118 +410,193 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
       };
       break;
     case 'plano-aula':
-      // Estrutura específica para plano de aula com formato completo
-      const objetivosList = Array.isArray(formData.objectives) ? formData.objectives :
-                           formData.objectives ? formData.objectives.split('.').filter(obj => obj.trim()) :
-                           ['Compreender o conceito do ' + (formData.theme || 'tema'),
-                            'Identificar os principais elementos do conteúdo',
-                            'Aplicar os conhecimentos em situações práticas',
-                            'Resolver problemas relacionados ao tema',
-                            'Desenvolver o raciocínio lógico e a capacidade de resolução de problemas'];
+      console.log('📚 Processando dados específicos de Plano de Aula');
+      console.log('🗂️ Custom fields consolidados para plano-aula:', consolidatedCustomFields);
 
-      const materiaisList = Array.isArray(formData.materials) ? formData.materials :
-                            formData.materials ? formData.materials.split(',').map(m => m.trim()) :
-                            ['Quadro branco ou projetor',
-                             'Marcadores ou canetas para quadro branco',
-                             'Material impresso com exercícios',
-                             'Calculadora (se necessário)',
-                             'Livro didático',
-                             'Notebook/tablet para apresentação'];
-
-      generatedContent = {
-        titulo: formData.title || 'Plano de Aula',
-        descricao: formData.description || 'Descrição do plano de aula',
-        disciplina: formData.subject || 'Disciplina',
-        tema: formData.theme || 'Tema da aula',
-        anoEscolaridade: formData.schoolYear || 'Ano escolar',
-        numeroQuestoes: parseInt(formData.numberOfQuestions) || 10,
-        nivelDificuldade: formData.difficultyLevel || 'Médio',
-        modeloQuestoes: formData.questionModel || 'Múltipla escolha',
-        fontes: Array.isArray(formData.sources) ? formData.sources : 
-               formData.sources ? formData.sources.split(',').map(s => s.trim()) : 
-               ['Livro didático de ' + (formData.subject || 'Disciplina') + ' do ' + (formData.schoolYear || 'ano'),
-                'Vídeos explicativos sobre ' + (formData.theme || 'o tema') + ' (Khan Academy, YouTube)',
-                'Sites educativos sobre ' + (formData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],
-        objetivos: objetivosList,
-        materiais: materiaisList,
-        instrucoes: formData.instructions || 'Siga as etapas do plano de aula conforme apresentado.',
-        tempoLimite: formData.timeLimit || '50 minutos',
-        contextoAplicacao: formData.context || 'Sala de aula regular com alunos do ' + (formData.schoolYear || 'ano especificado'),
-        competencias: formData.competencies || 'Competências gerais da BNCC aplicáveis ao ' + (formData.subject || 'componente curricular'),
-        avaliacao: formData.evaluation || 'Avaliação formativa através de participação e exercícios práticos',
-
-        // Estrutura completa do plano de aula para preview
-        visao_geral: {
-          disciplina: formData.subject || 'Disciplina',
-          tema: formData.theme || 'Tema da aula',
-          serie: formData.schoolYear || 'Ano escolar',
-          tempo: formData.timeLimit || '50 minutos',
-          metodologia: formData.difficultyLevel || 'Metodologia Ativa',
-          recursos: materiaisList,
-          sugestoes_ia: ['Plano de aula personalizado', 'Adaptável ao perfil da turma']
-        },
-        objetivos: objetivosList.map((obj, index) => ({
-          descricao: obj,
-          habilidade_bncc: formData.competencies || 'Competência BNCC relacionada',
-          sugestao_reescrita: 'Sugestão de melhoria disponível',
-          atividade_relacionada: 'Atividade ' + (index + 1)
-        })),
-        metodologia: {
-          nome: formData.difficultyLevel || 'Metodologia Ativa',
-          descricao: formData.description || 'Metodologia baseada em participação ativa dos alunos',
-          alternativas: ['Aula expositiva', 'Atividades práticas', 'Discussão em grupo'],
-          simulacao_de_aula: 'Simulação interativa disponível',
-          explicacao_em_video: 'Vídeo explicativo da metodologia'
-        },
-        desenvolvimento: [
-          {
-            etapa: 1,
-            titulo: 'Introdução ao Tema',
-            descricao: 'Apresentação do conteúdo e contextualização',
-            tipo_interacao: 'Expositiva/Dialogada',
-            tempo_estimado: '15 minutos',
-            recurso_gerado: 'Slides introdutórios',
-            nota_privada_professor: 'Verificar conhecimentos prévios dos alunos'
-          },
-          {
-            etapa: 2,
-            titulo: 'Desenvolvimento do Conteúdo',
-            descricao: 'Explicação detalhada dos conceitos principais',
-            tipo_interacao: 'Interativa',
-            tempo_estimado: '25 minutos',
-            recurso_gerado: 'Material didático e exemplos',
-            nota_privada_professor: 'Pausar para esclarecer dúvidas'
-          },
-          {
-            etapa: 3,
-            titulo: 'Aplicação Prática',
-            descricao: 'Exercícios e atividades de fixação',
-            tipo_interacao: 'Prática',
-            tempo_estimado: '10 minutos',
-            recurso_gerado: 'Lista de exercícios',
-            nota_privada_professor: 'Circular pela sala para auxiliar individualmente'
-          }
-        ],
-        atividades: [
-          {
-            nome: 'Atividade de Fixação',
-            tipo: 'Exercícios Práticos',
-            ref_objetivos: [1, 2],
-            visualizar_como_aluno: 'Exercícios interativos para consolidação',
-            sugestoes_ia: ['Adapte a dificuldade conforme o desempenho', 'Inclua exemplos contextualizados']
-          }
-        ],
-        avaliacao: {
-          criterios: formData.evaluation || 'Participação, compreensão dos conceitos, resolução de exercícios',
-          instrumentos: ['Observação direta', 'Exercícios práticos', 'Participação oral'],
-          feedback: 'Feedback imediato durante as atividades'
-        },
-        recursos_extras: {
-          materiais_complementares: ['Vídeos educativos', 'Jogos didáticos online', 'Simuladores'],
-          tecnologias: ['Quadro interativo', 'Projetor', 'Computador/tablet'],
-          referencias: ['Livro didático adotado', 'Artigos científicos', 'Sites educacionais']
-        }
+      // Processar dados do Plano de Aula com mapeamento completo
+      enrichedFormData = {
+        title: consolidatedData.personalizedTitle || consolidatedData.title || activity.personalizedTitle || activity.title || '',
+        description: consolidatedData.personalizedDescription || consolidatedData.description || activity.personalizedDescription || activity.description || '',
+        subject: consolidatedCustomFields['Componente Curricular'] ||
+                 consolidatedCustomFields['disciplina'] ||
+                 consolidatedCustomFields['Disciplina'] ||
+                 'Matemática',
+        theme: consolidatedCustomFields['Tema ou Tópico Central'] ||
+               consolidatedCustomFields['Tema Central'] ||
+               consolidatedCustomFields['tema'] ||
+               consolidatedCustomFields['Tema'] || '',
+        schoolYear: consolidatedCustomFields['Ano/Série Escolar'] ||
+                   consolidatedCustomFields['Público-Alvo'] ||
+                   consolidatedCustomFields['anoEscolaridade'] ||
+                   consolidatedCustomFields['Ano de Escolaridade'] || '',
+        numberOfQuestions: consolidatedCustomFields['Número de Questões'] || '10',
+        difficultyLevel: consolidatedCustomFields['Tipo de Aula'] ||
+                        consolidatedCustomFields['Metodologia'] ||
+                        consolidatedCustomFields['Nível de Dificuldade'] || 'Médio',
+        questionModel: consolidatedCustomFields['Modelo de Questões'] || 'Múltipla escolha',
+        sources: consolidatedCustomFields['Fontes'] ||
+                consolidatedCustomFields['Referencias'] ||
+                'Livro didático, sites educacionais',
+        objectives: consolidatedCustomFields['Objetivo Geral'] ||
+                   consolidatedCustomFields['Objetivos de Aprendizagem'] ||
+                   consolidatedCustomFields['Objetivo Principal'] || '',
+        materials: consolidatedCustomFields['Materiais/Recursos'] ||
+                  consolidatedCustomFields['Recursos'] ||
+                  consolidatedCustomFields['Materiais Necessários'] || '',
+        instructions: consolidatedCustomFields['Instruções'] || '',
+        evaluation: consolidatedCustomFields['Observações do Professor'] ||
+                   consolidatedCustomFields['Observações'] ||
+                   consolidatedCustomFields['Avaliação'] || '',
+        timeLimit: consolidatedCustomFields['Carga Horária'] ||
+                  consolidatedCustomFields['Tempo Estimado'] ||
+                  consolidatedCustomFields['Duração'] || '50 minutos',
+        context: consolidatedCustomFields['Perfil da Turma'] ||
+                consolidatedCustomFields['Contexto'] ||
+                'Turma heterogênea com diferentes níveis de aprendizado',
+        competencies: consolidatedCustomFields['Habilidades BNCC'] ||
+                     consolidatedCustomFields['Competências'] ||
+                     'Competências gerais da BNCC',
+        // Campos específicos mantidos
+        textType: '',
+        textGenre: '',
+        textLength: '',
+        associatedQuestions: '',
+        readingStrategies: '',
+        visualResources: '',
+        practicalActivities: '',
+        wordsIncluded: '',
+        gridFormat: '',
+        providedHints: '',
+        vocabularyContext: '',
+        language: 'Português',
+        associatedExercises: '',
+        knowledgeArea: '',
+        complexityLevel: ''
       };
+
+      console.log('✅ FormData enriquecido para plano-aula:', enrichedFormData);
+
+      try {
+        // Usar o PlanoAulaGenerator para gerar conteúdo com IA Gemini
+        console.log('🤖 Chamando PlanoAulaGenerator com Gemini');
+        const { PlanoAulaGenerator } = await import('../../activities/plano-aula/PlanoAulaGenerator');
+        generatedContent = await PlanoAulaGenerator.generatePlanoAula(enrichedFormData);
+        console.log('✅ Conteúdo gerado pelo PlanoAulaGenerator:', generatedContent);
+      } catch (error) {
+        console.error('❌ Erro no PlanoAulaGenerator:', error);
+
+        // Fallback com dados estruturados básicos
+        const objetivosList = Array.isArray(enrichedFormData.objectives) ? enrichedFormData.objectives :
+                             enrichedFormData.objectives ? enrichedFormData.objectives.split(',').map(obj => obj.trim()) :
+                             ['Desenvolver conhecimentos fundamentais sobre ' + (enrichedFormData.theme || 'o tema'),
+                              'Aplicar conceitos aprendidos em situações práticas',
+                              'Promover o pensamento crítico e reflexivo'];
+
+        const materiaisList = Array.isArray(enrichedFormData.materials) ? enrichedFormData.materials :
+                             enrichedFormData.materials ? enrichedFormData.materials.split(',').map(m => m.trim()) :
+                             ['Quadro branco ou projetor',
+                              'Marcadores ou canetas para quadro branco',
+                              'Material impresso com atividades',
+                              'Livro didático',
+                              'Notebook/tablet para apresentação'];
+
+        generatedContent = {
+          titulo: enrichedFormData.title || 'Plano de Aula',
+          descricao: enrichedFormData.description || 'Descrição do plano de aula',
+          disciplina: enrichedFormData.subject || 'Disciplina',
+          tema: enrichedFormData.theme || 'Tema da aula',
+          anoEscolaridade: enrichedFormData.schoolYear || 'Ano escolar',
+          numeroQuestoes: parseInt(enrichedFormData.numberOfQuestions) || 10,
+          nivelDificuldade: enrichedFormData.difficultyLevel || 'Médio',
+          modeloQuestoes: enrichedFormData.questionModel || 'Múltipla escolha',
+          fontes: Array.isArray(enrichedFormData.sources) ? enrichedFormData.sources : 
+                 enrichedFormData.sources ? enrichedFormData.sources.split(',').map(s => s.trim()) : 
+                 ['Livro didático de ' + (enrichedFormData.subject || 'Disciplina') + ' do ' + (enrichedFormData.schoolYear || 'ano'),
+                  'Vídeos explicativos sobre ' + (enrichedFormData.theme || 'o tema') + ' (Khan Academy, YouTube)',
+                  'Sites educativos sobre ' + (enrichedFormData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],
+          objetivos: objetivosList,
+          materiais: materiaisList,
+          instrucoes: enrichedFormData.instructions || 'Siga as etapas do plano de aula conforme apresentado.',
+          tempoLimite: enrichedFormData.timeLimit || '50 minutos',
+          contextoAplicacao: enrichedFormData.context || 'Sala de aula tradicional com possibilidade de trabalho em grupos',
+          competencias: enrichedFormData.competencies || 'Competências gerais da BNCC aplicáveis ao ' + (enrichedFormData.subject || 'componente curricular'),
+          avaliacao: enrichedFormData.evaluation || 'Avaliação formativa através de participação e exercícios práticos',
+
+          // Estrutura completa do plano de aula para preview
+          visao_geral: {
+            disciplina: enrichedFormData.subject || 'Disciplina',
+            tema: enrichedFormData.theme || 'Tema da aula',
+            serie: enrichedFormData.schoolYear || 'Ano escolar',
+            tempo: enrichedFormData.timeLimit || '50 minutos',
+            metodologia: enrichedFormData.difficultyLevel || 'Metodologia Ativa',
+            recursos: materiaisList,
+            sugestoes_ia: ['Plano de aula personalizado', 'Adaptável ao perfil da turma']
+          },
+          objetivos: objetivosList.map((obj, index) => ({
+            descricao: obj,
+            habilidade_bncc: enrichedFormData.competencies || 'Competência BNCC relacionada',
+            sugestao_reescrita: 'Sugestão de melhoria disponível',
+            atividade_relacionada: 'Atividade ' + (index + 1)
+          })),
+          metodologia: {
+            nome: enrichedFormData.difficultyLevel || 'Metodologia Ativa',
+            descricao: enrichedFormData.description || 'Metodologia baseada em participação ativa dos alunos',
+            alternativas: ['Aula expositiva', 'Atividades práticas', 'Discussão em grupo'],
+            simulacao_de_aula: 'Simulação interativa disponível',
+            explicacao_em_video: 'Vídeo explicativo da metodologia'
+          },
+          desenvolvimento: [
+            {
+              etapa: 1,
+              titulo: 'Introdução',
+              descricao: 'Apresentação do tema e contextualização',
+              tipo_interacao: 'Expositiva',
+              tempo_estimado: '15 min',
+              recurso_gerado: 'Slides introdutórios',
+              nota_privada_professor: 'Verificar conhecimentos prévios dos alunos'
+            },
+            {
+              etapa: 2,
+              titulo: 'Desenvolvimento',
+              descricao: 'Exploração do conteúdo principal com atividades práticas',
+              tipo_interacao: 'Interativa',
+              tempo_estimado: '25 min',
+              recurso_gerado: 'Material didático interativo',
+              nota_privada_professor: 'Acompanhar participação e compreensão'
+            },
+            {
+              etapa: 3,
+              titulo: 'Conclusão',
+              descricao: 'Síntese dos conceitos e avaliação',
+              tipo_interacao: 'Colaborativa',
+              tempo_estimado: '10 min',
+              recurso_gerado: 'Atividade de fechamento',
+              nota_privada_professor: 'Aplicar avaliação formativa'
+            }
+          ],
+          atividades: [
+            {
+              nome: 'Atividade Principal',
+              tipo: 'Prática',
+              ref_objetivos: [1, 2],
+              visualizar_como_aluno: 'Atividade interativa e engajante relacionada ao tema',
+              sugestoes_ia: ['Personalizar conforme o nível da turma', 'Adaptar recursos disponíveis']
+            }
+          ],
+          avaliacao: {
+            criterios: enrichedFormData.evaluation || 'Participação, compreensão e aplicação dos conceitos',
+            instrumentos: ['Observação direta', 'Atividades práticas', 'Questionamentos'],
+            feedback: 'Feedback contínuo e construtivo durante toda a aula'
+          },
+          recursos_extras: {
+            materiais_complementares: ['Textos de apoio', 'Exercícios complementares'],
+            tecnologias: ['Projetor', 'Computador', 'Internet'],
+            referencias: ['Bibliografia do componente curricular', 'Sites educacionais confiáveis']
+          }
+        };
+      }
+
+      console.log('📋 Conteúdo estruturado final para plano-aula:', generatedContent);
       break;
     default:
       // Lógica padrão para outros tipos de atividade (ou se não especificado)
