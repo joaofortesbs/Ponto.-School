@@ -63,63 +63,6 @@ import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
 import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
-// Função para processar dados de plano de aula gerados pela IA
-const processPlanoAulaData = (data: any): any => {
-  console.log('🎓 Processando plano de aula:', data);
-
-  // Normalizar a estrutura para garantir a consistência dos mini-cards
-  const planoProcessado: any = {
-    titulo: data.titulo || 'Plano de Aula Sem Título',
-    disciplina: data.disciplina || 'Indefinida',
-    tema: data.tema || 'Sem Tema',
-    anoEscolaridade: data.anoEscolaridade || 'Série Indefinida',
-    objetivos: data.objetivos || [],
-    materiais: data.materiais || [],
-    desenvolvimento: data.desenvolvimento ? data.desenvolvimento.map((etapa: any, index: number) => ({
-      etapa: index + 1,
-      titulo: etapa.titulo || `Etapa ${index + 1}`,
-      descricao: etapa.descricao || 'Descrição da etapa não fornecida',
-      tipo_interacao: etapa.tipo_interacao || 'Não especificado',
-      tempo_estimado: etapa.tempo_estimado || 'Tempo não especificado',
-      recurso_gerado: etapa.recurso_gerado || 'Nenhum recurso gerado',
-      nota_privada_professor: etapa.nota_privada_professor || ''
-    })) : [],
-    // Campos adicionais para enriquecer a experiência
-    avaliacao: data.avaliacao || 'Avaliação formativa',
-    competencias: data.competencias || 'Competências gerais',
-    recursos_extras: data.recursos_extras || { materiais_complementares: [], tecnologias: [], referencias: [] },
-    metodologia: data.metodologia || { nome: 'Padrao', descricao: 'Descrição padrão' }
-  };
-
-  // Garantir que a estrutura de desenvolvimento seja um array de mini-cards válidos
-  if (!Array.isArray(planoProcessado.desenvolvimento)) {
-    console.warn('⚠️ Campo "desenvolvimento" do plano de aula não é um array. Convertendo para array vazio.');
-    planoProcessado.desenvolvimento = [];
-  }
-
-  // Validação adicional: garantir que cada etapa tenha os campos mínimos para um mini-card
-  planoProcessado.desenvolvimento = planoProcessado.desenvolvimento.map((etapa: any, index: number) => ({
-    ...etapa,
-    etapa: etapa.etapa || index + 1,
-    titulo: etapa.titulo || `Etapa ${index + 1}`,
-    descricao: etapa.descricao || 'Sem descrição',
-    tempo_estimado: etapa.tempo_estimado || 'Indefinido'
-  }));
-
-  console.log('✅ Plano de aula processado:', planoProcessado);
-  return planoProcessado;
-};
-
-// Função simulada para salvar dados do plano de aula
-const savePlanoAulaData = async (activityId: string, data: any): Promise<void> => {
-  console.log(`💾 Salvando dados do plano de aula (ID: ${activityId}):`, data);
-  // Implementação real de salvamento de dados (ex: em banco de dados, API, etc.)
-  // Por enquanto, apenas um log.
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simula I/O
-  console.log(`✅ Dados do plano de aula salvos com sucesso.`);
-};
-
-
 export const generateActivityData = async (
   activity: ActionPlanItem,
   contextualizationData?: any
@@ -299,62 +242,134 @@ Responda APENAS com o JSON, sem texto adicional.`;
     if (response.success) {
       console.log('✅ Resposta recebida do Gemini');
       console.log('📊 Estimativa de tokens:', response.estimatedTokens);
-      console.log('💰 Custo estimado:', response.cost);
+      console.log('💰 Custo estimado:', response.estimatedPowerCost);
+      console.log('⏱️ Tempo de execução:', response.executionTime + 'ms');
 
-      console.log('📥 Resposta bruta do Gemini:', response.data);
+      // Limpar a resposta para garantir que seja JSON válido
+      let cleanedResponse = response.result.trim();
 
-      // Processar a resposta
-      let processedData;
-      try {
-        // Se a resposta já for um objeto, usar diretamente
-        if (typeof response.data === 'object') {
-          processedData = response.data;
-        } else {
-          // Tentar fazer parse se for string
-          processedData = JSON.parse(response.data);
+      console.log('🔧 Resposta bruta da IA (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
+
+      // Múltiplas tentativas de limpeza
+      // 1. Remover markdown
+      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+      cleanedResponse = cleanedResponse.replace(/```\s*/g, '');
+
+      // 2. Remover possíveis textos antes e depois do JSON
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}');
+
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+      }
+
+      // 3. Verificar se começa e termina com { }
+      if (!cleanedResponse.trim().startsWith('{')) {
+        const firstBrace = cleanedResponse.indexOf('{');
+        if (firstBrace !== -1) {
+          cleanedResponse = cleanedResponse.substring(firstBrace);
         }
+      }
 
-        console.log('📊 Dados processados:', processedData);
+      if (!cleanedResponse.trim().endsWith('}')) {
+        const lastBrace = cleanedResponse.lastIndexOf('}');
+        if (lastBrace !== -1) {
+          cleanedResponse = cleanedResponse.substring(0, lastBrace + 1);
+        }
+      }
 
-        // Processamento específico para plano-aula
-        if (activityType === 'plano-aula') {
-          console.log('📚 Processando dados específicos do plano de aula...');
+      console.log('🔧 Resposta limpa para parsing (primeiros 500 chars):', cleanedResponse.substring(0, 500));
 
-          // Usar o processador específico para plano de aula
-          const planoData = processPlanoAulaData(processedData);
+      try {
+        const parsedResult = JSON.parse(cleanedResponse);
+        console.log('✅ Resultado parseado com sucesso');
+        console.log('📊 Estrutura do resultado:', {
+          hasTitle: !!parsedResult.titulo,
+          hasDisciplina: !!parsedResult.disciplina,
+          hasTema: !!parsedResult.tema,
+          hasQuestoes: !!parsedResult.questoes,
+          questoesLength: parsedResult.questoes ? parsedResult.questoes.length : 0,
+          keys: Object.keys(parsedResult)
+        });
 
-          // Salvar os dados processados
-          if (contextData.activityId) {
-            savePlanoAulaData(contextData.activityId, planoData);
+        // Validação rigorosa para lista de exercícios
+        if (activityType === 'lista-exercicios') {
+          // Verificar se tem questões
+          if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes)) {
+            console.error('❌ Estrutura de questões inválida');
+            throw new Error('Campo questoes não encontrado ou não é um array');
           }
 
-          processedData = planoData;
-          console.log('✅ Dados do plano de aula processados e salvos:', processedData);
+          if (parsedResult.questoes.length === 0) {
+            console.error('❌ Nenhuma questão gerada pela IA');
+            throw new Error('Array de questões está vazio');
+          }
+
+          // Validar cada questão
+          const questoesValidas = parsedResult.questoes.every((questao: any, index: number) => {
+            const isValid = questao.id && questao.type && questao.enunciado;
+            if (!isValid) {
+              console.error(`❌ Questão ${index + 1} inválida:`, questao);
+            }
+            return isValid;
+          });
+
+          if (!questoesValidas) {
+            throw new Error('Algumas questões geradas pela IA são inválidas');
+          }
+
+          console.log(`📝 ${parsedResult.questoes.length} questões válidas geradas pela IA`);
+          console.log('📄 Primeira questão como exemplo:', parsedResult.questoes[0]);
+
+          // Marcar como gerado pela IA
+          parsedResult.isGeneratedByAI = true;
+          parsedResult.generatedAt = new Date().toISOString();
+
+          // Garantir que todos os campos necessários existem
+          parsedResult.titulo = parsedResult.titulo || contextData.titulo || contextData.title || 'Lista de Exercícios';
+          parsedResult.disciplina = parsedResult.disciplina || contextData.disciplina || contextData.subject || 'Disciplina';
+          parsedResult.tema = parsedResult.tema || contextData.tema || contextData.theme || 'Tema';
+          parsedResult.numeroQuestoes = parsedResult.questoes.length;
         }
 
-        return {
-          success: true,
-          data: processedData,
-          estimatedTokens: response.estimatedTokens,
-          cost: response.cost
-        };
-
+        return parsedResult;
       } catch (parseError) {
-        console.error('❌ Erro ao processar resposta do Gemini:', parseError);
-        console.error('📥 Resposta original:', response.data);
+        console.error('❌ Erro ao fazer parse do JSON:', parseError);
+        console.error('📄 Conteúdo que causou erro (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
 
-        return {
-          success: false,
-          error: 'Erro ao processar resposta da IA',
-          details: parseError
-        };
+        // Tentar extrair JSON de forma mais agressiva
+        try {
+          // Buscar por padrões JSON válidos
+          const jsonPattern = /\{[\s\S]*\}/;
+          const match = cleanedResponse.match(jsonPattern);
+
+          if (match) {
+            const extractedJson = match[0];
+            console.log('🔄 Tentando JSON extraído:', extractedJson.substring(0, 200));
+            const secondAttempt = JSON.parse(extractedJson);
+            console.log('✅ Segunda tentativa de parse bem sucedida');
+
+            // Aplicar mesmas validações
+            if (activityType === 'lista-exercicios') {
+              if (secondAttempt.questoes && Array.isArray(secondAttempt.questoes) && secondAttempt.questoes.length > 0) {
+                secondAttempt.isGeneratedByAI = true;
+                secondAttempt.generatedAt = new Date().toISOString();
+                return secondAttempt;
+              }
+            }
+
+            return secondAttempt;
+          }
+        } catch (secondError) {
+          console.error('❌ Segunda tentativa de parse também falhou:', secondError);
+        }
+
+        throw new Error(`Erro ao processar resposta da IA: ${parseError.message}`);
       }
+
     } else {
-      console.error('❌ Erro na geração:', response.error);
-      return {
-        success: false,
-        error: response.error || 'Erro desconhecido na geração'
-      };
+      console.error('❌ Erro na API Gemini:', response.error);
+      throw new Error(response.error || 'Falha na geração de conteúdo');
     }
 
   } catch (error) {
@@ -422,8 +437,8 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
         numeroQuestoes: parseInt(formData.numberOfQuestions) || 10,
         nivelDificuldade: formData.difficultyLevel || 'Médio',
         modeloQuestoes: formData.questionModel || 'Múltipla escolha',
-        fontes: Array.isArray(formData.sources) ? formData.sources :
-               formData.sources ? formData.sources.split(',').map(s => s.trim()) :
+        fontes: Array.isArray(formData.sources) ? formData.sources : 
+               formData.sources ? formData.sources.split(',').map(s => s.trim()) : 
                ['Livro didático de ' + (formData.subject || 'Disciplina') + ' do ' + (formData.schoolYear || 'ano'),
                 'Vídeos explicativos sobre ' + (formData.theme || 'o tema') + ' (Khan Academy, YouTube)',
                 'Sites educativos sobre ' + (formData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],

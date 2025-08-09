@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronRight,
+  Eye,
   Plus,
   X,
   Presentation,
@@ -23,15 +24,16 @@ import {
   PenTool,
   Zap,
   Activity,
+  FileText,
+  Play,
   Edit,
   Star,
   ChevronUp,
   GripVertical,
-  Expand,
-  Timer,
-  Package,
-  FileText,
-  Eye
+  MessageSquare,
+  Video,
+  Mic,
+  Group
 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
@@ -49,6 +51,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     { id: 1, name: "Aula expositiva", icon: <FileText className="w-4 h-4" /> },
     { id: 2, name: "Atividades práticas", icon: <PenTool className="w-4 h-4" /> }
   ]);
+  const [expandedSteps, setExpandedSteps] = useState<{ [key: number]: boolean }>({});
+  const [draggedStep, setDraggedStep] = useState<number | null>(null);
+  const [developmentSteps, setDevelopmentSteps] = useState<any[]>([]);
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+
 
   console.log('🔍 PlanoAulaPreview - Data recebida:', data);
   console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
@@ -68,7 +75,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   console.log('  - Título:', planoData?.titulo || planoData?.title);
   console.log('  - Descrição:', planoData?.descricao || planoData?.description);
   console.log('  - Disciplina:', planoData?.disciplina || planoData?.visao_geral?.disciplina);
-  console.log('  - Tema:', planoData?.tema || planoData?.visao_geral?.tema);
+  console.log('  - Tema:', planoData?.tema || planoData?.theme || planoData?.titulo || planoData?.title);
   console.log('  - Série:', planoData?.serie || planoData?.visao_geral?.serie);
   console.log('  - Tempo:', planoData?.tempo || planoData?.visao_geral?.tempo);
   console.log('  - Metodologia:', planoData?.metodologia || planoData?.visao_geral?.metodologia);
@@ -98,6 +105,18 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     return methodologyIcons[methodologyName] || Lightbulb; // Ícone padrão se não encontrado
   };
 
+  // Função para obter ícones baseados no tipo de interação
+  const getInteractionIcon = (tipoInteracao: string) => {
+    const lowerType = tipoInteracao.toLowerCase();
+    if (lowerType.includes('apresentação') || lowerType.includes('exposição')) return Presentation;
+    if (lowerType.includes('debate') || lowerType.includes('discussão')) return MessageSquare;
+    if (lowerType.includes('vídeo') || lowerType.includes('video')) return Video;
+    if (lowerType.includes('dinâmica') || lowerType.includes('grupo')) return Group;
+    if (lowerType.includes('prática') || lowerType.includes('atividade')) return Gamepad2;
+    if (lowerType.includes('interativo') || lowerType.includes('interativa')) return Activity;
+    return Play; // Ícone padrão
+  };
+
   // Lista de metodologias disponíveis para o dropdown
   const availableMethodologiesOptions = [
     { name: "Aula Expositiva", icon: Presentation },
@@ -114,7 +133,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   ];
 
   // Adiciona metodologias do plano original à lista de selecionadas se não estiverem vazias
-  useEffect(() => {
+  React.useEffect(() => {
     if (planoData?.metodologia?.alternativas && planoData.metodologia.alternativas.length > 0) {
       setSelectedMethodologies(planoData.metodologia.alternativas);
     } else {
@@ -122,6 +141,64 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       setSelectedMethodologies(['Aula Expositiva', 'Atividades Práticas']);
     }
   }, [planoData?.metodologia?.alternativas]);
+
+  // Inicializar etapas de desenvolvimento
+  React.useEffect(() => {
+    // Verifica se planoData existe e tem a propriedade desenvolvimento
+    if (planoData && Array.isArray(planoData.desenvolvimento)) {
+      setDevelopmentSteps(planoData.desenvolvimento);
+    } else if (planoData && typeof planoData.desenvolvimento === 'undefined' && planoData.developmentSteps) {
+       // Caso a propriedade venha com outro nome (ex: developmentSteps)
+       setDevelopmentSteps(planoData.developmentSteps);
+    }
+  }, [planoData]);
+
+
+  // Funções de drag and drop
+  const handleDragStart = (index: number) => {
+    setDraggedStep(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetIndex: number) => {
+    if (draggedStep === null) return;
+
+    const newSteps = [...developmentSteps];
+    const draggedItem = newSteps[draggedStep];
+    newSteps.splice(draggedStep, 1);
+    newSteps.splice(targetIndex, 0, draggedItem);
+
+    setDevelopmentSteps(newSteps);
+    setDraggedStep(null);
+  };
+
+  // Funções para mover etapas
+  const moveStepUp = (index: number) => {
+    if (index > 0) {
+      const newSteps = [...developmentSteps];
+      [newSteps[index - 1], newSteps[index]] = [newSteps[index], newSteps[index - 1]];
+      setDevelopmentSteps(newSteps);
+    }
+  };
+
+  const moveStepDown = (index: number) => {
+    if (index < developmentSteps.length - 1) {
+      const newSteps = [...developmentSteps];
+      [newSteps[index], newSteps[index + 1]] = [newSteps[index + 1], newSteps[index]];
+      setDevelopmentSteps(newSteps);
+    }
+  };
+
+  // Toggle de expansão
+  const toggleStepExpansion = (index: number) => {
+    setExpandedSteps(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   const addMethodology = (methodologyName: string) => {
     if (!selectedMethodologies.includes(methodologyName)) {
@@ -161,245 +238,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     { name: "Debate e discussão", icon: <Search className="w-4 h-4" /> },
     { name: "Estudo de caso", icon: <BookOpen className="w-4 h-4" /> },
     { name: "Experimentação", icon: <Activity className="w-4 h-4" /> },
-    { name: "Demonstração prática", icon: <Presentation className="w-4 h-4" /> }
+    { name: "Demonstração prática", icon: <Play className="w-4 h-4" /> }
   ];
-
-  // Estado para gerenciar a expansão das etapas e o arrasto
-  const [etapasExpandidas, setEtapasExpandidas] = useState<{ [key: string]: boolean }>({});
-  const [draggedEtapa, setDraggedEtapa] = useState<string | null>(null);
-
-  // Processar etapas de desenvolvimento - DADOS REAIS DA IA GEMINI
-  const etapasDesenvolvimento = useMemo(() => {
-    console.log('🔍 PlanoAulaPreview: Processando etapas de desenvolvimento dos dados da IA');
-
-    let etapas = [];
-
-    // PRIORIDADE 1: Dados processados da IA Gemini
-    if (data.etapas_desenvolvimento && Array.isArray(data.etapas_desenvolvimento)) {
-      etapas = data.etapas_desenvolvimento;
-      console.log('✅ Etapas carregadas de etapas_desenvolvimento (IA):', etapas.length);
-    }
-    // PRIORIDADE 2: Outras estruturas possíveis da IA
-    else if (data.desenvolvimento && Array.isArray(data.desenvolvimento)) {
-      etapas = data.desenvolvimento;
-      console.log('✅ Etapas carregadas de desenvolvimento (IA):', etapas.length);
-    }
-    else if (data.etapas && Array.isArray(data.etapas)) {
-      etapas = data.etapas;
-      console.log('✅ Etapas carregadas de etapas (IA):', etapas.length);
-    }
-    else if (data.steps && Array.isArray(data.steps)) {
-      // Converter formato steps para etapas
-      etapas = data.steps.map((step, index) => ({
-        id: step.id || `etapa-${index + 1}`,
-        titulo: step.titulo || step.title || `${index + 1}. Etapa ${index + 1}`,
-        descricao: step.descricao || step.description || 'Descrição da etapa',
-        tipo_interacao: step.tipo_interacao || step.interaction_type || 'Aula expositiva',
-        tempo_estimado: step.tempo_estimado || step.duration || '10 minutos',
-        recursos_usados: Array.isArray(step.recursos_usados) ? step.recursos_usados :
-                        Array.isArray(step.resources) ? step.resources : ['Quadro'],
-        metodologia: step.metodologia || step.methodology || '',
-        atividades_praticas: step.atividades_praticas || step.practical_activities || '',
-        avaliacao: step.avaliacao || step.evaluation || 'Participação',
-        observacoes: step.observacoes || step.notes || ''
-      }));
-      console.log('✅ Etapas convertidas de steps (IA):', etapas.length);
-    }
-
-    // Se ainda não encontramos etapas, procurar em caches específicos
-    if (etapas.length === 0 && activityData?.id) {
-      console.log('🔄 Tentando carregar etapas dos caches específicos...');
-
-      const cacheKeys = [
-        `constructed_plano-aula_${activityData.id}`,
-        `activity_${activityData.id}`,
-        'schoolpower_plano-aula_content'
-      ];
-
-      for (const cacheKey of cacheKeys) {
-        try {
-          const cachedData = localStorage.getItem(cacheKey);
-          if (cachedData) {
-            const parsed = JSON.parse(cachedData);
-            if (parsed.etapas_desenvolvimento && Array.isArray(parsed.etapas_desenvolvimento)) {
-              etapas = parsed.etapas_desenvolvimento;
-              console.log(`✅ Etapas carregadas do cache ${cacheKey}:`, etapas.length);
-              break;
-            }
-          }
-        } catch (error) {
-          console.warn(`⚠️ Erro ao carregar cache ${cacheKey}:`, error);
-        }
-      }
-    }
-
-    // APENAS COMO ÚLTIMO RECURSO: Etapas padrão (se IA falhar completamente)
-    if (etapas.length === 0) {
-      console.log('⚠️ Nenhuma etapa da IA encontrada, gerando etapas padrão baseadas no contexto');
-      const tema = data.tema || data['Tema ou Tópico Central'] || 'Tema da Aula';
-      const disciplina = data.disciplina || data['Componente Curricular'] || 'Matemática';
-
-      etapas = [
-        {
-          id: 'etapa-1',
-          titulo: '1. Introdução e Contextualização',
-          descricao: `Apresentação do tema "${tema}" de ${disciplina}, conectando com conhecimentos prévios e despertando interesse dos alunos.`,
-          tipo_interacao: 'Apresentação dialogada',
-          tempo_estimado: '15 minutos',
-          recursos_usados: ['Quadro', 'Slides'],
-          metodologia: 'Aula expositiva dialogada',
-          atividades_praticas: 'Discussão inicial sobre conhecimentos prévios',
-          avaliacao: 'Participação nas discussões',
-          observacoes: 'Adaptar linguagem conforme necessidade da turma'
-        },
-        {
-          id: 'etapa-2',
-          titulo: '2. Desenvolvimento do Conteúdo',
-          descricao: `Exposição sistemática dos conceitos fundamentais de ${disciplina} relacionados ao tema "${tema}", com demonstrações práticas.`,
-          tipo_interacao: 'Explicação + demonstração',
-          tempo_estimado: '20 minutos',
-          recursos_usados: ['Livro didático', 'Material manipulativo'],
-          metodologia: 'Demonstração prática',
-          atividades_praticas: 'Resolução de exemplos no quadro',
-          avaliacao: 'Acompanhamento da compreensão',
-          observacoes: 'Dar tempo para anotações dos alunos'
-        },
-        {
-          id: 'etapa-3',
-          titulo: '3. Atividade Prática',
-          descricao: `Aplicação dos conceitos através de exercícios práticos sobre "${tema}", promovendo a fixação do aprendizado.`,
-          tipo_interacao: 'Atividade individual/grupo',
-          tempo_estimado: '10 minutos',
-          recursos_usados: ['Exercícios', 'Material de apoio'],
-          metodologia: 'Aprendizagem ativa',
-          atividades_praticas: 'Resolução de exercícios propostos',
-          avaliacao: 'Correção dos exercícios',
-          observacoes: 'Circular pela sala auxiliando os alunos'
-        },
-        {
-          id: 'etapa-4',
-          titulo: '4. Síntese e Fechamento',
-          descricao: `Consolidação dos principais conceitos de ${disciplina} abordados sobre "${tema}" e esclarecimento de dúvidas finais.`,
-          tipo_interacao: 'Discussão + síntese',
-          tempo_estimado: '5 minutos',
-          recursos_usados: ['Quadro'],
-          metodologia: 'Síntese colaborativa',
-          atividades_praticas: 'Resumo coletivo dos pontos principais',
-          avaliacao: 'Verificação da compreensão geral',
-          observacoes: 'Anotar dúvidas para próxima aula'
-        }
-      ];
-    }
-
-    // Validar e normalizar estrutura das etapas
-    etapas = etapas.map((etapa, index) => ({
-      id: etapa.id || `etapa-${index + 1}`,
-      titulo: etapa.titulo || etapa.title || `${index + 1}. Etapa ${index + 1}`,
-      descricao: etapa.descricao || etapa.description || 'Descrição da etapa',
-      tipo_interacao: etapa.tipo_interacao || etapa.tipoInteracao || etapa.interaction_type || 'Aula expositiva',
-      tempo_estimado: etapa.tempo_estimado || etapa.tempoEstimado || etapa.duration || '10 minutos',
-      recursos_usados: Array.isArray(etapa.recursos_usados) ? etapa.recursos_usados :
-                      Array.isArray(etapa.recursos) ? etapa.recursos :
-                      etapa.recursos_usados ? [etapa.recursos_usados] :
-                      etapa.recursos ? [etapa.recursos] : ['Quadro'],
-      metodologia: etapa.metodologia || etapa.methodology || '',
-      atividades_praticas: etapa.atividades_praticas || etapa.practical_activities || '',
-      avaliacao: etapa.avaliacao || etapa.evaluation || 'Participação',
-      observacoes: etapa.observacoes || etapa.notes || ''
-    }));
-
-    console.log('✅ Etapas de desenvolvimento finais processadas:', etapas);
-    console.log('🎯 Total de etapas:', etapas.length);
-    console.log('📋 Primeira etapa como exemplo:', etapas[0]);
-
-    return etapas;
-  }, [data, activityData]);
-
-  // Inicializa o estado de expansão com base nas etapas carregadas
-  useEffect(() => {
-    const initialExpansionState = {};
-    etapasDesenvolvimento.forEach(etapa => {
-      initialExpansionState[etapa.id] = false; // Começa todas recolhidas
-    });
-    setEtapasExpandidas(initialExpansionState);
-  }, [etapasDesenvolvimento]);
-
-
-  const toggleEtapaExpansion = (etapaId: string) => {
-    setEtapasExpandidas(prev => ({
-      ...prev,
-      [etapaId]: !prev[etapaId]
-    }));
-  };
-
-  const moveEtapaUp = (index: number) => {
-    if (index > 0) {
-      const newEtapas = [...etapasDesenvolvimento];
-      [newEtapas[index - 1], newEtapas[index]] = [newEtapas[index], newEtapas[index - 1]];
-
-      // Salvar mudanças
-      const updatedData = { ...data, etapas_desenvolvimento: newEtapas };
-      saveDataToCache(updatedData);
-
-      // Recarregar dados para refletir mudanças
-      setData(updatedData);
-    }
-  };
-
-  const moveEtapaDown = (index: number) => {
-    if (index < etapasDesenvolvimento.length - 1) {
-      const newEtapas = [...etapasDesenvolvimento];
-      [newEtapas[index], newEtapas[index + 1]] = [newEtapas[index + 1], newEtapas[index]];
-
-      // Salvar mudanças
-      const updatedData = { ...data, etapas_desenvolvimento: newEtapas };
-      saveDataToCache(updatedData);
-
-      // Recarregar dados para refletir mudanças
-      setData(updatedData);
-    }
-  };
-
-  const editEtapa = (etapaId: string) => {
-    // TODO: Implementar modal de edição de etapa
-    console.log('Editando etapa:', etapaId);
-    toast({
-      title: "Edição de Etapa",
-      description: "Funcionalidade de edição será implementada em breve.",
-    });
-  };
-
-  const handleReorderEtapas = (draggedId: string, targetId: string) => {
-    console.log(`Reordenando: ${draggedId} para depois de ${targetId}`);
-    const etapas = [...etapasDesenvolvimento];
-    const draggedIndex = etapas.findIndex(e => e.id === draggedId);
-    const targetIndex = etapas.findIndex(e => e.id === targetId);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    const [movedEtapa] = etapas.splice(draggedIndex, 1);
-    etapas.splice(targetIndex, 0, movedEtapa);
-
-    // Salvar mudanças
-    const updatedData = { ...data, etapas_desenvolvimento: etapas };
-    saveDataToCache(updatedData);
-
-    // Recarregar dados para refletir mudanças
-    setData(updatedData);
-  };
-
-  const saveDataToCache = (updatedData: any) => {
-    try {
-      if (activityData?.id) {
-        localStorage.setItem(`constructed_plano-aula_${activityData.id}`, JSON.stringify(updatedData));
-        localStorage.setItem(`activity_${activityData.id}`, JSON.stringify(updatedData));
-      }
-      localStorage.setItem('schoolpower_plano-aula_content', JSON.stringify(updatedData));
-      console.log('✅ Dados atualizados salvos no cache');
-    } catch (error) {
-      console.error('❌ Erro ao salvar dados atualizados:', error);
-    }
-  };
 
 
   if (!planoData || (typeof planoData === 'object' && Object.keys(planoData).length === 0)) {
@@ -539,7 +379,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     {
       id: 'atividades',
       label: 'Atividades',
-      icon: Users,
+      icon: Play,
       description: 'Atividades práticas'
     },
     {
@@ -785,183 +625,204 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
       case 'desenvolvimento':
         return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
-                <Users className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Desenvolvimento</h3>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-orange-600" />
+                Etapas de Desenvolvimento
+              </h3>
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Etapa
+              </Button>
             </div>
 
-            {/* Cards de Etapas - Renderização Dinâmica das Etapas Geradas pela IA */}
-            <div className="space-y-3">
-              {etapasDesenvolvimento.map((etapa, index) => {
-                const isExpanded = etapasExpandidas[etapa.id] || false;
+            <div className="space-y-4">
+              {developmentSteps.map((etapa: any, index: number) => {
+                const InteractionIcon = getInteractionIcon(etapa.tipo_interacao || etapa.tipoInteracao || 'Interativo');
+                const isExpanded = expandedSteps[index];
+                const truncatedDescription = etapa.descricao?.length > 120
+                  ? etapa.descricao.substring(0, 120) + '...'
+                  : etapa.descricao;
+
                 return (
                   <Card
-                    key={etapa.id}
-                    className={`border-l-4 ${
-                      draggedEtapa === etapa.id ? 'border-l-orange-500 bg-orange-50/50 dark:bg-orange-900/20' : 'border-l-blue-500'
-                    } bg-gradient-to-r from-blue-50/30 to-transparent dark:from-blue-900/20 dark:to-transparent transition-all duration-200 hover:shadow-md cursor-pointer`}
-                    draggable={true}
-                    onDragStart={(e) => {
-                      setDraggedEtapa(etapa.id);
-                      e.dataTransfer.effectAllowed = 'move';
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = 'move';
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (draggedEtapa && draggedEtapa !== etapa.id) {
-                        handleReorderEtapas(draggedEtapa, etapa.id);
-                      }
-                      setDraggedEtapa(null);
-                    }}
-                    onDragEnd={() => setDraggedEtapa(null)}
+                    key={index}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(index)}
+                    className={`relative overflow-hidden transition-all duration-300 border-l-4 border-l-orange-500 shadow-lg hover:shadow-xl cursor-move ${
+                      draggedStep === index ? 'opacity-50 scale-95' : ''
+                    }`}
                   >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="flex items-center gap-2">
-                            <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
-                            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center text-xs font-bold text-blue-700 dark:text-blue-300">
-                              {index + 1}
+                    <CardContent className="p-0">
+                      {/* Header do Card */}
+                      <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 p-4 border-b border-orange-200 dark:border-orange-700">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" />
+                              <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                {index + 1}
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                            <div>
+                              <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">
                                 {etapa.titulo}
                               </h4>
-                              <Badge variant="secondary" className="text-xs px-2 py-1">
-                                <Timer className="h-3 w-3 mr-1" />
-                                {etapa.tempo_estimado || etapa.tempoEstimado}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs px-2 py-1">
-                                <Users className="h-3 w-3 mr-1" />
-                                {etapa.tipo_interacao || etapa.tipoInteracao}
-                              </Badge>
-                            </div>
-
-                            <div className="space-y-2">
-                              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                                {isExpanded ? etapa.descricao : `${etapa.descricao.substring(0, 120)}...`}
-                              </p>
-
-                              {isExpanded && (
-                                <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                  {(etapa.recursos_usados || etapa.recursos) && (
-                                    <div>
-                                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Recursos:</span>
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {(Array.isArray(etapa.recursos_usados) ? etapa.recursos_usados :
-                                          Array.isArray(etapa.recursos) ? etapa.recursos :
-                                          [etapa.recursos_usados || etapa.recursos]).map((recurso, idx) => (
-                                          <Badge key={idx} variant="secondary" className="text-xs">
-                                            <Package className="h-3 w-3 mr-1" />
-                                            {recurso}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {etapa.metodologia && (
-                                    <div>
-                                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Metodologia:</span>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{etapa.metodologia}</p>
-                                    </div>
-                                  )}
-
-                                  {etapa.atividades_praticas && (
-                                    <div>
-                                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Atividades Práticas:</span>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{etapa.atividades_praticas}</p>
-                                    </div>
-                                  )}
-
-                                  {etapa.avaliacao && (
-                                    <div>
-                                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Avaliação:</span>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{etapa.avaliacao}</p>
-                                    </div>
-                                  )}
-
-                                  {etapa.observacoes && (
-                                    <div>
-                                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Observações:</span>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{etapa.observacoes}</p>
-                                    </div>
-                                  )}
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                                  <InteractionIcon className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    {etapa.tipo_interacao || etapa.tipoInteracao}
+                                  </span>
                                 </div>
-                              )}
+                                {etapa.tempo_estimado && (
+                                  <Badge variant="outline" className="border-orange-300 text-orange-700 bg-white dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/20 text-xs">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {etapa.tempo_estimado}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex flex-col gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleEtapaExpansion(etapa.id)}
-                            className="text-xs px-2 py-1 h-6"
-                          >
-                            <Expand className="h-3 w-3 mr-1" />
-                            {isExpanded ? 'Recolher' : 'Expandir'}
-                          </Button>
-                          <div className="flex gap-1">
+                          {/* Controles de Movimento */}
+                          <div className="flex items-center gap-1">
                             <Button
-                              variant="outline"
                               size="sm"
-                              className="text-xs px-2 py-1 h-6"
-                              onClick={() => editEtapa(etapa.id)}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs px-2 py-1 h-6"
-                              onClick={() => moveEtapaUp(index)}
+                              variant="ghost"
+                              onClick={() => moveStepUp(index)}
                               disabled={index === 0}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
                             >
-                              ↑
+                              <ChevronUp className="w-4 h-4" />
                             </Button>
                             <Button
-                              variant="outline"
                               size="sm"
-                              className="text-xs px-2 py-1 h-6"
-                              onClick={() => moveEtapaDown(index)}
-                              disabled={index === etapasDesenvolvimento.length - 1}
+                              variant="ghost"
+                              onClick={() => moveStepDown(index)}
+                              disabled={index === developmentSteps.length - 1}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
                             >
-                              ↓
+                              <ChevronDown className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
                       </div>
-                    </CardHeader>
+
+                      {/* Conteúdo do Card */}
+                      <div className="p-4">
+                        <div className="mb-4">
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            {isExpanded ? etapa.descricao : truncatedDescription}
+                          </p>
+
+                          {etapa.descricao?.length > 120 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleStepExpansion(index)}
+                              className="mt-2 text-orange-600 hover:text-orange-700 text-xs p-0 h-auto"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="w-3 h-3 mr-1" />
+                                  Recolher
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-3 h-3 mr-1" />
+                                  Expandir
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Recursos e Notas */}
+                        {etapa.recurso_gerado && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-3 border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Recurso:</span>
+                            </div>
+                            <span className="text-sm text-blue-700 dark:text-blue-300">{etapa.recurso_gerado}</span>
+                          </div>
+                        )}
+
+                        {etapa.nota_privada_professor && (
+                          <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg mb-3 border border-amber-200 dark:border-amber-700">
+                            <div className="flex items-start gap-2">
+                              <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-sm font-semibold text-amber-800 dark:text-amber-200 block mb-1">
+                                  Nota para o professor:
+                                </span>
+                                <p className="text-sm text-amber-700 dark:text-amber-300">
+                                  {etapa.nota_privada_professor}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Botões de Ação */}
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Editar esta etapa
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            Gerar Slides
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Gerar Recurso
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
                   </Card>
                 );
               })}
             </div>
 
-            {/* Informações sobre as Etapas Geradas pela IA */}
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-5 h-5 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-bold text-blue-700 dark:text-blue-300">IA</span>
-                </div>
-                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Etapas geradas pela IA Gemini
-                </span>
-              </div>
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                {etapasDesenvolvimento.length} etapas personalizadas foram criadas automaticamente
-                baseadas no seu contexto educacional. Você pode reordená-las, editá-las ou adicionar novas etapas.
-              </p>
-            </div>
+            {/* Seção de Avaliação */}
+            {plano.avaliacao && (
+              <Card className="mt-6 border-l-4 border-l-green-500 shadow-lg">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg text-green-800 dark:text-green-200">
+                    <CheckCircle className="w-5 h-5" />
+                    Critérios de Avaliação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                    <p className="text-green-800 dark:text-green-200 text-sm leading-relaxed">
+                      {typeof plano.avaliacao === 'string'
+                        ? plano.avaliacao
+                        : plano.avaliacao.criterios || 'Critérios de avaliação não especificados'
+                      }
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 

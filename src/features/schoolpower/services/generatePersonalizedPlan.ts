@@ -83,27 +83,6 @@ Os campos obrigatórios são EXATAMENTE:
 - Tipo de Aula
 - Observações do Professor
 
-ESTRUTURA OBRIGATÓRIA DE ETAPAS DE DESENVOLVIMENTO:
-Para plano-aula, você DEVE incluir um campo "etapas_desenvolvimento" que é um array de objetos com a seguinte estrutura:
-
-"etapas_desenvolvimento": [
-  {
-    "id": "etapa-1",
-    "titulo": "1. Introdução e Contextualização",
-    "descricao": "Apresente o contexto histórico da Europa no século XVIII...",
-    "tipo_interacao": "Apresentação + debate",
-    "tempo_estimado": "15 minutos",
-    "recursos_usados": ["Slides", "Quadro"],
-    "metodologia": "Aula expositiva dialogada",
-    "objetivos_especificos": ["Contextualizar o período histórico", "Despertar interesse dos alunos"],
-    "atividades_praticas": "Discussão em grupos sobre conhecimentos prévios",
-    "avaliacao": "Participação nas discussões",
-    "observacoes": "Adaptar linguagem conforme necessidade da turma"
-  }
-]
-
-GERE SEMPRE ENTRE 3-6 ETAPAS PERSONALIZADAS E DETALHADAS baseadas no contexto fornecido!
-
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
     // Construir o prompt para a Gemini
