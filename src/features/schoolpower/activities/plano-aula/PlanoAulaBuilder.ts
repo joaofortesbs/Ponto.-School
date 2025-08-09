@@ -1,3 +1,4 @@
+
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface PlanoAulaData {
@@ -81,7 +82,7 @@ export class PlanoAulaBuilder {
    */
   static generatePrompt(data: PlanoAulaData): string {
     const promptData = JSON.stringify(data, null, 2);
-
+    
     return `Você é um planejador pedagógico especialista da School Power. Com base nos seguintes dados do professor, construa um plano de aula completo dividido em: Visão Geral, Objetivos, Metodologia, Desenvolvimento e Atividades.
 
 ${promptData}
@@ -168,7 +169,7 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
     } catch (error) {
       console.error('Erro ao processar resposta da IA:', error);
       console.error('Resposta recebida:', response);
-
+      
       // Retornar estrutura de fallback
       return PlanoAulaBuilder.createFallbackResponse();
     }
@@ -264,140 +265,3 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
     };
   }
 }
-
-export const buildPlanoAulaFromData = (data: any): PlanoAulaData => {
-  console.log('🔨 PlanoAulaBuilder - Construindo plano a partir dos dados:', data);
-
-  // Verificar se os dados já estão no formato correto
-  if (data.visao_geral && data.objetivos && data.metodologia && data.desenvolvimento) {
-    console.log('✅ PlanoAulaBuilder - Dados já estão estruturados');
-    // Garantir que desenvolvimento tenha etapas válidas
-    if (!data.desenvolvimento || data.desenvolvimento.length === 0) {
-      data.desenvolvimento = getDefaultDevelopmentSteps();
-    }
-    return data as PlanoAulaData;
-  }
-
-  // Construir etapas de desenvolvimento robustas
-  const buildDevelopmentSteps = () => {
-    if (data.desenvolvimento && Array.isArray(data.desenvolvimento) && data.desenvolvimento.length > 0) {
-      return data.desenvolvimento.map((etapa: any, index: number) => ({
-        etapa: etapa.etapa || index + 1,
-        titulo: etapa.titulo || `${index + 1}. Etapa ${index + 1}`,
-        descricao: etapa.descricao || `Descrição da etapa ${index + 1}`,
-        tipo_interacao: etapa.tipo_interacao || etapa.tipoInteracao || 'Interativa',
-        tipoInteracao: etapa.tipoInteracao || etapa.tipo_interacao || 'Interativa',
-        tempo_estimado: etapa.tempo_estimado || '15 min',
-        recurso_gerado: etapa.recurso_gerado || 'Material didático',
-        nota_privada_professor: etapa.nota_privada_professor || 'Orientação para o professor'
-      }));
-    }
-    return getDefaultDevelopmentSteps();
-  };
-
-  // Construir estrutura básica
-  const planoAula: PlanoAulaData = {
-    titulo: data.titulo || data.title || 'Plano de Aula',
-    descricao: data.descricao || data.description || 'Descrição do plano de aula',
-    visao_geral: {
-      disciplina: data.disciplina || data.subject || 'Disciplina',
-      tema: data.tema || data.theme || data.titulo || data.title || 'Tema',
-      serie: data.serie || data.anoEscolaridade || data.schoolYear || 'Série',
-      tempo: data.tempo || data.tempoLimite || data.timeLimit || 'Tempo',
-      metodologia: data.metodologia || data.tipoAula || data.difficultyLevel || 'Metodologia',
-      recursos: data.recursos || (data.materiais ? [data.materiais] : ['Recursos não especificados']),
-      sugestoes_ia: ['Plano de aula personalizado']
-    },
-    objetivos: data.objetivos ? (Array.isArray(data.objetivos) ? data.objetivos.map((obj: any) => ({
-      descricao: typeof obj === 'string' ? obj : obj.descricao || obj,
-      habilidade_bncc: data.competencias || 'BNCC não especificada',
-      sugestao_reescrita: '',
-      atividade_relacionada: ''
-    })) : [{
-      descricao: data.objetivos,
-      habilidade_bncc: data.competencias || 'BNCC não especificada',
-      sugestao_reescrita: '',
-      atividade_relacionada: ''
-    }]) : [{
-      descricao: data.objetivos || 'Objetivo não especificado',
-      habilidade_bncc: data.competencias || 'BNCC não especificada',
-      sugestao_reescrita: '',
-      atividade_relacionada: ''
-    }],
-    metodologia: {
-      nome: data.metodologia || data.tipoAula || data.difficultyLevel || 'Metodologia Ativa',
-      descricao: data.descricaoMetodologia || data.descricao || data.description || 'Descrição da metodologia',
-      alternativas: ['Aula expositiva', 'Atividades práticas'],
-      simulacao_de_aula: 'Simulação disponível',
-      explicacao_em_video: 'Video explicativo disponível'
-    },
-    desenvolvimento: buildDevelopmentSteps(),
-    atividades: data.atividades || [
-      {
-        nome: 'Atividade Principal',
-        tipo: 'Prática',
-        ref_objetivos: [1],
-        visualizar_como_aluno: 'Atividade interativa',
-        sugestoes_ia: ['Personalize conforme necessário']
-      }
-    ],
-    avaliacao: {
-      criterios: data.avaliacao || data.observacoes || data.evaluation || 'Critérios não especificados',
-      instrumentos: ['Observação', 'Participação'],
-      feedback: 'Feedback personalizado'
-    },
-    recursos_extras: {
-      materiais_complementares: data.materiais ? [data.materiais] : ['Material não especificado'],
-      tecnologias: ['Quadro', 'Projetor'],
-      referencias: ['Bibliografia básica']
-    }
-  };
-
-  console.log('✅ PlanoAulaBuilder - Plano construído:', planoAula);
-  console.log('🔍 PlanoAulaBuilder - Etapas de desenvolvimento:', planoAula.desenvolvimento);
-  return planoAula;
-};
-
-// Função auxiliar para etapas padrão
-const getDefaultDevelopmentSteps = () => [
-  {
-    etapa: 1,
-    titulo: "1. Introdução e Contextualização",
-    descricao: "Apresente o contexto histórico da Europa no século XVIII e introduza o tema da Revolução Francesa, destacando suas causas principais.",
-    tipo_interacao: "Apresentação + debate",
-    tipoInteracao: "Apresentação + debate",
-    tempo_estimado: "15 min",
-    recurso_gerado: "Slides introdutórios",
-    nota_privada_professor: "Contextualizar o período histórico e verificar conhecimentos prévios dos alunos"
-  },
-  {
-    etapa: 2,
-    titulo: "2. Vídeo Interativo",
-    descricao: "Assista com os alunos um vídeo de 5 minutos sobre os três estados franceses e pause para discussões pontuais.",
-    tipo_interacao: "Assistir + Discussão",
-    tipoInteracao: "Assistir + Discussão",
-    tempo_estimado: "10 min",
-    recurso_gerado: "Vídeo educativo + roteiro de discussão",
-    nota_privada_professor: "Pausar o vídeo em momentos estratégicos para promover discussão"
-  },
-  {
-    etapa: 3,
-    titulo: "3. Atividade Prática",
-    descricao: "Divida os alunos em grupos para simular os três estados franceses e discutir suas diferenças e conflitos.",
-    tipo_interacao: "Dinâmica em grupo",
-    tipoInteracao: "Dinâmica em grupo",
-    tempo_estimado: "20 min",
-    recurso_gerado: "Cartas de personagens + roteiro da dinâmica",
-    nota_privada_professor: "Circular entre os grupos orientando a discussão e garantindo participação"
-  },
-  {
-    etapa: 4,
-    titulo: "4. Reflexão Final",
-    descricao: "Recolha as conclusões dos grupos e faça uma análise guiada sobre as causas da Revolução Francesa.",
-    tipo_interacao: "Discussão guiada",
-    tipoInteracao: "Discussão guiada",
-    tempo_estimado: "10 min",
-    recurso_gerado: "Quadro síntese + questionário",
-    nota_privada_professor: "Sistematizar as principais conclusões e conectar com o próximo conteúdo"
-  }
-];
