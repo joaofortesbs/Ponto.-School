@@ -27,7 +27,12 @@ import {
   FileText,
   Play,
   Edit,
-  Star
+  Star,
+  ChevronUp,
+  GripVertical,
+  Expand,
+  Timer,
+  Package
 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
@@ -547,7 +552,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-orange-600" />
+                <Activity className="h-5 w-5 text-orange-600" />
                 Etapas da Aula
               </h3>
               <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
@@ -556,63 +561,31 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               </Button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {(plano.desenvolvimento || []).map((etapa: any, index: number) => (
-                <Card key={index} className="relative border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                          {etapa.etapa || index + 1}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-bold text-xl text-gray-900 dark:text-gray-100">{etapa.titulo}</h4>
-                          <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30 px-3 py-1">
-                              {etapa.tipo_interacao}
-                            </Badge>
-                            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
-                              {etapa.tempo_estimado}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-                          <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed">{etapa.descricao}</p>
-                        </div>
-
-                        {etapa.recurso_gerado && (
-                          <div className="bg-white dark:bg-gray-700 p-3 rounded-lg mb-3 border border-gray-200 dark:border-gray-600">
-                            <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Recurso gerado: </span>
-                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{etapa.recurso_gerado}</span>
-                          </div>
-                        )}
-
-                        {etapa.nota_privada_professor && (
-                          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700 mb-4">
-                            <strong className="text-orange-800 dark:text-orange-200 block mb-2">Nota para o professor:</strong>
-                            <p className="text-orange-700 dark:text-orange-300 text-sm">{etapa.nota_privada_professor}</p>
-                          </div>
-                        )}
-
-                        <div className="flex gap-3">
-                          <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
-                            <FileText className="w-4 h-4 mr-2" />
-                            Gerar Slides
-                          </Button>
-                          <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Gerar Recurso
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <EtapaCard 
+                  key={`etapa-${index}`}
+                  etapa={etapa} 
+                  index={index} 
+                  totalEtapas={plano.desenvolvimento?.length || 0}
+                  onMoveUp={(idx) => console.log('Mover para cima:', idx)}
+                  onMoveDown={(idx) => console.log('Mover para baixo:', idx)}
+                  onEdit={(idx) => console.log('Editar etapa:', idx)}
+                />
               ))}
             </div>
+
+            {(!plano.desenvolvimento || plano.desenvolvimento.length === 0) && (
+              <div className="text-center py-12">
+                <Activity className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                  Nenhuma etapa encontrada
+                </h4>
+                <p className="text-gray-500 dark:text-gray-500">
+                  As etapas de desenvolvimento serão exibidas aqui quando geradas pela IA
+                </p>
+              </div>
+            )}
           </div>
         );
 
@@ -862,6 +835,230 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         </div>
       )}
     </div>
+  );
+};
+
+// Componente para cada etapa do desenvolvimento
+interface EtapaCardProps {
+  etapa: any;
+  index: number;
+  totalEtapas: number;
+  onMoveUp: (index: number) => void;
+  onMoveDown: (index: number) => void;
+  onEdit: (index: number) => void;
+}
+
+const EtapaCard: React.FC<EtapaCardProps> = ({ 
+  etapa, 
+  index, 
+  totalEtapas, 
+  onMoveUp, 
+  onMoveDown, 
+  onEdit 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Função para obter ícone do tipo de interação
+  const getTipoInteracaoIcon = (tipo: string) => {
+    const tipoLower = tipo?.toLowerCase() || '';
+    
+    if (tipoLower.includes('apresentação') || tipoLower.includes('exposição')) {
+      return <Presentation className="w-4 h-4" />;
+    } else if (tipoLower.includes('prática') || tipoLower.includes('atividade')) {
+      return <Gamepad2 className="w-4 h-4" />;
+    } else if (tipoLower.includes('discussão') || tipoLower.includes('debate')) {
+      return <Users2 className="w-4 h-4" />;
+    } else if (tipoLower.includes('interativa') || tipoLower.includes('participativa')) {
+      return <UserCheck className="w-4 h-4" />;
+    } else if (tipoLower.includes('avaliação') || tipoLower.includes('avaliativa')) {
+      return <CheckCircle className="w-4 h-4" />;
+    } else {
+      return <Activity className="w-4 h-4" />;
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    console.log(`Reordenar: ${draggedIndex} para ${index}`);
+    // Aqui implementaria a lógica de reordenação
+  };
+
+  return (
+    <Card 
+      className={`relative border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-all duration-200 cursor-move ${
+        isDragging ? 'opacity-50 scale-105' : ''
+      }`}
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          {/* Drag Handle e Número da Etapa */}
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+              {etapa.etapa || index + 1}
+            </div>
+            <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-grab" />
+          </div>
+
+          {/* Conteúdo Principal */}
+          <div className="flex-1">
+            {/* Header da Etapa */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1 mr-4">
+                <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-2">
+                  {etapa.titulo}
+                </h4>
+                
+                {/* Tags de Informação */}
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <Badge 
+                    variant="outline" 
+                    className="border-blue-300 text-blue-700 bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:bg-blue-900/30 px-3 py-1 flex items-center gap-1"
+                  >
+                    {getTipoInteracaoIcon(etapa.tipo_interacao)}
+                    {etapa.tipo_interacao}
+                  </Badge>
+                  
+                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-3 py-1 flex items-center gap-1">
+                    <Timer className="w-3 h-3" />
+                    {etapa.tempo_estimado}
+                  </Badge>
+
+                  {etapa.recurso_gerado && (
+                    <Badge variant="outline" className="border-purple-300 text-purple-700 bg-purple-50 dark:border-purple-600 dark:text-purple-300 dark:bg-purple-900/30 px-3 py-1 flex items-center gap-1">
+                      <Package className="w-3 h-3" />
+                      {etapa.recurso_gerado}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Controles de Ação */}
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onMoveUp(index)}
+                    disabled={index === 0}
+                    className="h-8 w-8 p-0"
+                    title="Mover para cima"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onMoveDown(index)}
+                    disabled={index === totalEtapas - 1}
+                    className="h-8 w-8 p-0"
+                    title="Mover para baixo"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onEdit(index)}
+                  className="border-orange-300 text-orange-600 hover:bg-orange-50 px-2"
+                >
+                  <Edit className="w-3 h-3 mr-1" />
+                  Editar
+                </Button>
+              </div>
+            </div>
+
+            {/* Descrição */}
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
+              <p className={`text-gray-800 dark:text-gray-200 leading-relaxed ${
+                !isExpanded && etapa.descricao?.length > 150 ? 'line-clamp-3' : ''
+              }`}>
+                {etapa.descricao}
+              </p>
+              
+              {etapa.descricao?.length > 150 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-2 p-0 h-auto text-orange-600 hover:text-orange-700"
+                >
+                  <Expand className="w-4 h-4 mr-1" />
+                  {isExpanded ? 'Recolher' : 'Expandir'}
+                </Button>
+              )}
+            </div>
+
+            {/* Nota Privada do Professor */}
+            {etapa.nota_privada_professor && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-700 mb-4">
+                <div className="flex items-start gap-2">
+                  <Eye className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <strong className="text-amber-800 dark:text-amber-200 block mb-1 text-sm">
+                      Nota privada do professor:
+                    </strong>
+                    <p className="text-amber-700 dark:text-amber-300 text-sm">
+                      {etapa.nota_privada_professor}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Botões de Ação */}
+            <div className="flex gap-2 flex-wrap">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-orange-300 text-orange-600 hover:bg-orange-50"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Gerar Slides
+              </Button>
+              
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-green-300 text-green-600 hover:bg-green-50"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Gerar Recurso
+              </Button>
+
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Simular Etapa
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
