@@ -1,6 +1,6 @@
 
 import { DesenvolvimentoData, EtapaDesenvolvimento } from '../desenvolvimento/DesenvolvimentoData';
-import schoolPowerActivitiesData from '../../../data/schoolPowerActivities.json';
+import schoolPowerActivitiesData from '../../../../data/schoolPowerActivities.json';
 
 export interface AtividadeRecurso {
   id: string;
