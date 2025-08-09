@@ -21,7 +21,9 @@ import {
   Play,
   GripVertical,
   BarChart3,
-  ChevronUp
+  ChevronUp,
+  Brain, // Importado para o novo botão
+  Edit2 // Importado para o botão de edição
 } from 'lucide-react';
 import DebugPanel from './DebugPanel';
 import {
@@ -186,65 +188,43 @@ export default function DesenvolvimentoInterface({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
+          className="group"
         >
-          <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
-            theme === 'dark'
-              ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80'
-              : 'bg-white border-gray-200 hover:bg-gray-50'
+          <Card className={`transition-all duration-300 hover:shadow-lg border-2 hover:border-[#FF6B00]/30 rounded-2xl ${
+            theme === 'dark' ? 'bg-[#1E293B] border-gray-800' : 'bg-white border-gray-200'
           }`}>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <motion.div
-                    className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <GripVertical className="h-4 w-4 text-gray-400" />
-                  </motion.div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleEtapaExpandida(etapa.id)}
-                    className="p-1 h-8 w-8"
-                  >
-                    <motion.div
-                      animate={{ rotate: isEtapaExpandida ? 90 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </motion.div>
-                  </Button>
-
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
-                      {getIconeInteracao(etapa.tipoInteracao)}
-                    </div>
-                    <CardTitle className={`text-lg font-bold ${
-                      theme === 'dark' ? 'text-white' : 'text-[#29335C]'
-                    }`}>
-                      {etapa.titulo}
-                    </CardTitle>
+                <motion.div
+                  className="flex items-center gap-3"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
+                    {getIconeInteracao(etapa.tipoInteracao)}
                   </div>
-                </div>
+                  <CardTitle className={`text-lg font-bold ${
+                    theme === 'dark' ? 'text-white' : 'text-[#29335C]'
+                  }`}>
+                    {etapa.titulo}
+                  </CardTitle>
+                </motion.div>
 
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 rounded-full">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {etapa.tempoEstimado}
-                  </Badge>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editarEtapa(etapa.id)}
-                    className="text-gray-500 hover:text-[#FF6B00] h-8 w-8 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleEtapaExpandida(etapa.id)}
+                  className="p-1 h-8 w-8"
+                >
+                  <motion.div
+                    animate={{ rotate: isEtapaExpandida ? 90 : 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <Edit3 className="h-4 w-4" />
-                  </Button>
-                </div>
+                    <ChevronRight className="h-4 w-4" />
+                  </motion.div>
+                </Button>
               </div>
             </CardHeader>
 
@@ -271,27 +251,31 @@ export default function DesenvolvimentoInterface({
                     <p className="text-sm leading-relaxed">{etapa.descricao}</p>
                   </div>
 
-                  {/* Recursos usados */}
-                  {etapa.recursosUsados.length > 0 && (
-                    <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <p className={`text-xs font-medium mb-2 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        Recursos Utilizados:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
+                  {/* Informações Adicionais */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                        Tempo Estimado
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-[#FF6B00]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">{etapa.tempoEstimado}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                        Recursos Utilizados
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
                         {etapa.recursosUsados.map((recurso, index) => (
-                          <Badge
-                            key={index}
-                            variant="outline"
-                            className="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-full"
-                          >
+                          <Badge key={index} variant="outline" className="text-xs">
                             {recurso}
                           </Badge>
                         ))}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </CardContent>
             </motion.div>
@@ -473,65 +457,43 @@ export default function DesenvolvimentoInterface({
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
+                        className="group"
                       >
-                        <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
-                          theme === 'dark'
-                            ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80'
-                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                        <Card className={`transition-all duration-300 hover:shadow-lg border-2 hover:border-[#FF6B00]/30 rounded-2xl ${
+                          theme === 'dark' ? 'bg-[#1E293B] border-gray-800' : 'bg-white border-gray-200'
                         }`}>
-                          <CardHeader className="pb-3">
+                          <CardHeader className="pb-2">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1">
-                                <motion.div
-                                  className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  <GripVertical className="h-4 w-4 text-gray-400" />
-                                </motion.div>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleEtapaExpandida(etapa.id)}
-                                  className="p-1 h-8 w-8"
-                                >
-                                  <motion.div
-                                    animate={{ rotate: etapaExpandida === etapa.id ? 90 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                  >
-                                    <ChevronRight className="h-4 w-4" />
-                                  </motion.div>
-                                </Button>
-
-                                <div className="flex items-center gap-2">
-                                  <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
-                                    {getIconeInteracao(etapa.tipoInteracao)}
-                                  </div>
-                                  <CardTitle className={`text-lg font-bold ${
-                                    theme === 'dark' ? 'text-white' : 'text-[#29335C]'
-                                  }`}>
-                                    {etapa.titulo}
-                                  </CardTitle>
+                              <motion.div
+                                className="flex items-center gap-3"
+                                whileHover={{ scale: 1.02 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                              >
+                                <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
+                                  {getIconeInteracao(etapa.tipoInteracao)}
                                 </div>
-                              </div>
+                                <CardTitle className={`text-lg font-bold ${
+                                  theme === 'dark' ? 'text-white' : 'text-[#29335C]'
+                                }`}>
+                                  {etapa.titulo}
+                                </CardTitle>
+                              </motion.div>
 
-                              <div className="flex items-center gap-2">
-                                <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 rounded-full">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {etapa.tempoEstimado}
-                                </Badge>
-
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => editarEtapa(etapa.id)}
-                                  className="text-gray-500 hover:text-[#FF6B00] h-8 w-8 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleEtapaExpandida(etapa.id)}
+                                className="p-1 h-8 w-8"
+                              >
+                                <motion.div
+                                  animate={{ rotate: etapaExpandida === etapa.id ? 90 : 0 }}
+                                  transition={{ duration: 0.2 }}
                                 >
-                                  <Edit3 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                                  <ChevronRight className="h-4 w-4" />
+                                </motion.div>
+                              </Button>
                             </div>
                           </CardHeader>
 
@@ -558,27 +520,31 @@ export default function DesenvolvimentoInterface({
                                   <p className="text-sm leading-relaxed">{etapa.descricao}</p>
                                 </div>
 
-                                {/* Recursos usados */}
-                                {etapa.recursosUsados.length > 0 && (
-                                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                                    <p className={`text-xs font-medium mb-2 ${
-                                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                                    }`}>
-                                      Recursos Utilizados:
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
+                                {/* Informações Adicionais */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <h4 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                                      Tempo Estimado
+                                    </h4>
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="h-4 w-4 text-[#FF6B00]" />
+                                      <span className="text-sm text-gray-600 dark:text-gray-300">{etapa.tempoEstimado}</span>
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <h4 className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>
+                                      Recursos Utilizados
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1">
                                       {etapa.recursosUsados.map((recurso, index) => (
-                                        <Badge
-                                          key={index}
-                                          variant="outline"
-                                          className="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-full"
-                                        >
+                                        <Badge key={index} variant="outline" className="text-xs">
                                           {recurso}
                                         </Badge>
                                       ))}
                                     </div>
                                   </div>
-                                )}
+                                </div>
                               </div>
                             </CardContent>
                           </motion.div>
@@ -608,33 +574,35 @@ export default function DesenvolvimentoInterface({
                 </Reorder.Group>
               ) : (
                 <div className={`p-8 text-center border-2 border-dashed rounded-xl ${
-                  theme === 'dark' ? 'border-gray-700 bg-[#1E293B]' : 'border-gray-300 bg-gray-50'
+                  theme === 'dark' ? 'border-gray-700' : 'border-gray-300'
                 }`}>
                   <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className={`text-lg font-medium mb-2 ${
-                    theme === 'dark' ? 'text-white' : 'text-[#29335C]'
-                  }`}>
+                  <h3 className={`text-lg font-medium mb-2 ${theme === 'dark' ? 'text-white' : 'text-[#29335C]'}`}>
                     Nenhuma etapa encontrada
                   </h3>
-                  <p className={`text-sm mb-4 ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
-                    Clique no botão abaixo para gerar etapas automaticamente
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    Clique no botão abaixo para gerar as etapas de desenvolvimento
                   </p>
                   <Button
                     onClick={gerarEtapasViaIA}
                     disabled={carregandoIA}
-                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                    className="bg-[#FF6B00] hover:bg-[#FF8533] text-white"
                   >
                     {carregandoIA ? (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          className="mr-2"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                        </motion.div>
                         Gerando...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Gerar Etapas
+                        <Brain className="h-4 w-4 mr-2" />
+                        Gerar Etapas com IA
                       </>
                     )}
                   </Button>
