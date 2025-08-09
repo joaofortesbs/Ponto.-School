@@ -1,2 +1,3 @@
 
-export { default as AtividadesInterface } from './AtividadesInterface';
+export { AtividadesInterface } from './AtividadesInterface';
+export { default } from './AtividadesInterface';
