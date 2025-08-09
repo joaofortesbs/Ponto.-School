@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
+import { motion, Reorder } from 'framer-motion';
 import {
   ChevronDown,
   ChevronRight,
@@ -19,7 +20,8 @@ import {
   CheckCircle,
   AlertCircle,
   Play,
-  Bug
+  GripVertical,
+  BarChart3
 } from 'lucide-react';
 import DebugPanel from './DebugPanel';
 import {
@@ -44,6 +46,7 @@ export default function DesenvolvimentoInterface({
   const [desenvolvimentoData, setDesenvolvimentoData] = useState<DesenvolvimentoData>(desenvolvimentoDataPadrao);
   const [carregandoIA, setCarregandoIA] = useState(false);
   const [etapaExpandida, setEtapaExpandida] = useState<string | null>(null);
+  const [observacoesExpanded, setObservacoesExpanded] = useState(false);
   const [planoId, setPlanoId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
 
@@ -148,6 +151,21 @@ export default function DesenvolvimentoInterface({
     });
   };
 
+  const handleReorder = (newOrder: EtapaDesenvolvimento[]) => {
+    const updatedData = {
+      ...desenvolvimentoData,
+      etapas: newOrder.map((etapa, index) => ({
+        ...etapa,
+        ordem: index + 1
+      }))
+    };
+    setDesenvolvimentoData(updatedData);
+    onDataChange?.(updatedData);
+    
+    // Salvar no localStorage
+    DesenvolvimentoGeminiService.salvarEtapasDesenvolvimento(planoId, updatedData);
+  };
+
   const getIconeInteracao = (tipo: string) => {
     const tipoLower = tipo.toLowerCase();
     if (tipoLower.includes('apresentação')) return <Play className="h-4 w-4" />;
@@ -160,111 +178,145 @@ export default function DesenvolvimentoInterface({
     const isExpandida = etapaExpandida === etapa.id;
     
     return (
-      <Card 
-        key={etapa.id} 
-        className={`mb-4 transition-all duration-300 hover:shadow-md border-l-4 border-l-[#FF6B00] ${
-          theme === 'dark' 
-            ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
-            : 'bg-white border-gray-200 hover:bg-gray-50'
-        }`}
+      <Reorder.Item
+        key={etapa.id}
+        value={etapa}
+        dragListener={false}
+        className="mb-4"
       >
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleEtapaExpandida(etapa.id)}
-                className="p-1 h-8 w-8"
-              >
-                {isExpandida ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </Button>
-              
-              <div className="flex items-center gap-2">
-                {getIconeInteracao(etapa.tipoInteracao)}
-                <CardTitle className={`text-lg font-bold ${
-                  theme === 'dark' ? 'text-white' : 'text-[#29335C]'
-                }`}>
-                  {etapa.titulo}
-                </CardTitle>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20">
-                <Clock className="h-3 w-3 mr-1" />
-                {etapa.tempoEstimado}
-              </Badge>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editarEtapa(etapa.id)}
-                className="text-gray-500 hover:text-[#FF6B00] h-8 w-8 p-1"
-              >
-                <Edit3 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-0">
-          <div className="space-y-3">
-            {/* Tipo de Interação */}
-            <div className="flex items-center gap-2">
-              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                {etapa.tipoInteracao}
-              </Badge>
-            </div>
-            
-            {/* Descrição expandida/resumida */}
-            <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              {isExpandida ? (
-                <p className="text-sm leading-relaxed">{etapa.descricao}</p>
-              ) : (
-                <p className="text-sm line-clamp-2">{etapa.descricao}</p>
-              )}
-              
-              {!isExpandida && etapa.descricao.length > 120 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleEtapaExpandida(etapa.id)}
-                  className="text-[#FF6B00] text-xs mt-1 h-auto p-0 hover:underline"
-                >
-                  Expandir
-                </Button>
-              )}
-            </div>
-            
-            {/* Recursos usados */}
-            {isExpandida && etapa.recursosUsados.length > 0 && (
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                <p className={`text-xs font-medium mb-2 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Recursos Utilizados:
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {etapa.recursosUsados.map((recurso, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
+            theme === 'dark' 
+              ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
+              : 'bg-white border-gray-200 hover:bg-gray-50'
+          }`}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1">
+                  <div 
+                    className="cursor-grab active:cursor-grabbing p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    onPointerDown={(e) => e.currentTarget.closest('[data-reorder-item]')?.dispatchEvent(new PointerEvent('pointerdown', { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }))}
+                  >
+                    <GripVertical className="h-4 w-4 text-gray-400" />
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleEtapaExpandida(etapa.id)}
+                    className="p-1 h-8 w-8"
+                  >
+                    <motion.div
+                      animate={{ rotate: isExpandida ? 90 : 0 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      {recurso}
-                    </Badge>
-                  ))}
+                      <ChevronRight className="h-4 w-4" />
+                    </motion.div>
+                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
+                      {getIconeInteracao(etapa.tipoInteracao)}
+                    </div>
+                    <CardTitle className={`text-lg font-bold ${
+                      theme === 'dark' ? 'text-white' : 'text-[#29335C]'
+                    }`}>
+                      {etapa.titulo}
+                    </CardTitle>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 rounded-full">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {etapa.tempoEstimado}
+                  </Badge>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => editarEtapa(etapa.id)}
+                    className="text-gray-500 hover:text-[#FF6B00] h-8 w-8 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
+            </CardHeader>
+            
+            <motion.div
+              initial={false}
+              animate={{ 
+                height: isExpandida ? "auto" : 0,
+                opacity: isExpandida ? 1 : 0
+              }}
+              transition={{ duration: 0.3 }}
+              style={{ overflow: "hidden" }}
+            >
+              <CardContent className="pt-0">
+                <div className="space-y-4">
+                  {/* Tipo de Interação */}
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+                      {etapa.tipoInteracao}
+                    </Badge>
+                  </div>
+                  
+                  {/* Descrição */}
+                  <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <p className="text-sm leading-relaxed">{etapa.descricao}</p>
+                  </div>
+                  
+                  {/* Recursos usados */}
+                  {etapa.recursosUsados.length > 0 && (
+                    <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <p className={`text-xs font-medium mb-2 ${
+                        theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        Recursos Utilizados:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {etapa.recursosUsados.map((recurso, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-full"
+                          >
+                            {recurso}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </motion.div>
+
+            {/* Preview quando collapsed */}
+            {!isExpandida && (
+              <CardContent className="pt-0 pb-4">
+                <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <p className="text-sm line-clamp-2">{etapa.descricao}</p>
+                  {etapa.descricao.length > 120 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleEtapaExpandida(etapa.id)}
+                      className="text-[#FF6B00] text-xs mt-2 h-auto p-0 hover:underline"
+                    >
+                      Ver mais
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </Card>
+        </motion.div>
+      </Reorder.Item>
     );
   };
 
@@ -273,91 +325,129 @@ export default function DesenvolvimentoInterface({
       theme === 'dark' ? 'bg-[#001427] text-white' : 'bg-[#f7f9fa] text-[#29335C]'
     } transition-colors duration-300`}>
       
-      {/* Header */}
+      {/* Header com título estilizado */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
-              <Play className="h-6 w-6 text-[#FF6B00]" />
-            </div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <motion.div 
+              className="relative"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF8533] flex items-center justify-center shadow-lg">
+                <BarChart3 className="h-8 w-8 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-4 w-4 text-white" />
+              </div>
+            </motion.div>
             <div>
-              <h2 className="text-2xl font-bold text-[#29335C] dark:text-white">
+              <motion.h2 
+                className="text-3xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8533] bg-clip-text text-transparent"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
                 Desenvolvimento da Aula
-              </h2>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+              </motion.h2>
+              <motion.div 
+                className="h-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] rounded-full mt-1"
+                initial={{ width: 0 }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+              />
+              <motion.p 
+                className={`text-sm mt-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
                 {carregandoIA ? 'Gerando etapas via IA...' : `${desenvolvimentoData.etapas.length} etapas • ${desenvolvimentoData.tempoTotalEstimado}`}
-              </p>
+              </motion.p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {contextoPlano && (
-              <Button
-                onClick={regenerarEtapas}
-                disabled={carregandoIA}
-                variant="outline"
-                className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
               >
-                {carregandoIA ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Regenerar IA
-                  </>
-                )}
-              </Button>
+                <Button
+                  onClick={regenerarEtapas}
+                  disabled={carregandoIA}
+                  className="bg-gradient-to-r from-[#FF6B00] to-[#FF8533] hover:from-[#FF8533] hover:to-[#FF6B00] text-white border-0 rounded-xl px-6 py-2 shadow-lg transition-all duration-300"
+                >
+                  {carregandoIA ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Regenerar IA
+                    </>
+                  )}
+                </Button>
+              </motion.div>
             )}
-            
-            <Button
-              onClick={() => setShowDebug(true)}
-              variant="ghost"
-              size="sm"
-              className="text-gray-500 hover:text-orange-500"
-              title="Debug Panel"
-            >
-              <Bug className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
-        {/* Informações gerais */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-3 rounded-lg ${
+        {/* Cards de informações gerais */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card className={`rounded-xl border-0 shadow-sm ${
             theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          } border border-gray-200 dark:border-gray-800`}>
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-sm font-medium">Tempo Total</span>
-            </div>
-            <p className="text-lg font-bold">{desenvolvimentoData.tempoTotalEstimado}</p>
-          </div>
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                  <Clock className="h-4 w-4 text-[#FF6B00]" />
+                </div>
+                <span className="text-sm font-medium">Tempo Total</span>
+              </div>
+              <p className="text-xl font-bold text-[#FF6B00]">{desenvolvimentoData.tempoTotalEstimado}</p>
+            </CardContent>
+          </Card>
           
-          <div className={`p-3 rounded-lg ${
+          <Card className={`rounded-xl border-0 shadow-sm ${
             theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          } border border-gray-200 dark:border-gray-800`}>
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-sm font-medium">Etapas</span>
-            </div>
-            <p className="text-lg font-bold">{desenvolvimentoData.etapas.length}</p>
-          </div>
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-[#FF6B00]" />
+                </div>
+                <span className="text-sm font-medium">Etapas</span>
+              </div>
+              <p className="text-xl font-bold text-[#FF6B00]">{desenvolvimentoData.etapas.length}</p>
+            </CardContent>
+          </Card>
           
-          <div className={`p-3 rounded-lg ${
+          <Card className={`rounded-xl border-0 shadow-sm ${
             theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          } border border-gray-200 dark:border-gray-800`}>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-sm font-medium">Status</span>
-            </div>
-            <p className="text-sm font-bold text-green-600">
-              {carregandoIA ? 'Gerando...' : 'Pronto'}
-            </p>
-          </div>
-        </div>
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                  <Sparkles className="h-4 w-4 text-[#FF6B00]" />
+                </div>
+                <span className="text-sm font-medium">Status</span>
+              </div>
+              <p className="text-sm font-bold text-green-600">
+                {carregandoIA ? 'Gerando...' : 'Pronto'}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Conteúdo */}
@@ -365,7 +455,7 @@ export default function DesenvolvimentoInterface({
         {carregandoIA ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-4">
+              <Card key={i} className="p-4 rounded-2xl">
                 <div className="space-y-3">
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-4 w-full" />
@@ -380,54 +470,108 @@ export default function DesenvolvimentoInterface({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Lista de Etapas */}
-            <div>
-              {desenvolvimentoData.etapas.map(renderEtapaCard)}
-            </div>
+            {/* Lista de Etapas com Drag and Drop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Reorder.Group
+                axis="y"
+                values={desenvolvimentoData.etapas}
+                onReorder={handleReorder}
+                className="space-y-4"
+              >
+                {desenvolvimentoData.etapas.map(renderEtapaCard)}
+              </Reorder.Group>
+            </motion.div>
             
-            {/* Observações Gerais */}
+            {/* Observações Gerais - Colapsável */}
             {desenvolvimentoData.observacoesGerais && (
-              <Card className={`${
-                theme === 'dark' ? 'bg-[#1E293B] border-gray-800' : 'bg-white border-gray-200'
-              }`}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-[#FF6B00]" />
-                    Observações Gerais
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {desenvolvimentoData.observacoesGerais}
-                  </p>
-                </CardContent>
-              </Card>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Card className={`rounded-2xl border-0 shadow-lg ${
+                  theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
+                }`}>
+                  <CardHeader 
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1E293B]/80 transition-colors rounded-t-2xl"
+                    onClick={() => setObservacoesExpanded(!observacoesExpanded)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-3">
+                        <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                          <AlertCircle className="h-5 w-5 text-[#FF6B00]" />
+                        </div>
+                        Observações Gerais
+                      </CardTitle>
+                      <motion.div
+                        animate={{ rotate: observacoesExpanded ? 90 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </motion.div>
+                    </div>
+                  </CardHeader>
+                  <motion.div
+                    initial={false}
+                    animate={{ 
+                      height: observacoesExpanded ? "auto" : 0,
+                      opacity: observacoesExpanded ? 1 : 0
+                    }}
+                    transition={{ duration: 0.3 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <CardContent>
+                      <p className={`text-sm leading-relaxed ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {desenvolvimentoData.observacoesGerais}
+                      </p>
+                    </CardContent>
+                  </motion.div>
+                </Card>
+              </motion.div>
             )}
             
             {/* Sugestões da IA */}
             {desenvolvimentoData.sugestoesIA.length > 0 && (
-              <Card className={`border-l-4 border-l-[#FF6B00] ${
-                theme === 'dark' ? 'bg-[#1E293B] border-gray-800' : 'bg-white border-gray-200'
-              }`}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-[#FF6B00]" />
-                    Sugestões da IA
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {desenvolvimentoData.sugestoesIA.map((sugestao, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#FF6B00] mt-2 flex-shrink-0" />
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {sugestao}
-                        </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Card className={`border-l-4 border-l-[#FF6B00] rounded-2xl shadow-lg ${
+                  theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
+                }`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-[#FF6B00]" />
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      Sugestões da IA
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {desenvolvimentoData.sugestoesIA.map((sugestao, index) => (
+                        <motion.div 
+                          key={index} 
+                          className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <div className="w-2 h-2 rounded-full bg-[#FF6B00] mt-2 flex-shrink-0" />
+                          <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {sugestao}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             )}
           </div>
         )}
