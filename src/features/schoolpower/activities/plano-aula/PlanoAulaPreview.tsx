@@ -656,141 +656,145 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                       draggedStep === index ? 'opacity-50 scale-95' : ''
                     }`}
                   >
-                    <CardContent className="p-6">
-                      {/* Header com título e número da etapa */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="flex items-center gap-2">
-                            <GripVertical className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" />
-                            <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                              {index + 1}
+                    <CardContent className="p-0">
+                      {/* Header do Card */}
+                      <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 p-4 border-b border-orange-200 dark:border-orange-700">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" />
+                              <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                {index + 1}
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1">
-                              {etapa.titulo}
-                            </h4>
-                          </div>
-                        </div>
-
-                        {/* Controles de Movimento */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => moveStepUp(index)}
-                            disabled={index === 0}
-                            className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
-                          >
-                            <ChevronUp className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => moveStepDown(index)}
-                            disabled={index === developmentSteps.length - 1}
-                            className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Descrição */}
-                      <div className="mb-4">
-                        <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-                          {isExpanded ? etapa.descricao : truncatedDescription}
-                        </p>
-
-                        {etapa.descricao?.length > 120 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleStepExpansion(index)}
-                            className="mt-2 text-orange-600 hover:text-orange-700 text-sm p-0 h-auto"
-                          >
-                            {isExpanded ? (
-                              <>
-                                <ChevronUp className="w-4 h-4 mr-1" />
-                                Recolher
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="w-4 h-4 mr-1" />
-                                Expandir
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* Informações da etapa em grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        {/* Tipo de Interação */}
-                        <div className="flex items-center gap-2 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-700">
-                          <InteractionIcon className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                          <div>
-                            <span className="text-xs font-medium text-orange-800 dark:text-orange-200 block">Tipo de Interação</span>
-                            <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
-                              {etapa.tipo_interacao || etapa.tipoInteracao || 'Não especificado'}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Tempo Estimado */}
-                        {etapa.tempo_estimado && (
-                          <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-                            <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             <div>
-                              <span className="text-xs font-medium text-blue-800 dark:text-blue-200 block">Tempo Estimado</span>
-                              <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                                {etapa.tempo_estimado}
-                              </span>
+                              <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                {etapa.titulo}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                                  <InteractionIcon className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    {etapa.tipo_interacao || etapa.tipoInteracao}
+                                  </span>
+                                </div>
+                                {etapa.tempo_estimado && (
+                                  <Badge variant="outline" className="border-orange-300 text-orange-700 bg-white dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/20 text-xs">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {etapa.tempo_estimado}
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        )}
 
-                        {/* Recursos Usados */}
+                          {/* Controles de Movimento */}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => moveStepUp(index)}
+                              disabled={index === 0}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => moveStepDown(index)}
+                              disabled={index === developmentSteps.length - 1}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Conteúdo do Card */}
+                      <div className="p-4">
+                        <div className="mb-4">
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            {isExpanded ? etapa.descricao : truncatedDescription}
+                          </p>
+
+                          {etapa.descricao?.length > 120 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleStepExpansion(index)}
+                              className="mt-2 text-orange-600 hover:text-orange-700 text-xs p-0 h-auto"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="w-3 h-3 mr-1" />
+                                  Recolher
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-3 h-3 mr-1" />
+                                  Expandir
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Recursos e Notas */}
                         {etapa.recurso_gerado && (
-                          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
-                            <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
-                            <div>
-                              <span className="text-xs font-medium text-green-800 dark:text-green-200 block">Recursos Usados</span>
-                              <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                                {etapa.recurso_gerado}
-                              </span>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-3 border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Recurso:</span>
+                            </div>
+                            <span className="text-sm text-blue-700 dark:text-blue-300">{etapa.recurso_gerado}</span>
+                          </div>
+                        )}
+
+                        {etapa.nota_privada_professor && (
+                          <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg mb-3 border border-amber-200 dark:border-amber-700">
+                            <div className="flex items-start gap-2">
+                              <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-sm font-semibold text-amber-800 dark:text-amber-200 block mb-1">
+                                  Nota para o professor:
+                                </span>
+                                <p className="text-sm text-amber-700 dark:text-amber-300">
+                                  {etapa.nota_privada_professor}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         )}
-                      </div>
 
-                      {/* Nota para o professor (se existir) */}
-                      {etapa.nota_privada_professor && (
-                        <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg mb-4 border border-amber-200 dark:border-amber-700">
-                          <div className="flex items-start gap-2">
-                            <Lightbulb className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <span className="text-sm font-semibold text-amber-800 dark:text-amber-200 block mb-1">
-                                Nota para o professor:
-                              </span>
-                              <p className="text-sm text-amber-700 dark:text-amber-300">
-                                {etapa.nota_privada_professor}
-                              </p>
-                            </div>
-                          </div>
+                        {/* Botões de Ação */}
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Editar esta etapa
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            Gerar Slides
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Gerar Recurso
+                          </Button>
                         </div>
-                      )}
-
-                      {/* Botão de edição */}
-                      <div className="flex justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20"
-                        >
-                          <Edit className="w-4 h-4 mr-1" />
-                          Editar esta etapa
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
