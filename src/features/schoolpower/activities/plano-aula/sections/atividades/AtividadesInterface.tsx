@@ -1,97 +1,279 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Eye, Lightbulb, CheckCircle } from 'lucide-react';
-import { AtividadesData, AtividadesDataProcessor } from './AtividadesData';
+import React, { useState, useEffect } from 'react';
+import { useTheme } from '@/components/ThemeProvider';
+import { 
+  BookOpen, 
+  FileText, 
+  Calculator, 
+  Palette, 
+  Music, 
+  Beaker, 
+  Globe, 
+  Gamepad2,
+  Video,
+  Headphones,
+  Image,
+  Monitor,
+  Lightbulb,
+  Target,
+  Users,
+  Clock,
+  Star,
+  CheckCircle
+} from 'lucide-react';
 
 interface AtividadesInterfaceProps {
-  planoData: any;
+  planoData?: any;
+}
+
+interface AtividadeRecurso {
+  id: string;
+  nome: string;
+  tipo: 'atividade' | 'recurso';
+  descricao?: string;
+  fonte?: string;
 }
 
 const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) => {
-  const data = AtividadesDataProcessor.processData(planoData);
+  const { theme } = useTheme();
+  const [atividadesRecursos, setAtividadesRecursos] = useState<AtividadeRecurso[]>([]);
+
+  // Função para extrair atividades e recursos do desenvolvimento
+  useEffect(() => {
+    if (planoData?.desenvolvimento) {
+      const recursos: AtividadeRecurso[] = [];
+      
+      planoData.desenvolvimento.forEach((etapa: any, index: number) => {
+        // Extrair recursos da etapa
+        if (etapa.recurso_gerado || etapa.recursos_utilizados) {
+          const recursoNome = etapa.recurso_gerado || etapa.recursos_utilizados;
+          if (recursoNome && recursoNome.trim()) {
+            recursos.push({
+              id: `recurso-${index}-${Date.now()}`,
+              nome: recursoNome,
+              tipo: 'recurso',
+              descricao: etapa.descricao || `Recurso da ${etapa.titulo || `Etapa ${etapa.etapa || index + 1}`}`,
+              fonte: 'Desenvolvimento'
+            });
+          }
+        }
+
+        // Extrair atividades mencionadas na descrição
+        if (etapa.descricao) {
+          const atividadesMencionadas = [
+            'exercício', 'atividade', 'tarefa', 'prática', 'dinâmica', 
+            'discussão', 'apresentação', 'trabalho', 'projeto', 'quiz',
+            'jogo', 'simulação', 'experimento', 'pesquisa', 'análise'
+          ];
+
+          atividadesMencionadas.forEach(palavra => {
+            if (etapa.descricao.toLowerCase().includes(palavra)) {
+              recursos.push({
+                id: `atividade-${palavra}-${index}`,
+                nome: `${palavra.charAt(0).toUpperCase() + palavra.slice(1)} - ${etapa.titulo || `Etapa ${etapa.etapa || index + 1}`}`,
+                tipo: 'atividade',
+                descricao: etapa.descricao,
+                fonte: etapa.titulo || `Etapa ${etapa.etapa || index + 1}`
+              });
+            }
+          });
+        }
+      });
+
+      // Adicionar recursos gerais se disponíveis
+      if (planoData.visao_geral?.recursos) {
+        planoData.visao_geral.recursos.forEach((recurso: string, index: number) => {
+          if (Array.isArray(recurso)) {
+            recurso.forEach((subRecurso: string, subIndex: number) => {
+              recursos.push({
+                id: `geral-recurso-${index}-${subIndex}`,
+                nome: subRecurso,
+                tipo: 'recurso',
+                descricao: 'Recurso necessário para a aula',
+                fonte: 'Visão Geral'
+              });
+            });
+          } else {
+            recursos.push({
+              id: `geral-recurso-${index}`,
+              nome: recurso,
+              tipo: 'recurso',
+              descricao: 'Recurso necessário para a aula',
+              fonte: 'Visão Geral'
+            });
+          }
+        });
+      }
+
+      // Adicionar atividades específicas se disponíveis
+      if (planoData.atividades) {
+        planoData.atividades.forEach((atividade: any, index: number) => {
+          recursos.push({
+            id: `plano-atividade-${index}`,
+            nome: atividade.nome || `Atividade ${index + 1}`,
+            tipo: 'atividade',
+            descricao: atividade.visualizar_como_aluno || atividade.descricao || 'Atividade do plano de aula',
+            fonte: 'Plano de Aula'
+          });
+        });
+      }
+
+      // Remover duplicatas baseado no nome
+      const recursosUnicos = recursos.filter((item, index, arr) => 
+        arr.findIndex(other => other.nome.toLowerCase() === item.nome.toLowerCase()) === index
+      );
+
+      setAtividadesRecursos(recursosUnicos);
+    }
+  }, [planoData]);
+
+  // Função para obter ícone baseado no tipo de atividade/recurso
+  const getIconeRecurso = (nome: string, tipo: 'atividade' | 'recurso') => {
+    const nomeMinusculo = nome.toLowerCase();
+    
+    if (nomeMinusculo.includes('lousa') || nomeMinusculo.includes('quadro')) return Monitor;
+    if (nomeMinusculo.includes('livro') || nomeMinusculo.includes('texto')) return BookOpen;
+    if (nomeMinusculo.includes('exercício') || nomeMinusculo.includes('lista')) return FileText;
+    if (nomeMinusculo.includes('calculadora')) return Calculator;
+    if (nomeMinusculo.includes('pincel') || nomeMinusculo.includes('caneta')) return Palette;
+    if (nomeMinusculo.includes('música') || nomeMinusculo.includes('áudio')) return Music;
+    if (nomeMinusculo.includes('experimento') || nomeMinusculo.includes('laboratório')) return Beaker;
+    if (nomeMinusculo.includes('internet') || nomeMinusculo.includes('site')) return Globe;
+    if (nomeMinusculo.includes('jogo') || nomeMinusculo.includes('dinâmica')) return Gamepad2;
+    if (nomeMinusculo.includes('vídeo') || nomeMinusculo.includes('filme')) return Video;
+    if (nomeMinusculo.includes('headphone') || nomeMinusculo.includes('fone')) return Headphones;
+    if (nomeMinusculo.includes('imagem') || nomeMinusculo.includes('foto')) return Image;
+    if (nomeMinusculo.includes('projetor')) return Monitor;
+    if (nomeMinusculo.includes('discussão') || nomeMinusculo.includes('debate')) return Users;
+    if (nomeMinusculo.includes('apresentação')) return Target;
+    if (nomeMinusculo.includes('tempo') || nomeMinusculo.includes('cronômetro')) return Clock;
+    
+    return tipo === 'atividade' ? Lightbulb : Star;
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-          <Users className="h-5 w-5 text-orange-600" />
-          Atividades Práticas
-        </h3>
-        <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar Atividade
-        </Button>
+    <div className={`w-full h-full ${theme === "dark" ? "bg-transparent text-white" : "bg-transparent text-[#29335C]"}`}>
+      {/* Header da Seção */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#FF6B00] to-[#FF8736] flex items-center justify-center">
+            <Target className="h-4 w-4 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-[#29335C] dark:text-white">
+            Atividades e Recursos
+          </h2>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 ml-11">
+          Recursos e atividades necessários para aplicar o plano de aula
+        </p>
       </div>
 
-      <div className="space-y-4">
-        {data.atividades.map((atividade, index) => (
-          <Card key={index} className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">{atividade.nome}</h4>
-                    <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
-                      {atividade.tipo}
-                    </Badge>
+      {/* Grade de Mini-Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {atividadesRecursos.length > 0 ? (
+          atividadesRecursos.map((item) => {
+            const IconComponent = getIconeRecurso(item.nome, item.tipo);
+            
+            return (
+              <div
+                key={item.id}
+                className={`
+                  p-4 rounded-2xl border transition-all duration-200 hover:scale-105 cursor-pointer
+                  ${theme === "dark" 
+                    ? "bg-[#1E293B] border-gray-700 hover:border-[#FF6B00]/50" 
+                    : "bg-white border-gray-200 hover:border-[#FF6B00]/50"
+                  }
+                  hover:shadow-lg hover:shadow-[#FF6B00]/10
+                `}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`
+                    w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+                    ${item.tipo === 'atividade' 
+                      ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8736]' 
+                      : 'bg-gradient-to-r from-blue-500 to-blue-600'
+                    }
+                  `}>
+                    <IconComponent className="h-5 w-5 text-white" />
                   </div>
-
-                  {atividade.ref_objetivos && atividade.ref_objetivos.length > 0 && (
-                    <div className="mb-3">
-                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 block mb-2">Objetivos relacionados:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {atividade.ref_objetivos.map((obj: number) => (
-                          <Badge key={obj} variant="outline" size="sm" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30">
-                            Objetivo {obj}
-                          </Badge>
-                        ))}
-                      </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm text-[#29335C] dark:text-white truncate">
+                        {item.nome}
+                      </h3>
+                      <span className={`
+                        px-2 py-0.5 text-xs rounded-full flex-shrink-0
+                        ${item.tipo === 'atividade' 
+                          ? 'bg-[#FF6B00]/10 text-[#FF6B00]' 
+                          : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                        }
+                      `}>
+                        {item.tipo === 'atividade' ? 'Atividade' : 'Recurso'}
+                      </span>
                     </div>
-                  )}
-
-                  {atividade.visualizar_como_aluno && (
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-3">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong className="text-gray-800 dark:text-gray-200">Experiência do aluno:</strong> {atividade.visualizar_como_aluno}
+                    
+                    {item.descricao && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                        {item.descricao.length > 60 
+                          ? `${item.descricao.substring(0, 60)}...` 
+                          : item.descricao
+                        }
                       </p>
-                    </div>
-                  )}
-
-                  {atividade.sugestoes_ia && atividade.sugestoes_ia.length > 0 && (
-                    <div className="bg-gradient-to-r from-orange-50 to-indigo-50 dark:from-orange-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
-                      <strong className="text-orange-800 dark:text-orange-200 block mb-2 flex items-center gap-2">
-                        <Lightbulb className="w-4 h-4" />
-                        Sugestões da IA:
-                      </strong>
-                      <ul className="space-y-1">
-                        {atividade.sugestoes_ia.map((sugestao: string, idx: number) => (
-                          <li key={idx} className="text-orange-700 dark:text-orange-300 text-sm flex items-start gap-2">
-                            <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                            {sugestao}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-2 ml-4">
-                  <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Visualizar
-                  </Button>
-                  <Button size="sm" variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-50">
-                    Substituir
-                  </Button>
+                    )}
+                    
+                    {item.fonte && (
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" />
+                        <span className="text-xs text-gray-500 dark:text-gray-500">
+                          {item.fonte}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            );
+          })
+        ) : (
+          // Estado vazio
+          <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+              <Target className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-[#29335C] dark:text-white mb-2">
+              Nenhuma atividade encontrada
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 max-w-md">
+              As atividades e recursos serão extraídos automaticamente das etapas de desenvolvimento do seu plano de aula.
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Estatísticas no rodapé */}
+      {atividadesRecursos.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-[#FF6B00]">
+                {atividadesRecursos.filter(item => item.tipo === 'atividade').length}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Atividades
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-500">
+                {atividadesRecursos.filter(item => item.tipo === 'recurso').length}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Recursos
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

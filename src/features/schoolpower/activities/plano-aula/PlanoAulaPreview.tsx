@@ -38,12 +38,12 @@ import {
 import { toast } from "@/components/ui/use-toast";
 
 // Importar as seções separadas
-import VisaoGeralInterface from './sections/visao-geral/VisaoGeralInterface';
-import ObjetivosInterface from './sections/objetivos/ObjetivosInterface';
-import MetodologiaInterface from './sections/metodologia/MetodologiaInterface';
-import DesenvolvimentoInterface from './sections/desenvolvimento/DesenvolvimentoInterface';
-import AtividadesInterface from './sections/atividades/AtividadesInterface';
-import AvaliacaoInterface from './sections/avaliacao/AvaliacaoInterface';
+import { VisaoGeralInterface } from './sections/visao-geral/VisaoGeralInterface';
+import { ObjetivosInterface } from './sections/objetivos/ObjetivosInterface';
+import { MetodologiaInterface } from './sections/metodologia/MetodologiaInterface';
+import { DesenvolvimentoInterface } from './sections/desenvolvimento/DesenvolvimentoInterface';
+import { AtividadesInterface } from './sections/atividades/AtividadesInterface';
+import { AvaliacaoInterface } from './sections/avaliacao/AvaliacaoInterface';
 
 // Importar o integrador de desenvolvimento
 import { DesenvolvimentoIntegrator } from './sections/desenvolvimento/DesenvolvimentoIntegrator';
