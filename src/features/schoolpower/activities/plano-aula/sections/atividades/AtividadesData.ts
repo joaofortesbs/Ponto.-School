@@ -1,157 +1,179 @@
 
+import { DesenvolvimentoData, EtapaDesenvolvimento } from '../desenvolvimento/DesenvolvimentoData';
+import schoolPowerActivitiesData from '../../../data/schoolPowerActivities.json';
+
 export interface AtividadeRecurso {
   id: string;
   nome: string;
-  tipo: 'atividade' | 'recurso';
-  icone: string;
+  tipo: 'atividade' | 'recurso' | 'material';
   descricao?: string;
-  origem_etapa?: number;
-  categoria?: string;
+  icone?: string;
+  origem: 'desenvolvimento' | 'school_power' | 'manual';
+  etapa_origem?: string;
+  schoolPowerActivity?: any;
 }
 
 export interface AtividadesData {
-  atividades_recursos: AtividadeRecurso[];
+  titulo: string;
+  descricao: string;
   total_items: number;
-  ultima_atualizacao: string;
+  atividades_recursos: AtividadeRecurso[];
+  timestamp: string;
+  plano_id: string;
 }
 
 export class AtividadesDataProcessor {
-  static extrairAtividadesRecursosDoDesenvolvimento(desenvolvimentoData: any): AtividadeRecurso[] {
-    if (!desenvolvimentoData || !Array.isArray(desenvolvimentoData)) {
-      return [];
-    }
+  /**
+   * Processa dados de atividades vindos do desenvolvimento e outras fontes
+   */
+  static processarDadosAtividades(input: any): AtividadesData {
+    console.log('🔄 AtividadesDataProcessor: Iniciando processamento', input);
 
+    const { planoData, activityData, desenvolvimento } = input;
     const atividadesRecursos: AtividadeRecurso[] = [];
 
-    desenvolvimentoData.forEach((etapa: any, index: number) => {
-      // Extrair recursos gerados
-      if (etapa.recurso_gerado && etapa.recurso_gerado.trim()) {
-        const recursos = etapa.recurso_gerado.split(',').map((r: string) => r.trim());
-        recursos.forEach((recurso: string) => {
-          if (recurso) {
+    // Processar dados do desenvolvimento se disponível
+    if (desenvolvimento?.etapas || planoData?.desenvolvimento?.etapas) {
+      const etapas = desenvolvimento?.etapas || planoData?.desenvolvimento?.etapas || [];
+      
+      etapas.forEach((etapa: EtapaDesenvolvimento, index: number) => {
+        // Extrair recursos utilizados
+        if (etapa.recursosUtilizados && Array.isArray(etapa.recursosUtilizados)) {
+          etapa.recursosUtilizados.forEach((recurso: string, recursoIndex: number) => {
+            // Verificar se é uma atividade do School Power
+            const schoolPowerActivity = this.findSchoolPowerActivity(recurso);
+            
             atividadesRecursos.push({
-              id: `recurso-${index}-${recurso.toLowerCase().replace(/\s+/g, '-')}`,
+              id: `etapa-${index}-recurso-${recursoIndex}`,
               nome: recurso,
-              tipo: 'recurso',
-              icone: this.obterIconeRecurso(recurso),
-              descricao: `Recurso utilizado na etapa "${etapa.titulo}"`,
-              origem_etapa: index + 1,
-              categoria: 'Material Didático'
+              tipo: schoolPowerActivity ? 'atividade' : 'recurso',
+              descricao: etapa.descricao || `Recurso da etapa: ${etapa.titulo}`,
+              origem: 'desenvolvimento',
+              etapa_origem: etapa.titulo,
+              schoolPowerActivity: schoolPowerActivity
             });
-          }
-        });
-      }
-
-      // Extrair atividades baseadas no tipo de interação
-      if (etapa.tipo_interacao && etapa.tipo_interacao.trim()) {
-        const atividade = this.criarAtividadeDoTipoInteracao(etapa.tipo_interacao, etapa, index);
-        if (atividade) {
-          atividadesRecursos.push(atividade);
+          });
         }
-      }
 
-      // Extrair atividades adicionais mencionadas na descrição
-      const atividadesExtras = this.extrairAtividadesDaDescricao(etapa.descricao, etapa, index);
-      atividadesRecursos.push(...atividadesExtras);
-    });
-
-    // Remover duplicatas baseado no nome
-    const atividadesUnicas = atividadesRecursos.filter((item, index, self) =>
-      index === self.findIndex(t => t.nome.toLowerCase() === item.nome.toLowerCase())
-    );
-
-    return atividadesUnicas;
-  }
-
-  static obterIconeRecurso(recurso: string): string {
-    const recursoLower = recurso.toLowerCase();
-    
-    if (recursoLower.includes('slide') || recursoLower.includes('apresenta')) return 'presentation';
-    if (recursoLower.includes('video') || recursoLower.includes('vídeo')) return 'video';
-    if (recursoLower.includes('áudio') || recursoLower.includes('som')) return 'mic';
-    if (recursoLower.includes('texto') || recursoLower.includes('material')) return 'file-text';
-    if (recursoLower.includes('jogo') || recursoLower.includes('lúdic')) return 'gamepad-2';
-    if (recursoLower.includes('quadro') || recursoLower.includes('lousa')) return 'square';
-    if (recursoLower.includes('livro') || recursoLower.includes('apostila')) return 'book-open';
-    if (recursoLower.includes('exercício') || recursoLower.includes('atividade')) return 'pen-tool';
-    if (recursoLower.includes('mapa') || recursoLower.includes('esquema')) return 'map';
-    if (recursoLower.includes('imagem') || recursoLower.includes('figura')) return 'image';
-    
-    return 'activity';
-  }
-
-  static criarAtividadeDoTipoInteracao(tipoInteracao: string, etapa: any, index: number): AtividadeRecurso | null {
-    const tipo = tipoInteracao.toLowerCase();
-    
-    let nomeAtividade = '';
-    let icone = '';
-    let categoria = '';
-
-    if (tipo.includes('exposi') || tipo.includes('apresenta')) {
-      nomeAtividade = 'Apresentação Expositiva';
-      icone = 'presentation';
-      categoria = 'Metodologia Ativa';
-    } else if (tipo.includes('interativ') || tipo.includes('particip')) {
-      nomeAtividade = 'Atividade Interativa';
-      icone = 'users';
-      categoria = 'Metodologia Ativa';
-    } else if (tipo.includes('prática') || tipo.includes('exercít')) {
-      nomeAtividade = 'Atividade Prática';
-      icone = 'pen-tool';
-      categoria = 'Prática';
-    } else if (tipo.includes('avaliat') || tipo.includes('test')) {
-      nomeAtividade = 'Atividade Avaliativa';
-      icone = 'check-circle';
-      categoria = 'Avaliação';
-    } else if (tipo.includes('discussão') || tipo.includes('debate')) {
-      nomeAtividade = 'Discussão em Grupo';
-      icone = 'message-square';
-      categoria = 'Metodologia Ativa';
-    } else {
-      nomeAtividade = `Atividade - ${tipoInteracao}`;
-      icone = 'activity';
-      categoria = 'Geral';
+        // Extrair atividades mencionadas na descrição
+        if (etapa.descricao) {
+          const atividadesEncontradas = this.extrairAtividadesDaDescricao(etapa.descricao);
+          atividadesEncontradas.forEach((atividade, atIndex) => {
+            atividadesRecursos.push({
+              id: `etapa-${index}-atividade-${atIndex}`,
+              nome: atividade.nome,
+              tipo: 'atividade',
+              descricao: atividade.descricao,
+              origem: 'desenvolvimento',
+              etapa_origem: etapa.titulo,
+              schoolPowerActivity: atividade.schoolPowerActivity
+            });
+          });
+        }
+      });
     }
 
-    return {
-      id: `atividade-${index}-${tipo.replace(/\s+/g, '-')}`,
-      nome: nomeAtividade,
-      tipo: 'atividade',
-      icone,
-      descricao: `${tipoInteracao} - ${etapa.descricao}`,
-      origem_etapa: index + 1,
-      categoria
+    // Processar materiais do plano geral
+    if (planoData?.materiais && Array.isArray(planoData.materiais)) {
+      planoData.materiais.forEach((material: string, index: number) => {
+        atividadesRecursos.push({
+          id: `material-${index}`,
+          nome: material,
+          tipo: 'material',
+          descricao: `Material necessário para o plano de aula`,
+          origem: 'manual'
+        });
+      });
+    }
+
+    // Processar recursos do activityData
+    if (activityData?.originalData?.materiais && Array.isArray(activityData.originalData.materiais)) {
+      activityData.originalData.materiais.forEach((material: string, index: number) => {
+        // Evitar duplicatas
+        const jaExiste = atividadesRecursos.some(item => 
+          item.nome.toLowerCase() === material.toLowerCase()
+        );
+
+        if (!jaExiste) {
+          atividadesRecursos.push({
+            id: `activity-material-${index}`,
+            nome: material,
+            tipo: 'material',
+            descricao: `Material do plano de aula`,
+            origem: 'manual'
+          });
+        }
+      });
+    }
+
+    // Adicionar atividades do School Power automaticamente
+    this.adicionarAtividadesSchoolPowerRelevantes(atividadesRecursos, planoData, activityData);
+
+    // Remover duplicatas baseado no nome
+    const atividadesUnicas = this.removerDuplicatas(atividadesRecursos);
+
+    const resultado: AtividadesData = {
+      titulo: "Atividades e Recursos",
+      descricao: "Atividades e recursos necessários para aplicar o plano de aula",
+      total_items: atividadesUnicas.length,
+      atividades_recursos: atividadesUnicas,
+      timestamp: new Date().toISOString(),
+      plano_id: activityData?.id || planoData?.id || `plano_${Date.now()}`
     };
+
+    console.log('✅ AtividadesDataProcessor: Processamento concluído', resultado);
+    return resultado;
   }
 
-  static extrairAtividadesDaDescricao(descricao: string, etapa: any, index: number): AtividadeRecurso[] {
-    if (!descricao) return [];
+  /**
+   * Encontra atividade correspondente no School Power
+   */
+  private static findSchoolPowerActivity(nomeRecurso: string): any {
+    if (!nomeRecurso) return null;
 
-    const atividades: AtividadeRecurso[] = [];
-    const descricaoLower = descricao.toLowerCase();
+    const nomeNormalizado = nomeRecurso.toLowerCase();
+    
+    return schoolPowerActivitiesData.find(activity => {
+      const nomeActivity = (activity.name || activity.title || '').toLowerCase();
+      const descricaoActivity = (activity.description || '').toLowerCase();
+      
+      return nomeActivity.includes(nomeNormalizado) || 
+             nomeNormalizado.includes(nomeActivity) ||
+             descricaoActivity.includes(nomeNormalizado);
+    });
+  }
 
-    // Palavras-chave para identificar atividades
-    const atividadesChave = [
-      { keyword: 'quiz', nome: 'Quiz Interativo', icone: 'help-circle' },
-      { keyword: 'brainstorm', nome: 'Brainstorming', icone: 'zap' },
-      { keyword: 'roda de conversa', nome: 'Roda de Conversa', icone: 'users' },
-      { keyword: 'dinâmica', nome: 'Dinâmica de Grupo', icone: 'users-2' },
-      { keyword: 'simulação', nome: 'Simulação', icone: 'play' },
-      { keyword: 'pesquisa', nome: 'Atividade de Pesquisa', icone: 'search' },
-      { keyword: 'produção textual', nome: 'Produção Textual', icone: 'edit-3' },
-      { keyword: 'leitura', nome: 'Leitura Dirigida', icone: 'book-open' }
+  /**
+   * Extrai atividades mencionadas na descrição de uma etapa
+   */
+  private static extrairAtividadesDaDescricao(descricao: string): Array<{nome: string, descricao: string, schoolPowerActivity?: any}> {
+    const atividades: Array<{nome: string, descricao: string, schoolPowerActivity?: any}> = [];
+    
+    // Palavras-chave que indicam atividades
+    const palavrasChave = [
+      'exercício', 'exercícios', 'atividade', 'atividades',
+      'questão', 'questões', 'problema', 'problemas',
+      'tarefa', 'tarefas', 'prática', 'práticas'
     ];
 
-    atividadesChave.forEach((ativ, idx) => {
-      if (descricaoLower.includes(ativ.keyword)) {
-        atividades.push({
-          id: `atividade-extra-${index}-${idx}`,
-          nome: ativ.nome,
-          tipo: 'atividade',
-          icone: ativ.icone,
-          descricao: `Identificado na etapa "${etapa.titulo}"`,
-          origem_etapa: index + 1,
-          categoria: 'Metodologia Ativa'
+    const descricaoLower = descricao.toLowerCase();
+    
+    palavrasChave.forEach(palavra => {
+      if (descricaoLower.includes(palavra)) {
+        // Procurar atividades do School Power relacionadas
+        const atividadesRelacionadas = schoolPowerActivitiesData.filter(activity => {
+          const nomeActivity = (activity.name || activity.title || '').toLowerCase();
+          const descricaoActivity = (activity.description || '').toLowerCase();
+          
+          return nomeActivity.includes(palavra) || descricaoActivity.includes(palavra);
+        });
+
+        atividadesRelacionadas.forEach(activity => {
+          atividades.push({
+            nome: activity.name || activity.title || palavra,
+            descricao: activity.description || `Atividade relacionada a ${palavra}`,
+            schoolPowerActivity: activity
+          });
         });
       }
     });
@@ -159,42 +181,82 @@ export class AtividadesDataProcessor {
     return atividades;
   }
 
-  static processarDadosAtividades(planoData: any): AtividadesData {
-    let atividadesRecursos: AtividadeRecurso[] = [];
+  /**
+   * Adiciona atividades do School Power relevantes ao contexto
+   */
+  private static adicionarAtividadesSchoolPowerRelevantes(
+    atividadesRecursos: AtividadeRecurso[], 
+    planoData: any, 
+    activityData: any
+  ): void {
+    // Obter disciplina do plano
+    const disciplina = planoData?.disciplina || activityData?.originalData?.disciplina || '';
+    const tema = planoData?.tema || activityData?.originalData?.tema || '';
 
-    // Extrair do desenvolvimento
-    if (planoData?.desenvolvimento) {
-      const atividadesDesenvolvimento = this.extrairAtividadesRecursosDoDesenvolvimento(planoData.desenvolvimento);
-      atividadesRecursos = [...atividadesRecursos, ...atividadesDesenvolvimento];
+    // Selecionar atividades relevantes
+    const atividadesRelevantes = schoolPowerActivitiesData.filter(activity => {
+      const tags = activity.tags || [];
+      const categoria = activity.category || '';
+      
+      // Verificar se a atividade é relevante para a disciplina ou tema
+      return tags.some((tag: string) => 
+        disciplina.toLowerCase().includes(tag.toLowerCase()) ||
+        tema.toLowerCase().includes(tag.toLowerCase()) ||
+        categoria.toLowerCase().includes(disciplina.toLowerCase())
+      );
+    });
+
+    // Adicionar até 3 atividades mais relevantes
+    atividadesRelevantes.slice(0, 3).forEach((activity, index) => {
+      atividadesRecursos.push({
+        id: `school-power-${index}`,
+        nome: activity.name || activity.title || 'Atividade School Power',
+        tipo: 'atividade',
+        descricao: activity.description || 'Atividade gerada pelo School Power',
+        origem: 'school_power',
+        schoolPowerActivity: activity
+      });
+    });
+  }
+
+  /**
+   * Remove duplicatas baseado no nome
+   */
+  private static removerDuplicatas(atividades: AtividadeRecurso[]): AtividadeRecurso[] {
+    const nomesVistos = new Set<string>();
+    return atividades.filter(atividade => {
+      const nomeNormalizado = atividade.nome.toLowerCase().trim();
+      if (nomesVistos.has(nomeNormalizado)) {
+        return false;
+      }
+      nomesVistos.add(nomeNormalizado);
+      return true;
+    });
+  }
+
+  /**
+   * Valida se os dados processados estão corretos
+   */
+  static validarDados(dados: AtividadesData): { valido: boolean; erros: string[] } {
+    const erros: string[] = [];
+
+    if (!dados.titulo || dados.titulo.trim() === '') {
+      erros.push('Título é obrigatório');
     }
 
-    // Adicionar atividades School Power mencionadas nos recursos
-    const atividadesSchoolPower = this.adicionarAtividadesSchoolPower(atividadesRecursos);
-    atividadesRecursos = [...atividadesRecursos, ...atividadesSchoolPower];
+    if (!dados.atividades_recursos || dados.atividades_recursos.length === 0) {
+      erros.push('Pelo menos uma atividade ou recurso deve estar presente');
+    }
+
+    if (dados.total_items !== dados.atividades_recursos.length) {
+      erros.push('Total de items não confere com o número de atividades/recursos');
+    }
 
     return {
-      atividades_recursos: atividadesRecursos,
-      total_items: atividadesRecursos.length,
-      ultima_atualizacao: new Date().toISOString()
+      valido: erros.length === 0,
+      erros
     };
   }
-
-  static adicionarAtividadesSchoolPower(atividadesExistentes: AtividadeRecurso[]): AtividadeRecurso[] {
-    const schoolPowerActivities = [
-      { name: 'Lista de Exercícios Interativa', icon: 'list-checks' },
-      { name: 'Quiz Gamificado', icon: 'gamepad-2' },
-      { name: 'Mapa Mental Digital', icon: 'brain' },
-      { name: 'Simulador de Experimentos', icon: 'flask' },
-      { name: 'Apresentação Interativa', icon: 'presentation' }
-    ];
-
-    return schoolPowerActivities.map((activity, index) => ({
-      id: `school-power-${index}`,
-      nome: activity.name,
-      tipo: 'atividade' as const,
-      icone: activity.icon,
-      descricao: 'Atividade gerada pelo School Power',
-      categoria: 'School Power'
-    }));
-  }
 }
+
+export default AtividadesDataProcessor;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,7 @@ import {
   Edit3,
   ListChecks,
   Brain,
-  Flask,
+  Beaker,
   Target,
   Sparkles,
   Filter,
@@ -61,7 +60,7 @@ const iconMap: { [key: string]: React.ComponentType<any> } = {
   'edit-3': Edit3,
   'list-checks': ListChecks,
   'brain': Brain,
-  'flask': Flask
+  'flask': Beaker
 };
 
 const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) => {
@@ -72,11 +71,19 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
 
   // Processar dados sempre que planoData mudar
   useEffect(() => {
+    console.log('🔄 AtividadesInterface: Processando dados recebidos');
+
     if (planoData) {
-      console.log('🎯 AtividadesInterface: Processando dados do plano:', planoData);
-      const dadosProcessados = AtividadesDataProcessor.processarDadosAtividades(planoData);
-      console.log('📋 AtividadesInterface: Dados processados:', dadosProcessados);
-      setAtividadesData(dadosProcessados);
+      try {
+        const processedData = AtividadesDataProcessor.processarDadosAtividades({
+          planoData: planoData,
+        });
+
+        setAtividadesData(processedData);
+        console.log('✅ AtividadesInterface: Dados processados com sucesso', processedData);
+      } catch (error) {
+        console.error('❌ AtividadesInterface: Erro ao processar dados', error);
+      }
     }
   }, [planoData]);
 
@@ -314,7 +321,7 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
                     }`}>
                       {renderIcone(item.icone)}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-gray-900 dark:text-white truncate">
