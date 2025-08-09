@@ -37,7 +37,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-  const [activeTab, setActiveTab] = useState<'visualizacao' | 'desenvolvimento'>('visualizacao'); // Estado para controlar a aba ativa
+
 
   // Função específica para carregar dados do Plano de Aula
   const loadPlanoAulaData = (activityId: string) => {
@@ -74,7 +74,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      setActiveTab('visualizacao'); // Resetar para a aba de visualização
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -125,7 +124,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
       }
     };
 
@@ -238,10 +237,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Incluir todos os campos que podem estar no originalData
       exercicios: activity.originalData?.exercicios || storedData.exercicios,
       questions: activity.originalData?.questions || storedData.questions,
-      content: activity.originalData?.content || storedData.content,
-      // Adicionar campos para o desenvolvimento
-      etapasDesenvolvimento: activity.etapasDesenvolvimento || storedData.etapasDesenvolvimento || [],
-      avaliacao: activity.avaliacao || storedData.avaliacao || ''
+      content: activity.originalData?.content || storedData.content
     };
 
     // Para lista de exercícios, aplicar filtros de exclusão
@@ -341,17 +337,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Se encontrou conteúdo, mesclar com os dados existentes
       if (planoContent) {
         console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
-        previewData = {
-          ...previewData,
+        previewData = { 
+          ...previewData, 
           ...planoContent,
           // Garantir que os dados essenciais sejam preservados
           id: activity.id,
           type: activityType,
           title: planoContent.titulo || planoContent.title || previewData.title,
-          description: planoContent.descricao || planoContent.description || previewData.description,
-          // Atualizar etapas de desenvolvimento e avaliação se existirem no conteúdo do plano
-          etapasDesenvolvimento: planoContent.etapas || planoContent.etapasDesenvolvimento || previewData.etapasDesenvolvimento,
-          avaliacao: planoContent.avaliacao || previewData.avaliacao
+          description: planoContent.descricao || planoContent.description || previewData.description
         };
       } else {
         console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
@@ -613,35 +606,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             </div>
           )}
 
-          {/* Tabs for Visualização and Desenvolvimento */}
-          {!isExerciseList && (
-            <div className="flex px-6 py-3 border-b border-gray-700 bg-gray-800/50">
-              <button
-                onClick={() => setActiveTab('visualizacao')}
-                className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
-                  activeTab === 'visualizacao'
-                    ? 'bg-orange-500 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Visualização
-              </button>
-              <button
-                onClick={() => setActiveTab('desenvolvimento')}
-                className={`px-4 py-2 rounded-md font-medium text-sm transition-colors ${
-                  activeTab === 'desenvolvimento'
-                    ? 'bg-orange-500 text-white'
-                    : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Desenvolvimento
-              </button>
-            </div>
-          )}
-
 
           {/* Content Layout */}
-          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 150px)' }}> {/* Ajuste de altura para acomodar as abas */}
+          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
             {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
             {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
               <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
@@ -689,127 +656,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto max-h-[calc(95vh-240px)] bg-white dark:bg-gray-900" ref={contentRef}>
-                {/* Renderizar o preview da atividade ou a seção de desenvolvimento */}
-                {activeTab === 'visualizacao' ? (
-                  renderActivityPreview()
-                ) : (
-                  <>
-                    {/* Seção Desenvolvimento */}
-                    <div className="space-y-6">
-                      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                          <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                            <span className="text-orange-400 text-lg">🧩</span>
-                          </div>
-                          <h3 className="text-lg font-semibold text-white">Etapas de Desenvolvimento</h3>
-                          <button className="ml-auto px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
-                            + Adicionar Etapa
-                          </button>
-                        </div>
-
-                        {/* Lista de Etapas */}
-                        <div className="space-y-4">
-                          {activity?.etapasDesenvolvimento && activity.etapasDesenvolvimento.length > 0 ? (
-                            activity.etapasDesenvolvimento.map((etapa, index) => (
-                              <div key={index} className="bg-gray-900/50 border border-gray-600 rounded-lg p-4 hover:border-orange-500/50 transition-all duration-200 group">
-                                <div className="flex items-start justify-between mb-3">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <span className="text-orange-400 font-semibold">{etapa.titulo}</span>
-                                      <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-                                        {etapa.tipoInteracao || 'Interação'}
-                                      </span>
-                                    </div>
-                                    <p className="text-gray-300 text-sm leading-relaxed">
-                                      {etapa.descricao?.length > 120 ? (
-                                        <>
-                                          {etapa.descricao.substring(0, 120)}...
-                                          <button className="text-orange-400 hover:text-orange-300 ml-2 font-medium">
-                                            Expandir
-                                          </button>
-                                        </>
-                                      ) : (
-                                        etapa.descricao
-                                      )}
-                                    </p>
-                                  </div>
-
-                                  {/* Controles da Etapa */}
-                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                                      title="Mover para cima"
-                                      disabled={index === 0}
-                                    >
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                                      title="Mover para baixo"
-                                      disabled={index === activity.etapasDesenvolvimento.length - 1}
-                                    >
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                      </svg>
-                                    </button>
-                                    <button className="p-2 text-gray-400 hover:text-orange-400 hover:bg-gray-700 rounded-lg transition-colors">
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                      </svg>
-                                    </button>
-                                    <button className="p-2 text-gray-400 hover:text-gray-200 rounded-lg cursor-grab">
-                                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                </div>
-
-                                {/* Ícone do Tipo de Interação */}
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                  <span>
-                                    {etapa.tipoInteracao?.includes('Apresentação') && '📊'}
-                                    {etapa.tipoInteracao?.includes('Vídeo') && '🎥'}
-                                    {etapa.tipoInteracao?.includes('Atividade') && '🎯'}
-                                    {etapa.tipoInteracao?.includes('Discussão') && '💬'}
-                                    {etapa.tipoInteracao?.includes('Dinâmica') && '🎭'}
-                                    {etapa.tipoInteracao?.includes('Reflexão') && '🤔'}
-                                    {!etapa.tipoInteracao && '📝'}
-                                  </span>
-                                  <span>{etapa.tipoInteracao || 'Tipo de interação não especificado'}</span>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="bg-gray-900/50 border border-gray-600 rounded-lg p-8 text-center">
-                              <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-2xl">📋</span>
-                              </div>
-                              <h4 className="text-white font-medium mb-2">Nenhuma etapa definida</h4>
-                              <p className="text-gray-400 text-sm mb-4">As etapas de desenvolvimento serão geradas automaticamente pela IA</p>
-                              <button className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors">
-                                Gerar Etapas com IA
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Seção de Avaliação */}
-                        {activity?.avaliacao && (
-                          <div className="mt-6 bg-green-900/20 border border-green-700/50 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                              <span className="text-green-400">✓</span>
-                              <span className="text-green-300 text-sm font-medium">Critérios de Avaliação</span>
-                            </div>
-                            <p className="text-gray-300 text-sm leading-relaxed">{activity.avaliacao}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                )}
+                {renderActivityPreview()}
               </div>
             </div>
           </div>
