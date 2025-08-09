@@ -1,137 +1,229 @@
 
 export interface EtapaDesenvolvimento {
-  etapa: number;
+  id: string;
   titulo: string;
   descricao: string;
-  tipo_interacao: string;
-  tempo_estimado: string;
-  recurso_gerado: string;
-  nota_privada_professor?: string;
-  objetivos_etapa?: string[];
-  recursos_necessarios?: string[];
+  tipoInteracao: string;
+  tempoEstimado: string;
+  recursosUsados: string[];
+  ordem: number;
+  expandida: boolean;
 }
 
 export interface DesenvolvimentoData {
   etapas: EtapaDesenvolvimento[];
-  tempo_total_estimado: string;
-  observacoes_gerais?: string;
-  metodologia_aplicada?: string;
+  tempoTotalEstimado: string;
+  observacoesGerais: string;
+  sugestoesIA: string[];
 }
 
-// Função para processar dados do desenvolvimento
-export const processDesenvolvimentoData = (rawData: any): DesenvolvimentoData => {
-  console.log('🔄 Processando dados de desenvolvimento:', rawData);
-
-  // Se já tem estrutura de desenvolvimento, usa ela
-  if (rawData?.desenvolvimento && Array.isArray(rawData.desenvolvimento)) {
-    const etapas = rawData.desenvolvimento.map((etapa: any, index: number) => ({
-      etapa: etapa.etapa || index + 1,
-      titulo: etapa.titulo || `${index + 1}. Etapa ${index + 1}`,
-      descricao: etapa.descricao || 'Descrição da etapa',
-      tipo_interacao: etapa.tipo_interacao || 'Interativa',
-      tempo_estimado: etapa.tempo_estimado || '15 min',
-      recurso_gerado: etapa.recurso_gerado || 'Material didático',
-      nota_privada_professor: etapa.nota_privada_professor,
-      objetivos_etapa: etapa.objetivos_etapa || ['Engajar os alunos', 'Transmitir conhecimento'],
-      recursos_necessarios: etapa.recursos_necessarios || ['Quadro', 'Material didático']
-    }));
-
-    return {
-      etapas,
-      tempo_total_estimado: calculateTotalTime(etapas),
-      observacoes_gerais: rawData.observacoes_gerais,
-      metodologia_aplicada: rawData.metodologia?.nome || rawData.metodologia
-    };
-  }
-
-  // Criar estrutura básica se não existe
-  const etapasDefault: EtapaDesenvolvimento[] = [
+// Dados padrão/fallback
+export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
+  etapas: [
     {
-      etapa: 1,
-      titulo: '1. Introdução e Contextualização',
-      descricao: 'Apresentação do tema da aula, contextualização histórica e ativação do conhecimento prévio dos alunos através de questionamentos dirigidos.',
-      tipo_interacao: 'Apresentação + Debate',
-      tempo_estimado: '15 min',
-      recurso_gerado: 'Slides introdutórios',
-      nota_privada_professor: 'Verificar conhecimento prévio através de perguntas abertas',
-      objetivos_etapa: ['Engajar os alunos no tema', 'Ativar conhecimentos prévios', 'Estabelecer contexto'],
-      recursos_necessarios: ['Slides', 'Quadro', 'Projetor']
+      id: "etapa_1",
+      titulo: "1. Introdução e Contextualização",
+      descricao: "Apresente o contexto histórico da Europa no século XVIII...",
+      tipoInteracao: "Apresentação + debate",
+      tempoEstimado: "15 minutos",
+      recursosUsados: ["Slides", "Lousa"],
+      ordem: 1,
+      expandida: false
     },
     {
-      etapa: 2,
-      titulo: '2. Desenvolvimento do Conteúdo',
-      descricao: 'Explicação detalhada do conteúdo principal com exemplos práticos, demonstrações e participação ativa dos alunos.',
-      tipo_interacao: 'Interativa',
-      tempo_estimado: '25 min',
-      recurso_gerado: 'Material didático',
-      nota_privada_professor: 'Incentivar participação e esclarecer dúvidas durante a explicação',
-      objetivos_etapa: ['Transmitir o conteúdo principal', 'Promover compreensão', 'Estimular participação'],
-      recursos_necessarios: ['Material didático', 'Exemplos práticos', 'Quadro']
+      id: "etapa_2", 
+      titulo: "2. Desenvolvimento do Tema Principal",
+      descricao: "Explorar os conceitos fundamentais através de exemplos práticos...",
+      tipoInteracao: "Atividade prática",
+      tempoEstimado: "20 minutos",
+      recursosUsados: ["Material impresso", "Caderno"],
+      ordem: 2,
+      expandida: false
     },
     {
-      etapa: 3,
-      titulo: '3. Atividade Prática',
-      descricao: 'Aplicação prática do conteúdo através de exercícios, discussões em grupo ou atividades hands-on.',
-      tipo_interacao: 'Atividade Prática',
-      tempo_estimado: '15 min',
-      recurso_gerado: 'Lista de exercícios',
-      nota_privada_professor: 'Circular pela sala para apoiar os alunos individualmente',
-      objetivos_etapa: ['Fixar o conteúdo', 'Aplicar conhecimentos', 'Identificar dificuldades'],
-      recursos_necessarios: ['Exercícios', 'Materiais para atividade', 'Cronômetro']
-    },
-    {
-      etapa: 4,
-      titulo: '4. Síntese e Avaliação',
-      descricao: 'Fechamento da aula com resumo dos pontos principais, esclarecimento de dúvidas e avaliação da aprendizagem.',
-      tipo_interacao: 'Avaliativa',
-      tempo_estimado: '10 min',
-      recurso_gerado: 'Atividade de síntese',
-      nota_privada_professor: 'Verificar se os objetivos foram atingidos e ajustar próximas aulas',
-      objetivos_etapa: ['Consolidar aprendizado', 'Avaliar compreensão', 'Planejar próximos passos'],
-      recursos_necessarios: ['Resumo visual', 'Questões de verificação']
+      id: "etapa_3",
+      titulo: "3. Consolidação e Aplicação",
+      descricao: "Exercícios de fixação e aplicação dos conceitos aprendidos...",
+      tipoInteracao: "Exercícios em grupo",
+      tempoEstimado: "10 minutos", 
+      recursosUsados: ["Lista de exercícios", "Trabalho em grupo"],
+      ordem: 3,
+      expandida: false
     }
-  ];
-
-  return {
-    etapas: etapasDefault,
-    tempo_total_estimado: calculateTotalTime(etapasDefault),
-    observacoes_gerais: 'Plano estruturado para máximo engajamento e aprendizado',
-    metodologia_aplicada: rawData?.metodologia?.nome || 'Metodologia Ativa'
-  };
+  ],
+  tempoTotalEstimado: "45 minutos",
+  observacoesGerais: "Manter ritmo dinâmico e interativo durante toda a aula",
+  sugestoesIA: [
+    "Considere incluir mais momentos de interação",
+    "Varie os tipos de atividades para manter o engajamento"
+  ]
 };
 
-// Função para calcular tempo total
-const calculateTotalTime = (etapas: EtapaDesenvolvimento[]): string => {
-  const totalMinutos = etapas.reduce((total, etapa) => {
-    const tempo = etapa.tempo_estimado.replace(/\D/g, '');
-    return total + (parseInt(tempo) || 15);
-  }, 0);
-
-  if (totalMinutos < 60) {
-    return `${totalMinutos} minutos`;
-  } else {
-    const horas = Math.floor(totalMinutos / 60);
-    const minutos = totalMinutos % 60;
-    return `${horas}h ${minutos}min`;
-  }
-};
-
-// Função para validar dados de desenvolvimento
-export const validateDesenvolvimentoData = (data: DesenvolvimentoData): boolean => {
-  if (!data.etapas || !Array.isArray(data.etapas) || data.etapas.length === 0) {
-    return false;
+// Service para API do Gemini
+export class DesenvolvimentoGeminiService {
+  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+  
+  static async gerarEtapasDesenvolvimento(contextoPlano: any): Promise<DesenvolvimentoData> {
+    try {
+      console.log('🤖 Gerando etapas de desenvolvimento via Gemini...');
+      
+      const prompt = this.construirPrompt(contextoPlano);
+      const response = await this.chamarGeminiAPI(prompt);
+      const etapasGeradas = this.processarResposta(response);
+      
+      console.log('✅ Etapas de desenvolvimento geradas com sucesso:', etapasGeradas);
+      return etapasGeradas;
+      
+    } catch (error) {
+      console.error('❌ Erro ao gerar etapas de desenvolvimento:', error);
+      return this.aplicarContextoAosDadosPadrao(contextoPlano);
+    }
   }
 
-  return data.etapas.every(etapa => 
-    etapa.etapa && 
-    etapa.titulo && 
-    etapa.descricao && 
-    etapa.tipo_interacao && 
-    etapa.tempo_estimado
-  );
-};
+  private static construirPrompt(contextoPlano: any): string {
+    return `
+Você é um especialista em pedagogia e planejamento de aulas. Com base no contexto do plano de aula fornecido, crie etapas detalhadas para a seção de DESENVOLVIMENTO da aula.
 
-export default {
-  processDesenvolvimentoData,
-  validateDesenvolvimentoData
-};
+CONTEXTO DO PLANO DE AULA:
+- Disciplina: ${contextoPlano.disciplina || 'Não especificado'}
+- Tema: ${contextoPlano.tema || 'Não especificado'}
+- Série/Ano: ${contextoPlano.anoEscolaridade || contextoPlano.serie || 'Não especificado'}
+- Objetivos: ${JSON.stringify(contextoPlano.objetivos || [])}
+- Tempo Total: ${contextoPlano.tempoLimite || contextoPlano.tempo || '50 minutos'}
+- Recursos Disponíveis: ${JSON.stringify(contextoPlano.materiais || [])}
+
+INSTRUÇÕES:
+1. Crie entre 3 a 6 etapas para o desenvolvimento da aula
+2. Cada etapa deve ser progressiva e pedagógica
+3. Distribua o tempo de forma equilibrada
+4. Varie os tipos de interação (apresentação, prática, discussão, etc.)
+5. Use recursos disponíveis de forma inteligente
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "etapas": [
+    {
+      "id": "etapa_1",
+      "titulo": "1. Nome da Primeira Etapa",
+      "descricao": "Descrição detalhada do que será feito nesta etapa, incluindo metodologia e estratégias...",
+      "tipoInteracao": "Tipo de interação (ex: Apresentação dialogada, Atividade prática, Trabalho em grupo, etc.)",
+      "tempoEstimado": "X minutos",
+      "recursosUsados": ["Recurso 1", "Recurso 2"],
+      "ordem": 1,
+      "expandida": false
+    }
+  ],
+  "tempoTotalEstimado": "X minutos",
+  "observacoesGerais": "Observações importantes sobre o desenvolvimento da aula",
+  "sugestoesIA": ["Sugestão 1", "Sugestão 2", "Sugestão 3"]
+}
+
+RESPONDA APENAS COM O JSON, SEM TEXTO ADICIONAL.
+`;
+  }
+
+  private static async chamarGeminiAPI(prompt: string): Promise<string> {
+    const { API_KEYS } = await import('@/config/apiKeys');
+    
+    if (!API_KEYS.GEMINI) {
+      throw new Error('Chave da API Gemini não configurada');
+    }
+
+    const response = await fetch(`${this.GEMINI_API_URL}?key=${API_KEYS.GEMINI}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.8,
+          topK: 40,
+          maxOutputTokens: 2048,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro na API Gemini: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+  }
+
+  private static processarResposta(responseText: string): DesenvolvimentoData {
+    try {
+      // Limpar resposta da IA
+      let cleanedText = responseText.trim();
+      cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      cleanedText = cleanedText.trim();
+
+      const parsedData = JSON.parse(cleanedText);
+      
+      // Validar estrutura
+      if (!parsedData.etapas || !Array.isArray(parsedData.etapas)) {
+        throw new Error('Estrutura de resposta inválida');
+      }
+
+      // Garantir IDs únicos e ordem sequencial
+      parsedData.etapas.forEach((etapa: any, index: number) => {
+        etapa.id = etapa.id || `etapa_${index + 1}`;
+        etapa.ordem = index + 1;
+        etapa.expandida = false;
+      });
+
+      return parsedData as DesenvolvimentoData;
+      
+    } catch (error) {
+      console.error('Erro ao processar resposta da IA:', error);
+      throw new Error('Erro ao processar resposta da IA');
+    }
+  }
+
+  private static aplicarContextoAosDadosPadrao(contextoPlano: any): DesenvolvimentoData {
+    const dadosPadrao = { ...desenvolvimentoDataPadrao };
+    
+    // Personalizar com dados do contexto
+    if (contextoPlano.disciplina) {
+      dadosPadrao.etapas[0].descricao = `Apresentar os conceitos fundamentais de ${contextoPlano.disciplina} relacionados ao tema ${contextoPlano.tema || 'proposto'}...`;
+    }
+    
+    if (contextoPlano.tempoLimite || contextoPlano.tempo) {
+      dadosPadrao.tempoTotalEstimado = contextoPlano.tempoLimite || contextoPlano.tempo;
+    }
+
+    return dadosPadrao;
+  }
+
+  static salvarEtapasDesenvolvimento(planoId: string, dados: DesenvolvimentoData): void {
+    try {
+      const key = `plano_desenvolvimento_${planoId}`;
+      localStorage.setItem(key, JSON.stringify(dados));
+      console.log('💾 Etapas de desenvolvimento salvas:', key);
+    } catch (error) {
+      console.error('❌ Erro ao salvar etapas de desenvolvimento:', error);
+    }
+  }
+
+  static carregarEtapasDesenvolvimento(planoId: string): DesenvolvimentoData | null {
+    try {
+      const key = `plano_desenvolvimento_${planoId}`;
+      const dados = localStorage.getItem(key);
+      
+      if (dados) {
+        const parsedData = JSON.parse(dados);
+        console.log('📂 Etapas de desenvolvimento carregadas:', key);
+        return parsedData;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Erro ao carregar etapas de desenvolvimento:', error);
+      return null;
+    }
+  }
+}

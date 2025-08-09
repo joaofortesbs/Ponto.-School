@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,9 @@ import DesenvolvimentoInterface from './sections/desenvolvimento/Desenvolvimento
 import AtividadesInterface from './sections/atividades/AtividadesInterface';
 import AvaliacaoInterface from './sections/avaliacao/AvaliacaoInterface';
 
+// Importar o integrador de desenvolvimento
+import DesenvolvimentoIntegrator from './integrators/DesenvolvimentoIntegrator';
+
 
 interface PlanoAulaPreviewProps {
   data: any;
@@ -52,8 +55,9 @@ interface PlanoAulaPreviewProps {
 }
 
 const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
-  const [activeSection, setActiveSection] = useState<string>('visao-geral');
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+  const [activeSection, setActiveSection] = useState('visao-geral');
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [desenvolvimentoData, setDesenvolvimentoData] = useState(null);
 
   console.log('🔍 PlanoAulaPreview - Data recebida:', data);
   console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
@@ -244,7 +248,13 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         return <MetodologiaInterface planoData={plano} />;
 
       case 'desenvolvimento':
-        return <DesenvolvimentoInterface planoData={plano} />;
+        return (
+          <DesenvolvimentoInterface
+            data={data}
+            contextoPlano={contextoCompleto}
+            onDataChange={handleDesenvolvimentoChange}
+          />
+        );
 
       case 'atividades':
         return <AtividadesInterface planoData={plano} />;
@@ -263,6 +273,25 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       [sectionId]: !prev[sectionId]
     }));
   };
+
+  const handleUpdateApproval = (approved: boolean) => {
+    console.log('🔄 Atualização de aprovação:', approved);
+  };
+
+  // Handler para mudanças nos dados de desenvolvimento
+  const handleDesenvolvimentoChange = (data: any) => {
+    console.log('🔄 Dados de desenvolvimento alterados:', data);
+    setDesenvolvimentoData(data);
+
+    // Sincronizar com outras seções
+    const planoId = activityData?.id || data?.id || `plano_${Date.now()}`;
+    DesenvolvimentoIntegrator.sincronizarComOutrasSecoes(data, planoId);
+  };
+
+  // Preparar contexto completo para as seções
+  const contextoCompleto = useMemo(() => {
+    return DesenvolvimentoIntegrator.coletarContextoCompleto(activityData, data);
+  }, [activityData, data]);
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
