@@ -67,15 +67,6 @@ import { GeminiClient } from '../../../../utils/api/geminiClient';
 import { processPlanoAulaData, savePlanoAulaData, extractEtapasFromAIData } from '../../services/planoAulaDataProcessor';
 import { PlanoAulaDebugger } from '../../services/debugPlanoAula';
 
-// Função simulada para salvar dados do plano de aula
-const savePlanoAulaData = async (activityId: string, data: any): Promise<void> => {
-  console.log(`💾 Salvando dados do plano de aula (ID: ${activityId}):`, data);
-  // Implementação real de salvamento de dados (ex: em banco de dados, API, etc.)
-  // Por enquanto, apenas um log.
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simula I/O
-  console.log(`✅ Dados do plano de aula salvos com sucesso.`);
-};
-
 
 export const generateActivityData = async (
   activity: ActionPlanItem,
