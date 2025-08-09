@@ -638,7 +638,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
             </div>
 
             <div className="space-y-4">
-              {developmentSteps.map((etapa: any, index: number) => {
+              {developmentSteps.length > 0 ? developmentSteps.map((etapa: any, index: number) => {
                 const InteractionIcon = getInteractionIcon(etapa.tipo_interacao || etapa.tipoInteracao || 'Interativo');
                 const isExpanded = expandedSteps[index];
                 const truncatedDescription = etapa.descricao?.length > 120
@@ -799,7 +799,19 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                     </CardContent>
                   </Card>
                 );
-              })}
+              }) : (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                    <Activity className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Nenhuma etapa encontrada
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    As etapas de desenvolvimento não foram carregadas corretamente.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Seção de Avaliação */}
