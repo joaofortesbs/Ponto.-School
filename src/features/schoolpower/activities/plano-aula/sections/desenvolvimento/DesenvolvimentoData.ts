@@ -1,441 +1,240 @@
+
 export interface EtapaDesenvolvimento {
-  id: string;
   titulo: string;
   descricao: string;
-  tipoInteracao: string;
-  tempoEstimado: string;
-  recursosUsados: string[];
-  ordem: number;
-  expandida: boolean;
+  tipoInteracao: 'apresentacao' | 'discussao' | 'pratica' | 'grupo' | 'individual' | 'demonstracao';
+  tempoEstimado: number; // em minutos
+  recursos: string[];
+  observacoes?: string;
 }
 
 export interface DesenvolvimentoData {
+  titulo: string;
+  descricao: string;
+  tempoTotal: number;
   etapas: EtapaDesenvolvimento[];
-  tempoTotalEstimado: string;
-  observacoesGerais: string;
-  sugestoesIA: string[];
+  timestamp: string;
+  plano_id: string;
 }
 
-const calcularTempoTotal = (etapas: EtapaDesenvolvimento[]): string => {
-  const totalMinutos = Math.min(45, etapas.reduce((acc, etapa) => {
-    const tempo = parseInt(etapa.tempoEstimado) || 0;
-    return acc + tempo;
-  }, 0));
-
-  return `${totalMinutos}min`;
-};
-
-const ajustarTemposEtapas = (etapas: EtapaDesenvolvimento[]): EtapaDesenvolvimento[] => {
-  const TEMPO_MAXIMO = 45;
-
-  // Calcular tempo total atual
-  let tempoTotalAtual = etapas.reduce((acc, etapa) => {
-    const tempo = parseInt(etapa.tempoEstimado) || 0;
-    return acc + tempo;
-  }, 0);
-
-  // Se já está dentro do limite, retornar as etapas
-  if (tempoTotalAtual <= TEMPO_MAXIMO) {
-    return etapas;
-  }
-
-  // Ajustar proporcionalmente os tempos
-  const fatorAjuste = TEMPO_MAXIMO / tempoTotalAtual;
-
-  return etapas.map(etapa => {
-    const tempoAtual = parseInt(etapa.tempoEstimado) || 0;
-    const novoTempo = Math.max(5, Math.round(tempoAtual * fatorAjuste));
-
+export class DesenvolvimentoDataProcessor {
+  /**
+   * Cria dados padrão para desenvolvimento quando não há dados disponíveis
+   */
+  private static criarDadosPadrao(planoData?: any): DesenvolvimentoData {
     return {
-      ...etapa,
-      tempoEstimado: `${novoTempo} minutos`
+      titulo: "Desenvolvimento da Aula",
+      descricao: "Sequência de atividades para desenvolvimento do conteúdo",
+      tempoTotal: 45,
+      etapas: this.criarEtapasPadrao(planoData),
+      timestamp: new Date().toISOString(),
+      plano_id: planoData?.id || `plano_${Date.now()}`
     };
-  });
-};
-
-// Dados padrão/fallback
-export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
-  etapas: [
-    {
-      id: "etapa_1",
-      titulo: "1. Revisando Substantivos: Comuns e Próprios",
-      descricao: "Início com uma breve revisão sobre substantivos comuns e próprios. Utilizar exemplos do cotidiano para facilitar a compreensão. Apresentar exemplos na lousa, solicitando exemplos dos alunos e classificando-os coletivamente. Esclarecer dúvidas e reforçar a diferença entre os tipos de substantivos com exemplos concretos (nome de pessoas, lugares, coisas, etc.).",
-      tipoInteracao: "Apresentação dialogada e discussão",
-      tempoEstimado: "10 minutos",
-      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Quiz Interativo"],
-      ordem: 1,
-      expandida: false
-    },
-    {
-      id: "etapa_2",
-      titulo: "2. Introdução aos Verbos: Ação e Estado",
-      descricao: "Apresentar o conceito de verbo como palavra que indica ação ou estado. Utilizar exemplos práticos e contextualizados, como frases simples que mostram ações (correr, pular, estudar) e estados (ser, estar, parecer). Explicar a importância dos verbos na construção de frases e narrativas.",
-      tipoInteracao: "Apresentação expositiva com exemplos",
-      tempoEstimado: "15 minutos",
-      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Organizador Gráfico"],
-      ordem: 2,
-      expandida: false
-    },
-    {
-      id: "etapa_3",
-      titulo: "3. Atividade Prática: Identificação em Textos",
-      descricao: "Distribuir cópias de textos curtos (contos, notícias) para que os alunos identifiquem substantivos próprios e verbos. Trabalho em duplas ou pequenos grupos para discussão e análise. Circular pela sala oferecendo auxílio e esclarecendo dúvidas. Uso de dicionários para verificar classificações duvidosas.",
-      tipoInteracao: "Atividade prática em grupo",
-      tempoEstimado: "15 minutos",
-      recursosUsados: ["Cópias de textos para análise (contos, notícias, etc.)", "Dicionários (físicos ou online)", "Caça-Palavras"],
-      ordem: 3,
-      expandida: false
-    },
-    {
-      id: "etapa_4",
-      titulo: "4. Consolidação e Verificação",
-      descricao: "Momento final para consolidar o aprendizado através de exercícios rápidos na lousa e verificação da compreensão dos alunos. Esclarecimento de dúvidas finais e preparação para próxima aula.",
-      tipoInteracao: "Síntese e verificação",
-      tempoEstimado: "5 minutos",
-      recursosUsados: ["Lousa ou projetor", "Lista de exercícios impressa"],
-      ordem: 4,
-      expandida: false
-    }
-  ],
-  tempoTotalEstimado: "45min",
-  observacoesGerais: "Este plano de desenvolvimento foi estruturado para garantir uma progressão natural do aprendizado, partindo da revisão de conceitos já conhecidos (substantivos) para a introdução de novos elementos (verbos). A combinação de apresentação dialogada com atividades práticas favorece tanto a compreensão teórica quanto a aplicação prática dos conhecimentos. É importante manter um ritmo dinâmico e estar atento às dúvidas dos alunos, adaptando o tempo conforme necessário. O tempo total é limitado a 45 minutos para otimizar o aprendizado.",
-  sugestoesIA: [
-    "Considere usar jogos de identificação para tornar a aula mais dinâmica",
-    "Utilize textos de interesse dos alunos para maior engajamento",
-    "Mantenha exemplos sempre contextualizados com a realidade dos estudantes",
-    "Aproveite as atividades do School Power para tornar o aprendizado mais interativo"
-  ]
-};
-
-// Service para API do Gemini
-export class DesenvolvimentoGeminiService {
-  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
-
-  static async gerarEtapasDesenvolvimento(contextoPlano: any): Promise<DesenvolvimentoData> {
-    try {
-      console.log('🤖 Gerando etapas de desenvolvimento via Gemini...');
-
-      // Lista de atividades do School Power para incluir nos recursos
-      const atividadesSchoolPower = [
-        "Resumo", "Lista de Exercícios", "Prova", "Mapa Mental", "Texto de Apoio",
-        "Plano de Aula", "Sequência Didática", "Jogos Educativos", "Apresentação de Slides",
-        "Proposta de Redação", "Simulado", "Caça-Palavras", "Palavras Cruzadas",
-        "Experimento Científico", "Critérios de Avaliação", "Revisão Guiada", "Atividades de Matemática", "Quiz", "Charadas", "Corretor de Questões"
-      ];
-
-      const prompt = `
-Você é um especialista em pedagogia e criação de planos de aula. Gere um desenvolvimento de aula estruturado e detalhado com base no contexto fornecido.
-
-**CONTEXTO DO PLANO DE AULA:**
-- Disciplina: ${contextoPlano.disciplina || 'Não especificado'}
-- Tema: ${contextoPlano.tema || 'Não especificado'}  
-- Série/Ano: ${contextoPlano.anoEscolaridade || contextoPlano.serie || 'Não especificado'}
-- Tempo disponível: 45 minutos (MÁXIMO)
-- Metodologia: ${contextoPlano.metodologia || 'Ativa e participativa'}
-
-**ATIVIDADES DISPONÍVEIS NO SCHOOL POWER (inclua algumas nos recursos):**
-Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula, Sequência Didática, Jogos Educativos, Apresentação de Slides, Proposta de Redação, Simulado, Caça-Palavras, Palavras Cruzadas, Experimento Científico, Critérios de Avaliação, Revisão Guiada, Atividades de Matemática, Quiz, Charadas, Corretor de Questões.
-
-**INSTRUÇÕES ESPECÍFICAS:**
-1. Crie entre 3 a 5 etapas de desenvolvimento da aula
-2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
-3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
-4. Distribua o tempo de forma equilibrada entre as etapas
-5. Varie os tipos de interação (apresentação, discussão, prática, grupo, individual)
-6. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos de cada etapa
-7. Mantenha coerência com o tema e série especificados
-8. Adicione observações gerais relevantes
-9. Forneça sugestões da IA para melhorias
-
-**FORMATO DE RESPOSTA (JSON):**
-{
-  "etapas": [
-    {
-      "id": "etapa_1",
-      "titulo": "Título da etapa",
-      "descricao": "Descrição detalhada da atividade e procedimentos",
-      "tipoInteracao": "Tipo de interação (ex: Apresentação dialogada, Prática em grupo, etc.)",
-      "tempoEstimado": "X minutos",
-      "recursosUsados": ["Recurso tradicional", "Atividade do School Power", "Outro recurso"],
-      "ordem": 1,
-      "expandida": false
-    }
-  ],
-  "tempoTotalEstimado": "X minutos (máximo 45)",
-  "observacoesGerais": "Observações importantes sobre a condução da aula",
-  "sugestoesIA": ["Sugestão 1", "Sugestão 2", "Sugestão 3"]
-}
-
-Gere o desenvolvimento da aula agora:`;
-
-      const response = await this.chamarGeminiAPI(prompt);
-      const etapasGeradas = this.processarResposta(response);
-
-      // Garantir que o tempo total não exceda 45 minutos
-      let tempoTotalMinutos = 0;
-      etapasGeradas.etapas.forEach(etapa => {
-        const tempoMatch = etapa.tempoEstimado.match(/\d+/);
-        if (tempoMatch) {
-          tempoTotalMinutos += parseInt(tempoMatch[0], 10);
-        }
-      });
-
-      if (tempoTotalMinutos > 45) {
-        // Se o tempo total for maior que 45, reajusta as etapas
-        const fatorReducao = 45 / tempoTotalMinutos;
-        let tempoAcumulado = 0;
-        etapasGeradas.etapas.forEach((etapa, index) => {
-          const tempoMatch = etapa.tempoEstimado.match(/\d+/);
-          if (tempoMatch) {
-            let novoTempo = Math.floor(parseInt(tempoMatch[0], 10) * fatorReducao);
-            // Garante que cada etapa tenha pelo menos 5 minutos
-            novoTempo = Math.max(novoTempo, 5);
-            etapa.tempoEstimado = `${novoTempo} minutos`;
-            tempoAcumulado += novoTempo;
-          }
-          // Adiciona atividades do School Power se ainda não houver
-          if (!etapa.recursosUsados || etapa.recursosUsados.length < 2) {
-            const atividadeAleatoria = atividadesSchoolPower[Math.floor(Math.random() * atividadesSchoolPower.length)];
-            etapa.recursosUsados = [...(etapa.recursosUsados || []), atividadeAleatoria].slice(0, 2);
-          }
-          if (index === etapasGeradas.etapas.length - 1) {
-            etapa.tempoEstimado = `${45 - tempoAcumulado + (tempoMatch ? parseInt(tempoMatch[0], 10) : 0)} minutos`; // Ajusta a última etapa para fechar em 45
-          }
-        });
-        etapasGeradas.tempoTotalEstimado = "45 minutos";
-      } else {
-        etapasGeradas.tempoTotalEstimado = "45 minutos"; // Define como 45 minutos mesmo se a soma for menor
-      }
-
-      // Ajustar etapas para respeitar limite de 45 minutos
-      const etapasAjustadas = ajustarTemposEtapas(etapasGeradas.etapas);
-
-      console.log('✅ Etapas de desenvolvimento geradas com sucesso:', etapasGeradas);
-      return {
-        etapas: etapasAjustadas,
-        tempoTotalEstimado: calcularTempoTotal(etapasAjustadas),
-        observacoesGerais: etapasGeradas.observacoesGerais || '',
-        sugestoesIA: etapasGeradas.sugestoesIA || []
-      };
-
-
-    } catch (error) {
-      console.error('❌ Erro ao gerar etapas de desenvolvimento:', error);
-      return this.aplicarContextoAosDadosPadrao(contextoPlano);
-    }
   }
 
-  private static construirPrompt(contextoPlano: any): string {
-    return `
-Você é um especialista em pedagogia e criação de planos de aula. Gere um desenvolvimento de aula estruturado e detalhado com base no contexto fornecido.
+  /**
+   * Cria etapas padrão para o desenvolvimento
+   */
+  private static criarEtapasPadrao(planoData?: any): EtapaDesenvolvimento[] {
+    const disciplina = planoData?.disciplina || 'disciplina';
+    const tema = planoData?.tema || 'tema da aula';
 
-**CONTEXTO DO PLANO DE AULA:**
-- Disciplina: ${contextoPlano.disciplina || 'Não especificado'}
-- Tema: ${contextoPlano.tema || 'Não especificado'}  
-- Série/Ano: ${contextoPlano.anoEscolaridade || contextoPlano.serie || 'Não especificado'}
-- Tempo disponível: 45 minutos (MÁXIMO)
-- Metodologia: ${contextoPlano.metodologia || 'Ativa e participativa'}
-
-**ATIVIDADES DISPONÍVEIS NO SCHOOL POWER (inclua algumas nos recursos):**
-Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula, Sequência Didática, Jogos Educativos, Apresentação de Slides, Proposta de Redação, Simulado, Caça-Palavras, Palavras Cruzadas, Experimento Científico, Critérios de Avaliação, Revisão Guiada, Atividades de Matemática, Quiz, Charadas, Corretor de Questões.
-
-**INSTRUÇÕES ESPECÍFICAS:**
-1. Crie entre 3 a 5 etapas de desenvolvimento da aula
-2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
-3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
-4. Distribua o tempo de forma equilibrada entre as etapas
-5. Varie os tipos de interação (apresentação, discussão, prática, grupo, individual)
-6. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos de cada etapa
-7. Mantenha coerência com o tema e série especificados
-8. Adicione observações gerais relevantes
-9. Forneça sugestões da IA para melhorias
-
-**FORMATO DE RESPOSTA (JSON):**
-{
-  "etapas": [
-    {
-      "id": "etapa_1",
-      "titulo": "Título da etapa",
-      "descricao": "Descrição detalhada da atividade e procedimentos",
-      "tipoInteracao": "Tipo de interação (ex: Apresentação dialogada, Prática em grupo, etc.)",
-      "tempoEstimado": "X minutos",
-      "recursosUsados": ["Recurso tradicional", "Atividade do School Power", "Outro recurso"],
-      "ordem": 1,
-      "expandida": false
-    }
-  ],
-  "tempoTotalEstimado": "X minutos (máximo 45)",
-  "observacoesGerais": "Observações importantes sobre a condução da aula",
-  "sugestoesIA": ["Sugestão 1", "Sugestão 2", "Sugestão 3"]
-}
-
-Gere o desenvolvimento da aula agora:`;
-  }
-
-  private static async chamarGeminiAPI(prompt: string): Promise<string> {
-    const { API_KEYS } = await import('@/config/apiKeys');
-
-    if (!API_KEYS.GEMINI) {
-      throw new Error('Chave da API Gemini não configurada');
-    }
-
-    const response = await fetch(`${this.GEMINI_API_URL}?key=${API_KEYS.GEMINI}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    return [
+      {
+        titulo: "Introdução ao Tema",
+        descricao: `Apresentação inicial sobre ${tema}`,
+        tipoInteracao: 'apresentacao',
+        tempoEstimado: 10,
+        recursos: ["Quadro", "Material didático"],
+        observacoes: "Contextualizar o tema com exemplos práticos"
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.8,
-          topK: 40,
-          maxOutputTokens: 2048,
-        }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Erro na API Gemini: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
-  }
-
-  private static processarResposta(responseText: string): DesenvolvimentoData {
-    try {
-      // Limpar resposta da IA
-      let cleanedText = responseText.trim();
-      cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      cleanedText = cleanedText.trim();
-
-      const parsedData = JSON.parse(cleanedText);
-
-      // Validar estrutura
-      if (!parsedData.etapas || !Array.isArray(parsedData.etapas)) {
-        throw new Error('Estrutura de resposta inválida');
+      {
+        titulo: "Desenvolvimento do Conteúdo",
+        descricao: `Exploração detalhada dos conceitos de ${disciplina}`,
+        tipoInteracao: 'discussao',
+        tempoEstimado: 20,
+        recursos: ["Livro didático", "Atividades práticas"],
+        observacoes: "Incentivar participação dos alunos"
+      },
+      {
+        titulo: "Atividade Prática",
+        descricao: "Exercícios e aplicação dos conceitos aprendidos",
+        tipoInteracao: 'pratica',
+        tempoEstimado: 10,
+        recursos: ["Lista de exercícios", "Material de apoio"],
+        observacoes: "Acompanhar individualmente os alunos"
+      },
+      {
+        titulo: "Síntese e Fechamento",
+        descricao: "Revisão dos principais pontos da aula",
+        tipoInteracao: 'discussao',
+        tempoEstimado: 5,
+        recursos: ["Quadro", "Resumo"],
+        observacoes: "Verificar compreensão dos alunos"
       }
-
-      // Garantir IDs únicos e ordem sequencial
-      parsedData.etapas.forEach((etapa: any, index: number) => {
-        etapa.id = etapa.id || `etapa_${index + 1}`;
-        etapa.ordem = index + 1;
-        etapa.expandida = false;
-        // Garantir que o tempo estimado não ultrapasse o limite e que haja recursos do School Power
-        if (parseInt(etapa.tempoEstimado?.match(/\d+/)?.[0] || '0', 10) > 45) {
-          etapa.tempoEstimado = "45 minutos";
-        }
-        // Adiciona atividades do School Power se não houver ou se a lista for pequena
-        const atividadesSchoolPower = [
-          "Resumo", "Lista de Exercícios", "Prova", "Mapa Mental", "Texto de Apoio",
-          "Plano de Aula", "Sequência Didática", "Jogos Educativos", "Apresentação de Slides",
-          "Proposta de Redação", "Simulado", "Caça-Palavras", "Palavras Cruzadas",
-          "Experimento Científico", "Critérios de Avaliação", "Revisão Guiada", "Atividades de Matemática", "Quiz", "Charadas", "Corretor de Questões"
-        ];
-        if (!etapa.recursosUsados || etapa.recursosUsados.length < 2) {
-          const atividadeAleatoria = atividadesSchoolPower[Math.floor(Math.random() * atividadesSchoolPower.length)];
-          etapa.recursosUsados = [...(etapa.recursosUsados || []), atividadeAleatoria].slice(0, 2);
-        }
-      });
-
-      // Ajustar o tempo total estimado para 45 minutos
-      parsedData.tempoTotalEstimado = "45 minutos";
-
-      return parsedData as DesenvolvimentoData;
-
-    } catch (error) {
-      console.error('Erro ao processar resposta da IA:', error);
-      throw new Error('Erro ao processar resposta da IA');
-    }
-  }
-
-  private static aplicarContextoAosDadosPadrao(contexto: any): DesenvolvimentoData {
-    const dadosBase = { ...desenvolvimentoDataPadrao };
-
-    // Lista de atividades do School Power para incluir nos recursos
-    const atividadesSchoolPower = [
-      "Resumo", "Lista de Exercícios", "Prova", "Mapa Mental", "Texto de Apoio",
-      "Plano de Aula", "Sequência Didática", "Jogos Educativos", "Apresentação de Slides",
-      "Proposta de Redação", "Simulado", "Caça-Palavras", "Palavras Cruzadas",
-      "Experimento Científico", "Critérios de Avaliação", "Revisão Guiada", "Atividades de Matemática", "Quiz", "Charadas", "Corretor de Questões"
     ];
+  }
 
-    if (contexto?.disciplina || contexto?.tema) {
-      dadosBase.etapas = dadosBase.etapas.map((etapa, index) => {
-        // Selecionar algumas atividades aleatórias do School Power
-        const atividadesAleatorias = atividadesSchoolPower
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 2);
+  /**
+   * Valida se um objeto tem a estrutura de EtapaDesenvolvimento
+   */
+  private static validarEtapa(etapa: any): boolean {
+    if (!etapa || typeof etapa !== 'object') return false;
+    
+    const camposObrigatorios = ['titulo', 'descricao', 'tipoInteracao', 'tempoEstimado'];
+    return camposObrigatorios.every(campo => etapa.hasOwnProperty(campo));
+  }
 
-        return {
-          ...etapa,
-          descricao: `${etapa.descricao.split('...')[0]} relacionado ao tema "${contexto.tema || 'conteúdo específico'}" na disciplina de ${contexto.disciplina || 'estudos'}.`,
-          recursosUsados: [...etapa.recursosUsados.slice(0, 1), ...atividadesAleatorias]
-        };
-      });
+  /**
+   * Sanitiza e valida as etapas de desenvolvimento
+   */
+  private static sanitizarEtapas(etapas: any[]): EtapaDesenvolvimento[] {
+    if (!Array.isArray(etapas) || etapas.length === 0) {
+      return this.criarEtapasPadrao();
     }
 
-    // Ajustar o tempo total estimado para 45 minutos
-    dadosBase.tempoTotalEstimado = "45 minutos";
-    // Ajustar tempo das etapas para não exceder 45 minutos no total
-    let tempoTotalEtapas = 0;
-    dadosBase.etapas.forEach(etapa => {
-      const tempoMatch = etapa.tempoEstimado.match(/\d+/);
-      if (tempoMatch) {
-        tempoTotalEtapas += parseInt(tempoMatch[0], 10);
-      }
+    return etapas
+      .filter(etapa => this.validarEtapa(etapa))
+      .map(etapa => ({
+        titulo: String(etapa.titulo || 'Etapa sem título'),
+        descricao: String(etapa.descricao || 'Descrição não disponível'),
+        tipoInteracao: etapa.tipoInteracao || 'apresentacao',
+        tempoEstimado: Number(etapa.tempoEstimado) || 5,
+        recursos: Array.isArray(etapa.recursos) ? etapa.recursos : ['Material didático'],
+        observacoes: etapa.observacoes ? String(etapa.observacoes) : undefined
+      }));
+  }
+
+  /**
+   * Processa dados de desenvolvimento vindos de diferentes fontes
+   */
+  static processarDadosDesenvolvimento(input: any): DesenvolvimentoData {
+    console.log('🔄 DesenvolvimentoDataProcessor: Iniciando processamento', input);
+
+    // Verificar se input existe e não é nulo
+    if (!input || typeof input !== 'object') {
+      console.warn('⚠️ Input inválido, criando dados padrão');
+      return this.criarDadosPadrao();
+    }
+
+    const { planoData, activityData, desenvolvimento } = input;
+
+    // Tentar extrair etapas de desenvolvimento de várias fontes possíveis
+    let etapasOriginais: any[] = [];
+    
+    // Prioridade: desenvolvimento direto > planoData > activityData
+    if (desenvolvimento?.etapas && Array.isArray(desenvolvimento.etapas)) {
+      etapasOriginais = desenvolvimento.etapas;
+      console.log('📝 Usando etapas do desenvolvimento direto:', etapasOriginais.length);
+    } else if (planoData?.desenvolvimento?.etapas && Array.isArray(planoData.desenvolvimento.etapas)) {
+      etapasOriginais = planoData.desenvolvimento.etapas;
+      console.log('📝 Usando etapas do planoData:', etapasOriginais.length);
+    } else if (activityData?.desenvolvimento?.etapas && Array.isArray(activityData.desenvolvimento.etapas)) {
+      etapasOriginais = activityData.desenvolvimento.etapas;
+      console.log('📝 Usando etapas do activityData:', etapasOriginais.length);
+    } else if (activityData?.originalData?.desenvolvimento?.etapas && Array.isArray(activityData.originalData.desenvolvimento.etapas)) {
+      etapasOriginais = activityData.originalData.desenvolvimento.etapas;
+      console.log('📝 Usando etapas do originalData:', etapasOriginais.length);
+    } else {
+      console.log('📝 Nenhuma etapa encontrada, criando etapas padrão');
+    }
+
+    // Sanitizar e validar as etapas
+    const etapasProcessadas = this.sanitizarEtapas(etapasOriginais);
+    
+    // Calcular tempo total
+    const tempoTotal = etapasProcessadas.reduce((total, etapa) => {
+      return total + (etapa.tempoEstimado || 0);
+    }, 0);
+
+    // Criar o objeto de retorno
+    const resultado: DesenvolvimentoData = {
+      titulo: desenvolvimento?.titulo || planoData?.titulo || activityData?.titulo || "Desenvolvimento da Aula",
+      descricao: desenvolvimento?.descricao || "Sequência de atividades para desenvolvimento do conteúdo",
+      tempoTotal: Math.min(tempoTotal, 45), // Limitar a 45 minutos
+      etapas: etapasProcessadas,
+      timestamp: new Date().toISOString(),
+      plano_id: planoData?.id || activityData?.id || `plano_${Date.now()}`
+    };
+
+    console.log('✅ DesenvolvimentoDataProcessor: Processamento concluído', {
+      totalEtapas: resultado.etapas.length,
+      tempoTotal: resultado.tempoTotal
     });
 
-    if (tempoTotalEtapas > 45) {
-      const fatorReducao = 45 / tempoTotalEtapas;
-      let tempoAcumulado = 0;
-      dadosBase.etapas.forEach((etapa, index) => {
-        const tempoMatch = etapa.tempoEstimado.match(/\d+/);
-        if (tempoMatch) {
-          let novoTempo = Math.floor(parseInt(tempoMatch[0], 10) * fatorReducao);
-          novoTempo = Math.max(novoTempo, 5); // Garante pelo menos 5 minutos por etapa
-          etapa.tempoEstimado = `${novoTempo} minutos`;
-          tempoAcumulado += novoTempo;
-        }
-        if (index === dadosBase.etapas.length - 1) {
-          // Ajusta a última etapa para fechar em 45 minutos
-          etapa.tempoEstimado = `${45 - tempoAcumulado + (tempoMatch ? parseInt(tempoMatch[0], 10) : 0)} minutos`;
-        }
-      });
-    }
-
-
-    return dadosBase;
+    return resultado;
   }
 
-  static salvarEtapasDesenvolvimento(planoId: string, dados: DesenvolvimentoData): void {
-    try {
-      const key = `plano_desenvolvimento_${planoId}`;
-      localStorage.setItem(key, JSON.stringify(dados));
-      console.log('💾 Etapas de desenvolvimento salvas:', key);
-    } catch (error) {
-      console.error('❌ Erro ao salvar etapas de desenvolvimento:', error);
+  /**
+   * Gera prompt para IA criar desenvolvimento de aula
+   */
+  static gerarPromptDesenvolvimento(contextoPlano: any): string {
+    const disciplina = contextoPlano?.disciplina || 'disciplina não especificada';
+    const tema = contextoPlano?.tema || 'tema não especificado';
+    const objetivos = contextoPlano?.objetivos || 'objetivos não definidos';
+    
+    return `Crie um desenvolvimento de aula detalhado para:
+
+**CONTEXTO DA AULA:**
+- Disciplina: ${disciplina}
+- Tema: ${tema}  
+- Objetivos: ${objetivos}
+- Ano/Série: ${contextoPlano?.anoEscolaridade || contextoPlano?.serie || 'Não especificado'}
+- Tempo disponível: 45 minutos (MÁXIMO)
+- Metodologia: ${contextoPlano?.metodologia || 'Ativa e participativa'}
+
+**ATIVIDADES DISPONÍVEIS NO SCHOOL POWER (inclua algumas nos recursos):**
+Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula, Sequência Didática, Jogos Educativos, Apresentação de Slides, Proposta de Redação, Simulado, Caça-Palavras, Palavras Cruzadas, Experimento Científico, Critérios de Avaliação, Revisão Guiada, Atividades de Matemática, Quiz, Charadas, Corretor de Questões.
+
+**INSTRUÇÕES ESPECÍFICAS:**
+1. Crie entre 3 a 5 etapas de desenvolvimento da aula
+2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
+3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
+4. Distribua o tempo de forma equilibrada entre as etapas
+5. Varie os tipos de interação (apresentacao, discussao, pratica, grupo, individual)
+6. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos
+7. Seja específico e prático nas descrições
+
+**FORMATO DE RESPOSTA (JSON):**
+{
+  "titulo": "Desenvolvimento da Aula",
+  "descricao": "Breve descrição do desenvolvimento",
+  "etapas": [
+    {
+      "titulo": "Nome da Etapa",
+      "descricao": "Descrição detalhada do que será feito",
+      "tipoInteracao": "apresentacao|discussao|pratica|grupo|individual",
+      "tempoEstimado": numero_em_minutos,
+      "recursos": ["recurso1", "recurso2", "atividade_school_power"],
+      "observacoes": "Dicas pedagógicas específicas"
     }
+  ]
+}`;
   }
 
-  static carregarEtapasDesenvolvimento(planoId: string): DesenvolvimentoData | null {
-    try {
-      const key = `plano_desenvolvimento_${planoId}`;
-      const dados = localStorage.getItem(key);
-
-      if (dados) {
-        const parsedData = JSON.parse(dados);
-        console.log('📂 Etapas de desenvolvimento carregadas:', key);
-        return parsedData;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('❌ Erro ao carregar etapas de desenvolvimento:', error);
-      return null;
+  /**
+   * Valida se os dados de desenvolvimento estão corretos
+   */
+  static validarDados(dados: DesenvolvimentoData): boolean {
+    if (!dados || typeof dados !== 'object') return false;
+    
+    // Verificar campos obrigatórios
+    if (!dados.titulo || !dados.etapas || !Array.isArray(dados.etapas)) {
+      return false;
     }
+    
+    // Verificar se há pelo menos uma etapa
+    if (dados.etapas.length === 0) return false;
+    
+    // Verificar cada etapa
+    return dados.etapas.every(etapa => this.validarEtapa(etapa));
   }
 }
+
+// Função de conveniência para uso direto
+export const processarDesenvolvimento = (input: any): DesenvolvimentoData => {
+  return DesenvolvimentoDataProcessor.processarDadosDesenvolvimento(input);
+};
+
+// Export das interfaces e classe principal
+export { DesenvolvimentoDataProcessor as default };
