@@ -83,46 +83,6 @@ Os campos obrigatórios são EXATAMENTE:
 - Tipo de Aula
 - Observações do Professor
 
-ESTRUTURA OBRIGATÓRIA DE ETAPAS DE DESENVOLVIMENTO:
-Para plano-aula, você DEVE incluir um campo "etapas_desenvolvimento" que é um array de objetos com a seguinte estrutura:
-
-"etapas_desenvolvimento": [
-  {
-    "id": "etapa-1",
-    "titulo": "1. Introdução e Contextualização",
-    "descricao": "Apresente o contexto específico do tema solicitado, conectando com a realidade dos alunos e estabelecendo a relevância do conteúdo...",
-    "tipo_interacao": "Apresentação dialogada",
-    "tempo_estimado": "15 minutos",
-    "recursos_usados": ["Slides contextualizados", "Quadro interativo", "Exemplos do cotidiano"],
-    "metodologia": "Aula expositiva dialogada",
-    "objetivos_especificos": ["Contextualizar o tema específico", "Ativar conhecimentos prévios dos alunos"],
-    "atividades_praticas": "Discussão inicial sobre experiências dos alunos relacionadas ao tema",
-    "avaliacao": "Participação ativa nas discussões iniciais",
-    "observacoes": "Adaptar exemplos para o nível da série e realidade local"
-  },
-  {
-    "id": "etapa-2",
-    "titulo": "2. Desenvolvimento do Conteúdo",
-    "descricao": "Exposição sistemática dos conceitos fundamentais do tema, adequada para a série especificada...",
-    "tipo_interacao": "Explicação interativa + demonstração",
-    "tempo_estimado": "20 minutos",
-    "recursos_usados": ["Material didático específico", "Recursos visuais", "Exemplos práticos"],
-    "metodologia": "Metodologia ativa com demonstrações",
-    "objetivos_especificos": ["Compreender conceitos fundamentais", "Relacionar teoria e prática"],
-    "atividades_praticas": "Resolução de problemas contextualizados sobre o tema",
-    "avaliacao": "Acompanhamento da compreensão através de perguntas direcionadas",
-    "observacoes": "Pausar para esclarecimentos e verificar compreensão individual"
-  }
-]
-
-INSTRUÇÕES ESPECÍFICAS PARA ETAPAS:
-- GERE SEMPRE ENTRE 3-6 ETAPAS PERSONALIZADAS baseadas no contexto específico fornecido
-- CADA ETAPA deve ser única e adequada ao tema, disciplina e série especificados
-- NUNCA use exemplos genéricos - sempre contextualize com o tema fornecido
-- VARIE os tipos de interação e metodologias entre as etapas
-- ADAPTE o tempo estimado conforme a complexidade do conteúdo
-- INCLUA recursos específicos para cada etapa baseados no tema
-
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
     // Construir o prompt para a Gemini
