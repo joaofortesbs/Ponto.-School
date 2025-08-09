@@ -352,7 +352,7 @@ export class AtividadesDataProcessor {
       return tags.some((tag: string) => 
         disciplina.toLowerCase().includes(tag.toLowerCase()) ||
         tema.toLowerCase().includes(tag.toLowerCase()) ||
-        categoria.toLowerCase().includes(disciplina.toLowerCase())
+        categoria.toLowerCase()ase().includes(disciplina.toLowerCase())
       );
     });
 

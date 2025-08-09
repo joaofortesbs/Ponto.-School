@@ -399,20 +399,20 @@ const FloatingChatSupport: React.FC = () => {
   const [isReformulating, setIsReformulating] = useState(false);
 
   // Estados removidos relacionados à pesquisa avançada
-  
+
   // Estado para controlar modal de sugestão de prompt
   const [showPromptSuggestionModal, setShowPromptSuggestionModal] = useState(false);
   const [studyContent, setStudyContent] = useState("");
   const [generatedPrompts, setGeneratedPrompts] = useState<string[]>([]);
   const [isGeneratingPrompts, setIsGeneratingPrompts] = useState(false);
-  
+
   // Estado para controlar modal de busca profunda
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [deepSearchEnabled, setDeepSearchEnabled] = useState(false);
   const [globalSearchEnabled, setGlobalSearchEnabled] = useState(false);
   const [academicSearchEnabled, setAcademicSearchEnabled] = useState(false);
   const [socialSearchEnabled, setSocialSearchEnabled] = useState(false);
-  
+
   // Estado para controlar modal do Agente IA
   const [showAgentModal, setShowAgentModal] = useState(false);
   const [agentIAEnabled, setAgentIAEnabled] = useState(false);
@@ -422,19 +422,19 @@ const FloatingChatSupport: React.FC = () => {
     respondMessages: false,
     makeTransfers: false
   });
-  
+
   // Interface para dados do formulário
   interface FormData {
     institution: string;
     grade: string;
     classGroup: string;
     customClassGroup: string;
-    customGrade: string;
+    customGrade: string
   }
-  
+
   // Estado para modal Aprofundar no tema
   const [showAprofundarModal, setShowAprofundarModal] = useState(false);
-  
+
   // Estado para controlar modal de personalização do Epictus IA
   const [showEpictusPersonalizeModal, setShowEpictusPersonalizeModal] = useState(false);
   const [epictusNickname, setEpictusNickname] = useState(userName || "Usuário");
@@ -445,7 +445,7 @@ const FloatingChatSupport: React.FC = () => {
   const [tempProfileImage, setTempProfileImage] = useState<File | null>(null);
   const [isUploadingProfileImage, setIsUploadingProfileImage] = useState(false);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Estado para informações acadêmicas
   const [formData, setFormData] = useState<FormData>({
     institution: "",
@@ -458,20 +458,20 @@ const FloatingChatSupport: React.FC = () => {
   // Estado para modal de caderno
   const [showNotebookModal, setShowNotebookModal] = useState(false);
   const [notebookContent, setNotebookContent] = useState("");
-  
+
   // Estado para modal de apresentação
   const [showPresentationModal, setShowPresentationModal] = useState(false);
   const [presentationSlides, setPresentationSlides] = useState<any[]>([]);
-  
+
   // Estado para mostrar quiz
   const [showQuizTask, setShowQuizTask] = useState(false);
-  
+
   // Função para mostrar o modal de caderno
   const openNotebookModal = (content: string) => {
     setNotebookContent(content);
     setShowNotebookModal(true);
   };
-  
+
   // Função para mostrar o modal de apresentação
   const openPresentationModal = (slides: any[]) => {
     setPresentationSlides(slides);
@@ -706,142 +706,6 @@ const FloatingChatSupport: React.FC = () => {
       setUserHasScrolled(false); // Reset o estado de rolagem do usuário quando uma nova mensagem é adicionada
     }
   }, [messages.length, isTyping]);
-  
-  // Adicionar ouvinte de clique global para fechar popups de exportação
-  useEffect(() => {
-    const handleGlobalClick = () => {
-      setMessages(prevMessages => 
-        prevMessages.map(msg => ({
-          ...msg, 
-          showExportOptions: false,
-          showExportFormats: false,
-          showShareOptions: false,
-          showContextTools: false
-        }))
-      );
-    };
-    
-    // Ouvinte para transformar conteúdo do quiz em caderno
-    const handleTransformToNotebook = (event: CustomEvent) => {
-      if (event.detail && event.detail.content) {
-        // Mostrar notificação de processamento
-        toast({
-          title: "Transformando em caderno",
-          description: "Convertendo o resultado do quiz para formato de caderno...",
-          duration: 2000,
-        });
-        
-        // Gerar prompt para conversão para formato de caderno
-        const notebookPrompt = `
-        A partir do resumo do quiz abaixo, crie uma versão em formato de caderno de anotações estudantil.
-        
-        Siga estas diretrizes OBRIGATÓRIAS:
-        - Comece com um título direto sobre o tema do quiz
-        - Liste os pontos principais usando marcadores (•)
-        - Destaque palavras-chave usando **asteriscos duplos**
-        - Organize o conteúdo com títulos em maiúsculas seguidos de dois pontos
-        - Use uma linguagem técnica e direta
-        - Inclua um resumo dos pontos principais do quiz
-        - Transforme as perguntas e respostas em formato de estudo
-        - NÃO INCLUA LINKS PARA NENHUM SITE OU PLATAFORMA
-        - NÃO FAÇA REFERÊNCIAS A RECURSOS EXTERNOS
-        - NÃO MENCIONE A PONTO.SCHOOL
-        - NÃO INCLUA SAUDAÇÕES, INTRODUÇÕES OU CONCLUSÕES
-        - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
-        
-        Conteúdo do quiz:
-        "${event.detail.content}"
-        `;
-        
-        // Configurar estado de carregamento
-        setIsLoading(true);
-        
-        // Chamar serviço para converter conteúdo
-        generateAIResponse(notebookPrompt, sessionId || 'default_session', {
-          intelligenceLevel: 'advanced',
-          languageStyle: 'formal'
-        })
-        .then(notebookContent => {
-          // Mostrar modal de caderno com o conteúdo gerado
-          openNotebookModal(notebookContent);
-          
-          // Adicionar mensagem no chat sobre a transformação
-          setMessages(prevMessages => [
-            ...prevMessages,
-            {
-              id: Date.now(),
-              content: "📝 **Quiz transformado em caderno de anotações!**\n\nGerei um resumo do quiz em formato de caderno para facilitar seus estudos. Você pode exportar esse conteúdo para revisão futura.",
-              sender: "assistant",
-              timestamp: new Date()
-            }
-          ]);
-        })
-        .catch(error => {
-          console.error("Erro ao converter para formato de caderno:", error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível converter o conteúdo para o formato de caderno.",
-            variant: "destructive",
-            duration: 3000,
-          });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-      }
-    };
-    
-    document.addEventListener('click', handleGlobalClick);
-    document.addEventListener('transform-to-notebook', handleTransformToNotebook as EventListener);
-    
-    return () => {
-      document.removeEventListener('click', handleGlobalClick);
-      document.removeEventListener('transform-to-notebook', handleTransformToNotebook as EventListener);
-    };
-  }, []);
-
-  // Estado para controlar a visibilidade do botão de voltar ao fim
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  
-  // Detectar quando o usuário rola manualmente
-  useEffect(() => {
-    const handleScroll = (e: Event) => {
-      const scrollArea = e.target as HTMLElement;
-      const scrollPosition = scrollArea.scrollTop;
-      const scrollHeight = scrollArea.scrollHeight;
-      const clientHeight = scrollArea.clientHeight;
-      
-      // Mostrar botão se o usuário estiver a uma certa distância do final
-      const isNearBottom = scrollHeight - scrollPosition - clientHeight < 100;
-      
-      if (isTyping) {
-        setUserHasScrolled(true);
-      }
-      
-      // Se não estiver no final, mostrar o botão de voltar ao fim
-      setShowScrollToBottom(!isNearBottom && scrollHeight > clientHeight + 200);
-    };
-
-    // Encontrar o elemento de scroll (scroll area)
-    const scrollContainer = document.querySelector('.custom-scrollbar');
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-    }
-
-    return () => {
-      if (scrollContainer) {
-        scrollContainer.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [isTyping]);
-  
-  // Função para rolar para o fim da conversa
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      setUserHasScrolled(false);
-    }
-  };
 
   // Add blur effect to the rest of the page when chat is open
   useEffect(() => {
@@ -1363,19 +1227,19 @@ Exemplo de formato da resposta:
       if (!sessionData.session) return;
 
       const userId = sessionData.session.user.id;
-      
+
       // Consultar o perfil do usuário para obter a URL da imagem
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('avatar_url')
         .eq('id', userId)
         .single();
-      
+
       if (profileError) {
         console.error('Erro ao buscar imagem de perfil:', profileError);
         return;
       }
-      
+
       if (profileData?.avatar_url) {
         setProfileImageUrl(profileData.avatar_url);
       }
@@ -1390,7 +1254,7 @@ Exemplo de formato da resposta:
 
     try {
       setIsUploadingProfileImage(true);
-      
+
       // Obter a sessão do usuário
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
@@ -1413,14 +1277,14 @@ Exemplo de formato da resposta:
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = new Image();
-        
+
         const compressedFile = await new Promise<File>((resolve) => {
           img.onload = () => {
             // Calcular novo tamanho mantendo proporção
             const maxSize = 800;
             let width = img.width;
             let height = img.height;
-            
+
             if (width > height && width > maxSize) {
               height = (height / width) * maxSize;
               width = maxSize;
@@ -1446,10 +1310,10 @@ Exemplo de formato da resposta:
             }, 'image/jpeg', 0.85);
           };
           img.onerror = () => resolve(tempProfileImage);
-          
+
           img.src = URL.createObjectURL(tempProfileImage);
         });
-        
+
         fileToUpload = compressedFile;
       }
 
@@ -1489,7 +1353,7 @@ Exemplo de formato da resposta:
 
       // Atualizar o estado da imagem
       setProfileImageUrl(publicUrlData.publicUrl);
-      
+
       // Disparar evento para outros componentes saberem que o avatar foi atualizado
       const avatarUpdateEvent = new CustomEvent('avatar-updated', {
         detail: { url: publicUrlData.publicUrl }
@@ -1593,7 +1457,7 @@ Exemplo de formato da resposta:
           // Configurar para capturar dados a cada 1 segundo
           recorder.start(1000);
           setIsRecordingAudio(true);
-          
+
           // Mostrar notificação de gravação iniciada
           toast({
             title: "Gravação de áudio iniciada",
@@ -1628,7 +1492,7 @@ Exemplo de formato da resposta:
         audioRecorder.stop();
         // Atualizar o estado
         setIsRecordingAudio(false);
-        
+
         // Mostrar indicador visual de processamento
         toast({
           title: "Processando áudio",
@@ -1643,7 +1507,7 @@ Exemplo de formato da resposta:
           variant: "destructive",
           duration: 3000,
         });
-        
+
         // Tentar limpar recursos mesmo em caso de erro
         if (audioRecorder) {
           try {
@@ -1826,7 +1690,7 @@ Exemplo de formato da resposta:
                   setInputMessage(q.question);
                   // Usar async/await com setTimeout para garantir que a mensagem seja atualizada antes de enviar
                   setTimeout(async () => {
-                    await handleSendMessage();
+                    await sendMessage();
                   },100);
                 }}
               >
@@ -2113,7 +1977,7 @@ Exemplo de formato da resposta:
             </Button>
           </div>
         )}
-        
+
         <div className="space-y-4">
           {messages.map((message) => (
             <div
@@ -2174,7 +2038,7 @@ Exemplo de formato da resposta:
                       .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-0.5">$1<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-0.5"><path d="M18 13v6a2 `1-2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>')
 
                       // URLs in parentheses
-                      .replace(/(?<!\]|\()\((https?:\/\/[^\s)]+)\)/g, '(<a href="$1" target="_blank" rel="noopener noreferrer" class="text-orange-600 dark:text-orange-400 hover:underline">$1</a>)')
+                      .replace(/(?<!\]|\(\s*)(https?:\/\/[^\s)]+)/g, '$1')
 
                       // Plain URLs
                       .replace(/(?<!\]|\()(?<!\(\s*)(https?:\/\/[^\s)]+)/g, '$1')
@@ -2289,7 +2153,7 @@ Exemplo de formato da resposta:
                           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
                       </button>
-                      
+
                       <div className="relative">
                         <button 
                           onClick={(e) => {
@@ -2309,7 +2173,7 @@ Exemplo de formato da resposta:
                             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                           </svg>
                         </button>
-                        
+
                         {/* Context tools dropdown */}
                         {message.showContextTools && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
@@ -2321,9 +2185,9 @@ Exemplo de formato da resposta:
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showContextTools: false}))
                                 );
-                                
+
                                 setShowAprofundarModal(true);
-                                
+
                                 toast({
                                   title: "Aprofundando no tema",
                                   description: "Gerando conteúdo mais detalhado sobre este tópico...",
@@ -2338,7 +2202,7 @@ Exemplo de formato da resposta:
                               </svg>
                               Aprofundar no tema
                             </button>
-                            
+
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
@@ -2347,502 +2211,10 @@ Exemplo de formato da resposta:
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showContextTools: false}))
                                 );
-                                
-                                // Armazenar a mensagem atual para contexto
-                                const currentMessage = messages.find(msg => msg.showContextTools);
-                                
-                                // Criar um elemento para o modal de simulador de questões
-                                const modalHTML = `
-                                  <div id="question-simulator-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                                    <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-6 shadow-xl w-[90%] max-w-md animate-fadeIn">
-                                      <div class="flex justify-between items-center mb-4">
-                                        <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                            <path d="M12 17h.01"></path>
-                                          </svg>
-                                          Simulador de Questões
-                                        </h3>
-                                        <button 
-                                          id="close-question-simulator-modal"
-                                          class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        >
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M18 6 6 18"></path>
-                                            <path d="m6 6 12 12"></path>
-                                          </svg>
-                                        </button>
-                                      </div>
-                                      
-                                      <p class="text-sm text-gray-600 dark:text-gray-400 mb-5">
-                                        Escolha uma opção para continuar:
-                                      </p>
-                                      
-                                      <div class="grid grid-cols-1 gap-3 mb-2">
-                                        <button 
-                                          id="do-quiz-button"
-                                          class="p-4 border border-orange-200 dark:border-orange-700 rounded-lg bg-gradient-to-r from-white to-orange-50 dark:from-gray-800 dark:to-orange-900/20 flex items-center gap-3 group hover:shadow-md transition-all"
-                                        >
-                                          <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-600 dark:text-orange-400">
-                                              <path d="M9 11l3 3L22 4"></path>
-                                              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                                            </svg>
-                                          </div>
-                                          <div class="flex-1 text-left">
-                                            <h4 class="font-medium text-gray-800 dark:text-gray-200 mb-1">Fazer Quiz</h4>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Teste seus conhecimentos com perguntas interativas</p>
-                                          </div>
-                                        </button>
-                                        
-                                        <button 
-                                          id="see-questions-button"
-                                          class="p-4 border border-orange-200 dark:border-orange-700 rounded-lg bg-gradient-to-r from-white to-orange-50 dark:from-gray-800 dark:to-orange-900/20 flex items-center gap-3 group hover:shadow-md transition-all"
-                                        >
-                                          <div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-600 dark:text-orange-400">
-                                              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                                              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                                            </svg>
-                                          </div>
-                                          <div class="flex-1 text-left">
-                                            <h4 class="font-medium text-gray-800 dark:text-gray-200 mb-1">Ver possíveis questões da prova</h4>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Explore questões baseadas no conteúdo estudado</p>
-                                          </div>
-                                        </button>
-                                      </div>
-                                      
-                                      <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                        <p class="text-xs text-center text-gray-500 dark:text-gray-400 italic">
-                                          As questões são geradas com base no conteúdo da conversa
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                `;
-                                
-                                // Remover qualquer modal existente
-                                const existingModal = document.getElementById('question-simulator-modal');
-                                if (existingModal) {
-                                  existingModal.remove();
-                                }
-                                
-                                // Adicionar o novo modal ao DOM
-                                document.body.insertAdjacentHTML('beforeend', modalHTML);
-                                
-                                // Adicionar event listeners
-                                setTimeout(() => {
-                                  const modal = document.getElementById('question-simulator-modal');
-                                  const closeButton = document.getElementById('close-question-simulator-modal');
-                                  const doQuizButton = document.getElementById('do-quiz-button');
-                                  const seeQuestionsButton = document.getElementById('see-questions-button');
-                                  
-                                  // Função para fechar o modal
-                                  const closeModal = () => {
-                                    if (modal) {
-                                      modal.classList.add('animate-fadeOut');
-                                      setTimeout(() => modal.remove(), 200);
-                                    }
-                                  };
-                                  
-                                  // Event listener para fechar o modal
-                                  if (closeButton) {
-                                    closeButton.addEventListener('click', closeModal);
-                                  }
-                                  
-                                  // Event listener para clicar fora e fechar
-                                  if (modal) {
-                                    modal.addEventListener('click', (e) => {
-                                      if (e.target === modal) {
-                                        closeModal();
-                                      }
-                                    });
-                                  }
-                                  
-                                  // Event listener para o botão de fazer quiz
-                                  if (doQuizButton) {
-                                    doQuizButton.addEventListener('click', () => {
-                                      closeModal();
-                                      
-                                      // Criar e adicionar o modal de configuração do quiz
-                                      const quizConfigModalHTML = `
-                                        <div id="quiz-config-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                                          <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-xl border border-orange-200 dark:border-orange-700 p-5 shadow-xl w-[90%] max-w-sm animate-fadeIn">
-                                            <div class="flex justify-between items-center mb-4">
-                                              <h3 class="text-lg font-semibold flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-orange-500">
-                                                  <circle cx="12" cy="12" r="10"></circle>
-                                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                                </svg>
-                                                Configurações do Quiz
-                                              </h3>
-                                              <button 
-                                                id="close-quiz-config-modal"
-                                                class="h-7 w-7 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                              >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                  <path d="M18 6 6 18"></path>
-                                                  <path d="m6 6 12 12"></path>
-                                                </svg>
-                                              </button>
-                                            </div>
-                                            
-                                            <div class="space-y-4 mb-6">
-                                              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                                                <div>
-                                                  <p class="font-medium text-sm text-gray-800 dark:text-gray-200">Dificuldade Inteligente</p>
-                                                  <p class="text-xs text-gray-500 dark:text-gray-400">Ajusta o nível das perguntas com base nas suas respostas</p>
-                                                </div>
-                                                <label class="relative inline-flex items-center cursor-pointer">
-                                                  <input type="checkbox" id="smart-difficulty" class="sr-only peer" checked>
-                                                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
-                                                </label>
-                                              </div>
-                                              
-                                              <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                                                <input type="checkbox" id="study-mode" class="h-4 w-4 rounded text-orange-500 border-gray-300 focus:ring-orange-500 cursor-pointer">
-                                                <label for="study-mode" class="ml-2 block cursor-pointer">
-                                                  <p class="font-medium text-sm text-gray-800 dark:text-gray-200">Modo Estudo</p>
-                                                  <p class="text-xs text-gray-500 dark:text-gray-400">Mostra explicações após cada pergunta</p>
-                                                </label>
-                                              </div>
-                                            </div>
-                                            
-                                            <button 
-                                              id="start-quiz-button"
-                                              class="w-full py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
-                                            >
-                                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                              </svg>
-                                              Iniciar Quiz
-                                            </button>
-                                          </div>
-                                        </div>
-                                      `;
-                                      
-                                      // Adicionar o modal ao DOM
-                                      document.body.insertAdjacentHTML('beforeend', quizConfigModalHTML);
-                                      
-                                      // Adicionar event listeners ao modal
-                                      setTimeout(() => {
-                                        const quizConfigModal = document.getElementById('quiz-config-modal');
-                                        const closeQuizConfigButton = document.getElementById('close-quiz-config-modal');
-                                        const startQuizButton = document.getElementById('start-quiz-button');
-                                        
-                                        // Função para fechar o modal
-                                        const closeQuizConfigModal = () => {
-                                          if (quizConfigModal) {
-                                            quizConfigModal.classList.add('animate-fadeOut');
-                                            setTimeout(() => quizConfigModal.remove(), 200);
-                                          }
-                                        };
-                                        
-                                        // Event listener para fechar o modal
-                                        if (closeQuizConfigButton) {
-                                          closeQuizConfigButton.addEventListener('click', closeQuizConfigModal);
-                                        }
-                                        
-                                        // Event listener para clicar fora e fechar
-                                        if (quizConfigModal) {
-                                          quizConfigModal.addEventListener('click', (e) => {
-                                            if (e.target === quizConfigModal) {
-                                              closeQuizConfigModal();
-                                            }
-                                          });
-                                        }
-                                        
-                                        // Event listener para iniciar o quiz
-                                        if (startQuizButton) {
-                                          startQuizButton.addEventListener('click', () => {
-                                            // Obter as configurações selecionadas
-                                            const smartDifficulty = document.getElementById('smart-difficulty') as HTMLInputElement;
-                                            const studyMode = document.getElementById('study-mode') as HTMLInputElement;
-                                            
-                                            const useSmartDifficulty = smartDifficulty?.checked || false;
-                                            const useStudyMode = studyMode?.checked || false;
-                                            
-                                            closeQuizConfigModal();
-                                            
-                                            // Encontrar a última mensagem da IA para criar o quiz com base nela
-                                            const lastAIMessage = document.querySelector('.message-content:last-of-type');
-                                            const content = lastAIMessage?.textContent || 'Conteúdo geral sobre o assunto';
-                                            
-                                            // Gerar perguntas do quiz com base no conteúdo da última resposta da IA
-                                            const generateQuizQuestions = async () => {
-                                              setIsLoading(true);
-                                              
-                                              try {
-                                                // Encontrar a última mensagem do assistente para usar como base do quiz
-                                                const lastAIMessage = messages
-                                                  .filter(msg => msg.sender === 'assistant')
-                                                  .pop();
-                                                  
-                                                const content = lastAIMessage?.content || 'Conteúdo geral sobre o assunto';
-                                                
-                                                // Perguntas de exemplo para garantir que o quiz sempre funciona
-                                                const fallbackQuestions = [
-                                                  {
-                                                    id: "q1",
-                                                    text: "Qual é a principal vantagem de utilizar a Ponto.School para seus estudos?",
-                                                    options: [
-                                                      { id: "q1-a", text: "Apenas materiais didáticos", isCorrect: false },
-                                                      { id: "q1-b", text: "Personalização inteligente com IA", isCorrect: true },
-                                                      { id: "q1-c", text: "Apenas vídeo-aulas", isCorrect: false },
-                                                      { id: "q1-d", text: "Só funciona para ensino fundamental", isCorrect: false }
-                                                    ],
-                                                    explanation: "A Ponto.School oferece personalização inteligente com IA para adaptar o conteúdo às suas necessidades de aprendizado."
-                                                  },
-                                                  {
-                                                    id: "q2",
-                                                    text: "O que é o Epictus IA na plataforma Ponto.School?",
-                                                    options: [
-                                                      { id: "q2-a", text: "Um jogo educativo", isCorrect: false },
-                                                      { id: "q2-b", text: "Um assistente de inteligência artificial", isCorrect: true },
-                                                      { id: "q2-c", text: "Um calendário de estudos", isCorrect: false },
-                                                      { id: "q2-d", text: "Uma calculadora avançada", isCorrect: false }
-                                                    ],
-                                                    explanation: "O Epictus IA é um assistente de inteligência artificial que ajuda na personalização do aprendizado."
-                                                  },
-                                                  {
-                                                    id: "q3",
-                                                    text: "Qual recurso permite estudar com outros alunos na Ponto.School?",
-                                                    options: [
-                                                      { id: "q3-a", text: "Modo Solo", isCorrect: false },
-                                                      { id: "q3-b", text: "Calendário", isCorrect: false },
-                                                      { id: "q3-c", text: "Grupos de Estudo", isCorrect: true },
-                                                      { id: "q3-d", text: "Agenda", isCorrect: false }
-                                                    ],
-                                                    explanation: "Os Grupos de Estudo permitem colaboração e aprendizado conjunto com outros estudantes."
-                                                  },
-                                                  {
-                                                    id: "q4",
-                                                    text: "Como funciona o sistema de pontos na plataforma?",
-                                                    options: [
-                                                      { id: "q4-a", text: "São usados apenas para jogos", isCorrect: false },
-                                                      { id: "q4-b", text: "Podem ser trocados por recompensas", isCorrect: true },
-                                                      { id: "q4-c", text: "Não existem pontos na plataforma", isCorrect: false },
-                                                      { id: "q4-d", text: "São apenas decorativos", isCorrect: false }
-                                                    ],
-                                                    explanation: "Os pontos na plataforma são acumulados ao completar atividades e podem ser trocados por recompensas."
-                                                  },
-                                                  {
-                                                    id: "q5",
-                                                    text: "O que é o Modo Estudo no quiz da Ponto.School?",
-                                                    options: [
-                                                      { id: "q5-a", text: "Um timer para limitar o tempo", isCorrect: false },
-                                                      { id: "q5-b", text: "Um modo sem perguntas", isCorrect: false },
-                                                      { id: "q5-c", text: "Mostra explicações após cada resposta", isCorrect: true },
-                                                      { id: "q5-d", text: "Não permite consultar material", isCorrect: false }
-                                                    ],
-                                                    explanation: "O Modo Estudo mostra explicações detalhadas após cada resposta para melhorar o aprendizado."
-                                                  }
-                                                ];
-                                                
-                                                // Mostra o componente QuizTask com perguntas de fallback
-                                                const quizProps = {
-                                                  taskId: `quiz-${Date.now()}`,
-                                                  title: "Quiz sobre o conteúdo",
-                                                  description: "Teste seus conhecimentos sobre o assunto abordado",
-                                                  questions: fallbackQuestions,
-                                                  showExplanation: useStudyMode,
-                                                  onComplete: (score, totalQuestions) => {
-                                                    setShowQuizTask(false);
-                                                    setMessages(prev => [
-                                                      ...prev,
-                                                      {
-                                                        id: Date.now(),
-                                                        content: `Você completou o quiz com ${score} de ${totalQuestions} acertos (${Math.round((score/totalQuestions)*100)}%).`,
-                                                        sender: "assistant",
-                                                        timestamp: new Date()
-                                                      }
-                                                    ]);
-                                                  },
-                                                  onClose: () => setShowQuizTask(false)
-                                                };
-                                                
-                                                // Tentativa de gerar perguntas personalizadas (opcional - como fallback já existe)
-                                                try {
-                                                  // Formato do prompt para gerar o quiz
-                                                  const quizPrompt = `
-                                                  Gere um quiz com 5 perguntas de múltipla escolha baseadas no seguinte conteúdo:
-                                                  "${content.substring(0, 500)}..."
-                                                  
-                                                  Regras:
-                                                  - As perguntas devem estar diretamente relacionadas ao conteúdo fornecido
-                                                  ${useSmartDifficulty ? '- Misture níveis de dificuldade (fácil, médio e difícil)' : '- Mantenha um nível médio de dificuldade'}
-                                                  - Cada pergunta deve ter 4 alternativas, com apenas uma correta
-                                                  - Forneça uma explicação concisa para cada resposta
-                                                  
-                                                  Responda APENAS com um array JSON com as 5 perguntas no formato a seguir, sem qualquer texto ou explicação adicional:
-                                                  [
-                                                    {
-                                                      "id": "q1",
-                                                      "text": "Enunciado da pergunta",
-                                                      "options": [
-                                                        { "id": "q1-a", "text": "Alternativa A", "isCorrect": false },
-                                                        { "id": "q1-b", "text": "Alternativa B", "isCorrect": true },
-                                                        { "id": "q1-c", "text": "Alternativa C", "isCorrect": false },
-                                                        { "id": "q1-d", "text": "Alternativa D", "isCorrect": false }
-                                                      ],
-                                                      "explanation": "Explicação da resposta correta"
-                                                    }
-                                                  ]
-                                                  `;
-                                                  
-                                                  // Chamar a API para gerar as perguntas
-                                                  const quizResponse = await generateAIResponse(
-                                                    quizPrompt,
-                                                    sessionId || 'default_session',
-                                                    {
-                                                      intelligenceLevel: 'advanced',
-                                                      languageStyle: 'formal'
-                                                    }
-                                                  );
-                                                  
-                                                  // Se a resposta contiver JSON válido, substituir as perguntas de fallback
-                                                  if (quizResponse) {
-                                                    // Extrair apenas o JSON da resposta
-                                                    let jsonText = quizResponse;
-                                                    if (quizResponse.includes('[') && quizResponse.includes(']')) {
-                                                      const startIdx = quizResponse.indexOf('[');
-                                                      const endIdx = quizResponse.lastIndexOf(']') + 1;
-                                                      jsonText = quizResponse.substring(startIdx, endIdx);
-                                                    }
-                                                    
-                                                    // Tentar parsear o JSON
-                                                    try {
-                                                      const customQuestions = JSON.parse(jsonText);
-                                                      
-                                                      // Verificar se o JSON é válido e tem a estrutura esperada
-                                                      if (Array.isArray(customQuestions) && customQuestions.length > 0) {
-                                                        // Validar cada pergunta
-                                                        const validQuestions = customQuestions.filter(q => 
-                                                          q.id && q.text && Array.isArray(q.options) && q.options.length >= 3
-                                                        );
-                                                        
-                                                        if (validQuestions.length >= 3) {
-                                                          // Usar as perguntas customizadas em vez do fallback
-                                                          quizProps.questions = validQuestions;
-                                                          console.log('Usando perguntas personalizadas:', validQuestions);
-                                                        }
-                                                      }
-                                                    } catch (jsonError) {
-                                                      console.log('Erro ao parsear JSON, usando perguntas de fallback:', jsonError);
-                                                      // Continuamos com as perguntas de fallback
-                                                    }
-                                                  }
-                                                } catch (aiError) {
-                                                  console.log('Erro ao gerar perguntas, usando fallback:', aiError);
-                                                  // Continuamos com as perguntas de fallback
-                                                }
-                                                
-                                                console.log('Quiz gerado com sucesso:', quizProps);
-                                                
-                                                // Mostrar componente de Quiz e adicionar mensagem no chat
-                                                setShowQuizTask(true);
-                                                setMessages(prev => [
-                                                  ...prev,
-                                                  {
-                                                    id: Date.now(),
-                                                    content: "📝 **Quiz Iniciado!**\n\nResponda às perguntas de múltipla escolha para testar seus conhecimentos sobre o assunto. Boa sorte!",
-                                                    sender: "assistant",
-                                                    timestamp: new Date()
-                                                  }
-                                                ]);
-                                              } catch (error) {
-                                                console.error('Erro ao gerar quiz:', error);
-                                                toast({
-                                                  title: "Erro ao gerar quiz",
-                                                  description: "Não foi possível gerar as perguntas. Por favor, tente novamente.",
-                                                  variant: "destructive",
-                                                  duration: 3000,
-                                                });
-                                              } finally {
-                                                setIsLoading(false);
-                                              }
-                                            };
-                                            
-                                            // Iniciar a geração do quiz
-                                            generateQuizQuestions();
-                                            
-                                            // Notificação ao usuário
-                                            toast({
-                                              title: "Quiz iniciado",
-                                              description: `Quiz com ${useSmartDifficulty ? 'dificuldade inteligente' : 'dificuldade padrão'} e ${useStudyMode ? 'modo estudo ativado' : 'modo estudo desativado'}`,
-                                              duration: 3000,
-                                            });
-                                          });
-                                        }
-                                        
-                                      }, 50);
-                                    });
-                                  }
-                                  
-                                  // Event listener para o botão de ver questões
-                                  if (seeQuestionsButton) {
-                                    seeQuestionsButton.addEventListener('click', () => {
-                                      closeModal();
 
-                                      // Importar o componente QuestionSimulator dinamicamente
-                                      import("./QuestionSimulator").then((QuestionSimulatorModule) => {
-                                        const QuestionSimulator = QuestionSimulatorModule.default;
-                                        
-                                        // Renderizar o componente usando ReactDOM
-                                        const root = document.createElement('div');
-                                        root.id = 'question-simulator-root';
-                                        document.body.appendChild(root);
-                                        
-                                        import('react-dom/client').then((ReactDOMClient) => {
-                                          const reactRoot = ReactDOMClient.createRoot(root);
-                                          reactRoot.render(
-                                            React.createElement(QuestionSimulator, {
-                                              onClose: () => {
-                                                reactRoot.unmount();
-                                                root.remove();
-                                              },
-                                              sessionId: sessionId || 'default_session',
-                                              messages: messages
-                                            })
-                                          );
-                                        });
-                                      }).catch((error) => {
-                                        console.error("Erro ao carregar componente QuestionSimulator:", error);
-                                        toast({
-                                          title: "Erro",
-                                          description: "Não foi possível carregar o simulador de questões.",
-                                          variant: "destructive",
-                                          duration: 3000,
-                                        });
-                                      });
-                                    });
-                                  }
-                                }, 50);
-                              }}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-orange-500 dark:text-orange-400">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                              </svg>
-                              Simulador de questões
-                            </button>
-                            
-                            <button 
-                              className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                
-                                // Fechar menus de contexto
-                                setMessages(prevMessages => 
-                                  prevMessages.map(msg => ({...msg, showContextTools: false}))
-                                );
-                                
                                 // Obter a mensagem para converter para formato de caderno
                                 const messageToConvert = messages.find(msg => msg.showContextTools);
-                                
+
                                 if (messageToConvert && messageToConvert.content) {
                                   // Mostrar notificação de processamento
                                   toast({
@@ -2850,11 +2222,11 @@ Exemplo de formato da resposta:
                                     description: "Convertendo conteúdo para formato de caderno...",
                                     duration: 2000,
                                   });
-                                  
+
                                   // Gerar prompt para conversão para formato de caderno
                                   const notebookPrompt = `
                                   A partir da explicação abaixo, crie uma versão resumida no formato de caderno de anotações estudantil.
-                                  
+
                                   Siga estas diretrizes OBRIGATÓRIAS:
                                   - Comece com um título direto sobre o tema (sem introduções ou saudações)
                                   - Liste apenas os pontos principais usando marcadores (•)
@@ -2869,10 +2241,10 @@ Exemplo de formato da resposta:
                                   - NÃO TERMINE COM MENSAGENS MOTIVACIONAIS OU CHAMADAS PARA AÇÃO
                                   - FOQUE APENAS NO CONTEÚDO EDUCACIONAL
                                   - Limite a explicação a no máximo 250 palavras
-                                  
+
                                   Explicação original:
                                   "${messageToConvert.content}"
-                                  
+
                                   Formato exemplo:
                                   EQUAÇÃO DO 2º GRAU
                                   • Forma geral: ax² + bx + c = 0
@@ -2882,10 +2254,10 @@ Exemplo de formato da resposta:
                                   • Se Δ = 0 → uma raiz real
                                   • Se Δ > 0 → duas raízes reais
                                   `;
-                                  
+
                                   // Configurar estado de carregamento
                                   setIsLoading(true);
-                                  
+
                                   // Chamar serviço para converter conteúdo
                                   generateAIResponse(notebookPrompt, sessionId || 'default_session', {
                                     intelligenceLevel: 'advanced',
@@ -2916,50 +2288,44 @@ Exemplo de formato da resposta:
                                 }
                               }}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 mr-1.5 text-green-500 dark:text-green-400">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                              </svg>
+                              <FileText className="h-3.5 w-3.5 mr-1.5 text-green-500 dark:text-green-400" />
                               Escrever no Caderno
                             </button>
-                            
+
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                
+
                                 // Fechar menu de contexto
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showContextTools: false}))
                                 );
-                                
+
                                 // Mostrar notificação
                                 toast({
                                   title: "Modo Apresentação",
                                   description: "Iniciando simulação de apresentação deste conteúdo...",
                                   duration: 3000,
                                 });
-                                
+
                                 // Ativar estado de carregamento
                                 setIsLoading(true);
-                                
+
                                 // Obter a mensagem para converter para formato de apresentação
                                 const messageToPresent = messages.find(msg => msg.showContextTools);
-                                
+
                                 if (messageToPresent && messageToPresent.content) {
                                   // Função para extrair tópicos do conteúdo
                                   const extractTopicsFromContent = (content) => {
                                     // Divide o conteúdo em parágrafos
                                     const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
-                                    
+
                                     // Tenta identificar tópicos principais (frases curtas, pontos-chave)
                                     const topics = paragraphs
                                       .filter(p => p.length < 100 && !p.includes('.'))
                                       .slice(0, 3);
-                                    
+
                                     // Se não encontrou tópicos suficientes, usa as primeiras frases de parágrafos
                                     if (topics.length < 3) {
                                       const sentences = paragraphs
@@ -2967,13 +2333,13 @@ Exemplo de formato da resposta:
                                         .filter(s => s.trim().length > 15 && s.trim().length < 80)
                                         .map(s => s.trim())
                                         .slice(0, 3 - topics.length);
-                                      
+
                                       return [...topics, ...sentences];
                                     }
-                                    
+
                                     return topics;
                                   };
-                                  
+
                                   // Função para gerar slides a partir do conteúdo
                                   const generateSlidesFromContent = (content) => {
                                     // Extrair tópicos do conteúdo da mensagem com análise mais profunda
@@ -2981,26 +2347,26 @@ Exemplo de formato da resposta:
                                       // Procurar por marcadores de lista ou numeração
                                       const bulletPoints = text.match(/[•\-\*]\s+([^\n]+)/g) || [];
                                       const numberedPoints = text.match(/\d+\.\s+([^\n]+)/g) || [];
-                                      
+
                                       // Extrair os textos dos marcadores
                                       const topics = [...bulletPoints, ...numberedPoints]
                                         .map(point => point.replace(/^[•\-\*\d+\.]\s+/, '').trim())
                                         .filter(point => point.length > 0 && point.length < 100)
                                         .slice(0, 3);
-                                      
+
                                       // Se não encontrou suficientes, procurar por frases curtas
                                       if (topics.length < 3) {
                                         const sentences = text.split(/[.!?]/)
                                           .map(s => s.trim())
                                           .filter(s => s.length > 10 && s.length < 80)
                                           .slice(0, 3 - topics.length);
-                                        
+
                                         return [...topics, ...sentences];
                                       }
-                                      
+
                                       return topics.length > 0 ? topics : ["Aspectos principais", "Conceitos fundamentais", "Aplicações práticas"];
                                     };
-                                    
+
                                     // Extrair possível título da mensagem (primeira linha ou primeiro título markdown)
                                     const getTitle = (text) => {
                                       const titleMatch = text.match(/^#\s+(.+)$/m) || text.match(/^(.+)$/m);
@@ -3009,7 +2375,7 @@ Exemplo de formato da resposta:
                                       }
                                       return "Apresentação do Tema";
                                     };
-                                    
+
                                     // Extrair exemplos do conteúdo
                                     const getExamples = (text) => {
                                       const examplePatterns = [
@@ -3018,9 +2384,9 @@ Exemplo de formato da resposta:
                                         /como\s+([^.!?]+[.!?])/gi,
                                         /caso[s]?:?\s*([^.!?]+[.!?])/gi
                                       ];
-                                      
+
                                       let examples = [];
-                                      
+
                                       for (const pattern of examplePatterns) {
                                         const matches = text.matchAll(pattern);
                                         for (const match of matches) {
@@ -3029,24 +2395,24 @@ Exemplo de formato da resposta:
                                           }
                                         }
                                       }
-                                      
+
                                       // Se não encontrou exemplos específicos, gerar alguns baseados no contexto
                                       if (examples.length === 0) {
                                         const paragraphs = text.split(/\n\n+/);
                                         const potentialExamples = paragraphs
                                           .filter(p => p.length > 30 && p.length < 200)
                                           .slice(1, 3); // Pegar alguns parágrafos do meio do texto
-                                        
+
                                         if (potentialExamples.length > 0) {
                                           examples = potentialExamples.map(ex => "Exemplo: " + ex.trim());
                                         } else {
                                           examples = ["Exemplo ilustrativo (elabore com casos específicos durante a apresentação)"];
                                         }
                                       }
-                                      
+
                                       return examples.slice(0, 2);
                                     };
-                                    
+
                                     // Extrair um parágrafo explicativo mais detalhado
                                     const getExplanation = (text) => {
                                       const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 30 && p.trim().length < 300);
@@ -3055,7 +2421,7 @@ Exemplo de formato da resposta:
                                       }
                                       return "Este tema apresenta conceitos importantes que serão explorados nesta apresentação. Durante esta exposição, analisaremos tanto os fundamentos teóricos quanto as aplicações práticas, proporcionando exemplos concretos para facilitar a compreensão.";
                                     };
-                                    
+
                                     // Extrair aplicações práticas do conteúdo
                                     const getApplications = (text) => {
                                       const applicationPatterns = [
@@ -3064,9 +2430,9 @@ Exemplo de formato da resposta:
                                         /pratic[ao][s]?:?\s*([^.!?]+[.!?])/gi,
                                         /implica[çc][ãõ]o[õe]?s:?\s*([^.!?]+[.!?])/gi
                                       ];
-                                      
+
                                       let applications = [];
-                                      
+
                                       for (const pattern of applicationPatterns) {
                                         const matches = text.matchAll(pattern);
                                         for (const match of matches) {
@@ -3075,14 +2441,14 @@ Exemplo de formato da resposta:
                                           }
                                         }
                                       }
-                                      
+
                                       if (applications.length === 0) {
                                         applications = ["Aplicação na resolução de problemas reais", "Uso em diferentes contextos educacionais"];
                                       }
-                                      
+
                                       return applications.slice(0, 2);
                                     };
-                                    
+
                                     // Extrair conclusão mais elaborada
                                     const getConclusion = (text) => {
                                       const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 30);
@@ -3091,7 +2457,7 @@ Exemplo de formato da resposta:
                                       }
                                       return "Vimos os principais aspectos deste tema. É importante continuar explorando estes conceitos para aprofundar o conhecimento. A compreensão desse conteúdo fornece ferramentas valiosas tanto para o desenvolvimento acadêmico quanto para aplicações práticas no cotidiano.";
                                     };
-                                    
+
                                     // Gerar roteiro de apresentação
                                     const generatePresentationOutline = () => {
                                       return [
@@ -3110,7 +2476,7 @@ Exemplo de formato da resposta:
                                         "5. Perguntas & Respostas (2-3 min)"
                                       ].join("\n");
                                     };
-                                    
+
                                     // Usar o conteúdo da mensagem para gerar slides mais detalhados
                                     const title = getTitle(content);
                                     const topics = extractTopics(content);
@@ -3119,7 +2485,7 @@ Exemplo de formato da resposta:
                                     const applications = getApplications(content);
                                     const conclusion = getConclusion(content);
                                     const presentationOutline = generatePresentationOutline();
-                                    
+
                                     // Gerar slides com conteúdo mais detalhado
                                     const slides = [
                                       {
@@ -3131,7 +2497,7 @@ Exemplo de formato da resposta:
                                       {
                                         titulo: "Conceitos Fundamentais",
                                         topicos: topics.slice(0, 3).map(t => t),
-                                        explicacao: "Os conceitos centrais desta apresentação formam a base para compreensão do tema:\n\n" + 
+                                        explicacao: "Os conceitos centrais desta apresentação formam a base para compreensão do tema:\n\n" +
                                                     topics.map((t, i) => `${i+1}. ${t}: Representa um aspecto essencial que será detalhado com exemplos.`).join("\n\n") +
                                                     "\n\nAo compreender estes conceitos, será possível aplicá-los em diferentes contextos e situações práticas.",
                                         imagemOpcional: ""
@@ -3163,18 +2529,18 @@ Exemplo de formato da resposta:
 
                                     return slides;
                                   };
-                                  
+
                                   // Emular um pequeno delay para mostrar o loading
                                   setTimeout(() => {
                                     // Gerar slides a partir do conteúdo da resposta da IA
                                     const contentSlides = generateSlidesFromContent(messageToPresent.content);
-                                    
+
                                     // Definir slides e abrir o modal
                                     setPresentationSlides(contentSlides);
                                     setShowPresentationModal(true);
                                     setIsLoading(false);
                                   }, 1000);
-                                  
+
                                   // Versão com processamento de IA avançado (comentada por enquanto)
                                   /*
                                   // Gerar prompt para conversão para formato de apresentação
@@ -3201,28 +2567,28 @@ Exemplo de formato da resposta:
                                       "imagemOpcional": ""
                                     }
                                   ];
-                                  
+
                                   // Definir slides e abrir o modal diretamente
                                   setPresentationSlides(demoSlides);
                                   setShowPresentationModal(true);
-                                  
+
                                   // Versão com AI (comentada para simplificar a solução)
                                   /*
                                   // Gerar prompt para conversão para formato de apresentação
                                   const presentationPrompt = `
                                   A partir da explicação abaixo, crie uma apresentação de slides.
-                                  
+
                                   Crie uma estrutura de apresentação com os seguintes slides:
                                   1. Slide de introdução com o título principal e 2-3 tópicos chave
                                   2. 2-4 slides de desenvolvimento, cada um com um subtema específico do conteúdo
                                   3. Um slide final de conclusão/resumo
-                                  
+
                                   Para cada slide, forneça:
                                   - Um título claro
                                   - 3-4 tópicos em formato de bullet points
                                   - Uma explicação sucinta (máximo 150 palavras)
                                   - Uma imagem sugestiva (URL opcional - deixe em branco se não tiver ideia)
-                                  
+
                                   Formate a saída como um array JSON com cada slide tendo a estrutura:
                                   [
                                     {
@@ -3233,16 +2599,16 @@ Exemplo de formato da resposta:
                                     },
                                     ...mais slides...
                                   ]
-                                  
+
                                   O conteúdo a ser transformado em apresentação é:
                                   "${messageToPresent.content}"
-                                  
+
                                   IMPORTANTE: A saída deve ser APENAS o array JSON, sem qualquer texto antes ou depois.
                                   `;
-                                  
+
                                   // Configurar estado de carregamento
                                   setIsLoading(true);
-                                  
+
                                   // Chamar serviço para converter conteúdo em apresentação
                                   generateAIResponse(presentationPrompt, sessionId || 'default_session', {
                                     intelligenceLevel: 'advanced',
@@ -3252,7 +2618,7 @@ Exemplo de formato da resposta:
                                     try {
                                       // Tentar processar a resposta como JSON
                                       const presentationData = JSON.parse(presentationContent.trim());
-                                      
+
                                       // Abrir o modal de apresentação com os slides
                                       openPresentationModal(presentationData);
                                     } catch (error) {
@@ -3293,7 +2659,7 @@ Exemplo de formato da resposta:
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Botão de Exportar com popup */}
                       <div className="relative">
                         <button 
@@ -3312,7 +2678,7 @@ Exemplo de formato da resposta:
                         >
                           <Download className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                         </button>
-                        
+
                         {/* Menu principal com opções Exportar e Compartilhar */}
                         {message.showExportOptions && !message.showExportFormats && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-28 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
@@ -3359,7 +2725,7 @@ Exemplo de formato da resposta:
                             </button>
                           </div>
                         )}
-                        
+
                         {/* Menu secundário com formatos de exportação */}
                         {message.showExportFormats && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-36 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
@@ -3377,11 +2743,11 @@ Exemplo de formato da resposta:
                                 a.click();
                                 document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
-                                
+
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
                                 );
-                                
+
                                 toast({
                                   title: "Exportação concluída",
                                   description: "Arquivo TXT baixado com sucesso",
@@ -3402,7 +2768,7 @@ Exemplo de formato da resposta:
                                   description: "Preparando o documento para download...",
                                   duration: 2000,
                                 });
-                                
+
                                 // Importar jsPDF dinamicamente
                                 import('jspdf').then(({ default: jsPDF }) => {
                                   // Criar um novo documento PDF
@@ -3411,63 +2777,65 @@ Exemplo de formato da resposta:
                                     unit: 'mm',
                                     format: 'a4'
                                   });
-                                  
+
                                   // Configurações de estilo
                                   const pageWidth = doc.internal.pageSize.getWidth();
                                   const pageHeight = doc.internal.pageSize.getHeight();
                                   const margin = 20;
                                   const textWidth = pageWidth - (margin * 2);
-                                  
+
                                   // Adicionar cabeçalho
                                   doc.setFontSize(16);
                                   doc.setFont('helvetica', 'bold');
                                   doc.text('PONTO.SCHOOL - MATERIAL DE ESTUDO', pageWidth / 2, margin, { align: 'center' });
-                                  
+
                                   // Adicionar data
                                   const currentDate = new Date().toLocaleDateString('pt-BR');
                                   doc.setFontSize(10);
                                   doc.setFont('helvetica', 'normal');
                                   doc.text(`Data: ${currentDate}`, margin, margin + 10);
-                                  
+
                                   // Adicionar nome do aluno
                                   doc.text(`Aluno: ${userName || 'Estudante'}`, margin, margin + 15);
-                                  
+
                                   // Linha separadora
                                   doc.line(margin, margin + 20, pageWidth - margin, margin + 20);
-                                  
+
                                   // Preparar o conteúdo da mensagem
                                   doc.setFontSize(12);
                                   doc.setFont('helvetica', 'bold');
                                   doc.text('CONTEÚDO:', margin, margin + 30);
-                                  
+
                                   // Processar o conteúdo da mensagem (remover tags HTML e formatação)
                                   let contentText = message.content
-                                    .replace(/<br\s*\/?>/gi, '\n')
-                                    .replace(/<[^>]*>/g, '')
-                                    .replace(/\*\*(.*?)\*\*/g, '$1')
-                                    .replace(/\_(.*?)\_/g, '$1')
-                                    .replace(/\~\~(.*?)\~\~/g, '$1')
-                                    .replace(/\`(.*?)\`/g, '$1');
-                                  
+                                    // Converter quebras de linha em <br>
+                                    .replace(/\n/g, '\n') // Manter quebras de linha para splitTextToSize
+                                    // Remover tags HTML e formatação markdown simples
+                                    .replace(/<[^>]*>/g, '') // Remover tags HTML
+                                    .replace(/\*\*(.*?)\*\*/g, '$1') // Negrito
+                                    .replace(/\_(.*?)\_/g, '$1') // Itálico
+                                    .replace(/\~\~(.*?)\~\~/g, '$1') // Tachado
+                                    .replace(/\`(.*?)\`/g, '$1'); // Código inline
+
                                   // Adicionar conteúdo com quebra de linhas
                                   doc.setFont('helvetica', 'normal');
                                   const textLines = doc.splitTextToSize(contentText, textWidth);
                                   doc.text(textLines, margin, margin + 40);
-                                  
+
                                   // Adicionar rodapé
                                   doc.setFontSize(10);
                                   doc.text('Documento gerado automaticamente pela Ponto.School', pageWidth / 2, pageHeight - 15, { align: 'center' });
-                                  
+
                                   // Adicionar a frase personalizada de forma sutil e elegante
                                   doc.setFontSize(8);
                                   doc.setTextColor(150, 150, 150); // Cor cinza sutil
                                   doc.setFont('helvetica', 'italic');
                                   doc.text('"Não é sobre conectar você com a tecnologia, é sobre conectar você com o futuro!"', pageWidth / 2, pageHeight - 8, { align: 'center' });
                                   doc.setTextColor(0, 0, 0); // Resetar para cor padrão
-                                  
+
                                   // Salvar o PDF
                                   doc.save(`ponto-school-material-${Date.now()}.pdf`);
-                                  
+
                                   toast({
                                     title: "PDF gerado com sucesso",
                                     description: "O download do seu documento foi iniciado",
@@ -3482,7 +2850,7 @@ Exemplo de formato da resposta:
                                     duration: 3000,
                                   });
                                 });
-                                
+
                                 // Fechar os menus de opções
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
@@ -3501,7 +2869,7 @@ Exemplo de formato da resposta:
                                 const content = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head><meta charset='utf-8'><title>Mensagem Exportada</title></head>
 <body><p>${message.content}</p></body></html>`;
-                                
+
                                 const blob = new Blob([content], { type: 'application/vnd.ms-word' });
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement('a');
@@ -3511,11 +2879,11 @@ Exemplo de formato da resposta:
                                 a.click();
                                 document.body.removeChild(a);
                                 URL.revokeObjectURL(url);
-                                
+
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false}))
                                 );
-                                
+
                                 toast({
                                   title: "Exportação concluída",
                                   description: "Arquivo Word baixado com sucesso",
@@ -3528,7 +2896,7 @@ Exemplo de formato da resposta:
                             </button>
                           </div>
                         )}
-                        
+
                         {/* Menu secundário com opções de compartilhamento */}
                         {message.showShareOptions && (
                           <div className="absolute z-50 top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700">
@@ -3538,14 +2906,14 @@ Exemplo de formato da resposta:
                                 e.stopPropagation();
                                 // Gerar URL compartilhável (simulado)
                                 const fakeShareableUrl = `https://ponto.school/share/msg/${message.id}`;
-                                
+
                                 // Copiar para a área de transferência
                                 navigator.clipboard.writeText(fakeShareableUrl);
-                                
+
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
-                                
+
                                 toast({
                                   title: "Link copiado!",
                                   description: "Link compartilhável copiado para a área de transferência",
@@ -3556,12 +2924,12 @@ Exemplo de formato da resposta:
                               <Globe className="h-3.5 w-3.5 mr-2 text-blue-500" />
                               Copiar Link Compartilhável
                             </button>
-                            
+
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                
+
                                 // Preparar conteúdo para e-mail com formatação HTML
                                 const formattedContent = message.content
                                   // Converter quebras de linha em <br>
@@ -3572,7 +2940,7 @@ Exemplo de formato da resposta:
                                   .replace(/\_(.*?)\_/g, '<em>$1</em>')
                                   // Converter links markdown para HTML
                                   .replace(/\[(.*?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>');
-                                
+
                                 // Estrutura completa do email
                                 const emailHTML = `
                                 <html>
@@ -3602,26 +2970,26 @@ Exemplo de formato da resposta:
                                   </div>
                                 </body>
                                 </html>`;
-                                
+
                                 // Versão plain text para clientes que não suportam HTML
                                 const plainText = `Conteúdo compartilhado da Ponto.School\n\n${message.content}\n\nCompartilhado via Ponto.School`;
-                                
+
                                 // Criar assunto do e-mail
                                 const subject = encodeURIComponent("Material compartilhado da Ponto.School");
-                                
+
                                 // Preparar corpo do e-mail (versão texto)
                                 const body = encodeURIComponent(plainText);
-                                
+
                                 // Abrir modal personalizado para compartilhamento por e-mail
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
-                                
+
                                 // Usar o serviço de e-mail já importado
 
                                 // Criar e adicionar o modal diretamente ao DOM
                                 const modalHTML = `
-                                  <div id="custom-email-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                                  <div id="custom-email-modal" class="fixed inset-0 flex items-center justify-center z-[9999]">
                                     <div class="bg-[#1a1d2d] text-white rounded-lg w-[90%] max-w-md shadow-xl overflow-hidden border border-gray-700">
                                       <div class="bg-gradient-to-r from-orange-600 to-orange-700 p-4">
                                         <h3 class="text-lg font-semibold">Compartilhar por E-mail</h3>
@@ -3658,22 +3026,22 @@ Exemplo de formato da resposta:
                                 if (existingModal) {
                                   existingModal.remove();
                                 }
-                                
+
                                 // Adicionar o novo modal ao DOM
                                 document.body.insertAdjacentHTML('beforeend', modalHTML);
-                                
+
                                 // Adicionar event listeners ao modal com atraso para garantir que o DOM foi atualizado
                                 setTimeout(() => {
                                   const modal = document.getElementById('custom-email-modal');
                                   const input = document.getElementById('recipient-email-input');
                                   const cancelButton = document.getElementById('cancel-email-button');
                                   const sendButton = document.getElementById('send-email-button');
-                                  
+
                                   // Focar no input
                                   if (input) {
                                     input.focus();
                                   }
-                                  
+
                                   // Adicionar evento de cancelamento
                                   if (cancelButton) {
                                     cancelButton.addEventListener('click', () => {
@@ -3682,7 +3050,7 @@ Exemplo de formato da resposta:
                                       }
                                     });
                                   }
-                                  
+
                                   // Adicionar evento para fechar o modal ao clicar fora
                                   if (modal) {
                                     modal.addEventListener('click', (e) => {
@@ -3692,13 +3060,13 @@ Exemplo de formato da resposta:
                                     });
                                   }
                                 }, 50);
-                                
+
                                 // Adicionar evento de envio
                                 setTimeout(() => {
                                   const modal = document.getElementById('custom-email-modal');
                                   const input = document.getElementById('recipient-email-input');
                                   const sendButton = document.getElementById('send-email-button');
-                                  
+
                                   if (sendButton && input && modal) {
                                     sendButton.addEventListener('click', async () => {
                                       const email = input.value;
@@ -3706,7 +3074,7 @@ Exemplo de formato da resposta:
                                         // Mostrar indicador de carregamento
                                         sendButton.innerHTML = '<div class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-1"></div> Enviando...';
                                         sendButton.disabled = true;
-                                        
+
                                         try {
                                           // Usar o serviço de e-mail para enviar a mensagem
                                           const emailData = {
@@ -3714,14 +3082,14 @@ Exemplo de formato da resposta:
                                             subject: "Material compartilhado da Ponto.School",
                                             html: emailHTML
                                           };
-                                          
+
                                           // Importar o serviço de e-mail
-                                          const emailService = await import('../../services/emailService')vice = await import('@/services/emailService');
+                                          const emailService = await import('@/services/emailService');
                                           const result = await emailService.sendEmail(emailData);
-                                          
+
                                           // Remover o modal após o envio
                                           modal.remove();
-                                          
+
                                           if (result) {
                                             toast({
                                               title: "E-mail enviado com sucesso!",
@@ -3746,30 +3114,30 @@ Exemplo de formato da resposta:
                                             description: "Ocorreu um erro ao enviar, abrindo seu cliente de e-mail",
                                             duration: 3000,
                                           });
-                                          
+
                                           // Remover o modal após o erro
                                           modal.remove();
                                         }
-                                    } else {
-                                      // Mostrar erro se o e-mail for inválido
-                                      const errorMessage = document.createElement('p');
-                                      errorMessage.textContent = "Por favor, digite um endereço de e-mail válido.";
-                                      errorMessage.className = "text-red-500 text-sm mt-1";
-                                      
-                                      // Remover mensagens de erro existentes
-                                      const existingError = document.querySelector('.text-red-500');
-                                      if (existingError) {
-                                        existingError.remove();
+                                      } else {
+                                        // Mostrar erro se o e-mail for inválido
+                                        const errorMessage = document.createElement('p');
+                                        errorMessage.textContent = "Por favor, digite um endereço de e-mail válido.";
+                                        errorMessage.className = "text-red-500 text-sm mt-1";
+
+                                        // Remover mensagens de erro existentes
+                                        const existingError = document.querySelector('.text-red-500');
+                                        if (existingError) {
+                                          existingError.remove();
+                                        }
+
+                                        // Adicionar mensagem de erro
+                                        input.parentNode.insertBefore(errorMessage, input.nextSibling);
+
+                                        // Destacar o campo com erro
+                                        input.classList.add('border-red-500', 'focus:ring-red-500');
                                       }
-                                      
-                                      // Adicionar mensagem de erro
-                                      input.parentNode.insertBefore(errorMessage, input.nextSibling);
-                                      
-                                      // Destacar o campo com erro
-                                      input.classList.add('border-red-500', 'focus:ring-red-500');
-                                    }
-                                  });
-                                    
+                                    });
+
                                     // Adicionar evento de tecla Enter para envio
                                     input.addEventListener('keydown', (e) => {
                                       if (e.key === 'Enter') {
@@ -3778,7 +3146,7 @@ Exemplo de formato da resposta:
                                     });
                                   }
                                 }, 50);
-                                
+
                                 // Fechar todos os popups após a ação
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
@@ -3788,7 +3156,7 @@ Exemplo de formato da resposta:
                               <FileText className="h-3.5 w-3.5 mr-2 text-orange-500" />
                               Compartilhar por E-mail
                             </button>
-                            
+
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
@@ -3797,7 +3165,7 @@ Exemplo de formato da resposta:
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
-                                
+
                                 toast({
                                   title: "Compartilhando no Teams",
                                   description: "Abrindo Microsoft Teams para compartilhar o conteúdo",
@@ -3808,7 +3176,7 @@ Exemplo de formato da resposta:
                               <MessageSquare className="h-3.5 w-3.5 mr-2 text-blue-600" />
                               Compartilhar no Microsoft Teams
                             </button>
-                            
+
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
@@ -3817,7 +3185,7 @@ Exemplo de formato da resposta:
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
-                                
+
                                 toast({
                                   title: "Código QR gerado",
                                   description: "O código QR pode ser compartilhado com os alunos",
@@ -3828,7 +3196,7 @@ Exemplo de formato da resposta:
                               <Image className="h-3.5 w-3.5 mr-2 text-purple-500" />
                               Gerar Código QR da Mensagem
                             </button>
-                            
+
                             <button 
                               className="w-full text-left px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-[#FF6B00] dark:hover:text-[#FF6B00] flex items-center"
                               onClick={(e) => {
@@ -3837,7 +3205,7 @@ Exemplo de formato da resposta:
                                 setMessages(prevMessages => 
                                   prevMessages.map(msg => ({...msg, showExportOptions: false, showExportFormats: false, showShareOptions: false}))
                                 );
-                                
+
                                 toast({
                                   title: "Compartilhando na plataforma",
                                   description: "Conteúdo disponível para outros usuários da Ponto.School",
@@ -3851,7 +3219,7 @@ Exemplo de formato da resposta:
                           </div>
                         )}
                       </div>
-                      
+
                       <button 
                         onClick={() => {
                           navigator.clipboard.writeText(message.content);
@@ -3942,7 +3310,7 @@ Exemplo de formato da resposta:
                     <span className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center border border-white">
                       <Sparkles className="h-2 w-2 text-white" />
                     </span>
-                  </AvatarFallback>
+                  </Avatar>
                 </Avatar>
               </div>
               <div className="max-w-[75%] rounded-lg px-4 py-3 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-md">
@@ -3984,11 +3352,11 @@ Exemplo de formato da resposta:
                           if (typeof aiService.cancelResponse === 'function') {
                             await aiService.cancelResponse(sessionId || 'default_session');
                           }
-                          
+
                           // Atualizar UI
                           setIsTyping(false);
                           setIsResponsePaused(false); // Resetar o estado de pausa
-                          
+
                           // Remover a mensagem incompleta da IA que está sendo gerada
                           setMessages(prevMessages => {
                             // Filtramos para remover a última mensagem da IA (a que está sendo gerada)
@@ -3996,12 +3364,12 @@ Exemplo de formato da resposta:
                             const lastAIMessageIndex = [...prevMessages].reverse().findIndex(
                               msg => msg.sender === 'assistant' && msg.content === ''
                             );
-                            
+
                             if (lastAIMessageIndex !== -1) {
                               const actualIndex = prevMessages.length - 1 - lastAIMessageIndex;
                               return prevMessages.filter((_, i) => i !== actualIndex);
                             }
-                            
+
                             return prevMessages;
                           });
                         } catch (error) {
@@ -4085,7 +3453,7 @@ Exemplo de formato da resposta:
               <X className="h-3 w-3" />
             </Button>
           </div>
-          
+
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium mb-1 block">Nível de Inteligência</label>
@@ -4158,7 +3526,7 @@ Exemplo de formato da resposta:
         isOpen={showAprofundarModal}
         onClose={() => setShowAprofundarModal(false)}
       />
-      
+
       {/* Modal de Caderno para anotações */}
       {showNotebookModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -4179,12 +3547,12 @@ Exemplo de formato da resposta:
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            
+
             {/* Conteúdo do caderno com linhas */}
             <ScrollArea className="h-[50vh] bg-[#fffdf0] dark:bg-[#1e1e18] p-4 notebook-lines">
               <NotebookSimulation content={notebookContent} />
             </ScrollArea>
-            
+
             {/* Rodapé com ações */}
             <div className="p-3 border-t border-gray-400 dark:border-gray-600 bg-amber-100 dark:bg-gray-800 flex justify-between">
               <Button 
@@ -4203,7 +3571,7 @@ Exemplo de formato da resposta:
                 <Copy className="h-4 w-4 mr-2" />
                 Copiar texto
               </Button>
-              
+
               <Button 
                 className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
                 onClick={() => {
@@ -4217,7 +3585,7 @@ Exemplo de formato da resposta:
                   a.click();
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
-                  
+
                   toast({
                     title: "Anotações exportadas",
                     description: "Arquivo de texto baixado com sucesso",
@@ -4232,7 +3600,7 @@ Exemplo de formato da resposta:
           </div>
         </div>
       )}
-      
+
       {/* Modal de Apresentação */}
       {showPresentationModal && presentationSlides.length > 0 && (
         <SlidesPresentationModal
@@ -4241,7 +3609,7 @@ Exemplo de formato da resposta:
           slides={presentationSlides}
         />
       )}
-      
+
       {/* Quiz Task */}
       {showQuizTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -4335,7 +3703,7 @@ Exemplo de formato da resposta:
             <div className="absolute -right-20 -top-20 w-60 h-60 bg-orange-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl"></div>
             <div className="absolute right-1/4 bottom-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
-            
+
             {/* Header com design futurista */}
             <div className="flex justify-between items-center mb-4 relative z-10 sticky top-0 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent pb-2">
               <div className="flex items-center gap-2">
@@ -4363,7 +3731,7 @@ Exemplo de formato da resposta:
             <ScrollArea className="h-[350px] pr-2 relative z-10">
               <div className="flex flex-col items-center mb-6">
                 <div className="relative mb-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient p-1 bg-white dark:bg-gray-800">
+                  <div className="w-24 h-24 rounded-full border-4 border-gradient p-1 bg-white dark:bg-gray-800">
                     <div className="w-full h-full rounded-full overflow-hidden">
                       <Avatar className="w-full h-full">
                         <AvatarImage 
@@ -4397,7 +3765,7 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                 </div>
-                
+
                 {tempProfileImage && (
                   <div className="mb-3 w-full flex justify-center">
                     <div className="flex items-center gap-2 bg-orange-100 dark:bg-orange-900/20 p-2 rounded-lg">
@@ -4442,20 +3810,20 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                 )}
-                
+
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-1">Epictus IA</h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
                   Seu assistente de suporte inteligente, personalizado para atender às suas necessidades.
                 </p>
               </div>
-              
+
               <div className="space-y-6">
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
                   <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
                     <MessageSquare className="h-4 w-4 text-orange-500" />
                     Como o Epictus IA deveria chamar você?
                   </h5>
-                  
+
                   <div className="space-y-3">
                     <Input
                       value={tempNickname || epictusNickname}
@@ -4463,19 +3831,19 @@ Exemplo de formato da resposta:
                       placeholder="Digite seu nome ou apelido preferido"
                       className="bg-white/80 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus-visible:ring-orange-500"
                     />
-                    
+
                     <p className="text-xs text-gray-500 dark:text-gray-400 italic">
                       Este nome será usado pelo Epictus IA para se referir a você durante as conversas.
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
                   <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
                     <User className="h-4 w-4 text-orange-500" />
                     O que você faz?
                   </h5>
-                  
+
                   <div className="space-y-3">
                     <textarea
                       value={tempOccupation || userOccupation}
@@ -4483,19 +3851,19 @@ Exemplo de formato da resposta:
                       placeholder="Ex: Estudante de engenharia, Professor, Profissional de Marketing..."
                       className="w-full h-20 px-3 py-2 bg-white/80 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 text-sm resize-none"
                     />
-                    
+
                     <p className="text-xs text-gray-500 dark:text-gray-400 italic">
                       Isso ajuda a IA a adaptar as respostas ao seu contexto pessoal ou profissional, tornando as informações mais relevantes para você.
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
                   <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
                     <Zap className="h-4 w-4 text-orange-500" />
                     Personalidade do Epictus IA
                   </h5>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     <div 
                       className={`border ${aiLanguageStyle === 'casual' ? 'border-orange-300 dark:border-orange-700 bg-orange-50/60 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30'} p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors`}
@@ -4506,7 +3874,7 @@ Exemplo de formato da resposta:
                           description: "Epictus IA agora usará um tom amigável e casual para responder a você.",
                           duration: 2000,
                         });
-                        
+
                         // Adicionar mensagem informando sobre a mudança
                         setMessages(prevMessages => [
                           ...prevMessages, 
@@ -4527,7 +3895,7 @@ Exemplo de formato da resposta:
                       </div>
                       <p className="text-[10px] text-gray-500 dark:text-gray-400">Conversação casual e acolhedora</p>
                     </div>
-                    
+
                     <div 
                       className={`border ${aiLanguageStyle === 'technical' ? 'border-orange-300 dark:border-orange-700 bg-orange-50/60 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/30'} p-3 rounded-lg cursor-pointer hover:border-orange-300 dark:hover:border-orange-700 transition-colors`}
                       onClick={() => {
@@ -4537,7 +3905,7 @@ Exemplo de formato da resposta:
                           description: "Epictus IA agora usará um tom técnico e detalhado para responder a você.",
                           duration: 2000,
                         });
-                        
+
                         // Adicionar mensagem informando sobre a mudança
                         setMessages(prevMessages => [
                           ...prevMessages, 
@@ -4560,13 +3928,13 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
                   <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
                     <School className="h-4 w-4 text-orange-500" />
                     Informações Acadêmicas
                   </h5>
-                  
+
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
@@ -4583,7 +3951,7 @@ Exemplo de formato da resposta:
                         }}
                       />
                     </div>
-                    
+
                     <div>
                       <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
                         Série
@@ -4615,7 +3983,7 @@ Exemplo de formato da resposta:
                         <option value="Outro">Outro</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="text-xs font-medium mb-1 block text-gray-700 dark:text-gray-300">
                         Turma
@@ -4639,7 +4007,7 @@ Exemplo de formato da resposta:
                         <option value="outra">Outra turma</option>
                       </select>
                     </div>
-                    
+
                     {formData && formData.classGroup === "outra" && (
                       <div className="mt-1">
                         <Input
@@ -4656,22 +4024,22 @@ Exemplo de formato da resposta:
                     )}
                   </div>
                 </div>
-                
+
                 <div className="bg-white/70 dark:bg-gray-800/40 p-4 rounded-xl border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
-                      <Bell className="h-4 w-4 text-orange-500" />
-                      Notificações
-                    </h5>
+                  <h5 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-1.5">
+                    <Bell className="h-4 w-4 text-orange-500" />
+                    Notificações
+                  </h5>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Receba lembretes e sugestões personalizados do Epictus IA.
+                    </p>
                     <Switch />
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Receba lembretes e sugestões personalizados do Epictus IA.
-                  </p>
                 </div>
               </div>
             </ScrollArea>
-            
+
             {/* Botões de ação */}
             <div className="flex justify-end items-center gap-2 mt-3 pb-1 relative z-10">
               <Button
@@ -4703,7 +4071,7 @@ Exemplo de formato da resposta:
                       setTempNickname("");
                       confirmationMessage += `A partir de agora vou te chamar de ${tempNickname.trim() || epictusNickname}. `;
                       hasChanges = true;
-                      
+
                       // Atualizar o nickname no banco de dados, se possível
                       try {
                         const { data: sessionData } = await supabase.auth.getSession();
@@ -4720,14 +4088,14 @@ Exemplo de formato da resposta:
                         console.error('Erro ao atualizar nickname no perfil:', error);
                       }
                     }
-                    
+
                     // Atualiza a ocupação se foi alterada
                     if (tempOccupation.trim()) {
                       setUserOccupation(tempOccupation.trim());
                       setTempOccupation("");
                       confirmationMessage += `Entendi que você ${tempOccupation.trim()} e vou adaptar minhas respostas ao seu contexto. `;
                       hasChanges = true;
-                      
+
                       // Atualizar a ocupação no banco de dados, se possível
                       try {
                         const { data: sessionData } = await supabase.auth.getSession();
@@ -4744,25 +4112,25 @@ Exemplo de formato da resposta:
                         console.error('Erro ao atualizar ocupação no perfil:', error);
                       }
                     }
-                    
+
                     // Atualiza os dados acadêmicos se foram preenchidos
                     if (formData.institution.trim() || formData.grade) {
                       let acadInfoText = "";
-                      
+
                       if (formData.institution.trim()) {
                         acadInfoText += `você estuda na instituição "${formData.institution}"`;
                       }
-                      
+
                       if (formData.grade) {
                         if (acadInfoText) acadInfoText += " e ";
                         acadInfoText += `está no "${formData.grade}"`;
                       }
-                      
+
                       if (acadInfoText) {
                         confirmationMessage += `Registrei que ${acadInfoText}. `;
                         hasChanges = true;
                       }
-                      
+
                       // Atualizar informações acadêmicas no banco de dados
                       try {
                         const { data: sessionData } = await supabase.auth.getSession();
@@ -4780,18 +4148,18 @@ Exemplo de formato da resposta:
                         console.error('Erro ao atualizar informações acadêmicas:', error);
                       }
                     }
-                    
+
                     // Adicionar informação sobre a personalidade selecionada
                     const personalityInfo = aiLanguageStyle === 'casual' 
                       ? "Estou configurado para usar um tom amigável e casual nas nossas conversas. 😊" 
                       : aiLanguageStyle === 'technical' 
                         ? "Estou configurado para usar um tom técnico e formal nas nossas conversas." 
                         : "";
-                    
+
                     if (personalityInfo) {
                       confirmationMessage += personalityInfo + " ";
                       hasChanges = true;
-                      
+
                       // Salvar configuração de personalidade no localStorage para persistência
                       try {
                         localStorage.setItem('epictus_personality_style', aiLanguageStyle);
@@ -4799,15 +4167,15 @@ Exemplo de formato da resposta:
                         console.error('Erro ao salvar personalidade no localStorage:', error);
                       }
                     }
-                    
+
                     if (!hasChanges) {
                       confirmationMessage = "Suas configurações foram mantidas. ";
                     }
-                    
+
                     confirmationMessage += "Como posso te ajudar hoje?";
-                    
+
                     setShowEpictusPersonalizeModal(false);
-                    
+
                     // Adiciona uma mensagem de confirmação ao chat
                     setMessages(prevMessages => [
                       ...prevMessages, 
@@ -4818,7 +4186,7 @@ Exemplo de formato da resposta:
                         timestamp: new Date()
                       }
                     ]);
-                    
+
                     // Notificação visual
                     toast({
                       title: "Personalização salva",
@@ -4852,7 +4220,7 @@ Exemplo de formato da resposta:
             <div className="absolute -right-20 -top-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl"></div>
             <div className="absolute right-1/4 bottom-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
-            
+
             {/* Header com design futurista */}
             <div className="flex justify-between items-center mb-4 relative z-10 sticky top-0 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent pb-2">
               <div className="flex items-center gap-2">
@@ -4889,13 +4257,13 @@ Exemplo de formato da resposta:
                   className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-blue-500 data-[state=checked]:to-indigo-600 scale-90"
                 />
               </div>
-              
+
               <div className="p-3 rounded-xl bg-gradient-to-br from-gray-50/70 to-white/70 dark:from-gray-800/30 dark:to-gray-900/30 border border-gray-100/80 dark:border-gray-700/30 backdrop-filter backdrop-blur-sm shadow-sm mb-3">
                 <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                   O Agente IA utiliza tecnologia avançada para auxiliar proativamente em tarefas complexas, aprendendo com suas interações para oferecer suporte personalizado.
                 </p>
               </div>
-              
+
               <div className="space-y-3 relative z-10">
                 <h5 className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1.5">
                   <div className="w-4 h-4 rounded-md bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
@@ -4903,7 +4271,7 @@ Exemplo de formato da resposta:
                   </div>
                   Capacidades do Agente IA
                 </h5>
-                
+
                 <div className="grid grid-cols-1 gap-2">
                   <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
@@ -4922,7 +4290,7 @@ Exemplo de formato da resposta:
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Ajusta suas preferências automaticamente</span>
                     </label>
                   </div>
-                  
+
                   <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="access-pages" 
@@ -4940,7 +4308,7 @@ Exemplo de formato da resposta:
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Acessa seções e páginas da plataforma</span>
                     </label>
                   </div>
-                  
+
                   <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="respond-messages" 
@@ -4958,7 +4326,7 @@ Exemplo de formato da resposta:
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">Responde notificações e mensagens</span>
                     </label>
                   </div>
-                  
+
                   <div className={`flex items-center p-2 rounded-lg bg-white/70 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/40 backdrop-filter backdrop-blur-sm transition-all ${agentIAEnabled ? "hover:shadow-md hover:bg-white dark:hover:bg-gray-800/60" : "opacity-60"}`}>
                     <Checkbox 
                       id="make-transfers" 
@@ -4979,7 +4347,7 @@ Exemplo de formato da resposta:
                 </div>
               </div>
             </ScrollArea>
-            
+
             {/* Botões de ação com aparência mais moderna */}
             <div className="flex justify-end items-center gap-2 mt-3 pb-1 relative z-10">
               <Button
@@ -4995,7 +4363,7 @@ Exemplo de formato da resposta:
                 className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 rounded-lg"
                 onClick={() => {
                   setShowAgentModal(false);
-                  
+
                   if (agentIAEnabled) {
                     // Adiciona uma mensagem de confirmação ao chat
                     setMessages(prevMessages => [
@@ -5007,7 +4375,7 @@ Exemplo de formato da resposta:
                         timestamp: new Date()
                       }
                     ]);
-                    
+
                     // Notificação visual
                     toast({
                       title: "Agente IA ativado",
@@ -5023,19 +4391,19 @@ Exemplo de formato da resposta:
           </div>
         </div>
       )}
-      
+
       {/* Modal de Busca Profunda */}
       {showSearchModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-md" onClick={() => setShowSearchModal(false)}></div>
-          
+
           {/* Modal principal com efeitos glassmorphism avançados - versão menor */}
           <div className="relative bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-gray-900/90 dark:to-gray-950/80 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-4 shadow-2xl w-[85%] max-w-md max-h-[500px] animate-fadeIn">
             {/* Elementos decorativos de fundo */}
             <div className="absolute -right-20 -top-20 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl"></div>
             <div className="absolute right-1/4 bottom-0 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl"></div>
-            
+
             {/* Header com design futurista */}
             <div className="flex justify-between items-center mb-4 relative z-10 sticky top-0 bg-gradient-to-b from-white/80 to-transparent dark:from-gray-900/80 dark:to-transparent pb-2">
               <div className="flex items-center gap-2">
@@ -5073,18 +4441,18 @@ Exemplo de formato da resposta:
                   />
                 </div>
               </div>
-              
+
               {/* Seletor de fontes com design mais moderno */}
               <div className="space-y-3 relative z-10">
                 <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
                   <div className="h-6 w-1 bg-gradient-to-b from-blue-500 to-indigo-700 rounded-full"></div>
                   <span>Fontes de Pesquisa</span>
                 </div>
-                
+
                 {/* Web Global - Card mais avançado */}
                 <div className="group relative overflow-hidden p-3 bg-gradient-to-br from-white/80 to-blue-50/50 dark:from-gray-800/40 dark:to-blue-900/20 backdrop-blur-md rounded-lg border border-blue-100/60 dark:border-blue-900/30 hover:shadow-md hover:shadow-blue-500/5 transition-all duration-300">
                   <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-blue-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
@@ -5095,7 +4463,7 @@ Exemplo de formato da resposta:
                         <div className="text-[10px] text-gray-500 dark:text-gray-400">Resultados da internet mundial</div>
                       </div>
                     </div>
-                    
+
                     <div className="relative">
                       <Switch 
                         checked={globalSearchEnabled}
@@ -5114,11 +4482,11 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Acadêmico - Card mais avançado */}
                 <div className="group relative overflow-hidden p-3 bg-gradient-to-br from-white/80 to-purple-50/50 dark:from-gray-800/40 dark:to-purple-900/20 backdrop-blur-md rounded-lg border border-purple-100/60 dark:border-purple-900/30 hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300">
                   <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-purple-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
@@ -5129,7 +4497,7 @@ Exemplo de formato da resposta:
                         <div className="text-[10px] text-gray-500 dark:text-gray-400">Artigos científicos e pesquisas</div>
                       </div>
                     </div>
-                    
+
                     <div className="relative">
                       <Switch 
                         checked={academicSearchEnabled}
@@ -5148,11 +4516,11 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Social - Card mais avançado */}
                 <div className="group relative overflow-hidden p-3 bg-gradient-to-br from-white/80 to-green-50/50 dark:from-gray-800/40 dark:to-green-900/20 backdrop-blur-md rounded-lg border border-green-100/60 dark:border-green-900/30 hover:shadow-md hover:shadow-green-500/5 transition-all duration-300">
                   <div className="absolute -right-8 -bottom-8 w-24 h-24 bg-green-500/5 rounded-full opacity-50 group-hover:opacity-70 transition-opacity"></div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-md shadow-green-500/20">
@@ -5163,7 +4531,7 @@ Exemplo de formato da resposta:
                         <div className="text-[10px] text-gray-500 dark:text-gray-400">Discussões e opiniões da comunidade</div>
                       </div>
                     </div>
-                    
+
                     <div className="relative">
                       <Switch 
                         checked={socialSearchEnabled}
@@ -5182,7 +4550,7 @@ Exemplo de formato da resposta:
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Profundidade da Busca com um slider visual */}
                 <div className="mt-3 p-3 bg-white/50 dark:bg-gray-800/30 backdrop-blur-md rounded-lg border border-gray-100/60 dark:border-gray-700/30 relative z-10">
                   <div className="flex items-center justify-between mb-2">
@@ -5194,7 +4562,7 @@ Exemplo de formato da resposta:
                       {deepSearchEnabled ? "Avançada" : "Padrão"}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] text-gray-500">Padrão</span>
                     <Switch 
@@ -5206,12 +4574,12 @@ Exemplo de formato da resposta:
                     />
                     <span className="text-[10px] text-gray-500">Profunda</span>
                   </div>
-                  
+
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1.5 italic">
                     A busca profunda analisa fontes extensas e realiza conexões complexas entre diferentes conteúdos.
                   </p>
                 </div>
-                
+
                 {/* Botões de ação com aparência mais moderna */}
                 <div className="flex justify-end items-center gap-2 mt-5 relative z-10">
                   <Button
@@ -5227,20 +4595,20 @@ Exemplo de formato da resposta:
                     className="px-3 py-1 h-8 text-xs bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white border-none shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 rounded-lg"
                     onClick={() => {
                       setShowSearchModal(false);
-                      
+
                       let description = "Busca padrão será utilizada em suas pesquisas";
-                      
+
                       // Construir mensagem com base nas opções selecionadas
                       const enabledOptions = [];
                       if (deepSearchEnabled) enabledOptions.push("Busca Profunda");
                       if (globalSearchEnabled) enabledOptions.push("Web Global");
                       if (academicSearchEnabled) enabledOptions.push("Acadêmico");
                       if (socialSearchEnabled) enabledOptions.push("Social");
-                      
+
                       if (enabledOptions.length > 0) {
                         description = `Fontes ativadas: ${enabledOptions.join(", ")}`;
                       }
-                      
+
                       toast({
                         title: "Configurações salvas",
                         description: description,
@@ -5261,7 +4629,7 @@ Exemplo de formato da resposta:
           </div>
         </div>
       )}
-      
+
       {/* Modal de Sugestão de Prompt */}
       {showPromptSuggestionModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -5283,7 +4651,9 @@ Exemplo de formato da resposta:
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Quais conteúdos você está estudando?</label>
+              <label className="text-sm font-medium mb-1.5 block text-gray-700 dark:text-gray-300">
+                Quais conteúdos você está estudando?
+              </label>
               <textarea 
                 value={studyContent}
                 onChange={(e) => setStudyContent(e.target.value)}
@@ -5346,7 +4716,7 @@ Exemplo de formato da resposta:
           </div>
         </div>
       )}
-      
+
       {/* Improved Prompt Panel */}
       {isImprovingPrompt && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -5385,7 +4755,7 @@ Exemplo de formato da resposta:
                     <p className="text-sm whitespace-pre-wrap">{improvedPrompt}</p>
                   </div>
                 </ScrollArea>
-                
+
                 <div className="flex justify-end gap-2 mt-3">
                   <Button 
                     size="sm" 
@@ -5425,11 +4795,11 @@ Exemplo de formato da resposta:
               <Sparkles className="h-3 w-3 text-orange-500" />
               <span className="text-gray-700 dark:text-gray-300">IA Habilitada</span>
             </Button>
-            
+
             {/* Opção de pesquisa removida */}
-            
+
             {/* Botão de Pesquisa Avançada removido */}
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -5437,7 +4807,7 @@ Exemplo de formato da resposta:
               onClick={() => {
                 // Abre o modal de busca profunda
                 setShowSearchModal(true);
-                
+
                 // Desativa outros modais para evitar conflitos
                 setIsShowingAISettings(false);
                 setShowPromptSuggestionModal(false);
@@ -5447,7 +4817,7 @@ Exemplo de formato da resposta:
               <Search className="h-3 w-3 text-indigo-500" />
               <span className="text-gray-700 dark:text-gray-300">Busca</span>
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -5455,7 +4825,7 @@ Exemplo de formato da resposta:
               onClick={() => {
                 // Desativa os outros modais para evitar conflitos
                 setIsShowingAISettings(false);
-                
+
                 // Abre o modal do Agente IA
                 setShowAgentModal(true);
               }}
@@ -5464,7 +4834,7 @@ Exemplo de formato da resposta:
               <span className="text-gray-700 dark:text-gray-300">Agente IA</span>
             </Button>
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -5487,7 +4857,7 @@ Exemplo de formato da resposta:
             <span className="text-gray-700 dark:text-gray-300">Nova conversa</span>
           </Button>
         </div>
-        
+
         {/* Selected Files Preview */}
         {selectedFiles.length > 0 && (
           <div className="mb-2 px-2 py-1.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -5513,8 +4883,8 @@ Exemplo de formato da resposta:
             </div>
           </div>
         )}
-        
-        {/* Input Area with Glass Effect */}
+
+        {/* Input Area with Glow Effect */}
         <div className="flex gap-1.5 relative">
           {/* File Attachment Button */}
           <div className="relative">
@@ -5560,7 +4930,7 @@ Exemplo de formato da resposta:
                   </label>
                   <input
                     type="file"
-                    id="videoupload"
+                    id="video-upload"
                     accept="video/*"
                     className="hidden"
                     onChange={handleFileUpload}
@@ -5619,7 +4989,7 @@ Exemplo de formato da resposta:
                 className="border-0 bg-transparent focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 pr-14 py-5 h-11 text-md placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 onKeyPress={(e) => e.key === "Enter" && sendMessage()}
               />
-              
+
               <div className="absolute right-2 flex items-center gap-1.5">
                 {inputMessage.trim().length > 0 && !isImprovingPrompt && (
                   <Button
@@ -5632,7 +5002,7 @@ Exemplo de formato da resposta:
                     <Sparkles className="h-4 w-4 text-orange-500" />
                   </Button>
                 )}
-                
+
                 <Button
                   size="icon"
                   className={`h-8 w-8 rounded-full transition-all duration-300 ${
@@ -5655,7 +5025,7 @@ Exemplo de formato da resposta:
                     <Mic className="h-4 w-4" />
                   )}
                 </Button>
-                
+
                 {/* Botão de sugerir prompt */}
                 <Button
                   size="icon"
@@ -5669,560 +5039,6 @@ Exemplo de formato da resposta:
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-
-  const renderTicketsContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-[#FF6B00] text-white">
-        <h3 className="text-lg font-semibold">Meus Tickets</h3>
-        <div className="flex justify-between items-center mt-2">
-          <Input
-            placeholder="Buscar tickets..."
-            className="bg-white/10 border-white/20 text-white placeholder:text-white/60 h-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Button
-            size="sm"
-            className="ml-2 bg-white text-[#FF6B00] hover:bg-white/90"
-            onClick={() => setIsCreatingTicket(true)}
-          >
-            <Plus className="h-4 w-4 mr-1" /> Novo Ticket
-          </Button>
-        </div>
-      </div>{isCreatingTicket ? (
-        <div className="p-4 space-y-4">
-          <h3 className="text-lg font-semibold dark:text-gray-200">
-            Novo Ticket
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
-                Título
-              </label>
-              <Input
-                value={newTicket.title}
-                onChange={(e) =>
-                  setNewTicket({ ...newTicket, title: e.target.value })
-                }
-                placeholder="Descreva o problema brevemente"
-                className="dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
-                Descrição
-              </label>
-              <textarea
-                value={newTicket.description}
-                onChange={(e) =>
-                  setNewTicket({ ...newTicket, description: e.target.value })
-                }
-                placeholder="Forneça detalhes sobre o problema"
-                className="w-full min-h-[100px] p-2 rounded-md border border-input dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
-                Categoria
-              </label>
-              <select
-                value={newTicket.category}
-                onChange={(e) =>
-                  setNewTicket({ ...newTicket, category: e.target.value })
-                }
-                className="w-full p-2 rounded-md border border-input dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-              >
-                <option value="Acesso e Conteúdo">Acesso e Conteúdo</option>
-                <option value="Problemas Técnicos">Problemas Técnicos</option>
-                <option value="Faturamento">Faturamento</option>
-                <option value="Certificados">Certificados</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreatingTicket(false)}
-                className="dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
-                onClick={handleCreateTicket}
-              >
-                Enviar Ticket
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            {filteredTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium dark:text-gray-200">
-                    {ticket.title}
-                  </h4>
-                  <Badge
-                    className={`${ticket.status === "open" ? "bg-blue-500" : ticket.status === "in_progress" ? "bg-yellow-500" : "bg-green-500"}`}
-                  >
-                    #{ticket.id}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-                  {ticket.description}
-                </p>
-                <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                  <Badge
-                    variant="outline"
-                    className="dark:border-gray-700 dark:text-gray-300"
-                  >
-                    {ticket.category}
-                  </Badge>
-                  <div className="flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {ticket.createdAt.toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {filteredTickets.length === 0 && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                Nenhum ticket encontrado
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      )}
-    </div>
-  );
-
-  const renderHelpContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-[#FF6B00] text-white">
-        <h3 className="text-lg font-semibold">Central de Ajuda</h3>
-        <div className="relative mt-2">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-          <Input
-            placeholder="Buscar perguntas frequentes..."
-            className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/60 h-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {selectedFaq ? (
-        <div className="p-4 space-y-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-2 dark:text-gray-200 dark:hover:bg-gray-800"
-            onClick={() => setSelectedFaq(null)}
-          >
-            ← Voltar
-          </Button>
-          <h3 className="text-lg font-semibold dark:text-gray-200">
-            {selectedFaq.question}
-          </h3>
-          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
-            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-              {selectedFaq.answer}
-            </p>
-          </div>
-          <div className="pt-4 border-t dark:border-gray-700">
-            <p className="text-sm font-medium mb-2 dark:text-gray-300">
-              Esta resposta foi útil?
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-              >
-                <ThumbsUp className="h-4 w-4" /> Sim
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-              >
-                <ThumbsDown className="h-4 w-4" /> Não
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-6">
-            {/* Group FAQs by category */}
-            {(() => {
-              const groupedFaqs: Record<string, FaqItem[]> = {};
-
-              filteredFaqs.forEach((faq) => {
-                if (!groupedFaqs[faq.category]) {
-                  groupedFaqs[faq.category] = [];
-                }
-                groupedFaqs[faq.category].push(faq);
-              });
-
-              return Object.entries(groupedFaqs).map(([category, faqs]) => (
-                <div key={category} className="space-y-2">
-                  <h4 className="text-sm font-semibold text-[#FF6B00] uppercase">
-                    {category}
-                  </h4>
-                  <div className="space-y-2">
-                    {faqs.map((faq) => (
-                      <Button
-                        key={faq.id}
-                        variant="outline"
-                        className="w-full justify-start text-left h-auto py-3 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                        onClick={() => setSelectedFaq(faq)}
-                      >
-                        <div className="flex items-center">
-                          <FileText className="h-4 w-4 mr-2 text-[#FF6B00]" />
-                          <span className="text-sm">{faq.question}</span>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ));
-            })()}
-
-            {filteredFaqs.length === 0 && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                Nenhuma pergunta encontrada
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      )}
-    </div>
-  );
-
-  const renderSuggestionsContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-gradient-to-r from-orange-100 to-orange-200 dark:from-orange-900 dark:to-orange-800">
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-1">
-            <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
-            <h3 className="text-sm font-semibold">Sugestões</h3>
-          </div>
-          <Button
-            size="sm"
-            className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-2 py-0 h-6 text-xs"
-            onClick={() => setIsCreatingSuggestion(true)}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Nova
-          </Button>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
-          <Input
-            placeholder="Buscar sugestões..."
-            className="pl-7 py-1 h-6 text-xs rounded-full border-orange-200 dark:border-orange-700 bg-white dark:bg-orange-900/50"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {isCreatingSuggestion ? (
-        <div className="p-4 space-y-4">
-          <h3 className="text-sm font-semibold flex items-center gap-1 dark:text-gray-200">
-            <Lightbulb className="h-3.5 w-3.5 text-orange-500" />
-            Nova Sugestão
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
-                Título
-              </label>
-              <Input
-                value={newSuggestion.title}
-                onChange={(e) =>
-                  setNewSuggestion({ ...newSuggestion, title: e.target.value })
-                }
-                placeholder="Título da sua sugestão"
-                className="border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block dark:text-gray-300">
-                Descrição
-              </label>
-              <textarea
-                value={newSuggestion.description}
-                onChange={(e) =>
-                  setNewSuggestion({
-                    ...newSuggestion,
-                    description: e.target.value,
-                  })
-                }
-                placeholder="Descreva sua sugestão em detalhes"
-                className="w-full min-h-[120px] p-3 rounded-md border border-orange-200 dark:border-orange-700 bg-white dark:bg-gray-800 dark:text-gray-200"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                className="border-orange-200 dark:border-orange-700 dark:text-gray-200 dark:hover:bg-gray-800"
-                onClick={() => setIsCreatingSuggestion(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={handleCreateSuggestion}
-              >
-                Enviar Sugestão
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <ScrollArea
-          className="flex-1 custom-scrollbar"
-          style={{ maxHeight: "calc(100% - 60px)" }}
-        >
-          <div className="p-4 space-y-4">
-            {filteredSuggestions.length > 0 ? (
-              filteredSuggestions.map((suggestion) => (
-                <div
-                  key={suggestion.id}
-                  className="border border-orange-200 dark:border-orange-700 rounded-xl p-4 hover:bg-orange-50 dark:hover:bg-orange-900/50 transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium text-gray-800 dark:text-gray-200">
-                      {suggestion.title}
-                    </h4>
-                    <Badge
-                      className={`${suggestionStatusColors[suggestion.status]} rounded-full px-3`}
-                    >
-                      {suggestion.status === "pending"
-                        ? "Pendente"
-                        : suggestion.status === "reviewing"
-                          ? "Em análise"
-                          : suggestion.status === "approved"
-                            ? "Aprovado"
-                            : "Implementado"}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground dark:text-gray-400 mb-3">
-                    {suggestion.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <Button
-                      variant={suggestion.userVoted ? "default" : "outline"}
-                      size="sm"
-                      className={
-                        suggestion.userVoted
-                          ? "bg-orange-500 hover:bg-orange-600 text-white rounded-full"
-                          : "border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/50 rounded-full dark:text-gray-200"
-                      }
-                      onClick={() => handleVote(suggestion.id)}
-                    >
-                      <Vote className="h-4 w-4 mr-1" />
-                      {suggestion.votes} votos
-                    </Button>
-                    <div className="text-xs text-muted-foreground bg-orange-100 dark:bg-orange-800 px-2 py-1 rounded-full">
-                      {new Date(suggestion.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 px-4 dark:text-gray-300">
-                <div className="w-14 h-14 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center mx-auto mb-3">
-                  <Lightbulb className="h-8 w-8 text-orange500" />
-                </div>
-                <p className="text-gray-800 dark:text-gray-200 font-medium mb-2">
-                  Nenhuma sugestão encontrada
-                </p>
-                <p className="text-sm text-muted-foreground dark:text-gray-400 mb-6">
-                  Compartilhe suas ideias para melhorar a plataforma
-                </p>
-                <Button
-                  className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6"
-                  onClick={() => setIsCreatingSuggestion(true)}
-                >
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  Criar uma nova sugestão
-                </Button>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      )}
-    </div>
-  );
-
-  return (
-    <>
-      {/* Overlay for blur effect */}
-      {isOpen && (
-        <div
-          ref={overlayRef}
-          className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      <div className="fixed bottom-6 right-6 z-50">
-        {!isOpen ? (
-          <Button
-            onClick={() => setIsOpen(true)}
-            className="w-14 h-14 rounded-full bg-gradient-to-br from-[#FF8736] to-[#FF6B00] hover:bg-gradient-to-br hover:from-[#FF9856] hover:to-[#FF7B20] shadow-lg shadow-orange-500/20 dark:shadow-orange-700/30 animate-bounce-subtle flex items-center justify-center"
-          >
-            <MessageCircle className="h-6 w-6 text-white" />
-            <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-900"></span>
-          </Button>
-        ) : (
-          <div
-            className={cn(
-              "bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950 rounded-3xl shadow-2xl backdrop-blur-md border border-gray-100 dark:border-gray-800 flex flex-col overflow-hidden transition-all duration-300 p-1",
-              isExpanded ? "w-[700px] h-[700px]" : "w-[1100px] h-[700px]",
-            )}
-          >
-            {/* Header with glass effect */}
-            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl mb-2 backdrop-blur-md shadow-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <MessageSquare className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm">Suporte Ponto.School</h3>
-                  <div className="flex items-center gap-1 text-xs text-white/80">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                    Online agora
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                <div 
-                  className="h-8 w-8 rounded-full border-2 border-white/30 hover:border-white/70 cursor-pointer overflow-hidden transition-all duration-300 transform hover:scale-110"
-                  onClick={() => setShowEpictusPersonalizeModal(true)}
-                  title="Personalizar Epictus IA"
-                >
-                  <Avatar>
-                    <AvatarImage 
-                      src={profileImageUrl || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&mouth=smile&eyes=happy"}
-                      alt="Personalizar IA"
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF8C40] text-white">
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-white/10 text-white"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                >
-                  <Maximize2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full hover:bg-white/10 text-white"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Main content with floating card effect */}
-            <div className="flex-1 overflow-hidden px-1 relative">
-              {/* Floating navigation pills */}
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 flex items-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-1 shadow-sm border border-gray-100 dark:border-gray-700">
-                <Button
-                  variant={activeTab === "home" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "home" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => setActiveTab("home")}
-                >
-                  <Home className="h-4 w-4 mr-1" /> Início
-                </Button>
-                <Button
-                  variant={activeTab === "chat" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "chat" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => {
-                    setActiveTab("chat");
-                    setSelectedChat(null);
-                  }}
-                >
-                  <MessageCircle className="h-4 w-4 mr-1" /> Chat
-                </Button>
-                <Button
-                  variant={activeTab === "history" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "history" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => setActiveTab("history")}
-                >
-                  <History className="h-4 w-4 mr-1" /> Histórico
-                </Button>
-                <Button
-                  variant={activeTab === "tickets" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "tickets" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => setActiveTab("tickets")}
-                >
-                  <TicketIcon className="h-4 w-4 mr-1" /> Tickets
-                </Button>
-                <Button
-                  variant={activeTab === "suggestions" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "suggestions" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => setActiveTab("suggestions")}
-                >
-                  <Lightbulb className="h-4 w-4 mr-1" /> Sugestões
-                </Button>
-                <Button
-                  variant={activeTab === "notifications" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "notifications" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => setActiveTab("notifications")}
-                >
-                  <Bell className="h-4 w-4 mr-1" /> Notificações
-                </Button>
-                <Button
-                  variant={activeTab === "help" ? "default" : "ghost"}
-                  size="sm"
-                  className={`h-8 rounded-full px-3 ${activeTab === "help" ? "bg-orange-500 text-white" : "text-gray-700 dark:text-gray-300"}`}
-                  onClick={() => setActiveTab("help")}
-                >
-                  <HelpCircle className="h-4 w-4 mr-1" /> Ajuda
-                </Button>
-              </div>
-
-              {/* Content area with glass morphism effect */}
-              <div className="mt-14 h-[calc(100%-3.5rem)] rounded-2xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-md border border-gray-100 dark:border-gray-700 shadow-sm p-3 overflow-hidden">
-                <div className="h-full overflow-hidden">
-                  {activeTab === "home" && renderHomeContent()}
-                  {activeTab === "chat" && renderChatContent()}
-                  {activeTab === "history" && renderChatHistoryContent()}
-                  {activeTab === "tickets" && renderTicketsContent()}
-                  {activeTab === "help" && renderHelpContent()}
-                  {activeTab === "suggestions" && renderSuggestionsContent()}
-                  {activeTab === "notifications" && renderNotificationsContent()}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <style>{`
@@ -6239,27 +5055,28 @@ Exemplo de formato da resposta:
         .animate-bounce-subtle {
           animation: bounce-subtle 2s ease-in-out infinite;
         }
-        
+
         .border-gradient {
           position: relative;
           background-clip: padding-box;
           background-origin: border-box;
           background-image: linear-gradient(to right, #FF6B00, #FF8C40);
         }
-        
+
         @keyframes pulse-subtle {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 1;
           }
           50% {
             opacity: 0.8;
           }
         }
-        
+
         .animate-pulse-subtle {
           animation: pulse-subtle 1.5s ease-in-out infinite;
         }
-        
+
         @keyframes recording-progress {
           0% {
             width: 0%;
@@ -6268,7 +5085,7 @@ Exemplo de formato da resposta:
             width: 100%;
           }
         }
-        
+
         .animate-recording-progress {
           animation: recording-progress 10s linear infinite;
           width: 0%;
