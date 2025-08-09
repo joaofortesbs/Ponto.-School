@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface PlanoAulaData {
@@ -82,7 +81,7 @@ export class PlanoAulaBuilder {
    */
   static generatePrompt(data: PlanoAulaData): string {
     const promptData = JSON.stringify(data, null, 2);
-    
+
     return `Você é um planejador pedagógico especialista da School Power. Com base nos seguintes dados do professor, construa um plano de aula completo dividido em: Visão Geral, Objetivos, Metodologia, Desenvolvimento e Atividades.
 
 ${promptData}
@@ -153,7 +152,7 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
       const parsed = JSON.parse(cleanedResponse);
 
       // Validação básica da estrutura
-      if (!parsed.visao_geral || !parsed.objetivos || !parsed.metodologia || 
+      if (!parsed.visao_geral || !parsed.objetivos || !parsed.metodologia ||
           !parsed.desenvolvimento || !parsed.atividades) {
         throw new Error('Estrutura JSON inválida - campos obrigatórios ausentes');
       }
@@ -169,7 +168,7 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
     } catch (error) {
       console.error('Erro ao processar resposta da IA:', error);
       console.error('Resposta recebida:', response);
-      
+
       // Retornar estrutura de fallback
       return PlanoAulaBuilder.createFallbackResponse();
     }
@@ -207,30 +206,39 @@ IMPORTANTE: Retorne APENAS um JSON válido no seguinte formato exato:
       desenvolvimento: [
         {
           etapa: 1,
-          titulo: 'Introdução',
-          descricao: 'Apresentação do tema e objetivos',
-          tipo_interacao: 'discussão',
-          tempo_estimado: '10 minutos',
-          recurso_gerado: 'slide introdutório',
-          nota_privada_professor: 'Verificar conhecimentos prévios'
+          titulo: "1. Introdução e Contextualização",
+          descricao: "Apresente o contexto histórico da Europa no século XVIII, focando nas tensões sociais e econômicas que antecederam a Revolução Francesa. Inicie com uma pergunta provocativa sobre desigualdade social.",
+          tipo_interacao: "Apresentação + debate",
+          tempo_estimado: "15 min",
+          recurso_gerado: "Slides introdutórios",
+          nota_privada_professor: "Contextualizar o tema e despertar interesse dos alunos"
         },
         {
           etapa: 2,
-          titulo: 'Desenvolvimento',
-          descricao: 'Exposição do conteúdo principal',
-          tipo_interacao: 'explicação',
-          tempo_estimado: '25 minutos',
-          recurso_gerado: 'material de apoio',
-          nota_privada_professor: 'Manter atenção dos alunos'
+          titulo: "2. Vídeo Interativo",
+          descricao: "Assista com os alunos um vídeo de 5 minutos sobre os três estados franceses e suas diferenças. Pause em momentos estratégicos para discussão.",
+          tipo_interacao: "Assistir + Discussão",
+          tempo_estimado: "10 min",
+          recurso_gerado: "Vídeo educativo",
+          nota_privada_professor: "Verificar compreensão durante as pausas estratégicas"
         },
         {
           etapa: 3,
-          titulo: 'Conclusão',
-          descricao: 'Síntese e avaliação',
-          tipo_interacao: 'discussão',
-          tempo_estimado: '15 minutos',
-          recurso_gerado: 'atividade de fixação',
-          nota_privada_professor: 'Verificar aprendizagem'
+          titulo: "3. Atividade Prática",
+          descricao: "Divida os alunos em grupos para simular os três estados franceses. Cada grupo deve apresentar suas características, privilégios e queixas.",
+          tipo_interacao: "Dinâmica em grupo",
+          tempo_estimado: "20 min",
+          recurso_gerado: "Roteiro de simulação",
+          nota_privada_professor: "Circular entre os grupos oferecendo orientação"
+        },
+        {
+          etapa: 4,
+          titulo: "4. Reflexão Final",
+          descricao: "Recolha as conclusões dos grupos e faça uma análise guiada sobre como essas tensões levaram à revolução.",
+          tipo_interacao: "Discussão guiada",
+          tempo_estimado: "10 min",
+          recurso_gerado: "Síntese das conclusões",
+          nota_privada_professor: "Conectar com a próxima aula sobre a revolução"
         }
       ],
       atividades: [
