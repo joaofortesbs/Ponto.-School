@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Separator } from "@/components/ui/separator";
 import {
   BookOpen,
   Clock,
@@ -25,8 +26,10 @@ import {
   Activity,
   FileText,
   Play,
-  Separator
+  Edit,
+  Star
 } from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
 
 interface PlanoAulaPreviewProps {
   data: any;
@@ -37,6 +40,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   const [activeSection, setActiveSection] = useState<string>('visao-geral');
   const [showAddMethodology, setShowAddMethodology] = useState(false);
   const [selectedMethodologies, setSelectedMethodologies] = useState<string[]>([]);
+  const [editingMethodologies, setEditingMethodologies] = useState(false);
+  const [methodologies, setMethodologies] = useState([
+    { id: 1, name: "Aula expositiva", icon: <FileText className="w-4 h-4" /> },
+    { id: 2, name: "Atividades práticas", icon: <PenTool className="w-4 h-4" /> }
+  ]);
 
   console.log('🔍 PlanoAulaPreview - Data recebida:', data);
   console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
@@ -87,17 +95,17 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   };
 
   // Lista de metodologias disponíveis para o dropdown
-  const availableMethodologies = [
-    { id: 1, name: 'Aula Expositiva', icon: Presentation },
-    { id: 2, name: 'Atividades Práticas', icon: Gamepad2 },
-    { id: 3, name: 'Estudo de Caso', icon: Search },
-    { id: 4, name: 'Aprendizagem Baseada em Projetos', icon: PenTool },
-    { id: 5, name: 'Aprendizagem Cooperativa', icon: Users2 },
-    { id: 6, name: 'Resolução de Problemas', icon: Zap },
-    { id: 7, name: 'Simulação', icon: Presentation },
-    { id: 8, name: 'Discussão em Grupo', icon: Users2 },
-    { id: 9, name: 'Metacognição', icon: Brain },
-    { id: 10, name: 'Aula Dialogada', icon: UserCheck },
+  const availableMethodologiesOptions = [
+    { name: "Aula Expositiva", icon: Presentation },
+    { name: "Atividades Práticas", icon: Gamepad2 },
+    { name: "Estudo de Caso", icon: Search },
+    { name: "Aprendizagem Baseada em Projetos", icon: PenTool },
+    { name: "Aprendizagem Cooperativa", icon: Users2 },
+    { name: "Resolução de Problemas", icon: Zap },
+    { name: "Simulação", icon: Presentation },
+    { name: "Discussão em Grupo", icon: Users2 },
+    { name: "Metacognição", icon: Brain },
+    { name: "Aula Dialogada", icon: UserCheck },
     // Adicione mais metodologias conforme necessário
   ];
 
@@ -121,6 +129,36 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   const removeMethodology = (methodologyNameToRemove: string) => {
     setSelectedMethodologies(selectedMethodologies.filter(name => name !== methodologyNameToRemove));
   };
+
+  // Funções para a edição das metodologias no componente de atividade (se aplicável)
+  const handleRemoveMethodology = (methodologyId: number) => {
+    setMethodologies(prev => prev.filter(m => m.id !== methodologyId));
+    toast({
+      title: "Metodologia removida",
+      description: "A metodologia foi removida com sucesso.",
+    });
+  };
+
+  const handleAddMethodology = (methodologyName: string, icon: React.ReactNode) => {
+    const newId = Math.max(...methodologies.map(m => m.id), 0) + 1;
+    setMethodologies(prev => [...prev, { id: newId, name: methodologyName, icon }]);
+    setShowAddMethodology(false);
+    toast({
+      title: "Metodologia adicionada",
+      description: `${methodologyName} foi adicionada com sucesso.`,
+    });
+  };
+
+  const availableMethodologiesForModal = [
+    { name: "Aprendizagem baseada em projetos", icon: <Target className="w-4 h-4" /> },
+    { name: "Sala de aula invertida", icon: <Brain className="w-4 h-4" /> },
+    { name: "Gamificação", icon: <Star className="w-4 h-4" /> },
+    { name: "Aprendizagem colaborativa", icon: <Users className="w-4 h-4" /> },
+    { name: "Debate e discussão", icon: <Search className="w-4 h-4" /> },
+    { name: "Estudo de caso", icon: <BookOpen className="w-4 h-4" /> },
+    { name: "Experimentação", icon: <Activity className="w-4 h-4" /> },
+    { name: "Demonstração prática", icon: <Play className="w-4 h-4" /> }
+  ];
 
 
   if (!planoData || (typeof planoData === 'object' && Object.keys(planoData).length === 0)) {
@@ -262,6 +300,12 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       label: 'Atividades',
       icon: Play,
       description: 'Atividades práticas'
+    },
+    {
+      id: 'avaliacao',
+      label: 'Avaliação',
+      icon: CheckCircle,
+      description: 'Critérios de avaliação'
     }
   ];
 
@@ -418,11 +462,20 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setShowAddMethodology(!showAddMethodology)}
+                      onClick={() => setEditingMethodologies(!editingMethodologies)}
                       className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-600 dark:hover:bg-orange-900/30"
                     >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Adicionar
+                      {editingMethodologies ? (
+                        <>
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Salvar
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="w-3 h-3 mr-1" />
+                          Editar
+                        </>
+                      )}
                     </Button>
                   </div>
 
@@ -451,17 +504,17 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                   </div>
 
                   {/* Dropdown para Adicionar Metodologias */}
-                  {showAddMethodology && (
+                  {editingMethodologies && (
                     <div className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
                       <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                         Escolha uma metodologia para adicionar:
                       </h5>
                       <div className="grid grid-cols-2 gap-2">
-                        {availableMethodologies
+                        {availableMethodologiesOptions
                           .filter(methodology => !selectedMethodologies.includes(methodology.name))
                           .map((methodology) => (
                             <button
-                              key={methodology.id}
+                              key={methodology.name}
                               onClick={() => addMethodology(methodology.name)}
                               className="flex items-center gap-2 p-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
                             >
@@ -693,6 +746,13 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     }
   };
 
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
+
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       {/* Layout Principal */}
@@ -759,6 +819,48 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           </div>
         </div>
       </div>
+
+      {/* Modal para adicionar metodologia */}
+      {showAddMethodology && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAddMethodology(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                Adicionar Metodologia
+              </h3>
+              <button
+                onClick={() => setShowAddMethodology(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {availableMethodologiesForModal
+                .filter(available => !methodologies.some(current => current.name === available.name))
+                .map((methodology, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAddMethodology(methodology.name, methodology.icon)}
+                    className="w-full flex items-center gap-3 p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
+                      {methodology.icon}
+                    </div>
+                    <span className="text-gray-700 dark:text-gray-300">{methodology.name}</span>
+                  </button>
+                ))}
+            </div>
+
+            {availableMethodologiesForModal.filter(available => !methodologies.some(current => current.name === available.name)).length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-4">
+                Todas as metodologias disponíveis já foram adicionadas.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
