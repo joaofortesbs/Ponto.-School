@@ -53,8 +53,8 @@ const ajustarTemposEtapas = (etapas: EtapaDesenvolvimento[]): EtapaDesenvolvimen
   });
 };
 
-// Dados padrão/fallback
-export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
+// Função para criar dados padrão com validação
+const criarDadosPadrao = (): DesenvolvimentoData => ({
   etapas: [
     {
       id: "etapa_1",
@@ -97,15 +97,17 @@ export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
       expandida: false
     }
   ],
-  tempoTotalEstimado: "45min",
-  observacoesGerais: "Este plano de desenvolvimento foi estruturado para garantir uma progressão natural do aprendizado, partindo da revisão de conceitos já conhecidos (substantivos) para a introdução de novos elementos (verbos). A combinação de apresentação dialogada com atividades práticas favorece tanto a compreensão teórica quanto a aplicação prática dos conhecimentos. É importante manter um ritmo dinâmico e estar atento às dúvidas dos alunos, adaptando o tempo conforme necessário. O tempo total é limitado a 45 minutos para otimizar o aprendizado.",
+  tempoTotalEstimado: "45 minutos",
+  observacoesGerais: "Aula estruturada para promover participação ativa dos alunos, alternando momentos expositivos com atividades práticas. Importante observar o nível de compreensão da turma e ajustar o ritmo conforme necessário.",
   sugestoesIA: [
-    "Considere usar jogos de identificação para tornar a aula mais dinâmica",
-    "Utilize textos de interesse dos alunos para maior engajamento",
-    "Mantenha exemplos sempre contextualizados com a realidade dos estudantes",
-    "Aproveite as atividades do School Power para tornar o aprendizado mais interativo"
+    "Considere usar exemplos do cotidiano dos alunos para tornar o aprendizado mais significativo",
+    "Inclua atividades colaborativas para estimular a interação entre os estudantes",
+    "Reserve tempo para esclarecimento de dúvidas individuais"
   ]
-};
+});
+
+// Dados padrão/fallback
+export const desenvolvimentoDataPadrao: DesenvolvimentoData = criarDadosPadrao();
 
 // Service para API do Gemini
 export class DesenvolvimentoGeminiService {
@@ -427,15 +429,29 @@ Gere o desenvolvimento da aula agora:`;
       const dados = localStorage.getItem(key);
 
       if (dados) {
-        const parsedData = JSON.parse(dados);
-        console.log('📂 Etapas de desenvolvimento carregadas:', key);
-        return parsedData;
+        const parsedData = JSON.parse(dados) as DesenvolvimentoData;
+
+        // Validar se os dados têm a estrutura esperada
+        if (parsedData && parsedData.etapas && Array.isArray(parsedData.etapas)) {
+          console.log('💾 Dados de desenvolvimento carregados:', parsedData);
+          return {
+            ...criarDadosPadrao(),
+            ...parsedData,
+            etapas: parsedData.etapas || [],
+            sugestoesIA: parsedData.sugestoesIA || [],
+            observacoesGerais: parsedData.observacoesGerais || ''
+          };
+        } else {
+          console.warn('⚠️ Dados carregados não têm estrutura válida, usando dados padrão');
+          return criarDadosPadrao();
+        }
       }
 
       return null;
     } catch (error) {
       console.error('❌ Erro ao carregar etapas de desenvolvimento:', error);
-      return null;
+      return criarDadosPadrao();
     }
+    return criarDadosPadrao();
   }
 }
