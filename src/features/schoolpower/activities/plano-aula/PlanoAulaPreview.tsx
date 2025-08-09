@@ -741,17 +741,32 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                           )}
                         </div>
 
-                        {/* Recursos e Notas */}
-                        {etapa.recurso_gerado && (
+                        {/* Recursos utilizados */}
+                        {(etapa.recurso_gerado || etapa.recursos) && (
                           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-3 border border-blue-200 dark:border-blue-700">
                             <div className="flex items-center gap-2 mb-1">
                               <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                              <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Recurso:</span>
+                              <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Recursos usados:</span>
                             </div>
-                            <span className="text-sm text-blue-700 dark:text-blue-300">{etapa.recurso_gerado}</span>
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                              {etapa.recurso_gerado || etapa.recursos || 'Não especificado'}
+                            </span>
                           </div>
                         )}
 
+                        {/* Tempo estimado - exibido de forma destacada */}
+                        {etapa.tempo_estimado && (
+                          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg mb-3 border border-green-200 dark:border-green-700">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-green-600 dark:text-green-400" />
+                              <span className="text-sm font-semibold text-green-800 dark:text-green-200">
+                                Tempo estimado: {etapa.tempo_estimado}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Nota privada para o professor */}
                         {etapa.nota_privada_professor && (
                           <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg mb-3 border border-amber-200 dark:border-amber-700">
                             <div className="flex items-start gap-2">
@@ -768,8 +783,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                           </div>
                         )}
 
-                        {/* Botões de Ação */}
-                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        {/* Apenas botão de editar */}
+                        <div className="flex justify-center pt-2 border-t border-gray-200 dark:border-gray-700">
                           <Button
                             size="sm"
                             variant="outline"
@@ -777,22 +792,6 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                           >
                             <Edit className="w-3 h-3 mr-1" />
                             Editar esta etapa
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
-                          >
-                            <FileText className="w-3 h-3 mr-1" />
-                            Gerar Slides
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
-                          >
-                            <Plus className="w-3 h-3 mr-1" />
-                            Gerar Recurso
                           </Button>
                         </div>
                       </div>
