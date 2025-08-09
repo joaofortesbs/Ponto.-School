@@ -124,7 +124,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
       }
     };
 
@@ -337,8 +337,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Se encontrou conteúdo, mesclar com os dados existentes
       if (planoContent) {
         console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
-        previewData = {
-          ...previewData,
+        previewData = { 
+          ...previewData, 
           ...planoContent,
           // Garantir que os dados essenciais sejam preservados
           id: activity.id,
@@ -414,11 +414,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  // Define modal height based on activity type
-  const getModalHeight = () => {
-    return activity.type === 'plano-aula' ? 'h-[600px]' : 'max-h-[90vh]';
-  };
-
   return (
     <AnimatePresence>
       <motion.div
@@ -429,10 +424,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         onClick={onClose}
       >
         <motion.div
+          className={`${activityType === 'plano-aula' ? 'max-w-7xl' : 'max-w-6xl'} w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className={`relative w-full max-w-7xl ${getModalHeight()} ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Aplicar background laranja no cabeçalho quando for Plano de Aula */}
