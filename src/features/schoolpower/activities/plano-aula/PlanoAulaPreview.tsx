@@ -21,7 +21,11 @@ import {
   Brain,
   Search,
   PenTool,
-  Zap
+  Zap,
+  Activity,
+  FileText,
+  Play,
+  Separator
 } from 'lucide-react';
 
 interface PlanoAulaPreviewProps {
