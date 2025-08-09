@@ -27,7 +27,13 @@ import {
   FileText,
   Play,
   Edit,
-  Star
+  Star,
+  ChevronUp,
+  GripVertical,
+  MessageSquare,
+  Video,
+  Mic,
+  Group
 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
@@ -45,6 +51,9 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     { id: 1, name: "Aula expositiva", icon: <FileText className="w-4 h-4" /> },
     { id: 2, name: "Atividades práticas", icon: <PenTool className="w-4 h-4" /> }
   ]);
+  const [expandedSteps, setExpandedSteps] = useState<{ [key: number]: boolean }>({});
+  const [draggedStep, setDraggedStep] = useState<number | null>(null);
+  const [developmentSteps, setDevelopmentSteps] = useState<any[]>([]);
 
   console.log('🔍 PlanoAulaPreview - Data recebida:', data);
   console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
@@ -94,6 +103,18 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     return methodologyIcons[methodologyName] || Lightbulb; // Ícone padrão se não encontrado
   };
 
+  // Função para obter ícones baseados no tipo de interação
+  const getInteractionIcon = (tipoInteracao: string) => {
+    const lowerType = tipoInteracao.toLowerCase();
+    if (lowerType.includes('apresentação') || lowerType.includes('exposição')) return Presentation;
+    if (lowerType.includes('debate') || lowerType.includes('discussão')) return MessageSquare;
+    if (lowerType.includes('vídeo') || lowerType.includes('video')) return Video;
+    if (lowerType.includes('dinâmica') || lowerType.includes('grupo')) return Group;
+    if (lowerType.includes('prática') || lowerType.includes('atividade')) return Gamepad2;
+    if (lowerType.includes('interativo') || lowerType.includes('interativa')) return Activity;
+    return Play; // Ícone padrão
+  };
+
   // Lista de metodologias disponíveis para o dropdown
   const availableMethodologiesOptions = [
     { name: "Aula Expositiva", icon: Presentation },
@@ -118,6 +139,59 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       setSelectedMethodologies(['Aula Expositiva', 'Atividades Práticas']);
     }
   }, [planoData?.metodologia?.alternativas]);
+
+  // Inicializar etapas de desenvolvimento
+  React.useEffect(() => {
+    if (plano?.desenvolvimento && Array.isArray(plano.desenvolvimento)) {
+      setDevelopmentSteps(plano.desenvolvimento);
+    }
+  }, [plano?.desenvolvimento]);
+
+  // Funções de drag and drop
+  const handleDragStart = (index: number) => {
+    setDraggedStep(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetIndex: number) => {
+    if (draggedStep === null) return;
+    
+    const newSteps = [...developmentSteps];
+    const draggedItem = newSteps[draggedStep];
+    newSteps.splice(draggedStep, 1);
+    newSteps.splice(targetIndex, 0, draggedItem);
+    
+    setDevelopmentSteps(newSteps);
+    setDraggedStep(null);
+  };
+
+  // Funções para mover etapas
+  const moveStepUp = (index: number) => {
+    if (index > 0) {
+      const newSteps = [...developmentSteps];
+      [newSteps[index - 1], newSteps[index]] = [newSteps[index], newSteps[index - 1]];
+      setDevelopmentSteps(newSteps);
+    }
+  };
+
+  const moveStepDown = (index: number) => {
+    if (index < developmentSteps.length - 1) {
+      const newSteps = [...developmentSteps];
+      [newSteps[index], newSteps[index + 1]] = [newSteps[index + 1], newSteps[index]];
+      setDevelopmentSteps(newSteps);
+    }
+  };
+
+  // Toggle de expansão
+  const toggleStepExpansion = (index: number) => {
+    setExpandedSteps(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
 
   const addMethodology = (methodologyName: string) => {
     if (!selectedMethodologies.includes(methodologyName)) {
@@ -547,8 +621,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-orange-600" />
-                Etapas da Aula
+                <Activity className="h-5 w-5 text-orange-600" />
+                Etapas de Desenvolvimento
               </h3>
               <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
                 <Plus className="w-4 h-4 mr-2" />
@@ -556,63 +630,192 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               </Button>
             </div>
 
-            <div className="space-y-6">
-              {(plano.desenvolvimento || []).map((etapa: any, index: number) => (
-                <Card key={index} className="relative border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                          {etapa.etapa || index + 1}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-bold text-xl text-gray-900 dark:text-gray-100">{etapa.titulo}</h4>
+            <div className="space-y-4">
+              {developmentSteps.map((etapa: any, index: number) => {
+                const InteractionIcon = getInteractionIcon(etapa.tipo_interacao || etapa.tipoInteracao || 'Interativo');
+                const isExpanded = expandedSteps[index];
+                const truncatedDescription = etapa.descricao?.length > 120 
+                  ? etapa.descricao.substring(0, 120) + '...' 
+                  : etapa.descricao;
+
+                return (
+                  <Card 
+                    key={index}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={handleDragOver}
+                    onDrop={() => handleDrop(index)}
+                    className={`relative overflow-hidden transition-all duration-300 border-l-4 border-l-orange-500 shadow-lg hover:shadow-xl cursor-move ${
+                      draggedStep === index ? 'opacity-50 scale-95' : ''
+                    }`}
+                  >
+                    <CardContent className="p-0">
+                      {/* Header do Card */}
+                      <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 p-4 border-b border-orange-200 dark:border-orange-700">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30 px-3 py-1">
-                              {etapa.tipo_interacao}
-                            </Badge>
-                            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
-                              {etapa.tempo_estimado}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <GripVertical className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" />
+                              <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                {index + 1}
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                {etapa.titulo}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                                  <InteractionIcon className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    {etapa.tipo_interacao || etapa.tipoInteracao}
+                                  </span>
+                                </div>
+                                {etapa.tempo_estimado && (
+                                  <Badge variant="outline" className="border-orange-300 text-orange-700 bg-white dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/20 text-xs">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {etapa.tempo_estimado}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Controles de Movimento */}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => moveStepUp(index)}
+                              disabled={index === 0}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
+                            >
+                              <ChevronUp className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => moveStepDown(index)}
+                              disabled={index === developmentSteps.length - 1}
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-orange-600 disabled:opacity-30"
+                            >
+                              <ChevronDown className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
+                      </div>
 
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
-                          <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed">{etapa.descricao}</p>
+                      {/* Conteúdo do Card */}
+                      <div className="p-4">
+                        <div className="mb-4">
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            {isExpanded ? etapa.descricao : truncatedDescription}
+                          </p>
+                          
+                          {etapa.descricao?.length > 120 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleStepExpansion(index)}
+                              className="mt-2 text-orange-600 hover:text-orange-700 text-xs p-0 h-auto"
+                            >
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="w-3 h-3 mr-1" />
+                                  Recolher
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-3 h-3 mr-1" />
+                                  Expandir
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
 
+                        {/* Recursos e Notas */}
                         {etapa.recurso_gerado && (
-                          <div className="bg-white dark:bg-gray-700 p-3 rounded-lg mb-3 border border-gray-200 dark:border-gray-600">
-                            <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Recurso gerado: </span>
-                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{etapa.recurso_gerado}</span>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-3 border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Recurso:</span>
+                            </div>
+                            <span className="text-sm text-blue-700 dark:text-blue-300">{etapa.recurso_gerado}</span>
                           </div>
                         )}
 
                         {etapa.nota_privada_professor && (
-                          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700 mb-4">
-                            <strong className="text-orange-800 dark:text-orange-200 block mb-2">Nota para o professor:</strong>
-                            <p className="text-orange-700 dark:text-orange-300 text-sm">{etapa.nota_privada_professor}</p>
+                          <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg mb-3 border border-amber-200 dark:border-amber-700">
+                            <div className="flex items-start gap-2">
+                              <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-sm font-semibold text-amber-800 dark:text-amber-200 block mb-1">
+                                  Nota para o professor:
+                                </span>
+                                <p className="text-sm text-amber-700 dark:text-amber-300">
+                                  {etapa.nota_privada_professor}
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
 
-                        <div className="flex gap-3">
-                          <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
-                            <FileText className="w-4 h-4 mr-2" />
+                        {/* Botões de Ação */}
+                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Editar esta etapa
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
                             Gerar Slides
                           </Button>
-                          <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
-                            <Plus className="w-4 h-4 mr-2" />
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
                             Gerar Recurso
                           </Button>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
+
+            {/* Seção de Avaliação */}
+            {plano.avaliacao && (
+              <Card className="mt-6 border-l-4 border-l-green-500 shadow-lg">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg text-green-800 dark:text-green-200">
+                    <CheckCircle className="w-5 h-5" />
+                    Critérios de Avaliação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
+                    <p className="text-green-800 dark:text-green-200 text-sm leading-relaxed">
+                      {typeof plano.avaliacao === 'string' 
+                        ? plano.avaliacao 
+                        : plano.avaliacao.criterios || 'Critérios de avaliação não especificados'
+                      }
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 
