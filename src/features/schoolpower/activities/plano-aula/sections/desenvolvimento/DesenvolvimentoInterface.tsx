@@ -306,7 +306,7 @@ export default function DesenvolvimentoInterface({
                       variant="ghost"
                       size="sm"
                       onClick={() => toggleEtapaExpandida(etapa.id)}
-                      className="text-[#FF6B00] text-xs mt-2 h-auto p-0 hover:underline"
+                      className="text-[#FF6B00] text-xs mt-2 h-auto p-0 hover:underline transition-all duration-200 hover:text-[#FF8533]"
                     >
                       Ver mais
                     </Button>
@@ -371,7 +371,69 @@ export default function DesenvolvimentoInterface({
           </div>
         </div>
 
+        {/* Cards informativos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className={`border border-[#FF6B00]/30 rounded-xl ${
+            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                  <Clock className="h-5 w-5 text-[#FF6B00]" />
+                </div>
+                <div>
+                  <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Tempo Total
+                  </p>
+                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-[#29335C]'}`}>
+                    {desenvolvimentoData.tempoTotalEstimado}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={`border border-[#FF6B00]/30 rounded-xl ${
+            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                  <BookOpen className="h-5 w-5 text-[#FF6B00]" />
+                </div>
+                <div>
+                  <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Total de Etapas
+                  </p>
+                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-[#29335C]'}`}>
+                    {desenvolvimentoData.etapas.length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={`border border-[#FF6B00]/30 rounded-xl ${
+            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-[#FF6B00]" />
+                </div>
+                <div>
+                  <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Status
+                  </p>
+                  <p className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-[#29335C]'}`}>
+                    {carregandoIA ? 'Gerando...' : 'Concluído'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
 
       {/* Conteúdo */}
       <ScrollArea className="h-[calc(100vh-300px)] p-6">
