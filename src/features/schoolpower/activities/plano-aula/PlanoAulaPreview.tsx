@@ -54,6 +54,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   const [expandedSteps, setExpandedSteps] = useState<{ [key: number]: boolean }>({});
   const [draggedStep, setDraggedStep] = useState<number | null>(null);
   const [developmentSteps, setDevelopmentSteps] = useState<any[]>([]);
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+
 
   console.log('🔍 PlanoAulaPreview - Data recebida:', data);
   console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
@@ -73,7 +75,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   console.log('  - Título:', planoData?.titulo || planoData?.title);
   console.log('  - Descrição:', planoData?.descricao || planoData?.description);
   console.log('  - Disciplina:', planoData?.disciplina || planoData?.visao_geral?.disciplina);
-  console.log('  - Tema:', planoData?.tema || planoData?.visao_geral?.tema);
+  console.log('  - Tema:', planoData?.tema || planoData?.theme || planoData?.titulo || planoData?.title);
   console.log('  - Série:', planoData?.serie || planoData?.visao_geral?.serie);
   console.log('  - Tempo:', planoData?.tempo || planoData?.visao_geral?.tempo);
   console.log('  - Metodologia:', planoData?.metodologia || planoData?.visao_geral?.metodologia);
@@ -142,10 +144,15 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   // Inicializar etapas de desenvolvimento
   React.useEffect(() => {
-    if (plano?.desenvolvimento && Array.isArray(plano.desenvolvimento)) {
-      setDevelopmentSteps(plano.desenvolvimento);
+    // Verifica se planoData existe e tem a propriedade desenvolvimento
+    if (planoData && Array.isArray(planoData.desenvolvimento)) {
+      setDevelopmentSteps(planoData.desenvolvimento);
+    } else if (planoData && typeof planoData.desenvolvimento === 'undefined' && planoData.developmentSteps) {
+       // Caso a propriedade venha com outro nome (ex: developmentSteps)
+       setDevelopmentSteps(planoData.developmentSteps);
     }
-  }, [plano?.desenvolvimento]);
+  }, [planoData]);
+
 
   // Funções de drag and drop
   const handleDragStart = (index: number) => {
@@ -158,12 +165,12 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   const handleDrop = (targetIndex: number) => {
     if (draggedStep === null) return;
-    
+
     const newSteps = [...developmentSteps];
     const draggedItem = newSteps[draggedStep];
     newSteps.splice(draggedStep, 1);
     newSteps.splice(targetIndex, 0, draggedItem);
-    
+
     setDevelopmentSteps(newSteps);
     setDraggedStep(null);
   };
@@ -634,12 +641,12 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               {developmentSteps.map((etapa: any, index: number) => {
                 const InteractionIcon = getInteractionIcon(etapa.tipo_interacao || etapa.tipoInteracao || 'Interativo');
                 const isExpanded = expandedSteps[index];
-                const truncatedDescription = etapa.descricao?.length > 120 
-                  ? etapa.descricao.substring(0, 120) + '...' 
+                const truncatedDescription = etapa.descricao?.length > 120
+                  ? etapa.descricao.substring(0, 120) + '...'
                   : etapa.descricao;
 
                 return (
-                  <Card 
+                  <Card
                     key={index}
                     draggable
                     onDragStart={() => handleDragStart(index)}
@@ -711,7 +718,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                           <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                             {isExpanded ? etapa.descricao : truncatedDescription}
                           </p>
-                          
+
                           {etapa.descricao?.length > 120 && (
                             <Button
                               variant="ghost"
@@ -763,25 +770,25 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
                         {/* Botões de Ação */}
                         <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="border-orange-300 text-orange-600 hover:bg-orange-50 dark:border-orange-600 dark:text-orange-400 dark:hover:bg-orange-900/20"
                           >
                             <Edit className="w-3 h-3 mr-1" />
                             Editar esta etapa
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
                           >
                             <FileText className="w-3 h-3 mr-1" />
                             Gerar Slides
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             className="border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800"
                           >
                             <Plus className="w-3 h-3 mr-1" />
@@ -807,8 +814,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                 <CardContent>
                   <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
                     <p className="text-green-800 dark:text-green-200 text-sm leading-relaxed">
-                      {typeof plano.avaliacao === 'string' 
-                        ? plano.avaliacao 
+                      {typeof plano.avaliacao === 'string'
+                        ? plano.avaliacao
                         : plano.avaliacao.criterios || 'Critérios de avaliação não especificados'
                       }
                     </p>
