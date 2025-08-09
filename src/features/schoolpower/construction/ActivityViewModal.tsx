@@ -424,7 +424,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         onClick={onClose}
       >
         <motion.div
-          className={`${activityType === 'plano-aula' ? 'max-w-7xl' : 'max-w-6xl'} w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
+          className={`${activityType === 'plano-aula' ? 'max-w-[95vw]' : 'max-w-6xl'} w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}

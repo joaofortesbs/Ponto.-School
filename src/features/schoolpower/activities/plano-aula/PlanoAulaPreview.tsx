@@ -18,7 +18,8 @@ import {
   Brain,
   Activity,
   CheckCircle,
-  GraduationCap
+  GraduationCap,
+  ExternalLink
 } from 'lucide-react';
 
 interface PlanoAulaPreviewProps {
@@ -253,14 +254,14 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               </div>
 
               {(plano.visao_geral?.sugestoes_ia || plano.sugestoes_ia) && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700 mt-4">
-                  <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-orange-50 to-indigo-50 dark:from-orange-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700 mt-4">
+                  <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5" />
                     Sugestões da IA
                   </h4>
                   <ul className="space-y-2">
                     {(plano.visao_geral?.sugestoes_ia || plano.sugestoes_ia || []).map((sugestao: string, index: number) => (
-                      <li key={index} className="text-blue-700 dark:text-blue-300 text-sm flex items-start gap-2">
+                      <li key={index} className="text-orange-700 dark:text-orange-300 text-sm flex items-start gap-2">
                         <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         {sugestao}
                       </li>
@@ -275,86 +276,83 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       case 'objetivos':
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-                <div className="p-2 bg-green-500 rounded-lg">
-                  <Target className="w-5 h-5 text-white" />
+            {/* Objetivos de Aprendizagem */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                    <Target className="h-5 w-5 text-orange-600" />
+                    Objetivos de Aprendizagem
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/50"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar Objetivo
+                  </Button>
                 </div>
-                Objetivos de Aprendizagem
-              </h3>
-              <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white">
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Objetivo
-              </Button>
-            </div>
 
-            <div className="space-y-4">
-              {(plano.objetivos || []).map((objetivo: any, index: number) => (
-                <Card key={index} className="border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Badge className="bg-green-500 text-white font-medium px-3 py-1">Objetivo {index + 1}</Badge>
-                          {objetivo.habilidade_bncc && (
-                            <Badge variant="outline" className="border-green-300 text-green-700 bg-green-50 dark:border-green-600 dark:text-green-300 dark:bg-green-900/30">
-                              {objetivo.habilidade_bncc}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-gray-800 dark:text-gray-200 mb-3 text-base leading-relaxed">{objetivo.descricao}</p>
-
-                        {objetivo.atividade_relacionada && (
-                          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg mb-3">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              <strong className="text-gray-800 dark:text-gray-200">Atividade relacionada:</strong> {objetivo.atividade_relacionada}
-                            </p>
-                          </div>
-                        )}
-
-                        {objetivo.sugestao_reescrita && (
-                          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                            <strong className="text-yellow-800 dark:text-yellow-200 block mb-1">Sugestão de reescrita:</strong>
-                            <p className="text-yellow-700 dark:text-yellow-300 text-sm">{objetivo.sugestao_reescrita}</p>
-                          </div>
-                        )}
-                      </div>
-                      <Button size="sm" variant="outline" className="ml-4 border-green-300 text-green-600 hover:bg-green-50">
-                        Gerar Atividade
-                      </Button>
+                {/* Frase gerada pela IA */}
+                <div className="mb-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                      <Target className="h-4 w-4 text-white" />
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <div className="flex-1">
+                      <p className="text-orange-800 dark:text-orange-200 leading-relaxed font-medium">
+                        Compreender a estrutura e o funcionamento da língua portuguesa: Utilizar a norma padrão da língua em situações comunicativas. Produzir textos coerentes e coesos. Desenvolver a capacidade de análise crítica e reflexiva sobre a língua. Ampliar o vocabulário. Aprimorar a leitura e a escrita.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  {(plano.objetivos || []).map((objetivo: any, index: number) => (
+                    <div 
+                      key={index} 
+                      className="group relative bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-700 rounded-2xl p-4 hover:shadow-md transition-all duration-200 hover:border-orange-300 dark:hover:border-orange-600"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center text-sm font-semibold">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{objetivo.descricao || objetivo}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
           </div>
         );
 
       case 'metodologia':
         return (
           <div className="space-y-6">
-            <Card className="border-l-4 border-l-purple-500 shadow-lg">
+            <Card className="border-l-4 border-l-orange-500 shadow-lg">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-purple-500 rounded-lg">
+                  <div className="p-2 bg-orange-500 rounded-lg">
                     <Brain className="w-5 h-5 text-white" />
                   </div>
                   {plano.metodologia?.nome || 'Metodologia'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-5 rounded-xl border border-purple-200 dark:border-purple-700">
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-5 rounded-xl border border-orange-200 dark:border-orange-700">
                   <p className="text-gray-800 dark:text-gray-200 text-base leading-relaxed">
                     {plano.metodologia?.descricao || 'Descrição da metodologia não disponível'}
                   </p>
                 </div>
 
                 <div className="flex gap-3">
-                  <Button size="sm" className="bg-purple-500 hover:bg-purple-600 text-white flex-shrink-0">
+                  <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white flex-shrink-0">
                     <Play className="w-4 h-4 mr-2" />
                     Simular Aula
                   </Button>
-                  <Button size="sm" variant="outline" className="border-purple-300 text-purple-600 hover:bg-purple-50">
+                  <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                     <Eye className="w-4 h-4 mr-2" />
                     Vídeo Explicativo
                   </Button>
@@ -368,7 +366,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                         <Badge 
                           key={index} 
                           variant="outline" 
-                          className="cursor-pointer hover:bg-purple-50 border-purple-300 text-purple-700 transition-colors"
+                          className="cursor-pointer hover:bg-orange-50 border-orange-300 text-orange-700 transition-colors"
                         >
                           {alt}
                         </Badge>
@@ -378,12 +376,12 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                 )}
 
                 {plano.metodologia?.simulacao_de_aula && (
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2 flex items-center gap-2">
+                  <div className="bg-gradient-to-r from-orange-50 to-emerald-50 dark:from-orange-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                    <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2 flex items-center gap-2">
                       <Play className="w-4 h-4" />
                       Simulação da Aula
                     </h4>
-                    <p className="text-green-700 dark:text-green-300 text-sm">
+                    <p className="text-orange-700 dark:text-orange-300 text-sm">
                       {plano.metodologia.simulacao_de_aula}
                     </p>
                   </div>
@@ -397,13 +395,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <Activity className="w-5 h-5 text-white" />
-                </div>
-                Etapas de Desenvolvimento
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-orange-600" />
+                Etapas da Aula
               </h3>
-              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Etapa
               </Button>
@@ -411,11 +407,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
             <div className="space-y-6">
               {(plano.desenvolvimento || []).map((etapa: any, index: number) => (
-                <Card key={index} className="relative border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
+                <Card key={index} className="relative border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-6">
                       <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                           {etapa.etapa || index + 1}
                         </div>
                       </div>
@@ -423,10 +419,10 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                         <div className="flex items-center justify-between mb-4">
                           <h4 className="font-bold text-xl text-gray-900 dark:text-gray-100">{etapa.titulo}</h4>
                           <div className="flex items-center gap-3">
-                            <Badge variant="outline" className="border-blue-300 text-blue-700 bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:bg-blue-900/30 px-3 py-1">
+                            <Badge variant="outline" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30 px-3 py-1">
                               {etapa.tipo_interacao}
                             </Badge>
-                            <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 px-3 py-1">
+                            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
                               {etapa.tempo_estimado}
                             </Badge>
                           </div>
@@ -444,18 +440,18 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                         )}
 
                         {etapa.nota_privada_professor && (
-                          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700 mb-4">
-                            <strong className="text-yellow-800 dark:text-yellow-200 block mb-2">Nota para o professor:</strong>
-                            <p className="text-yellow-700 dark:text-yellow-300 text-sm">{etapa.nota_privada_professor}</p>
+                          <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700 mb-4">
+                            <strong className="text-orange-800 dark:text-orange-200 block mb-2">Nota para o professor:</strong>
+                            <p className="text-orange-700 dark:text-orange-300 text-sm">{etapa.nota_privada_professor}</p>
                           </div>
                         )}
 
                         <div className="flex gap-3">
-                          <Button size="sm" variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50">
+                          <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                             <FileText className="w-4 h-4 mr-2" />
                             Gerar Slides
                           </Button>
-                          <Button size="sm" variant="outline" className="border-green-300 text-green-600 hover:bg-green-50">
+                          <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                             <Plus className="w-4 h-4 mr-2" />
                             Gerar Recurso
                           </Button>
@@ -473,13 +469,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
-                <div className="p-2 bg-indigo-500 rounded-lg">
-                  <Play className="w-5 h-5 text-white" />
-                </div>
-                Atividades da Aula
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-600" />
+                Atividades Práticas
               </h3>
-              <Button size="sm" className="bg-indigo-500 hover:bg-indigo-600 text-white">
+              <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Atividade
               </Button>
@@ -487,13 +481,13 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
             <div className="space-y-4">
               {(plano.atividades || []).map((atividade: any, index: number) => (
-                <Card key={index} className="border-l-4 border-l-indigo-500 shadow-md hover:shadow-lg transition-shadow">
+                <Card key={index} className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
                           <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">{atividade.nome}</h4>
-                          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 px-3 py-1">
+                          <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
                             {atividade.tipo}
                           </Badge>
                         </div>
@@ -503,7 +497,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                             <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 block mb-2">Objetivos relacionados:</span>
                             <div className="flex flex-wrap gap-2">
                               {atividade.ref_objetivos.map((obj: number) => (
-                                <Badge key={obj} variant="outline" size="sm" className="border-indigo-300 text-indigo-700 bg-indigo-50 dark:border-indigo-600 dark:text-indigo-300 dark:bg-indigo-900/30">
+                                <Badge key={obj} variant="outline" size="sm" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30">
                                   Objetivo {obj}
                                 </Badge>
                               ))}
@@ -520,14 +514,14 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                         )}
 
                         {atividade.sugestoes_ia && atividade.sugestoes_ia.length > 0 && (
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                            <strong className="text-blue-800 dark:text-blue-200 block mb-2 flex items-center gap-2">
+                          <div className="bg-gradient-to-r from-orange-50 to-indigo-50 dark:from-orange-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                            <strong className="text-orange-800 dark:text-orange-200 block mb-2 flex items-center gap-2">
                               <Lightbulb className="w-4 h-4" />
                               Sugestões da IA:
                             </strong>
                             <ul className="space-y-1">
                               {atividade.sugestoes_ia.map((sugestao: string, idx: number) => (
-                                <li key={idx} className="text-blue-700 dark:text-blue-300 text-sm flex items-start gap-2">
+                                <li key={idx} className="text-orange-700 dark:text-orange-300 text-sm flex items-start gap-2">
                                   <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
                                   {sugestao}
                                 </li>
@@ -538,7 +532,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                       </div>
 
                       <div className="flex flex-col gap-2 ml-4">
-                        <Button size="sm" variant="outline" className="border-indigo-300 text-indigo-600 hover:bg-indigo-50">
+                        <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
                           <Eye className="w-4 h-4 mr-2" />
                           Visualizar
                         </Button>
@@ -554,6 +548,48 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           </div>
         );
 
+      case 'avaliacao':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-orange-600" />
+                  Avaliação
+                </h3>
+                <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Critério
+                </Button>
+            </div>
+            <Card className="border-l-4 border-l-orange-500 shadow-lg">
+              <CardContent className="space-y-6 p-6">
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-5 rounded-xl border border-orange-200 dark:border-orange-700">
+                  <label className="text-sm font-semibold text-orange-800 dark:text-orange-200 mb-3 block">Critérios de Avaliação</label>
+                  <p className="text-orange-700 dark:text-orange-300 text-base leading-relaxed">
+                    {plano.avaliacao?.criterios || 'Critérios de avaliação não especificados'}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 block">Instrumentos de Avaliação</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(plano.avaliacao?.instrumentos || []).map((instrumento: string, index: number) => (
+                        <Badge key={index} variant="outline" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30 px-3 py-1">
+                          {instrumento}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 block">Feedback</label>
+                    <p className="text-base text-gray-800 dark:text-gray-200">{plano.avaliacao?.feedback || 'Feedback não especificado'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -564,9 +600,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       {/* Layout Principal */}
       <div className="flex flex-1 h-full">
         {/* Sidebar de Navegação */}
-        <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-lg">
-          <div className="p-4">
-            <div className="space-y-3">
+        <div className="w-80 bg-orange-50 dark:bg-orange-900/20 border-r border-orange-200 dark:border-orange-700 overflow-y-auto">
+            <div className="p-6 space-y-6">
               {sidebarSections.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
@@ -575,36 +610,36 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full text-left p-4 rounded-xl transition-all duration-200 group ${
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white shadow-lg transform scale-[1.02]'
-                        : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:shadow-md'
+                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 hover:text-orange-800 dark:hover:text-orange-200'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${
                         isActive 
-                          ? 'bg-white/20' 
-                          : 'bg-gray-200 dark:bg-gray-700 group-hover:bg-gray-300 dark:group-hover:bg-gray-600'
+                          ? 'bg-orange-500/20' 
+                          : 'bg-orange-100 dark:bg-orange-900/30 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/40'
                       }`}>
                         <Icon className={`w-5 h-5 ${
-                          isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'
+                          isActive ? 'text-orange-600' : 'text-orange-500 dark:text-orange-400'
                         }`} />
                       </div>
                       <div className="flex-1">
                         <h3 className={`font-semibold ${
-                          isActive ? 'text-white' : 'text-gray-900 dark:text-gray-100'
+                          isActive ? 'text-orange-800 dark:text-orange-100' : 'text-gray-900 dark:text-gray-100'
                         }`}>
                           {section.label}
                         </h3>
                         <p className={`text-sm ${
-                          isActive ? 'text-orange-100' : 'text-gray-500 dark:text-gray-400'
+                          isActive ? 'text-orange-700' : 'text-gray-500 dark:text-gray-400'
                         }`}>
                           {section.description}
                         </p>
                       </div>
                       {isActive && (
-                        <ChevronRight className="w-5 h-5 text-white" />
+                        <ChevronRight className="w-5 h-5 text-orange-600" />
                       )}
                     </div>
                   </button>
@@ -612,7 +647,6 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               })}
             </div>
           </div>
-        </div>
 
         {/* Área de Conteúdo Principal */}
         <div className="flex-1 overflow-hidden">
