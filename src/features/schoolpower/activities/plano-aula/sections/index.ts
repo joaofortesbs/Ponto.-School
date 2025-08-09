@@ -21,7 +21,7 @@ export type { DesenvolvimentoData, EtapaDesenvolvimento } from './desenvolviment
 
 // Atividades
 export { default as AtividadesInterface } from './atividades/AtividadesInterface';
-export { AtividadesDataProcessor, atividadesDataPadrao } from './atividades/AtividadesData';
+export { AtividadesDataProcessor } from './atividades/AtividadesData';
 export type { AtividadesData, AtividadeRecurso } from './atividades/AtividadesData';
 
 // Avaliação

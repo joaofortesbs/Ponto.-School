@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
@@ -36,10 +37,10 @@ interface DesenvolvimentoInterfaceProps {
   onDataChange?: (data: DesenvolvimentoData) => void;
 }
 
-export default function DesenvolvimentoInterface({
-  data,
-  contextoPlano,
-  onDataChange
+export default function DesenvolvimentoInterface({ 
+  data, 
+  contextoPlano, 
+  onDataChange 
 }: DesenvolvimentoInterfaceProps) {
   const { theme } = useTheme();
   const [desenvolvimentoData, setDesenvolvimentoData] = useState<DesenvolvimentoData>(desenvolvimentoDataPadrao);
@@ -48,8 +49,6 @@ export default function DesenvolvimentoInterface({
   const [observacoesExpanded, setObservacoesExpanded] = useState(false);
   const [planoId, setPlanoId] = useState<string>('');
   const [showDebug, setShowDebug] = useState(false);
-  const [expandedEtapas, setExpandedEtapas] = useState<Set<number>>(new Set());
-
 
   // Gerar ID único para o plano
   useEffect(() => {
@@ -63,10 +62,10 @@ export default function DesenvolvimentoInterface({
       if (!planoId) return;
 
       console.log('🔄 Carregando/Gerando dados de desenvolvimento para:', planoId);
-
+      
       // Tentar carregar dados salvos primeiro
       const dadosSalvos = DesenvolvimentoGeminiService.carregarEtapasDesenvolvimento(planoId);
-
+      
       if (dadosSalvos) {
         console.log('📂 Dados encontrados no localStorage:', dadosSalvos);
         setDesenvolvimentoData(dadosSalvos);
@@ -90,21 +89,21 @@ export default function DesenvolvimentoInterface({
 
   const gerarEtapasViaIA = async () => {
     setCarregandoIA(true);
-
+    
     try {
       console.log('🚀 Iniciando geração de etapas via Gemini...');
       console.log('📝 Contexto enviado:', contextoPlano);
 
       const etapasGeradas = await DesenvolvimentoGeminiService.gerarEtapasDesenvolvimento(contextoPlano);
-
+      
       console.log('✅ Etapas geradas com sucesso:', etapasGeradas);
-
+      
       setDesenvolvimentoData(etapasGeradas);
       onDataChange?.(etapasGeradas);
-
+      
       // Salvar no localStorage
       DesenvolvimentoGeminiService.salvarEtapasDesenvolvimento(planoId, etapasGeradas);
-
+      
       toast({
         title: "✨ Etapas Geradas com Sucesso!",
         description: `${etapasGeradas.etapas.length} etapas foram criadas pela IA para seu plano de aula.`,
@@ -112,12 +111,12 @@ export default function DesenvolvimentoInterface({
 
     } catch (error) {
       console.error('❌ Erro na geração via IA:', error);
-
+      
       // Usar dados padrão em caso de erro
       const dadosComContexto = DesenvolvimentoGeminiService['aplicarContextoAosDadosPadrao'](contextoPlano);
       setDesenvolvimentoData(dadosComContexto);
       onDataChange?.(dadosComContexto);
-
+      
       toast({
         title: "⚠️ Falha na Geração IA",
         description: "Usando estrutura padrão. Você pode tentar gerar novamente.",
@@ -162,7 +161,7 @@ export default function DesenvolvimentoInterface({
     };
     setDesenvolvimentoData(updatedData);
     onDataChange?.(updatedData);
-
+    
     // Salvar no localStorage
     DesenvolvimentoGeminiService.salvarEtapasDesenvolvimento(planoId, updatedData);
   };
@@ -175,23 +174,9 @@ export default function DesenvolvimentoInterface({
     return <BookOpen className="h-4 w-4" />;
   };
 
-  const toggleSubEtapaExpandida = (etapaIndex: number) => {
-    setExpandedEtapas(prev => {
-      const newState = new Set(prev);
-      if (newState.has(etapaIndex)) {
-        newState.delete(etapaIndex);
-      } else {
-        newState.add(etapaIndex);
-      }
-      return newState;
-    });
-  };
-
-  const isEtapaExpandida = (index: number): boolean => expandedEtapas.has(index);
-
-  const renderEtapaCard = (etapa: EtapaDesenvolvimento, index: number) => {
-    const isEtapaMainExpanded = etapaExpandida === etapa.id;
-
+  const renderEtapaCard = (etapa: EtapaDesenvolvimento) => {
+    const isExpandida = etapaExpandida === etapa.id;
+    
     return (
       <Reorder.Item
         key={etapa.id}
@@ -204,21 +189,21 @@ export default function DesenvolvimentoInterface({
           transition={{ duration: 0.3 }}
         >
           <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
-            theme === 'dark'
-              ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80'
+            theme === 'dark' 
+              ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
               : 'bg-white border-gray-200 hover:bg-gray-50'
           }`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <motion.div
+                  <motion.div 
                     className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <GripVertical className="h-4 w-4 text-gray-400" />
                   </motion.div>
-
+                  
                   <Button
                     variant="ghost"
                     size="sm"
@@ -226,13 +211,13 @@ export default function DesenvolvimentoInterface({
                     className="p-1 h-8 w-8"
                   >
                     <motion.div
-                      animate={{ rotate: isEtapaMainExpanded ? 90 : 0 }}
+                      animate={{ rotate: isExpandida ? 90 : 0 }}
                       transition={{ duration: 0.2 }}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </motion.div>
                   </Button>
-
+                  
                   <div className="flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
                       {getIconeInteracao(etapa.tipoInteracao)}
@@ -244,13 +229,13 @@ export default function DesenvolvimentoInterface({
                     </CardTitle>
                   </div>
                 </div>
-
+                
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 rounded-full">
                     <Clock className="h-3 w-3 mr-1" />
                     {etapa.tempoEstimado}
                   </Badge>
-
+                  
                   <Button
                     variant="ghost"
                     size="sm"
@@ -262,12 +247,12 @@ export default function DesenvolvimentoInterface({
                 </div>
               </div>
             </CardHeader>
-
+            
             <motion.div
               initial={false}
-              animate={{
-                height: isEtapaMainExpanded ? "auto" : 0,
-                opacity: isEtapaMainExpanded ? 1 : 0
+              animate={{ 
+                height: isExpandida ? "auto" : 0,
+                opacity: isExpandida ? 1 : 0
               }}
               transition={{ duration: 0.3 }}
               style={{ overflow: "hidden" }}
@@ -280,12 +265,12 @@ export default function DesenvolvimentoInterface({
                       {etapa.tipoInteracao}
                     </Badge>
                   </div>
-
+                  
                   {/* Descrição */}
                   <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     <p className="text-sm leading-relaxed">{etapa.descricao}</p>
                   </div>
-
+                  
                   {/* Recursos usados */}
                   {etapa.recursosUsados.length > 0 && (
                     <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -307,57 +292,12 @@ export default function DesenvolvimentoInterface({
                       </div>
                     </div>
                   )}
-
-                  {/* Sub-etapas */}
-                  {etapa.subEtapas && etapa.subEtapas.length > 0 && (
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between mb-2 cursor-pointer" onClick={() => toggleSubEtapaExpandida(index)}>
-                        <h4 className={`text-sm font-semibold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                          Sub-etapas ({etapa.subEtapas.length})
-                        </h4>
-                        <motion.div
-                          animate={{ rotate: isEtapaExpandida(index) ? 90 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
-                        </motion.div>
-                      </div>
-                      {etapa.subEtapas?.map((subEtapa, subIndex) => {
-                          const isSubEtapaExpandida = expandedEtapas.has(index);
-                          return (
-                          <motion.div
-                            key={subIndex}
-                            className="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700"
-                            initial={false}
-                            animate={isSubEtapaExpandida ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <CardContent className="pt-2 pb-0">
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="p-1 bg-[#E0E7FF]/30 rounded-md text-[#605DEC]">
-                                    <Play className="h-3 w-3" />
-                                  </div>
-                                  <p className={`text-xs font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    {subEtapa.titulo}
-                                  </p>
-                                </div>
-                                <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                  {subEtapa.descricao}
-                                </p>
-                              </div>
-                            </CardContent>
-                          </motion.div>
-                        );
-                        })}
-                      </div>
-                    )}
                 </div>
               </CardContent>
             </motion.div>
 
             {/* Preview quando collapsed */}
-            {!isEtapaMainExpanded && (
+            {!isExpandida && (
               <CardContent className="pt-0 pb-4">
                 <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                   <p className="text-sm line-clamp-2">{etapa.descricao}</p>
@@ -384,7 +324,7 @@ export default function DesenvolvimentoInterface({
     <div className={`w-full h-full ${
       theme === 'dark' ? 'text-white' : 'text-[#29335C]'
     } transition-colors duration-300`}>
-
+      
       {/* Header com título estilizado */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between mb-6">
@@ -401,7 +341,7 @@ export default function DesenvolvimentoInterface({
               </p>
             </div>
           </div>
-
+          
           <div className="flex items-center gap-3">
             {contextoPlano && (
               <motion.div
@@ -530,7 +470,7 @@ export default function DesenvolvimentoInterface({
                 {desenvolvimentoData.etapas.map(renderEtapaCard)}
               </Reorder.Group>
             </motion.div>
-
+            
             {/* Observações Gerais - Colapsável */}
             {desenvolvimentoData.observacoesGerais && (
               <motion.div
@@ -541,7 +481,7 @@ export default function DesenvolvimentoInterface({
                 <Card className={`rounded-2xl border-0 shadow-lg ${
                   theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
                 }`}>
-                  <CardHeader
+                  <CardHeader 
                     className="cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1E293B]/80 transition-colors rounded-t-2xl"
                     onClick={() => setObservacoesExpanded(!observacoesExpanded)}
                   >
@@ -562,7 +502,7 @@ export default function DesenvolvimentoInterface({
                   </CardHeader>
                   <motion.div
                     initial={false}
-                    animate={{
+                    animate={{ 
                       height: observacoesExpanded ? "auto" : 0,
                       opacity: observacoesExpanded ? 1 : 0
                     }}
@@ -578,7 +518,7 @@ export default function DesenvolvimentoInterface({
                 </Card>
               </motion.div>
             )}
-
+            
             {/* Sugestões da IA */}
             {desenvolvimentoData.sugestoesIA.length > 0 && (
               <motion.div
@@ -600,8 +540,8 @@ export default function DesenvolvimentoInterface({
                   <CardContent>
                     <div className="space-y-3">
                       {desenvolvimentoData.sugestoesIA.map((sugestao, index) => (
-                        <motion.div
-                          key={index}
+                        <motion.div 
+                          key={index} 
                           className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl"
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
@@ -621,9 +561,9 @@ export default function DesenvolvimentoInterface({
           </div>
         )}
       </ScrollArea>
-
+      
       {/* Debug Panel */}
-      <DebugPanel
+      <DebugPanel 
         planoId={planoId}
         show={showDebug}
         onClose={() => setShowDebug(false)}
