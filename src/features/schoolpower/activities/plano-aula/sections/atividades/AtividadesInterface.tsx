@@ -32,9 +32,11 @@ import {
   List
 } from 'lucide-react';
 import { AtividadesDataProcessor, AtividadeRecurso, AtividadesData } from './AtividadesData';
+import { DesenvolvimentoIntegrator } from '../desenvolvimento/DesenvolvimentoIntegrator';
+import { DesenvolvimentoData } from '../desenvolvimento/DesenvolvimentoData';
 
 interface AtividadesInterfaceProps {
-  planoData: any;
+  planoData?: any;
 }
 
 const iconMap: { [key: string]: React.ComponentType<any> } = {
@@ -68,6 +70,7 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
   const [filtroTipo, setFiltroTipo] = useState<'todos' | 'atividade' | 'recurso'>('todos');
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [desenvolvimentoData, setDesenvolvimentoData] = useState<DesenvolvimentoData | null>(null);
 
   // Processar dados sempre que planoData mudar
   useEffect(() => {
@@ -87,11 +90,52 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
     }
   }, [planoData]);
 
+  // Buscar dados de desenvolvimento
+  useEffect(() => {
+    console.log('🔄 AtividadesInterface: Buscando dados de desenvolvimento');
+    const fetchDesenvolvimento = async () => {
+      try {
+        const data = await DesenvolvimentoIntegrator.buscarDadosDesenvolvimento();
+        setDesenvolvimentoData(data);
+        console.log('✅ AtividadesInterface: Dados de desenvolvimento carregados com sucesso', data);
+      } catch (error) {
+        console.error('❌ AtividadesInterface: Erro ao buscar dados de desenvolvimento', error);
+      }
+    };
+
+    fetchDesenvolvimento();
+  }, []);
+
+  // Combinar dados de atividades e recursos de desenvolvimento
+  const combinedData = useMemo(() => {
+    let combined: AtividadeRecurso[] = [];
+
+    // Adiciona atividades e recursos do plano de aula
+    if (atividadesData?.atividades_recursos) {
+      combined = [...atividadesData.atividades_recursos];
+    }
+
+    // Adiciona recursos utilizados da seção de desenvolvimento
+    if (desenvolvimentoData?.recursos_utilizados) {
+      const recursosDesenvolvimento: AtividadeRecurso[] = desenvolvimentoData.recursos_utilizados.map(recurso => ({
+        id: `dev-${recurso.id}`, // ID único para recursos de desenvolvimento
+        nome: recurso.nome,
+        descricao: recurso.descricao || 'N/A',
+        tipo: 'recurso', // Sempre um recurso
+        icone: recurso.icone || 'activity', // Ícone padrão se não especificado
+        categoria: recurso.categoria || 'Outros', // Categoria padrão
+        origem_etapa: recurso.etapa_origem || null
+      }));
+      combined = [...combined, ...recursosDesenvolvimento];
+    }
+    
+    console.log('🔄 AtividadesInterface: Combinando dados de atividades e desenvolvimento');
+    return combined;
+  }, [atividadesData, desenvolvimentoData]);
+
   // Filtrar atividades e recursos
   const atividadesFiltradas = useMemo(() => {
-    if (!atividadesData?.atividades_recursos) return [];
-
-    let filtrados = atividadesData.atividades_recursos;
+    let filtrados = combinedData;
 
     // Filtrar por tipo
     if (filtroTipo !== 'todos') {
@@ -104,14 +148,14 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
     }
 
     return filtrados;
-  }, [atividadesData, filtroTipo, filtroCategoria]);
+  }, [combinedData, filtroTipo, filtroCategoria]);
 
   // Obter categorias únicas
   const categorias = useMemo(() => {
-    if (!atividadesData?.atividades_recursos) return [];
-    const cats = Array.from(new Set(atividadesData.atividades_recursos.map(item => item.categoria).filter(Boolean)));
+    if (!combinedData) return [];
+    const cats = Array.from(new Set(combinedData.map(item => item.categoria).filter(Boolean)));
     return cats;
-  }, [atividadesData]);
+  }, [combinedData]);
 
   const renderIcone = (icone: string) => {
     const IconComponent = iconMap[icone] || Activity;
@@ -135,7 +179,7 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
     }
   };
 
-  if (!atividadesData) {
+  if (!atividadesData || !desenvolvimentoData) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-8 bg-gray-200 rounded-lg w-1/3"></div>
@@ -147,6 +191,9 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
       </div>
     );
   }
+
+  // Calcular total de itens combinados
+  const totalCombinedItems = (atividadesData?.atividades_recursos?.length || 0) + (desenvolvimentoData?.recursos_utilizados?.length || 0);
 
   return (
     <div className="space-y-6">
@@ -161,7 +208,7 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
               Atividades e Recursos
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              {atividadesData.total_items} itens necessários para aplicar este plano de aula
+              {totalCombinedItems} itens necessários para aplicar este plano de aula
             </p>
           </div>
         </div>
@@ -170,10 +217,10 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
           {/* Estatísticas rápidas */}
           <div className="flex gap-2">
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              {atividadesData.atividades_recursos.filter(item => item.tipo === 'atividade').length} Atividades
+              {combinedData.filter(item => item.tipo === 'atividade').length} Atividades
             </Badge>
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              {atividadesData.atividades_recursos.filter(item => item.tipo === 'recurso').length} Recursos
+              {combinedData.filter(item => item.tipo === 'recurso').length} Recursos
             </Badge>
           </div>
         </div>
@@ -372,7 +419,7 @@ const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) 
             <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
               Recursos Automaticamente Identificados
             </p>
-            <p className="text-xs text-orange-600 dark:text-orange-400">
+            <p className="text-xs text-orange-600 dark:text-gray-400">
               Estas atividades e recursos foram extraídos automaticamente do plano de desenvolvimento da aula
             </p>
           </div>

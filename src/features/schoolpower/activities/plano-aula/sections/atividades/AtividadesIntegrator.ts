@@ -3,28 +3,70 @@ import { AtividadesDataProcessor, AtividadesData } from './AtividadesData';
 
 export class AtividadesIntegrator {
   private static readonly STORAGE_KEY = 'plano_aula_atividades_data';
+  private static readonly DEBUG = true;
+  
+  /**
+   * Log de debug se habilitado
+   */
+  private static debugLog(message: string, data?: any): void {
+    if (this.DEBUG) {
+      console.log(`🔧 AtividadesIntegrator: ${message}`, data || '');
+    }
+  }
+
+  /**
+   * Valida dados antes do processamento
+   */
+  private static validarDados(dados: any, origem: string): boolean {
+    this.debugLog(`Validando dados de ${origem}`, dados);
+    
+    if (!dados) {
+      console.warn(`⚠️ AtividadesIntegrator: Dados inválidos de ${origem}`);
+      return false;
+    }
+    
+    return true;
+  }
   
   /**
    * Sincroniza dados das atividades quando há mudanças no desenvolvimento
    */
   static sincronizarComDesenvolvimento(desenvolvimentoData: any, planoId: string): AtividadesData {
-    console.log('🔄 AtividadesIntegrator: Sincronizando com dados de desenvolvimento');
+    this.debugLog('Sincronizando com dados de desenvolvimento');
     
-    // Processar dados do desenvolvimento
-    const atividadesData = AtividadesDataProcessor.processarDadosAtividades({
-      desenvolvimento: desenvolvimentoData
-    });
+    if (!this.validarDados(desenvolvimentoData, 'desenvolvimento')) {
+      throw new Error('Dados de desenvolvimento inválidos');
+    }
+    
+    if (!planoId) {
+      throw new Error('ID do plano é obrigatório');
+    }
+    
+    try {
+      // Processar dados do desenvolvimento
+      const atividadesData = AtividadesDataProcessor.processarDadosAtividades({
+        desenvolvimento: desenvolvimentoData
+      });
 
-    // Salvar no localStorage para persistência
-    this.salvarDadosAtividades(planoId, atividadesData);
+      // Validar dados processados
+      if (!atividadesData || !Array.isArray(atividadesData.atividades_recursos)) {
+        throw new Error('Dados processados são inválidos');
+      }
 
-    console.log('✅ AtividadesIntegrator: Sincronização concluída', {
-      totalItems: atividadesData.total_items,
-      atividades: atividadesData.atividades_recursos.filter(item => item.tipo === 'atividade').length,
-      recursos: atividadesData.atividades_recursos.filter(item => item.tipo === 'recurso').length
-    });
+      // Salvar no localStorage para persistência
+      this.salvarDadosAtividades(planoId, atividadesData);
 
-    return atividadesData;
+      this.debugLog('Sincronização concluída', {
+        totalItems: atividadesData.total_items,
+        atividades: atividadesData.atividades_recursos.filter(item => item.tipo === 'atividade').length,
+        recursos: atividadesData.atividades_recursos.filter(item => item.tipo === 'recurso').length
+      });
+
+      return atividadesData;
+    } catch (error) {
+      console.error('❌ AtividadesIntegrator: Erro na sincronização', error);
+      throw error;
+    }
   }
 
   /**

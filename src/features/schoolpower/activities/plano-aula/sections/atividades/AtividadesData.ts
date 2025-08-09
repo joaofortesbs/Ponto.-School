@@ -1,4 +1,3 @@
-
 import { DesenvolvimentoData, EtapaDesenvolvimento } from '../desenvolvimento/DesenvolvimentoData';
 import schoolPowerActivitiesData from '../../../../data/schoolPowerActivities.json';
 
@@ -11,6 +10,7 @@ export interface AtividadeRecurso {
   origem: 'desenvolvimento' | 'school_power' | 'manual';
   etapa_origem?: string;
   schoolPowerActivity?: any;
+  categoria?: string;
 }
 
 export interface AtividadesData {
@@ -35,22 +35,24 @@ export class AtividadesDataProcessor {
     // Processar dados do desenvolvimento se disponível
     if (desenvolvimento?.etapas || planoData?.desenvolvimento?.etapas) {
       const etapas = desenvolvimento?.etapas || planoData?.desenvolvimento?.etapas || [];
-      
+
       etapas.forEach((etapa: EtapaDesenvolvimento, index: number) => {
         // Extrair recursos utilizados
         if (etapa.recursosUtilizados && Array.isArray(etapa.recursosUtilizados)) {
           etapa.recursosUtilizados.forEach((recurso: string, recursoIndex: number) => {
             // Verificar se é uma atividade do School Power
             const schoolPowerActivity = this.findSchoolPowerActivity(recurso);
-            
+
             atividadesRecursos.push({
               id: `etapa-${index}-recurso-${recursoIndex}`,
               nome: recurso,
               tipo: schoolPowerActivity ? 'atividade' : 'recurso',
               descricao: etapa.descricao || `Recurso da etapa: ${etapa.titulo}`,
+              icone: this.getIconeForRecurso(recurso, schoolPowerActivity),
               origem: 'desenvolvimento',
               etapa_origem: etapa.titulo,
-              schoolPowerActivity: schoolPowerActivity
+              schoolPowerActivity: schoolPowerActivity,
+              categoria: this.determinarCategoria(recurso, schoolPowerActivity)
             });
           });
         }
@@ -64,9 +66,11 @@ export class AtividadesDataProcessor {
               nome: atividade.nome,
               tipo: 'atividade',
               descricao: atividade.descricao,
+              icone: this.getIconeForRecurso(atividade.nome, atividade.schoolPowerActivity),
               origem: 'desenvolvimento',
               etapa_origem: etapa.titulo,
-              schoolPowerActivity: atividade.schoolPowerActivity
+              schoolPowerActivity: atividade.schoolPowerActivity,
+              categoria: this.determinarCategoria(atividade.nome, atividade.schoolPowerActivity)
             });
           });
         }
@@ -81,7 +85,9 @@ export class AtividadesDataProcessor {
           nome: material,
           tipo: 'material',
           descricao: `Material necessário para o plano de aula`,
-          origem: 'manual'
+          icone: this.getIconeForRecurso(material),
+          origem: 'manual',
+          categoria: this.determinarCategoria(material)
         });
       });
     }
@@ -100,7 +106,9 @@ export class AtividadesDataProcessor {
             nome: material,
             tipo: 'material',
             descricao: `Material do plano de aula`,
-            origem: 'manual'
+            icone: this.getIconeForRecurso(material),
+            origem: 'manual',
+            categoria: this.determinarCategoria(material)
           });
         }
       });
@@ -112,11 +120,18 @@ export class AtividadesDataProcessor {
     // Remover duplicatas baseado no nome
     const atividadesUnicas = this.removerDuplicatas(atividadesRecursos);
 
+    // Adicionar categorias automaticamente
+    const atividadesComCategoria = atividadesUnicas.map(item => ({
+      ...item,
+      categoria: this.determinarCategoria(item.nome, item.schoolPowerActivity)
+    }));
+
+
     const resultado: AtividadesData = {
       titulo: "Atividades e Recursos",
       descricao: "Atividades e recursos necessários para aplicar o plano de aula",
-      total_items: atividadesUnicas.length,
-      atividades_recursos: atividadesUnicas,
+      total_items: atividadesComCategoria.length,
+      atividades_recursos: atividadesComCategoria,
       timestamp: new Date().toISOString(),
       plano_id: activityData?.id || planoData?.id || `plano_${Date.now()}`
     };
@@ -132,11 +147,11 @@ export class AtividadesDataProcessor {
     if (!nomeRecurso) return null;
 
     const nomeNormalizado = nomeRecurso.toLowerCase();
-    
+
     return schoolPowerActivitiesData.find(activity => {
       const nomeActivity = (activity.name || activity.title || '').toLowerCase();
       const descricaoActivity = (activity.description || '').toLowerCase();
-      
+
       return nomeActivity.includes(nomeNormalizado) || 
              nomeNormalizado.includes(nomeActivity) ||
              descricaoActivity.includes(nomeNormalizado);
@@ -144,11 +159,38 @@ export class AtividadesDataProcessor {
   }
 
   /**
+   * Obtém o ícone apropriado para um recurso
+   */
+  private static getIconeForRecurso(recurso: string, schoolPowerActivity?: any): string {
+    if (schoolPowerActivity) {
+      return schoolPowerActivity.icone || 'Activity';
+    }
+
+    // Determinar ícone baseado no nome do recurso
+    const recursoLower = recurso.toLowerCase();
+
+    if (recursoLower.includes('video') || recursoLower.includes('vídeo')) return 'Video';
+    if (recursoLower.includes('apresentação') || recursoLower.includes('slide')) return 'Presentation';
+    if (recursoLower.includes('jogo') || recursoLower.includes('game')) return 'Gamepad2';
+    if (recursoLower.includes('texto') || recursoLower.includes('leitura')) return 'FileText';
+    if (recursoLower.includes('exercício') || recursoLower.includes('atividade')) return 'PenTool';
+    if (recursoLower.includes('discussão') || recursoLower.includes('debate')) return 'MessageSquare';
+    if (recursoLower.includes('quadro') || recursoLower.includes('lousa')) return 'Square';
+    if (recursoLower.includes('livro') || recursoLower.includes('material')) return 'BookOpen';
+    if (recursoLower.includes('mapa') || recursoLower.includes('esquema')) return 'Map';
+    if (recursoLower.includes('imagem') || recursoLower.includes('figura')) return 'Image';
+    if (recursoLower.includes('grupo') || recursoLower.includes('equipe')) return 'Users';
+    if (recursoLower.includes('experimento') || recursoLower.includes('laboratório')) return 'Beaker';
+
+    return 'Activity'; // Ícone padrão
+  }
+
+  /**
    * Extrai atividades mencionadas na descrição de uma etapa
    */
   private static extrairAtividadesDaDescricao(descricao: string): Array<{nome: string, descricao: string, schoolPowerActivity?: any}> {
     const atividades: Array<{nome: string, descricao: string, schoolPowerActivity?: any}> = [];
-    
+
     // Palavras-chave que indicam atividades
     const palavrasChave = [
       'exercício', 'exercícios', 'atividade', 'atividades',
@@ -157,14 +199,14 @@ export class AtividadesDataProcessor {
     ];
 
     const descricaoLower = descricao.toLowerCase();
-    
+
     palavrasChave.forEach(palavra => {
       if (descricaoLower.includes(palavra)) {
         // Procurar atividades do School Power relacionadas
         const atividadesRelacionadas = schoolPowerActivitiesData.filter(activity => {
           const nomeActivity = (activity.name || activity.title || '').toLowerCase();
           const descricaoActivity = (activity.description || '').toLowerCase();
-          
+
           return nomeActivity.includes(palavra) || descricaoActivity.includes(palavra);
         });
 
@@ -197,7 +239,7 @@ export class AtividadesDataProcessor {
     const atividadesRelevantes = schoolPowerActivitiesData.filter(activity => {
       const tags = activity.tags || [];
       const categoria = activity.category || '';
-      
+
       // Verificar se a atividade é relevante para a disciplina ou tema
       return tags.some((tag: string) => 
         disciplina.toLowerCase().includes(tag.toLowerCase()) ||
@@ -213,8 +255,10 @@ export class AtividadesDataProcessor {
         nome: activity.name || activity.title || 'Atividade School Power',
         tipo: 'atividade',
         descricao: activity.description || 'Atividade gerada pelo School Power',
+        icone: this.getIconeForRecurso(activity.name || activity.title || '', activity),
         origem: 'school_power',
-        schoolPowerActivity: activity
+        schoolPowerActivity: activity,
+        categoria: this.determinarCategoria(activity.name || activity.title || '', activity)
       });
     });
   }
@@ -233,6 +277,30 @@ export class AtividadesDataProcessor {
       return true;
     });
   }
+
+  /**
+   * Determina a categoria de um recurso
+   */
+  private static determinarCategoria(recurso: string, schoolPowerActivity?: any): string {
+    if (schoolPowerActivity) {
+      return schoolPowerActivity.categoria || 'Atividade Interativa';
+    }
+
+    const recursoLower = recurso.toLowerCase();
+
+    if (recursoLower.includes('video') || recursoLower.includes('vídeo')) return 'Material Audiovisual';
+    if (recursoLower.includes('apresentação') || recursoLower.includes('slide')) return 'Material de Apresentação';
+    if (recursoLower.includes('jogo') || recursoLower.includes('game')) return 'Atividade Lúdica';
+    if (recursoLower.includes('texto') || recursoLower.includes('leitura')) return 'Material Textual';
+    if (recursoLower.includes('exercício') || recursoLower.includes('atividade')) return 'Atividade Prática';
+    if (recursoLower.includes('discussão') || recursoLower.includes('debate')) return 'Atividade Colaborativa';
+    if (recursoLower.includes('quadro') || recursoLower.includes('lousa')) return 'Material de Apoio';
+    if (recursoLower.includes('livro') || recursoLower.includes('material')) return 'Material Didático';
+    if (recursoLower.includes('experimento') || recursoLower.includes('laboratório')) return 'Atividade Experimental';
+
+    return 'Material Geral';
+  }
+
 
   /**
    * Valida se os dados processados estão corretos

@@ -55,9 +55,13 @@ interface PlanoAulaPreviewProps {
 }
 
 const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
-  const [activeSection, setActiveSection] = useState('visao-geral');
-  const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [desenvolvimentoData, setDesenvolvimentoData] = useState(null);
+  // Estado para armazenar dados específicos de cada seção
+  const [secaoAtual, setSecaoAtual] = useState('visao-geral');
+  const [dadosSessao, setDadosSessao] = useState<any>({});
+
+  // Integrador para sincronização de dados de desenvolvimento
+  const [desenvolvimentoData, setDesenvolvimentoData] = useState<any>(null);
+  const [planoId] = useState(() => activityData?.id || `plano-${Date.now()}`);
 
   console.log('🔍 PlanoAulaPreview - Data recebida:', data);
   console.log('🔍 PlanoAulaPreview - ActivityData recebida:', activityData);
@@ -237,7 +241,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   ];
 
   const renderSectionContent = () => {
-    switch (activeSection) {
+    switch (secaoAtual) {
       case 'visao-geral':
         return <VisaoGeralInterface planoData={plano} />;
 
@@ -284,7 +288,6 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     setDesenvolvimentoData(data);
 
     // Sincronizar com outras seções
-    const planoId = activityData?.id || data?.id || `plano_${Date.now()}`;
     DesenvolvimentoIntegrator.sincronizarComOutrasSecoes(data, planoId);
   };
 
@@ -292,6 +295,42 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   const contextoCompleto = useMemo(() => {
     return DesenvolvimentoIntegrator.coletarContextoCompleto(activityData, data);
   }, [activityData, data]);
+
+  // Efeito para inicializar dados da seção
+  useEffect(() => {
+    if (activityData?.originalData) {
+      console.log('📊 PlanoAulaPreview: Inicializando com dados da atividade', activityData.originalData);
+
+      // Processar dados de desenvolvimento se disponível
+      if (activityData.originalData.desenvolvimento) {
+        const dadosProcessados = DesenvolvimentoIntegrator.processarDados(
+          activityData.originalData,
+          planoId
+        );
+        setDesenvolvimentoData(dadosProcessados);
+        console.log('🔄 PlanoAulaPreview: Dados de desenvolvimento processados', dadosProcessados);
+      }
+    }
+  }, [activityData, planoId]);
+
+  // Efeito para reprocessar dados quando desenvolvimento mudar
+  useEffect(() => {
+    if (desenvolvimentoData && activityData?.originalData) {
+      console.log('🔄 PlanoAulaPreview: Reprocessando dados após mudança no desenvolvimento');
+
+      // Reprocessar dados para garantir sincronização
+      const dadosAtualizados = DesenvolvimentoIntegrator.processarDados(
+        {
+          ...activityData.originalData,
+          desenvolvimento: desenvolvimentoData
+        },
+        planoId
+      );
+
+      console.log('✅ PlanoAulaPreview: Dados sincronizados', dadosAtualizados);
+    }
+  }, [desenvolvimentoData, activityData, planoId]);
+
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
@@ -302,12 +341,12 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           <div className="p-6 space-y-6">
             {sidebarSections.map((section) => {
               const Icon = section.icon;
-              const isActive = activeSection === section.id;
+              const isActive = secaoAtual === section.id;
 
               return (
                 <button
                   key={section.id}
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => setSecaoAtual(section.id)}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 shadow-sm'

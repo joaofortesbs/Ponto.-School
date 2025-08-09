@@ -33,7 +33,112 @@ export interface ContextoPlanoCompleto {
   versao?: string;
 }
 
+// Interface para os dados de desenvolvimento, incluindo etapas e recursos
+export interface DesenvolvimentoData {
+  id: string;
+  planoId: string;
+  etapas: Array<{
+    id: string;
+    titulo: string;
+    descricao: string;
+    tempoEstimado: string;
+    recursosUsados?: string[];
+    instrucoes?: string[];
+  }>;
+  recursosUtilizados: string[];
+  tempoTotalEstimado: string;
+  timestamp: string;
+}
+
+
 export class DesenvolvimentoIntegrator {
+  private static readonly STORAGE_KEY = 'plano_aula_desenvolvimento_data';
+  private static listeners: ((data: DesenvolvimentoData) => void)[] = [];
+
+  /**
+   * Adiciona um listener para mudanças nos dados de desenvolvimento
+   */
+  static addChangeListener(callback: (data: DesenvolvimentoData) => void): () => void {
+    this.listeners.push(callback);
+    return () => {
+      const index = this.listeners.indexOf(callback);
+      if (index > -1) {
+        this.listeners.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Notifica todos os listeners sobre mudanças nos dados
+   */
+  private static notifyListeners(data: DesenvolvimentoData): void {
+    this.listeners.forEach(callback => {
+      try {
+        callback(data);
+      } catch (error) {
+        console.error('Erro ao notificar listener:', error);
+      }
+    });
+  }
+
+  /**
+   * Processa e salva dados do desenvolvimento do plano de aula
+   */
+  static processarDados(planoData: any, planoId: string): DesenvolvimentoData {
+    console.log('🚀 Processando dados de desenvolvimento...');
+
+    const desenvolvimentoData: DesenvolvimentoData = {
+      id: planoData?.id || `desenvolvimento_${Date.now()}`,
+      planoId: planoId,
+      etapas: planoData?.etapas || [],
+      recursosUtilizados: this.extrairRecursosUnicos(planoData?.etapas || []),
+      tempoTotalEstimado: this.calcularTempoTotal(planoData?.etapas || []),
+      timestamp: new Date().toISOString(),
+    };
+
+    // Salvar dados processados
+    this.salvarDados(planoId, desenvolvimentoData);
+
+    // Notificar listeners sobre a mudança
+    this.notifyListeners(desenvolvimentoData);
+
+    console.log('✅ DesenvolvimentoIntegrator: Dados processados e salvos', {
+      totalEtapas: desenvolvimentoData.etapas.length,
+      timestamp: desenvolvimentoData.timestamp
+    });
+
+    return desenvolvimentoData;
+  }
+
+  /**
+   * Carrega dados de desenvolvimento do localStorage
+   */
+  static carregarDados(planoId: string): DesenvolvimentoData | null {
+    try {
+      const data = localStorage.getItem(`${this.STORAGE_KEY}_${planoId}`);
+      if (data) {
+        const parsedData: DesenvolvimentoData = JSON.parse(data);
+        console.log('💾 Dados de desenvolvimento carregados:', parsedData);
+        return parsedData;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar dados de desenvolvimento:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Salva dados de desenvolvimento no localStorage
+   */
+  private static salvarDados(planoId: string, data: DesenvolvimentoData): void {
+    try {
+      localStorage.setItem(`${this.STORAGE_KEY}_${planoId}`, JSON.stringify(data));
+      console.log('💾 Dados de desenvolvimento salvos:', { planoId });
+    } catch (error) {
+      console.error('❌ Erro ao salvar dados de desenvolvimento:', error);
+    }
+  }
+
   /**
    * Coleta dados completos do plano de aula para enviar à IA
    */
