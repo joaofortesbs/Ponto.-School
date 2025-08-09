@@ -145,7 +145,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   // Inicializar etapas de desenvolvimento
   React.useEffect(() => {
     console.log('🔄 Inicializando etapas de desenvolvimento:', planoData);
-    
+
     // Verifica se planoData existe e tem a propriedade desenvolvimento
     if (planoData && Array.isArray(planoData.desenvolvimento)) {
       console.log('✅ Etapas encontradas em planoData.desenvolvimento:', planoData.desenvolvimento);
@@ -153,9 +153,9 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     } else if (planoData && planoData.developmentSteps && Array.isArray(planoData.developmentSteps)) {
       console.log('✅ Etapas encontradas em planoData.developmentSteps:', planoData.developmentSteps);
       setDevelopmentSteps(planoData.developmentSteps);
-    } else if (plano && Array.isArray(plano.desenvolvimento)) {
-      console.log('✅ Etapas encontradas em plano.desenvolvimento:', plano.desenvolvimento);
-      setDevelopmentSteps(plano.desenvolvimento);
+    } else if (planoData && Array.isArray(planoData.desenvolvimento)) { // Changed from `plano` to `planoData`
+      console.log('✅ Etapas encontradas em planoData.desenvolvimento:', planoData.desenvolvimento);
+      setDevelopmentSteps(planoData.desenvolvimento);
     } else {
       console.log('⚠️ Nenhuma etapa encontrada, criando etapas padrão');
       // Cria etapas padrão se não houver nenhuma
@@ -199,7 +199,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       ];
       setDevelopmentSteps(etapasPadrao);
     }
-  }, [planoData, plano]);
+  }, [planoData]); // Removed `plano` from dependencies as it was the problematic duplicate
 
 
   // Funções de drag and drop
@@ -305,107 +305,104 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     );
   }
 
-  // Se não tem estrutura de plano completo, cria uma estrutura básica
-  let plano = planoData;
-  if (!plano.visao_geral) {
-    console.log('🔨 PlanoAulaPreview - Criando estrutura básica do plano');
-
-    plano = {
-      titulo: plano.titulo || plano.title || 'Plano de Aula',
-      descricao: plano.descricao || plano.description || 'Descrição do plano de aula',
-      visao_geral: {
-        disciplina: plano.disciplina || plano.subject || 'Disciplina',
-        tema: plano.tema || plano.theme || plano.titulo || plano.title || 'Tema',
-        serie: plano.serie || plano.anoEscolaridade || plano.schoolYear || 'Série',
-        tempo: plano.tempo || plano.tempoLimite || plano.timeLimit || 'Tempo',
-        metodologia: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia',
-        recursos: plano.recursos || (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
-        sugestoes_ia: ['Plano de aula personalizado']
+  // If planoData doesn't have the necessary structure, create a basic one.
+  // This `plano` variable is now the sole source for the structured plan data.
+  const plano = planoData?.titulo || planoData?.title ? planoData : {
+    titulo: planoData?.titulo || planoData?.title || 'Plano de Aula',
+    descricao: planoData?.descricao || planoData?.description || 'Descrição do plano de aula',
+    visao_geral: {
+      disciplina: planoData?.disciplina || planoData?.subject || 'Disciplina',
+      tema: planoData?.tema || planoData?.theme || planoData?.titulo || planoData?.title || 'Tema',
+      serie: planoData?.serie || planoData?.anoEscolaridade || planoData?.schoolYear || 'Série',
+      tempo: planoData?.tempo || planoData?.tempoLimite || planoData?.timeLimit || 'Tempo',
+      metodologia: planoData?.metodologia || planoData?.tipoAula || planoData?.difficultyLevel || 'Metodologia',
+      recursos: planoData?.recursos || (planoData?.materiais ? [planoData.materiais] : ['Recursos não especificados']),
+      sugestoes_ia: ['Plano de aula personalizado']
+    },
+    objetivos: planoData?.objetivos ? (Array.isArray(planoData.objetivos) ? planoData.objetivos.map(obj => ({
+      descricao: typeof obj === 'string' ? obj : obj.descricao || obj,
+      habilidade_bncc: planoData?.competencias || 'BNCC não especificada',
+      sugestao_reescrita: '',
+      atividade_relacionada: ''
+    })) : [{
+      descricao: planoData.objetivos,
+      habilidade_bncc: planoData?.competencias || 'BNCC não especificada',
+      sugestao_reescrita: '',
+      atividade_relacionada: ''
+    }]) : [{
+      descricao: planoData?.objetivos || 'Objetivo não especificado',
+      habilidade_bncc: planoData?.competencias || 'BNCC não especificada',
+      sugestao_reescrita: '',
+      atividade_relacionada: ''
+    }],
+    metodologia: {
+      nome: planoData?.metodologia || planoData?.tipoAula || planoData?.difficultyLevel || 'Metodologia Ativa',
+      descricao: planoData?.descricaoMetodologia || planoData?.descricao || planoData?.description || 'Descrição da metodologia',
+      alternativas: ['Aula expositiva', 'Atividades práticas'],
+      simulacao_de_aula: 'Simulação disponível',
+      explicacao_em_video: 'Video explicativo disponível'
+    },
+    desenvolvimento: planoData?.desenvolvimento || [
+      {
+        etapa: 1,
+        titulo: "1. Introdução e Contextualização",
+        descricao: "Apresente o contexto histórico da Europa no século XVIII, focando nas tensões sociais e econômicas que antecederam a Revolução Francesa. Inicie com uma pergunta provocativa sobre desigualdade social.",
+        tipo_interacao: "Apresentação + debate",
+        tempo_estimado: "15 min",
+        recurso_gerado: "Slides introdutórios",
+        nota_privada_professor: "Contextualizar o tema e despertar interesse"
       },
-      objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
-        descricao: typeof obj === 'string' ? obj : obj.descricao || obj,
-        habilidade_bncc: plano.competencias || 'BNCC não especificada',
-        sugestao_reescrita: '',
-        atividade_relacionada: ''
-      })) : [{
-        descricao: plano.objetivos,
-        habilidade_bncc: plano.competencias || 'BNCC não especificada',
-        sugestao_reescrita: '',
-        atividade_relacionada: ''
-      }]) : [{
-        descricao: plano.objetivos || 'Objetivo não especificado',
-        habilidade_bncc: plano.competencias || 'BNCC não especificada',
-        sugestao_reescrita: '',
-        atividade_relacionada: ''
-      }],
-      metodologia: {
-        nome: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
-        descricao: plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
-        alternativas: ['Aula expositiva', 'Atividades práticas'],
-        simulacao_de_aula: 'Simulação disponível',
-        explicacao_em_video: 'Video explicativo disponível'
+      {
+        etapa: 2,
+        titulo: "2. Vídeo Interativo",
+        descricao: "Assista com os alunos um vídeo de 5 minutos sobre os três estados franceses e suas diferenças. Pause em momentos estratégicos para discussão.",
+        tipo_interacao: "Assistir + Discussão",
+        tempo_estimado: "10 min",
+        recurso_gerado: "Vídeo educativo",
+        nota_privada_professor: "Verificar compreensão durante as pausas"
       },
-      desenvolvimento: plano.desenvolvimento || [
-        {
-          etapa: 1,
-          titulo: "1. Introdução e Contextualização",
-          descricao: "Apresente o contexto histórico da Europa no século XVIII, focando nas tensões sociais e econômicas que antecederam a Revolução Francesa. Inicie com uma pergunta provocativa sobre desigualdade social.",
-          tipo_interacao: "Apresentação + debate",
-          tempo_estimado: "15 min",
-          recurso_gerado: "Slides introdutórios",
-          nota_privada_professor: "Contextualizar o tema e despertar interesse"
-        },
-        {
-          etapa: 2,
-          titulo: "2. Vídeo Interativo",
-          descricao: "Assista com os alunos um vídeo de 5 minutos sobre os três estados franceses e suas diferenças. Pause em momentos estratégicos para discussão.",
-          tipo_interacao: "Assistir + Discussão",
-          tempo_estimado: "10 min",
-          recurso_gerado: "Vídeo educativo",
-          nota_privada_professor: "Verificar compreensão durante as pausas"
-        },
-        {
-          etapa: 3,
-          titulo: "3. Atividade Prática",
-          descricao: "Divida os alunos em grupos para simular os três estados franceses. Cada grupo deve apresentar suas características, privilégios e queixas.",
-          tipo_interacao: "Dinâmica em grupo",
-          tempo_estimado: "20 min",
-          recurso_gerado: "Roteiro de simulação",
-          nota_privada_professor: "Circular entre os grupos orientando"
-        },
-        {
-          etapa: 4,
-          titulo: "4. Reflexão Final",
-          descricao: "Recolha as conclusões dos grupos e faça uma análise guiada sobre como essas tensões levaram à revolução.",
-          tipo_interacao: "Discussão guiada",
-          tempo_estimado: "10 min",
-          recurso_gerado: "Síntese das conclusões",
-          nota_privada_professor: "Conectar com próxima aula"
-        }
-      ],
-      atividades: plano.atividades || [
-        {
-          nome: 'Atividade Principal',
-          tipo: 'Prática',
-          ref_objetivos: [1],
-          visualizar_como_aluno: 'Atividade interativa',
-          sugestoes_ia: ['Personalize conforme necessário']
-        }
-      ],
-      avaliacao: {
-        criterios: plano.avaliacao || plano.observacoes || plano.evaluation || 'Critérios não especificados',
-        instrumentos: ['Observação', 'Participação'],
-        feedback: 'Feedback personalizado'
+      {
+        etapa: 3,
+        titulo: "3. Atividade Prática",
+        descricao: "Divida os alunos em grupos para simular os três estados franceses. Cada grupo deve apresentar suas características, privilégios e queixas.",
+        tipo_interacao: "Dinâmica em grupo",
+        tempo_estimado: "20 min",
+        recurso_gerado: "Roteiro de simulação",
+        nota_privada_professor: "Circular entre os grupos orientando"
       },
-      recursos_extras: {
-        materiais_complementares: plano.materiais ? [plano.materiais] : ['Material não especificado'],
-        tecnologias: ['Quadro', 'Projetor'],
-        referencias: ['Bibliografia básica']
+      {
+        etapa: 4,
+        titulo: "4. Reflexão Final",
+        descricao: "Recolha as conclusões dos grupos e faça uma análise guiada sobre como essas tensões levaram à revolução.",
+        tipo_interacao: "Discussão guiada",
+        tempo_estimado: "10 min",
+        recurso_gerado: "Síntese das conclusões",
+        nota_privada_professor: "Conectar com próxima aula"
       }
-    };
-
-    console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
+    ],
+    atividades: planoData?.atividades || [
+      {
+        nome: 'Atividade Principal',
+        tipo: 'Prática',
+        ref_objetivos: [1],
+        visualizar_como_aluno: 'Atividade interativa',
+        sugestoes_ia: ['Personalize conforme necessário']
+      }
+    ],
+    avaliacao: {
+      criterios: planoData?.avaliacao || planoData?.observacoes || planoData?.evaluation || 'Critérios não especificados',
+      instrumentos: ['Observação', 'Participação'],
+      feedback: 'Feedback personalizado'
+    },
+    recursos_extras: {
+      materiais_complementares: planoData?.materiais ? [planoData.materiais] : ['Material não especificado'],
+      tecnologias: ['Quadro', 'Projetor'],
+      referencias: ['Bibliografia básica']
+    }
   };
+
+  console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
+
 
   // Seções de navegação lateral
   const sidebarSections = [
@@ -683,7 +680,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
       case 'desenvolvimento':
         console.log('🎯 Renderizando seção desenvolvimento com etapas:', developmentSteps);
         console.log('📊 Total de etapas:', developmentSteps.length);
-        
+
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
