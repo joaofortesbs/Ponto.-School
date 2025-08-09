@@ -24,131 +24,18 @@ export interface AtividadesData {
 
 export class AtividadesDataProcessor {
   /**
-   * Extrai etapas de desenvolvimento de forma segura
-   */
-  private static extrairEtapasSeguramente(desenvolvimento: any, planoData: any, activityData: any): any[] {
-    // Tentar múltiplas fontes de dados
-    const fontes = [
-      desenvolvimento?.etapas,
-      planoData?.desenvolvimento?.etapas,
-      activityData?.desenvolvimento?.etapas,
-      activityData?.originalData?.desenvolvimento?.etapas
-    ];
-
-    for (const fonte of fontes) {
-      if (Array.isArray(fonte) && fonte.length > 0) {
-        console.log('📝 Etapas encontradas na fonte:', fonte.length);
-        return fonte;
-      }
-    }
-
-    console.log('📝 Nenhuma etapa encontrada, retornando array vazio');
-    return [];
-  }
-
-  /**
-   * Cria dados padrão de atividades
-   */
-  private static criarAtividadesPadrao(): AtividadesData {
-    return {
-      titulo: "Atividades e Recursos",
-      descricao: "Lista de atividades e recursos para o plano de aula",
-      total_items: 0,
-      atividades_recursos: [],
-      timestamp: new Date().toISOString(),
-      plano_id: `plano_${Date.now()}`
-    };
-  }
-
-  /**
-   * Determina o tipo de recurso baseado no nome
-   */
-  private static determinarTipoRecurso(nomeRecurso: string): 'atividade' | 'recurso' | 'material' {
-    const nome = nomeRecurso.toLowerCase();
-
-    const atividades = ['lista', 'exercício', 'prova', 'quiz', 'jogo', 'simulado'];
-    const recursos = ['slide', 'apresentação', 'mapa mental', 'texto'];
-
-    if (atividades.some(palavra => nome.includes(palavra))) return 'atividade';
-    if (recursos.some(palavra => nome.includes(palavra))) return 'recurso';
-
-    return 'material';
-  }
-
-  /**
-   * Categoriza por tipo de interação
-   */
-  private static categorizarPorTipoInteracao(tipoInteracao: string): string {
-    const mapeamento: Record<string, string> = {
-      'apresentacao': 'expositiva',
-      'discussao': 'participativa', 
-      'pratica': 'atividade',
-      'grupo': 'colaborativa',
-      'individual': 'individual'
-    };
-
-    return mapeamento[tipoInteracao] || 'geral';
-  }
-
-  /**
    * Processa dados de atividades vindos do desenvolvimento e outras fontes
    */
   static processarDadosAtividades(input: any): AtividadesData {
     console.log('🔄 AtividadesDataProcessor: Iniciando processamento', input);
 
-    // Verificar se input existe e é válido
-    if (!input || typeof input !== 'object') {
-      console.warn('⚠️ Input inválido para AtividadesDataProcessor');
-      return this.criarAtividadesPadrao();
-    }
-
     const { planoData, activityData, desenvolvimento } = input;
     const atividadesRecursos: AtividadeRecurso[] = [];
 
     // Processar dados do desenvolvimento se disponível
-    const etapasDesenvolvimento = this.extrairEtapasSeguramente(desenvolvimento, planoData, activityData);
+    if (desenvolvimento?.etapas || planoData?.desenvolvimento?.etapas) {
+      const etapas = desenvolvimento?.etapas || planoData?.desenvolvimento?.etapas || [];
 
-    if (etapasDesenvolvimento && etapasDesenvolvimento.length > 0) {
-      console.log('📝 Processando etapas do desenvolvimento:', etapasDesenvolvimento.length);
-
-      etapasDesenvolvimento.forEach((etapa: any, index: number) => {
-        if (!etapa || typeof etapa !== 'object') return;
-
-        // Processar recursos da etapa de forma segura
-        const recursos = Array.isArray(etapa.recursos) ? etapa.recursos : [];
-        recursos.forEach((recurso: string) => {
-          if (typeof recurso === 'string' && recurso.trim()) {
-            atividadesRecursos.push({
-              id: `desenvolvimento_${index}_${recurso.toLowerCase().replace(/\s+/g, '_')}`,
-              nome: recurso,
-              tipo: this.determinarTipoRecurso(recurso),
-              descricao: `Recurso para a etapa: ${etapa.titulo || 'Etapa sem título'}`,
-              origem: 'desenvolvimento',
-              etapa_origem: etapa.titulo || `Etapa ${index + 1}`,
-              categoria: 'material'
-            });
-          }
-        });
-
-        // Adicionar a própria etapa como atividade
-        if (etapa.titulo) {
-          atividadesRecursos.push({
-            id: `etapa_${index}`,
-            nome: etapa.titulo,
-            tipo: 'atividade',
-            descricao: etapa.descricao || 'Atividade de desenvolvimento',
-            origem: 'desenvolvimento',
-            etapa_origem: etapa.titulo,
-            categoria: this.categorizarPorTipoInteracao(etapa.tipoInteracao)
-          });
-        }
-      }); 
-    }
-
-    // Processar dados de EtapaDesenvolvimento (assumindo que DesenvolvimentoData.ts exporta EtapaDesenvolvimento)
-    if (desenvolvimento?.etapas && Array.isArray(desenvolvimento.etapas)) {
-      const etapas: EtapaDesenvolvimento[] = desenvolvimento.etapas;
-      
       etapas.forEach((etapa: EtapaDesenvolvimento, index: number) => {
         // Extrair recursos utilizados
         if (etapa.recursosUtilizados && Array.isArray(etapa.recursosUtilizados)) {
