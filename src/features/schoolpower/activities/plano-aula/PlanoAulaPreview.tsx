@@ -12,7 +12,6 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronRight,
-  Eye,
   Plus,
   X,
   Presentation,
@@ -24,8 +23,6 @@ import {
   PenTool,
   Zap,
   Activity,
-  FileText,
-  Play,
   Edit,
   Star,
   ChevronUp,
@@ -1009,52 +1006,7 @@ const EtapaCard: React.FC<EtapaCardProps> = ({
               )}
             </div>
 
-            {/* Nota Privada do Professor */}
-            {etapa.nota_privada_professor && (
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-700 mb-4">
-                <div className="flex items-start gap-2">
-                  <Eye className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <strong className="text-amber-800 dark:text-amber-200 block mb-1 text-sm">
-                      Nota privada do professor:
-                    </strong>
-                    <p className="text-amber-700 dark:text-amber-300 text-sm">
-                      {etapa.nota_privada_professor}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Botões de Ação */}
-            <div className="flex gap-2 flex-wrap">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="border-orange-300 text-orange-600 hover:bg-orange-50"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Gerar Slides
-              </Button>
-              
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="border-green-300 text-green-600 hover:bg-green-50"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Gerar Recurso
-              </Button>
-
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="border-blue-300 text-blue-600 hover:bg-blue-50"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Simular Etapa
-              </Button>
-            </div>
+            
           </div>
         </div>
       </CardContent>
