@@ -566,7 +566,6 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         {/* Sidebar de Navegação */}
         <div className="w-80 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-lg">
           <div className="p-4">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Seções do Plano</h2>
             <div className="space-y-3">
               {sidebarSections.map((section) => {
                 const Icon = section.icon;
