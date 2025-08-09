@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
@@ -62,10 +61,10 @@ export default function DesenvolvimentoInterface({
       if (!planoId) return;
 
       console.log('🔄 Carregando/Gerando dados de desenvolvimento para:', planoId);
-      
+
       // Tentar carregar dados salvos primeiro
       const dadosSalvos = DesenvolvimentoGeminiService.carregarEtapasDesenvolvimento(planoId);
-      
+
       if (dadosSalvos) {
         console.log('📂 Dados encontrados no localStorage:', dadosSalvos);
         setDesenvolvimentoData(dadosSalvos);
@@ -89,21 +88,21 @@ export default function DesenvolvimentoInterface({
 
   const gerarEtapasViaIA = async () => {
     setCarregandoIA(true);
-    
+
     try {
       console.log('🚀 Iniciando geração de etapas via Gemini...');
       console.log('📝 Contexto enviado:', contextoPlano);
 
       const etapasGeradas = await DesenvolvimentoGeminiService.gerarEtapasDesenvolvimento(contextoPlano);
-      
+
       console.log('✅ Etapas geradas com sucesso:', etapasGeradas);
-      
+
       setDesenvolvimentoData(etapasGeradas);
       onDataChange?.(etapasGeradas);
-      
+
       // Salvar no localStorage
       DesenvolvimentoGeminiService.salvarEtapasDesenvolvimento(planoId, etapasGeradas);
-      
+
       toast({
         title: "✨ Etapas Geradas com Sucesso!",
         description: `${etapasGeradas.etapas.length} etapas foram criadas pela IA para seu plano de aula.`,
@@ -111,12 +110,12 @@ export default function DesenvolvimentoInterface({
 
     } catch (error) {
       console.error('❌ Erro na geração via IA:', error);
-      
+
       // Usar dados padrão em caso de erro
       const dadosComContexto = DesenvolvimentoGeminiService['aplicarContextoAosDadosPadrao'](contextoPlano);
       setDesenvolvimentoData(dadosComContexto);
       onDataChange?.(dadosComContexto);
-      
+
       toast({
         title: "⚠️ Falha na Geração IA",
         description: "Usando estrutura padrão. Você pode tentar gerar novamente.",
@@ -161,7 +160,7 @@ export default function DesenvolvimentoInterface({
     };
     setDesenvolvimentoData(updatedData);
     onDataChange?.(updatedData);
-    
+
     // Salvar no localStorage
     DesenvolvimentoGeminiService.salvarEtapasDesenvolvimento(planoId, updatedData);
   };
@@ -176,7 +175,7 @@ export default function DesenvolvimentoInterface({
 
   const renderEtapaCard = (etapa: EtapaDesenvolvimento) => {
     const isExpandida = etapaExpandida === etapa.id;
-    
+
     return (
       <Reorder.Item
         key={etapa.id}
@@ -203,7 +202,7 @@ export default function DesenvolvimentoInterface({
                   >
                     <GripVertical className="h-4 w-4 text-gray-400" />
                   </motion.div>
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -217,7 +216,7 @@ export default function DesenvolvimentoInterface({
                       <ChevronRight className="h-4 w-4" />
                     </motion.div>
                   </Button>
-                  
+
                   <div className="flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
                       {getIconeInteracao(etapa.tipoInteracao)}
@@ -229,13 +228,13 @@ export default function DesenvolvimentoInterface({
                     </CardTitle>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 rounded-full">
                     <Clock className="h-3 w-3 mr-1" />
                     {etapa.tempoEstimado}
                   </Badge>
-                  
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -247,7 +246,7 @@ export default function DesenvolvimentoInterface({
                 </div>
               </div>
             </CardHeader>
-            
+
             <motion.div
               initial={false}
               animate={{ 
@@ -265,12 +264,12 @@ export default function DesenvolvimentoInterface({
                       {etapa.tipoInteracao}
                     </Badge>
                   </div>
-                  
+
                   {/* Descrição */}
                   <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                     <p className="text-sm leading-relaxed">{etapa.descricao}</p>
                   </div>
-                  
+
                   {/* Recursos usados */}
                   {etapa.recursosUsados.length > 0 && (
                     <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -324,7 +323,7 @@ export default function DesenvolvimentoInterface({
     <div className={`w-full h-full ${
       theme === 'dark' ? 'text-white' : 'text-[#29335C]'
     } transition-colors duration-300`}>
-      
+
       {/* Header com título estilizado */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between mb-6">
@@ -341,7 +340,7 @@ export default function DesenvolvimentoInterface({
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {contextoPlano && (
               <motion.div
@@ -455,22 +454,193 @@ export default function DesenvolvimentoInterface({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Lista de Etapas com Drag and Drop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Reorder.Group
-                axis="y"
-                values={desenvolvimentoData.etapas}
-                onReorder={handleReorder}
-                className="space-y-4"
-              >
-                {desenvolvimentoData.etapas.map(renderEtapaCard)}
-              </Reorder.Group>
-            </motion.div>
-            
+            {/* Lista de Etapas */}
+            <div className="space-y-4">
+              {Array.isArray(desenvolvimentoData.etapas) && desenvolvimentoData.etapas.length > 0 ? (
+                <Reorder.Group 
+                  axis="y" 
+                  values={desenvolvimentoData.etapas} 
+                  onReorder={handleReorder}
+                  className="space-y-4"
+                >
+                  {desenvolvimentoData.etapas.map((etapa, index) => (
+                    <Reorder.Item
+                      key={etapa.id}
+                      value={etapa}
+                      className="mb-4"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
+                          theme === 'dark' 
+                            ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
+                            : 'bg-white border-gray-200 hover:bg-gray-50'
+                        }`}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                <motion.div 
+                                  className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  <GripVertical className="h-4 w-4 text-gray-400" />
+                                </motion.div>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleEtapaExpandida(etapa.id)}
+                                  className="p-1 h-8 w-8"
+                                >
+                                  <motion.div
+                                    animate={{ rotate: isExpandida ? 90 : 0 }}
+                                    transition={{ duration: 0.2 }}
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </motion.div>
+                                </Button>
+
+                                <div className="flex items-center gap-2">
+                                  <div className="p-2 rounded-lg bg-[#FF6B00]/10 text-[#FF6B00]">
+                                    {getIconeInteracao(etapa.tipoInteracao)}
+                                  </div>
+                                  <CardTitle className={`text-lg font-bold ${
+                                    theme === 'dark' ? 'text-white' : 'text-[#29335C]'
+                                  }`}>
+                                    {etapa.titulo}
+                                  </CardTitle>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20 rounded-full">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {etapa.tempoEstimado}
+                                </Badge>
+
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => editarEtapa(etapa.id)}
+                                  className="text-gray-500 hover:text-[#FF6B00] h-8 w-8 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+
+                          <motion.div
+                            initial={false}
+                            animate={{ 
+                              height: isExpandida ? "auto" : 0,
+                              opacity: isExpandida ? 1 : 0
+                            }}
+                            transition={{ duration: 0.3 }}
+                            style={{ overflow: "hidden" }}
+                          >
+                            <CardContent className="pt-0">
+                              <div className="space-y-4">
+                                {/* Tipo de Interação */}
+                                <div className="flex items-center gap-2">
+                                  <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full">
+                                    {etapa.tipoInteracao}
+                                  </Badge>
+                                </div>
+
+                                {/* Descrição */}
+                                <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  <p className="text-sm leading-relaxed">{etapa.descricao}</p>
+                                </div>
+
+                                {/* Recursos usados */}
+                                {etapa.recursosUsados.length > 0 && (
+                                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <p className={`text-xs font-medium mb-2 ${
+                                      theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                                    }`}>
+                                      Recursos Utilizados:
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                      {etapa.recursosUsados.map((recurso, index) => (
+                                        <Badge
+                                          key={index}
+                                          variant="outline"
+                                          className="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-full"
+                                        >
+                                          {recurso}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </motion.div>
+
+                          {/* Preview quando collapsed */}
+                          {!isExpandida && (
+                            <CardContent className="pt-0 pb-4">
+                              <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                                <p className="text-sm line-clamp-2">{etapa.descricao}</p>
+                                {etapa.descricao.length > 120 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleEtapaExpandida(etapa.id)}
+                                    className="text-[#FF6B00] text-xs mt-2 h-auto p-0 hover:underline transition-all duration-200 hover:text-[#FF8533]"
+                                  >
+                                    Ver mais
+                                  </Button>
+                                )}
+                              </div>
+                            </CardContent>
+                          )}
+                        </Card>
+                      </motion.div>
+                    </Reorder.Item>
+                  ))}
+                </Reorder.Group>
+              ) : (
+                <div className={`p-8 text-center border-2 border-dashed rounded-xl ${
+                  theme === 'dark' ? 'border-gray-700 bg-[#1E293B]' : 'border-gray-300 bg-gray-50'
+                }`}>
+                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className={`text-lg font-medium mb-2 ${
+                    theme === 'dark' ? 'text-white' : 'text-[#29335C]'
+                  }`}>
+                    Nenhuma etapa encontrada
+                  </h3>
+                  <p className={`text-sm mb-4 ${
+                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    Clique no botão abaixo para gerar etapas automaticamente
+                  </p>
+                  <Button
+                    onClick={gerarEtapasViaIA}
+                    disabled={carregandoIA}
+                    className="bg-[#FF6B00] hover:bg-[#FF6B00]/90 text-white"
+                  >
+                    {carregandoIA ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Gerar Etapas
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {/* Observações Gerais - Colapsável */}
             {desenvolvimentoData.observacoesGerais && (
               <motion.div
@@ -518,7 +688,7 @@ export default function DesenvolvimentoInterface({
                 </Card>
               </motion.div>
             )}
-            
+
             {/* Sugestões da IA */}
             {desenvolvimentoData.sugestoesIA.length > 0 && (
               <motion.div
@@ -561,7 +731,7 @@ export default function DesenvolvimentoInterface({
           </div>
         )}
       </ScrollArea>
-      
+
       {/* Debug Panel */}
       <DebugPanel 
         planoId={planoId}
