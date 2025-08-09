@@ -78,6 +78,29 @@ export class PlanoAulaDebugger {
     return [];
   }
   
+  static debugEtapasDesenvolvimento(etapas: any[]) {
+    this.log(`🔍 Debug das etapas de desenvolvimento: ${etapas.length} etapas encontradas`, etapas);
+    
+    etapas.forEach((etapa, index) => {
+      this.log(`📝 Etapa ${index + 1}:`, {
+        titulo: etapa.titulo || etapa.title,
+        descricao: etapa.descricao || etapa.description,
+        tempo: etapa.tempo_estimado || etapa.tempo || etapa.duration,
+        tipo: etapa.tipo_interacao || etapa.tipo || etapa.type
+      });
+    });
+  }
+
+  static debugEstruturaPlanoCriada(plano: any) {
+    this.log('🏗️ Estrutura básica do plano criada:', {
+      titulo: plano.titulo,
+      visao_geral: !!plano.visao_geral,
+      objetivos: Array.isArray(plano.objetivos) ? plano.objetivos.length : 0,
+      desenvolvimento: Array.isArray(plano.desenvolvimento) ? plano.desenvolvimento.length : 0,
+      metodologia: !!plano.metodologia
+    });
+  }
+
   static getDebugReport(): string {
     return this.logs.join('\n');
   }
