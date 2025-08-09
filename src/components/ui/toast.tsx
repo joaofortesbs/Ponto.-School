@@ -125,3 +125,6 @@ export {
   ToastClose,
   ToastAction,
 }
+
+// Adicionar exportação toast para compatibilidade
+export const toast = ToastProvider

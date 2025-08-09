@@ -65,13 +65,13 @@ export class AtividadesDataProcessor {
    */
   private static determinarTipoRecurso(nomeRecurso: string): 'atividade' | 'recurso' | 'material' {
     const nome = nomeRecurso.toLowerCase();
-    
+
     const atividades = ['lista', 'exercício', 'prova', 'quiz', 'jogo', 'simulado'];
     const recursos = ['slide', 'apresentação', 'mapa mental', 'texto'];
-    
+
     if (atividades.some(palavra => nome.includes(palavra))) return 'atividade';
     if (recursos.some(palavra => nome.includes(palavra))) return 'recurso';
-    
+
     return 'material';
   }
 
@@ -107,13 +107,13 @@ export class AtividadesDataProcessor {
 
     // Processar dados do desenvolvimento se disponível
     const etapasDesenvolvimento = this.extrairEtapasSeguramente(desenvolvimento, planoData, activityData);
-    
+
     if (etapasDesenvolvimento && etapasDesenvolvimento.length > 0) {
       console.log('📝 Processando etapas do desenvolvimento:', etapasDesenvolvimento.length);
-      
+
       etapasDesenvolvimento.forEach((etapa: any, index: number) => {
         if (!etapa || typeof etapa !== 'object') return;
-        
+
         // Processar recursos da etapa de forma segura
         const recursos = Array.isArray(etapa.recursos) ? etapa.recursos : [];
         recursos.forEach((recurso: string) => {
@@ -129,7 +129,7 @@ export class AtividadesDataProcessor {
             });
           }
         });
-        
+
         // Adicionar a própria etapa como atividade
         if (etapa.titulo) {
           atividadesRecursos.push({
@@ -142,8 +142,13 @@ export class AtividadesDataProcessor {
             categoria: this.categorizarPorTipoInteracao(etapa.tipoInteracao)
           });
         }
-      }); [];
+      }); 
+    }
 
+    // Processar dados de EtapaDesenvolvimento (assumindo que DesenvolvimentoData.ts exporta EtapaDesenvolvimento)
+    if (desenvolvimento?.etapas && Array.isArray(desenvolvimento.etapas)) {
+      const etapas: EtapaDesenvolvimento[] = desenvolvimento.etapas;
+      
       etapas.forEach((etapa: EtapaDesenvolvimento, index: number) => {
         // Extrair recursos utilizados
         if (etapa.recursosUtilizados && Array.isArray(etapa.recursosUtilizados)) {

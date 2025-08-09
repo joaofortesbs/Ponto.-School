@@ -1,3 +1,4 @@
+import { ActivityData } from '../../types/ActivityData';
 
 export interface EtapaDesenvolvimento {
   titulo: string;
@@ -17,11 +18,19 @@ export interface DesenvolvimentoData {
   plano_id: string;
 }
 
+// Classe para integração com Gemini AI
+export class DesenvolvimentoGeminiService {
+  static async processData(data: any) {
+    // Implementação do serviço Gemini
+    return data;
+  }
+}
+
 export class DesenvolvimentoDataProcessor {
   /**
    * Cria dados padrão para desenvolvimento quando não há dados disponíveis
    */
-  private static criarDadosPadrao(planoData?: any): DesenvolvimentoData {
+  static criarDadosPadrao(planoData?: any): DesenvolvimentoData {
     return {
       titulo: "Desenvolvimento da Aula",
       descricao: "Sequência de atividades para desenvolvimento do conteúdo",
@@ -35,7 +44,7 @@ export class DesenvolvimentoDataProcessor {
   /**
    * Cria etapas padrão para o desenvolvimento
    */
-  private static criarEtapasPadrao(planoData?: any): EtapaDesenvolvimento[] {
+  static criarEtapasPadrao(planoData?: any): EtapaDesenvolvimento[] {
     const disciplina = planoData?.disciplina || 'disciplina';
     const tema = planoData?.tema || 'tema da aula';
 
@@ -80,7 +89,7 @@ export class DesenvolvimentoDataProcessor {
    */
   private static validarEtapa(etapa: any): boolean {
     if (!etapa || typeof etapa !== 'object') return false;
-    
+
     const camposObrigatorios = ['titulo', 'descricao', 'tipoInteracao', 'tempoEstimado'];
     return camposObrigatorios.every(campo => etapa.hasOwnProperty(campo));
   }
@@ -121,7 +130,7 @@ export class DesenvolvimentoDataProcessor {
 
     // Tentar extrair etapas de desenvolvimento de várias fontes possíveis
     let etapasOriginais: any[] = [];
-    
+
     // Prioridade: desenvolvimento direto > planoData > activityData
     if (desenvolvimento?.etapas && Array.isArray(desenvolvimento.etapas)) {
       etapasOriginais = desenvolvimento.etapas;
@@ -141,7 +150,7 @@ export class DesenvolvimentoDataProcessor {
 
     // Sanitizar e validar as etapas
     const etapasProcessadas = this.sanitizarEtapas(etapasOriginais);
-    
+
     // Calcular tempo total
     const tempoTotal = etapasProcessadas.reduce((total, etapa) => {
       return total + (etapa.tempoEstimado || 0);
@@ -172,7 +181,7 @@ export class DesenvolvimentoDataProcessor {
     const disciplina = contextoPlano?.disciplina || 'disciplina não especificada';
     const tema = contextoPlano?.tema || 'tema não especificado';
     const objetivos = contextoPlano?.objetivos || 'objetivos não definidos';
-    
+
     return `Crie um desenvolvimento de aula detalhado para:
 
 **CONTEXTO DA AULA:**
@@ -183,10 +192,10 @@ export class DesenvolvimentoDataProcessor {
 - Tempo disponível: 45 minutos (MÁXIMO)
 - Metodologia: ${contextoPlano?.metodologia || 'Ativa e participativa'}
 
-**ATIVIDADES DISPONÍVEIS NO SCHOOL POWER (inclua algumas nos recursos):**
+**ATIVIDADES DISPONIVEIS NO SCHOOL POWER (inclua algumas nos recursos):**
 Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula, Sequência Didática, Jogos Educativos, Apresentação de Slides, Proposta de Redação, Simulado, Caça-Palavras, Palavras Cruzadas, Experimento Científico, Critérios de Avaliação, Revisão Guiada, Atividades de Matemática, Quiz, Charadas, Corretor de Questões.
 
-**INSTRUÇÕES ESPECÍFICAS:**
+**INSTRUÇÕES ESPECIFICAS:**
 1. Crie entre 3 a 5 etapas de desenvolvimento da aula
 2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
 3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
@@ -217,15 +226,15 @@ Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula,
    */
   static validarDados(dados: DesenvolvimentoData): boolean {
     if (!dados || typeof dados !== 'object') return false;
-    
+
     // Verificar campos obrigatórios
     if (!dados.titulo || !dados.etapas || !Array.isArray(dados.etapas)) {
       return false;
     }
-    
+
     // Verificar se há pelo menos uma etapa
     if (dados.etapas.length === 0) return false;
-    
+
     // Verificar cada etapa
     return dados.etapas.every(etapa => this.validarEtapa(etapa));
   }
