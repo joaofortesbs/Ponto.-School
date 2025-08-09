@@ -17,19 +17,6 @@ export interface DesenvolvimentoData {
   sugestoesIA: string[];
 }
 
-const calcularTempoTotal = (etapas: EtapaDesenvolvimento[]): string => {
-  if (!etapas || !Array.isArray(etapas) || etapas.length === 0) {
-    return "0min";
-  }
-  
-  const totalMinutos = Math.min(45, etapas.reduce((acc, etapa) => {
-    const tempo = parseInt(etapa.tempoEstimado?.match(/\d+/)?.[0] || '0', 10);
-    return acc + tempo;
-  }, 0));
-
-  return `${totalMinutos}min`;
-};
-
 // Dados padrão/fallback - GARANTINDO QUE SEMPRE EXISTE
 export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
   etapas: [
@@ -73,33 +60,38 @@ export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
   ]
 };
 
-// Dados padrão para desenvolvimento
-export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
-  id: '',
-  planoId: '',
-  etapas: [],
-  recursosUtilizados: [],
-  tempoTotalEstimado: '0 min',
-  timestamp: new Date().toISOString()
-};
+// Função para calcular tempo total das etapas
+function calcularTempoTotal(etapas: EtapaDesenvolvimento[]): string {
+  if (!etapas || etapas.length === 0) return "0 minutos";
+  
+  let totalMinutos = 0;
+  etapas.forEach(etapa => {
+    const match = etapa.tempoEstimado.match(/\d+/);
+    if (match) {
+      totalMinutos += parseInt(match[0], 10);
+    }
+  });
+  
+  return totalMinutos > 60 ? `${Math.floor(totalMinutos / 60)}h ${totalMinutos % 60}min` : `${totalMinutos}min`;
+}
 
+// Classe para gerenciar dados de desenvolvimento via Gemini
 export class DesenvolvimentoGeminiService {
-  private static readonly GEMINI_API_KEY = 'AIzaSyAOGaQlsBFb2FzjOCmCORZAL8Hg0J4jVQ';
+  private static readonly GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyB0wPaEv6T0C-2_z3rOwRjlQ-HQXPPfXF8';
   private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
 
   static async gerarEtapasDesenvolvimento(contextoPlano: any): Promise<DesenvolvimentoData> {
     try {
-      console.log('🤖 DesenvolvimentoGeminiService: Iniciando geração com contexto:', contextoPlano);
+      console.log('🚀 Iniciando geração de etapas via Gemini...', contextoPlano);
 
-      // Verificar se há contexto válido
-      if (!contextoPlano || (!contextoPlano.disciplina && !contextoPlano.tema && !contextoPlano.objetivo)) {
-        console.log('⚠️ Contexto insuficiente, retornando dados padrão');
+      if (!contextoPlano) {
+        console.warn('⚠️ Contexto do plano não fornecido, usando dados padrão');
         return desenvolvimentoDataPadrao;
       }
 
-      const prompt = this.construirPrompt(contextoPlano);
-      console.log('📝 Prompt construído:', prompt.substring(0, 200) + '...');
-
+      // Preparar prompt para o Gemini
+      const prompt = this.criarPromptDesenvolvimento(contextoPlano);
+      
       const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -115,78 +107,75 @@ export class DesenvolvimentoGeminiService {
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 8192,
           }
         })
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Erro na API Gemini: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('📡 Resposta da API recebida:', data);
-
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Resposta da API inválida');
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('Resposta inválida da API Gemini');
       }
 
       const textoResposta = data.candidates[0].content.parts[0].text;
-      return this.processarRespostaGemini(textoResposta, contextoPlano);
+      console.log('📝 Resposta bruta do Gemini:', textoResposta);
+
+      return this.processarRespostaGemini(textoResposta);
 
     } catch (error) {
       console.error('❌ Erro ao gerar etapas via Gemini:', error);
-      // Retornar dados padrão em caso de erro
       return desenvolvimentoDataPadrao;
     }
   }
 
-  private static construirPrompt(contexto: any): string {
+  private static criarPromptDesenvolvimento(contextoPlano: any): string {
     return `
-Você é um especialista em pedagogia e criação de planos de aula. Crie etapas de desenvolvimento detalhadas para um plano de aula com as seguintes informações:
+Baseado no seguinte contexto de plano de aula, gere APENAS um JSON válido com as etapas de desenvolvimento:
 
-**Contexto do Plano:**
-- Disciplina: ${contexto.disciplina || 'Não especificada'}
-- Tema: ${contexto.tema || 'Não especificado'}
-- Objetivo: ${contexto.objetivo || 'Não especificado'}
-- Duração: ${contexto.duracao || '45 minutos'}
-- Ano/Série: ${contexto.anoSerie || 'Não especificado'}
+CONTEXTO:
+- Disciplina: ${contextoPlano.disciplina || 'Não informado'}
+- Tema: ${contextoPlano.tema || 'Não informado'}
+- Série: ${contextoPlano.serie || 'Não informado'}
+- Duração: ${contextoPlano.duracao || '45 minutos'}
+- Objetivos: ${contextoPlano.objetivos || 'Não informado'}
 
-**Instruções:**
-1. Crie entre 3 a 5 etapas de desenvolvimento progressivas
-2. Cada etapa deve ter duração entre 5-20 minutos
-3. O tempo total não deve exceder 45 minutos
-4. Inclua diferentes tipos de interação (apresentação, prática, discussão, etc.)
-5. Sugira recursos específicos do School Power (Quiz Interativo, Mapa Mental, etc.)
+Retorne APENAS um JSON válido seguindo esta estrutura exata:
 
-**Formato de Resposta (JSON VÁLIDO):**
 {
   "etapas": [
     {
       "id": "etapa_1",
-      "titulo": "Título da Etapa",
-      "descricao": "Descrição detalhada da atividade e metodologia",
-      "tipoInteracao": "Tipo de interação pedagógica",
+      "titulo": "Título da etapa",
+      "descricao": "Descrição detalhada da etapa",
+      "tipoInteracao": "Tipo de interação",
       "tempoEstimado": "X minutos",
-      "recursosUsados": ["Recurso 1", "Recurso 2"],
+      "recursosUsados": ["recurso1", "recurso2"],
       "ordem": 1,
       "expandida": false
     }
   ],
   "tempoTotalEstimado": "45min",
-  "observacoesGerais": "Observações importantes para o professor",
-  "sugestoesIA": ["Sugestão 1", "Sugestão 2"]
+  "observacoesGerais": "Observações gerais do plano",
+  "sugestoesIA": ["sugestão1", "sugestão2", "sugestão3"]
 }
 
-Responda APENAS com o JSON válido, sem texto adicional.
+IMPORTANTE: 
+- Retorne APENAS o JSON, sem texto adicional
+- Gere entre 3 a 5 etapas
+- O tempo total deve somar aproximadamente ${contextoPlano.duracao || '45 minutos'}
+- Use recursos variados e apropriados para a disciplina
 `;
   }
 
-  private static processarRespostaGemini(textoResposta: string, contexto: any): DesenvolvimentoData {
+  private static processarRespostaGemini(textoResposta: string): DesenvolvimentoData {
     try {
       console.log('🔄 Processando resposta do Gemini...');
       
-      // Limpar e extrair JSON da resposta
       let cleanedText = textoResposta.trim();
       
       // Remover markdown se presente
@@ -196,44 +185,46 @@ Responda APENAS com o JSON válido, sem texto adicional.
         cleanedText = cleanedText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
       }
       
-      // Encontrar o JSON na resposta
-      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        cleanedText = jsonMatch[0];
-      }
+      // Remover texto antes e depois do JSON
+      const jsonStart = cleanedText.indexOf('{');
+      const jsonEnd = cleanedText.lastIndexOf('}');
       
-      cleanedText = cleanedText.trim();
-
-      const parsedData = JSON.parse(cleanedText);
-
-      // Validar estrutura
-      if (!parsedData.etapas || !Array.isArray(parsedData.etapas)) {
-        throw new Error('Estrutura de resposta inválida');
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
       }
 
-      // Garantir IDs únicos e ordem sequencial
-      parsedData.etapas.forEach((etapa: any, index: number) => {
-        etapa.id = etapa.id || `etapa_${index + 1}`;
-        etapa.ordem = index + 1;
-        etapa.expandida = false;
-        
-        // Garantir que o tempo estimado não ultrapasse o limite
-        if (parseInt(etapa.tempoEstimado?.match(/\d+/)?.[0] || '0', 10) > 45) {
-          etapa.tempoEstimado = "45 minutos";
-        }
-        
-        // Adiciona atividades do School Power se não houver ou se a lista for pequena
-        const atividadesSchoolPower = [
-          "Resumo", "Lista de Exercícios", "Prova", "Mapa Mental", "Texto de Apoio",
-          "Plano de Aula", "Sequência Didática", "Jogos Educativos", "Apresentação de Slides",
-          "Proposta de Redação", "Simulado", "Caça-Palavras", "Palavras Cruzadas",
-          "Experimento Científico", "Critérios de Avaliação", "Revisão Guiada", 
-          "Atividades de Matemática", "Quiz", "Charadas", "Corretor de Questões"
-        ];
-        
-        if (!etapa.recursosUsados || etapa.recursosUsados.length < 2) {
-          const atividadeAleatoria = atividadesSchoolPower[Math.floor(Math.random() * atividadesSchoolPower.length)];
-          etapa.recursosUsados = etapa.recursosUsados || [];
+      console.log('🔧 Texto limpo para parsing:', cleanedText);
+      
+      const parsedData = JSON.parse(cleanedText);
+      
+      // Validar estrutura básica
+      if (!parsedData.etapas || !Array.isArray(parsedData.etapas)) {
+        console.warn('⚠️ Estrutura inválida, usando dados padrão');
+        return desenvolvimentoDataPadrao;
+      }
+
+      // Validar e corrigir cada etapa
+      parsedData.etapas = parsedData.etapas.map((etapa: any, index: number) => ({
+        id: etapa.id || `etapa_${index + 1}`,
+        titulo: etapa.titulo || `Etapa ${index + 1}`,
+        descricao: etapa.descricao || 'Descrição não fornecida',
+        tipoInteracao: etapa.tipoInteracao || 'Apresentação',
+        tempoEstimado: etapa.tempoEstimado || '10 minutos',
+        recursosUsados: Array.isArray(etapa.recursosUsados) ? etapa.recursosUsados : ['Recurso básico'],
+        ordem: etapa.ordem || index + 1,
+        expandida: false
+      }));
+
+      // Adicionar recursos aleatórios do School Power se necessário
+      const recursosSchoolPower = [
+        "Quiz Interativo", "Mapa Mental", "Organizador Gráfico", 
+        "Texto de Apoio", "Lista de Exercícios", "Proposta de Redação",
+        "Simulado", "Jogos Educativos", "Apresentação de Slides"
+      ];
+
+      parsedData.etapas.forEach((etapa: any) => {
+        if (etapa.recursosUsados.length < 3 && Math.random() > 0.5) {
+          const atividadeAleatoria = recursosSchoolPower[Math.floor(Math.random() * recursosSchoolPower.length)];
           if (!etapa.recursosUsados.includes(atividadeAleatoria)) {
             etapa.recursosUsados.push(atividadeAleatoria);
           }
@@ -339,6 +330,3 @@ Responda APENAS com o JSON válido, sem texto adicional.
     };
   }
 }
-
-// Garantir que desenvolvimentoDataPadrao está sempre disponível
-export { desenvolvimentoDataPadrao as default };
