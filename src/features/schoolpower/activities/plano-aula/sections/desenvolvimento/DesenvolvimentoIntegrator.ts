@@ -1,3 +1,4 @@
+
 /**
  * Integrador para sincronização de dados entre seções do plano de aula
  * e coleta de contexto para geração via IA
@@ -13,7 +14,7 @@ export interface ContextoPlanoCompleto {
   serie?: string;
   tempo?: string;
   tempoLimite?: string;
-
+  
   // Dados das outras seções
   objetivos?: string[];
   materiais?: string[];
@@ -21,124 +22,19 @@ export interface ContextoPlanoCompleto {
   metodologia?: string;
   competencias?: string[];
   habilidadesBNCC?: string[];
-
+  
   // Dados específicos do contexto
   contextoAplicacao?: string;
   nivelComplexidade?: string;
   estrategiasEnsino?: string[];
   avaliacaoPlaneada?: string;
-
+  
   // Metadados
   dataGeracao?: string;
   versao?: string;
 }
 
-// Interface para os dados de desenvolvimento, incluindo etapas e recursos
-export interface DesenvolvimentoData {
-  id: string;
-  planoId: string;
-  etapas: Array<{
-    id: string;
-    titulo: string;
-    descricao: string;
-    tempoEstimado: string;
-    recursosUsados?: string[];
-    instrucoes?: string[];
-  }>;
-  recursosUtilizados: string[];
-  tempoTotalEstimado: string;
-  timestamp: string;
-}
-
-
 export class DesenvolvimentoIntegrator {
-  private static readonly STORAGE_KEY = 'plano_aula_desenvolvimento_data';
-  private static listeners: ((data: DesenvolvimentoData) => void)[] = [];
-
-  /**
-   * Adiciona um listener para mudanças nos dados de desenvolvimento
-   */
-  static addChangeListener(callback: (data: DesenvolvimentoData) => void): () => void {
-    this.listeners.push(callback);
-    return () => {
-      const index = this.listeners.indexOf(callback);
-      if (index > -1) {
-        this.listeners.splice(index, 1);
-      }
-    };
-  }
-
-  /**
-   * Notifica todos os listeners sobre mudanças nos dados
-   */
-  private static notifyListeners(data: DesenvolvimentoData): void {
-    this.listeners.forEach(callback => {
-      try {
-        callback(data);
-      } catch (error) {
-        console.error('Erro ao notificar listener:', error);
-      }
-    });
-  }
-
-  /**
-   * Processa e salva dados do desenvolvimento do plano de aula
-   */
-  static processarDados(planoData: any, planoId: string): DesenvolvimentoData {
-    console.log('🚀 Processando dados de desenvolvimento...');
-
-    const desenvolvimentoData: DesenvolvimentoData = {
-      id: planoData?.id || `desenvolvimento_${Date.now()}`,
-      planoId: planoId,
-      etapas: planoData?.etapas || [],
-      recursosUtilizados: this.extrairRecursosUnicos(planoData?.etapas || []),
-      tempoTotalEstimado: this.calcularTempoTotal(planoData?.etapas || []),
-      timestamp: new Date().toISOString(),
-    };
-
-    // Salvar dados processados
-    this.salvarDados(planoId, desenvolvimentoData);
-
-    // Notificar listeners sobre a mudança
-    this.notifyListeners(desenvolvimentoData);
-
-    console.log('✅ DesenvolvimentoIntegrator: Dados processados e salvos', {
-      totalEtapas: desenvolvimentoData.etapas.length,
-      timestamp: desenvolvimentoData.timestamp
-    });
-
-    return desenvolvimentoData;
-  }
-
-  /**
-   * Carrega dados de desenvolvimento do localStorage
-   */
-  static carregarDados(planoId: string): DesenvolvimentoData | null {
-    try {
-      const data = localStorage.getItem(`${this.STORAGE_KEY}_${planoId}`);
-      if (data) {
-        const parsedData: DesenvolvimentoData = JSON.parse(data);
-        console.log('💾 Dados de desenvolvimento carregados:', parsedData);
-        return parsedData;
-      }
-    } catch (error) {
-      console.error('❌ Erro ao carregar dados de desenvolvimento:', error);
-    }
-    return null;
-  }
-
-  /**
-   * Salva dados de desenvolvimento no localStorage
-   */
-  private static salvarDados(planoId: string, data: DesenvolvimentoData): void {
-    try {
-      localStorage.setItem(`${this.STORAGE_KEY}_${planoId}`, JSON.stringify(data));
-      console.log('💾 Dados de desenvolvimento salvos:', { planoId });
-    } catch (error) {
-      console.error('❌ Erro ao salvar dados de desenvolvimento:', error);
-    }
-  }
-
   /**
    * Coleta dados completos do plano de aula para enviar à IA
    */
@@ -150,7 +46,7 @@ export class DesenvolvimentoIntegrator {
     const contexto: ContextoPlanoCompleto = {
       // IDs e identificação
       id: activityData?.id || originalData?.id || `plano_${Date.now()}`,
-
+      
       // Dados básicos - múltiplas fontes
       titulo: activityData?.title || originalData?.titulo || originalData?.title,
       disciplina: activityData?.subject || originalData?.disciplina || originalData?.subject,
@@ -159,26 +55,26 @@ export class DesenvolvimentoIntegrator {
       serie: originalData?.serie,
       tempo: activityData?.timeLimit || originalData?.tempo || originalData?.timeLimit || '50 minutos',
       tempoLimite: originalData?.tempoLimite,
-
+      
       // Objetivos - várias possibilidades
       objetivos: this.extrairObjetivos(activityData, originalData),
-
+      
       // Materiais e recursos
       materiais: this.extrairMateriais(activityData, originalData),
       recursos: this.extrairRecursos(activityData, originalData),
-
+      
       // Metodologia e estratégias
       metodologia: activityData?.methodology || originalData?.metodologia || originalData?.nivelDificuldade,
       estrategiasEnsino: this.extrairEstrategias(activityData, originalData),
-
+      
       // Competências e habilidades
       competencias: this.extrairCompetencias(activityData, originalData),
       habilidadesBNCC: this.extrairHabilidadesBNCC(activityData, originalData),
-
+      
       // Contexto adicional
       contextoAplicacao: activityData?.context || originalData?.contextoAplicacao || originalData?.context,
       nivelComplexidade: activityData?.difficultyLevel || originalData?.nivelDificuldade || originalData?.difficultyLevel,
-
+      
       // Metadados
       dataGeracao: new Date().toISOString(),
       versao: '1.0'
@@ -190,7 +86,7 @@ export class DesenvolvimentoIntegrator {
 
   private static extrairObjetivos(activityData: any, originalData: any): string[] {
     const objetivos: string[] = [];
-
+    
     // Múltiplas fontes de objetivos
     if (activityData?.objectives) {
       if (Array.isArray(activityData.objectives)) {
@@ -199,7 +95,7 @@ export class DesenvolvimentoIntegrator {
         objetivos.push(activityData.objectives);
       }
     }
-
+    
     if (originalData?.objetivos) {
       if (Array.isArray(originalData.objetivos)) {
         objetivos.push(...originalData.objetivos);
@@ -207,7 +103,7 @@ export class DesenvolvimentoIntegrator {
         objetivos.push(originalData.objetivos);
       }
     }
-
+    
     if (originalData?.objectives) {
       if (Array.isArray(originalData.objectives)) {
         objetivos.push(...originalData.objectives);
@@ -220,19 +116,19 @@ export class DesenvolvimentoIntegrator {
 
   private static extrairMateriais(activityData: any, originalData: any): string[] {
     const materiais: string[] = [];
-
+    
     if (activityData?.materials) {
       if (Array.isArray(activityData.materials)) {
         materiais.push(...activityData.materials);
       }
     }
-
+    
     if (originalData?.materiais) {
       if (Array.isArray(originalData.materiais)) {
         materiais.push(...originalData.materiais);
       }
     }
-
+    
     if (originalData?.materials) {
       if (Array.isArray(originalData.materials)) {
         materiais.push(...originalData.materials);
@@ -244,13 +140,13 @@ export class DesenvolvimentoIntegrator {
 
   private static extrairRecursos(activityData: any, originalData: any): string[] {
     const recursos: string[] = [];
-
+    
     if (activityData?.resources) {
       if (Array.isArray(activityData.resources)) {
         recursos.push(...activityData.resources);
       }
     }
-
+    
     if (originalData?.recursos) {
       if (Array.isArray(originalData.recursos)) {
         recursos.push(...originalData.recursos);
@@ -262,13 +158,13 @@ export class DesenvolvimentoIntegrator {
 
   private static extrairCompetencias(activityData: any, originalData: any): string[] {
     const competencias: string[] = [];
-
+    
     if (activityData?.competencies) {
       if (Array.isArray(activityData.competencies)) {
         competencias.push(...activityData.competencies);
       }
     }
-
+    
     if (originalData?.competencias) {
       if (Array.isArray(originalData.competencias)) {
         competencias.push(...originalData.competencias);
@@ -280,13 +176,13 @@ export class DesenvolvimentoIntegrator {
 
   private static extrairHabilidadesBNCC(activityData: any, originalData: any): string[] {
     const habilidades: string[] = [];
-
+    
     if (originalData?.habilidadesBNCC) {
       if (Array.isArray(originalData.habilidadesBNCC)) {
         habilidades.push(...originalData.habilidadesBNCC);
       }
     }
-
+    
     if (activityData?.bnccSkills) {
       if (Array.isArray(activityData.bnccSkills)) {
         habilidades.push(...activityData.bnccSkills);
@@ -298,19 +194,19 @@ export class DesenvolvimentoIntegrator {
 
   private static extrairEstrategias(activityData: any, originalData: any): string[] {
     const estrategias: string[] = [];
-
+    
     if (originalData?.estrategiasEnsino) {
       if (Array.isArray(originalData.estrategiasEnsino)) {
         estrategias.push(...originalData.estrategiasEnsino);
       }
     }
-
+    
     if (originalData?.estrategiasLeitura) {
       if (Array.isArray(originalData.estrategiasLeitura)) {
         estrategias.push(...originalData.estrategiasLeitura);
       }
     }
-
+    
     // Inferir estratégias baseadas no tipo de atividade
     const tipo = activityData?.type || originalData?.tipo;
     if (tipo) {
@@ -328,38 +224,47 @@ export class DesenvolvimentoIntegrator {
   }
 
   /**
-   * Sincroniza dados com outras seções do plano de aula
+   * Sincroniza dados de desenvolvimento com outras seções
    */
   static sincronizarComOutrasSecoes(desenvolvimentoData: any, planoId: string): void {
-    console.log('🔗 DesenvolvimentoIntegrator: Sincronizando com outras seções');
-
-    // Sincronizar com a seção de Atividades
     try {
-      // Importar dinamicamente para evitar dependência circular
-      import('../atividades/AtividadesIntegrator').then(({ AtividadesIntegrator }) => {
-        AtividadesIntegrator.sincronizarComDesenvolvimento(desenvolvimentoData, planoId);
-      });
+      console.log('🔄 Sincronizando dados de desenvolvimento com outras seções...');
+      
+      // Calcular tempo total baseado nas etapas
+      if (desenvolvimentoData.etapas) {
+        const tempoTotal = this.calcularTempoTotal(desenvolvimentoData.etapas);
+        
+        // Salvar tempo calculado para outras seções usarem
+        const tempoData = {
+          tempoDesenvolvimento: tempoTotal,
+          ultimaAtualizacao: new Date().toISOString()
+        };
+        
+        localStorage.setItem(`plano_tempo_${planoId}`, JSON.stringify(tempoData));
+      }
+      
+      // Extrair recursos únicos das etapas para sincronizar com seção de materiais
+      if (desenvolvimentoData.etapas) {
+        const recursosUnicos = this.extrairRecursosUnicos(desenvolvimentoData.etapas);
+        
+        const recursosData = {
+          recursosDesenvolvimento: recursosUnicos,
+          ultimaAtualizacao: new Date().toISOString()
+        };
+        
+        localStorage.setItem(`plano_recursos_${planoId}`, JSON.stringify(recursosData));
+      }
+      
+      console.log('✅ Sincronização concluída');
+      
     } catch (error) {
-      console.error('❌ Erro ao sincronizar com seção de Atividades:', error);
-    }
-
-    // Salvar dados para outras seções acessarem
-    try {
-      localStorage.setItem(`plano_desenvolvimento_${planoId}`, JSON.stringify({
-        data: desenvolvimentoData,
-        timestamp: new Date().toISOString(),
-        planoId
-      }));
-
-      console.log('✅ DesenvolvimentoIntegrator: Dados sincronizados com outras seções');
-    } catch (error) {
-      console.error('❌ Erro ao sincronizar com outras seções:', error);
+      console.error('❌ Erro na sincronização:', error);
     }
   }
 
   private static calcularTempoTotal(etapas: any[]): string {
     let totalMinutos = 0;
-
+    
     etapas.forEach(etapa => {
       if (etapa.tempoEstimado) {
         const match = etapa.tempoEstimado.match(/(\d+)/);
@@ -368,19 +273,19 @@ export class DesenvolvimentoIntegrator {
         }
       }
     });
-
+    
     return `${totalMinutos} minutos`;
   }
 
   private static extrairRecursosUnicos(etapas: any[]): string[] {
     const recursos = new Set<string>();
-
+    
     etapas.forEach(etapa => {
       if (etapa.recursosUsados && Array.isArray(etapa.recursosUsados)) {
         etapa.recursosUsados.forEach((recurso: string) => recursos.add(recurso));
       }
     });
-
+    
     return Array.from(recursos);
   }
 
@@ -389,19 +294,19 @@ export class DesenvolvimentoIntegrator {
    */
   static validarContextoParaIA(contexto: ContextoPlanoCompleto): { valido: boolean; erros: string[] } {
     const erros: string[] = [];
-
+    
     if (!contexto.disciplina || contexto.disciplina.trim() === '') {
       erros.push('Disciplina é obrigatória');
     }
-
+    
     if (!contexto.tema || contexto.tema.trim() === '') {
       erros.push('Tema é obrigatório');
     }
-
+    
     if (!contexto.anoEscolaridade || contexto.anoEscolaridade.trim() === '') {
       erros.push('Ano de escolaridade é obrigatório');
     }
-
+    
     return {
       valido: erros.length === 0,
       erros
@@ -418,10 +323,10 @@ export class DesenvolvimentoIntegrator {
         timestamp: new Date().toISOString(),
         planoId
       };
-
+      
       localStorage.setItem(`debug_contexto_${planoId}`, JSON.stringify(debugData));
       console.log('🐛 Contexto salvo para debug:', `debug_contexto_${planoId}`);
-
+      
     } catch (error) {
       console.error('❌ Erro ao salvar contexto debug:', error);
     }
