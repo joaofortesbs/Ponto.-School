@@ -598,55 +598,55 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   return (
     <div className="h-[600px] bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       {/* Layout Principal */}
-      <div className="flex flex-1 h-full"></div>
+      <div className="flex flex-1 h-full">
         {/* Sidebar de Navegação */}
-        <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto"></div>
-            <div className="p-6 space-y-6">
-              {sidebarSections.map((section) => {
-                const Icon = section.icon;
-                const isActive = activeSection === section.id;
+        <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {sidebarSections.map((section) => {
+              const Icon = section.icon;
+              const isActive = activeSection === section.id;
 
-                return (
-                  <button
-                    key={section.id}
-                    onClick={() => setActiveSection(section.id)}
-                    className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 hover:text-orange-800 dark:hover:text-orange-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${
-                        isActive 
-                          ? 'bg-orange-500/20' 
-                          : 'bg-orange-100 dark:bg-orange-900/30 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/40'
-                      }`}>
-                        <Icon className={`w-5 h-5 ${
-                          isActive ? 'text-orange-600' : 'text-orange-500 dark:text-orange-400'
-                        }`} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className={`font-semibold ${
-                          isActive ? 'text-orange-800 dark:text-orange-100' : 'text-gray-900 dark:text-gray-100'
-                        }`}>
-                          {section.label}
-                        </h3>
-                        <p className={`text-sm ${
-                          isActive ? 'text-orange-700' : 'text-gray-500 dark:text-gray-400'
-                        }`}>
-                          {section.description}
-                        </p>
-                      </div>
-                      {isActive && (
-                        <ChevronRight className="w-5 h-5 text-orange-600" />
-                      )}
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 hover:text-orange-800 dark:hover:text-orange-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      isActive 
+                        ? 'bg-orange-500/20' 
+                        : 'bg-orange-100 dark:bg-orange-900/30 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/40'
+                    }`}>
+                      <Icon className={`w-5 h-5 ${
+                        isActive ? 'text-orange-600' : 'text-orange-500 dark:text-orange-400'
+                      }`} />
                     </div>
-                  </button>
-                );
-              })}
-            </div>
+                    <div className="flex-1">
+                      <h3 className={`font-semibold ${
+                        isActive ? 'text-orange-800 dark:text-orange-100' : 'text-gray-900 dark:text-gray-100'
+                      }`}>
+                        {section.label}
+                      </h3>
+                      <p className={`text-sm ${
+                        isActive ? 'text-orange-700' : 'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        {section.description}
+                      </p>
+                    </div>
+                    {isActive && (
+                      <ChevronRight className="w-5 h-5 text-orange-600" />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
+        </div>
 
         {/* Área de Conteúdo Principal */}
         <div className="flex-1 overflow-hidden">
@@ -659,7 +659,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               </Card>
             </div>
           </div>
-        </div></div>
+        </div>
       </div>
     </div>
   );
