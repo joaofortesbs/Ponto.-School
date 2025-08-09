@@ -330,3 +330,91 @@ IMPORTANTE:
     };
   }
 }
+// Dados estruturados para a seção de Desenvolvimento do Plano de Aula
+
+export interface EtapaDesenvolvimento {
+  id: string;
+  titulo: string;
+  descricao: string;
+  tipoInteracao: string;
+  tempoEstimado: string;
+  recursosUsados: string[];
+  ordem: number;
+  expandida: boolean;
+}
+
+export interface DesenvolvimentoData {
+  etapas: EtapaDesenvolvimento[];
+  observacoesGerais?: string;
+  metodologiaGeral?: string;
+  recursosComplementares?: string[];
+}
+
+// Dados padrão/fallback - GARANTINDO QUE SEMPRE EXISTE
+export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
+  etapas: [
+    {
+      id: "etapa_1",
+      titulo: "1. Revisando Substantivos: Comuns e Próprios",
+      descricao: "Início com uma breve revisão sobre substantivos comuns e próprios. Utilizar exemplos do cotidiano para facilitar a compreensão. Apresentar exemplos na lousa, solicitando exemplos dos alunos e classificando-os coletivamente. Esclarecer dúvidas e reforçar a diferença entre os tipos de substantivos com exemplos concretos (nome de pessoas, lugares, coisas, etc.).",
+      tipoInteracao: "Apresentação dialogada e discussão",
+      tempoEstimado: "10 minutos",
+      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Quiz Interativo"],
+      ordem: 1,
+      expandida: false
+    },
+    {
+      id: "etapa_2",
+      titulo: "2. Introdução aos Verbos: Ação e Estado",
+      descricao: "Apresentar o conceito de verbo como palavra que indica ação ou estado. Utilizar exemplos práticos e contextualizados, como frases simples que mostram ações (correr, pular, estudar) e estados (ser, estar, parecer). Explicar a importância dos verbos na construção de frases e narrativas.",
+      tipoInteracao: "Apresentação expositiva com exemplos",
+      tempoEstimado: "15 minutos",
+      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Organizador Gráfico"],
+      ordem: 2,
+      expandida: false
+    },
+    {
+      id: "etapa_3",
+      titulo: "3. Atividade Prática: Identificando Classes Gramaticais",
+      descricao: "Dividir a turma em grupos pequenos e entregar atividade prática com frases para identificar substantivos e verbos. Cada grupo receberá um conjunto de frases diferentes e deverá classificar as palavras destacadas. Circular entre os grupos oferecendo orientação conforme necessário. Promover discussão coletiva sobre as respostas encontradas.",
+      tipoInteracao: "Trabalho em grupos pequenos",
+      tempoEstimado: "20 minutos",
+      recursosUsados: ["Fichas com atividades", "Lápis/canetas", "Folhas de resposta"],
+      ordem: 3,
+      expandida: false
+    }
+  ],
+  observacoesGerais: "Manter ambiente colaborativo e encorajador durante toda a aula",
+  metodologiaGeral: "Metodologia ativa com foco na participação dos estudantes",
+  recursosComplementares: ["Quadro digital", "Projetor", "Material impresso"]
+};
+
+// Função para obter dados do desenvolvimento com fallback seguro
+export function obterDadosDesenvolvimento(dados?: any): DesenvolvimentoData {
+  if (!dados) {
+    console.log('📚 Usando dados padrão para desenvolvimento');
+    return desenvolvimentoDataPadrao;
+  }
+
+  // Se os dados existem mas não têm a estrutura esperada, usar dados padrão
+  if (!dados.etapas || !Array.isArray(dados.etapas)) {
+    console.log('📚 Dados inválidos, usando dados padrão para desenvolvimento');
+    return desenvolvimentoDataPadrao;
+  }
+
+  return {
+    etapas: dados.etapas.map((etapa: any, index: number) => ({
+      id: etapa.id || `etapa_${index + 1}`,
+      titulo: etapa.titulo || `Etapa ${index + 1}`,
+      descricao: etapa.descricao || "Descrição não disponível",
+      tipoInteracao: etapa.tipoInteracao || "Interação não especificada",
+      tempoEstimado: etapa.tempoEstimado || "Tempo não especificado",
+      recursosUsados: Array.isArray(etapa.recursosUsados) ? etapa.recursosUsados : [],
+      ordem: etapa.ordem || index + 1,
+      expandida: false // Sempre começar fechado
+    })),
+    observacoesGerais: dados.observacoesGerais || desenvolvimentoDataPadrao.observacoesGerais,
+    metodologiaGeral: dados.metodologiaGeral || desenvolvimentoDataPadrao.metodologiaGeral,
+    recursosComplementares: dados.recursosComplementares || desenvolvimentoDataPadrao.recursosComplementares
+  };
+}
