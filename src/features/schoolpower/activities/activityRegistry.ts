@@ -1,4 +1,3 @@
-
 import { lazy, LazyExoticComponent, FC } from 'react';
 
 export interface ActivityComponentSet {
@@ -74,6 +73,10 @@ export const activityRegistry: ActivityRegistryType = {
   "criterios-avaliacao": {
     editor: lazy(() => import("./default/EditActivity")),
     preview: lazy(() => import("./default/ActivityPreview")),
+  },
+  "plano-aula": {
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./plano-aula/PlanoAulaPreview")),
   },
 };
 

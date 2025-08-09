@@ -1,0 +1,119 @@
+
+/* Estilos específicos para os cards de desenvolvimento do plano de aula */
+.plano-aula-desenvolvimento {
+  .etapa-card {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 107, 0, 0.2);
+  }
+
+  .etapa-card:hover {
+    @apply shadow-lg;
+    border-color: rgba(255, 107, 0, 0.4);
+    transform: translateY(-2px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .drag-handle {
+    @apply opacity-0 group-hover:opacity-100;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .etapa-badge {
+    @apply inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium;
+    backdrop-filter: blur(5px);
+  }
+
+  .interaction-badge {
+    background: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  .time-badge {
+    background: rgba(34, 197, 94, 0.1);
+    color: rgb(34, 197, 94);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .resources-badge {
+    background: rgba(168, 85, 247, 0.1);
+    color: rgb(168, 85, 247);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+  }
+
+  .add-etapa-button {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.1) 0%, rgba(255, 107, 0, 0.05) 100%);
+    border: 2px dashed rgba(255, 107, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .add-etapa-button:hover {
+    background: rgba(255, 107, 0, 0.1);
+    border-color: rgba(255, 107, 0, 0.6);
+    transform: scale(1.02);
+  }
+
+  .expanded-content {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      max-height: 200px;
+      transform: translateY(0);
+    }
+  }
+
+  .section-divider {
+    background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.3), transparent);
+    height: 1px;
+    margin: 1rem 0;
+  }
+
+  .development-section-header {
+    @apply relative;
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, rgba(255, 107, 0, 0.1) 100%);
+    border-left: 4px solid #FF6B00;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Dark mode adjustments */
+.dark .plano-aula-desenvolvimento {
+  .etapa-card {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.9) 100%);
+    border-color: rgba(255, 107, 0, 0.3);
+  }
+
+  .etapa-card:hover {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.95) 100%);
+  }
+
+  .development-section-header {
+    background: linear-gradient(135deg, rgba(31, 41, 55, 0.3) 0%, rgba(17, 24, 39, 0.5) 100%);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .plano-aula-desenvolvimento {
+    .etapa-card {
+      @apply p-4;
+    }
+
+    .development-section-header {
+      @apply p-3;
+    }
+  }
+}
