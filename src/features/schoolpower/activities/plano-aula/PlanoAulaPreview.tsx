@@ -29,7 +29,9 @@ import {
   GripVertical,
   Expand,
   Timer,
-  Package
+  Package,
+  FileText,
+  Eye
 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
@@ -159,7 +161,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     { name: "Debate e discussão", icon: <Search className="w-4 h-4" /> },
     { name: "Estudo de caso", icon: <BookOpen className="w-4 h-4" /> },
     { name: "Experimentação", icon: <Activity className="w-4 h-4" /> },
-    { name: "Demonstração prática", icon: <Play className="w-4 h-4" /> }
+    { name: "Demonstração prática", icon: <Presentation className="w-4 h-4" /> }
   ];
 
 
@@ -300,7 +302,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     {
       id: 'atividades',
       label: 'Atividades',
-      icon: Play,
+      icon: Users,
       description: 'Atividades práticas'
     },
     {
