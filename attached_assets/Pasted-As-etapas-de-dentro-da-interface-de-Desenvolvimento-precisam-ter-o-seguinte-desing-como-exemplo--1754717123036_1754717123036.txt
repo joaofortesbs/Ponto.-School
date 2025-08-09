@@ -4,6 +4,7 @@ Titulo (Por exemplo: "1. Introdução e Contextualização")
 Descrição (Por exemplo: "Apresente o contexto histórico da Europa no século XVIII...")
 Tipo de Interação (Por exemplo: "Apresentação + debate")
 Tempo Estimado (Por exemplo: "15 minutos")
+Recursos usados (Por exemplo: "Slides")
 🧩 Design visual:
 
 Estilo moderno, interativo e modular.
