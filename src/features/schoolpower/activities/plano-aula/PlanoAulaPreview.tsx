@@ -596,11 +596,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+    <div className="h-[600px] bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
       {/* Layout Principal */}
-      <div className="flex flex-1 h-full">
+      <div className="flex flex-1 h-full"></div>
         {/* Sidebar de Navegação */}
-        <div className="w-80 bg-orange-50 dark:bg-orange-900/20 border-r border-orange-200 dark:border-orange-700 overflow-y-auto">
+        <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto"></div>
             <div className="p-6 space-y-6">
               {sidebarSections.map((section) => {
                 const Icon = section.icon;
@@ -650,7 +650,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
         {/* Área de Conteúdo Principal */}
         <div className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
+          <div className="h-[600px] overflow-y-auto">
             <div className="p-8">
               <Card className="shadow-xl border-0 bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
                 <CardContent className="p-8">
@@ -659,7 +659,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
               </Card>
             </div>
           </div>
-        </div>
+        </div></div>
       </div>
     </div>
   );
