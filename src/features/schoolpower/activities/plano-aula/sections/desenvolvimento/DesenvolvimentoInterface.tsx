@@ -1,444 +1,315 @@
 
-import React, { useState, useEffect } from 'react';
-import { useTheme } from '@/components/ThemeProvider';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/components/ui/use-toast';
-import {
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Users,
-  BookOpen,
-  Edit3,
+"use client";
+
+import React, { useState, useRef } from 'react';
+import { motion, Reorder } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Clock, 
+  BookOpen, 
+  Target, 
+  Lightbulb, 
+  GripVertical, 
+  Sparkles, 
+  ChevronDown, 
+  ChevronUp,
   RefreshCw,
-  Sparkles,
-  CheckCircle,
-  AlertCircle,
-  Play,
-  Bug
+  FileText,
+  Users,
+  Brain,
+  Zap
 } from 'lucide-react';
-import DebugPanel from './DebugPanel';
-import {
-  DesenvolvimentoData,
-  EtapaDesenvolvimento,
-  DesenvolvimentoGeminiService,
-  desenvolvimentoDataPadrao
-} from './DesenvolvimentoData';
+import { toast } from "@/components/ui/use-toast";
+import { DesenvolvimentoData, CardDesenvolvimento } from './DesenvolvimentoData';
+import { DesenvolvimentoIntegrator } from './DesenvolvimentoIntegrator';
 
 interface DesenvolvimentoInterfaceProps {
-  data?: any;
-  contextoPlano?: any;
-  onDataChange?: (data: DesenvolvimentoData) => void;
+  data: any;
+  activityData: any;
 }
 
-export default function DesenvolvimentoInterface({ 
+const DesenvolvimentoInterface: React.FC<DesenvolvimentoInterfaceProps> = ({ 
   data, 
-  contextoPlano, 
-  onDataChange 
-}: DesenvolvimentoInterfaceProps) {
-  const { theme } = useTheme();
-  const [desenvolvimentoData, setDesenvolvimentoData] = useState<DesenvolvimentoData>(desenvolvimentoDataPadrao);
-  const [carregandoIA, setCarregandoIA] = useState(false);
-  const [etapaExpandida, setEtapaExpandida] = useState<string | null>(null);
-  const [planoId, setPlanoId] = useState<string>('');
-  const [showDebug, setShowDebug] = useState(false);
+  activityData 
+}) => {
+  const [cards, setCards] = useState<CardDesenvolvimento[]>(DesenvolvimentoData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [observacoesExpanded, setObservacoesExpanded] = useState(false);
+  const integrator = useRef(new DesenvolvimentoIntegrator());
 
-  // Gerar ID único para o plano
-  useEffect(() => {
-    const id = data?.id || contextoPlano?.id || `plano_${Date.now()}`;
-    setPlanoId(id);
-  }, [data, contextoPlano]);
-
-  // Carregar dados salvos ou gerar novos
-  useEffect(() => {
-    const carregarOuGerarDados = async () => {
-      if (!planoId) return;
-
-      console.log('🔄 Carregando/Gerando dados de desenvolvimento para:', planoId);
-      
-      // Tentar carregar dados salvos primeiro
-      const dadosSalvos = DesenvolvimentoGeminiService.carregarEtapasDesenvolvimento(planoId);
-      
-      if (dadosSalvos) {
-        console.log('📂 Dados encontrados no localStorage:', dadosSalvos);
-        setDesenvolvimentoData(dadosSalvos);
-        onDataChange?.(dadosSalvos);
-        return;
-      }
-
-      // Se não há dados salvos e há contexto, gerar via IA
-      if (contextoPlano && (contextoPlano.disciplina || contextoPlano.tema)) {
-        console.log('🤖 Gerando dados via IA para contexto:', contextoPlano);
-        await gerarEtapasViaIA();
-      } else {
-        console.log('📋 Usando dados padrão');
-        setDesenvolvimentoData(desenvolvimentoDataPadrao);
-        onDataChange?.(desenvolvimentoDataPadrao);
-      }
-    };
-
-    carregarOuGerarDados();
-  }, [planoId, contextoPlano]);
-
-  const gerarEtapasViaIA = async () => {
-    setCarregandoIA(true);
-    
+  // Função para regenerar com IA
+  const handleRegenerarIA = async () => {
+    setIsLoading(true);
     try {
-      console.log('🚀 Iniciando geração de etapas via Gemini...');
-      console.log('📝 Contexto enviado:', contextoPlano);
-
-      const etapasGeradas = await DesenvolvimentoGeminiService.gerarEtapasDesenvolvimento(contextoPlano);
-      
-      console.log('✅ Etapas geradas com sucesso:', etapasGeradas);
-      
-      setDesenvolvimentoData(etapasGeradas);
-      onDataChange?.(etapasGeradas);
-      
-      // Salvar no localStorage
-      DesenvolvimentoGeminiService.salvarEtapasDesenvolvimento(planoId, etapasGeradas);
-      
-      toast({
-        title: "✨ Etapas Geradas com Sucesso!",
-        description: `${etapasGeradas.etapas.length} etapas foram criadas pela IA para seu plano de aula.`,
+      const newCards = await integrator.current.generateDesenvolvimentoCards({
+        data,
+        activityData
       });
-
+      
+      if (newCards && newCards.length > 0) {
+        setCards(newCards);
+        toast({
+          title: "✨ Desenvolvimento Regenerado!",
+          description: "A IA criou uma nova sequência de desenvolvimento personalizada.",
+          variant: "default",
+        });
+      }
     } catch (error) {
-      console.error('❌ Erro na geração via IA:', error);
-      
-      // Usar dados padrão em caso de erro
-      const dadosComContexto = DesenvolvimentoGeminiService['aplicarContextoAosDadosPadrao'](contextoPlano);
-      setDesenvolvimentoData(dadosComContexto);
-      onDataChange?.(dadosComContexto);
-      
+      console.error('Erro ao regenerar desenvolvimento:', error);
       toast({
-        title: "⚠️ Falha na Geração IA",
-        description: "Usando estrutura padrão. Você pode tentar gerar novamente.",
-        variant: "destructive"
+        title: "❌ Erro na Regeneração",
+        description: "Não foi possível regenerar o desenvolvimento. Tente novamente.",
+        variant: "destructive",
       });
     } finally {
-      setCarregandoIA(false);
+      setIsLoading(false);
     }
   };
 
-  const regenerarEtapas = async () => {
-    if (!contextoPlano) {
-      toast({
-        title: "❌ Erro",
-        description: "Contexto do plano não encontrado para regeneração.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    await gerarEtapasViaIA();
-  };
-
-  const toggleEtapaExpandida = (etapaId: string) => {
-    setEtapaExpandida(etapaExpandida === etapaId ? null : etapaId);
-  };
-
-  const editarEtapa = (etapaId: string) => {
-    toast({
-      title: "🔧 Edição de Etapas",
-      description: "Funcionalidade de edição será implementada em breve.",
-    });
-  };
-
-  const getIconeInteracao = (tipo: string) => {
-    const tipoLower = tipo.toLowerCase();
-    if (tipoLower.includes('apresentação')) return <Play className="h-4 w-4" />;
-    if (tipoLower.includes('prática') || tipoLower.includes('exercício')) return <CheckCircle className="h-4 w-4" />;
-    if (tipoLower.includes('grupo') || tipoLower.includes('debate')) return <Users className="h-4 w-4" />;
-    return <BookOpen className="h-4 w-4" />;
-  };
-
-  const renderEtapaCard = (etapa: EtapaDesenvolvimento) => {
-    const isExpandida = etapaExpandida === etapa.id;
+  // Ícones para diferentes tipos de atividade
+  const getActivityIcon = (tipo: string) => {
+    const iconMap: Record<string, any> = {
+      'introducao': BookOpen,
+      'explicacao': Brain,
+      'demonstracao': Target,
+      'pratica': Users,
+      'atividade': FileText,
+      'avaliacao': Zap,
+      'sintese': Lightbulb,
+      'default': Clock
+    };
     
-    return (
-      <Card 
-        key={etapa.id} 
-        className={`mb-4 transition-all duration-300 hover:shadow-md border-l-4 border-l-[#FF6B00] ${
-          theme === 'dark' 
-            ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
-            : 'bg-white border-gray-200 hover:bg-gray-50'
-        }`}
-      >
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleEtapaExpandida(etapa.id)}
-                className="p-1 h-8 w-8"
-              >
-                {isExpandida ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </Button>
-              
-              <div className="flex items-center gap-2">
-                {getIconeInteracao(etapa.tipoInteracao)}
-                <CardTitle className={`text-lg font-bold ${
-                  theme === 'dark' ? 'text-white' : 'text-[#29335C]'
-                }`}>
-                  {etapa.titulo}
-                </CardTitle>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-[#FF6B00]/10 text-[#FF6B00] border-[#FF6B00]/20">
-                <Clock className="h-3 w-3 mr-1" />
-                {etapa.tempoEstimado}
-              </Badge>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => editarEtapa(etapa.id)}
-                className="text-gray-500 hover:text-[#FF6B00] h-8 w-8 p-1"
-              >
-                <Edit3 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="pt-0">
-          <div className="space-y-3">
-            {/* Tipo de Interação */}
-            <div className="flex items-center gap-2">
-              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                {etapa.tipoInteracao}
-              </Badge>
-            </div>
-            
-            {/* Descrição expandida/resumida */}
-            <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              {isExpandida ? (
-                <p className="text-sm leading-relaxed">{etapa.descricao}</p>
-              ) : (
-                <p className="text-sm line-clamp-2">{etapa.descricao}</p>
-              )}
-              
-              {!isExpandida && etapa.descricao.length > 120 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleEtapaExpandida(etapa.id)}
-                  className="text-[#FF6B00] text-xs mt-1 h-auto p-0 hover:underline"
-                >
-                  Expandir
-                </Button>
-              )}
-            </div>
-            
-            {/* Recursos usados */}
-            {isExpandida && etapa.recursosUsados.length > 0 && (
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                <p className={`text-xs font-medium mb-2 ${
-                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Recursos Utilizados:
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {etapa.recursosUsados.map((recurso, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="text-xs bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                    >
-                      {recurso}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
+    const IconComponent = iconMap[tipo] || iconMap.default;
+    return <IconComponent className="h-5 w-5" />;
+  };
+
+  // Card de Observações Gerais
+  const observacoesGerais = {
+    titulo: "Observações Gerais",
+    conteudo: [
+      "• Adapte o tempo de cada etapa conforme o ritmo da turma",
+      "• Mantenha um ambiente participativo e acolhedor",
+      "• Utilize exemplos do cotidiano dos alunos sempre que possível",
+      "• Esteja preparado para revisitar conceitos se necessário",
+      "• Incentive perguntas e discussões durante toda a aula"
+    ]
   };
 
   return (
-    <div className={`w-full h-full ${
-      theme === 'dark' ? 'bg-[#001427] text-white' : 'bg-[#f7f9fa] text-[#29335C]'
-    } transition-colors duration-300`}>
-      
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-4">
+    <div className="space-y-6">
+      {/* Título da Seção - Estilo Objetivos */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-orange-400/10 to-transparent rounded-xl blur-xl" />
+        <div className="relative bg-gradient-to-r from-orange-50 to-white dark:from-orange-950/50 dark:to-background border border-orange-200/50 dark:border-orange-800/50 rounded-xl p-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[#FF6B00]/10 flex items-center justify-center">
-              <Play className="h-6 w-6 text-[#FF6B00]" />
+            <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg">
+              <Clock className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-[#29335C] dark:text-white">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
                 Desenvolvimento da Aula
               </h2>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                {carregandoIA ? 'Gerando etapas via IA...' : `${desenvolvimentoData.etapas.length} etapas • ${desenvolvimentoData.tempoTotalEstimado}`}
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Sequência estruturada das etapas da aula
               </p>
             </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {contextoPlano && (
-              <Button
-                onClick={regenerarEtapas}
-                disabled={carregandoIA}
-                variant="outline"
-                className="border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-              >
-                {carregandoIA ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Regenerar IA
-                  </>
-                )}
-              </Button>
-            )}
-            
-            <Button
-              onClick={() => setShowDebug(true)}
-              variant="ghost"
-              size="sm"
-              className="text-gray-500 hover:text-orange-500"
-              title="Debug Panel"
-            >
-              <Bug className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Informações gerais */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-3 rounded-lg ${
-            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          } border border-gray-200 dark:border-gray-800`}>
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-sm font-medium">Tempo Total</span>
-            </div>
-            <p className="text-lg font-bold">{desenvolvimentoData.tempoTotalEstimado}</p>
-          </div>
-          
-          <div className={`p-3 rounded-lg ${
-            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          } border border-gray-200 dark:border-gray-800`}>
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-sm font-medium">Etapas</span>
-            </div>
-            <p className="text-lg font-bold">{desenvolvimentoData.etapas.length}</p>
-          </div>
-          
-          <div className={`p-3 rounded-lg ${
-            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          } border border-gray-200 dark:border-gray-800`}>
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-              <span className="text-sm font-medium">Status</span>
-            </div>
-            <p className="text-sm font-bold text-green-600">
-              {carregandoIA ? 'Gerando...' : 'Pronto'}
-            </p>
           </div>
         </div>
       </div>
 
-      {/* Conteúdo */}
-      <ScrollArea className="h-[calc(100vh-300px)] p-6">
-        {carregandoIA ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-4">
-                <div className="space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-6 w-20" />
-                    <Skeleton className="h-6 w-24" />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Lista de Etapas */}
-            <div>
-              {desenvolvimentoData.etapas.map(renderEtapaCard)}
-            </div>
-            
-            {/* Observações Gerais */}
-            {desenvolvimentoData.observacoesGerais && (
-              <Card className={`${
-                theme === 'dark' ? 'bg-[#1E293B] border-gray-800' : 'bg-white border-gray-200'
-              }`}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-[#FF6B00]" />
-                    Observações Gerais
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {desenvolvimentoData.observacoesGerais}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Sugestões da IA */}
-            {desenvolvimentoData.sugestoesIA.length > 0 && (
-              <Card className={`border-l-4 border-l-[#FF6B00] ${
-                theme === 'dark' ? 'bg-[#1E293B] border-gray-800' : 'bg-white border-gray-200'
-              }`}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-[#FF6B00]" />
-                    Sugestões da IA
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {desenvolvimentoData.sugestoesIA.map((sugestao, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <div className="w-2 h-2 rounded-full bg-[#FF6B00] mt-2 flex-shrink-0" />
-                        <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {sugestao}
-                        </p>
+      {/* Botão Regenerar IA */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleRegenerarIA}
+          disabled={isLoading}
+          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Regenerando...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-4 w-4" />
+              Regenerar IA
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Cards de Desenvolvimento com Drag and Drop */}
+      <Reorder.Group 
+        axis="y" 
+        values={cards} 
+        onReorder={setCards}
+        className="space-y-4"
+      >
+        {cards.map((card, index) => (
+          <Reorder.Item 
+            key={card.id} 
+            value={card}
+            className="cursor-grab active:cursor-grabbing"
+          >
+            <motion.div
+              layout
+              whileDrag={{ scale: 1.02, rotateZ: 2 }}
+              className="group"
+            >
+              <Card className="hover:shadow-lg transition-all duration-300 border-2 hover:border-orange-200/50 dark:hover:border-orange-800/50 rounded-2xl overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-gray-50 to-white dark:from-gray-900/50 dark:to-background pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-5 w-5 text-gray-400 group-hover:text-orange-500 transition-colors" />
+                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-md">
+                          {getActivityIcon(card.tipo)}
+                        </div>
                       </div>
-                    ))}
+                      <div>
+                        <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                          {card.titulo}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+                            {card.duracao}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Etapa {index + 1}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                </CardHeader>
+                
+                <CardContent className="pt-4 space-y-4">
+                  <div>
+                    <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição:</h4>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {card.descricao}
+                    </p>
+                  </div>
+
+                  {card.objetivos && card.objetivos.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Objetivos:</h4>
+                      <ul className="space-y-1">
+                        {card.objetivos.map((objetivo, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Target className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                            {objetivo}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {card.atividades && card.atividades.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Atividades:</h4>
+                      <ul className="space-y-1">
+                        {card.atividades.map((atividade, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <Lightbulb className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                            {atividade}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {card.recursos && card.recursos.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Recursos Necessários:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {card.recursos.map((recurso, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+                            {recurso}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {card.avaliacaoFormativa && (
+                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3">
+                      <h4 className="font-medium text-green-800 dark:text-green-300 mb-2 flex items-center gap-2">
+                        <Zap className="h-4 w-4" />
+                        Avaliação Formativa:
+                      </h4>
+                      <p className="text-sm text-green-700 dark:text-green-400">
+                        {card.avaliacaoFormativa}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            )}
+            </motion.div>
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
+
+      {/* Card de Observações Gerais - Colapsável */}
+      <Card className="border-2 border-orange-200/50 dark:border-orange-800/50 rounded-2xl overflow-hidden">
+        <CardHeader 
+          className="bg-gradient-to-r from-orange-50 to-orange-25 dark:from-orange-950/50 dark:to-orange-900/30 cursor-pointer hover:from-orange-100 hover:to-orange-50 dark:hover:from-orange-900/70 dark:hover:to-orange-800/40 transition-all duration-200"
+          onClick={() => setObservacoesExpanded(!observacoesExpanded)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-md">
+                <FileText className="h-5 w-5 text-white" />
+              </div>
+              <CardTitle className="text-lg font-semibold text-orange-700 dark:text-orange-300">
+                {observacoesGerais.titulo}
+              </CardTitle>
+            </div>
+            <motion.div
+              animate={{ rotate: observacoesExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </motion.div>
           </div>
-        )}
-      </ScrollArea>
+        </CardHeader>
+        
+        <motion.div
+          initial={false}
+          animate={{ 
+            height: observacoesExpanded ? "auto" : 0,
+            opacity: observacoesExpanded ? 1 : 0 
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          style={{ overflow: "hidden" }}
+        >
+          <CardContent className="pt-4">
+            <ul className="space-y-3">
+              {observacoesGerais.conteudo.map((observacao, index) => (
+                <li key={index} className="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400">
+                  <Lightbulb className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                  {observacao.replace('• ', '')}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </motion.div>
+      </Card>
+
+      {/* Separador Final */}
+      <Separator className="my-8" />
       
-      {/* Debug Panel */}
-      <DebugPanel 
-        planoId={planoId}
-        show={showDebug}
-        onClose={() => setShowDebug(false)}
-      />
+      {/* Indicador de Progresso */}
+      <div className="text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          ✅ Seção de Desenvolvimento configurada com {cards.length} etapas
+        </p>
+      </div>
     </div>
   );
-}
+};
+
+export default DesenvolvimentoInterface;
