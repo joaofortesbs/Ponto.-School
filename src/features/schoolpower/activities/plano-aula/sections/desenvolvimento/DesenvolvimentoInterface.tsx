@@ -20,7 +20,8 @@ import {
   AlertCircle,
   Play,
   GripVertical,
-  BarChart3
+  BarChart3,
+  ChevronUp
 } from 'lucide-react';
 import DebugPanel from './DebugPanel';
 import {
@@ -36,10 +37,10 @@ interface DesenvolvimentoInterfaceProps {
   onDataChange?: (data: DesenvolvimentoData) => void;
 }
 
-export default function DesenvolvimentoInterface({ 
-  data, 
-  contextoPlano, 
-  onDataChange 
+export default function DesenvolvimentoInterface({
+  data,
+  contextoPlano,
+  onDataChange
 }: DesenvolvimentoInterfaceProps) {
   const { theme } = useTheme();
   const [desenvolvimentoData, setDesenvolvimentoData] = useState<DesenvolvimentoData>(desenvolvimentoDataPadrao);
@@ -174,7 +175,7 @@ export default function DesenvolvimentoInterface({
   };
 
   const renderEtapaCard = (etapa: EtapaDesenvolvimento) => {
-    const isExpandida = etapaExpandida === etapa.id;
+    const isEtapaExpandida = etapaExpandida === etapa.id;
 
     return (
       <Reorder.Item
@@ -188,14 +189,14 @@ export default function DesenvolvimentoInterface({
           transition={{ duration: 0.3 }}
         >
           <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
-            theme === 'dark' 
-              ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
+            theme === 'dark'
+              ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80'
               : 'bg-white border-gray-200 hover:bg-gray-50'
           }`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <motion.div 
+                  <motion.div
                     className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
@@ -210,7 +211,7 @@ export default function DesenvolvimentoInterface({
                     className="p-1 h-8 w-8"
                   >
                     <motion.div
-                      animate={{ rotate: isExpandida ? 90 : 0 }}
+                      animate={{ rotate: isEtapaExpandida ? 90 : 0 }}
                       transition={{ duration: 0.2 }}
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -249,9 +250,9 @@ export default function DesenvolvimentoInterface({
 
             <motion.div
               initial={false}
-              animate={{ 
-                height: isExpandida ? "auto" : 0,
-                opacity: isExpandida ? 1 : 0
+              animate={{
+                height: isEtapaExpandida ? "auto" : 0,
+                opacity: isEtapaExpandida ? 1 : 0
               }}
               transition={{ duration: 0.3 }}
               style={{ overflow: "hidden" }}
@@ -296,7 +297,7 @@ export default function DesenvolvimentoInterface({
             </motion.div>
 
             {/* Preview quando collapsed */}
-            {!isExpandida && (
+            {!isEtapaExpandida && (
               <CardContent className="pt-0 pb-4">
                 <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                   <p className="text-sm line-clamp-2">{etapa.descricao}</p>
@@ -457,9 +458,9 @@ export default function DesenvolvimentoInterface({
             {/* Lista de Etapas */}
             <div className="space-y-4">
               {Array.isArray(desenvolvimentoData.etapas) && desenvolvimentoData.etapas.length > 0 ? (
-                <Reorder.Group 
-                  axis="y" 
-                  values={desenvolvimentoData.etapas} 
+                <Reorder.Group
+                  axis="y"
+                  values={desenvolvimentoData.etapas}
                   onReorder={handleReorder}
                   className="space-y-4"
                 >
@@ -475,14 +476,14 @@ export default function DesenvolvimentoInterface({
                         transition={{ duration: 0.3 }}
                       >
                         <Card className={`transition-all duration-300 hover:shadow-lg border-l-4 border-l-[#FF6B00] rounded-2xl group ${
-                          theme === 'dark' 
-                            ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80' 
+                          theme === 'dark'
+                            ? 'bg-[#1E293B] border-gray-800 hover:bg-[#1E293B]/80'
                             : 'bg-white border-gray-200 hover:bg-gray-50'
                         }`}>
                           <CardHeader className="pb-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3 flex-1">
-                                <motion.div 
+                                <motion.div
                                   className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                   whileHover={{ scale: 1.1 }}
                                   whileTap={{ scale: 0.95 }}
@@ -497,7 +498,7 @@ export default function DesenvolvimentoInterface({
                                   className="p-1 h-8 w-8"
                                 >
                                   <motion.div
-                                    animate={{ rotate: isExpandida ? 90 : 0 }}
+                                    animate={{ rotate: etapaExpandida === etapa.id ? 90 : 0 }}
                                     transition={{ duration: 0.2 }}
                                   >
                                     <ChevronRight className="h-4 w-4" />
@@ -536,9 +537,9 @@ export default function DesenvolvimentoInterface({
 
                           <motion.div
                             initial={false}
-                            animate={{ 
-                              height: isExpandida ? "auto" : 0,
-                              opacity: isExpandida ? 1 : 0
+                            animate={{
+                              height: etapaExpandida === etapa.id ? "auto" : 0,
+                              opacity: etapaExpandida === etapa.id ? 1 : 0
                             }}
                             transition={{ duration: 0.3 }}
                             style={{ overflow: "hidden" }}
@@ -583,7 +584,7 @@ export default function DesenvolvimentoInterface({
                           </motion.div>
 
                           {/* Preview quando collapsed */}
-                          {!isExpandida && (
+                          {!isEtapaExpandida && (
                             <CardContent className="pt-0 pb-4">
                               <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                                 <p className="text-sm line-clamp-2">{etapa.descricao}</p>
@@ -651,7 +652,7 @@ export default function DesenvolvimentoInterface({
                 <Card className={`rounded-2xl border-0 shadow-lg ${
                   theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
                 }`}>
-                  <CardHeader 
+                  <CardHeader
                     className="cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1E293B]/80 transition-colors rounded-t-2xl"
                     onClick={() => setObservacoesExpanded(!observacoesExpanded)}
                   >
@@ -672,7 +673,7 @@ export default function DesenvolvimentoInterface({
                   </CardHeader>
                   <motion.div
                     initial={false}
-                    animate={{ 
+                    animate={{
                       height: observacoesExpanded ? "auto" : 0,
                       opacity: observacoesExpanded ? 1 : 0
                     }}
@@ -710,8 +711,8 @@ export default function DesenvolvimentoInterface({
                   <CardContent>
                     <div className="space-y-3">
                       {desenvolvimentoData.sugestoesIA.map((sugestao, index) => (
-                        <motion.div 
-                          key={index} 
+                        <motion.div
+                          key={index}
                           className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl"
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
@@ -733,7 +734,7 @@ export default function DesenvolvimentoInterface({
       </ScrollArea>
 
       {/* Debug Panel */}
-      <DebugPanel 
+      <DebugPanel
         planoId={planoId}
         show={showDebug}
         onClose={() => setShowDebug(false)}

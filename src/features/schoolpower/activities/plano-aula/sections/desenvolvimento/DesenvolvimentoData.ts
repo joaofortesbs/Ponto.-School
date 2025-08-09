@@ -73,6 +73,16 @@ export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
   ]
 };
 
+// Dados padrão para desenvolvimento
+export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
+  id: '',
+  planoId: '',
+  etapas: [],
+  recursosUtilizados: [],
+  tempoTotalEstimado: '0 min',
+  timestamp: new Date().toISOString()
+};
+
 export class DesenvolvimentoGeminiService {
   private static readonly GEMINI_API_KEY = 'AIzaSyAOGaQlsBFb2FzjOCmCORZAL8Hg0J4jVQ';
   private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
