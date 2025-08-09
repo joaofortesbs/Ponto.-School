@@ -1,406 +1,240 @@
 
-<old_str>import { ActivityData } from '../../types/ActivityData';
-
 export interface EtapaDesenvolvimento {
-  id: string;
   titulo: string;
   descricao: string;
-  duracao: string;
+  tipoInteracao: 'apresentacao' | 'discussao' | 'pratica' | 'grupo' | 'individual' | 'demonstracao';
+  tempoEstimado: number; // em minutos
   recursos: string[];
-  metodologia: string;
   observacoes?: string;
 }
 
 export interface DesenvolvimentoData {
-  etapas: EtapaDesenvolvimento[];
-  observacoesGerais?: string;
-  metodologiaGeral?: string;
-  recursosNecessarios?: string[];
-}
-
-export class DesenvolvimentoDataProcessor {
-  /**
-   * Processa dados de desenvolvimento do plano de aula
-   */
-  static processarDados(activityData: any): DesenvolvimentoData {
-    try {
-      // Validar se activityData existe
-      if (!activityData) {
-        console.warn('⚠️ ActivityData não fornecido, criando dados padrão');
-        return this.criarDadosPadrao();
-      }
-
-      // Extrair dados específicos do desenvolvimento
-      const desenvolvimentoRaw = activityData.desenvolvimento || 
-                                activityData.originalData?.desenvolvimento ||
-                                activityData.generatedContent?.desenvolvimento;
-
-      if (!desenvolvimentoRaw) {
-        console.warn('⚠️ Dados de desenvolvimento não encontrados, criando padrão');
-        return this.criarDadosPadrao();
-      }
-
-      // Processar etapas
-      const etapas = this.processarEtapas(desenvolvimentoRaw);
-
-      return {
-        etapas: etapas || [],
-        observacoesGerais: desenvolvimentoRaw.observacoesGerais || '',
-        metodologiaGeral: desenvolvimentoRaw.metodologiaGeral || '',
-        recursosNecessarios: Array.isArray(desenvolvimentoRaw.recursosNecessarios) 
-          ? desenvolvimentoRaw.recursosNecessarios 
-          : []
-      };
-
-    } catch (error) {
-      console.error('❌ Erro ao processar dados de desenvolvimento:', error);
-      return this.criarDadosPadrao();
-    }
-  }
-
-  /**
-   * Processa etapas de desenvolvimento
-   */
-  private static processarEtapas(desenvolvimentoRaw: any): EtapaDesenvolvimento[] {
-    try {
-      if (!desenvolvimentoRaw) return [];
-
-      // Verificar se existe array de etapas
-      let etapasArray = desenvolvimentoRaw.etapas || 
-                       desenvolvimentoRaw.passos || 
-                       desenvolvimentoRaw.fases ||
-                       [];
-
-      // Garantir que é um array
-      if (!Array.isArray(etapasArray)) {
-        console.warn('⚠️ Etapas não é um array, tentando converter');
-        
-        // Se for objeto, tentar extrair propriedades
-        if (typeof etapasArray === 'object') {
-          etapasArray = Object.values(etapasArray).filter(item => 
-            item && typeof item === 'object'
-          );
-        } else {
-          etapasArray = [];
-        }
-      }
-
-      // Processar cada etapa
-      return etapasArray.map((etapa: any, index: number) => {
-        if (!etapa || typeof etapa !== 'object') {
-          return this.criarEtapaPadrao(index + 1);
-        }
-
-        return {
-          id: etapa.id || `etapa-${index + 1}`,
-          titulo: etapa.titulo || etapa.title || etapa.nome || `Etapa ${index + 1}`,
-          descricao: etapa.descricao || etapa.description || etapa.desc || '',
-          duracao: etapa.duracao || etapa.tempo || etapa.duration || '30 min',
-          recursos: Array.isArray(etapa.recursos) ? etapa.recursos : 
-                   Array.isArray(etapa.materiais) ? etapa.materiais : [],
-          metodologia: etapa.metodologia || etapa.metodo || etapa.abordagem || '',
-          observacoes: etapa.observacoes || etapa.obs || ''
-        };
-      });
-
-    } catch (error) {
-      console.error('❌ Erro ao processar etapas:', error);
-      return [this.criarEtapaPadrao(1)];
-    }
-  }
-
-  /**
-   * Cria dados padrão para desenvolvimento
-   */
-  private static criarDadosPadrao(): DesenvolvimentoData {
-    return {
-      etapas: [
-        this.criarEtapaPadrao(1),
-        this.criarEtapaPadrao(2),
-        this.criarEtapaPadrao(3)
-      ],
-      observacoesGerais: 'Plano de desenvolvimento a ser personalizado conforme necessidades da turma.',
-      metodologiaGeral: 'Metodologia participativa e interativa',
-      recursosNecessarios: ['Material didático', 'Quadro', 'Projetor']
-    };
-  }
-
-  /**
-   * Cria uma etapa padrão
-   */
-  private static criarEtapaPadrao(numero: number): EtapaDesenvolvimento {
-    const etapas = {
-      1: {
-        titulo: 'Abertura e Motivação',
-        descricao: 'Apresentação do tema e motivação inicial dos alunos',
-        metodologia: 'Exposição dialogada'
-      },
-      2: {
-        titulo: 'Desenvolvimento do Conteúdo',
-        descricao: 'Apresentação e explicação do conteúdo principal',
-        metodologia: 'Metodologia expositiva e prática'
-      },
-      3: {
-        titulo: 'Fixação e Avaliação',
-        descricao: 'Atividades práticas para fixação do conteúdo',
-        metodologia: 'Exercícios práticos e discussão'
-      }
-    };
-
-    const etapaInfo = etapas[numero as keyof typeof etapas] || etapas[1];
-
-    return {
-      id: `etapa-${numero}`,
-      titulo: etapaInfo.titulo,
-      descricao: etapaInfo.descricao,
-      duracao: '30 min',
-      recursos: ['Material didático', 'Quadro'],
-      metodologia: etapaInfo.metodologia,
-      observacoes: ''
-    };
-  }
-
-  /**
-   * Valida dados de desenvolvimento
-   */
-  static validarDados(dados: DesenvolvimentoData): boolean {
-    try {
-      if (!dados) return false;
-      
-      // Verificar se tem etapas
-      if (!Array.isArray(dados.etapas) || dados.etapas.length === 0) {
-        return false;
-      }
-
-      // Validar cada etapa
-      return dados.etapas.every(etapa => 
-        etapa && 
-        typeof etapa === 'object' &&
-        etapa.id && 
-        etapa.titulo && 
-        etapa.descricao
-      );
-
-    } catch (error) {
-      console.error('❌ Erro na validação dos dados de desenvolvimento:', error);
-      return false;
-    }
-  }
-}
-
-// Export para compatibilidade
-export { DesenvolvimentoDataProcessor as DesenvolvimentoGeminiService };</old_str>
-<new_str>import { ActivityData } from '../../types/ActivityData';
-
-export interface EtapaDesenvolvimento {
-  id: string;
   titulo: string;
   descricao: string;
-  duracao: string;
-  recursos: string[];
-  metodologia: string;
-  observacoes?: string;
-}
-
-export interface DesenvolvimentoData {
+  tempoTotal: number;
   etapas: EtapaDesenvolvimento[];
-  observacoesGerais?: string;
-  metodologiaGeral?: string;
-  recursosNecessarios?: string[];
+  timestamp: string;
+  plano_id: string;
 }
 
 export class DesenvolvimentoDataProcessor {
   /**
-   * Processa dados de desenvolvimento do plano de aula
+   * Cria dados padrão para desenvolvimento quando não há dados disponíveis
    */
-  static processarDados(activityData: any): DesenvolvimentoData {
-    try {
-      // Validar se activityData existe
-      if (!activityData) {
-        console.warn('⚠️ ActivityData não fornecido, criando dados padrão');
-        return this.criarDadosPadrao();
+  private static criarDadosPadrao(planoData?: any): DesenvolvimentoData {
+    return {
+      titulo: "Desenvolvimento da Aula",
+      descricao: "Sequência de atividades para desenvolvimento do conteúdo",
+      tempoTotal: 45,
+      etapas: this.criarEtapasPadrao(planoData),
+      timestamp: new Date().toISOString(),
+      plano_id: planoData?.id || `plano_${Date.now()}`
+    };
+  }
+
+  /**
+   * Cria etapas padrão para o desenvolvimento
+   */
+  private static criarEtapasPadrao(planoData?: any): EtapaDesenvolvimento[] {
+    const disciplina = planoData?.disciplina || 'disciplina';
+    const tema = planoData?.tema || 'tema da aula';
+
+    return [
+      {
+        titulo: "Introdução ao Tema",
+        descricao: `Apresentação inicial sobre ${tema}`,
+        tipoInteracao: 'apresentacao',
+        tempoEstimado: 10,
+        recursos: ["Quadro", "Material didático"],
+        observacoes: "Contextualizar o tema com exemplos práticos"
+      },
+      {
+        titulo: "Desenvolvimento do Conteúdo",
+        descricao: `Exploração detalhada dos conceitos de ${disciplina}`,
+        tipoInteracao: 'discussao',
+        tempoEstimado: 20,
+        recursos: ["Livro didático", "Atividades práticas"],
+        observacoes: "Incentivar participação dos alunos"
+      },
+      {
+        titulo: "Atividade Prática",
+        descricao: "Exercícios e aplicação dos conceitos aprendidos",
+        tipoInteracao: 'pratica',
+        tempoEstimado: 10,
+        recursos: ["Lista de exercícios", "Material de apoio"],
+        observacoes: "Acompanhar individualmente os alunos"
+      },
+      {
+        titulo: "Síntese e Fechamento",
+        descricao: "Revisão dos principais pontos da aula",
+        tipoInteracao: 'discussao',
+        tempoEstimado: 5,
+        recursos: ["Quadro", "Resumo"],
+        observacoes: "Verificar compreensão dos alunos"
       }
+    ];
+  }
 
-      // Extrair dados específicos do desenvolvimento
-      const desenvolvimentoRaw = activityData.desenvolvimento || 
-                                activityData.originalData?.desenvolvimento ||
-                                activityData.generatedContent?.desenvolvimento;
+  /**
+   * Valida se um objeto tem a estrutura de EtapaDesenvolvimento
+   */
+  private static validarEtapa(etapa: any): boolean {
+    if (!etapa || typeof etapa !== 'object') return false;
+    
+    const camposObrigatorios = ['titulo', 'descricao', 'tipoInteracao', 'tempoEstimado'];
+    return camposObrigatorios.every(campo => etapa.hasOwnProperty(campo));
+  }
 
-      if (!desenvolvimentoRaw) {
-        console.warn('⚠️ Dados de desenvolvimento não encontrados, criando padrão');
-        return this.criarDadosPadrao();
-      }
+  /**
+   * Sanitiza e valida as etapas de desenvolvimento
+   */
+  private static sanitizarEtapas(etapas: any[]): EtapaDesenvolvimento[] {
+    if (!Array.isArray(etapas) || etapas.length === 0) {
+      return this.criarEtapasPadrao();
+    }
 
-      // Processar etapas
-      const etapas = this.processarEtapas(desenvolvimentoRaw);
+    return etapas
+      .filter(etapa => this.validarEtapa(etapa))
+      .map(etapa => ({
+        titulo: String(etapa.titulo || 'Etapa sem título'),
+        descricao: String(etapa.descricao || 'Descrição não disponível'),
+        tipoInteracao: etapa.tipoInteracao || 'apresentacao',
+        tempoEstimado: Number(etapa.tempoEstimado) || 5,
+        recursos: Array.isArray(etapa.recursos) ? etapa.recursos : ['Material didático'],
+        observacoes: etapa.observacoes ? String(etapa.observacoes) : undefined
+      }));
+  }
 
-      return {
-        etapas: etapas && etapas.length > 0 ? etapas : [this.criarEtapaPadrao(1)],
-        observacoesGerais: desenvolvimentoRaw.observacoesGerais || '',
-        metodologiaGeral: desenvolvimentoRaw.metodologiaGeral || '',
-        recursosNecessarios: Array.isArray(desenvolvimentoRaw.recursosNecessarios) 
-          ? desenvolvimentoRaw.recursosNecessarios 
-          : []
-      };
+  /**
+   * Processa dados de desenvolvimento vindos de diferentes fontes
+   */
+  static processarDadosDesenvolvimento(input: any): DesenvolvimentoData {
+    console.log('🔄 DesenvolvimentoDataProcessor: Iniciando processamento', input);
 
-    } catch (error) {
-      console.error('❌ Erro ao processar dados de desenvolvimento:', error);
+    // Verificar se input existe e não é nulo
+    if (!input || typeof input !== 'object') {
+      console.warn('⚠️ Input inválido, criando dados padrão');
       return this.criarDadosPadrao();
     }
-  }
 
-  /**
-   * Processa etapas de desenvolvimento
-   */
-  private static processarEtapas(desenvolvimentoRaw: any): EtapaDesenvolvimento[] {
-    try {
-      if (!desenvolvimentoRaw) return [];
+    const { planoData, activityData, desenvolvimento } = input;
 
-      // Verificar se existe array de etapas
-      let etapasArray = desenvolvimentoRaw.etapas || 
-                       desenvolvimentoRaw.passos || 
-                       desenvolvimentoRaw.fases ||
-                       [];
-
-      // Garantir que é um array
-      if (!Array.isArray(etapasArray)) {
-        console.warn('⚠️ Etapas não é um array, tentando converter');
-        
-        // Se for objeto, tentar extrair propriedades
-        if (typeof etapasArray === 'object') {
-          etapasArray = Object.values(etapasArray).filter(item => 
-            item && typeof item === 'object'
-          );
-        } else {
-          etapasArray = [];
-        }
-      }
-
-      // Se não há etapas válidas, retornar array vazio para criar padrões
-      if (!etapasArray || etapasArray.length === 0) {
-        return [];
-      }
-
-      // Processar cada etapa
-      return etapasArray.map((etapa: any, index: number) => {
-        if (!etapa || typeof etapa !== 'object') {
-          return this.criarEtapaPadrao(index + 1);
-        }
-
-        return {
-          id: etapa.id || `etapa-${index + 1}`,
-          titulo: etapa.titulo || etapa.title || etapa.nome || `Etapa ${index + 1}`,
-          descricao: etapa.descricao || etapa.description || etapa.desc || '',
-          duracao: etapa.duracao || etapa.tempo || etapa.duration || '30 min',
-          recursos: Array.isArray(etapa.recursos) ? etapa.recursos : 
-                   Array.isArray(etapa.materiais) ? etapa.materiais : [],
-          metodologia: etapa.metodologia || etapa.metodo || etapa.abordagem || '',
-          observacoes: etapa.observacoes || etapa.obs || ''
-        };
-      });
-
-    } catch (error) {
-      console.error('❌ Erro ao processar etapas:', error);
-      return [];
+    // Tentar extrair etapas de desenvolvimento de várias fontes possíveis
+    let etapasOriginais: any[] = [];
+    
+    // Prioridade: desenvolvimento direto > planoData > activityData
+    if (desenvolvimento?.etapas && Array.isArray(desenvolvimento.etapas)) {
+      etapasOriginais = desenvolvimento.etapas;
+      console.log('📝 Usando etapas do desenvolvimento direto:', etapasOriginais.length);
+    } else if (planoData?.desenvolvimento?.etapas && Array.isArray(planoData.desenvolvimento.etapas)) {
+      etapasOriginais = planoData.desenvolvimento.etapas;
+      console.log('📝 Usando etapas do planoData:', etapasOriginais.length);
+    } else if (activityData?.desenvolvimento?.etapas && Array.isArray(activityData.desenvolvimento.etapas)) {
+      etapasOriginais = activityData.desenvolvimento.etapas;
+      console.log('📝 Usando etapas do activityData:', etapasOriginais.length);
+    } else if (activityData?.originalData?.desenvolvimento?.etapas && Array.isArray(activityData.originalData.desenvolvimento.etapas)) {
+      etapasOriginais = activityData.originalData.desenvolvimento.etapas;
+      console.log('📝 Usando etapas do originalData:', etapasOriginais.length);
+    } else {
+      console.log('📝 Nenhuma etapa encontrada, criando etapas padrão');
     }
+
+    // Sanitizar e validar as etapas
+    const etapasProcessadas = this.sanitizarEtapas(etapasOriginais);
+    
+    // Calcular tempo total
+    const tempoTotal = etapasProcessadas.reduce((total, etapa) => {
+      return total + (etapa.tempoEstimado || 0);
+    }, 0);
+
+    // Criar o objeto de retorno
+    const resultado: DesenvolvimentoData = {
+      titulo: desenvolvimento?.titulo || planoData?.titulo || activityData?.titulo || "Desenvolvimento da Aula",
+      descricao: desenvolvimento?.descricao || "Sequência de atividades para desenvolvimento do conteúdo",
+      tempoTotal: Math.min(tempoTotal, 45), // Limitar a 45 minutos
+      etapas: etapasProcessadas,
+      timestamp: new Date().toISOString(),
+      plano_id: planoData?.id || activityData?.id || `plano_${Date.now()}`
+    };
+
+    console.log('✅ DesenvolvimentoDataProcessor: Processamento concluído', {
+      totalEtapas: resultado.etapas.length,
+      tempoTotal: resultado.tempoTotal
+    });
+
+    return resultado;
   }
 
   /**
-   * Cria dados padrão para desenvolvimento
+   * Gera prompt para IA criar desenvolvimento de aula
    */
-  private static criarDadosPadrao(): DesenvolvimentoData {
-    return {
-      etapas: [
-        this.criarEtapaPadrao(1),
-        this.criarEtapaPadrao(2),
-        this.criarEtapaPadrao(3)
-      ],
-      observacoesGerais: 'Plano de desenvolvimento a ser personalizado conforme necessidades da turma.',
-      metodologiaGeral: 'Metodologia participativa e interativa',
-      recursosNecessarios: ['Material didático', 'Quadro', 'Projetor']
-    };
+  static gerarPromptDesenvolvimento(contextoPlano: any): string {
+    const disciplina = contextoPlano?.disciplina || 'disciplina não especificada';
+    const tema = contextoPlano?.tema || 'tema não especificado';
+    const objetivos = contextoPlano?.objetivos || 'objetivos não definidos';
+    
+    return `Crie um desenvolvimento de aula detalhado para:
+
+**CONTEXTO DA AULA:**
+- Disciplina: ${disciplina}
+- Tema: ${tema}  
+- Objetivos: ${objetivos}
+- Ano/Série: ${contextoPlano?.anoEscolaridade || contextoPlano?.serie || 'Não especificado'}
+- Tempo disponível: 45 minutos (MÁXIMO)
+- Metodologia: ${contextoPlano?.metodologia || 'Ativa e participativa'}
+
+**ATIVIDADES DISPONÍVEIS NO SCHOOL POWER (inclua algumas nos recursos):**
+Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula, Sequência Didática, Jogos Educativos, Apresentação de Slides, Proposta de Redação, Simulado, Caça-Palavras, Palavras Cruzadas, Experimento Científico, Critérios de Avaliação, Revisão Guiada, Atividades de Matemática, Quiz, Charadas, Corretor de Questões.
+
+**INSTRUÇÕES ESPECÍFICAS:**
+1. Crie entre 3 a 5 etapas de desenvolvimento da aula
+2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
+3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
+4. Distribua o tempo de forma equilibrada entre as etapas
+5. Varie os tipos de interação (apresentacao, discussao, pratica, grupo, individual)
+6. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos
+7. Seja específico e prático nas descrições
+
+**FORMATO DE RESPOSTA (JSON):**
+{
+  "titulo": "Desenvolvimento da Aula",
+  "descricao": "Breve descrição do desenvolvimento",
+  "etapas": [
+    {
+      "titulo": "Nome da Etapa",
+      "descricao": "Descrição detalhada do que será feito",
+      "tipoInteracao": "apresentacao|discussao|pratica|grupo|individual",
+      "tempoEstimado": numero_em_minutos,
+      "recursos": ["recurso1", "recurso2", "atividade_school_power"],
+      "observacoes": "Dicas pedagógicas específicas"
+    }
+  ]
+}`;
   }
 
   /**
-   * Cria uma etapa padrão
-   */
-  private static criarEtapaPadrao(numero: number): EtapaDesenvolvimento {
-    const etapas = {
-      1: {
-        titulo: 'Abertura e Motivação',
-        descricao: 'Apresentação do tema e motivação inicial dos alunos',
-        metodologia: 'Exposição dialogada'
-      },
-      2: {
-        titulo: 'Desenvolvimento do Conteúdo',
-        descricao: 'Apresentação e explicação do conteúdo principal',
-        metodologia: 'Metodologia expositiva e prática'
-      },
-      3: {
-        titulo: 'Fixação e Avaliação',
-        descricao: 'Atividades práticas para fixação do conteúdo',
-        metodologia: 'Exercícios práticos e discussão'
-      }
-    };
-
-    const etapaInfo = etapas[numero as keyof typeof etapas] || etapas[1];
-
-    return {
-      id: `etapa-${numero}`,
-      titulo: etapaInfo.titulo,
-      descricao: etapaInfo.descricao,
-      duracao: '30 min',
-      recursos: ['Material didático', 'Quadro'],
-      metodologia: etapaInfo.metodologia,
-      observacoes: ''
-    };
-  }
-
-  /**
-   * Valida dados de desenvolvimento
+   * Valida se os dados de desenvolvimento estão corretos
    */
   static validarDados(dados: DesenvolvimentoData): boolean {
-    try {
-      if (!dados) return false;
-      
-      // Verificar se tem etapas
-      if (!Array.isArray(dados.etapas) || dados.etapas.length === 0) {
-        return false;
-      }
-
-      // Validar cada etapa
-      return dados.etapas.every(etapa => 
-        etapa && 
-        typeof etapa === 'object' &&
-        etapa.id && 
-        etapa.titulo && 
-        etapa.descricao
-      );
-
-    } catch (error) {
-      console.error('❌ Erro na validação dos dados de desenvolvimento:', error);
+    if (!dados || typeof dados !== 'object') return false;
+    
+    // Verificar campos obrigatórios
+    if (!dados.titulo || !dados.etapas || !Array.isArray(dados.etapas)) {
       return false;
     }
+    
+    // Verificar se há pelo menos uma etapa
+    if (dados.etapas.length === 0) return false;
+    
+    // Verificar cada etapa
+    return dados.etapas.every(etapa => this.validarEtapa(etapa));
   }
 }
 
-// Export do serviço com nome correto
-export class DesenvolvimentoGeminiService {
-  static processarDados = DesenvolvimentoDataProcessor.processarDados;
-  static validarDados = DesenvolvimentoDataProcessor.validarDados;
-  
-  static processarEtapas(desenvolvimentoRaw: any): EtapaDesenvolvimento[] {
-    return DesenvolvimentoDataProcessor['processarEtapas'](desenvolvimentoRaw);
-  }
-  
-  static criarDadosPadrao(): DesenvolvimentoData {
-    return DesenvolvimentoDataProcessor['criarDadosPadrao']();
-  }
-  
-  static criarEtapaPadrao(numero: number): EtapaDesenvolvimento {
-    return DesenvolvimentoDataProcessor['criarEtapaPadrao'](numero);
-  }
-}
+// Função de conveniência para uso direto
+export const processarDesenvolvimento = (input: any): DesenvolvimentoData => {
+  return DesenvolvimentoDataProcessor.processarDadosDesenvolvimento(input);
+};
 
-// Export default
-export default DesenvolvimentoDataProcessor;</old_str>
+// Export das interfaces e classe principal
+export { DesenvolvimentoDataProcessor as default };

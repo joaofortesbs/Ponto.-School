@@ -140,7 +140,7 @@ function dispatch(action: Action) {
 type Toast_2 = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast_2) {
-  const id = Math.random().toString(36).substring(2, 11)
+  const id = Math.random().toString(36).substr(2, 9)
 
   const update = (props: ToasterToast) =>
     dispatch({

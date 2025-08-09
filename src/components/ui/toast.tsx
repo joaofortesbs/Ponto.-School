@@ -125,6 +125,3 @@ export {
   ToastClose,
   ToastAction,
 }
-
-// Re-export toast function from use-toast for compatibility
-export { toast } from "./use-toast"
