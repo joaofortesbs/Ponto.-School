@@ -16,94 +16,45 @@ export interface DesenvolvimentoData {
   sugestoesIA: string[];
 }
 
-const calcularTempoTotal = (etapas: EtapaDesenvolvimento[]): string => {
-  const totalMinutos = Math.min(45, etapas.reduce((acc, etapa) => {
-    const tempo = parseInt(etapa.tempoEstimado) || 0;
-    return acc + tempo;
-  }, 0));
-
-  return `${totalMinutos}min`;
-};
-
-const ajustarTemposEtapas = (etapas: EtapaDesenvolvimento[]): EtapaDesenvolvimento[] => {
-  const TEMPO_MAXIMO = 45;
-
-  // Calcular tempo total atual
-  let tempoTotalAtual = etapas.reduce((acc, etapa) => {
-    const tempo = parseInt(etapa.tempoEstimado) || 0;
-    return acc + tempo;
-  }, 0);
-
-  // Se já está dentro do limite, retornar as etapas
-  if (tempoTotalAtual <= TEMPO_MAXIMO) {
-    return etapas;
-  }
-
-  // Ajustar proporcionalmente os tempos
-  const fatorAjuste = TEMPO_MAXIMO / tempoTotalAtual;
-
-  return etapas.map(etapa => {
-    const tempoAtual = parseInt(etapa.tempoEstimado) || 0;
-    const novoTempo = Math.max(5, Math.round(tempoAtual * fatorAjuste));
-
-    return {
-      ...etapa,
-      tempoEstimado: `${novoTempo} minutos`
-    };
-  });
-};
-
 // Dados padrão/fallback
 export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
   etapas: [
     {
       id: "etapa_1",
-      titulo: "1. Revisando Substantivos: Comuns e Próprios",
-      descricao: "Início com uma breve revisão sobre substantivos comuns e próprios. Utilizar exemplos do cotidiano para facilitar a compreensão. Apresentar exemplos na lousa, solicitando exemplos dos alunos e classificando-os coletivamente. Esclarecer dúvidas e reforçar a diferença entre os tipos de substantivos com exemplos concretos (nome de pessoas, lugares, coisas, etc.).",
-      tipoInteracao: "Apresentação dialogada e discussão",
-      tempoEstimado: "10 minutos",
-      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Quiz Interativo"],
+      titulo: "1. Introdução e Contextualização",
+      descricao: "Apresente o contexto histórico da Europa no século XVIII...",
+      tipoInteracao: "Apresentação + debate",
+      tempoEstimado: "15 minutos",
+      recursosUsados: ["Slides", "Lousa"],
       ordem: 1,
       expandida: false
     },
     {
       id: "etapa_2",
-      titulo: "2. Introdução aos Verbos: Ação e Estado",
-      descricao: "Apresentar o conceito de verbo como palavra que indica ação ou estado. Utilizar exemplos práticos e contextualizados, como frases simples que mostram ações (correr, pular, estudar) e estados (ser, estar, parecer). Explicar a importância dos verbos na construção de frases e narrativas.",
-      tipoInteracao: "Apresentação expositiva com exemplos",
-      tempoEstimado: "15 minutos",
-      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Organizador Gráfico"],
+      titulo: "2. Desenvolvimento do Tema Principal",
+      descricao: "Explorar os conceitos fundamentais através de exemplos práticos...",
+      tipoInteracao: "Atividade prática",
+      tempoEstimado: "20 minutos",
+      recursosUsados: ["Material impresso", "Caderno"],
       ordem: 2,
       expandida: false
     },
     {
       id: "etapa_3",
-      titulo: "3. Atividade Prática: Identificação em Textos",
-      descricao: "Distribuir cópias de textos curtos (contos, notícias) para que os alunos identifiquem substantivos próprios e verbos. Trabalho em duplas ou pequenos grupos para discussão e análise. Circular pela sala oferecendo auxílio e esclarecendo dúvidas. Uso de dicionários para verificar classificações duvidosas.",
-      tipoInteracao: "Atividade prática em grupo",
-      tempoEstimado: "15 minutos",
-      recursosUsados: ["Cópias de textos para análise (contos, notícias, etc.)", "Dicionários (físicos ou online)", "Caça-Palavras"],
+      titulo: "3. Consolidação e Aplicação",
+      descricao: "Exercícios de fixação e aplicação dos conceitos aprendidos...",
+      tipoInteracao: "Exercícios em grupo",
+      tempoEstimado: "10 minutos",
+      recursosUsados: ["Lista de exercícios", "Trabalho em grupo"],
       ordem: 3,
-      expandida: false
-    },
-    {
-      id: "etapa_4",
-      titulo: "4. Consolidação e Verificação",
-      descricao: "Momento final para consolidar o aprendizado através de exercícios rápidos na lousa e verificação da compreensão dos alunos. Esclarecimento de dúvidas finais e preparação para próxima aula.",
-      tipoInteracao: "Síntese e verificação",
-      tempoEstimado: "5 minutos",
-      recursosUsados: ["Lousa ou projetor", "Lista de exercícios impressa"],
-      ordem: 4,
       expandida: false
     }
   ],
-  tempoTotalEstimado: "45min",
-  observacoesGerais: "Este plano de desenvolvimento foi estruturado para garantir uma progressão natural do aprendizado, partindo da revisão de conceitos já conhecidos (substantivos) para a introdução de novos elementos (verbos). A combinação de apresentação dialogada com atividades práticas favorece tanto a compreensão teórica quanto a aplicação prática dos conhecimentos. É importante manter um ritmo dinâmico e estar atento às dúvidas dos alunos, adaptando o tempo conforme necessário. O tempo total é limitado a 45 minutos para otimizar o aprendizado.",
+  tempoTotalEstimado: "45 minutos",
+  observacoesGerais: "Manter ritmo dinâmico e interativo durante toda a aula",
   sugestoesIA: [
-    "Considere usar jogos de identificação para tornar a aula mais dinâmica",
-    "Utilize textos de interesse dos alunos para maior engajamento",
-    "Mantenha exemplos sempre contextualizados com a realidade dos estudantes",
-    "Aproveite as atividades do School Power para tornar o aprendizado mais interativo"
+    "Considere incluir mais momentos de interação",
+    "Varie os tipos de atividades para manter o engajamento"
   ]
 };
 
@@ -139,13 +90,12 @@ Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula,
 **INSTRUÇÕES ESPECÍFICAS:**
 1. Crie entre 3 a 5 etapas de desenvolvimento da aula
 2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
-3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
-4. Distribua o tempo de forma equilibrada entre as etapas
-5. Varie os tipos de interação (apresentação, discussão, prática, grupo, individual)
-6. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos de cada etapa
-7. Mantenha coerência com o tema e série especificados
-8. Adicione observações gerais relevantes
-9. Forneça sugestões da IA para melhorias
+3. O tempo total NÃO deve exceder 45 minutos
+4. Varie os tipos de interação (apresentação, discussão, prática, grupo, individual)
+5. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos de cada etapa
+6. Mantenha coerência com o tema e série especificados
+7. Adicione observações gerais relevantes
+8. Forneça sugestões da IA para melhorias
 
 **FORMATO DE RESPOSTA (JSON):**
 {
@@ -199,7 +149,7 @@ Gere o desenvolvimento da aula agora:`;
             etapa.recursosUsados = [...(etapa.recursosUsados || []), atividadeAleatoria].slice(0, 2);
           }
           if (index === etapasGeradas.etapas.length - 1) {
-            etapa.tempoEstimado = `${45 - tempoAcumulado + (tempoMatch ? parseInt(tempoMatch[0], 10) : 0)} minutos`; // Ajusta a última etapa para fechar em 45
+            etapa.tempoEstimado = `${45 - tempoAcumulado + novoTempo} minutos`; // Ajusta a última etapa para fechar em 45
           }
         });
         etapasGeradas.tempoTotalEstimado = "45 minutos";
@@ -207,17 +157,9 @@ Gere o desenvolvimento da aula agora:`;
         etapasGeradas.tempoTotalEstimado = "45 minutos"; // Define como 45 minutos mesmo se a soma for menor
       }
 
-      // Ajustar etapas para respeitar limite de 45 minutos
-      const etapasAjustadas = ajustarTemposEtapas(etapasGeradas.etapas);
 
       console.log('✅ Etapas de desenvolvimento geradas com sucesso:', etapasGeradas);
-      return {
-        etapas: etapasAjustadas,
-        tempoTotalEstimado: calcularTempoTotal(etapasAjustadas),
-        observacoesGerais: etapasGeradas.observacoesGerais || '',
-        sugestoesIA: etapasGeradas.sugestoesIA || []
-      };
-
+      return etapasGeradas;
 
     } catch (error) {
       console.error('❌ Erro ao gerar etapas de desenvolvimento:', error);
@@ -242,13 +184,12 @@ Resumo, Lista de Exercícios, Prova, Mapa Mental, Texto de Apoio, Plano de Aula,
 **INSTRUÇÕES ESPECÍFICAS:**
 1. Crie entre 3 a 5 etapas de desenvolvimento da aula
 2. Cada etapa deve ter: título claro, descrição detalhada, tipo de interação, tempo estimado e recursos necessários
-3. O tempo total NÃO deve exceder 45 minutos (LIMITE MÁXIMO)
-4. Distribua o tempo de forma equilibrada entre as etapas
-5. Varie os tipos de interação (apresentação, discussão, prática, grupo, individual)
-6. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos de cada etapa
-7. Mantenha coerência com o tema e série especificados
-8. Adicione observações gerais relevantes
-9. Forneça sugestões da IA para melhorias
+3. O tempo total NÃO deve exceder 45 minutos
+4. Varie os tipos de interação (apresentação, discussão, prática, grupo, individual)
+5. SEMPRE inclua pelo menos 1-2 atividades do School Power nos recursos de cada etapa
+6. Mantenha coerência com o tema e série especificados
+7. Adicione observações gerais relevantes
+8. Forneça sugestões da IA para melhorias
 
 **FORMATO DE RESPOSTA (JSON):**
 {
