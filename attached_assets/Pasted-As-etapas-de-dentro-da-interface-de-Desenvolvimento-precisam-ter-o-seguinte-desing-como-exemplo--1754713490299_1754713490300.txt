@@ -1,0 +1,31 @@
+As etapas de dentro da interface de Desenvolvimento precisam ter o seguinte desing, como exemplo: [
+
+Titulo (Por exemplo: "1. Introdução e Contextualização")
+Descrição (Por exemplo: "Apresente o contexto histórico da Europa no século XVIII...")
+Tipo de Interação (Por exemplo: "Apresentação + debate")
+Tempo Estimado (Por exemplo: "15 minutos")
+🧩 Design visual:
+
+Estilo moderno, interativo e modular.
+
+Use cards para cada etapa do plano.
+
+Cada card de etapa deve conter:
+
+Título da etapa
+
+Descrição curta com botão “Expandir”
+
+Tipo de interação (com ícone representativo)
+
+Botão "Editar esta etapa"
+
+Botão "Mover para cima" e "Mover para baixo"
+
+Permita que o professor arraste e reordene etapas (drag and drop entre os cards).
+
+É extremamente importante que você não use dados ficticios, todos os dados dessas etapas, incluindo a quantidade e ordem das etapas de desenvolvimento, precisam ter todos os conteúdos personalizados e feitos pela a IA do Gemini! Garanta que a IA está fazendo todos os conteúdos corretamente de maneria personalizada, e garanta que o sistema da platafroma está conseguindo converter esses dados para os mini-cards de etapas, da maneira correta, com uma lógica correta e completamente funcional e ativa!!!!!!!
+
+Faça que as etapas apareçam corretamente da mesma maneira que eu te descrevi anteriormente que eu quero que elas apareçam! É EXTREMAMENTE IMRPOATENTE QUE VOCÊ FAÇA ESSAS ALTERAÇÕES, APENAS DENTRO DA INTERFACE DE "Desenvolvimento", sem alterar o desing do restante do modal de Visualizar Atividades!!!!!!! Tome muito cuidado com isso!!!!!!!
+
+Faça todas essas alterações que eu te pedi, sem cometer ou deixar novos erros ou bugs dentro da plataforma, e sem comprometer negativamente as funcionalidades de dentro da plataforma, seja extremamente cuidadoso e eficiente! Analise e pense o porque esses erros acontecem, analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!
