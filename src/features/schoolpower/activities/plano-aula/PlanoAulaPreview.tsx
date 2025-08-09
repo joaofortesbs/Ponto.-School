@@ -46,7 +46,7 @@ import AtividadesInterface from './sections/atividades/AtividadesInterface';
 import AvaliacaoInterface from './sections/avaliacao/AvaliacaoInterface';
 
 // Importar o integrador de desenvolvimento
-import DesenvolvimentoIntegrator from './integrators/DesenvolvimentoIntegrator';
+import { DesenvolvimentoIntegrator } from './sections/desenvolvimento/DesenvolvimentoIntegrator';
 
 
 interface PlanoAulaPreviewProps {
