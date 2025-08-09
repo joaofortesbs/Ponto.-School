@@ -1,96 +1,375 @@
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Eye, Lightbulb, CheckCircle } from 'lucide-react';
-import { AtividadesData, AtividadesDataProcessor } from './AtividadesData';
+import { 
+  Presentation, 
+  Video, 
+  Mic, 
+  FileText, 
+  Gamepad2, 
+  Square, 
+  BookOpen, 
+  PenTool, 
+  Map, 
+  Image, 
+  Activity, 
+  Users, 
+  CheckCircle, 
+  MessageSquare, 
+  HelpCircle, 
+  Zap, 
+  Users2, 
+  Play, 
+  Search, 
+  Edit3,
+  ListChecks,
+  Brain,
+  Flask,
+  Target,
+  Sparkles,
+  Filter,
+  Grid3x3,
+  List
+} from 'lucide-react';
+import { AtividadesDataProcessor, AtividadeRecurso, AtividadesData } from './AtividadesData';
 
 interface AtividadesInterfaceProps {
   planoData: any;
 }
 
+const iconMap: { [key: string]: React.ComponentType<any> } = {
+  'presentation': Presentation,
+  'video': Video,
+  'mic': Mic,
+  'file-text': FileText,
+  'gamepad-2': Gamepad2,
+  'square': Square,
+  'book-open': BookOpen,
+  'pen-tool': PenTool,
+  'map': Map,
+  'image': Image,
+  'activity': Activity,
+  'users': Users,
+  'check-circle': CheckCircle,
+  'message-square': MessageSquare,
+  'help-circle': HelpCircle,
+  'zap': Zap,
+  'users-2': Users2,
+  'play': Play,
+  'search': Search,
+  'edit-3': Edit3,
+  'list-checks': ListChecks,
+  'brain': Brain,
+  'flask': Flask
+};
+
 const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) => {
-  const data = AtividadesDataProcessor.processData(planoData);
+  const [atividadesData, setAtividadesData] = useState<AtividadesData | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'atividade' | 'recurso'>('todos');
+  const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Processar dados sempre que planoData mudar
+  useEffect(() => {
+    if (planoData) {
+      console.log('🎯 AtividadesInterface: Processando dados do plano:', planoData);
+      const dadosProcessados = AtividadesDataProcessor.processarDadosAtividades(planoData);
+      console.log('📋 AtividadesInterface: Dados processados:', dadosProcessados);
+      setAtividadesData(dadosProcessados);
+    }
+  }, [planoData]);
+
+  // Filtrar atividades e recursos
+  const atividadesFiltradas = useMemo(() => {
+    if (!atividadesData?.atividades_recursos) return [];
+
+    let filtrados = atividadesData.atividades_recursos;
+
+    // Filtrar por tipo
+    if (filtroTipo !== 'todos') {
+      filtrados = filtrados.filter(item => item.tipo === filtroTipo);
+    }
+
+    // Filtrar por categoria
+    if (filtroCategoria !== 'todas') {
+      filtrados = filtrados.filter(item => item.categoria === filtroCategoria);
+    }
+
+    return filtrados;
+  }, [atividadesData, filtroTipo, filtroCategoria]);
+
+  // Obter categorias únicas
+  const categorias = useMemo(() => {
+    if (!atividadesData?.atividades_recursos) return [];
+    const cats = Array.from(new Set(atividadesData.atividades_recursos.map(item => item.categoria).filter(Boolean)));
+    return cats;
+  }, [atividadesData]);
+
+  const renderIcone = (icone: string) => {
+    const IconComponent = iconMap[icone] || Activity;
+    return <IconComponent className="w-6 h-6" />;
+  };
+
+  const getCorTipo = (tipo: 'atividade' | 'recurso') => {
+    return tipo === 'atividade' 
+      ? 'bg-blue-100 text-blue-700 border-blue-200' 
+      : 'bg-green-100 text-green-700 border-green-200';
+  };
+
+  const getCorCategoria = (categoria?: string) => {
+    switch (categoria) {
+      case 'Metodologia Ativa': return 'bg-purple-100 text-purple-700';
+      case 'School Power': return 'bg-orange-100 text-orange-700';
+      case 'Material Didático': return 'bg-amber-100 text-amber-700';
+      case 'Avaliação': return 'bg-red-100 text-red-700';
+      case 'Prática': return 'bg-cyan-100 text-cyan-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  if (!atividadesData) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded-lg w-1/3"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-          <Users className="h-5 w-5 text-orange-600" />
-          Atividades Práticas
-        </h3>
-        <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar Atividade
-        </Button>
+      {/* Cabeçalho */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-orange-100 rounded-xl">
+            <Target className="w-6 h-6 text-orange-600" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Atividades e Recursos
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              {atividadesData.total_items} itens necessários para aplicar este plano de aula
+            </p>
+          </div>
+        </div>
+
+        <div className="ml-auto flex items-center gap-3">
+          {/* Estatísticas rápidas */}
+          <div className="flex gap-2">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              {atividadesData.atividades_recursos.filter(item => item.tipo === 'atividade').length} Atividades
+            </Badge>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              {atividadesData.atividades_recursos.filter(item => item.tipo === 'recurso').length} Recursos
+            </Badge>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {data.atividades.map((atividade, index) => (
-          <Card key={index} className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">{atividade.nome}</h4>
-                    <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
-                      {atividade.tipo}
-                    </Badge>
-                  </div>
+      {/* Filtros e Visualização */}
+      <div className="flex items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-4">
+          {/* Filtro por Tipo */}
+          <select
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value as any)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+          >
+            <option value="todos">Todos os tipos</option>
+            <option value="atividade">Apenas Atividades</option>
+            <option value="recurso">Apenas Recursos</option>
+          </select>
 
-                  {atividade.ref_objetivos && atividade.ref_objetivos.length > 0 && (
-                    <div className="mb-3">
-                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 block mb-2">Objetivos relacionados:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {atividade.ref_objetivos.map((obj: number) => (
-                          <Badge key={obj} variant="outline" size="sm" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30">
-                            Objetivo {obj}
-                          </Badge>
-                        ))}
+          {/* Filtro por Categoria */}
+          <select
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+          >
+            <option value="todas">Todas as categorias</option>
+            {categorias.map(categoria => (
+              <option key={categoria} value={categoria}>{categoria}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Toggle de Visualização */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'grid' 
+                ? 'bg-orange-100 text-orange-600' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'list' 
+                ? 'bg-orange-100 text-orange-600' 
+                : 'text-gray-400 hover:text-gray-600'
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Grade de Atividades e Recursos */}
+      {atividadesFiltradas.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Filter className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Nenhum item encontrado
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            Ajuste os filtros para ver mais atividades e recursos
+          </p>
+        </div>
+      ) : (
+        <div className={`${
+          viewMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' 
+            : 'space-y-3'
+        }`}>
+          {atividadesFiltradas.map((item, index) => (
+            <Card 
+              key={item.id} 
+              className={`group hover:shadow-lg transition-all duration-300 border-0 shadow-sm hover:scale-105 rounded-2xl overflow-hidden ${
+                viewMode === 'list' ? 'flex items-center p-4' : ''
+              }`}
+              style={{
+                background: item.tipo === 'atividade' 
+                  ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)'
+                  : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)'
+              }}
+            >
+              <CardContent className={`${viewMode === 'grid' ? 'p-6' : 'p-0 flex-1 flex items-center gap-4'}`}>
+                {viewMode === 'grid' ? (
+                  <>
+                    {/* Ícone e Tipo */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-3 rounded-xl ${
+                        item.tipo === 'atividade' 
+                          ? 'bg-blue-500/10 text-blue-600' 
+                          : 'bg-green-500/10 text-green-600'
+                      }`}>
+                        {renderIcone(item.icone)}
                       </div>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs font-medium rounded-full px-3 py-1 ${getCorTipo(item.tipo)}`}
+                      >
+                        {item.tipo === 'atividade' ? 'Atividade' : 'Recurso'}
+                      </Badge>
                     </div>
-                  )}
 
-                  {atividade.visualizar_como_aluno && (
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-3">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong className="text-gray-800 dark:text-gray-200">Experiência do aluno:</strong> {atividade.visualizar_como_aluno}
-                      </p>
+                    {/* Nome e Descrição */}
+                    <div className="space-y-2 mb-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight">
+                        {item.nome}
+                      </h3>
+                      {item.descricao && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                          {item.descricao}
+                        </p>
+                      )}
                     </div>
-                  )}
 
-                  {atividade.sugestoes_ia && atividade.sugestoes_ia.length > 0 && (
-                    <div className="bg-gradient-to-r from-orange-50 to-indigo-50 dark:from-orange-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
-                      <strong className="text-orange-800 dark:text-orange-200 block mb-2 flex items-center gap-2">
-                        <Lightbulb className="w-4 h-4" />
-                        Sugestões da IA:
-                      </strong>
-                      <ul className="space-y-1">
-                        {atividade.sugestoes_ia.map((sugestao: string, idx: number) => (
-                          <li key={idx} className="text-orange-700 dark:text-orange-300 text-sm flex items-start gap-2">
-                            <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                            {sugestao}
-                          </li>
-                        ))}
-                      </ul>
+                    {/* Footer com informações */}
+                    <div className="flex items-center justify-between">
+                      {item.categoria && (
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs px-2 py-1 rounded-full ${getCorCategoria(item.categoria)}`}
+                        >
+                          {item.categoria}
+                        </Badge>
+                      )}
+                      {item.origem_etapa && (
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                          Etapa {item.origem_etapa}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Vista em Lista */}
+                    <div className={`p-3 rounded-xl ${
+                      item.tipo === 'atividade' 
+                        ? 'bg-blue-500/10 text-blue-600' 
+                        : 'bg-green-500/10 text-green-600'
+                    }`}>
+                      {renderIcone(item.icone)}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                          {item.nome}
+                        </h3>
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs font-medium rounded-full ${getCorTipo(item.tipo)}`}
+                        >
+                          {item.tipo === 'atividade' ? 'Atividade' : 'Recurso'}
+                        </Badge>
+                      </div>
+                      {item.descricao && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {item.descricao}
+                        </p>
+                      )}
+                    </div>
 
-                <div className="flex flex-col gap-2 ml-4">
-                  <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Visualizar
-                  </Button>
-                  <Button size="sm" variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-50">
-                    Substituir
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                    <div className="flex items-center gap-2">
+                      {item.categoria && (
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs px-2 py-1 rounded-full ${getCorCategoria(item.categoria)}`}
+                        >
+                          {item.categoria}
+                        </Badge>
+                      )}
+                      {item.origem_etapa && (
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                          Etapa {item.origem_etapa}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Rodapé com informações */}
+      <div className="mt-8 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-700">
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-5 h-5 text-orange-600" />
+          <div>
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+              Recursos Automaticamente Identificados
+            </p>
+            <p className="text-xs text-orange-600 dark:text-orange-400">
+              Estas atividades e recursos foram extraídos automaticamente do plano de desenvolvimento da aula
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

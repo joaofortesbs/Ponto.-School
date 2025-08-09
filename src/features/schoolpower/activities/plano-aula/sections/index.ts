@@ -22,7 +22,7 @@ export type { DesenvolvimentoData, EtapaDesenvolvimento } from './desenvolviment
 // Atividades
 export { default as AtividadesInterface } from './atividades/AtividadesInterface';
 export { AtividadesDataProcessor } from './atividades/AtividadesData';
-export type { AtividadesData, Atividade } from './atividades/AtividadesData';
+export type { AtividadesData, AtividadeRecurso } from './atividades/AtividadesData';
 
 // Avaliação
 export { default as AvaliacaoInterface } from './avaliacao/AvaliacaoInterface';
