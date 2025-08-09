@@ -1,0 +1,40 @@
+Faça as seguintes alterações dentro da seção de School Power: Dentro da interface de Construção de Atividades: Dentro do modal de Visualizar Atividades:
+
+Dentro do modal de Visualizar Atividades, das atividades de Plano de Aula (plano-aula):
+
+Precisamos reconstruir completamente a interface da seção de Desenvolvimento, de dentro do menu lateral esquerdo, de dentro do modal de Visualizar Atividades, das atividades de Plano de Aula em especifico!!!!!!!
+
+Vamos primeiro configurar o desin dos mini-cards que precisam ter dentro dessa interface em especifico!!!!!!! Os dados por equanto podem ser ficticios, porém você precisa mapear e registrar todos os campos que eu vou te falar aqui, para que no futuro a gente faça integrações e sicronizações e conexões diretas com a API do Gemini!!!!!!!
+
+As etapas de dentro da interface de Desenvolvimento precisam ter o seguinte desing, como exemplo: [
+
+Titulo (Por exemplo: "1. Introdução e Contextualização")
+Descrição (Por exemplo: "Apresente o contexto histórico da Europa no século XVIII...")
+Tipo de Interação (Por exemplo: "Apresentação + debate")
+Tempo Estimado (Por exemplo: "15 minutos")
+Recursos usados (Por exemplo: "Slides")
+Não coloque botões de (Gerar Slides, Gerar Recurso, Simular) de dentro de cada card de desenvolvimento!
+
+🧩 Design visual:
+
+Estilo moderno, interativo e modular.
+
+Use cards para cada etapa do plano.
+
+Cada card de etapa deve conter:
+
+Título da etapa
+
+Descrição curta com botão “Expandir”
+
+Tipo de interação (com ícone representativo)
+
+Botão "Editar esta etapa"!!!!!!!
+
+Permita que o professor arraste e reordene etapas (drag and drop entre os cards).
+
+Você precisa garantir que os mini-cards vão aparecer de qualquer maneira! Mas da forma correta! E você precisa garantir que o sistema de gerar o conteúdo personalizado continue funcionando corretamente!
+
+Verifique todas as conexões, todas as integrações, todas as sicronizações, todas as coletas e salvamento de dados!!!!!!!
+
+Você precisa garantir que somente vão ser alteradas coisas relacionadadas à seção de Desenvolvimento! Ou seja, nenhuma outra seção de dentro do modal de Visualizar Atividades (Das atividades de Plano de Aula) vão ser alteradas! O que eu estou te pedindo é apenas para reconstruir a seção de Desenvolvimento atual, que eu te representei dentro da imagem que eu te enviei como exemplo para você entender perfeitamente o que precisa ser alterado!!!!!!! Não altere coisas fora de contexto! REFLITA BASTANTE SOBRE CADA ALTERAÇÃO QUE VOCÊ VAI PRECISAR FAZER, PARA FAZER TUDO DA MANEIRA CORRETA, E SEM COMETER OU DEIXAR ERROS OU BUGS NO PROCESSO!!!!!!! É EXTREMAMENTE IMPORTANTE QUE VOCÊ NÃO ALTERE A ESTRUTURA DO MODAL DE Visualizar Atividades nas atividades de Plano de Aula!!!!!!!
