@@ -34,6 +34,7 @@ import {
   Eye
 } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
+import { PlanoAulaDebugger } from '../../services/debugPlanoAula';
 
 interface PlanoAulaPreviewProps {
   data: any;
@@ -312,6 +313,9 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     console.log('🎯 Total de etapas:', etapas.length);
     console.log('📋 Primeira etapa como exemplo:', etapas[0]);
 
+    // Chamada do debugger após o processamento das etapas
+    PlanoAulaDebugger.debugEtapasDesenvolvimento(etapas);
+
     return etapas;
   }, [data, activityData]);
 
@@ -404,6 +408,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   if (!planoData || (typeof planoData === 'object' && Object.keys(planoData).length === 0)) {
     console.log('⚠️ PlanoAulaPreview - Dados vazios ou inválidos, exibindo estado vazio');
+    PlanoAulaDebugger.debugPlanoDataVazio();
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -508,6 +513,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     };
 
     console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
+    PlanoAulaDebugger.debugEstruturaPlanoCriada(plano);
   };
 
   // Seções de navegação lateral

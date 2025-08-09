@@ -30,115 +30,114 @@ export interface PlanoAulaData {
 }
 
 /**
+ * Extrai etapas de desenvolvimento de diferentes estruturas de dados da IA
+ */
+export function extractEtapasFromAIData(rawData: any): EtapaDesenvolvimento[] {
+  console.log('🔍 Extraindo etapas de desenvolvimento dos dados da IA:', rawData);
+
+  let etapas: any[] = [];
+
+  // Múltiplas tentativas de localizar etapas nos dados da IA
+  const possiblePaths = [
+    rawData.etapas_desenvolvimento,
+    rawData.desenvolvimento,
+    rawData.etapas,
+    rawData.steps,
+    rawData.development_steps,
+    rawData.lesson_steps,
+    rawData.class_development,
+    rawData.atividades_desenvolvimento,
+    rawData.sequencia_didatica
+  ];
+
+  for (const path of possiblePaths) {
+    if (path && Array.isArray(path) && path.length > 0) {
+      etapas = path;
+      console.log('✅ Etapas encontradas em:', path);
+      break;
+    }
+  }
+
+  // Se não encontrou etapas em arrays, procurar em objetos aninhados
+  if (etapas.length === 0) {
+    const nestedPaths = [
+      rawData.plano?.etapas_desenvolvimento,
+      rawData.plano?.desenvolvimento,
+      rawData.conteudo?.etapas,
+      rawData.lesson_plan?.steps,
+      rawData.aula?.desenvolvimento
+    ];
+
+    for (const path of nestedPaths) {
+      if (path && Array.isArray(path) && path.length > 0) {
+        etapas = path;
+        console.log('✅ Etapas encontradas em objeto aninhado');
+        break;
+      }
+    }
+  }
+
+  // Normalizar e processar etapas encontradas
+  const processedEtapas = etapas.map((etapa, index) => {
+    return {
+      id: etapa.id || etapa.etapa_id || `etapa-${index + 1}`,
+      titulo: etapa.titulo || etapa.title || etapa.nome || etapa.name || `${index + 1}. Etapa ${index + 1}`,
+      descricao: etapa.descricao || etapa.description || etapa.desc || etapa.conteudo || 'Descrição não disponível',
+      tipo_interacao: etapa.tipo_interacao || etapa.tipoInteracao || etapa.interaction_type || etapa.tipo || 'Aula expositiva',
+      tempo_estimado: etapa.tempo_estimado || etapa.tempoEstimado || etapa.duration || etapa.tempo || '10 minutos',
+      recursos_usados: normalizeRecursos(etapa.recursos_usados || etapa.recursos || etapa.resources || etapa.materiais),
+      metodologia: etapa.metodologia || etapa.methodology || etapa.metodo || '',
+      objetivos_especificos: normalizeArray(etapa.objetivos_especificos || etapa.objetivos || etapa.objectives),
+      atividades_praticas: etapa.atividades_praticas || etapa.atividades || etapa.activities || '',
+      avaliacao: etapa.avaliacao || etapa.evaluation || etapa.assessment || 'Participação',
+      observacoes: etapa.observacoes || etapa.notes || etapa.obs || ''
+    };
+  });
+
+  console.log('✅ Etapas processadas:', processedEtapas);
+  return processedEtapas;
+}
+
+/**
+ * Normaliza recursos para array de strings
+ */
+function normalizeRecursos(recursos: any): string[] {
+  if (!recursos) return ['Quadro'];
+  if (Array.isArray(recursos)) return recursos.filter(r => r && typeof r === 'string');
+  if (typeof recursos === 'string') return recursos.split(',').map(r => r.trim()).filter(r => r);
+  return ['Quadro'];
+}
+
+/**
+ * Normaliza qualquer valor para array de strings
+ */
+function normalizeArray(value: any): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(v => v && typeof v === 'string');
+  if (typeof value === 'string') return value.split(',').map(v => v.trim()).filter(v => v);
+  return [];
+}
+
+/**
  * Processa e valida dados de plano de aula gerados pela IA
  */
 export function processPlanoAulaData(rawData: any): PlanoAulaData {
   console.log('🔄 Processando dados do plano de aula:', rawData);
 
-  // Extrair etapas de desenvolvimento
-  let etapas_desenvolvimento: EtapaDesenvolvimento[] = [];
+  // Usar a nova função de extração de etapas
+  let etapas_desenvolvimento = extractEtapasFromAIData(rawData);
 
-  // Tentar extrair etapas de diferentes possíveis localizações
-  if (rawData.etapas_desenvolvimento && Array.isArray(rawData.etapas_desenvolvimento)) {
-    etapas_desenvolvimento = rawData.etapas_desenvolvimento;
-  } else if (rawData.desenvolvimento && Array.isArray(rawData.desenvolvimento)) {
-    etapas_desenvolvimento = rawData.desenvolvimento;
-  } else if (rawData.etapas && Array.isArray(rawData.etapas)) {
-    etapas_desenvolvimento = rawData.etapas;
-  } else if (rawData.steps && Array.isArray(rawData.steps)) {
-    etapas_desenvolvimento = rawData.steps.map((step: any, index: number) => ({
-      id: step.id || `etapa-${index + 1}`,
-      titulo: step.titulo || step.title || `${index + 1}. Etapa ${index + 1}`,
-      descricao: step.descricao || step.description || 'Descrição da etapa',
-      tipo_interacao: step.tipo_interacao || step.interaction_type || 'Aula expositiva',
-      tempo_estimado: step.tempo_estimado || step.duration || '10 minutos',
-      recursos_usados: Array.isArray(step.recursos_usados) ? step.recursos_usados : 
-                      Array.isArray(step.resources) ? step.resources : ['Quadro'],
-      metodologia: step.metodologia || step.methodology || 'Aula tradicional',
-      objetivos_especificos: step.objetivos_especificos || step.specific_objectives || [],
-      atividades_praticas: step.atividades_praticas || step.practical_activities || '',
-      avaliacao: step.avaliacao || step.evaluation || 'Participação',
-      observacoes: step.observacoes || step.notes || ''
-    }));
-  }
-
-  // Se ainda não temos etapas, gerar etapas padrão baseadas no contexto
+  // Se ainda não temos etapas da IA, gerar etapas baseadas no contexto fornecido
   if (!etapas_desenvolvimento || etapas_desenvolvimento.length === 0) {
-    console.log('⚠️ Nenhuma etapa encontrada, gerando etapas padrão baseadas no contexto');
+    console.log('⚠️ Nenhuma etapa da IA encontrada, gerando etapas contextualizadas');
     
     const tema = rawData.tema || rawData['Tema ou Tópico Central'] || 'Tema da Aula';
     const disciplina = rawData.disciplina || rawData['Componente Curricular'] || 'Matemática';
+    const objetivos = rawData.objetivos || rawData['Objetivo Geral'] || 'Objetivo não especificado';
+    const serie = rawData.serie || rawData['Ano/Série Escolar'] || 'Série não especificada';
     
-    etapas_desenvolvimento = [
-      {
-        id: 'etapa-1',
-        titulo: '1. Introdução e Contextualização',
-        descricao: `Apresentação do tema "${tema}" de forma contextualizada, conectando com conhecimentos prévios dos alunos e estabelecendo a relevância do conteúdo.`,
-        tipo_interacao: 'Apresentação dialogada',
-        tempo_estimado: '15 minutos',
-        recursos_usados: ['Quadro', 'Slides'],
-        metodologia: 'Aula expositiva dialogada',
-        objetivos_especificos: ['Contextualizar o tema', 'Ativar conhecimentos prévios'],
-        atividades_praticas: 'Discussão inicial sobre o tema',
-        avaliacao: 'Participação nas discussões',
-        observacoes: 'Adaptar linguagem conforme a turma'
-      },
-      {
-        id: 'etapa-2',
-        titulo: '2. Desenvolvimento do Conteúdo',
-        descricao: `Exposição sistemática do conteúdo de ${disciplina} relacionado ao tema "${tema}", com exemplos práticos e demonstrações.`,
-        tipo_interacao: 'Explicação + demonstração',
-        tempo_estimado: '20 minutos',
-        recursos_usados: ['Livro didático', 'Material manipulativo'],
-        metodologia: 'Demonstração prática',
-        objetivos_especificos: ['Compreender conceitos fundamentais', 'Aplicar conhecimentos'],
-        atividades_praticas: 'Resolução de exemplos no quadro',
-        avaliacao: 'Acompanhamento da compreensão',
-        observacoes: 'Dar tempo para anotações'
-      },
-      {
-        id: 'etapa-3',
-        titulo: '3. Atividade Prática',
-        descricao: `Aplicação prática dos conceitos apresentados através de exercícios e atividades relacionadas ao tema "${tema}".`,
-        tipo_interacao: 'Atividade individual/grupo',
-        tempo_estimado: '10 minutos',
-        recursos_usados: ['Exercícios', 'Material de apoio'],
-        metodologia: 'Aprendizagem ativa',
-        objetivos_especificos: ['Fixar aprendizado', 'Desenvolver autonomia'],
-        atividades_praticas: 'Resolução de exercícios propostos',
-        avaliacao: 'Correção dos exercícios',
-        observacoes: 'Circular pela sala auxiliando os alunos'
-      },
-      {
-        id: 'etapa-4',
-        titulo: '4. Síntese e Fechamento',
-        descricao: `Consolidação dos principais conceitos abordados sobre "${tema}" e esclarecimento de dúvidas finais.`,
-        tipo_interacao: 'Discussão + síntese',
-        tempo_estimado: '5 minutos',
-        recursos_usados: ['Quadro'],
-        metodologia: 'Síntese colaborativa',
-        objetivos_especificos: ['Consolidar aprendizado', 'Esclarecer dúvidas'],
-        atividades_praticas: 'Resumo coletivo dos pontos principais',
-        avaliacao: 'Verificação da compreensão geral',
-        observacoes: 'Anotar dúvidas para próxima aula'
-      }
-    ];
+    etapas_desenvolvimento = generateContextualizedSteps(tema, disciplina, objetivos, serie);
   }
-
-  // Validar e normalizar cada etapa
-  etapas_desenvolvimento = etapas_desenvolvimento.map((etapa, index) => ({
-    id: etapa.id || `etapa-${index + 1}`,
-    titulo: etapa.titulo || `${index + 1}. Etapa ${index + 1}`,
-    descricao: etapa.descricao || 'Descrição da etapa',
-    tipo_interacao: etapa.tipo_interacao || 'Aula expositiva',
-    tempo_estimado: etapa.tempo_estimado || '10 minutos',
-    recursos_usados: Array.isArray(etapa.recursos_usados) ? etapa.recursos_usados : ['Quadro'],
-    metodologia: etapa.metodologia || 'Aula tradicional',
-    objetivos_especificos: Array.isArray(etapa.objetivos_especificos) ? etapa.objetivos_especificos : [],
-    atividades_praticas: etapa.atividades_praticas || '',
-    avaliacao: etapa.avaliacao || 'Participação',
-    observacoes: etapa.observacoes || ''
-  }));
 
   console.log('✅ Etapas de desenvolvimento processadas:', etapas_desenvolvimento);
 
@@ -161,6 +160,68 @@ export function processPlanoAulaData(rawData: any): PlanoAulaData {
 
   console.log('✅ Dados do plano de aula processados com sucesso:', processedData);
   return processedData;
+}
+
+/**
+ * Gera etapas contextualizadas baseadas nos dados fornecidos
+ */
+function generateContextualizedSteps(tema: string, disciplina: string, objetivos: string, serie: string): EtapaDesenvolvimento[] {
+  console.log('🎯 Gerando etapas contextualizadas para:', { tema, disciplina, objetivos, serie });
+
+  return [
+    {
+      id: 'etapa-contextualizada-1',
+      titulo: `1. Introdução: ${tema}`,
+      descricao: `Apresentação contextualizada do tema "${tema}" para ${serie} de ${disciplina}. Conectar com conhecimentos prévios dos alunos e estabelecer a importância do conteúdo no contexto da disciplina. ${objetivos}`,
+      tipo_interacao: 'Apresentação dialogada',
+      tempo_estimado: '15 minutos',
+      recursos_usados: ['Slides contextualizados', 'Quadro interativo', 'Exemplos do cotidiano'],
+      metodologia: 'Aula expositiva dialogada',
+      objetivos_especificos: [`Contextualizar ${tema}`, 'Ativar conhecimentos prévios', 'Despertar interesse pelo conteúdo'],
+      atividades_praticas: `Discussão inicial sobre experiências dos alunos relacionadas a ${tema}`,
+      avaliacao: 'Participação ativa nas discussões iniciais',
+      observacoes: `Adaptar exemplos para o nível de ${serie} e realidade local`
+    },
+    {
+      id: 'etapa-contextualizada-2',
+      titulo: `2. Desenvolvimento: Conceitos de ${tema}`,
+      descricao: `Exposição sistemática dos conceitos fundamentais de ${tema} em ${disciplina}, adequada para ${serie}. Utilizar metodologias ativas e exemplos práticos para facilitar a compreensão.`,
+      tipo_interacao: 'Explicação interativa + demonstração',
+      tempo_estimado: '20 minutos',
+      recursos_usados: ['Material didático específico', 'Recursos visuais', 'Exemplos práticos'],
+      metodologia: 'Metodologia ativa com demonstrações',
+      objetivos_especificos: ['Compreender conceitos fundamentais', 'Relacionar teoria e prática', 'Desenvolver raciocínio crítico'],
+      atividades_praticas: `Resolução de problemas contextualizados sobre ${tema}`,
+      avaliacao: 'Acompanhamento da compreensão através de perguntas direcionadas',
+      observacoes: 'Pausar para esclarecimentos e verificar compreensão individual'
+    },
+    {
+      id: 'etapa-contextualizada-3',
+      titulo: `3. Aplicação Prática: ${tema} na Prática`,
+      descricao: `Aplicação dos conceitos de ${tema} através de atividades práticas adequadas para ${serie}. Promover a fixação do aprendizado através de exercícios contextualizados.`,
+      tipo_interacao: 'Atividade prática individual/grupo',
+      tempo_estimado: '12 minutos',
+      recursos_usados: ['Exercícios contextualizados', 'Material de apoio', 'Ferramentas específicas'],
+      metodologia: 'Aprendizagem baseada em problemas',
+      objetivos_especificos: ['Aplicar conhecimentos adquiridos', 'Desenvolver autonomia', 'Consolidar aprendizado'],
+      atividades_praticas: `Resolução de situações-problema envolvendo ${tema}`,
+      avaliacao: 'Avaliação formativa através da correção das atividades',
+      observacoes: 'Circular pela sala oferecendo apoio individualizado'
+    },
+    {
+      id: 'etapa-contextualizada-4',
+      titulo: `4. Síntese e Avaliação: ${tema}`,
+      descricao: `Consolidação dos principais conceitos sobre ${tema} estudados em ${disciplina}. Verificação da aprendizagem e esclarecimento de dúvidas finais.`,
+      tipo_interacao: 'Síntese colaborativa + avaliação',
+      tempo_estimado: '8 minutos',
+      recursos_usados: ['Síntese visual', 'Quadro de resumo'],
+      metodologia: 'Síntese colaborativa',
+      objetivos_especificos: ['Consolidar aprendizado', 'Esclarecer dúvidas', 'Conectar com próximos conteúdos'],
+      atividades_praticas: `Elaboração coletiva de síntese sobre ${tema}`,
+      avaliacao: 'Verificação da compreensão geral através de questões-síntese',
+      observacoes: 'Registrar dúvidas para retomada na próxima aula'
+    }
+  ];
 }
 
 /**

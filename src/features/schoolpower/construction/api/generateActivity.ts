@@ -63,52 +63,9 @@ import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
 import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
-// Função para processar dados de plano de aula gerados pela IA
-const processPlanoAulaData = (data: any): any => {
-  console.log('🎓 Processando plano de aula:', data);
-
-  // Normalizar a estrutura para garantir a consistência dos mini-cards
-  const planoProcessado: any = {
-    titulo: data.titulo || 'Plano de Aula Sem Título',
-    disciplina: data.disciplina || 'Indefinida',
-    tema: data.tema || 'Sem Tema',
-    anoEscolaridade: data.anoEscolaridade || 'Série Indefinida',
-    objetivos: data.objetivos || [],
-    materiais: data.materiais || [],
-    desenvolvimento: data.desenvolvimento ? data.desenvolvimento.map((etapa: any, index: number) => ({
-      etapa: index + 1,
-      titulo: etapa.titulo || `Etapa ${index + 1}`,
-      descricao: etapa.descricao || 'Descrição da etapa não fornecida',
-      tipo_interacao: etapa.tipo_interacao || 'Não especificado',
-      tempo_estimado: etapa.tempo_estimado || 'Tempo não especificado',
-      recurso_gerado: etapa.recurso_gerado || 'Nenhum recurso gerado',
-      nota_privada_professor: etapa.nota_privada_professor || ''
-    })) : [],
-    // Campos adicionais para enriquecer a experiência
-    avaliacao: data.avaliacao || 'Avaliação formativa',
-    competencias: data.competencias || 'Competências gerais',
-    recursos_extras: data.recursos_extras || { materiais_complementares: [], tecnologias: [], referencias: [] },
-    metodologia: data.metodologia || { nome: 'Padrao', descricao: 'Descrição padrão' }
-  };
-
-  // Garantir que a estrutura de desenvolvimento seja um array de mini-cards válidos
-  if (!Array.isArray(planoProcessado.desenvolvimento)) {
-    console.warn('⚠️ Campo "desenvolvimento" do plano de aula não é um array. Convertendo para array vazio.');
-    planoProcessado.desenvolvimento = [];
-  }
-
-  // Validação adicional: garantir que cada etapa tenha os campos mínimos para um mini-card
-  planoProcessado.desenvolvimento = planoProcessado.desenvolvimento.map((etapa: any, index: number) => ({
-    ...etapa,
-    etapa: etapa.etapa || index + 1,
-    titulo: etapa.titulo || `Etapa ${index + 1}`,
-    descricao: etapa.descricao || 'Sem descrição',
-    tempo_estimado: etapa.tempo_estimado || 'Indefinido'
-  }));
-
-  console.log('✅ Plano de aula processado:', planoProcessado);
-  return planoProcessado;
-};
+// Importar o processador dedicado e sistema de debug
+import { processPlanoAulaData, savePlanoAulaData, extractEtapasFromAIData } from '../../services/planoAulaDataProcessor';
+import { PlanoAulaDebugger } from '../../services/debugPlanoAula';
 
 // Função simulada para salvar dados do plano de aula
 const savePlanoAulaData = async (activityId: string, data: any): Promise<void> => {
@@ -303,6 +260,11 @@ Responda APENAS com o JSON, sem texto adicional.`;
 
       console.log('📥 Resposta bruta do Gemini:', response.data);
 
+      // Tracking de debug para plano de aula
+      if (activityType === 'plano-aula') {
+        PlanoAulaDebugger.trackAIResponse(response.data);
+      }
+
       // Processar a resposta
       let processedData;
       try {
@@ -319,17 +281,33 @@ Responda APENAS com o JSON, sem texto adicional.`;
         // Processamento específico para plano-aula
         if (activityType === 'plano-aula') {
           console.log('📚 Processando dados específicos do plano de aula...');
+          
+          PlanoAulaDebugger.log('🔧 Iniciando processamento específico do plano de aula');
 
-          // Usar o processador específico para plano de aula
+          // Usar o processador dedicado importado
+          const planoDataOriginal = { ...processedData };
           const planoData = processPlanoAulaData(processedData);
+          
+          // Debug do processamento
+          PlanoAulaDebugger.trackDataProcessing(planoDataOriginal, planoData);
 
           // Salvar os dados processados
           if (contextData.activityId) {
             savePlanoAulaData(contextData.activityId, planoData);
+            PlanoAulaDebugger.log(`💾 Dados salvos para atividade: ${contextData.activityId}`);
+          }
+
+          // Garantir que as etapas foram extraídas corretamente
+          const etapasExtraidas = extractEtapasFromAIData(processedData);
+          if (etapasExtraidas.length > 0) {
+            planoData.etapas_desenvolvimento = etapasExtraidas;
+            PlanoAulaDebugger.log(`✅ Etapas extraídas e integradas: ${etapasExtraidas.length}`, etapasExtraidas);
+          } else {
+            PlanoAulaDebugger.log('⚠️ Nenhuma etapa extraída dos dados da IA');
           }
 
           processedData = planoData;
-          console.log('✅ Dados do plano de aula processados e salvos:', processedData);
+          PlanoAulaDebugger.log('✅ Processamento concluído:', processedData);
         }
 
         return {
