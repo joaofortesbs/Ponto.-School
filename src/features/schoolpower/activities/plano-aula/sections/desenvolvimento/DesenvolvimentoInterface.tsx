@@ -181,7 +181,6 @@ export default function DesenvolvimentoInterface({
       <Reorder.Item
         key={etapa.id}
         value={etapa}
-        dragListener={false}
         className="mb-4"
       >
         <motion.div
@@ -197,12 +196,13 @@ export default function DesenvolvimentoInterface({
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
-                  <div 
-                    className="cursor-grab active:cursor-grabbing p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    onPointerDown={(e) => e.currentTarget.closest('[data-reorder-item]')?.dispatchEvent(new PointerEvent('pointerdown', { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }))}
+                  <motion.div 
+                    className="cursor-grab active:cursor-grabbing p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     <GripVertical className="h-4 w-4 text-gray-400" />
-                  </div>
+                  </motion.div>
                   
                   <Button
                     variant="ghost"
@@ -322,49 +322,23 @@ export default function DesenvolvimentoInterface({
 
   return (
     <div className={`w-full h-full ${
-      theme === 'dark' ? 'bg-[#001427] text-white' : 'bg-[#f7f9fa] text-[#29335C]'
+      theme === 'dark' ? 'text-white' : 'text-[#29335C]'
     } transition-colors duration-300`}>
       
       {/* Header com título estilizado */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <motion.div 
-              className="relative"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF6B00] to-[#FF8533] flex items-center justify-center shadow-lg">
-                <BarChart3 className="h-8 w-8 text-white" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-4 w-4 text-white" />
-              </div>
-            </motion.div>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#FF8533] flex items-center justify-center">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <motion.h2 
-                className="text-3xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8533] bg-clip-text text-transparent"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
+              <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-[#29335C]'}`}>
                 Desenvolvimento da Aula
-              </motion.h2>
-              <motion.div 
-                className="h-1 bg-gradient-to-r from-[#FF6B00] to-[#FF8533] rounded-full mt-1"
-                initial={{ width: 0 }}
-                animate={{ width: "100%" }}
-                transition={{ duration: 0.8, delay: 0.3 }}
-              />
-              <motion.p 
-                className={`text-sm mt-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
+              </h2>
+              <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                 {carregandoIA ? 'Gerando etapas via IA...' : `${desenvolvimentoData.etapas.length} etapas • ${desenvolvimentoData.tempoTotalEstimado}`}
-              </motion.p>
+              </p>
             </div>
           </div>
           
@@ -397,58 +371,7 @@ export default function DesenvolvimentoInterface({
           </div>
         </div>
 
-        {/* Cards de informações gerais */}
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Card className={`rounded-xl border-0 shadow-sm ${
-            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          }`}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
-                  <Clock className="h-4 w-4 text-[#FF6B00]" />
-                </div>
-                <span className="text-sm font-medium">Tempo Total</span>
-              </div>
-              <p className="text-xl font-bold text-[#FF6B00]">{desenvolvimentoData.tempoTotalEstimado}</p>
-            </CardContent>
-          </Card>
-          
-          <Card className={`rounded-xl border-0 shadow-sm ${
-            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          }`}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-[#FF6B00]" />
-                </div>
-                <span className="text-sm font-medium">Etapas</span>
-              </div>
-              <p className="text-xl font-bold text-[#FF6B00]">{desenvolvimentoData.etapas.length}</p>
-            </CardContent>
-          </Card>
-          
-          <Card className={`rounded-xl border-0 shadow-sm ${
-            theme === 'dark' ? 'bg-[#1E293B]' : 'bg-white'
-          }`}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-[#FF6B00]/10 rounded-lg">
-                  <Sparkles className="h-4 w-4 text-[#FF6B00]" />
-                </div>
-                <span className="text-sm font-medium">Status</span>
-              </div>
-              <p className="text-sm font-bold text-green-600">
-                {carregandoIA ? 'Gerando...' : 'Pronto'}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+        </div>
 
       {/* Conteúdo */}
       <ScrollArea className="h-[calc(100vh-300px)] p-6">
