@@ -1,432 +1,411 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Presentation, 
-  Video, 
-  Mic, 
-  FileText, 
-  Gamepad2, 
-  Square, 
-  BookOpen, 
-  PenTool, 
-  Map, 
-  Image, 
-  Activity, 
-  Users, 
-  CheckCircle, 
-  MessageSquare, 
-  HelpCircle, 
-  Zap, 
-  Users2, 
-  Play, 
-  Search, 
-  Edit3,
-  ListChecks,
-  Brain,
-  Beaker,
-  Target,
-  Sparkles,
-  Filter,
-  Grid3x3,
-  List
+  BookOpen, Clock, Users, Target, Star, ChevronRight, 
+  Play, Eye, Edit3, Copy, Share2, Download, Filter,
+  CheckCircle2, AlertCircle, Zap, FileText, Search,
+  Lightbulb, MessageSquare, Beaker, Calculator,
+  PenTool, Monitor, Gamepad2, Award, Compass,
+  Hash, Tag, Timer, BarChart3, Settings
 } from 'lucide-react';
-import { AtividadesDataProcessor, AtividadeRecurso, AtividadesData } from './AtividadesData';
-import { DesenvolvimentoIntegrator } from '../desenvolvimento/DesenvolvimentoIntegrator';
-import { DesenvolvimentoData } from '../desenvolvimento/DesenvolvimentoData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AtividadesData, AtividadeRecurso, AtividadesDataProcessor } from './AtividadesData';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface AtividadesInterfaceProps {
-  planoData?: any;
+  dados?: AtividadesData;
+  onAtividadeClick?: (atividade: AtividadeRecurso) => void;
+  onEditarAtividade?: (atividade: AtividadeRecurso) => void;
+  isLoading?: boolean;
 }
 
-const iconMap: { [key: string]: React.ComponentType<any> } = {
-  'presentation': Presentation,
-  'video': Video,
-  'mic': Mic,
-  'file-text': FileText,
-  'gamepad-2': Gamepad2,
-  'square': Square,
-  'book-open': BookOpen,
-  'pen-tool': PenTool,
-  'map': Map,
-  'image': Image,
-  'activity': Activity,
-  'users': Users,
-  'check-circle': CheckCircle,
-  'message-square': MessageSquare,
-  'help-circle': HelpCircle,
-  'zap': Zap,
-  'users-2': Users2,
-  'play': Play,
-  'search': Search,
-  'edit-3': Edit3,
-  'list-checks': ListChecks,
-  'brain': Brain,
-  'flask': Beaker
-};
-
-const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) => {
+export default function AtividadesInterface({ 
+  dados, 
+  onAtividadeClick, 
+  onEditarAtividade,
+  isLoading = false 
+}: AtividadesInterfaceProps) {
+  const { theme } = useTheme();
   const [atividadesData, setAtividadesData] = useState<AtividadesData | null>(null);
-  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'atividade' | 'recurso'>('todos');
-  const [filtroCategoria, setFiltroCategoria] = useState<string>('todas');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [desenvolvimentoData, setDesenvolvimentoData] = useState<DesenvolvimentoData | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
+  const [filtroDificuldade, setFiltroDificuldade] = useState<string>('todas');
+  const [buscaTexto, setBuscaTexto] = useState<string>('');
+  const [atividadesFiltradas, setAtividadesFiltradas] = useState<AtividadeRecurso[]>([]);
 
-  // Processar dados sempre que planoData mudar
+  // Inicializar dados
   useEffect(() => {
-    console.log('🔄 AtividadesInterface: Processando dados recebidos');
-
-    if (planoData) {
-      try {
-        const processedData = AtividadesDataProcessor.processarDadosAtividades({
-          planoData: planoData,
-        });
-
-        setAtividadesData(processedData);
-        console.log('✅ AtividadesInterface: Dados processados com sucesso', processedData);
-      } catch (error) {
-        console.error('❌ AtividadesInterface: Erro ao processar dados', error);
-      }
+    if (dados) {
+      setAtividadesData(dados);
+    } else {
+      // Usar dados padrão se não fornecidos
+      setAtividadesData(AtividadesDataProcessor.gerarDadosPadrao());
     }
-  }, [planoData]);
+  }, [dados]);
 
-  // Buscar dados de desenvolvimento
+  // Aplicar filtros
   useEffect(() => {
-    console.log('🔄 AtividadesInterface: Buscando dados de desenvolvimento');
-    const fetchDesenvolvimento = async () => {
-      try {
-        const data = await DesenvolvimentoIntegrator.buscarDadosDesenvolvimento();
-        setDesenvolvimentoData(data);
-        console.log('✅ AtividadesInterface: Dados de desenvolvimento carregados com sucesso', data);
-      } catch (error) {
-        console.error('❌ AtividadesInterface: Erro ao buscar dados de desenvolvimento', error);
-      }
-    };
+    if (!atividadesData) return;
 
-    fetchDesenvolvimento();
-  }, []);
+    let atividades = [...atividadesData.atividadesRecursos];
 
-  // Combinar dados de atividades e recursos de desenvolvimento
-  const combinedData = useMemo(() => {
-    let combined: AtividadeRecurso[] = [];
-
-    // Adiciona atividades e recursos do plano de aula
-    if (atividadesData?.atividades_recursos) {
-      combined = [...atividadesData.atividades_recursos];
-    }
-
-    // Adiciona recursos utilizados da seção de desenvolvimento
-    if (desenvolvimentoData?.recursos_utilizados) {
-      const recursosDesenvolvimento: AtividadeRecurso[] = desenvolvimentoData.recursos_utilizados.map(recurso => ({
-        id: `dev-${recurso.id}`, // ID único para recursos de desenvolvimento
-        nome: recurso.nome,
-        descricao: recurso.descricao || 'N/A',
-        tipo: 'recurso', // Sempre um recurso
-        icone: recurso.icone || 'activity', // Ícone padrão se não especificado
-        categoria: recurso.categoria || 'Outros', // Categoria padrão
-        origem_etapa: recurso.etapa_origem || null
-      }));
-      combined = [...combined, ...recursosDesenvolvimento];
-    }
-    
-    console.log('🔄 AtividadesInterface: Combinando dados de atividades e desenvolvimento');
-    return combined;
-  }, [atividadesData, desenvolvimentoData]);
-
-  // Filtrar atividades e recursos
-  const atividadesFiltradas = useMemo(() => {
-    let filtrados = combinedData;
-
-    // Filtrar por tipo
+    // Filtro por tipo
     if (filtroTipo !== 'todos') {
-      filtrados = filtrados.filter(item => item.tipo === filtroTipo);
+      atividades = atividades.filter(atividade => atividade.tipo === filtroTipo);
     }
 
-    // Filtrar por categoria
-    if (filtroCategoria !== 'todas') {
-      filtrados = filtrados.filter(item => item.categoria === filtroCategoria);
+    // Filtro por dificuldade
+    if (filtroDificuldade !== 'todas') {
+      atividades = atividades.filter(atividade => atividade.dificuldade === filtroDificuldade);
     }
 
-    return filtrados;
-  }, [combinedData, filtroTipo, filtroCategoria]);
-
-  // Obter categorias únicas
-  const categorias = useMemo(() => {
-    if (!combinedData) return [];
-    const cats = Array.from(new Set(combinedData.map(item => item.categoria).filter(Boolean)));
-    return cats;
-  }, [combinedData]);
-
-  const renderIcone = (icone: string) => {
-    const IconComponent = iconMap[icone] || Activity;
-    return <IconComponent className="w-6 h-6" />;
-  };
-
-  const getCorTipo = (tipo: 'atividade' | 'recurso') => {
-    return tipo === 'atividade' 
-      ? 'bg-blue-100 text-blue-700 border-blue-200' 
-      : 'bg-green-100 text-green-700 border-green-200';
-  };
-
-  const getCorCategoria = (categoria?: string) => {
-    switch (categoria) {
-      case 'Metodologia Ativa': return 'bg-purple-100 text-purple-700';
-      case 'School Power': return 'bg-orange-100 text-orange-700';
-      case 'Material Didático': return 'bg-amber-100 text-amber-700';
-      case 'Avaliação': return 'bg-red-100 text-red-700';
-      case 'Prática': return 'bg-cyan-100 text-cyan-700';
-      default: return 'bg-gray-100 text-gray-700';
+    // Filtro por texto
+    if (buscaTexto) {
+      const textoBusca = buscaTexto.toLowerCase();
+      atividades = atividades.filter(atividade =>
+        atividade.titulo.toLowerCase().includes(textoBusca) ||
+        atividade.descricao.toLowerCase().includes(textoBusca) ||
+        atividade.tags.some(tag => tag.toLowerCase().includes(textoBusca))
+      );
     }
+
+    setAtividadesFiltradas(atividades);
+  }, [atividadesData, filtroTipo, filtroDificuldade, buscaTexto]);
+
+  // Obter ícone do tipo de atividade
+  const obterIconeTipo = (tipo: AtividadeRecurso['tipo']) => {
+    const icones = {
+      'exercicio': <FileText className="h-5 w-5" />,
+      'leitura': <BookOpen className="h-5 w-5" />,
+      'pesquisa': <Search className="h-5 w-5" />,
+      'pratica': <Zap className="h-5 w-5" />,
+      'projeto': <Lightbulb className="h-5 w-5" />,
+      'discussao': <MessageSquare className="h-5 w-5" />,
+      'avaliacao': <BarChart3 className="h-5 w-5" />
+    };
+    return icones[tipo] || <FileText className="h-5 w-5" />;
   };
 
-  if (!atividadesData || !desenvolvimentoData) {
+  // Obter cor do tipo
+  const obterCorTipo = (tipo: AtividadeRecurso['tipo']) => {
+    const cores = {
+      'exercicio': 'bg-blue-500',
+      'leitura': 'bg-green-500',
+      'pesquisa': 'bg-purple-500',
+      'pratica': 'bg-yellow-500',
+      'projeto': 'bg-orange-500',
+      'discussao': 'bg-pink-500',
+      'avaliacao': 'bg-red-500'
+    };
+    return cores[tipo] || 'bg-gray-500';
+  };
+
+  // Obter cor da dificuldade
+  const obterCorDificuldade = (dificuldade: AtividadeRecurso['dificuldade']) => {
+    const cores = {
+      'facil': 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30',
+      'medio': 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30',
+      'dificil': 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30'
+    };
+    return cores[dificuldade] || cores.medio;
+  };
+
+  if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded-lg w-1/3"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
-          ))}
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
+          <p className="text-gray-600 dark:text-gray-300">Carregando atividades...</p>
         </div>
       </div>
     );
   }
 
-  // Calcular total de itens combinados
-  const totalCombinedItems = (atividadesData?.atividades_recursos?.length || 0) + (desenvolvimentoData?.recursos_utilizados?.length || 0);
+  if (!atividadesData) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-300">Erro ao carregar dados das atividades</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Cabeçalho */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-100 rounded-xl">
-            <Target className="w-6 h-6 text-orange-600" />
-          </div>
+    <div className="w-full h-full flex flex-col">
+      {/* Header com filtros */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-[#29335C] dark:text-white flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-[#FF6B00]" />
               Atividades e Recursos
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              {totalCombinedItems} itens necessários para aplicar este plano de aula
+            <p className="text-gray-600 dark:text-gray-300">
+              {atividadesFiltradas.length} atividade{atividadesFiltradas.length !== 1 ? 's' : ''} encontrada{atividadesFiltradas.length !== 1 ? 's' : ''}
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-1" />
+              Exportar
+            </Button>
+            <Button variant="outline" size="sm">
+              <Share2 className="h-4 w-4 mr-1" />
+              Compartilhar
+            </Button>
+          </div>
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
-          {/* Estatísticas rápidas */}
-          <div className="flex gap-2">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              {combinedData.filter(item => item.tipo === 'atividade').length} Atividades
-            </Badge>
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              {combinedData.filter(item => item.tipo === 'recurso').length} Recursos
-            </Badge>
+        {/* Filtros */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex-1 min-w-[200px]">
+            <Input
+              placeholder="Buscar atividades..."
+              value={buscaTexto}
+              onChange={(e) => setBuscaTexto(e.target.value)}
+              className="w-full"
+            />
           </div>
+          <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os tipos</SelectItem>
+              <SelectItem value="exercicio">Exercício</SelectItem>
+              <SelectItem value="leitura">Leitura</SelectItem>
+              <SelectItem value="pesquisa">Pesquisa</SelectItem>
+              <SelectItem value="pratica">Prática</SelectItem>
+              <SelectItem value="projeto">Projeto</SelectItem>
+              <SelectItem value="discussao">Discussão</SelectItem>
+              <SelectItem value="avaliacao">Avaliação</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filtroDificuldade} onValueChange={setFiltroDificuldade}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Dificuldade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              <SelectItem value="facil">Fácil</SelectItem>
+              <SelectItem value="medio">Médio</SelectItem>
+              <SelectItem value="dificil">Difícil</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Filtros e Visualização */}
-      <div className="flex items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-4">
-          {/* Filtro por Tipo */}
-          <select
-            value={filtroTipo}
-            onChange={(e) => setFiltroTipo(e.target.value as any)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
-          >
-            <option value="todos">Todos os tipos</option>
-            <option value="atividade">Apenas Atividades</option>
-            <option value="recurso">Apenas Recursos</option>
-          </select>
-
-          {/* Filtro por Categoria */}
-          <select
-            value={filtroCategoria}
-            onChange={(e) => setFiltroCategoria(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
-          >
-            <option value="todas">Todas as categorias</option>
-            {categorias.map(categoria => (
-              <option key={categoria} value={categoria}>{categoria}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Toggle de Visualização */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'grid' 
-                ? 'bg-orange-100 text-orange-600' 
-                : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <Grid3x3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-lg transition-colors ${
-              viewMode === 'list' 
-                ? 'bg-orange-100 text-orange-600' 
-                : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            <List className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Grade de Atividades e Recursos */}
-      {atividadesFiltradas.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Filter className="w-8 h-8 text-gray-400" />
+      <ScrollArea className="flex-1">
+        {atividadesFiltradas.length === 0 ? (
+          <div className="text-center py-12">
+            <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-300">
+              Nenhuma atividade encontrada com os filtros aplicados
+            </p>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Nenhum item encontrado
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            Ajuste os filtros para ver mais atividades e recursos
-          </p>
-        </div>
-      ) : (
-        <div className={`${
-          viewMode === 'grid' 
-            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' 
-            : 'space-y-3'
-        }`}>
-          {atividadesFiltradas.map((item, index) => (
-            <Card 
-              key={item.id} 
-              className={`group hover:shadow-lg transition-all duration-300 border-0 shadow-sm hover:scale-105 rounded-2xl overflow-hidden ${
-                viewMode === 'list' ? 'flex items-center p-4' : ''
-              }`}
-              style={{
-                background: item.tipo === 'atividade' 
-                  ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)'
-                  : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)'
-              }}
-            >
-              <CardContent className={`${viewMode === 'grid' ? 'p-6' : 'p-0 flex-1 flex items-center gap-4'}`}>
-                {viewMode === 'grid' ? (
-                  <>
-                    {/* Ícone e Tipo */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-xl ${
-                        item.tipo === 'atividade' 
-                          ? 'bg-blue-500/10 text-blue-600' 
-                          : 'bg-green-500/10 text-green-600'
-                      }`}>
-                        {renderIcone(item.icone)}
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs font-medium rounded-full px-3 py-1 ${getCorTipo(item.tipo)}`}
-                      >
-                        {item.tipo === 'atividade' ? 'Atividade' : 'Recurso'}
-                      </Badge>
-                    </div>
-
-                    {/* Nome e Descrição */}
-                    <div className="space-y-2 mb-4">
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight">
-                        {item.nome}
-                      </h3>
-                      {item.descricao && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                          {item.descricao}
+        ) : (
+          <>
+            {/* Grade de Mini-Cards das Atividades */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              <AnimatePresence>
+                {atividadesFiltradas.map((atividade, index) => (
+                  <motion.div
+                    key={atividade.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2, delay: index * 0.1 }}
+                  >
+                    <Card className="h-full hover:shadow-lg transition-all duration-200 cursor-pointer group border border-gray-200 dark:border-gray-800">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className={`w-10 h-10 rounded-lg ${obterCorTipo(atividade.tipo)} flex items-center justify-center text-white mb-3`}>
+                            {obterIconeTipo(atividade.tipo)}
+                          </div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditarAtividade?.(atividade);
+                              }}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Função de copiar
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <CardTitle className="text-lg leading-tight">
+                          {atividade.titulo}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                          {atividade.descricao}
                         </p>
-                      )}
-                    </div>
 
-                    {/* Footer com informações */}
-                    <div className="flex items-center justify-between">
-                      {item.categoria && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs px-2 py-1 rounded-full ${getCorCategoria(item.categoria)}`}
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Badge className={obterCorDificuldade(atividade.dificuldade)}>
+                            {atividade.dificuldade === 'facil' ? 'Fácil' : 
+                             atividade.dificuldade === 'medio' ? 'Médio' : 'Difícil'}
+                          </Badge>
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Timer className="h-3 w-3" />
+                            {atividade.duracao}
+                          </Badge>
+                        </div>
+
+                        {/* Tags */}
+                        {atividade.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-4">
+                            {atividade.tags.slice(0, 3).map((tag, tagIndex) => (
+                              <Badge key={tagIndex} variant="secondary" className="text-xs">
+                                <Hash className="h-2 w-2 mr-1" />
+                                {tag}
+                              </Badge>
+                            ))}
+                            {atividade.tags.length > 3 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{atividade.tags.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Objetivos */}
+                        <div className="mb-4">
+                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                            Objetivos:
+                          </p>
+                          <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
+                            {atividade.objetivos.slice(0, 2).map((objetivo, objIndex) => (
+                              <li key={objIndex} className="flex items-start gap-1">
+                                <Target className="h-3 w-3 mt-0.5 text-[#FF6B00] flex-shrink-0" />
+                                <span className="line-clamp-1">{objetivo}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Recursos necessários */}
+                        {atividade.recursos.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+                              Recursos:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {atividade.recursos.slice(0, 2).map((recurso, recIndex) => (
+                                <Badge key={recIndex} variant="outline" className="text-xs">
+                                  {recurso}
+                                </Badge>
+                              ))}
+                              {atividade.recursos.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{atividade.recursos.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Botão de ação */}
+                        <Button
+                          className="w-full mt-4"
+                          onClick={() => onAtividadeClick?.(atividade)}
                         >
-                          {item.categoria}
-                        </Badge>
-                      )}
-                      {item.origem_etapa && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          Etapa {item.origem_etapa}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Vista em Lista */}
-                    <div className={`p-3 rounded-xl ${
-                      item.tipo === 'atividade' 
-                        ? 'bg-blue-500/10 text-blue-600' 
-                        : 'bg-green-500/10 text-green-600'
-                    }`}>
-                      {renderIcone(item.icone)}
-                    </div>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Visualizar Atividade
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                          {item.nome}
-                        </h3>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs font-medium rounded-full ${getCorTipo(item.tipo)}`}
-                        >
-                          {item.tipo === 'atividade' ? 'Atividade' : 'Recurso'}
-                        </Badge>
-                      </div>
-                      {item.descricao && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                          {item.descricao}
-                        </p>
-                      )}
-                    </div>
+            {/* Informações Adicionais */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Orientações Gerais */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Compass className="h-5 w-5 text-[#FF6B00]" />
+                    Orientações Gerais
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {atividadesData.orientacoesGerais}
+                  </p>
+                </CardContent>
+              </Card>
 
-                    <div className="flex items-center gap-2">
-                      {item.categoria && (
-                        <Badge 
-                          variant="secondary" 
-                          className={`text-xs px-2 py-1 rounded-full ${getCorCategoria(item.categoria)}`}
-                        >
-                          {item.categoria}
-                        </Badge>
-                      )}
-                      {item.origem_etapa && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          Etapa {item.origem_etapa}
-                        </span>
-                      )}
+              {/* Materiais Necessários */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-[#FF6B00]" />
+                    Materiais Necessários
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {atividadesData.materiaisNecessarios.map((material, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span className="text-gray-600 dark:text-gray-300">{material}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-[#FF6B00]" />
+                      <span className="font-medium">Tempo estimado total:</span>
+                      <Badge variant="outline">{atividadesData.tempoEstimado}</Badge>
                     </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-      {/* Rodapé com informações */}
-      <div className="mt-8 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-700">
-        <div className="flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-orange-600" />
-          <div>
-            <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-              Recursos Automaticamente Identificados
-            </p>
-            <p className="text-xs text-orange-600 dark:text-gray-400">
-              Estas atividades e recursos foram extraídos automaticamente do plano de desenvolvimento da aula
-            </p>
-          </div>
-        </div>
-      </div>
+            {/* Observações */}
+            {atividadesData.observacoes && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-[#FF6B00]" />
+                    Observações
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {atividadesData.observacoes}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+      </ScrollArea>
     </div>
   );
-};
-
-export default AtividadesInterface;
+}
