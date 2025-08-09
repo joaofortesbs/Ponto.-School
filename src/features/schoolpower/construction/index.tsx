@@ -15,6 +15,14 @@ export interface ConstructionActivity {
   type: string;
   status: 'draft' | 'in-progress' | 'completed' | 'pending';
   originalData?: any;
+  etapasDesenvolvimento?: EtapaDesenvolvimento[];
+  avaliacao?: string;
+}
+
+export interface EtapaDesenvolvimento {
+  titulo: string;
+  descricao: string;
+  tipoInteracao: string;
 }
 
 export function ConstructionInterface({ approvedActivities, handleEditActivity }: ConstructionInterfaceProps) {
