@@ -1,114 +1,97 @@
 
 import React from 'react';
-import { FileText, Users, BookOpen, Lightbulb, PenTool, Calculator, Microscope, Globe } from 'lucide-react';
-
-interface Activity {
-  name: string;
-  icon: React.ReactNode;
-}
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Users, Plus, Eye, Lightbulb, CheckCircle } from 'lucide-react';
+import { AtividadesData, AtividadesDataProcessor } from './AtividadesData';
 
 interface AtividadesInterfaceProps {
-  data?: {
-    etapas?: Array<{
-      recursos?: string;
-    }>;
-  };
+  planoData: any;
 }
 
-export const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ data }) => {
-  // Extrair todas as atividades/recursos das etapas
-  const extractActivities = (): Activity[] => {
-    if (!data?.etapas) return [];
-
-    const allActivities: Activity[] = [];
-    
-    data.etapas.forEach(etapa => {
-      if (etapa.recursos) {
-        // Dividir os recursos por vírgula e processar cada um
-        const recursos = etapa.recursos.split(',').map(r => r.trim());
-        
-        recursos.forEach(recurso => {
-          if (recurso && !allActivities.some(a => a.name === recurso)) {
-            allActivities.push({
-              name: recurso,
-              icon: getIconForActivity(recurso)
-            });
-          }
-        });
-      }
-    });
-
-    return allActivities;
-  };
-
-  const getIconForActivity = (activityName: string): React.ReactNode => {
-    const name = activityName.toLowerCase();
-    
-    if (name.includes('lista') || name.includes('exercício') || name.includes('questão')) {
-      return <FileText className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('grupo') || name.includes('equipe') || name.includes('colaborativo')) {
-      return <Users className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('livro') || name.includes('texto') || name.includes('leitura')) {
-      return <BookOpen className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('criativo') || name.includes('ideia') || name.includes('brainstorm')) {
-      return <Lightbulb className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('redação') || name.includes('escrita') || name.includes('produção')) {
-      return <PenTool className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('matemática') || name.includes('cálculo') || name.includes('número')) {
-      return <Calculator className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('ciência') || name.includes('experimento') || name.includes('laboratório')) {
-      return <Microscope className="w-5 h-5 text-orange-600" />;
-    } else if (name.includes('geografia') || name.includes('história') || name.includes('mundo')) {
-      return <Globe className="w-5 h-5 text-orange-600" />;
-    } else {
-      return <FileText className="w-5 h-5 text-orange-600" />;
-    }
-  };
-
-  const activities = extractActivities();
+const AtividadesInterface: React.FC<AtividadesInterfaceProps> = ({ planoData }) => {
+  const data = AtividadesDataProcessor.processData(planoData);
 
   return (
     <div className="space-y-6">
-      {/* Título */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center">
-          <FileText className="w-4 h-4 text-white" />
-        </div>
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-          Atividades e Recursos
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+          <Users className="h-5 w-5 text-orange-600" />
+          Atividades Práticas
         </h3>
+        <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
+          <Plus className="w-4 h-4 mr-2" />
+          Adicionar Atividade
+        </Button>
       </div>
 
-      {/* Grade de Atividades */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {activities.map((activity, index) => (
-          <div
-            key={index}
-            className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
-                {activity.icon}
+      <div className="space-y-4">
+        {data.atividades.map((atividade, index) => (
+          <Card key={index} className="border-l-4 border-l-orange-500 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100">{atividade.nome}</h4>
+                    <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
+                      {atividade.tipo}
+                    </Badge>
+                  </div>
+
+                  {atividade.ref_objetivos && atividade.ref_objetivos.length > 0 && (
+                    <div className="mb-3">
+                      <span className="text-sm font-semibold text-gray-600 dark:text-gray-400 block mb-2">Objetivos relacionados:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {atividade.ref_objetivos.map((obj: number) => (
+                          <Badge key={obj} variant="outline" size="sm" className="border-orange-300 text-orange-700 bg-orange-50 dark:border-orange-600 dark:text-orange-300 dark:bg-orange-900/30">
+                            Objetivo {obj}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {atividade.visualizar_como_aluno && (
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-3">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <strong className="text-gray-800 dark:text-gray-200">Experiência do aluno:</strong> {atividade.visualizar_como_aluno}
+                      </p>
+                    </div>
+                  )}
+
+                  {atividade.sugestoes_ia && atividade.sugestoes_ia.length > 0 && (
+                    <div className="bg-gradient-to-r from-orange-50 to-indigo-50 dark:from-orange-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                      <strong className="text-orange-800 dark:text-orange-200 block mb-2 flex items-center gap-2">
+                        <Lightbulb className="w-4 h-4" />
+                        Sugestões da IA:
+                      </strong>
+                      <ul className="space-y-1">
+                        {atividade.sugestoes_ia.map((sugestao: string, idx: number) => (
+                          <li key={idx} className="text-orange-700 dark:text-orange-300 text-sm flex items-start gap-2">
+                            <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            {sugestao}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2 ml-4">
+                  <Button size="sm" variant="outline" className="border-orange-300 text-orange-600 hover:bg-orange-50">
+                    <Eye className="w-4 h-4 mr-2" />
+                    Visualizar
+                  </Button>
+                  <Button size="sm" variant="outline" className="border-gray-300 text-gray-600 hover:bg-gray-50">
+                    Substituir
+                  </Button>
+                </div>
               </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-800 dark:text-gray-200 text-sm leading-tight">
-                  {activity.name}
-                </h4>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
-
-      {/* Mensagem caso não haja atividades */}
-      {activities.length === 0 && (
-        <div className="text-center py-8">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-500 dark:text-gray-400">
-            Nenhuma atividade ou recurso encontrado nas etapas de desenvolvimento.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

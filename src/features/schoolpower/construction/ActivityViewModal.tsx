@@ -124,7 +124,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
       }
     };
 
@@ -240,6 +240,43 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       content: activity.originalData?.content || storedData.content
     };
 
+    // Para lista de exercícios, aplicar filtros de exclusão
+    if (activityType === 'lista-exercicios') {
+      try {
+        const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+        if (deletedQuestionsJson) {
+          const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+          console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
+
+          // Filtrar questões excluídas em todas as possíveis localizações
+          if (previewData.questoes && Array.isArray(previewData.questoes)) {
+            previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
+          }
+
+          if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
+            previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
+          }
+
+          if (previewData.questions && Array.isArray(previewData.questions)) {
+            previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
+          }
+
+          if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
+            previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
+          }
+
+          // Adicionar os IDs excluídos aos dados para referência
+          previewData.deletedQuestionIds = deletedQuestionIds;
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+      }
+    }
+
     // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
     if (activityType === 'plano-aula') {
       console.log('📚 ActivityViewModal: Processando Plano de Aula');
@@ -300,8 +337,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Se encontrou conteúdo, mesclar com os dados existentes
       if (planoContent) {
         console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
-        previewData = {
-          ...previewData,
+        previewData = { 
+          ...previewData, 
           ...planoContent,
           // Garantir que os dados essenciais sejam preservados
           id: activity.id,
@@ -342,43 +379,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           }
         };
         console.log('🔄 Usando dados de fallback completos para plano-aula:', previewData);
-      }
-    }
-
-    // Para lista de exercícios, aplicar filtros de exclusão
-    if (activityType === 'lista-exercicios') {
-      try {
-        const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
-        if (deletedQuestionsJson) {
-          const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
-          console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
-
-          // Filtrar questões excluídas em todas as possíveis localizações
-          if (previewData.questoes && Array.isArray(previewData.questoes)) {
-            previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
-          }
-
-          if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
-            previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
-          }
-
-          if (previewData.questions && Array.isArray(previewData.questions)) {
-            previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
-          }
-
-          if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
-            previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
-          }
-
-          // Adicionar os IDs excluídos aos dados para referência
-          previewData.deletedQuestionIds = deletedQuestionIds;
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
       }
     }
 
@@ -611,10 +611,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
             {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
             {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
-              <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0 rounded-l-lg">
+              <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
                 <div className="p-4 space-y-4">
                   {/* Summary Card */}
-                  <Card className="bg-white dark:bg-gray-700 shadow-sm rounded-lg">
+                  <Card className="bg-white dark:bg-gray-700 shadow-sm">
                     <CardContent className="p-3">
                       <div className="text-sm">
                         <div className="flex justify-between items-center">
@@ -636,7 +636,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                       <button
                         key={question.id}
                         onClick={() => scrollToQuestion(question.id, index)}
-                        className={`w-full text-left p-2 text-xs rounded-lg transition-colors ${
+                        className={`w-full text-left p-2 text-xs rounded transition-colors ${
                           selectedQuestionId === question.id
                             ? 'bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 font-medium text-orange-800 dark:text-orange-200'
                             : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
@@ -656,31 +656,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto max-h-[calc(95vh-240px)] bg-white dark:bg-gray-900" ref={contentRef}>
-                {/* Refactored "Atividades" section */}
-                {activityType === 'plano-aula' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {previewData.atividades && Array.isArray(previewData.atividades) ? previewData.atividades.map((item, index) => (
-                      <Card key={index} className="rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg overflow-hidden">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          {/* Placeholder for icon - replace with actual icon component based on item.tipo */}
-                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                            {item.icon || <BookOpen className="h-6 w-6" />}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{item.titulo || item.name || 'Atividade'}</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              {item.descricao || item.description || 'Descrição breve da atividade ou recurso.'}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )) : (
-                      <p className="text-gray-500 dark:text-gray-400">Nenhuma atividade ou recurso encontrado para este plano de aula.</p>
-                    )}
-                  </div>
-                ) : (
-                  renderActivityPreview()
-                )}
+                {renderActivityPreview()}
               </div>
             </div>
           </div>
