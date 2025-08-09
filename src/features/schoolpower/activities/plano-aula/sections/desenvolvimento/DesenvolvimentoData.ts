@@ -1,3 +1,4 @@
+// Dados estruturados para a seção de Desenvolvimento do Plano de Aula
 
 export interface EtapaDesenvolvimento {
   id: string;
@@ -12,9 +13,11 @@ export interface EtapaDesenvolvimento {
 
 export interface DesenvolvimentoData {
   etapas: EtapaDesenvolvimento[];
-  tempoTotalEstimado: string;
-  observacoesGerais: string;
-  sugestoesIA: string[];
+  tempoTotalEstimado?: string;
+  observacoesGerais?: string;
+  metodologiaGeral?: string;
+  recursosComplementares?: string[];
+  sugestoesIA?: string[];
 }
 
 // Dados padrão/fallback - GARANTINDO QUE SEMPRE EXISTE
@@ -63,7 +66,7 @@ export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
 // Função para calcular tempo total das etapas
 function calcularTempoTotal(etapas: EtapaDesenvolvimento[]): string {
   if (!etapas || etapas.length === 0) return "0 minutos";
-  
+
   let totalMinutos = 0;
   etapas.forEach(etapa => {
     const match = etapa.tempoEstimado.match(/\d+/);
@@ -71,7 +74,7 @@ function calcularTempoTotal(etapas: EtapaDesenvolvimento[]): string {
       totalMinutos += parseInt(match[0], 10);
     }
   });
-  
+
   return totalMinutos > 60 ? `${Math.floor(totalMinutos / 60)}h ${totalMinutos % 60}min` : `${totalMinutos}min`;
 }
 
@@ -91,7 +94,7 @@ export class DesenvolvimentoGeminiService {
 
       // Preparar prompt para o Gemini
       const prompt = this.criarPromptDesenvolvimento(contextoPlano);
-      
+
       const response = await fetch(`${this.GEMINI_API_URL}?key=${this.GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -117,7 +120,7 @@ export class DesenvolvimentoGeminiService {
       }
 
       const data = await response.json();
-      
+
       if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
         throw new Error('Resposta inválida da API Gemini');
       }
@@ -175,28 +178,28 @@ IMPORTANTE:
   private static processarRespostaGemini(textoResposta: string): DesenvolvimentoData {
     try {
       console.log('🔄 Processando resposta do Gemini...');
-      
+
       let cleanedText = textoResposta.trim();
-      
+
       // Remover markdown se presente
       if (cleanedText.includes('```json')) {
         cleanedText = cleanedText.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
       } else if (cleanedText.includes('```')) {
         cleanedText = cleanedText.replace(/```\s*/g, '').replace(/```\s*$/g, '');
       }
-      
+
       // Remover texto antes e depois do JSON
       const jsonStart = cleanedText.indexOf('{');
       const jsonEnd = cleanedText.lastIndexOf('}');
-      
+
       if (jsonStart !== -1 && jsonEnd !== -1) {
         cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
       }
 
       console.log('🔧 Texto limpo para parsing:', cleanedText);
-      
+
       const parsedData = JSON.parse(cleanedText);
-      
+
       // Validar estrutura básica
       if (!parsedData.etapas || !Array.isArray(parsedData.etapas)) {
         console.warn('⚠️ Estrutura inválida, usando dados padrão');
@@ -245,7 +248,7 @@ IMPORTANTE:
         const tempoMatch = etapa.tempoEstimado.match(/\d+/);
         const tempoEtapa = tempoMatch ? parseInt(tempoMatch[0], 10) : 0;
         tempoAcumulado += tempoEtapa;
-        
+
         if (index === dadosBase.etapas.length - 1) {
           // Ajusta a última etapa para fechar em 45 minutos
           etapa.tempoEstimado = `${45 - tempoAcumulado + (tempoMatch ? parseInt(tempoMatch[0], 10) : 0)} minutos`;
@@ -268,7 +271,7 @@ IMPORTANTE:
         console.warn('⚠️ ID do plano ou dados inválidos para salvamento');
         return;
       }
-      
+
       const key = `plano_desenvolvimento_${planoId}`;
       localStorage.setItem(key, JSON.stringify(dados));
       console.log('💾 Etapas de desenvolvimento salvas:', key);
@@ -283,19 +286,19 @@ IMPORTANTE:
         console.warn('⚠️ ID do plano inválido para carregamento');
         return null;
       }
-      
+
       const key = `plano_desenvolvimento_${planoId}`;
       const dados = localStorage.getItem(key);
 
       if (dados) {
         const parsedData = JSON.parse(dados);
-        
+
         // Validar dados carregados
         if (!parsedData.etapas || !Array.isArray(parsedData.etapas)) {
           console.warn('⚠️ Dados carregados inválidos, usando dados padrão');
           return desenvolvimentoDataPadrao;
         }
-        
+
         console.log('📂 Dados de desenvolvimento carregados:', parsedData);
         return parsedData;
       }
@@ -308,7 +311,7 @@ IMPORTANTE:
   static limparDadosDesenvolvimento(planoId: string): void {
     try {
       if (!planoId) return;
-      
+
       const key = `plano_desenvolvimento_${planoId}`;
       localStorage.removeItem(key);
       console.log('🗑️ Dados de desenvolvimento removidos:', key);
@@ -330,64 +333,6 @@ IMPORTANTE:
     };
   }
 }
-// Dados estruturados para a seção de Desenvolvimento do Plano de Aula
-
-export interface EtapaDesenvolvimento {
-  id: string;
-  titulo: string;
-  descricao: string;
-  tipoInteracao: string;
-  tempoEstimado: string;
-  recursosUsados: string[];
-  ordem: number;
-  expandida: boolean;
-}
-
-export interface DesenvolvimentoData {
-  etapas: EtapaDesenvolvimento[];
-  observacoesGerais?: string;
-  metodologiaGeral?: string;
-  recursosComplementares?: string[];
-}
-
-// Dados padrão/fallback - GARANTINDO QUE SEMPRE EXISTE
-export const desenvolvimentoDataPadrao: DesenvolvimentoData = {
-  etapas: [
-    {
-      id: "etapa_1",
-      titulo: "1. Revisando Substantivos: Comuns e Próprios",
-      descricao: "Início com uma breve revisão sobre substantivos comuns e próprios. Utilizar exemplos do cotidiano para facilitar a compreensão. Apresentar exemplos na lousa, solicitando exemplos dos alunos e classificando-os coletivamente. Esclarecer dúvidas e reforçar a diferença entre os tipos de substantivos com exemplos concretos (nome de pessoas, lugares, coisas, etc.).",
-      tipoInteracao: "Apresentação dialogada e discussão",
-      tempoEstimado: "10 minutos",
-      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Quiz Interativo"],
-      ordem: 1,
-      expandida: false
-    },
-    {
-      id: "etapa_2",
-      titulo: "2. Introdução aos Verbos: Ação e Estado",
-      descricao: "Apresentar o conceito de verbo como palavra que indica ação ou estado. Utilizar exemplos práticos e contextualizados, como frases simples que mostram ações (correr, pular, estudar) e estados (ser, estar, parecer). Explicar a importância dos verbos na construção de frases e narrativas.",
-      tipoInteracao: "Apresentação expositiva com exemplos",
-      tempoEstimado: "15 minutos",
-      recursosUsados: ["Lousa ou projetor", "Pincel ou caneta para lousa", "Organizador Gráfico"],
-      ordem: 2,
-      expandida: false
-    },
-    {
-      id: "etapa_3",
-      titulo: "3. Atividade Prática: Identificando Classes Gramaticais",
-      descricao: "Dividir a turma em grupos pequenos e entregar atividade prática com frases para identificar substantivos e verbos. Cada grupo receberá um conjunto de frases diferentes e deverá classificar as palavras destacadas. Circular entre os grupos oferecendo orientação conforme necessário. Promover discussão coletiva sobre as respostas encontradas.",
-      tipoInteracao: "Trabalho em grupos pequenos",
-      tempoEstimado: "20 minutos",
-      recursosUsados: ["Fichas com atividades", "Lápis/canetas", "Folhas de resposta"],
-      ordem: 3,
-      expandida: false
-    }
-  ],
-  observacoesGerais: "Manter ambiente colaborativo e encorajador durante toda a aula",
-  metodologiaGeral: "Metodologia ativa com foco na participação dos estudantes",
-  recursosComplementares: ["Quadro digital", "Projetor", "Material impresso"]
-};
 
 // Função para obter dados do desenvolvimento com fallback seguro
 export function obterDadosDesenvolvimento(dados?: any): DesenvolvimentoData {
