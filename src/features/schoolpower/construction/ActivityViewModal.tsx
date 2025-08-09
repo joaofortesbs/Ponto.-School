@@ -1,13 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Loader2 } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
-import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
+// PlanoAulaPreview is now imported dynamically within the switch case.
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -26,9 +26,10 @@ interface ActivityViewModalProps {
   isOpen: boolean;
   activity: ConstructionActivity | null;
   onClose: () => void;
+  onEdit?: (activityId: string) => void; // Adicionado para o botão de editar no Plano de Aula
 }
 
-export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
+export function ActivityViewModal({ isOpen, activity, onClose, onEdit }: ActivityViewModalProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -396,11 +397,29 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       case 'plano-aula':
         console.log('📚 Renderizando PlanoAulaPreview com dados:', previewData);
+        // Importar dinamicamente o componente de preview
+        const PlanoAulaPreview = React.lazy(() => import('../activities/plano-aula/PlanoAulaPreview'));
+
         return (
-          <PlanoAulaPreview
-            data={previewData}
-            activityData={activity}
-          />
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-orange-500" />
+                <div>
+                  <h3 className="font-semibold">Carregando Plano de Aula</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Preparando visualização personalizada...
+                  </p>
+                </div>
+              </div>
+            </div>
+          }>
+            <PlanoAulaPreview
+              activity={previewData} // Passa os dados já processados
+              onEdit={onEdit}
+              onClose={onClose}
+            />
+          </Suspense>
         );
 
       default:
@@ -587,6 +606,18 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     >
                       <BookOpen className="h-4 w-4 mr-2" />
                       Simular Aula
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit?.(activity.id)} // Chama onEdit se existir
+                      className={`${
+                        activityType === 'plano-aula'
+                          ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                          : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
+                      }`}
+                    >
+                      <Edit className="h-4 w-4" />
                     </Button>
                   </>
                 )}

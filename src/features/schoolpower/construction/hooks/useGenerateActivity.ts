@@ -28,43 +28,46 @@ interface UseGenerateActivityProps {
 export const useGenerateActivity = ({ activityId, activityType }: UseGenerateActivityProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<any>(null); // Adicionado estado para gerenciar o conteúdo gerado
 
-  const generateActivity = useCallback(async (formData: any) => {
-    setIsGenerating(true);
-    setError(null);
-
+  const generateActivity = useCallback(async (activityData: any) => {
     try {
-      console.log('🚀 Iniciando geração de atividade:', { activityId, activityType, formData });
+      setIsGenerating(true);
+      setError(null);
 
-      // Lógica específica para plano de aula
-      if (activityId === 'plano-aula') {
-        console.log('📚 Gerando Plano de Aula...');
-        // Utiliza a nova classe PlanoAulaGenerator
-        return await PlanoAulaGenerator.generatePlanoAula(formData);
+      console.log('Gerando atividade:', activityData);
+
+      // Para plano de aula, usar o serviço especializado
+      if (activityData.type === 'plano-aula') {
+        const { default: PlanoAulaService } = await import('../../activities/plano-aula/planoAulaService');
+        const planoContent = await PlanoAulaService.generatePlanoContent(activityData.data || {});
+
+        // Validar e melhorar o conteúdo gerado
+        const enhancedContent = await PlanoAulaService.validateAndEnhancePlano(planoContent);
+
+        setGeneratedContent(enhancedContent);
+        return enhancedContent;
       }
 
-      // Lógica específica para lista de exercícios
-      if (activityId === 'lista-exercicios') {
-        return await generateExerciseList(formData);
-      }
+      // Para outros tipos de atividade, usar o sistema existente
+      const generatedContent = await generateActivityContent(activityData);
+      setGeneratedContent(generatedContent);
 
-      // Lógica genérica para outras atividades
-      // Usa a função original importada 'generateActivityContent'
-      return await generateGenericActivity(formData);
-
-    } catch (error: any) {
-      console.error('❌ Erro na geração da atividade:', error);
-      setError(error.message || 'Erro desconhecido na geração da atividade');
-      // Lançar o erro para que possa ser tratado pelo chamador, se necessário
-      throw error;
+      return generatedContent;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao gerar atividade';
+      console.error('Erro na geração:', err);
+      setError(errorMessage);
+      throw err;
     } finally {
       setIsGenerating(false);
     }
-  }, [activityId, activityType]); // Dependências do useCallback mantidas
+  }, []); // A dependência 'activityId' e 'activityType' foram removidas pois a lógica interna agora verifica 'activityData.type'
 
   return {
     generateActivity,
     isGenerating,
-    error
+    error,
+    generatedContent // Retornando o conteúdo gerado
   };
 }

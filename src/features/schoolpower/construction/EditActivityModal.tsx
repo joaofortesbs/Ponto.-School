@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap } from 'lucide-react';
+import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -90,7 +89,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     language: '',
     associatedExercises: '',
     knowledgeArea: '',
-    complexityLevel: ''
+    complexityLevel: '',
+    // Novos campos para plano de aula
+    disciplina: activity?.customFields?.disciplina || '',
+    turma: activity?.customFields?.turma || '',
+    professor: activity?.customFields?.professor || '',
+    duracao: activity?.customFields?.duracao || '',
+    tema: activity?.customFields?.tema || '',
+    nivel: activity?.customFields?.nivel || '',
+    instituicao: activity?.customFields?.instituicao || '',
+    conteudo: activity?.customFields?.conteudo || '',
+    metodologia: activity?.customFields?.metodologia || '',
+    recursos: activity?.customFields?.recursos || '',
+    avaliacao: activity?.customFields?.avaliacao || '',
   });
 
   // Estado para conteúdo gerado
@@ -109,6 +120,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const [buildProgress, setBuildProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [builtContent, setBuiltContent] = useState<any>(null); // Adicionado para uso local
+  const [isSaving, setIsSaving] = useState(false);
 
   // Hook para geração de atividades
   const {
@@ -148,6 +160,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
             perfilTurma: data.context,
             tipoAula: data.difficultyLevel,
             observacoes: data.evaluation,
+            // Campos específicos do plano de aula
+            disciplina: data.disciplina,
+            turma: data.turma,
+            professor: data.professor,
+            duracao: data.duracao,
+            temaAula: data.tema,
+            nivelEnsino: data.nivel,
+            instituicao: data.instituicao,
+            conteudoProgramatico: data.conteudo,
+            metodologia: data.metodologia,
+            recursos: data.recursos,
+            avaliacao: data.avaliacao
           },
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
@@ -442,7 +466,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 language: '',
                 associatedExercises: '',
                 knowledgeArea: '',
-                complexityLevel: ''
+                complexityLevel: '',
+                // Novos campos do plano de aula
+                disciplina: consolidatedCustomFields['disciplina'] || customFields['Disciplina'] || '',
+                turma: consolidatedCustomFields['turma'] || customFields['Série/Turma'] || '',
+                professor: consolidatedCustomFields['professor'] || customFields['Professor(a)'] || '',
+                duracao: consolidatedCustomFields['duracao'] || customFields['Duração da Aula'] || '',
+                tema: consolidatedCustomFields['tema'] || customFields['Tema da Aula'] || '',
+                nivel: consolidatedCustomFields['nivel'] || customFields['Nível de Ensino'] || '',
+                instituicao: consolidatedCustomFields['instituicao'] || customFields['Instituição'] || '',
+                conteudo: consolidatedCustomFields['conteudo'] || customFields['Conteúdo Programático'] || '',
+                metodologia: consolidatedCustomFields['metodologia'] || customFields['Metodologia'] || '',
+                recursos: consolidatedCustomFields['recursos'] || customFields['Recursos Necessários'] || '',
+                avaliacao: consolidatedCustomFields['avaliacao'] || customFields['Avaliação'] || '',
               };
 
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
@@ -459,6 +495,17 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               console.log('  - Perfil da Turma:', enrichedFormData.context);
               console.log('  - Tipo de Aula:', enrichedFormData.difficultyLevel);
               console.log('  - Observações:', enrichedFormData.evaluation);
+              console.log('  - Disciplina:', enrichedFormData.disciplina);
+              console.log('  - Turma:', enrichedFormData.turma);
+              console.log('  - Professor:', enrichedFormData.professor);
+              console.log('  - Duração:', enrichedFormData.duracao);
+              console.log('  - Tema Aula:', enrichedFormData.tema);
+              console.log('  - Nível Ensino:', enrichedFormData.nivel);
+              console.log('  - Instituição:', enrichedFormData.instituicao);
+              console.log('  - Conteúdo Programático:', enrichedFormData.conteudo);
+              console.log('  - Metodologia:', enrichedFormData.metodologia);
+              console.log('  - Recursos:', enrichedFormData.recursos);
+              console.log('  - Avaliação:', enrichedFormData.avaliacao);
             } else {
               // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
               enrichedFormData = {
@@ -493,7 +540,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 language: consolidatedCustomFields['Idioma'] || consolidatedCustomFields['idioma'] || '',
                 associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
                 knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
-                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || ''
+                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || '',
+                // Novos campos do plano de aula
+                disciplina: consolidatedCustomFields['disciplina'] || customFields['Disciplina'] || autoFormData.disciplina || '',
+                turma: consolidatedCustomFields['turma'] || customFields['Série/Turma'] || autoFormData.turma || '',
+                professor: consolidatedCustomFields['professor'] || customFields['Professor(a)'] || autoFormData.professor || '',
+                duracao: consolidatedCustomFields['duracao'] || customFields['Duração da Aula'] || autoFormData.duracao || '',
+                tema: consolidatedCustomFields['tema'] || customFields['Tema da Aula'] || autoFormData.tema || '',
+                nivel: consolidatedCustomFields['nivel'] || customFields['Nível de Ensino'] || autoFormData.nivel || '',
+                instituicao: consolidatedCustomFields['instituicao'] || customFields['Instituição'] || autoFormData.instituicao || '',
+                conteudo: consolidatedCustomFields['conteudo'] || customFields['Conteúdo Programático'] || autoFormData.conteudo || '',
+                metodologia: consolidatedCustomFields['metodologia'] || customFields['Metodologia'] || autoFormData.metodologia || '',
+                recursos: consolidatedCustomFields['recursos'] || customFields['Recursos Necessários'] || autoFormData.recursos || '',
+                avaliacao: consolidatedCustomFields['avaliacao'] || customFields['Avaliação'] || autoFormData.avaliacao || '',
               };
             }
 
@@ -557,7 +616,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               language: '',
               associatedExercises: '',
               knowledgeArea: '',
-              complexityLevel: ''
+              complexityLevel: '',
+              // Novos campos do plano de aula
+              disciplina: activity.originalData?.customFields?.['disciplina'] || '',
+              turma: activity.originalData?.customFields?.['turma'] || '',
+              professor: activity.originalData?.customFields?.['professor'] || '',
+              duracao: activity.originalData?.customFields?.['duracao'] || '',
+              tema: activity.originalData?.customFields?.['tema'] || '',
+              nivel: activity.originalData?.customFields?.['nivel'] || '',
+              instituicao: activity.originalData?.customFields?.['instituicao'] || '',
+              conteudo: activity.originalData?.customFields?.['conteudo'] || '',
+              metodologia: activity.originalData?.customFields?.['metodologia'] || '',
+              recursos: activity.originalData?.customFields?.['recursos'] || '',
+              avaliacao: activity.originalData?.customFields?.['avaliacao'] || '',
             };
 
             setFormData(fallbackData);
@@ -637,7 +708,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               language: '',
               associatedExercises: '',
               knowledgeArea: '',
-              complexityLevel: ''
+              complexityLevel: '',
+              // Novos campos do plano de aula
+              disciplina: customFields['disciplina'] || '',
+              turma: customFields['turma'] || '',
+              professor: customFields['professor'] || '',
+              duracao: customFields['duracao'] || '',
+              tema: customFields['tema'] || '',
+              nivel: customFields['nivel'] || '',
+              instituicao: customFields['instituicao'] || '',
+              conteudo: customFields['conteudo'] || '',
+              metodologia: customFields['metodologia'] || '',
+              recursos: customFields['recursos'] || '',
+              avaliacao: customFields['avaliacao'] || '',
             };
 
             console.log('📝 Dados diretos processados para plano-aula:', directFormData);
@@ -674,7 +757,19 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               language: '',
               associatedExercises: '',
               knowledgeArea: '',
-              complexityLevel: ''
+              complexityLevel: '',
+              // Novos campos do plano de aula (preenchidos com valores padrão se não existirem)
+              disciplina: '',
+              turma: '',
+              professor: '',
+              duracao: '',
+              tema: '',
+              nivel: '',
+              instituicao: '',
+              conteudo: '',
+              metodologia: '',
+              recursos: '',
+              avaliacao: '',
             };
           }
 
@@ -690,7 +785,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     };
 
     loadActivityData();
-  }, [activity, isOpen, loadSavedContent]);
+  }, [activity, isOpen, loadSavedContent, onUpdateActivity]);
 
   // Função para automação - será chamada externamente
   useEffect(() => {
@@ -711,10 +806,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     };
   }, [activity, formData, isGenerating]);
 
-  const handleInputChange = (field: keyof ActivityFormData, value: string) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
   };
 
@@ -804,11 +900,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     });
   };
 
-  const handleExportPDF = () => {
-    // Lógica para exportar PDF será implementada futuramente
-    console.log('Exportar PDF em desenvolvimento');
-  };
-
   // Verificar se campos obrigatórios estão preenchidos
   const isFormValid = activity?.id === 'lista-exercicios'
     ? formData.title.trim() &&
@@ -820,13 +911,15 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       formData.difficultyLevel.trim() &&
       formData.questionModel.trim()
     : activity?.id === 'plano-aula'
-    ? formData.title.trim() &&
+    ? formData.disciplina.trim() && // Verifica os campos obrigatórios para plano de aula
+      formData.turma.trim() &&
+      formData.professor.trim() &&
+      formData.duracao.trim() &&
+      formData.tema.trim() &&
+      formData.nivel.trim() &&
+      formData.title.trim() &&
       formData.description.trim() &&
-      formData.theme.trim() &&
-      formData.schoolYear.trim() &&
-      formData.subject.trim() &&
-      formData.objectives.trim() &&
-      formData.materials.trim()
+      formData.objectives.trim()
     : formData.title.trim() &&
       formData.description.trim() &&
       formData.objectives.trim();
@@ -856,11 +949,32 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       // Obter customFields a partir dos dados da atividade
       const customFields = activity.customFields || {};
 
-      // Salvar os dados editados
+      // Salvar os dados editados, incluindo os campos específicos do plano de aula
       const updatedActivity = {
         ...activity,
-        ...formData,
-        customFields: customFields
+        title: formData.title,
+        description: formData.description,
+        customFields: {
+          ...customFields,
+          disciplina: formData.disciplina,
+          turma: formData.turma,
+          professor: formData.professor,
+          duracao: formData.duracao,
+          tema: formData.tema,
+          nivel: formData.nivel,
+          instituicao: formData.instituicao,
+          conteudo: formData.conteudo,
+          metodologia: formData.metodologia,
+          recursos: formData.recursos,
+          avaliacao: formData.avaliacao,
+          // Mantenha outros campos personalizados existentes
+          ...Object.entries(customFields).reduce((acc, [key, value]) => {
+            if (!['disciplina', 'turma', 'professor', 'duracao', 'tema', 'nivel', 'instituicao', 'conteudo', 'metodologia', 'recursos', 'avaliacao'].includes(key.toLowerCase())) {
+              acc[key] = value;
+            }
+            return acc;
+          }, {}),
+        }
       };
 
       // Chamar a função de atualização passada como prop
@@ -909,6 +1023,16 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         formData.numberOfQuestions.trim() &&
         formData.difficultyLevel.trim() &&
         formData.questionModel.trim()
+      : activity?.id === 'plano-aula'
+      ? formData.disciplina.trim() &&
+        formData.turma.trim() &&
+        formData.professor.trim() &&
+        formData.duracao.trim() &&
+        formData.tema.trim() &&
+        formData.nivel.trim() &&
+        formData.title.trim() &&
+        formData.description.trim() &&
+        formData.objectives.trim()
       : formData.title.trim() &&
         formData.description.trim() &&
         formData.objectives.trim();
@@ -927,8 +1051,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       return () => clearTimeout(timer);
     }
   }, [formData, activity, isOpen, handleBuildActivity]);
-
-  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -1016,8 +1138,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         <Label htmlFor="title" className="text-sm">Título da Atividade</Label>
                         <Input
                           id="title"
+                          name="title"
                           value={formData.title}
-                          onChange={(e) => handleInputChange('title', e.target.value)}
+                          onChange={handleInputChange}
                           placeholder="Digite o título da atividade"
                           className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                         />
@@ -1027,8 +1150,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         <Label htmlFor="description" className="text-sm">Descrição</Label>
                         <Textarea
                           id="description"
+                          name="description"
                           value={formData.description}
-                          onChange={(e) => handleInputChange('description', e.target.value)}
+                          onChange={handleInputChange}
                           placeholder="Descreva a atividade..."
                           className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                         />
@@ -1042,8 +1166,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="subject" className="text-sm">Disciplina</Label>
                               <Input
                                 id="subject"
+                                name="subject"
                                 value={formData.subject}
-                                onChange={(e) => handleInputChange('subject', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: Português, Matemática, História..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1053,8 +1178,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="theme" className="text-sm">Tema</Label>
                               <Input
                                 id="theme"
+                                name="theme"
                                 value={formData.theme}
-                                onChange={(e) => handleInputChange('theme', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: Substantivos e Verbos"
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1066,8 +1192,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
                               <Input
                                 id="schoolYear"
+                                name="schoolYear"
                                 value={formData.schoolYear}
-                                onChange={(e) => handleInputChange('schoolYear', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: 6º ano, 7º ano, 1º ano EM..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1077,8 +1204,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
                               <Input
                                 id="numberOfQuestions"
+                                name="numberOfQuestions"
                                 value={formData.numberOfQuestions}
-                                onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: 5, 10, 15, 20..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1090,8 +1218,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
                               <Input
                                 id="difficultyLevel"
+                                name="difficultyLevel"
                                 value={formData.difficultyLevel}
-                                onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: Básico, Intermediário, Avançado..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1101,8 +1230,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
                               <Input
                                 id="questionModel"
+                                name="questionModel"
                                 value={formData.questionModel}
-                                onChange={(e) => handleInputChange('questionModel', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: Múltipla Escolha, Dissertativa, Mista..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1113,8 +1243,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                             <Label htmlFor="sources" className="text-sm">Fontes</Label>
                             <Textarea
                               id="sources"
+                              name="sources"
                               value={formData.sources}
-                              onChange={(e) => handleInputChange('sources', e.target.value)}
+                              onChange={handleInputChange}
                               placeholder="Digite as fontes de referência..."
                               className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
@@ -1126,8 +1257,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="timeLimit" className="text-sm">Tempo Limite</Label>
                               <Input
                                 id="timeLimit"
+                                name="timeLimit"
                                 value={formData.timeLimit || ''}
-                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: 50 minutos, 1 hora..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1137,8 +1269,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                               <Label htmlFor="context" className="text-sm">Contexto de Aplicação</Label>
                               <Input
                                 id="context"
+                                name="context"
                                 value={formData.context || ''}
-                                onChange={(e) => handleInputChange('context', e.target.value)}
+                                onChange={handleInputChange}
                                 placeholder="Ex: Produção textual, Sala de aula..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
@@ -1150,120 +1283,226 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                       {/* Campos específicos para Plano de Aula */}
                       {activity?.id === 'plano-aula' && (
                         <>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-700">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FileText className="h-5 w-5 text-orange-600" />
+                              <h3 className="font-semibold text-orange-800 dark:text-orange-300">Dados para Geração Automática</h3>
+                            </div>
+                            <p className="text-sm text-orange-700 dark:text-orange-400">
+                              Preencha os campos abaixo para que nossa IA gere um plano de aula completo e personalizado.
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="tema" className="text-sm">Tema ou Tópico Central</Label>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Disciplina *
+                              </label>
                               <Input
-                                id="tema"
-                                value={formData.theme}
-                                onChange={(e) => handleInputChange('theme', e.target.value)}
-                                placeholder="Digite o tema central da aula..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                name="disciplina"
+                                value={formData.disciplina || ''}
+                                onChange={handleInputChange}
+                                placeholder="Ex: Matemática, História, Ciências..."
+                                className="focus:ring-orange-500 focus:border-orange-500"
                               />
                             </div>
-
                             <div>
-                              <Label htmlFor="anoSerie" className="text-sm">Ano/Série Escolar</Label>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Série/Turma *
+                              </label>
                               <Input
-                                id="anoSerie"
-                                value={formData.schoolYear}
-                                onChange={(e) => handleInputChange('schoolYear', e.target.value)}
-                                placeholder="Ex: 1º ano, 6º ano, 2º ano EM..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                name="turma"
+                                value={formData.turma || ''}
+                                onChange={handleInputChange}
+                                placeholder="Ex: 8º ano, 3ª série, Turma A..."
+                                className="focus:ring-orange-500 focus:border-orange-500"
                               />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="componenteCurricular" className="text-sm">Componente Curricular</Label>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Professor(a) *
+                              </label>
                               <Input
-                                id="componenteCurricular"
-                                value={formData.subject}
-                                onChange={(e) => handleInputChange('subject', e.target.value)}
-                                placeholder="Ex: Matemática, Português, História..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                name="professor"
+                                value={formData.professor || ''}
+                                onChange={handleInputChange}
+                                placeholder="Nome completo do professor"
+                                className="focus:ring-orange-500 focus:border-orange-500"
                               />
                             </div>
-
                             <div>
-                              <Label htmlFor="cargaHoraria" className="text-sm">Carga Horária</Label>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Duração da Aula *
+                              </label>
+                              <select
+                                name="duracao"
+                                value={formData.duracao || ''}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                              >
+                                <option value="">Selecione a duração</option>
+                                <option value="30 minutos">30 minutos</option>
+                                <option value="45 minutos">45 minutos</option>
+                                <option value="50 minutos">50 minutos</option>
+                                <option value="1 hora">1 hora</option>
+                                <option value="1h30min">1h30min</option>
+                                <option value="2 horas">2 horas</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                              Tema da Aula *
+                            </label>
+                            <Input
+                              name="tema"
+                              value={formData.tema || ''}
+                              onChange={handleInputChange}
+                              placeholder="Ex: Equações de 1º grau, Revolução Industrial, Sistema Digestório..."
+                              className="focus:ring-orange-500 focus:border-orange-500"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Nível de Ensino *
+                              </label>
+                              <select
+                                name="nivel"
+                                value={formData.nivel || ''}
+                                onChange={handleInputChange}
+                                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                              >
+                                <option value="">Selecione o nível</option>
+                                <option value="Educação Infantil">Educação Infantil</option>
+                                <option value="Ensino Fundamental I">Ensino Fundamental I (1º ao 5º ano)</option>
+                                <option value="Ensino Fundamental II">Ensino Fundamental II (6º ao 9º ano)</option>
+                                <option value="Ensino Médio">Ensino Médio</option>
+                                <option value="Ensino Superior">Ensino Superior</option>
+                                <option value="Pós-graduação">Pós-graduação</option>
+                                <option value="Educação de Jovens e Adultos">EJA</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Instituição
+                              </label>
                               <Input
-                                id="cargaHoraria"
-                                value={formData.timeLimit || ''}
-                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
-                                placeholder="Ex: 50 minutos, 2 horas..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                name="instituicao"
+                                value={formData.instituicao || ''}
+                                onChange={handleInputChange}
+                                placeholder="Nome da escola/universidade"
+                                className="focus:ring-orange-500 focus:border-orange-500"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <Label htmlFor="habilidadesBNCC" className="text-sm">Habilidades BNCC</Label>
+                            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                              Objetivos de Aprendizagem
+                            </label>
                             <Textarea
-                              id="habilidadesBNCC"
-                              value={formData.competencies || ''}
-                              onChange={(e) => handleInputChange('competencies', e.target.value)}
-                              placeholder="Liste as habilidades da BNCC que serão trabalhadas..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              name="objetivos"
+                              value={formData.objetivos || ''}
+                              onChange={handleInputChange}
+                              placeholder="Descreva os principais objetivos que os alunos devem alcançar ao final da aula..."
+                              rows={3}
+                              className="focus:ring-orange-500 focus:border-orange-500"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Se não preenchido, objetivos serão gerados automaticamente com base no tema e nível.
+                            </p>
                           </div>
 
                           <div>
-                            <Label htmlFor="objetivoGeral" className="text-sm">Objetivo Geral</Label>
+                            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                              Conteúdo Programático
+                            </label>
                             <Textarea
-                              id="objetivoGeral"
-                              value={formData.objectives}
-                              onChange={(e) => handleInputChange('objectives', e.target.value)}
-                              placeholder="Descreva o objetivo geral da aula..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              name="conteudo"
+                              value={formData.conteudo || ''}
+                              onChange={handleInputChange}
+                              placeholder="Liste os tópicos e conceitos específicos que devem ser abordados na aula..."
+                              rows={4}
+                              className="focus:ring-orange-500 focus:border-orange-500"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Opcional. Se não preenchido, o conteúdo será estruturado automaticamente.
+                            </p>
                           </div>
 
                           <div>
-                            <Label htmlFor="materiaisRecursos" className="text-sm">Materiais/Recursos</Label>
+                            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                              Metodologia Preferida
+                            </label>
                             <Textarea
-                              id="materiaisRecursos"
-                              value={formData.materials}
-                              onChange={(e) => handleInputChange('materials', e.target.value)}
-                              placeholder="Liste os materiais e recursos necessários..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              name="metodologia"
+                              value={formData.metodologia || ''}
+                              onChange={handleInputChange}
+                              placeholder="Descreva estratégias pedagógicas específicas, metodologias ativas preferidas..."
+                              rows={3}
+                              className="focus:ring-orange-500 focus:border-orange-500"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Ex: Aprendizagem baseada em problemas, sala de aula invertida, gamificação...
+                            </p>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="perfilTurma" className="text-sm">Perfil da Turma</Label>
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Recursos Disponíveis
+                              </label>
                               <Textarea
-                                id="perfilTurma"
-                                value={formData.context || ''}
-                                onChange={(e) => handleInputChange('context', e.target.value)}
-                                placeholder="Descreva o perfil e características da turma..."
-                                className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                name="recursos"
+                                value={formData.recursos || ''}
+                                onChange={handleInputChange}
+                                placeholder="Materiais, equipamentos, tecnologias disponíveis..."
+                                rows={3}
+                                className="focus:ring-orange-500 focus:border-orange-500"
                               />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Ex: Projetor, laboratório, tablets, internet...
+                              </p>
                             </div>
-
                             <div>
-                              <Label htmlFor="tipoAula" className="text-sm">Tipo de Aula</Label>
-                              <Input
-                                id="tipoAula"
-                                value={formData.difficultyLevel || ''}
-                                onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
-                                placeholder="Ex: Expositiva, Prática, Dialogada..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                Métodos de Avaliação
+                              </label>
+                              <Textarea
+                                name="avaliacao"
+                                value={formData.avaliacao || ''}
+                                onChange={handleInputChange}
+                                placeholder="Como pretende avaliar o aprendizado dos alunos..."
+                                rows={3}
+                                className="focus:ring-orange-500 focus:border-orange-500"
                               />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Ex: Participação, exercícios, projeto, prova...
+                              </p>
                             </div>
                           </div>
 
-                          <div>
-                            <Label htmlFor="observacoesProfessor" className="text-sm">Observações do Professor</Label>
-                            <Textarea
-                              id="observacoesProfessor"
-                              value={formData.evaluation}
-                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                              placeholder="Adicione observações, adaptações ou considerações especiais..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-start gap-2">
+                              <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
+                              <div>
+                                <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
+                                  Dicas para melhor resultado:
+                                </h4>
+                                <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                                  <li>• Seja específico no tema da aula</li>
+                                  <li>• Indique o nível de conhecimento prévio dos alunos</li>
+                                  <li>• Mencione recursos tecnológicos disponíveis</li>
+                                  <li>• Campos obrigatórios (*) garantem melhor personalização</li>
+                                </ul>
+                              </div>
+                            </div>
                           </div>
                         </>
                       )}
@@ -1275,8 +1514,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                             <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
                             <Textarea
                               id="objectives"
+                              name="objectives"
                               value={formData.objectives}
-                              onChange={(e) => handleInputChange('objectives', e.target.value)}
+                              onChange={handleInputChange}
                               placeholder="Descreva os objetivos que os alunos devem alcançar..."
                               className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
@@ -1286,8 +1526,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                             <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
                             <Textarea
                               id="materials"
+                              name="materials"
                               value={formData.materials}
-                              onChange={(e) => handleInputChange('materials', e.target.value)}
+                              onChange={handleInputChange}
                               placeholder="Liste os materiais necessários (um por linha)..."
                               className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
@@ -1297,8 +1538,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                             <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
                             <Textarea
                               id="instructions"
+                              name="instructions"
                               value={formData.instructions}
-                              onChange={(e) => handleInputChange('instructions', e.target.value)}
+                              onChange={handleInputChange}
                               placeholder="Descreva como a atividade deve ser executada..."
                               className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
@@ -1308,8 +1550,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                             <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
                             <Textarea
                               id="evaluation"
+                              name="evaluation"
                               value={formData.evaluation}
-                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
+                              onChange={handleInputChange}
                               placeholder="Como a atividade será avaliada..."
                               className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
@@ -1330,10 +1573,10 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                   id="build-activity-button"
                   data-testid="build-activity-button"
                   onClick={handleBuildActivity}
-                  disabled={buildingStatus.isBuilding || !isFormValid}
+                  disabled={isBuilding || !isFormValid}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {buildingStatus.isBuilding ? (
+                  {isBuilding ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       {buildingStatus.currentStep || 'Gerando Atividade...'}
@@ -1399,7 +1642,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
           <Button
             variant="outline"
             onClick={onClose}
-            disabled={isGenerating}
+            disabled={isSaving || isGenerating}
             className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <X className="w-4 h-4 mr-2" />
@@ -1433,8 +1676,9 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               </Button>
             )}
             <Button
-              onClick={handleSaveChanges}
-              className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
+              onClick={handleSave}
+              disabled={isSaving || isGenerating}
+              className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="h-4 w-4 mr-2" />
               Salvar Alterações
