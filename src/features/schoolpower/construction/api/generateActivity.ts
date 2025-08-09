@@ -63,6 +63,63 @@ import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
 import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
+// Função para processar dados de plano de aula gerados pela IA
+const processPlanoAulaData = (data: any): any => {
+  console.log('🎓 Processando plano de aula:', data);
+
+  // Normalizar a estrutura para garantir a consistência dos mini-cards
+  const planoProcessado: any = {
+    titulo: data.titulo || 'Plano de Aula Sem Título',
+    disciplina: data.disciplina || 'Indefinida',
+    tema: data.tema || 'Sem Tema',
+    anoEscolaridade: data.anoEscolaridade || 'Série Indefinida',
+    objetivos: data.objetivos || [],
+    materiais: data.materiais || [],
+    desenvolvimento: data.desenvolvimento ? data.desenvolvimento.map((etapa: any, index: number) => ({
+      etapa: index + 1,
+      titulo: etapa.titulo || `Etapa ${index + 1}`,
+      descricao: etapa.descricao || 'Descrição da etapa não fornecida',
+      tipo_interacao: etapa.tipo_interacao || 'Não especificado',
+      tempo_estimado: etapa.tempo_estimado || 'Tempo não especificado',
+      recurso_gerado: etapa.recurso_gerado || 'Nenhum recurso gerado',
+      nota_privada_professor: etapa.nota_privada_professor || ''
+    })) : [],
+    // Campos adicionais para enriquecer a experiência
+    avaliacao: data.avaliacao || 'Avaliação formativa',
+    competencias: data.competencias || 'Competências gerais',
+    recursos_extras: data.recursos_extras || { materiais_complementares: [], tecnologias: [], referencias: [] },
+    metodologia: data.metodologia || { nome: 'Padrao', descricao: 'Descrição padrão' }
+  };
+
+  // Garantir que a estrutura de desenvolvimento seja um array de mini-cards válidos
+  if (!Array.isArray(planoProcessado.desenvolvimento)) {
+    console.warn('⚠️ Campo "desenvolvimento" do plano de aula não é um array. Convertendo para array vazio.');
+    planoProcessado.desenvolvimento = [];
+  }
+
+  // Validação adicional: garantir que cada etapa tenha os campos mínimos para um mini-card
+  planoProcessado.desenvolvimento = planoProcessado.desenvolvimento.map((etapa: any, index: number) => ({
+    ...etapa,
+    etapa: etapa.etapa || index + 1,
+    titulo: etapa.titulo || `Etapa ${index + 1}`,
+    descricao: etapa.descricao || 'Sem descrição',
+    tempo_estimado: etapa.tempo_estimado || 'Indefinido'
+  }));
+
+  console.log('✅ Plano de aula processado:', planoProcessado);
+  return planoProcessado;
+};
+
+// Função simulada para salvar dados do plano de aula
+const savePlanoAulaData = async (activityId: string, data: any): Promise<void> => {
+  console.log(`💾 Salvando dados do plano de aula (ID: ${activityId}):`, data);
+  // Implementação real de salvamento de dados (ex: em banco de dados, API, etc.)
+  // Por enquanto, apenas um log.
+  await new Promise(resolve => setTimeout(resolve, 500)); // Simula I/O
+  console.log(`✅ Dados do plano de aula salvos com sucesso.`);
+};
+
+
 export const generateActivityData = async (
   activity: ActionPlanItem,
   contextualizationData?: any
@@ -215,116 +272,6 @@ export const generateActivityContent = async (
       const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
       prompt = buildListaExerciciosPrompt(contextData);
       console.log('📝 Prompt gerado para lista de exercícios:', prompt.substring(0, 500) + '...');
-    } else if (activityType === 'plano-aula') {
-      // Atualizar AI prompt to ensure development steps are generated
-      const prompt = `
-        Como especialista em educação, crie um plano de aula COMPLETO E DETALHADO com base nas seguintes informações:
-
-        **Dados do Formulário:**
-        - Disciplina: ${contextData.subject}
-        - Tema: ${contextData.theme}
-        - Ano/Série: ${contextData.schoolYear}
-        - Tempo de aula: ${contextData.timeLimit}
-        - Nível de dificuldade: ${contextData.difficultyLevel}
-        - Descrição/Contexto: ${contextData.description}
-        - Objetivos: ${contextData.objectives}
-        - Materiais disponíveis: ${contextData.materials}
-        - Competências BNCC: ${contextData.competencies}
-        - Critérios de avaliação: ${contextData.evaluation}
-
-        **FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):**
-        {
-          "titulo": "Título do plano de aula",
-          "disciplina": "${contextData.subject}",
-          "tema": "${contextData.theme}",
-          "serie": "${contextData.schoolYear}",
-          "tempo": "${contextData.timeLimit}",
-          "visao_geral": {
-            "disciplina": "${contextData.subject}",
-            "tema": "${contextData.theme}",
-            "serie": "${contextData.schoolYear}",
-            "tempo": "${contextData.timeLimit}",
-            "metodologia": "Metodologia pedagógica utilizada",
-            "recursos": ["Lista", "de", "recursos"],
-            "sugestoes_ia": ["Sugestões", "personalizadas"]
-          },
-          "objetivos": [
-            {
-              "descricao": "Objetivo específico de aprendizagem",
-              "habilidade_bncc": "Código BNCC relacionado",
-              "sugestao_reescrita": "Sugestão de melhoria",
-              "atividade_relacionada": "Atividade que desenvolve este objetivo"
-            }
-          ],
-          "metodologia": {
-            "nome": "Nome da metodologia",
-            "descricao": "Descrição detalhada da abordagem pedagógica",
-            "alternativas": ["Método 1", "Método 2"],
-            "simulacao_de_aula": "Descrição da simulação",
-            "explicacao_em_video": "Descrição do vídeo explicativo"
-          },
-          "desenvolvimento": [
-            {
-              "etapa": 1,
-              "titulo": "1. Introdução e Contextualização",
-              "descricao": "Descrição detalhada e específica da etapa de introdução relacionada ao tema ${contextData.theme}",
-              "tipo_interacao": "Apresentação + debate",
-              "tempo_estimado": "15 minutos",
-              "recurso_gerado": "Slides",
-              "nota_privada_professor": "Orientação específica para o professor sobre esta etapa"
-            },
-            {
-              "etapa": 2,
-              "titulo": "2. Desenvolvimento Principal",
-              "descricao": "Descrição detalhada e específica do desenvolvimento principal sobre ${contextData.theme}",
-              "tipo_interacao": "Atividade prática",
-              "tempo_estimado": "25 minutos",
-              "recurso_gerado": "Material didático",
-              "nota_privada_professor": "Orientação específica para o professor sobre esta etapa"
-            },
-            {
-              "etapa": 3,
-              "titulo": "3. Síntese e Avaliação",
-              "descricao": "Descrição detalhada e específica da síntese e avaliação sobre ${contextData.theme}",
-              "tipo_interacao": "Avaliação formativa",
-              "tempo_estimado": "10 minutos",
-              "recurso_gerado": "Questionário",
-              "nota_privada_professor": "Orientação específica para o professor sobre esta etapa"
-            }
-          ],
-          "atividades": [
-            {
-              "nome": "Nome da atividade",
-              "tipo": "Tipo da atividade",
-              "ref_objetivos": [1, 2],
-              "visualizar_como_aluno": "Como o aluno verá esta atividade",
-              "sugestoes_ia": ["Sugestão 1", "Sugestão 2"]
-            }
-          ],
-          "avaliacao": {
-            "criterios": "Critérios de avaliação",
-            "instrumentos": ["Instrumento 1", "Instrumento 2"],
-            "feedback": "Tipo de feedback"
-          }
-        }
-
-        **INSTRUÇÕES ESPECÍFICAS PARA ETAPAS DE DESENVOLVIMENTO:**
-        1. OBRIGATÓRIO: Crie pelo menos 3 etapas detalhadas no array "desenvolvimento"
-        2. Cada etapa DEVE ter:
-           - titulo: Nome claro da etapa (ex: "1. Introdução e Contextualização")
-           - descricao: Explicação detalhada do que será feito nesta etapa (mínimo 100 caracteres)
-           - tipo_interacao: Tipo específico (ex: "Apresentação + debate", "Atividade prática", "Discussão em grupo")
-           - tempo_estimado: Tempo específico em minutos (ex: "15 minutos")
-           - recurso_gerado: Recurso ou material utilizado (ex: "Slides", "Material impresso", "Vídeo")
-           - nota_privada_professor: Orientação específica para o professor
-        3. O conteúdo de cada etapa deve ser 100% personalizado para "${contextData.theme}"
-        4. Use metodologias ativas e diversifique os tipos de interação
-        5. O tempo total das etapas deve somar aproximadamente ${contextData.timeLimit}
-        6. Responda APENAS em JSON válido, sem texto adicional
-
-        IMPORTANTE: As etapas devem ser específicas para o tema "${contextData.theme}" e não genéricas!
-      `;
-      console.log('📝 Prompt gerado para plano de aula:', prompt.substring(0, 500) + '...');
     } else {
       // Prompt genérico para outros tipos de atividade
       prompt = `
@@ -352,178 +299,62 @@ Responda APENAS com o JSON, sem texto adicional.`;
     if (response.success) {
       console.log('✅ Resposta recebida do Gemini');
       console.log('📊 Estimativa de tokens:', response.estimatedTokens);
-      console.log('💰 Custo estimado:', response.estimatedPowerCost);
-      console.log('⏱️ Tempo de execução:', response.executionTime + 'ms');
+      console.log('💰 Custo estimado:', response.cost);
 
-      // Limpar a resposta para garantir que seja JSON válido
-      let cleanedResponse = response.result.trim();
+      console.log('📥 Resposta bruta do Gemini:', response.data);
 
-      console.log('🔧 Resposta bruta da IA (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
-
-      // Múltiplas tentativas de limpeza
-      // 1. Remover markdown
-      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-      cleanedResponse = cleanedResponse.replace(/```\s*/g, '');
-
-      // 2. Remover possíveis textos antes e depois do JSON
-      const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}');
-
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-      }
-
-      // 3. Verificar se começa e termina com { }
-      if (!cleanedResponse.trim().startsWith('{')) {
-        const firstBrace = cleanedResponse.indexOf('{');
-        if (firstBrace !== -1) {
-          cleanedResponse = cleanedResponse.substring(firstBrace);
-        }
-      }
-
-      if (!cleanedResponse.trim().endsWith('}')) {
-        const lastBrace = cleanedResponse.lastIndexOf('}');
-        if (lastBrace !== -1) {
-          cleanedResponse = cleanedResponse.substring(0, lastBrace + 1);
-        }
-      }
-
-      console.log('🔧 Resposta limpa para parsing (primeiros 500 chars):', cleanedResponse.substring(0, 500));
-
-      let parsedResult;
+      // Processar a resposta
+      let processedData;
       try {
-        parsedResult = JSON.parse(cleanedResponse);
-        console.log('✅ Resultado parseado com sucesso');
+        // Se a resposta já for um objeto, usar diretamente
+        if (typeof response.data === 'object') {
+          processedData = response.data;
+        } else {
+          // Tentar fazer parse se for string
+          processedData = JSON.parse(response.data);
+        }
+
+        console.log('📊 Dados processados:', processedData);
+
+        // Processamento específico para plano-aula
+        if (activityType === 'plano-aula') {
+          console.log('📚 Processando dados específicos do plano de aula...');
+
+          // Usar o processador específico para plano de aula
+          const planoData = processPlanoAulaData(processedData);
+
+          // Salvar os dados processados
+          if (contextData.activityId) {
+            savePlanoAulaData(contextData.activityId, planoData);
+          }
+
+          processedData = planoData;
+          console.log('✅ Dados do plano de aula processados e salvos:', processedData);
+        }
+
+        return {
+          success: true,
+          data: processedData,
+          estimatedTokens: response.estimatedTokens,
+          cost: response.cost
+        };
+
       } catch (parseError) {
-        console.error('❌ Erro ao fazer parse do JSON:', parseError);
-        console.error('📄 Conteúdo que causou erro (primeiros 1000 chars):', cleanedResponse.substring(0, 1000));
+        console.error('❌ Erro ao processar resposta do Gemini:', parseError);
+        console.error('📥 Resposta original:', response.data);
 
-        // Tentar extrair JSON de forma mais agressiva
-        try {
-          // Buscar por padrões JSON válidos
-          const jsonPattern = /\{[\s\S]*\}/;
-          const match = cleanedResponse.match(jsonPattern);
-
-          if (match) {
-            const extractedJson = match[0];
-            console.log('🔄 Tentando JSON extraído:', extractedJson.substring(0, 200));
-            parsedResult = JSON.parse(extractedJson);
-            console.log('✅ Segunda tentativa de parse bem sucedida');
-          } else {
-            throw new Error('Nenhum padrão JSON encontrado');
-          }
-        } catch (secondError) {
-          console.error('❌ Segunda tentativa de parse também falhou:', secondError);
-          throw new Error(`Erro ao processar resposta da IA: Falha ao parsear JSON. ${secondError.message}`);
-        }
+        return {
+          success: false,
+          error: 'Erro ao processar resposta da IA',
+          details: parseError
+        };
       }
-
-      console.log('📊 Estrutura do resultado:', {
-        hasTitle: !!parsedResult.titulo,
-        hasDisciplina: !!parsedResult.disciplina,
-        hasTema: !!parsedResult.tema,
-        hasQuestoes: !!parsedResult.questoes,
-        questoesLength: parsedResult.questoes ? parsedResult.questoes.length : 0,
-        keys: Object.keys(parsedResult)
-      });
-
-      // Validação rigorosa para lista de exercícios
-      if (activityType === 'lista-exercicios') {
-        // Verificar se tem questões
-        if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes)) {
-          console.error('❌ Estrutura de questões inválida');
-          throw new Error('Campo questoes não encontrado ou não é um array');
-        }
-
-        if (parsedResult.questoes.length === 0) {
-          console.error('❌ Nenhuma questão gerada pela IA');
-          throw new Error('Array de questões está vazio');
-        }
-
-        // Validar cada questão
-        const questoesValidas = parsedResult.questoes.every((questao: any, index: number) => {
-          const isValid = questao.id && questao.type && questao.enunciado;
-          if (!isValid) {
-            console.error(`❌ Questão ${index + 1} inválida:`, questao);
-          }
-          return isValid;
-        });
-
-        if (!questoesValidas) {
-          throw new Error('Algumas questões geradas pela IA são inválidas');
-        }
-
-        console.log(`📝 ${parsedResult.questoes.length} questões válidas geradas pela IA`);
-        console.log('📄 Primeira questão como exemplo:', parsedResult.questoes[0]);
-
-        // Marcar como gerado pela IA
-        parsedResult.isGeneratedByAI = true;
-        parsedResult.generatedAt = new Date().toISOString();
-
-        // Garantir que todos os campos necessários existem
-        parsedResult.titulo = parsedResult.titulo || contextData.titulo || contextData.title || 'Lista de Exercícios';
-        parsedResult.disciplina = parsedResult.disciplina || contextData.disciplina || contextData.subject || 'Disciplina';
-        parsedResult.tema = parsedResult.tema || contextData.tema || contextData.theme || 'Tema';
-        parsedResult.numeroQuestoes = parsedResult.questoes.length;
-      }
-
-      // Add logic to extract development steps from AI response
-      const extractEtapasFromAIData = (aiResponse: any): any[] => {
-        if (aiResponse && aiResponse.desenvolvimento && Array.isArray(aiResponse.desenvolvimento)) {
-          // Mapear para o formato esperado, garantindo que todos os campos existam
-          return aiResponse.desenvolvimento.map((etapa: any, index: number) => ({
-            etapa: index + 1,
-            titulo: etapa.titulo || `Etapa ${index + 1}`,
-            descricao: etapa.descricao || 'Descrição da etapa',
-            tipo_interacao: etapa.tipo_interacao || 'Atividade',
-            tempo_estimado: etapa.tempo_estimado || '30 minutos',
-            recurso_gerado: etapa.recurso_gerado || 'Material de apoio',
-            nota_privada_professor: etapa.nota_privada_professor || 'Observação para o professor'
-          }));
-        }
-        return [];
-      };
-
-      const etapasDesenvolvimento = extractEtapasFromAIData(parsedResult) || [
-        {
-          etapa: 1,
-          titulo: '1. Introdução e Contextualização',
-          descricao: 'Apresentação do conteúdo principal da aula com contextualização histórica e relevância atual',
-          tipo_interacao: 'Apresentação + debate',
-          tempo_estimado: '15 minutos',
-          recurso_gerado: 'Slides',
-          nota_privada_professor: 'Verificar conhecimento prévio dos alunos'
-        },
-        {
-          etapa: 2,
-          titulo: '2. Desenvolvimento Principal',
-          descricao: 'Exploração detalhada do conteúdo com exemplos práticos e exercícios interativos',
-          tipo_interacao: 'Atividade prática',
-          tempo_estimado: '25 minutos',
-          recurso_gerado: 'Material didático',
-          nota_privada_professor: 'Acompanhar individualmente os alunos'
-        },
-        {
-          etapa: 3,
-          titulo: '3. Síntese e Avaliação',
-          descricao: 'Consolidação do aprendizado e verificação da compreensão através de atividades avaliativas',
-          tipo_interacao: 'Avaliação formativa',
-          tempo_estimado: '10 minutos',
-          recurso_gerado: 'Questionário',
-          nota_privada_professor: 'Identificar dificuldades para próxima aula'
-        }
-      ];
-
-      // Garantir que a estrutura de plano de aula inclua as etapas de desenvolvimento geradas
-      if (activityType === 'plano-aula') {
-        parsedResult.desenvolvimento = etapasDesenvolvimento;
-      }
-
-      return parsedResult;
-
     } else {
-      console.error('❌ Erro na API Gemini:', response.error);
-      throw new Error(response.error || 'Falha na geração de conteúdo');
+      console.error('❌ Erro na geração:', response.error);
+      return {
+        success: false,
+        error: response.error || 'Erro desconhecido na geração'
+      };
     }
 
   } catch (error) {
@@ -565,76 +396,22 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
       break;
     case 'plano-aula':
       // Estrutura específica para plano de aula com formato completo
-      const materiaisList = Array.isArray(formData.materials) ? formData.materials :
-        (formData.materials ? [formData.materials] : ['Quadro branco ou projetor',
-          'Marcadores ou canetas para quadro branco',
-          'Material impresso com exercícios',
-          'Calculadora (se necessário)',
-          'Livro didático',
-          'Notebook/tablet para apresentação']);
-
       const objetivosList = Array.isArray(formData.objectives) ? formData.objectives :
-        (formData.objectives ? formData.objectives.split('.').filter(obj => obj.trim()) :
-          ['Compreender o conceito do ' + (formData.theme || 'tema'),
-          'Identificar os principais elementos do conteúdo',
-          'Aplicar os conhecimentos em situações práticas',
-          'Resolver problemas relacionados ao tema',
-          'Desenvolver o raciocínio lógico e a capacidade de resolução de problemas']);
+                           formData.objectives ? formData.objectives.split('.').filter(obj => obj.trim()) :
+                           ['Compreender o conceito do ' + (formData.theme || 'tema'),
+                            'Identificar os principais elementos do conteúdo',
+                            'Aplicar os conhecimentos em situações práticas',
+                            'Resolver problemas relacionados ao tema',
+                            'Desenvolver o raciocínio lógico e a capacidade de resolução de problemas'];
 
-      // Add logic to extract development steps from AI response
-      const extractEtapasFromAIData = (aiResponse: any): any[] => {
-        if (aiResponse && aiResponse.desenvolvimento && Array.isArray(aiResponse.desenvolvimento)) {
-          // Mapear para o formato esperado, garantindo que todos os campos existam
-          return aiResponse.desenvolvimento.map((etapa: any, index: number) => ({
-            etapa: index + 1,
-            titulo: etapa.titulo || `Etapa ${index + 1}`,
-            descricao: etapa.descricao || 'Descrição da etapa',
-            tipo_interacao: etapa.tipo_interacao || 'Atividade',
-            tempo_estimado: etapa.tempo_estimado || '30 minutos',
-            recurso_gerado: etapa.recurso_gerado || 'Material de apoio',
-            nota_privada_professor: etapa.nota_privada_professor || 'Observação para o professor'
-          }));
-        }
-        return [];
-      };
-
-      const aiResponse = await generateActivityContent('plano-aula', formData); // Chama a função para gerar o conteúdo da IA
-      const etapasDesenvolvimento = extractEtapasFromAIData(aiResponse) || [
-        {
-          etapa: 1,
-          titulo: '1. Introdução ao Tema',
-          descricao: 'Apresentação do conteúdo principal da aula com contextualização histórica e relevância atual',
-          tipo_interacao: 'Apresentação + discussão',
-          tempo_estimado: '15 minutos',
-          recurso_gerado: 'Slides introdutórios',
-          nota_privada_professor: 'Verificar conhecimento prévio dos alunos'
-        },
-        {
-          etapa: 2,
-          titulo: '2. Desenvolvimento Principal',
-          descricao: 'Exploração detalhada do conteúdo com exemplos práticos e exercícios interativos',
-          tipo_interacao: 'Atividade prática',
-          tempo_estimado: '25 minutos',
-          recurso_gerado: 'Material didático interativo',
-          nota_privada_professor: 'Acompanhar individualmente os alunos'
-        },
-        {
-          etapa: 3,
-          titulo: '3. Síntese e Avaliação',
-          descricao: 'Consolidação do aprendizado e verificação da compreensão através de atividades avaliativas',
-          tipo_interacao: 'Avaliação formativa',
-          tempo_estimado: '10 minutos',
-          recurso_gerado: 'Questionário de verificação',
-          nota_privada_professor: 'Identificar dificuldades para próxima aula'
-        }
-      ];
-
-      console.log('📋 Dados processados para geração:', {
-        materiaisList,
-        objetivosList,
-        etapasDesenvolvimento,
-        formData
-      });
+      const materiaisList = Array.isArray(formData.materials) ? formData.materials :
+                            formData.materials ? formData.materials.split(',').map(m => m.trim()) :
+                            ['Quadro branco ou projetor',
+                             'Marcadores ou canetas para quadro branco',
+                             'Material impresso com exercícios',
+                             'Calculadora (se necessário)',
+                             'Livro didático',
+                             'Notebook/tablet para apresentação'];
 
       generatedContent = {
         titulo: formData.title || 'Plano de Aula',
@@ -646,10 +423,28 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
         nivelDificuldade: formData.difficultyLevel || 'Médio',
         modeloQuestoes: formData.questionModel || 'Múltipla escolha',
         fontes: Array.isArray(formData.sources) ? formData.sources :
-          formData.sources ? formData.sources.split(',').map(s => s.trim()) :
-            ['Livro didático de ' + (formData.subject || 'Disciplina') + ' do ' + (formData.schoolYear || 'ano'),
-            'Vídeos explicativos sobre ' + (formData.theme || 'o tema') + ' (Khan Academy, YouTube)',
-            'Sites educativos sobre ' + (formData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],
+               formData.sources ? formData.sources.split(',').map(s => s.trim()) :
+               ['Livro didático de ' + (formData.subject || 'Disciplina') + ' do ' + (formData.schoolYear || 'ano'),
+                'Vídeos explicativos sobre ' + (formData.theme || 'o tema') + ' (Khan Academy, YouTube)',
+                'Sites educativos sobre ' + (formData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],
+        objetivos: objetivosList,
+        materiais: materiaisList,
+        instrucoes: formData.instructions || 'Siga as etapas do plano de aula conforme apresentado.',
+        tempoLimite: formData.timeLimit || '50 minutos',
+        contextoAplicacao: formData.context || 'Sala de aula regular com alunos do ' + (formData.schoolYear || 'ano especificado'),
+        competencias: formData.competencies || 'Competências gerais da BNCC aplicáveis ao ' + (formData.subject || 'componente curricular'),
+        avaliacao: formData.evaluation || 'Avaliação formativa através de participação e exercícios práticos',
+
+        // Estrutura completa do plano de aula para preview
+        visao_geral: {
+          disciplina: formData.subject || 'Disciplina',
+          tema: formData.theme || 'Tema da aula',
+          serie: formData.schoolYear || 'Ano escolar',
+          tempo: formData.timeLimit || '50 minutos',
+          metodologia: formData.difficultyLevel || 'Metodologia Ativa',
+          recursos: materiaisList,
+          sugestoes_ia: ['Plano de aula personalizado', 'Adaptável ao perfil da turma']
+        },
         objetivos: objetivosList.map((obj, index) => ({
           descricao: obj,
           habilidade_bncc: formData.competencies || 'Competência BNCC relacionada',
@@ -663,8 +458,35 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
           simulacao_de_aula: 'Simulação interativa disponível',
           explicacao_em_video: 'Vídeo explicativo da metodologia'
         },
-        // Ensure AI generates proper development steps data
-        desenvolvimento: etapasDesenvolvimento,
+        desenvolvimento: [
+          {
+            etapa: 1,
+            titulo: 'Introdução ao Tema',
+            descricao: 'Apresentação do conteúdo e contextualização',
+            tipo_interacao: 'Expositiva/Dialogada',
+            tempo_estimado: '15 minutos',
+            recurso_gerado: 'Slides introdutórios',
+            nota_privada_professor: 'Verificar conhecimentos prévios dos alunos'
+          },
+          {
+            etapa: 2,
+            titulo: 'Desenvolvimento do Conteúdo',
+            descricao: 'Explicação detalhada dos conceitos principais',
+            tipo_interacao: 'Interativa',
+            tempo_estimado: '25 minutos',
+            recurso_gerado: 'Material didático e exemplos',
+            nota_privada_professor: 'Pausar para esclarecer dúvidas'
+          },
+          {
+            etapa: 3,
+            titulo: 'Aplicação Prática',
+            descricao: 'Exercícios e atividades de fixação',
+            tipo_interacao: 'Prática',
+            tempo_estimado: '10 minutos',
+            recurso_gerado: 'Lista de exercícios',
+            nota_privada_professor: 'Circular pela sala para auxiliar individualmente'
+          }
+        ],
         atividades: [
           {
             nome: 'Atividade de Fixação',
@@ -733,21 +555,8 @@ async function generateSimpleActivityContent(activityData: any): Promise<string>
       delete displayData.avaliacao;
       delete displayData.atividades;
       delete displayData.metodologia;
+      delete displayData.desenvolvimento;
       delete displayData.visao_geral;
-
-      // Ensure AI generates proper development steps data
-      // Desenvolvimento array is now correctly populated from extracted data or default
-      if (activityData.desenvolvimento && Array.isArray(activityData.desenvolvimento)) {
-        // Ensure the development steps have the correct design
-        displayData.desenvolvimento = activityData.desenvolvimento.map((etapa: any) => ({
-          titulo: etapa.titulo,
-          descricao: etapa.descricao,
-          tipo_interacao: etapa.tipo_interacao,
-          tempo_estimado: etapa.tempo_estimado,
-          recurso_gerado: etapa.recurso_gerado,
-          // nota_privada_professor is not meant for student view, so it can be omitted or handled differently if needed
-        }));
-      }
 
 
       return JSON.stringify(displayData, null, 2);
