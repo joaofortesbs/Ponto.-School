@@ -1410,15 +1410,33 @@ export function CardDeConstrucao({
                                       {/* Exibir customFields como tags/badges */}
                                       {activity.customFields && Object.keys(activity.customFields).length > 0 && (
                                         <div className="mt-3 flex flex-wrap gap-2">
-                                          {Object.entries(activity.customFields).map(([key, value]) => (
-                                            <div 
-                                              key={key} 
-                                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
-                                            >
-                                              <span className="font-semibold">{key}:</span>
-                                              <span className="ml-1 truncate max-w-[150px]">{value}</span>
-                                            </div>
-                                          ))}
+                                          {Object.entries(activity.customFields).map(([key, value]) => {
+                                            // Função para garantir renderização segura
+                                            const safeValue = (val: any): string => {
+                                              if (val === null || val === undefined) return '';
+                                              if (typeof val === 'object') {
+                                                // Se for um objeto, tentar extrair propriedades comuns
+                                                if (val.nome) return String(val.nome);
+                                                if (val.title) return String(val.title);
+                                                if (val.descricao) return String(val.descricao);
+                                                if (val.description) return String(val.description);
+                                                return '[Dados Complexos]';
+                                              }
+                                              return String(val);
+                                            };
+
+                                            const displayValue = safeValue(value);
+                                            
+                                            return (
+                                              <div 
+                                                key={key} 
+                                                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
+                                              >
+                                                <span className="font-semibold">{key}:</span>
+                                                <span className="ml-1 truncate max-w-[150px]">{displayValue}</span>
+                                              </div>
+                                            );
+                                          })}
                                         </div>
                                       )}
 

@@ -65,16 +65,30 @@ const getActivityName = (id: string): string => {
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
 
-  const tema = customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema'];
-  const anoSerie = customFields['Ano/Série Escolar'] || customFields['Público-Alvo'];
-  const componenteCurricular = customFields['Componente Curricular'] || customFields['Disciplina'];
-  const cargaHoraria = customFields['Carga Horária'] || customFields['Tempo Estimado'];
-  const habilidadesBNCC = customFields['Habilidades BNCC'];
-  const objetivoGeral = customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem'];
-  const materiaisRecursos = customFields['Materiais/Recursos'] || customFields['Recursos'];
-  const perfilTurma = customFields['Perfil da Turma'];
-  const tipoAula = customFields['Tipo de Aula'] || customFields['Metodologia'];
-  const observacoes = customFields['Observações do Professor'] || customFields['Observações'];
+  // Helper function para garantir que valores sejam strings
+  const safeString = (value: any): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'object') {
+      // Se for um objeto, tentar extrair propriedades comuns
+      if (value.nome) return String(value.nome);
+      if (value.title) return String(value.title);
+      if (value.descricao) return String(value.descricao);
+      if (value.description) return String(value.description);
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  const tema = safeString(customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema']);
+  const anoSerie = safeString(customFields['Ano/Série Escolar'] || customFields['Público-Alvo']);
+  const componenteCurricular = safeString(customFields['Componente Curricular'] || customFields['Disciplina']);
+  const cargaHoraria = safeString(customFields['Carga Horária'] || customFields['Tempo Estimado']);
+  const habilidadesBNCC = safeString(customFields['Habilidades BNCC']);
+  const objetivoGeral = safeString(customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem']);
+  const materiaisRecursos = safeString(customFields['Materiais/Recursos'] || customFields['Recursos']);
+  const perfilTurma = safeString(customFields['Perfil da Turma']);
+  const tipoAula = safeString(customFields['Tipo de Aula'] || customFields['Metodologia']);
+  const observacoes = safeString(customFields['Observações do Professor'] || customFields['Observações']);
 
   return (
     <div className="space-y-3">
@@ -164,17 +178,31 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
   console.log('📚 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
 
-  // Campos obrigatórios conforme especificação
-  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || '';
-  const anoSerie = customFields['Ano / Série'] || customFields['anoSerie'] || '';
-  const disciplina = customFields['Disciplina'] || customFields['disciplina'] || '';
-  const bnccCompetencias = customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || '';
-  const publicoAlvo = customFields['Público-alvo'] || customFields['publicoAlvo'] || '';
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || '';
-  const quantidadeAulas = customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '';
-  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '';
-  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '';
-  const cronograma = customFields['Cronograma'] || customFields['cronograma'] || '';
+  // Helper function para garantir que valores sejam strings
+  const safeString = (value: any): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'object') {
+      // Se for um objeto, tentar extrair propriedades comuns
+      if (value.nome) return String(value.nome);
+      if (value.title) return String(value.title);
+      if (value.descricao) return String(value.descricao);
+      if (value.description) return String(value.description);
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  // Campos obrigatórios conforme especificação - garantindo que sejam strings
+  const tituloTemaAssunto = safeString(customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || '');
+  const anoSerie = safeString(customFields['Ano / Série'] || customFields['anoSerie'] || '');
+  const disciplina = safeString(customFields['Disciplina'] || customFields['disciplina'] || '');
+  const bnccCompetencias = safeString(customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || '');
+  const publicoAlvo = safeString(customFields['Público-alvo'] || customFields['publicoAlvo'] || '');
+  const objetivosAprendizagem = safeString(customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || '');
+  const quantidadeAulas = safeString(customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '');
+  const quantidadeDiagnosticos = safeString(customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '');
+  const quantidadeAvaliacoes = safeString(customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '');
+  const cronograma = safeString(customFields['Cronograma'] || customFields['cronograma'] || '');
 
   return (
     <div className="space-y-3">

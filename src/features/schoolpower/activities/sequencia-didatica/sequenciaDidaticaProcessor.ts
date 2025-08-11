@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface SequenciaDidaticaCustomFields {
@@ -14,28 +13,52 @@ export interface SequenciaDidaticaActivity {
   personalizedDescription?: string;
 }
 
+export interface SequenciaDidaticaData {
+  tituloTemaAssunto: string;
+  anoSerie: string;
+  disciplina: string;
+  bnccCompetencias: string;
+  publicoAlvo: string;
+  objetivosAprendizagem: string;
+  quantidadeAulas: string;
+  quantidadeDiagnosticos: string;
+  quantidadeAvaliacoes: string;
+  cronograma: string;
+}
+
+export const sequenciaDidaticaFieldMapping = {
+  'Título do Tema / Assunto': 'tituloTemaAssunto',
+  'tituloTemaAssunto': 'tituloTemaAssunto',
+  'Ano / Série': 'anoSerie',
+  'anoSerie': 'anoSerie',
+  'Disciplina': 'disciplina',
+  'disciplina': 'disciplina',
+  'BNCC / Competências': 'bnccCompetencias',
+  'bnccCompetencias': 'bnccCompetencias',
+  'Público-alvo': 'publicoAlvo',
+  'publicoAlvo': 'publicoAlvo',
+  'Objetivos de Aprendizagem': 'objetivosAprendizagem',
+  'objetivosAprendizagem': 'objetivosAprendizagem',
+  'Quantidade de Aulas': 'quantidadeAulas',
+  'quantidadeAulas': 'quantidadeAulas',
+  'Quantidade de Diagnósticos': 'quantidadeDiagnosticos',
+  'quantidadeDiagnosticos': 'quantidadeDiagnosticos',
+  'Quantidade de Avaliações': 'quantidadeAvaliacoes',
+  'quantidadeAvaliacoes': 'quantidadeAvaliacoes',
+  'Cronograma': 'cronograma',
+  'cronograma': 'cronograma'
+};
+
 /**
  * Processa dados de uma atividade de Sequência Didática do Action Plan
  * para o formato do formulário do modal
  */
-export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity): ActivityFormData {
-  console.log('📚 Processando dados da Sequência Didática:', activity);
+export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaData {
+  console.log('📚 Processando dados da Sequência Didática:', activityData);
 
-  const customFields = activity.customFields || {};
+  const customFields = activityData.customFields || {};
 
   return {
-    title: activity.personalizedTitle || activity.title || customFields['Título do Tema / Assunto'] || '',
-    description: activity.personalizedDescription || activity.description || '',
-    subject: customFields['Disciplina'] || 'Geografia',
-    theme: customFields['Título do Tema / Assunto'] || '',
-    schoolYear: customFields['Ano / Série'] || '6º ano',
-    numberOfQuestions: '',
-    difficultyLevel: 'Médio',
-    questionModel: '',
-    sources: '',
-    objectives: customFields['Objetivos de Aprendizagem'] || '',
-    materials: '',
-    // Campos específicos da Sequência Didática com nomes corretos
     tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
     anoSerie: customFields['Ano / Série'] || '',
     disciplina: customFields['Disciplina'] || '',
@@ -48,22 +71,6 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
     cronograma: customFields['Cronograma'] || ''
   };
 }
-
-/**
- * Mapeia os campos da Sequência Didática para o formato do modal
- */
-export const sequenciaDidaticaFieldMapping = {
-  'Título do Tema / Assunto': 'Título do Tema / Assunto',
-  'Ano / Série': 'Ano / Série', 
-  'Disciplina': 'Disciplina',
-  'BNCC / Competências': 'BNCC / Competências',
-  'Público-alvo': 'Público-alvo',
-  'Objetivos de Aprendizagem': 'Objetivos de Aprendizagem',
-  'Quantidade de Aulas': 'Quantidade de Aulas',
-  'Quantidade de Diagnósticos': 'Quantidade de Diagnósticos',
-  'Quantidade de Avaliações': 'Quantidade de Avaliações',
-  'Cronograma': 'Cronograma'
-};
 
 export interface SequenciaDidaticaFields {
   'Título do Tema / Assunto': string;

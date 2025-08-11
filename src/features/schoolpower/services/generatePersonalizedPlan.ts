@@ -5,6 +5,8 @@ import activityFieldsSchema from '../data/activityFieldsSchema.json';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
 import { processAIGeneratedContent } from './exerciseListProcessor';
+import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
+import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
@@ -395,20 +397,47 @@ export async function generatePersonalizedPlan(
     const geminiResponse = await callGeminiAPI(prompt);
 
     // Processes the response
-    const geminiActivities = parseGeminiResponse(geminiResponse);
+    const generatedActivities = parseGeminiResponse(geminiResponse);
 
     // Validates the returned activities
-    const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
+    const validatedActivities = await validateGeminiPlan(generatedActivities, schoolPowerActivities);
 
-
-
-    // Maps validated activities to the ActionPlanItem format
+    // Processar cada atividade e extrair custom fields
     const actionPlanItems = validatedActivities.map(activityData => {
-        // Extracts custom fields from the activity
-        const customFields: Record<string, string> = {};
+        console.log(`🔄 Processing activity: ${activityData.id}`);
 
-        // Gets all fields that are not standard system fields
-        const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
+        // Validação específica para Sequência Didática
+        if (activityData.id === 'sequencia-didatica') {
+          console.log('🎯 Aplicando validação específica para Sequência Didática');
+          const validation = validateSequenciaDidaticaData(activityData);
+
+          if (!validation.isValid) {
+            console.error('❌ Sequência Didática inválida:', validation.errors);
+            // Use fallback data for invalid Sequência Didática
+            activityData = {
+              ...activityData,
+              customFields: {
+                'Título do Tema / Assunto': activityData.personalizedTitle || 'Sequência Didática Personalizada',
+                'Ano / Série': '9º Ano',
+                'Disciplina': 'Português',
+                'BNCC / Competências': 'EF89LP01, EF89LP02',
+                'Público-alvo': 'Alunos do Ensino Fundamental',
+                'Objetivos de Aprendizagem': 'Desenvolver habilidades específicas',
+                'Quantidade de Aulas': '4',
+                'Quantidade de Diagnósticos': '1',
+                'Quantidade de Avaliações': '2',
+                'Cronograma': 'Cronograma a ser definido'
+              }
+            };
+          } else if (validation.processedData) {
+            activityData = validation.processedData;
+          }
+        }
+
+        // Extract custom fields (all fields except standard ones)
+        const customFields: Record<string, string> = {};
+        const standardFields = ['id', 'title', 'description', 'duration',
+                               'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
 
         Object.keys(activityData).forEach(key => {
             if (!standardFields.includes(key) && typeof activityData[key] === 'string') {
@@ -416,7 +445,19 @@ export async function generatePersonalizedPlan(
             }
         });
 
-        console.log(`✅ Custom fields extracted for ${activityData.id}:`, customFields);
+        // Garantir que customFields seja um objeto válido
+        const finalCustomFields = activityData.customFields || customFields || {};
+
+        // Para Sequência Didática, garantir que todos os valores sejam strings
+        if (activityData.id === 'sequencia-didatica') {
+          Object.keys(finalCustomFields).forEach(key => {
+            if (typeof finalCustomFields[key] !== 'string') {
+              finalCustomFields[key] = String(finalCustomFields[key]);
+            }
+          });
+        }
+
+        console.log(`✅ Custom fields extracted for ${activityData.id}:`, finalCustomFields);
 
         const activity = {
           id: activityData.id,
@@ -426,7 +467,7 @@ export async function generatePersonalizedPlan(
           difficulty: activityData.difficulty,
           category: activityData.category,
           type: activityData.type,
-          customFields: customFields || {},
+          customFields: finalCustomFields,
           approved: true,
           isTrilhasEligible: true,
           isBuilt: false, // Will be marked as true after automatic build
