@@ -35,16 +35,18 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
     sources: '',
     objectives: customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || '',
     materials: '',
+    instructions: '',
+    evaluation: '',
     // Campos específicos da Sequência Didática
     tituloTemaAssunto: customFields['Título do Tema / Assunto'] || customFields['titulo'] || customFields['tema'] || '',
     anoSerie: customFields['Ano / Série'] || customFields['ano'] || customFields['serie'] || '',
     disciplina: customFields['Disciplina'] || customFields['disciplina'] || '',
     bnccCompetencias: customFields['BNCC / Competências'] || customFields['bncc'] || customFields['competencias'] || '',
     publicoAlvo: customFields['Público-alvo'] || customFields['publicoAlvo'] || customFields['publico'] || '',
-    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || '',
-    quantidadeAulas: customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || customFields['aulas'] || '',
-    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || customFields['diagnosticos'] || '',
-    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || customFields['avaliacoes'] || '',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || customFields['objetivosAprendizagem'] || '',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '',
     cronograma: customFields['Cronograma'] || customFields['cronograma'] || ''
   };
 }

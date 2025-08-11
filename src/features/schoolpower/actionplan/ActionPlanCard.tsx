@@ -160,6 +160,82 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   );
 };
 
+// Nova função para renderizar campos específicos da Sequência Didática
+const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
+  console.log('🎯 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
+
+  const tituloSequencia = customFields['Título da Sequência'] || customFields['Título'];
+  const duracaoTotal = customFields['Duração Total'] || customFields['Duração'];
+  const publicoAlvo = customFields['Público-Alvo'];
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'];
+  const metodologia = customFields['Metodologia'] || customFields['Abordagem'];
+  const recursosDidaticos = customFields['Recursos Didáticos'] || customFields['Materiais'];
+  const avaliacao = customFields['Avaliação'] || customFields['Critérios de Avaliação'];
+  const competividade = customFields['Competências e Habilidades']; // Verifique o nome exato do campo
+
+  return (
+    <div className="space-y-3">
+      {tituloSequencia && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Título da Sequência</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800">{tituloSequencia}</div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {duracaoTotal && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Duração Total</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{duracaoTotal}</div>
+          </div>
+        )}
+        {publicoAlvo && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-Alvo</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{publicoAlvo}</div>
+          </div>
+        )}
+      </div>
+
+      {objetivosAprendizagem && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivos de Aprendizagem</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivosAprendizagem}</div>
+        </div>
+      )}
+
+      {metodologia && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Metodologia</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{metodologia}</div>
+        </div>
+      )}
+
+      {recursosDidaticos && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recursos Didáticos</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{recursosDidaticos}</div>
+        </div>
+      )}
+
+      {avaliacao && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Avaliação</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{avaliacao}</div>
+        </div>
+      )}
+
+      {competividade && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Competências e Habilidades</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{competividade}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];
   onApprove: (approvedItems: ActionPlanItem[]) => void;
@@ -190,7 +266,8 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       'estudo-grupo': Users,
       'pesquisa-aprofundada': BookOpen,
       'exercicios-praticos': Target,
-      'apresentacao-oral': Users
+      'apresentacao-oral': Users,
+      'sequencia-didatica': BookOpen // Ícone para Sequência Didática
     };
 
     // Se o ID específico não for encontrado, usa um padrão baseado em palavras-chave
@@ -291,6 +368,30 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
         localStorage.setItem(autoDataKey, JSON.stringify(autoData));
         console.log('💾 Dados salvos para preenchimento automático:', autoData);
+      } else if (activity.id === 'sequencia-didatica') {
+         console.log('📚 Salvando dados específicos da Sequência Didática para preenchimento automático');
+         const autoDataKey = `auto_activity_data_${activity.id}`;
+         const autoData = {
+           formData: {
+             title: activity.personalizedTitle || activity.title,
+             description: activity.personalizedDescription || activity.description,
+             sequenceTitle: fullActivity.customFields?.['Título da Sequência'] || fullActivity.customFields?.['Título'] || '',
+             totalDuration: fullActivity.customFields?.['Duração Total'] || fullActivity.customFields?.['Duração'] || '',
+             targetAudience: fullActivity.customFields?.['Público-Alvo'] || '',
+             learningObjectives: fullActivity.customFields?.['Objetivos de Aprendizagem'] || '',
+             methodology: fullActivity.customFields?.['Metodologia'] || fullActivity.customFields?.['Abordagem'] || '',
+             didacticResources: fullActivity.customFields?.['Recursos Didáticos'] || fullActivity.customFields?.['Materiais'] || '',
+             evaluationCriteria: fullActivity.customFields?.['Avaliação'] || fullActivity.customFields?.['Critérios de Avaliação'] || '',
+             competenciesAndSkills: fullActivity.customFields?.['Competências e Habilidades'] || ''
+           },
+           customFields: fullActivity.customFields || {},
+           originalActivity: fullActivity,
+           actionPlanActivity: activity,
+           activityType: 'sequencia-didatica',
+           timestamp: Date.now()
+         };
+         localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+         console.log('💾 Dados salvos para preenchimento automático:', autoData);
       }
 
       // Salvar no localStorage
@@ -487,24 +588,29 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                       {item.description}
                     </p>
 
-                    {/* Custom fields como badges - específico para plano-aula */}
-                    {item.customFields && Object.keys(item.customFields).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {item.id === 'plano-aula' ? (
-                          renderPlanoAulaFields(item.customFields)
-                        ) : (
-                          Object.entries(item.customFields).map(([key, value]) => (
-                            <Badge
-                              key={key}
-                              variant="outline"
-                              className="text-xs px-2 py-1"
-                            >
-                              {key}: {String(value).substring(0, 30)}{String(value).length > 30 ? '...' : ''}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    )}
+                    {/* Custom fields como badges - específico para plano-aula e sequencia-didatica */}
+                      {item.customFields && Object.keys(item.customFields).length > 0 && (
+                        <div className="mt-3">
+                          {item.id === 'sequencia-didatica' ? (
+                            renderSequenciaDidaticaFields(item.customFields)
+                          ) : item.id === 'plano-aula' ? (
+                            renderPlanoAulaFields(item.customFields)
+                          ) : (
+                            // Renderização padrão para outros tipos
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(item.customFields).map(([key, value]) => (
+                                <div
+                                  key={key}
+                                  className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
+                                >
+                                  <span className="font-semibold">{key}:</span>
+                                  <span className="ml-1 truncate max-w-[150px]">{value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                     {/* ID da atividade (para debug) */}
                     <div className="mt-2">

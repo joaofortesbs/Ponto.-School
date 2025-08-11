@@ -403,38 +403,29 @@ export async function generatePersonalizedPlan(
 
 
     // Maps validated activities to the ActionPlanItem format
-    const actionPlanItems = validatedActivities.map(activityData => {
-        // Extracts custom fields from the activity
-        const customFields: Record<string, string> = {};
-
-        // Gets all fields that are not standard system fields
-        const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
-
-        Object.keys(activityData).forEach(key => {
-            if (!standardFields.includes(key) && typeof activityData[key] === 'string') {
-                customFields[key] = activityData[key];
-            }
-        });
-
-        console.log(`✅ Custom fields extracted for ${activityData.id}:`, customFields);
-
-        const activity = {
-          id: activityData.id,
-          title: activityData.title,
-          description: activityData.description,
-          duration: activityData.duration,
-          difficulty: activityData.difficulty,
-          category: activityData.category,
-          type: activityData.type,
-          customFields: customFields || {},
-          approved: true,
-          isTrilhasEligible: true,
-          isBuilt: false, // Will be marked as true after automatic build
+    const actionPlanItems = validatedActivities.map(activity => {
+        // Mapear para o formato final
+        const mappedActivity = {
+          id: activity.id,
+          title: activity.personalizedTitle || activity.title || activity.name,
+          description: activity.personalizedDescription || activity.description,
+          duration: activity.duration || "30 min",
+          difficulty: activity.difficulty || "Médio",
+          category: activity.tags?.[0] || "educacional",
+          type: activity.name,
+          approved: false,
+          isTrilhasEligible: isActivityEligibleForTrilhas(activity.id),
+          customFields: activity.customFields || {},
+          isBuilt: false,
           builtAt: null
         };
 
-        console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, activity);
-        return activity;
+        // Log específico para sequência didática
+        if (activity.id === 'sequencia-didatica') {
+          console.log('📚 Sequência Didática processada:', mappedActivity);
+          console.log('🔧 Custom Fields preservados:', mappedActivity.customFields);
+        }
+        return mappedActivity;
     });
 
     if (validatedActivities.length === 0) {
