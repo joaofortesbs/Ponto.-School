@@ -1,0 +1,137 @@
+🔄 Lógica de Construção da Sequência Didática
+1. Entrada e Coleta de Dados
+O sistema precisa iniciar com a coleta de todos os campos essenciais que definimos antes.
+Esses dados podem vir de duas formas:
+
+Preenchidos pelo usuário (professor)
+
+Sugestionados e completados pela IA com base em informações prévias (disciplina, série, BNCC etc.)
+
+Fluxo:
+
+Usuário acessa a atividade “Sequência Didática”.
+
+Interface exibe o menu flutuante (como na sua imagem) com:
+
+Objetivos de Aprendizagem (editável)
+
+Quantidade de Aulas, Diagnósticos e Avaliações (editável)
+
+Cronograma (opcional)
+
+Botão “Transformar em Grade”
+
+Botão “Regenerar Atividades”
+
+Usuário confirma ou edita as informações.
+
+Sistema salva essas informações no banco de dados como configuração inicial da sequência.
+
+2. Envio de Dados para a IA (Gemini)
+Após confirmar os dados, o sistema envia uma requisição estruturada para a IA com:
+
+Metadados (tema, ano, disciplina, BNCC)
+
+Objetivos de Aprendizagem
+
+Estrutura (número de aulas, diagnósticos, avaliações)
+
+Preferências (datas, tempo estimado, recursos)
+
+Instrução para que a IA retorne um roteiro completo e encadeado, onde:
+
+Cada aula tem objetivo claro e progressivo.
+
+Diagnósticos e avaliações estejam integrados na sequência.
+
+Todos os conteúdos sejam claros, aplicáveis e prontos para uso.
+
+3. Resposta da IA
+O Gemini retorna um JSON estruturado contendo:
+
+Lista de aulas com:
+
+Título
+
+Objetivo específico
+
+Resumo/contexto
+
+Passo a passo (introdução, desenvolvimento, fechamento)
+
+Recursos
+
+Atividade prática
+
+Tempo estimado
+
+Lista de diagnósticos
+
+Lista de avaliações
+
+Encadeamento entre as aulas (progressão didática)
+
+Sugestão de cronograma
+
+4. Montagem da Interface
+O sistema recebe o JSON e gera automaticamente a interface visual:
+
+Parte superior (menu flutuante)
+Objetivos de Aprendizagem (clique para editar → após salvar, pode regenerar)
+
+Contadores de aulas, diagnósticos e avaliações (clicar para editar)
+
+Cronograma
+
+Botão “Transformar em Grade” (muda visual para um calendário ou visual de tabela)
+
+Botão “Regenerar” (chama novamente a IA com novos parâmetros)
+
+Parte inferior (carrossel ou grade)
+Cards de Aula
+
+Cards de Simulado/Diagnóstico
+
+Cards de Prova/Avaliação
+
+Cada card exibe:
+
+Título
+
+Objetivo
+
+Tempo estimado
+
+Botão “Ver detalhes” (abre modal com roteiro completo)
+
+Opção de baixar ou compartilhar
+
+5. Regeneração Inteligente
+Quando o professor altera:
+
+Objetivos de aprendizagem
+
+Quantidade de aulas/diagnósticos/avaliações
+O sistema marca a sequência como desatualizada.
+Se o professor clicar em Regenerar, o sistema:
+
+Pega as alterações
+
+Reenvia para a IA mantendo o restante do conteúdo inalterado (apenas as partes impactadas são regeneradas)
+
+Substitui o conteúdo no banco de dados
+
+Atualiza a interface em tempo real
+
+6. Aplicabilidade para o Professor
+O professor poderá:
+
+Navegar pelas aulas no carrossel
+
+Clicar em cada aula para abrir um roteiro prático (pronto para uso)
+
+Marcar aulas como “Concluídas”
+
+Adicionar notas ou ajustes pessoais
+
+Compartilhar diretamente com os alunos dentro da plataforma
