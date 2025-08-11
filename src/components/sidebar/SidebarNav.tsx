@@ -73,7 +73,6 @@ export function SidebarNav({
   const [isUploading, setIsUploading] = useState(isCollapsed);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [isCardFlipped, setIsCardFlipped] = useState(false);
-  const [isCardHovered, setIsCardHovered] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isMenuFlipping, setIsMenuFlipping] = useState(false);
   const [isModeChanging, setIsModeChanging] = useState(false);
@@ -202,6 +201,11 @@ export function SidebarNav({
             localStorage.setItem("userFirstName", firstName);
 
             // Disparar evento para outros componentes
+            document.dispatchEvent(
+              new CustomEvent("userAvatarUpdated", {
+                detail: { url: data.avatar_url },
+              }),
+            );
             document.dispatchEvent(
               new CustomEvent("usernameUpdated", {
                 detail: {
@@ -1247,7 +1251,7 @@ export function SidebarNav({
           }
         }
 
-        /* Efeito cascata contínuo */
+        /* Efeito contínuo */
         .cascading-effect {
           animation: cascadeWave 1.2s ease-in-out infinite;
           transform-origin: center;
@@ -1387,7 +1391,7 @@ export function SidebarNav({
             transform: scale(1.01);
             filter: brightness(1.08);
           }
-          }
+        }
 
         /* Animações para o flip do menu */
         .menu-animating .menu-item-wrapper {

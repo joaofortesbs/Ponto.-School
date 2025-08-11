@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/components/ui/toast';
+import { useToast } from "@/components/ui/use-toast";
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
@@ -41,20 +41,20 @@ const getActivityIcon = (activityId: string) => {
 
 /**
  * Modal de Edição de Atividades com Agente Interno de Execução
- * 
+ *
  * Este componente inclui um agente automático interno que:
  * - Detecta quando todos os campos foram preenchidos pela IA
  * - Aciona automaticamente o botão "Construir Atividade"
  * - Fecha o modal após a construção (quando apropriado)
  * - Mantém toda a funcionalidade manual original intacta
  */
-export const EditActivityModal: React.FC<EditActivityModalProps> = ({
+const EditActivityModal = ({
   isOpen,
   activity,
   onClose,
   onSave,
   onUpdateActivity
-}) => {
+}: EditActivityModalProps) => {
   // Estado para controlar qual aba está ativa
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
 
@@ -120,6 +120,8 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
   const [buildProgress, setBuildProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [builtContent, setBuiltContent] = useState<any>(null); // Adicionado para uso local
+
+  const { toast } = useToast();
 
   // Hook para geração de atividades
   const {
@@ -188,72 +190,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true,
       }
-    };
-  };
-
-  // Processar dados específicos para lista de exercícios
-  const processExerciseListData = (formData: ActivityFormData, generatedContent?: any) => {
-    console.log('🔄 Processando dados da lista de exercícios:', { formData, generatedContent });
-
-    if (generatedContent && generatedContent.isGeneratedByAI) {
-      console.log('✅ Usando conteúdo gerado pela IA');
-      try {
-        // Extrair questões de diferentes formatos possíveis
-        let questoesExtraidas = [];
-
-        if (generatedContent.questoes && Array.isArray(generatedContent.questoes)) {
-          questoesExtraidas = generatedContent.questoes;
-        } else if (generatedContent.questions && Array.isArray(generatedContent.questions)) {
-          questoesExtraidas = generatedContent.questions;
-        } else if (generatedContent.content && generatedContent.content.questoes) {
-          questoesExtraidas = generatedContent.content.questoes;
-        } else if (generatedContent.content && generatedContent.content.questions) {
-          questoesExtraidas = generatedContent.content.questions;
-        }
-
-        console.log(`📝 Questões extraídas: ${questoesExtraidas.length}`);
-
-        const processedData = {
-          titulo: generatedContent.titulo || formData.title || 'Lista de Exercícios',
-          disciplina: generatedContent.disciplina || formData.subject || 'Disciplina não especificada',
-          tema: generatedContent.tema || formData.theme || 'Tema não especificado',
-          tipoQuestoes: generatedContent.tipoQuestoes || formData.questionModel || 'multipla-escolha',
-          numeroQuestoes: questoesExtraidas.length || parseInt(formData.numberOfQuestions || '5'),
-          dificuldade: generatedContent.dificuldade || formData.difficultyLevel || 'medio',
-          objetivos: generatedContent.objetivos || formData.objectives || '',
-          conteudoPrograma: generatedContent.conteudoPrograma || formData.instructions || '',
-          observacoes: generatedContent.observacoes || '',
-          questoes: questoesExtraidas,
-          isGeneratedByAI: true,
-          generatedAt: generatedContent.generatedAt
-        };
-
-        console.log('📊 Dados processados da IA:', processedData);
-        console.log(`📝 Questões finais: ${processedData.questoes.length}`);
-
-        if (processedData.questoes.length > 0) {
-          console.log('📄 Primeira questão processada:', processedData.questoes[0]);
-        }
-
-        return processedData;
-      } catch (error) {
-        console.error('❌ Erro ao processar conteúdo da IA:', error);
-      }
-    }
-
-    console.log('⚠️ Usando dados de fallback (sem conteúdo da IA)');
-    return {
-      titulo: formData.title || 'Lista de Exercícios',
-      disciplina: formData.subject || 'Disciplina não especificada',
-      tema: formData.theme || 'Tema não especificado',
-      tipoQuestoes: formData.questionModel || 'multipla-escolha',
-      numeroQuestoes: parseInt(formData.numberOfQuestions || '5'),
-      dificuldade: formData.difficultyLevel || 'medio',
-      objetivos: formData.objectives || '',
-      conteudoPrograma: formData.instructions || '',
-      observacoes: '',
-      questoes: [],
-      isGeneratedByAI: false
     };
   };
 
@@ -486,7 +422,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               console.log('🗂️ Custom fields consolidados para sequencia-didatica:', consolidatedCustomFields);
 
               enrichedFormData = {
-                ...prevFormData, // Começa com os dados base do formulário
+                ...formData, // Começa com os dados base do formulário
                 title: consolidatedData.title || autoFormData.title || activity.title || '',
                 description: consolidatedData.description || autoFormData.description || activity.description || '',
                 // Mapeamento dos campos específicos da Sequência Didática
@@ -783,7 +719,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     };
 
     loadActivityData();
-  }, [activity, isOpen, loadSavedContent]);
+  }, [activity, isOpen, loadSavedContent]); // Adicionado loadSavedContent à dependência do useEffect
 
   // Função para automação - será chamada externamente
   useEffect(() => {
@@ -802,7 +738,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     return () => {
       delete (window as any).autoBuildCurrentActivity;
     };
-  }, [activity, formData, isGenerating]);
+  }, [activity, formData, isGenerating, handleBuildActivity]); // Adicionado handleBuildActivity à dependência
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
@@ -878,7 +814,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [activity, formData, isBuilding]); // Adicionado isBuilding e formData
+  }, [activity, formData, isBuilding, toast]); // Adicionado toast à dependência
 
   const handleSaveChanges = () => {
     const activityData = {
@@ -953,8 +889,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     if (!activity) return;
 
     try {
-      // setIsSaving(true); // Remover ou renomear conforme o uso
-
       // Obter customFields a partir dos dados da atividade
       const customFields = activity.customFields || {};
 
@@ -1016,8 +950,6 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         title: "Erro ao salvar",
         description: "Não foi possível salvar as alterações.",
       });
-    } finally {
-      // setIsSaving(false); // Remover ou renomear conforme o uso
     }
   };
 
