@@ -743,25 +743,6 @@ const EditActivityModal = ({
     loadActivityData();
   }, [activity, isOpen, loadSavedContent]); // Adicionado loadSavedContent à dependência do useEffect
 
-  // Função para automação - será chamada externamente
-  useEffect(() => {
-    const handleAutoBuild = () => {
-      if (activity && formData.title && formData.description && !isGenerating) {
-        console.log('🤖 Construção automática iniciada para:', activity.title);
-        handleBuildActivity();
-      }
-    };
-
-    // Registrar a função no window para acesso externo
-    if (activity) {
-      (window as any).autoBuildCurrentActivity = handleAutoBuild;
-    }
-
-    return () => {
-      delete (window as any).autoBuildCurrentActivity;
-    };
-  }, [activity, formData, isGenerating, handleBuildActivity]); // Adicionado handleBuildActivity à dependência
-
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -836,7 +817,26 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [activity, formData, isBuilding, toast]); // Adicionado toast à dependência
+  }, [activity, formData, isBuilding, toast]);
+
+  // Função para automação - será chamada externamente
+  useEffect(() => {
+    const handleAutoBuild = () => {
+      if (activity && formData.title && formData.description && !isGenerating) {
+        console.log('🤖 Construção automática iniciada para:', activity.title);
+        handleBuildActivity();
+      }
+    };
+
+    // Registrar a função no window para acesso externo
+    if (activity) {
+      (window as any).autoBuildCurrentActivity = handleAutoBuild;
+    }
+
+    return () => {
+      delete (window as any).autoBuildCurrentActivity;
+    };
+  }, [activity, formData, isGenerating, handleBuildActivity]);
 
   const handleSaveChanges = () => {
     const activityData = {
