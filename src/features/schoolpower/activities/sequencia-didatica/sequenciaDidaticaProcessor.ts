@@ -53,7 +53,7 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
     objetivos: customFields['Objetivos'] || customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || '',
     etapas: customFields['Etapas'] || customFields['Metodologia'] || customFields['etapas'] || '',
     recursos: customFields['Recursos'] || customFields['Recursos Didáticos'] || customFields['recursos'] || '',
-    avaliacao: customFields['Avaliação'] || customFields['Critérios de Avaliação'] || customFields['avaliacao'] || ''prendizagem'] || '',
+    avaliacao: customFields['Avaliação'] || customFields['Critérios de Avaliação'] || customFields['avaliacao'] || '',
     quantidadeAulas: customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '',
     quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '',
     quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '',
@@ -61,21 +61,7 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
   };
 }
 
-/**
- * Mapeia os campos da Sequência Didática para o formato do modal
- */
-export const sequenciaDidaticaFieldMapping = {
-  'tituloTemaAssunto': 'Título do Tema / Assunto',
-  'anoSerie': 'Ano / Série', 
-  'disciplina': 'Disciplina',
-  'bnccCompetencias': 'BNCC / Competências',
-  'publicoAlvo': 'Público-alvo',
-  'objetivosAprendizagem': 'Objetivos de Aprendizagem',
-  'quantidadeAulas': 'Quantidade de Aulas',
-  'quantidadeDiagnosticos': 'Quantidade de Diagnósticos',
-  'quantidadeAvaliacoes': 'Quantidade de Avaliações',
-  'cronograma': 'Cronograma'
-};
+
 
 export interface SequenciaDidaticaFields {
   tituloTemaAssunto: string;
