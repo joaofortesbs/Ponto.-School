@@ -207,14 +207,27 @@ const EditActivityModal = ({
         }
       };
     } else if (type === 'sequencia-didatica') {
+      console.log('🔄 Processando dados da Sequência Didática...');
       const processedData = processSequenciaDidaticaData(data);
+      
+      // Garantir que tem estrutura mínima necessária
+      const sequenciaCompleta = {
+        ...processedData,
+        aulas: processedData.aulas || [],
+        diagnosticos: processedData.diagnosticos || [],
+        avaliacoes: processedData.avaliacoes || [],
+        materiaisNecessarios: processedData.materiaisNecessarios || [],
+        competenciasDesenvolvidas: processedData.competenciasDesenvolvidas || [],
+        duracaoTotal: processedData.duracaoTotal || `${processedData.quantidadeAulas} aulas`,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+      };
+      
+      console.log('✅ Sequência Didática processada:', sequenciaCompleta);
+      
       return {
         success: true,
-        data: {
-          ...processedData,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
+        data: sequenciaCompleta
       };
     }
     // Simulação de retorno genérico
@@ -278,6 +291,14 @@ const EditActivityModal = ({
         try {
           contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
           console.log(`✅ Conteúdo específico da sequencia-didatica encontrado para: ${activity.id}`);
+          console.log('📊 Estrutura do conteúdo da sequência didática:', {
+            hasAulas: !!contentToLoad?.aulas,
+            aulasCount: contentToLoad?.aulas?.length || 0,
+            hasDiagnosticos: !!contentToLoad?.diagnosticos,
+            diagnosticosCount: contentToLoad?.diagnosticos?.length || 0,
+            hasAvaliacoes: !!contentToLoad?.avaliacoes,
+            avaliacoesCount: contentToLoad?.avaliacoes?.length || 0
+          });
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico da sequencia-didatica:', error);
           console.error('📄 Conteúdo que causou erro:', sequenciaDidaticaSavedContent);

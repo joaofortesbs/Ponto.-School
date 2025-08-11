@@ -1,130 +1,379 @@
 
-import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
-import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+import { geminiClient } from '@/utils/api/geminiClient';
+import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { SequenciaDidaticaCompleta, AulaData, DiagnosticoData, AvaliacaoData } from './SequenciaDidaticaGenerator';
+
+export interface SequenciaDidaticaBuildResult {
+  success: boolean;
+  data?: SequenciaDidaticaCompleta;
+  error?: string;
+}
 
 export class SequenciaDidaticaBuilder {
-  private static instance: SequenciaDidaticaBuilder;
-
-  static getInstance(): SequenciaDidaticaBuilder {
-    if (!SequenciaDidaticaBuilder.instance) {
-      SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
-    }
-    return SequenciaDidaticaBuilder.instance;
-  }
-
-  async construirSequenciaDidatica(formData: any): Promise<{ success: boolean; data?: SequenciaDidaticaCompleta; error?: string }> {
-    console.log('🏗️ Iniciando construção da Sequência Didática:', formData);
+  /**
+   * Constrói uma sequência didática completa baseada nos dados do formulário
+   */
+  async construirSequenciaDidatica(formData: ActivityFormData): Promise<SequenciaDidaticaBuildResult> {
+    console.log('🚀 SequenciaDidaticaBuilder: Iniciando construção da sequência didática');
+    console.log('📊 Dados recebidos:', formData);
 
     try {
-      // Mapear dados do formulário para formato esperado
-      const dadosSequencia: SequenciaDidaticaData = {
-        tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-        anoSerie: formData.anoSerie || formData.schoolYear || '',
-        disciplina: formData.disciplina || formData.subject || '',
-        bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-        publicoAlvo: formData.publicoAlvo || formData.context || '',
-        objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-        quantidadeAulas: formData.quantidadeAulas || '4',
-        quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-        quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
-        cronograma: formData.cronograma || ''
-      };
-
-      console.log('📋 Dados mapeados:', dadosSequencia);
-
-      // Validar dados essenciais
-      const validacao = this.validarDados(dadosSequencia);
+      // Validar dados obrigatórios
+      const validacao = this.validarDados(formData);
       if (!validacao.valido) {
-        throw new Error(`Dados inválidos: ${validacao.erro}`);
+        return {
+          success: false,
+          error: validacao.erro
+        };
       }
 
-      // Gerar sequência completa
-      const sequenciaCompleta = await sequenciaDidaticaGenerator.gerarSequenciaCompleta(dadosSequencia);
+      // Construir o prompt para a IA
+      const prompt = this.construirPrompt(formData);
+      console.log('📝 Prompt construído para IA');
+
+      // Gerar conteúdo com a IA Gemini
+      const response = await geminiClient.generate({
+        prompt,
+        temperature: 0.7,
+        maxTokens: 4000
+      });
+
+      if (!response.success) {
+        throw new Error(`Erro na geração da IA: ${response.error}`);
+      }
+
+      console.log('✅ Resposta da IA recebida');
+
+      // Processar a resposta da IA
+      const sequenciaProcessada = this.processarRespostaIA(response.result, formData);
+      
+      console.log('🔄 Sequência didática processada:', sequenciaProcessada);
 
       // Salvar no localStorage
-      const storageKey = `sequencia_didatica_${Date.now()}`;
-      localStorage.setItem(storageKey, JSON.stringify(sequenciaCompleta));
-      
-      // Também salvar com chave específica para recuperação
-      const activityKey = 'constructed_sequencia-didatica_latest';
-      localStorage.setItem(activityKey, JSON.stringify(sequenciaCompleta));
-
-      console.log('✅ Sequência Didática construída e salva:', storageKey);
+      this.salvarSequencia(sequenciaProcessada);
 
       return {
         success: true,
-        data: sequenciaCompleta
+        data: sequenciaProcessada
       };
 
     } catch (error) {
-      console.error('❌ Erro na construção da Sequência Didática:', error);
+      console.error('❌ Erro na construção da sequência didática:', error);
       return {
         success: false,
-        error: error.message || 'Erro desconhecido na construção'
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
     }
   }
 
-  async regenerarSequencia(
-    dadosOriginais: SequenciaDidaticaData,
-    alteracoes: Partial<SequenciaDidaticaData>
-  ): Promise<{ success: boolean; data?: SequenciaDidaticaCompleta; error?: string }> {
-    console.log('🔄 Regenerando Sequência Didática com alterações:', alteracoes);
+  /**
+   * Constrói o prompt para a IA baseado nos dados do formulário
+   */
+  private construirPrompt(formData: ActivityFormData): string {
+    return `
+Crie uma sequência didática completa e detalhada com as seguintes especificações:
 
+INFORMAÇÕES BÁSICAS:
+- Título/Tema: ${formData.tituloTemaAssunto || formData.title}
+- Disciplina: ${formData.disciplina || formData.subject}
+- Ano/Série: ${formData.anoSerie || formData.schoolYear}
+- Público-alvo: ${formData.publicoAlvo || 'Estudantes do ensino fundamental/médio'}
+- Objetivos de Aprendizagem: ${formData.objetivosAprendizagem || formData.objectives}
+
+ESTRUTURA REQUERIDA:
+- Quantidade de Aulas: ${formData.quantidadeAulas || '4'}
+- Quantidade de Diagnósticos: ${formData.quantidadeDiagnosticos || '1'}
+- Quantidade de Avaliações: ${formData.quantidadeAvaliacoes || '1'}
+- Competências BNCC: ${formData.bnccCompetencias || 'A definir'}
+
+CRONOGRAMA: ${formData.cronograma || 'A definir conforme necessidades da turma'}
+
+Por favor, retorne uma sequência didática completa no seguinte formato JSON:
+
+{
+  "tituloTemaAssunto": "string",
+  "anoSerie": "string", 
+  "disciplina": "string",
+  "bnccCompetencias": "string",
+  "publicoAlvo": "string",
+  "objetivosAprendizagem": "string",
+  "quantidadeAulas": "string",
+  "quantidadeDiagnosticos": "string", 
+  "quantidadeAvaliacoes": "string",
+  "cronograma": "string",
+  "duracaoTotal": "string",
+  "materiaisNecessarios": ["string"],
+  "competenciasDesenvolvidas": ["string"],
+  "aulas": [
+    {
+      "numero": 1,
+      "titulo": "string",
+      "objetivo": "string",
+      "conteudo": "string",
+      "metodologia": "string",
+      "recursos": ["string"],
+      "atividadePratica": "string",
+      "avaliacao": "string", 
+      "tempoEstimado": "string"
+    }
+  ],
+  "diagnosticos": [
+    {
+      "numero": 1,
+      "titulo": "string",
+      "objetivo": "string",
+      "questoes": ["string"],
+      "criteriosAvaliacao": "string",
+      "tempoEstimado": "string"
+    }
+  ],
+  "avaliacoes": [
+    {
+      "numero": 1,
+      "titulo": "string", 
+      "objetivo": "string",
+      "formato": "string",
+      "criterios": ["string"],
+      "tempoEstimado": "string"
+    }
+  ]
+}
+
+INSTRUÇÕES ESPECÍFICAS:
+1. Crie EXATAMENTE ${formData.quantidadeAulas || '4'} aulas detalhadas e progressivas
+2. Desenvolva ${formData.quantidadeDiagnosticos || '1'} diagnóstico(s) para avaliar conhecimentos prévios
+3. Elabore ${formData.quantidadeAvaliacoes || '1'} avaliação(ões) formativa(s) e/ou somativa(s)
+4. Cada aula deve ter objetivos claros, conteúdo bem estruturado e atividades práticas
+5. Inclua metodologias variadas e recursos diversificados
+6. Garanta progressão lógica e coerência entre as aulas
+7. Foque nos objetivos de aprendizagem definidos
+8. Considere o nível de desenvolvimento do público-alvo
+
+Retorne APENAS o JSON, sem texto adicional.
+`;
+  }
+
+  /**
+   * Processa a resposta da IA e converte para o formato esperado
+   */
+  private processarRespostaIA(respostaIA: string, formData: ActivityFormData): SequenciaDidaticaCompleta {
     try {
-      const sequenciaRegenerada = await sequenciaDidaticaGenerator.regenerarSequencia(dadosOriginais, alteracoes);
+      // Tentar extrair JSON da resposta
+      let jsonString = respostaIA.trim();
       
-      // Atualizar localStorage
-      const activityKey = 'constructed_sequencia-didatica_latest';
-      localStorage.setItem(activityKey, JSON.stringify(sequenciaRegenerada));
+      // Remover possíveis prefixos/sufixos de markdown
+      if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.replace(/```json\s*/, '').replace(/\s*```$/, '');
+      } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.replace(/```\s*/, '').replace(/\s*```$/, '');
+      }
 
-      console.log('✅ Sequência regenerada com sucesso');
+      const dadosIA = JSON.parse(jsonString);
+      console.log('📊 Dados parseados da IA:', dadosIA);
 
-      return {
-        success: true,
-        data: sequenciaRegenerada
+      // Garantir que todos os campos estão presentes
+      const sequenciaCompleta: SequenciaDidaticaCompleta = {
+        tituloTemaAssunto: dadosIA.tituloTemaAssunto || formData.tituloTemaAssunto || formData.title || 'Sequência Didática',
+        anoSerie: dadosIA.anoSerie || formData.anoSerie || formData.schoolYear || '',
+        disciplina: dadosIA.disciplina || formData.disciplina || formData.subject || '',
+        bnccCompetencias: dadosIA.bnccCompetencias || formData.bnccCompetencias || formData.competencies || '',
+        publicoAlvo: dadosIA.publicoAlvo || formData.publicoAlvo || formData.context || '',
+        objetivosAprendizagem: dadosIA.objetivosAprendizagem || formData.objetivosAprendizagem || formData.objectives || '',
+        quantidadeAulas: dadosIA.quantidadeAulas || formData.quantidadeAulas || '4',
+        quantidadeDiagnosticos: dadosIA.quantidadeDiagnosticos || formData.quantidadeDiagnosticos || '1',
+        quantidadeAvaliacoes: dadosIA.quantidadeAvaliacoes || formData.quantidadeAvaliacoes || '1',
+        cronograma: dadosIA.cronograma || formData.cronograma || 'Cronograma a ser definido',
+        duracaoTotal: dadosIA.duracaoTotal || `${dadosIA.quantidadeAulas || formData.quantidadeAulas || '4'} aulas`,
+        materiaisNecessarios: dadosIA.materiaisNecessarios || ['Quadro', 'Material didático', 'Recursos audiovisuais'],
+        competenciasDesenvolvidas: dadosIA.competenciasDesenvolvidas || ['Compreensão', 'Análise', 'Aplicação'],
+        aulas: this.processarAulas(dadosIA.aulas || []),
+        diagnosticos: this.processarDiagnosticos(dadosIA.diagnosticos || []),
+        avaliacoes: this.processarAvaliacoes(dadosIA.avaliacoes || []),
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true
       };
+
+      console.log('✅ Sequência didática completa processada:', sequenciaCompleta);
+      return sequenciaCompleta;
+
     } catch (error) {
-      console.error('❌ Erro na regeneração:', error);
-      return {
-        success: false,
-        error: error.message || 'Erro na regeneração'
-      };
+      console.error('❌ Erro ao processar resposta da IA:', error);
+      
+      // Fallback: criar sequência básica com os dados do formulário
+      return this.criarSequenciaFallback(formData);
     }
   }
 
-  private validarDados(dados: SequenciaDidaticaData): { valido: boolean; erro?: string } {
-    if (!dados.tituloTemaAssunto?.trim()) {
+  /**
+   * Processa as aulas recebidas da IA
+   */
+  private processarAulas(aulas: any[]): AulaData[] {
+    return aulas.map((aula, index) => ({
+      numero: aula.numero || index + 1,
+      titulo: aula.titulo || `Aula ${index + 1}`,
+      objetivo: aula.objetivo || 'Objetivo a ser definido',
+      conteudo: aula.conteudo || 'Conteúdo a ser desenvolvido',
+      metodologia: aula.metodologia || 'Metodologia a ser aplicada',
+      recursos: Array.isArray(aula.recursos) ? aula.recursos : ['Recursos básicos'],
+      atividadePratica: aula.atividadePratica || 'Atividade prática a ser desenvolvida',
+      avaliacao: aula.avaliacao || 'Avaliação da aula',
+      tempoEstimado: aula.tempoEstimado || '50 minutos'
+    }));
+  }
+
+  /**
+   * Processa os diagnósticos recebidos da IA
+   */
+  private processarDiagnosticos(diagnosticos: any[]): DiagnosticoData[] {
+    return diagnosticos.map((diagnostico, index) => ({
+      numero: diagnostico.numero || index + 1,
+      titulo: diagnostico.titulo || `Diagnóstico ${index + 1}`,
+      objetivo: diagnostico.objetivo || 'Avaliar conhecimentos prévios',
+      questoes: Array.isArray(diagnostico.questoes) ? diagnostico.questoes : ['Questão diagnóstica'],
+      criteriosAvaliacao: diagnostico.criteriosAvaliacao || 'Critérios a serem definidos',
+      tempoEstimado: diagnostico.tempoEstimado || '30 minutos'
+    }));
+  }
+
+  /**
+   * Processa as avaliações recebidas da IA
+   */
+  private processarAvaliacoes(avaliacoes: any[]): AvaliacaoData[] {
+    return avaliacoes.map((avaliacao, index) => ({
+      numero: avaliacao.numero || index + 1,
+      titulo: avaliacao.titulo || `Avaliação ${index + 1}`,
+      objetivo: avaliacao.objetivo || 'Avaliar aprendizagem',
+      formato: avaliacao.formato || 'Avaliação escrita',
+      criterios: Array.isArray(avaliacao.criterios) ? avaliacao.criterios : ['Critério de avaliação'],
+      tempoEstimado: avaliacao.tempoEstimado || '50 minutos'
+    }));
+  }
+
+  /**
+   * Cria uma sequência básica como fallback em caso de erro
+   */
+  private criarSequenciaFallback(formData: ActivityFormData): SequenciaDidaticaCompleta {
+    const quantidadeAulas = parseInt(formData.quantidadeAulas || '4');
+    const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos || '1');
+    const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes || '1');
+
+    // Gerar aulas básicas
+    const aulas: AulaData[] = Array.from({ length: quantidadeAulas }, (_, index) => ({
+      numero: index + 1,
+      titulo: `Aula ${index + 1}: ${formData.tituloTemaAssunto || 'Conteúdo'}`,
+      objetivo: formData.objetivosAprendizagem || 'Desenvolver compreensão sobre o tema',
+      conteudo: `Conteúdo da aula ${index + 1} sobre ${formData.tituloTemaAssunto || 'o tema abordado'}`,
+      metodologia: 'Aula expositiva dialogada com atividades práticas',
+      recursos: ['Quadro', 'Material didático', 'Recursos audiovisuais'],
+      atividadePratica: `Atividade prática relacionada ao conteúdo da aula ${index + 1}`,
+      avaliacao: 'Participação e desenvolvimento das atividades propostas',
+      tempoEstimado: '50 minutos'
+    }));
+
+    // Gerar diagnósticos básicos
+    const diagnosticos: DiagnosticoData[] = Array.from({ length: quantidadeDiagnosticos }, (_, index) => ({
+      numero: index + 1,
+      titulo: `Diagnóstico ${index + 1}: Conhecimentos Prévios`,
+      objetivo: 'Avaliar os conhecimentos prévios dos estudantes sobre o tema',
+      questoes: [
+        'O que você já sabe sobre este assunto?',
+        'Qual sua experiência anterior com este tema?',
+        'Quais são suas expectativas para este conteúdo?'
+      ],
+      criteriosAvaliacao: 'Identificação do nível de conhecimento prévio dos estudantes',
+      tempoEstimado: '30 minutos'
+    }));
+
+    // Gerar avaliações básicas
+    const avaliacoes: AvaliacaoData[] = Array.from({ length: quantidadeAvaliacoes }, (_, index) => ({
+      numero: index + 1,
+      titulo: `Avaliação ${index + 1}: Verificação da Aprendizagem`,
+      objetivo: 'Verificar o alcance dos objetivos de aprendizagem propostos',
+      formato: 'Avaliação mista (questões objetivas e subjetivas)',
+      criterios: [
+        'Compreensão dos conceitos apresentados',
+        'Aplicação do conhecimento adquirido',
+        'Qualidade das respostas e argumentação'
+      ],
+      tempoEstimado: '50 minutos'
+    }));
+
+    return {
+      tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || 'Sequência Didática',
+      anoSerie: formData.anoSerie || formData.schoolYear || '',
+      disciplina: formData.disciplina || formData.subject || '',
+      bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
+      publicoAlvo: formData.publicoAlvo || formData.context || '',
+      objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
+      quantidadeAulas: formData.quantidadeAulas || '4',
+      quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
+      quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
+      cronograma: formData.cronograma || 'Cronograma flexível conforme necessidades da turma',
+      duracaoTotal: `${quantidadeAulas} aulas de 50 minutos cada`,
+      materiaisNecessarios: ['Quadro', 'Material didático', 'Recursos audiovisuais'],
+      competenciasDesenvolvidas: ['Compreensão', 'Análise', 'Aplicação'],
+      aulas,
+      diagnosticos,
+      avaliacoes,
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false
+    };
+  }
+
+  /**
+   * Salva a sequência didática no localStorage
+   */
+  private salvarSequencia(sequencia: SequenciaDidaticaCompleta): void {
+    try {
+      const chaveArmazenamento = 'constructed_sequencia-didatica_latest';
+      localStorage.setItem(chaveArmazenamento, JSON.stringify(sequencia));
+      console.log('💾 Sequência didática salva no localStorage com chave:', chaveArmazenamento);
+    } catch (error) {
+      console.error('❌ Erro ao salvar sequência no localStorage:', error);
+    }
+  }
+
+  /**
+   * Valida os dados necessários para construir a sequência
+   */
+  private validarDados(formData: ActivityFormData): { valido: boolean; erro?: string } {
+    if (!formData.tituloTemaAssunto && !formData.title) {
       return { valido: false, erro: 'Título do tema/assunto é obrigatório' };
     }
 
-    if (!dados.disciplina?.trim()) {
+    if (!formData.disciplina && !formData.subject) {
       return { valido: false, erro: 'Disciplina é obrigatória' };
     }
 
-    if (!dados.anoSerie?.trim()) {
+    if (!formData.anoSerie && !formData.schoolYear) {
       return { valido: false, erro: 'Ano/série é obrigatório' };
     }
 
-    if (!dados.objetivosAprendizagem?.trim()) {
+    if (!formData.objetivosAprendizagem && !formData.objectives) {
       return { valido: false, erro: 'Objetivos de aprendizagem são obrigatórios' };
     }
 
-    if (!dados.quantidadeAulas || parseInt(dados.quantidadeAulas) < 1) {
-      return { valido: false, erro: 'Quantidade de aulas deve ser pelo menos 1' };
+    const quantidadeAulas = parseInt(formData.quantidadeAulas || '0');
+    if (quantidadeAulas <= 0) {
+      return { valido: false, erro: 'Quantidade de aulas deve ser maior que 0' };
     }
 
-    if (!dados.quantidadeDiagnosticos || parseInt(dados.quantidadeDiagnosticos) < 0) {
+    const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos || '0');
+    if (quantidadeDiagnosticos < 0) {
       return { valido: false, erro: 'Quantidade de diagnósticos deve ser 0 ou maior' };
     }
 
-    if (!dados.quantidadeAvaliacoes || parseInt(dados.quantidadeAvaliacoes) < 0) {
+    const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes || '0');
+    if (quantidadeAvaliacoes < 0) {
       return { valido: false, erro: 'Quantidade de avaliações deve ser 0 ou maior' };
     }
 
     return { valido: true };
   }
 
+  /**
+   * Carrega uma sequência salva do localStorage
+   */
   carregarSequenciaSalva(): SequenciaDidaticaCompleta | null {
     try {
       const activityKey = 'constructed_sequencia-didatica_latest';
@@ -142,4 +391,4 @@ export class SequenciaDidaticaBuilder {
   }
 }
 
-export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();
+export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();
