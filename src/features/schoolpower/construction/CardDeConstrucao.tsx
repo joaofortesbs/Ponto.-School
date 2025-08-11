@@ -51,7 +51,7 @@ import atividadesTrilhas from '../data/atividadesTrilhas.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
 import { EditActivityModal } from './EditActivityModal';
 import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
-import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping, extractSequenciaDidaticaData } from '../activities/sequencia-didatica';
+import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -691,8 +691,6 @@ export function CardDeConstrucao({
       // Processamento específico para Sequência Didática
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
-        console.log('🎯 Processando Sequência Didática com campos:', customFields);
-        
         autoFormData = processSequenciaDidaticaData({
           id: activity.id,
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',
@@ -701,10 +699,6 @@ export function CardDeConstrucao({
         });
         
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
-        
-        // Também extrair dados específicos para debug
-        const extractedData = extractSequenciaDidaticaData(customFields);
-        console.log('📋 Dados extraídos específicos:', extractedData);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {

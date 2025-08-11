@@ -5,7 +5,6 @@ import activityFieldsSchema from '../data/activityFieldsSchema.json';
 import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 import { validateGeminiPlan } from './validateGeminiPlan';
 import { processAIGeneratedContent } from './exerciseListProcessor';
-import sequenciaDidaticaPrompt from '../prompts/sequenciaDidaticaPrompt';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
@@ -86,6 +85,23 @@ Os campos obrigatórios são EXATAMENTE:
 
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
+    // Adicionar informações específicas para sequencia-didatica
+    const sequenciaDidaticaSpecificInfo = `
+ATENÇÃO ESPECIAL PARA SEQUENCIA-DIDATICA:
+Os campos obrigatórios são EXATAMENTE:
+- Título do Tema / Assunto
+- Ano / Série
+- Disciplina
+- BNCC / Competências
+- Público-alvo
+- Objetivos de Aprendizagem
+- Quantidade de Aulas
+- Quantidade de Diagnósticos
+- Quantidade de Avaliações
+- Cronograma
+
+USE EXATAMENTE ESTES NOMES DE CAMPOS para sequencia-didatica! NÃO use nomes como "Tema Central", "Objetivos", "Etapas", "Recursos", "Avaliação" - estes são INCORRETOS para sequencia-didatica!`;
+
     // Construir o prompt para a Gemini
     const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
@@ -105,6 +121,8 @@ CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
 
 ${planoAulaSpecificInfo}
+
+${sequenciaDidaticaSpecificInfo}
 
 INSTRUCTIONS:
 1. Carefully analyze the request and provided information
@@ -401,93 +419,42 @@ export async function generatePersonalizedPlan(
     // Validates the returned activities
     const validatedActivities = await validateGeminiPlan(geminiActivities, schoolPowerActivities);
 
-    // Extrai os campos personalizados para cada atividade
-    const activitiesWithCustomFields = await Promise.all(
-      validatedActivities.map(async (activity) => {
-        console.log(`🎯 Gerando campos personalizados para: ${activity.id}`);
 
-        try {
-          // Prompt específico baseado no tipo de atividade
-          let customFieldsPrompt = '';
 
-          if (activity.id === 'sequencia-didatica') {
-            customFieldsPrompt = `
-${sequenciaDidaticaPrompt}
+    // Maps validated activities to the ActionPlanItem format
+    const actionPlanItems = validatedActivities.map(activityData => {
+        // Extracts custom fields from the activity
+        const customFields: Record<string, string> = {};
 
-Contexto fornecido:
-- Matérias/Temas: ${contextualizationData.subjects}
-- Público-alvo: ${contextualizationData.audience || 'Não especificado'}
-- Restrições: ${contextualizationData.restrictions || 'Nenhuma'}
-- Datas importantes: ${contextualizationData.dates || 'Não especificado'}
-- Observações: ${contextualizationData.notes || 'Nenhuma'}
+        // Gets all fields that are not standard system fields
+        const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
 
-Gere os campos específicos para esta Sequência Didática em JSON válido.
-            `;
-          } else {
-            // Prompt genérico para outras atividades
-            customFieldsPrompt = `
-Com base no contexto: "${contextualizationData.subjects}", público: "${contextualizationData.audience || 'Students'}", restrições: "${contextualizationData.restrictions || 'undefined'}"
-
-Gere campos específicos em JSON para a atividade "${activity.title}" (ID: ${activity.id}):
-- Se for plano-aula: tema, disciplina, ano, carga horária, objetivos, materiais, etc.
-- Se for prova/simulado: disciplina, conteúdo, número de questões, nível, tempo, etc.
-
-Retorne apenas um JSON válido com os campos.
-            `;
-          }
-
-          const customFieldsResponse = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{
-                  text: customFieldsPrompt
-                }]
-              }]
-            })
-          });
-
-          if (!customFieldsResponse.ok) {
-            console.warn(`⚠️ Falha ao gerar campos personalizados para ${activity.id}`);
-            return {
-              ...activity,
-              customFields: {}
-            };
-          }
-
-          const customFieldsData = await customFieldsResponse.json();
-          const customFieldsText = customFieldsData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-
-          // Tentar extrair JSON da resposta
-          let customFields = {};
-          try {
-            const jsonMatch = customFieldsText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              customFields = JSON.parse(jsonMatch[0]);
+        Object.keys(activityData).forEach(key => {
+            if (!standardFields.includes(key) && typeof activityData[key] === 'string') {
+                customFields[key] = activityData[key];
             }
-          } catch (parseError) {
-            console.warn(`⚠️ Erro ao processar JSON dos campos personalizados para ${activity.id}:`, parseError);
-          }
+        });
 
-          console.log(`✅ Campos personalizados gerados para ${activity.id}:`, customFields);
+        console.log(`✅ Custom fields extracted for ${activityData.id}:`, customFields);
 
-          return {
-            ...activity,
-            customFields
-          };
-        } catch (error) {
-          console.error(`❌ Erro ao gerar campos personalizados para ${activity.id}:`, error);
-          return {
-            ...activity,
-            customFields: {}
-          };
-        }
-      })
-    );
+        const activity = {
+          id: activityData.id,
+          title: activityData.title,
+          description: activityData.description,
+          duration: activityData.duration,
+          difficulty: activityData.difficulty,
+          category: activityData.category,
+          type: activityData.type,
+          customFields: customFields || {},
+          approved: true,
+          isTrilhasEligible: true,
+          isBuilt: false, // Will be marked as true after automatic build
+          builtAt: null
+        };
 
+        console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, activity);
+        return activity;
+    });
 
     if (validatedActivities.length === 0) {
       console.warn('⚠️ No valid activities returned, using fallback');
@@ -497,7 +464,7 @@ Retorne apenas um JSON válido com os campos.
     console.log(`✅ Total validated activities generated: ${validatedActivities.length}`);
 
     // Converts to ActionPlanItems
-    const actionPlanItems = convertToActionPlanItems(activitiesWithCustomFields, schoolPowerActivities);
+    const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
 
     console.log('✅ Personalized plan generated successfully:', actionPlanItems);
     return actionPlanItems;

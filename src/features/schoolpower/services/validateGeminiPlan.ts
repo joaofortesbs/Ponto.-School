@@ -1,5 +1,6 @@
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
+import { validateSequenciaDidaticaFields, fixSequenciaDidaticaFields } from './sequenciaDidaticaValidator';
 
 /**
  * Interface para atividade retornada pela Gemini
@@ -68,34 +69,6 @@ function findActivityById(activityId: string, allowedActivities: typeof schoolPo
 }
 
 /**
- * Valida os dados específicos da Sequência Didática
- */
-function validateSequenciaDidaticaData(customFields: any): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  // Exemplo de validação: verificar se o campo 'duracao' existe e é um número
-  if (!customFields.duracao || typeof customFields.duracao !== 'number') {
-    errors.push('Duração é obrigatória e deve ser um número');
-  }
-
-  // Exemplo de validação: verificar se o campo 'objetivo' existe e é uma string não vazia
-  if (!customFields.objetivo || typeof customFields.objetivo !== 'string' || customFields.objetivo.trim() === '') {
-    errors.push('Objetivo é obrigatório e não pode ser vazio');
-  }
-
-  // Exemplo de validação: verificar se o campo 'publicoAlvo' existe e é uma string não vazia
-  if (!customFields.publicoAlvo || typeof customFields.publicoAlvo !== 'string' || customFields.publicoAlvo.trim() === '') {
-    errors.push('Público-alvo é obrigatório e não pode ser vazio');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-
-/**
  * Valida uma única atividade retornada pela Gemini
  */
 function validateSingleActivity(
@@ -127,6 +100,41 @@ function validateSingleActivity(
     return null;
   }
 
+  // Obtém os campos personalizados da atividade
+  let customFields = getCustomFieldsForActivity(originalActivity.id);
+
+  // Valida se tem customFields necessários
+  let hasValidCustomFields = customFields && Object.keys(customFields).length > 0;
+
+  // Validação específica para sequencia-didatica
+  if (activity.id === 'sequencia-didatica' && hasValidCustomFields) {
+    console.log('🔍 Validando campos específicos da Sequência Didática...');
+
+    // Corrigir campos mapeados incorretamente
+    const fixedFields = fixSequenciaDidaticaFields(customFields);
+    customFields = fixedFields;
+
+    // Validar campos específicos
+    const validation = validateSequenciaDidaticaFields(customFields);
+
+    if (!validation.isValid) {
+      console.error('❌ Sequência Didática com campos inválidos:', validation.errors);
+      return null;
+    }
+
+    if (validation.warnings.length > 0) {
+      console.warn('⚠️ Sequência Didática com avisos:', validation.warnings);
+    }
+
+    console.log('✅ Sequência Didática validada com sucesso');
+  }
+
+  if (!hasValidCustomFields) {
+    console.warn(`⚠️ Atividade ${activity.id} sem custom fields - será ignorada`);
+    return null;
+  }
+
+
   // Cria atividade validada
   const validatedActivity: ValidatedActivity = {
     id: originalActivity.id,
@@ -146,36 +154,11 @@ function validateSingleActivity(
   // Preserva todos os campos personalizados da resposta da Gemini
   const standardFields = ['id', 'title', 'description', 'duration', 'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
 
-  // Array para coletar warnings de validação
-  const warnings: string[] = [];
-
   Object.keys(activity).forEach(key => {
     if (!standardFields.includes(key) && typeof activity[key] === 'string') {
       validatedActivity[key] = activity[key];
     }
   });
-
-  // Validar campos customizados se existirem
-    if (activity.customFields && Object.keys(activity.customFields).length > 0) {
-      console.log(`🔍 Validando campos customizados para ${activity.id}:`, activity.customFields);
-
-      // Validação específica para Sequência Didática
-      if (activity.id === 'sequencia-didatica') {
-        const validationResult = validateSequenciaDidaticaData(activity.customFields);
-        if (!validationResult.isValid) {
-          console.warn(`⚠️ Problemas na validação da Sequência Didática:`, validationResult.errors);
-          warnings.push(`Sequência Didática: ${validationResult.errors.join(', ')}`);
-        } else {
-          console.log(`✅ Sequência Didática validada com sucesso`);
-        }
-      }
-    }
-
-  // Se houver warnings, adicionar uma chave 'validationWarnings' à atividade validada
-  if (warnings.length > 0) {
-    validatedActivity.validationWarnings = warnings;
-  }
-
 
   console.log('✅ Atividade validada:', validatedActivity);
   return validatedActivity;

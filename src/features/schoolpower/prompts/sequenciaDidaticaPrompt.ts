@@ -1,40 +1,42 @@
 
 export const sequenciaDidaticaPrompt = `
-Você é um especialista em criação de sequências didáticas educacionais. 
+SISTEMA ESPECIALIZADO PARA SEQUÊNCIA DIDÁTICA
 
-Com base nos dados de contextualização fornecidos, você deve gerar EXATAMENTE os seguintes campos para uma atividade de Sequência Didática:
+CAMPOS OBRIGATÓRIOS (use EXATAMENTE estes nomes):
+1. "Título do Tema / Assunto" - O tema principal da sequência
+2. "Ano / Série" - Ano escolar (ex: 6º ano do Ensino Fundamental)
+3. "Disciplina" - Matéria específica (ex: Português, Matemática, etc.)
+4. "BNCC / Competências" - Códigos da BNCC aplicáveis
+5. "Público-alvo" - Descrição do público (ex: Ensino Fundamental II)
+6. "Objetivos de Aprendizagem" - Objetivos específicos da sequência
+7. "Quantidade de Aulas" - Número de aulas necessárias
+8. "Quantidade de Diagnósticos" - Quantidade de avaliações diagnósticas
+9. "Quantidade de Avaliações" - Quantidade de avaliações formais
+10. "Cronograma" - Distribuição temporal das atividades
 
-CAMPOS OBRIGATÓRIOS (retorne sempre estes campos):
-1. "Título do Tema / Assunto": Um título claro e específico do tema principal
-2. "Ano / Série": O ano ou série escolar (ex: "6º ano do Ensino Fundamental")
-3. "Disciplina": A disciplina principal (ex: "Português", "Matemática", "Geografia")
-4. "BNCC / Competências": Códigos BNCC ou competências relevantes (opcional, mas recomendado)
-5. "Público-alvo": Descrição do público-alvo (ex: "Estudantes do Ensino Fundamental II")
-6. "Objetivos de Aprendizagem": Lista clara dos objetivos educacionais
-7. "Quantidade de Aulas": Número estimado de aulas (ex: "8 aulas")
-8. "Quantidade de Diagnósticos": Número de avaliações diagnósticas (ex: "2")
-9. "Quantidade de Avaliações": Número total de avaliações (ex: "3")
-10. "Cronograma": Cronograma resumido da sequência (opcional)
+IMPORTANTE:
+- NÃO use campos genéricos como "Tema Central", "Objetivos", "Etapas", "Recursos", "Avaliação"
+- Use APENAS os nomes de campos listados acima
+- Todos os valores devem ser específicos e contextualizados
+- A quantidade de aulas deve ser um número realista (entre 4-12 aulas)
+- A quantidade de diagnósticos deve ser entre 1-3
+- A quantidade de avaliações deve ser entre 2-4
 
-IMPORTANTE: 
-- Retorne SEMPRE todos os campos, mesmo que alguns sejam opcionais
-- Use EXATAMENTE os nomes dos campos como especificado acima
-- Baseie-se no contexto educacional fornecido
-- Seja específico e pedagógico nas respostas
-- Se algum campo não puder ser determinado, forneça uma sugestão padrão apropriada
-
-Formato de resposta esperado:
+EXEMPLO CORRETO:
 {
-  "Título do Tema / Assunto": "valor",
-  "Ano / Série": "valor", 
-  "Disciplina": "valor",
-  "BNCC / Competências": "valor",
-  "Público-alvo": "valor",
-  "Objetivos de Aprendizagem": "valor",
-  "Quantidade de Aulas": "valor",
-  "Quantidade de Diagnósticos": "valor", 
-  "Quantidade de Avaliações": "valor",
-  "Cronograma": "valor"
+  "id": "sequencia-didatica",
+  "title": "Sequência Didática: Substantivos Próprios e Verbos",
+  "description": "Desenvolvimento de uma sequência didática para o ensino de substantivos próprios e verbos no 6º ano",
+  "Título do Tema / Assunto": "Substantivos Próprios e Verbos",
+  "Ano / Série": "6º ano do Ensino Fundamental",
+  "Disciplina": "Português",
+  "BNCC / Competências": "EF67LP32, EF67LP33",
+  "Público-alvo": "Estudantes do 6º ano do Ensino Fundamental",
+  "Objetivos de Aprendizagem": "Identificar e classificar substantivos próprios; Reconhecer e conjugar verbos regulares; Aplicar conhecimentos em textos práticos",
+  "Quantidade de Aulas": "8",
+  "Quantidade de Diagnósticos": "2",
+  "Quantidade de Avaliações": "3",
+  "Cronograma": "Aulas 1-2: Substantivos próprios; Aulas 3-4: Verbos regulares; Aulas 5-6: Prática integrada; Aulas 7-8: Avaliação e revisão"
 }
 `;
 

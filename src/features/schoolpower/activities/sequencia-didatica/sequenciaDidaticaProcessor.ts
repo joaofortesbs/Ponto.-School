@@ -3,16 +3,6 @@
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface SequenciaDidaticaCustomFields {
-  'Título do Tema / Assunto': string;
-  'Ano / Série': string;
-  'Disciplina': string;
-  'BNCC / Competências': string;
-  'Público-alvo': string;
-  'Objetivos de Aprendizagem': string;
-  'Quantidade de Aulas': string;
-  'Quantidade de Diagnósticos': string;
-  'Quantidade de Avaliações': string;
-  'Cronograma': string;
   [key: string]: string;
 }
 
@@ -34,7 +24,6 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
 
   const customFields = activity.customFields || {};
 
-  // Mapear campos específicos da Sequência Didática
   return {
     title: activity.personalizedTitle || activity.title || customFields['Título do Tema / Assunto'] || '',
     description: activity.personalizedDescription || activity.description || '',
@@ -47,11 +36,7 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
     sources: '',
     objectives: customFields['Objetivos de Aprendizagem'] || '',
     materials: '',
-    instructions: '',
-    evaluation: '',
-    timeLimit: '',
-    context: customFields['Público-alvo'] || '',
-    // Campos específicos da Sequência Didática
+    // Campos específicos da Sequência Didática com nomes CORRETOS
     tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
     anoSerie: customFields['Ano / Série'] || '',
     disciplina: customFields['Disciplina'] || '',
@@ -93,22 +78,3 @@ export interface SequenciaDidaticaFields {
   'Quantidade de Avaliações': string;
   'Cronograma': string;
 }
-
-/**
- * Extrai dados da Sequência Didática a partir dos customFields
- */
-export function extractSequenciaDidaticaData(customFields: Record<string, string>): SequenciaDidaticaFields {
-  return {
-    'Título do Tema / Assunto': customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || '',
-    'Ano / Série': customFields['Ano / Série'] || customFields['anoSerie'] || '',
-    'Disciplina': customFields['Disciplina'] || customFields['disciplina'] || '',
-    'BNCC / Competências': customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || '',
-    'Público-alvo': customFields['Público-alvo'] || customFields['publicoAlvo'] || '',
-    'Objetivos de Aprendizagem': customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || '',
-    'Quantidade de Aulas': customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '',
-    'Quantidade de Diagnósticos': customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '',
-    'Quantidade de Avaliações': customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '',
-    'Cronograma': customFields['Cronograma'] || customFields['cronograma'] || ''
-  };
-}
-

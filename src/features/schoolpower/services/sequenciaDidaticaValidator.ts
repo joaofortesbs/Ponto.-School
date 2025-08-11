@@ -1,20 +1,14 @@
 
-import { SequenciaDidaticaFields } from '../activities/sequencia-didatica/sequenciaDidaticaProcessor';
-
-export interface SequenciaDidaticaValidationResult {
+export interface SequenciaDidaticaValidation {
   isValid: boolean;
   errors: string[];
-  missingFields: string[];
-  data: SequenciaDidaticaFields;
+  warnings: string[];
 }
 
-/**
- * Valida os dados de uma Sequência Didática gerados pela IA
- */
-export function validateSequenciaDidaticaData(customFields: Record<string, string>): SequenciaDidaticaValidationResult {
+export const validateSequenciaDidaticaFields = (customFields: Record<string, string>): SequenciaDidaticaValidation => {
   const errors: string[] = [];
-  const missingFields: string[] = [];
-  
+  const warnings: string[] = [];
+
   // Campos obrigatórios
   const requiredFields = [
     'Título do Tema / Assunto',
@@ -26,57 +20,71 @@ export function validateSequenciaDidaticaData(customFields: Record<string, strin
     'Quantidade de Diagnósticos',
     'Quantidade de Avaliações'
   ];
-  
+
   // Verificar campos obrigatórios
-  for (const field of requiredFields) {
+  requiredFields.forEach(field => {
     if (!customFields[field] || customFields[field].trim() === '') {
-      missingFields.push(field);
       errors.push(`Campo obrigatório ausente: ${field}`);
     }
-  }
-  
+  });
+
   // Validações específicas
-  if (customFields['Quantidade de Aulas']) {
-    const quantidadeAulas = parseInt(customFields['Quantidade de Aulas']);
-    if (isNaN(quantidadeAulas) || quantidadeAulas <= 0) {
-      errors.push('Quantidade de Aulas deve ser um número válido maior que zero');
-    }
+  const quantidadeAulas = parseInt(customFields['Quantidade de Aulas'] || '0');
+  if (quantidadeAulas < 4 || quantidadeAulas > 12) {
+    warnings.push('Quantidade de aulas deve estar entre 4 e 12');
   }
-  
-  if (customFields['Quantidade de Diagnósticos']) {
-    const quantidadeDiagnosticos = parseInt(customFields['Quantidade de Diagnósticos']);
-    if (isNaN(quantidadeDiagnosticos) || quantidadeDiagnosticos < 0) {
-      errors.push('Quantidade de Diagnósticos deve ser um número válido maior ou igual a zero');
-    }
+
+  const quantidadeDiagnosticos = parseInt(customFields['Quantidade de Diagnósticos'] || '0');
+  if (quantidadeDiagnosticos < 1 || quantidadeDiagnosticos > 3) {
+    warnings.push('Quantidade de diagnósticos deve estar entre 1 e 3');
   }
-  
-  if (customFields['Quantidade de Avaliações']) {
-    const quantidadeAvaliacoes = parseInt(customFields['Quantidade de Avaliações']);
-    if (isNaN(quantidadeAvaliacoes) || quantidadeAvaliacoes < 0) {
-      errors.push('Quantidade de Avaliações deve ser um número válido maior ou igual a zero');
-    }
+
+  const quantidadeAvaliacoes = parseInt(customFields['Quantidade de Avaliações'] || '0');
+  if (quantidadeAvaliacoes < 2 || quantidadeAvaliacoes > 4) {
+    warnings.push('Quantidade de avaliações deve estar entre 2 e 4');
   }
-  
-  // Extrair dados
-  const data: SequenciaDidaticaFields = {
-    'Título do Tema / Assunto': customFields['Título do Tema / Assunto'] || '',
-    'Ano / Série': customFields['Ano / Série'] || '',
-    'Disciplina': customFields['Disciplina'] || '',
-    'BNCC / Competências': customFields['BNCC / Competências'] || '',
-    'Público-alvo': customFields['Público-alvo'] || '',
-    'Objetivos de Aprendizagem': customFields['Objetivos de Aprendizagem'] || '',
-    'Quantidade de Aulas': customFields['Quantidade de Aulas'] || '',
-    'Quantidade de Diagnósticos': customFields['Quantidade de Diagnósticos'] || '',
-    'Quantidade de Avaliações': customFields['Quantidade de Avaliações'] || '',
-    'Cronograma': customFields['Cronograma'] || ''
-  };
-  
+
+  // Verificar se não estão usando campos incorretos
+  const incorrectFields = ['Tema Central', 'Objetivos', 'Etapas', 'Recursos', 'Avaliação'];
+  incorrectFields.forEach(field => {
+    if (customFields[field]) {
+      warnings.push(`Campo "${field}" detectado - deve ser mapeado para o campo correto da Sequência Didática`);
+    }
+  });
+
   return {
     isValid: errors.length === 0,
     errors,
-    missingFields,
-    data
+    warnings
   };
-}
+};
 
-export default validateSequenciaDidaticaData;
+export const fixSequenciaDidaticaFields = (customFields: Record<string, string>): Record<string, string> => {
+  const fixed = { ...customFields };
+
+  // Mapeamento de campos incorretos para corretos
+  const fieldMapping: Record<string, string> = {
+    'Tema Central': 'Título do Tema / Assunto',
+    'Tema': 'Título do Tema / Assunto',
+    'Assunto': 'Título do Tema / Assunto',
+    'Objetivos': 'Objetivos de Aprendizagem',
+    'Série': 'Ano / Série',
+    'Ano': 'Ano / Série',
+    'Competências': 'BNCC / Competências',
+    'BNCC': 'BNCC / Competências',
+    'Publico Alvo': 'Público-alvo',
+    'Aulas': 'Quantidade de Aulas',
+    'Diagnósticos': 'Quantidade de Diagnósticos',
+    'Avaliações': 'Quantidade de Avaliações'
+  };
+
+  // Aplicar mapeamento
+  Object.entries(fieldMapping).forEach(([incorrectField, correctField]) => {
+    if (fixed[incorrectField] && !fixed[correctField]) {
+      fixed[correctField] = fixed[incorrectField];
+      delete fixed[incorrectField];
+    }
+  });
+
+  return fixed;
+};
