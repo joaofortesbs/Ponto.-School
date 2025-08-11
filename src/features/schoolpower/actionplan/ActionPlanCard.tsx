@@ -164,17 +164,30 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
   console.log('📚 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
 
-  // Campos obrigatórios conforme especificação
-  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || '';
-  const anoSerie = customFields['Ano / Série'] || customFields['anoSerie'] || '';
-  const disciplina = customFields['Disciplina'] || customFields['disciplina'] || '';
-  const bnccCompetencias = customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || '';
-  const publicoAlvo = customFields['Público-alvo'] || customFields['publicoAlvo'] || '';
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || '';
-  const quantidadeAulas = customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '';
-  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '';
-  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '';
-  const cronograma = customFields['Cronograma'] || customFields['cronograma'] || '';
+  // Campos obrigatórios conforme especificação - usar chaves exatas
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || '';
+  const anoSerie = customFields['Ano / Série'] || '';
+  const disciplina = customFields['Disciplina'] || '';
+  const bnccCompetencias = customFields['BNCC / Competências'] || '';
+  const publicoAlvo = customFields['Público-alvo'] || '';
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || '';
+  const quantidadeAulas = customFields['Quantidade de Aulas'] || '';
+  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || '';
+  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || '';
+  const cronograma = customFields['Cronograma'] || '';
+  
+  console.log('📊 Campos extraídos:', {
+    tituloTemaAssunto,
+    anoSerie,
+    disciplina,
+    bnccCompetencias,
+    publicoAlvo,
+    objetivosAprendizagem,
+    quantidadeAulas,
+    quantidadeDiagnosticos,
+    quantidadeAvaliacoes,
+    cronograma
+  });
 
   return (
     <div className="space-y-3">
