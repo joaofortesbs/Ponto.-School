@@ -1,171 +1,121 @@
 
-export const testSequenciaDidaticaFlow = () => {
-  console.log('🧪 Iniciando teste da funcionalidade de Sequência Didática');
-  
-  // Dados de teste
-  const testFormData = {
-    tituloTemaAssunto: 'Substantivos Próprios e Verbos',
-    disciplina: 'Língua Portuguesa',
+import { sequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
+import { ActivityFormData } from '../../construction/types/ActivityTypes';
+
+// Função de teste para verificar se a sequência didática está funcionando
+export async function testarSequenciaDidatica() {
+  console.log('🧪 Iniciando teste da Sequência Didática');
+
+  const dadosTeste: ActivityFormData = {
+    title: 'Substantivos e Adjetivos',
+    description: 'Sequência didática sobre classificação de substantivos e adjetivos',
+    tituloTemaAssunto: 'Substantivos e Adjetivos',
     anoSerie: '6º Ano do Ensino Fundamental',
-    bnccCompetencias: 'EF06LP01, EF06LP02',
-    publicoAlvo: 'Estudantes do 6º ano do ensino fundamental',
-    objetivosAprendizagem: 'Identificar e classificar substantivos próprios e verbos em diferentes contextos textuais',
+    disciplina: 'Língua Portuguesa',
+    bnccCompetencias: 'EF06LP04, EF06LP05',
+    publicoAlvo: 'Estudantes do 6º ano com conhecimentos básicos de gramática',
+    objetivosAprendizagem: 'Identificar e classificar substantivos e adjetivos em textos, compreendendo suas funções na construção do sentido',
     quantidadeAulas: '4',
     quantidadeDiagnosticos: '1',
     quantidadeAvaliacoes: '2',
-    cronograma: 'Sequência a ser desenvolvida ao longo de duas semanas'
+    cronograma: 'Uma aula por semana, ao longo de um mês',
+    // Campos obrigatórios do formulário
+    subject: 'Língua Portuguesa',
+    theme: 'Substantivos e Adjetivos',
+    schoolYear: '6º Ano',
+    numberOfQuestions: '10',
+    difficultyLevel: 'Médio',
+    questionModel: 'Múltipla escolha e análise textual',
+    sources: 'Livro didático e textos complementares',
+    objectives: 'Identificar e classificar substantivos e adjetivos',
+    materials: 'Quadro, livro didático, textos de apoio',
+    instructions: 'Atividades práticas de identificação e classificação',
+    evaluation: 'Avaliação formativa e somativa',
+    timeLimit: '50 minutos por aula',
+    context: 'Aulas presenciais com apoio de material didático',
+    textType: '',
+    textGenre: '',
+    textLength: '',
+    associatedQuestions: '',
+    competencies: 'EF06LP04, EF06LP05',
+    readingStrategies: '',
+    visualResources: '',
+    practicalActivities: '',
+    wordsIncluded: '',
+    gridFormat: '',
+    providedHints: '',
+    vocabularyContext: '',
+    language: 'Português',
+    associatedExercises: '',
+    knowledgeArea: 'Linguagens',
+    complexityLevel: 'Médio'
   };
 
-  // Simular dados gerados
-  const mockGeneratedData = {
-    tituloTemaAssunto: testFormData.tituloTemaAssunto,
-    anoSerie: testFormData.anoSerie,
-    disciplina: testFormData.disciplina,
-    bnccCompetencias: testFormData.bnccCompetencias,
-    publicoAlvo: testFormData.publicoAlvo,
-    objetivosAprendizagem: testFormData.objetivosAprendizagem,
-    quantidadeAulas: testFormData.quantidadeAulas,
-    quantidadeDiagnosticos: testFormData.quantidadeDiagnosticos,
-    quantidadeAvaliacoes: testFormData.quantidadeAvaliacoes,
-    cronograma: testFormData.cronograma,
-    duracaoTotal: '4 aulas de 50 minutos',
-    materiaisNecessarios: ['Quadro', 'Livro didático', 'Textos diversos'],
-    competenciasDesenvolvidas: ['Leitura', 'Análise linguística', 'Compreensão textual'],
-    aulas: [
-      {
-        numero: 1,
-        titulo: 'Aula 1: Reconhecendo Substantivos Próprios',
-        objetivo: 'Identificar substantivos próprios em textos',
-        conteudo: 'Conceito de substantivos próprios e sua função',
-        metodologia: 'Aula expositiva com exemplos práticos',
-        recursos: ['Quadro', 'Textos'],
-        atividadePratica: 'Exercícios de identificação',
-        avaliacao: 'Participação e acertos nos exercícios',
-        tempoEstimado: '50 minutos'
-      },
-      {
-        numero: 2,
-        titulo: 'Aula 2: Explorando os Verbos',
-        objetivo: 'Compreender o conceito e uso dos verbos',
-        conteudo: 'Verbos de ação, estado e fenômeno',
-        metodologia: 'Atividades práticas e dinâmicas',
-        recursos: ['Material didático', 'Projetor'],
-        atividadePratica: 'Criação de frases com verbos',
-        avaliacao: 'Correção coletiva das atividades',
-        tempoEstimado: '50 minutos'
-      },
-      {
-        numero: 3,
-        titulo: 'Aula 3: Aplicação Prática',
-        objetivo: 'Aplicar conhecimentos em contextos reais',
-        conteudo: 'Análise textual com foco em substantivos e verbos',
-        metodologia: 'Trabalho em grupos',
-        recursos: ['Textos variados', 'Fichas de trabalho'],
-        atividadePratica: 'Análise textual em grupos',
-        avaliacao: 'Apresentação dos grupos',
-        tempoEstimado: '50 minutos'
-      },
-      {
-        numero: 4,
-        titulo: 'Aula 4: Síntese e Avaliação',
-        objetivo: 'Consolidar aprendizagens',
-        conteudo: 'Revisão e síntese dos conteúdos',
-        metodologia: 'Revisão participativa',
-        recursos: ['Quadro', 'Material de apoio'],
-        atividadePratica: 'Atividade de síntese',
-        avaliacao: 'Avaliação formativa',
-        tempoEstimado: '50 minutos'
-      }
-    ],
-    diagnosticos: [
-      {
-        numero: 1,
-        titulo: 'Diagnóstico Inicial',
-        objetivo: 'Avaliar conhecimentos prévios',
-        questoes: [
-          'O que você sabe sobre substantivos?',
-          'Consegue dar exemplos de verbos?',
-          'Qual a diferença entre nome próprio e comum?'
-        ],
-        criteriosAvaliacao: 'Identificar o nível de conhecimento prévio',
-        tempoEstimado: '30 minutos'
-      }
-    ],
-    avaliacoes: [
-      {
-        numero: 1,
-        titulo: 'Avaliação Formativa',
-        objetivo: 'Verificar progresso da aprendizagem',
-        formato: 'Atividades práticas',
-        criterios: ['Identificação correta', 'Aplicação adequada'],
-        tempoEstimado: '40 minutos'
-      },
-      {
-        numero: 2,
-        titulo: 'Avaliação Somativa',
-        objetivo: 'Avaliar aprendizagem final',
-        formato: 'Prova escrita',
-        criterios: ['Conceitos', 'Aplicação', 'Análise'],
-        tempoEstimado: '50 minutos'
-      }
-    ],
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
-  };
+  try {
+    console.log('📝 Dados de teste:', dadosTeste);
+    
+    const resultado = await sequenciaDidaticaBuilder.construirSequenciaDidatica(dadosTeste);
+    
+    if (resultado.success && resultado.data) {
+      console.log('✅ Teste PASSOU - Sequência gerada:', {
+        titulo: resultado.data.tituloTemaAssunto,
+        disciplina: resultado.data.disciplina,
+        aulasCount: resultado.data.aulas.length,
+        diagnosticosCount: resultado.data.diagnosticos.length,
+        avaliacoesCount: resultado.data.avaliacoes.length,
+        temAulas: resultado.data.aulas.length > 0,
+        temDiagnosticos: resultado.data.diagnosticos.length > 0,
+        temAvaliacoes: resultado.data.avaliacoes.length > 0
+      });
 
-  // Salvar nos locais corretos
-  const chaves = [
-    'constructed_sequencia-didatica_sequencia-didatica',
-    'schoolpower_sequencia-didatica_content',
-    'activity_sequencia-didatica'
-  ];
-
-  chaves.forEach(chave => {
-    localStorage.setItem(chave, JSON.stringify(mockGeneratedData));
-    console.log(`✅ Dados de teste salvos com chave: ${chave}`);
-  });
-
-  // Verificar se foi salvo corretamente
-  chaves.forEach(chave => {
-    const saved = localStorage.getItem(chave);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        console.log(`✅ Verificação da chave ${chave}:`, {
-          hasAulas: !!parsed.aulas,
-          aulasCount: parsed.aulas?.length || 0,
-          hasTitle: !!parsed.tituloTemaAssunto
-        });
-      } catch (error) {
-        console.error(`❌ Erro ao verificar chave ${chave}:`, error);
+      // Verificar se foi salvo no localStorage
+      const sequenciaSalva = sequenciaDidaticaBuilder.carregarSequenciaSalva();
+      if (sequenciaSalva) {
+        console.log('✅ Sequência encontrada no localStorage');
+        return { success: true, data: resultado.data };
+      } else {
+        console.log('⚠️ Sequência não encontrada no localStorage');
+        return { success: false, error: 'Não foi salva no localStorage' };
       }
+    } else {
+      console.error('❌ Teste FALHOU:', resultado.error);
+      return { success: false, error: resultado.error };
     }
-  });
+  } catch (error) {
+    console.error('❌ Erro no teste:', error);
+    return { success: false, error: error.message };
+  }
+}
 
-  console.log('🎯 Teste concluído! Agora abra o modal de Sequência Didática para verificar.');
-  return mockGeneratedData;
-};
+// Função para testar apenas o carregamento
+export function testarCarregamento() {
+  console.log('🔍 Testando carregamento da sequência didática');
+  
+  const sequenciaSalva = sequenciaDidaticaBuilder.carregarSequenciaSalva();
+  
+  if (sequenciaSalva) {
+    console.log('✅ Sequência carregada:', {
+      titulo: sequenciaSalva.tituloTemaAssunto,
+      aulasCount: sequenciaSalva.aulas?.length || 0,
+      diagnosticosCount: sequenciaSalva.diagnosticos?.length || 0,
+      avaliacoesCount: sequenciaSalva.avaliacoes?.length || 0
+    });
+    return sequenciaSalva;
+  } else {
+    console.log('❌ Nenhuma sequência encontrada');
+    return null;
+  }
+}
 
 // Função para limpar dados de teste
-export const limparTestesSequenciaDidatica = () => {
-  const chaves = [
-    'constructed_sequencia-didatica_sequencia-didatica',
-    'schoolpower_sequencia-didatica_content',
-    'activity_sequencia-didatica',
-    'constructedActivities'
-  ];
+export function limparTeste() {
+  console.log('🗑️ Limpando dados de teste');
+  sequenciaDidaticaBuilder.limparSequenciasSalvas();
+}
 
-  chaves.forEach(chave => {
-    localStorage.removeItem(chave);
-    console.log(`🗑️ Chave removida: ${chave}`);
-  });
-
-  console.log('🧹 Dados de teste limpos!');
-};
-
-// Disponibilizar globalmente para teste no console
+// Expor funções no window para teste manual no console
 if (typeof window !== 'undefined') {
-  (window as any).testSequenciaDidatica = testSequenciaDidaticaFlow;
-  (window as any).limparTestesSequenciaDidatica = limparTestesSequenciaDidatica;
-  console.log('🔧 Funções de teste disponíveis: testSequenciaDidatica() e limparTestesSequenciaDidatica()');
+  (window as any).testarSequenciaDidatica = testarSequenciaDidatica;
+  (window as any).testarCarregamento = testarCarregamento;
+  (window as any).limparTeste = limparTeste;
 }

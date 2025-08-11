@@ -207,29 +207,20 @@ const EditActivityModal = ({
         }
       };
     } else if (type === 'sequencia-didatica') {
-      console.log('🔄 Processando dados da Sequência Didática...');
-      const processedData = processSequenciaDidaticaData(data);
-      
-      // Garantir que tem estrutura mínima necessária
-      const sequenciaCompleta = {
-        ...processedData,
-        aulas: processedData.aulas || [],
-        diagnosticos: processedData.diagnosticos || [],
-        avaliacoes: processedData.avaliacoes || [],
-        materiaisNecessarios: processedData.materiaisNecessarios || [],
-        competenciasDesenvolvidas: processedData.competenciasDesenvolvidas || [],
-        duracaoTotal: processedData.duracaoTotal || `${processedData.quantidadeAulas} aulas`,
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true,
-      };
-      
-      console.log('✅ Sequência Didática processada:', sequenciaCompleta);
-      
-      return {
-        success: true,
-        data: sequenciaCompleta
-      };
-    }
+        console.log('🔄 Usando SequenciaDidaticaBuilder para gerar conteúdo...');
+        const result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(data);
+
+        if (result.success && result.data) {
+          console.log('✅ Sequência Didática gerada com sucesso:', result.data);
+          return {
+            success: true,
+            data: result.data
+          };
+        } else {
+          console.error('❌ Erro ao gerar sequência:', result.error);
+          throw new Error(result.error || 'Erro na geração da sequência didática');
+        }
+      }
     // Simulação de retorno genérico
     return {
       success: true,
@@ -300,13 +291,13 @@ const EditActivityModal = ({
 
         setGeneratedContent(contentToLoad);
         setIsContentLoaded(!!contentToLoad);
-        
+
         if (contentToLoad) {
           console.log(`🎯 Sequência didática carregada com sucesso da chave: ${foundKey}`);
         } else {
           console.log('⚠️ Nenhum conteúdo de sequência didática encontrado');
         }
-        
+
         return;
       }
 
@@ -799,7 +790,7 @@ const EditActivityModal = ({
     };
 
     loadActivityData();
-  }, [activity, isOpen, loadSavedContent]); // Adicionado loadSavedContent à dependência do useEffect
+  }, [activity, isOpen, onUpdateActivity]); // Removido loadSavedContent da dependência, pois não é mais usado diretamente
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
@@ -839,7 +830,7 @@ const EditActivityModal = ({
           quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
           quantidadeAvaliacoes: formData.quantidadeAvaliacoes
         });
-        
+
         result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(formData);
       } else {
         // Usar a lógica padrão para outras atividades
@@ -857,11 +848,11 @@ const EditActivityModal = ({
           const primaryKey = `constructed_sequencia-didatica_${activity.id}`;
           const secondaryKey = `schoolpower_sequencia-didatica_content`;
           const tertiaryKey = `activity_sequencia-didatica`;
-          
+
           localStorage.setItem(primaryKey, JSON.stringify(result.data));
           localStorage.setItem(secondaryKey, JSON.stringify(result.data));
           localStorage.setItem(tertiaryKey, JSON.stringify(result.data));
-          
+
           console.log('💾 Dados da sequência didática salvos com chaves:', {
             primaryKey,
             secondaryKey,
@@ -912,7 +903,7 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [activity, formData, isBuilding, toast]);
+  }, [activity, formData, isBuilding, toast, generateActivityContent]); // Adicionado generateActivityContent à dependência
 
   // Função para automação - será chamada externamente
   useEffect(() => {
