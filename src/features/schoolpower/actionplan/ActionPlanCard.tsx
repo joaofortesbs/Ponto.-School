@@ -65,21 +65,27 @@ const getActivityName = (id: string): string => {
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
 
-  const tema = customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema'];
-  const anoSerie = customFields['Ano/Série Escolar'] || customFields['Público-Alvo'];
-  const componenteCurricular = customFields['Componente Curricular'] || customFields['Disciplina'];
-  const cargaHoraria = customFields['Carga Horária'] || customFields['Tempo Estimado'];
-  const habilidadesBNCC = customFields['Habilidades BNCC'];
-  const objetivoGeral = customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem'];
-  const materiaisRecursos = customFields['Materiais/Recursos'] || customFields['Recursos'];
-  const perfilTurma = customFields['Perfil da Turma'];
-  const tipoAula = customFields['Tipo de Aula'] || customFields['Metodologia'];
-  const observacoes = customFields['Observações do Professor'] || customFields['Observações'];
+  // Verificar se customFields é um objeto válido
+  if (!customFields || typeof customFields !== 'object') {
+    return null;
+  }
+
+  // Converter valores para strings para evitar erros de renderização
+  const tema = String(customFields['Tema ou Tópico Central'] || customFields['Tema Central'] || customFields['Tema'] || '');
+  const anoSerie = String(customFields['Ano/Série Escolar'] || customFields['Público-Alvo'] || '');
+  const componenteCurricular = String(customFields['Componente Curricular'] || customFields['Disciplina'] || '');
+  const cargaHoraria = String(customFields['Carga Horária'] || customFields['Tempo Estimado'] || '');
+  const habilidadesBNCC = String(customFields['Habilidades BNCC'] || '');
+  const objetivoGeral = String(customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem'] || '');
+  const materiaisRecursos = String(customFields['Materiais/Recursos'] || customFields['Recursos'] || '');
+  const perfilTurma = String(customFields['Perfil da Turma'] || '');
+  const tipoAula = String(customFields['Tipo de Aula'] || customFields['Metodologia'] || '');
+  const observacoes = String(customFields['Observações do Professor'] || customFields['Observações'] || '');
 
   return (
     <div className="space-y-3">
       {/* Tema Central em destaque */}
-      {tema && (
+      {tema && tema.trim() && (
         <div className="w-full">
           <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema ou Tópico Central</div>
           <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tema}</div>
@@ -88,13 +94,13 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 
       {/* Informações básicas */}
       <div className="grid grid-cols-2 gap-2">
-        {componenteCurricular && (
+        {componenteCurricular && componenteCurricular.trim() && (
           <div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Componente Curricular</div>
             <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{componenteCurricular}</div>
           </div>
         )}
-        {anoSerie && (
+        {anoSerie && anoSerie.trim() && (
           <div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ano/Série Escolar</div>
             <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoSerie}</div>
@@ -102,21 +108,21 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
         )}
       </div>
 
-      {objetivoGeral && (
+      {objetivoGeral && objetivoGeral.trim() && (
         <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivo Geral</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivoGeral}</div>
         </div>
       )}
 
-      {materiaisRecursos && (
+      {materiaisRecursos && materiaisRecursos.trim() && (
         <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Materiais/Recursos</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{materiaisRecursos}</div>
         </div>
       )}
 
-      {perfilTurma && (
+      {perfilTurma && perfilTurma.trim() && (
         <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Perfil da Turma</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{perfilTurma}</div>
@@ -125,14 +131,14 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 
       {/* Tags e informações complementares */}
       <div className="space-y-2">
-        {(cargaHoraria || tipoAula) && (
+        {((cargaHoraria && cargaHoraria.trim()) || (tipoAula && tipoAula.trim())) && (
           <div className="flex flex-wrap gap-2 w-full">
-            {cargaHoraria && (
+            {cargaHoraria && cargaHoraria.trim() && (
               <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
                 ⏱️ {cargaHoraria}
               </Badge>
             )}
-            {tipoAula && (
+            {tipoAula && tipoAula.trim() && (
               <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
                 📚 {tipoAula}
               </Badge>
@@ -140,7 +146,7 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
           </div>
         )}
 
-        {habilidadesBNCC && (
+        {habilidadesBNCC && habilidadesBNCC.trim() && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Habilidades BNCC</div>
             <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 border-purple-200 text-purple-700">
@@ -149,7 +155,7 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
           </div>
         )}
 
-        {observacoes && (
+        {observacoes && observacoes.trim() && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Observações do Professor</div>
             <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{observacoes}</div>
@@ -164,17 +170,22 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
   console.log('📚 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
 
-  // Campos obrigatórios conforme especificação - usar chaves exatas
-  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || '';
-  const anoSerie = customFields['Ano / Série'] || '';
-  const disciplina = customFields['Disciplina'] || '';
-  const bnccCompetencias = customFields['BNCC / Competências'] || '';
-  const publicoAlvo = customFields['Público-alvo'] || '';
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || '';
-  const quantidadeAulas = customFields['Quantidade de Aulas'] || '';
-  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || '';
-  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || '';
-  const cronograma = customFields['Cronograma'] || '';
+  // Verificar se customFields é um objeto válido
+  if (!customFields || typeof customFields !== 'object') {
+    return null;
+  }
+
+  // Campos obrigatórios conforme especificação - usar chaves exatas e converter para strings
+  const tituloTemaAssunto = String(customFields['Título do Tema / Assunto'] || '');
+  const anoSerie = String(customFields['Ano / Série'] || '');
+  const disciplina = String(customFields['Disciplina'] || '');
+  const bnccCompetencias = String(customFields['BNCC / Competências'] || '');
+  const publicoAlvo = String(customFields['Público-alvo'] || '');
+  const objetivosAprendizagem = String(customFields['Objetivos de Aprendizagem'] || '');
+  const quantidadeAulas = String(customFields['Quantidade de Aulas'] || '');
+  const quantidadeDiagnosticos = String(customFields['Quantidade de Diagnósticos'] || '');
+  const quantidadeAvaliacoes = String(customFields['Quantidade de Avaliações'] || '');
+  const cronograma = String(customFields['Cronograma'] || '');
   
   console.log('📊 Campos extraídos:', {
     tituloTemaAssunto,
@@ -192,7 +203,7 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
   return (
     <div className="space-y-3">
       {/* Título do Tema / Assunto em destaque */}
-      {tituloTemaAssunto && (
+      {tituloTemaAssunto && tituloTemaAssunto.trim() && (
         <div className="w-full">
           <div className="text-xs font-semibold text-[#FF6B00] mb-1">Título do Tema / Assunto</div>
           <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tituloTemaAssunto}</div>
@@ -201,13 +212,13 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
 
       {/* Informações básicas obrigatórias */}
       <div className="grid grid-cols-2 gap-2">
-        {anoSerie && (
+        {anoSerie && anoSerie.trim() && (
           <div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ano / Série</div>
             <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoSerie}</div>
           </div>
         )}
-        {disciplina && (
+        {disciplina && disciplina.trim() && (
           <div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
             <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
@@ -216,7 +227,7 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
       </div>
 
       {/* Público-alvo obrigatório */}
-      {publicoAlvo && (
+      {publicoAlvo && publicoAlvo.trim() && (
         <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-alvo</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{publicoAlvo}</div>
@@ -224,7 +235,7 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
       )}
 
       {/* Objetivos de Aprendizagem obrigatório */}
-      {objetivosAprendizagem && (
+      {objetivosAprendizagem && objetivosAprendizagem.trim() && (
         <div className="w-full">
           <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivos de Aprendizagem</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivosAprendizagem}</div>
@@ -234,25 +245,25 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
       {/* Badges com quantidades obrigatórias */}
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2 w-full">
-          {quantidadeAulas && (
+          {quantidadeAulas && quantidadeAulas.trim() && (
             <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
-              📖 {quantidadeAulas} aulas
+              📖 {quantidadeAulas} {quantidadeAulas.toLowerCase().includes('aula') ? '' : 'aulas'}
             </Badge>
           )}
-          {quantidadeDiagnosticos && (
+          {quantidadeDiagnosticos && quantidadeDiagnosticos.trim() && (
             <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
-              🔍 {quantidadeDiagnosticos} diagnósticos
+              🔍 {quantidadeDiagnosticos} {quantidadeDiagnosticos.toLowerCase().includes('diagnóstico') ? '' : 'diagnósticos'}
             </Badge>
           )}
-          {quantidadeAvaliacoes && (
+          {quantidadeAvaliacoes && quantidadeAvaliacoes.trim() && (
             <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 border-purple-200 text-purple-700">
-              ✅ {quantidadeAvaliacoes} avaliações
+              ✅ {quantidadeAvaliacoes} {quantidadeAvaliacoes.toLowerCase().includes('avaliação') ? '' : 'avaliações'}
             </Badge>
           )}
         </div>
 
         {/* BNCC / Competências (opcional) */}
-        {bnccCompetencias && (
+        {bnccCompetencias && bnccCompetencias.trim() && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">BNCC / Competências</div>
             <Badge variant="outline" className="text-xs px-2 py-1 bg-orange-50 border-orange-200 text-orange-700">
@@ -262,7 +273,7 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
         )}
 
         {/* Cronograma (opcional) */}
-        {cronograma && (
+        {cronograma && cronograma.trim() && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cronograma</div>
             <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{cronograma}</div>
@@ -608,15 +619,27 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                         ) : item.id === 'sequencia-didatica' ? (
                           renderSequenciaDidaticaFields(item.customFields)
                         ) : (
-                          Object.entries(item.customFields).map(([key, value]) => (
-                            <Badge
-                              key={key}
-                              variant="outline"
-                              className="text-xs px-2 py-1"
-                            >
-                              {key}: {String(value).substring(0, 30)}{String(value).length > 30 ? '...' : ''}
-                            </Badge>
-                          ))
+                          Object.entries(item.customFields).map(([key, value]) => {
+                            // Garantir que o valor seja uma string válida para renderização
+                            let displayValue = '';
+                            if (value !== null && value !== undefined) {
+                              if (typeof value === 'object') {
+                                displayValue = JSON.stringify(value);
+                              } else {
+                                displayValue = String(value);
+                              }
+                            }
+                            
+                            return (
+                              <Badge
+                                key={key}
+                                variant="outline"
+                                className="text-xs px-2 py-1"
+                              >
+                                {String(key)}: {displayValue.substring(0, 30)}{displayValue.length > 30 ? '...' : ''}
+                              </Badge>
+                            );
+                          })
                         )}
                       </div>
                     )}

@@ -421,7 +421,7 @@ Contexto fornecido:
 - Datas importantes: ${contextualizationData.dates || 'Não especificado'}
 - Observações: ${contextualizationData.notes || 'Nenhuma'}
 
-Gere os campos específicos para esta Sequência Didática em JSON válido.
+Gere os campos específicos para esta Sequência Didática em JSON válido com valores que sejam APENAS strings simples.
             `;
           } else {
             // Prompt genérico para outras atividades
@@ -432,7 +432,7 @@ Gere campos específicos em JSON para a atividade "${activity.title}" (ID: ${act
 - Se for plano-aula: tema, disciplina, ano, carga horária, objetivos, materiais, etc.
 - Se for prova/simulado: disciplina, conteúdo, número de questões, nível, tempo, etc.
 
-Retorne apenas um JSON válido com os campos.
+IMPORTANTE: Retorne apenas um JSON válido onde TODOS os valores sejam strings simples (não objetos aninhados).
             `;
           }
 
@@ -466,10 +466,27 @@ Retorne apenas um JSON válido com os campos.
           try {
             const jsonMatch = customFieldsText.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
-              customFields = JSON.parse(jsonMatch[0]);
+              const parsedFields = JSON.parse(jsonMatch[0]);
+              
+              // Garantir que todos os valores sejam strings
+              customFields = {};
+              for (const [key, value] of Object.entries(parsedFields)) {
+                if (value !== null && value !== undefined) {
+                  if (typeof value === 'object') {
+                    // Converter objetos para strings JSON
+                    customFields[key] = JSON.stringify(value);
+                  } else {
+                    // Converter outros tipos para string
+                    customFields[key] = String(value);
+                  }
+                } else {
+                  customFields[key] = '';
+                }
+              }
             }
           } catch (parseError) {
             console.warn(`⚠️ Erro ao processar JSON dos campos personalizados para ${activity.id}:`, parseError);
+            customFields = {};
           }
 
           console.log(`✅ Campos personalizados gerados para ${activity.id}:`, customFields);
