@@ -18,6 +18,10 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import { CheckCircle2 } from 'lucide-react';
+import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
+import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
+import { sequenciaDidaticaBuilder } from '../activities/sequencia-didatica/SequenciaDidaticaBuilder';
+import SequenciaDidaticaPreview from '../activities/sequencia-didatica/SequenciaDidaticaPreview';
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
@@ -199,6 +203,16 @@ const EditActivityModal = ({
             { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
             { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
           ],
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'sequencia-didatica') {
+      const processedData = processSequenciaDidaticaData(data);
+      return {
+        success: true,
+        data: {
+          ...processedData,
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
@@ -1497,10 +1511,10 @@ const EditActivityModal = ({
                         onRegenerateContent={handleRegenerateContent}
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
-                      // Placeholder para visualização de Sequência Didática, se necessário
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500">Visualização da Sequência Didática em desenvolvimento...</p>
-                      </div>
+                      <SequenciaDidaticaPreview
+                        data={generatedContent}
+                        activityData={activity}
+                      />
                     ) : (
                       <ActivityPreview
                         content={generatedContent}
