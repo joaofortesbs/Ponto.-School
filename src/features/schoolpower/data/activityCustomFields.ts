@@ -65,16 +65,16 @@ export const activityCustomFields: Record<string, string[]> = {
     "prazoEntrega"
   ],
   "sequencia-didatica": [
-    "tituloTemaAssunto",
-    "anoSerie", 
-    "disciplina",
-    "bnccCompetencias",
-    "publicoAlvo",
-    "objetivosAprendizagem",
-    "quantidadeAulas",
-    "quantidadeDiagnosticos",
-    "quantidadeAvaliacoes",
-    "cronograma"
+    "Título do Tema / Assunto",
+    "Ano / Série", 
+    "Disciplina",
+    "BNCC / Competências",
+    "Público-alvo",
+    "Objetivos de Aprendizagem",
+    "Quantidade de Aulas",
+    "Quantidade de Diagnósticos",
+    "Quantidade de Avaliações",
+    "Cronograma"
   ],
   "plano-aula": [
     "tema",
@@ -196,70 +196,61 @@ export function getCustomFieldsForActivity(activityId: string): Record<string, a
  */
 function getSequenciaDidaticaCustomFields(): Record<string, any> {
   return {
-    tituloTemaAssunto: {
+    'Título do Tema / Assunto': {
       type: 'text',
       label: 'Título do Tema / Assunto',
       placeholder: 'Ex: Substantivos Próprios e Verbos',
       required: true
     },
-    anoSerie: {
+    'Ano / Série': {
       type: 'text', 
       label: 'Ano / Série',
       placeholder: 'Ex: 6º ano do Ensino Fundamental',
       required: true
     },
-    disciplina: {
+    'Disciplina': {
       type: 'select',
       label: 'Disciplina',
       options: ['Português', 'Matemática', 'Geografia', 'História', 'Ciências', 'Inglês', 'Arte', 'Educação Física'],
       required: true
     },
-    bnccCompetencias: {
+    'BNCC / Competências': {
       type: 'text',
       label: 'BNCC / Competências (opcional)',
       placeholder: 'Ex: EF67LP32, EF67LP33',
       required: false
     },
-    publicoAlvo: {
+    'Público-alvo': {
       type: 'text',
       label: 'Público-alvo',
       placeholder: 'Ex: Ensino Fundamental II',
       required: true
     },
-    objetivosAprendizagem: {
+    'Objetivos de Aprendizagem': {
       type: 'textarea',
       label: 'Objetivos de Aprendizagem',
       placeholder: 'Liste os objetivos de aprendizagem da sequência didática...',
       required: true
     },
-    quantidadeAulas: {
+    'Quantidade de Aulas': {
       type: 'number',
       label: 'Quantidade de Aulas',
       placeholder: 'Ex: 8',
       required: true
     },
-    quantidadeDiagnosticos: {
+    'Quantidade de Diagnósticos': {
       type: 'number',
       label: 'Quantidade de Diagnósticos',
       placeholder: 'Ex: 2',
       required: true
     },
-    quantidadeAvaliacoes: {
+    'Quantidade de Avaliações': {
       type: 'number',
       label: 'Quantidade de Avaliações',
       placeholder: 'Ex: 3',
       required: true
     },
-    cronograma: {
-      type: 'textarea',
-      label: 'Cronograma',
-      placeholder: 'Descreva o cronograma de execução da sequência didática...',
-      required: false
-    },
-      placeholder: 'Ex: 3',
-      required: true
-    },
-    cronograma: {
+    'Cronograma': {
       type: 'textarea',
       label: 'Cronograma (opcional)',
       placeholder: 'Descreva o cronograma das aulas ou ordem sequencial...',

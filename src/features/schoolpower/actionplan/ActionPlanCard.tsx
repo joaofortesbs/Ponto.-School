@@ -164,51 +164,61 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
   console.log('📚 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
 
-  const tituloTema = customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || customFields['titulo'];
-  const anoSerie = customFields['Ano / Série'] || customFields['anoSerie'] || customFields['Ano/Série Escolar'];
-  const disciplina = customFields['Disciplina'] || customFields['disciplina'];
-  const bnccCompetencias = customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || customFields['Habilidades BNCC'];
-  const publicoAlvo = customFields['Público-alvo'] || customFields['publicoAlvo'];
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || customFields['objetivos'];
-  const quantidadeAulas = customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'];
-  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'];
-  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'];
-  const cronograma = customFields['Cronograma'] || customFields['cronograma'];
+  // Campos obrigatórios conforme especificação
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || '';
+  const anoSerie = customFields['Ano / Série'] || customFields['anoSerie'] || '';
+  const disciplina = customFields['Disciplina'] || customFields['disciplina'] || '';
+  const bnccCompetencias = customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || '';
+  const publicoAlvo = customFields['Público-alvo'] || customFields['publicoAlvo'] || '';
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || '';
+  const quantidadeAulas = customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '';
+  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '';
+  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '';
+  const cronograma = customFields['Cronograma'] || customFields['cronograma'] || '';
 
   return (
     <div className="space-y-3">
-      {/* Título do Tema em destaque */}
-      {tituloTema && (
+      {/* Título do Tema / Assunto em destaque */}
+      {tituloTemaAssunto && (
         <div className="w-full">
-          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema Central</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tituloTema}</div>
+          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Título do Tema / Assunto</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tituloTemaAssunto}</div>
         </div>
       )}
 
-      {/* Informações básicas */}
+      {/* Informações básicas obrigatórias */}
       <div className="grid grid-cols-2 gap-2">
-        {disciplina && (
-          <div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
-            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
-          </div>
-        )}
         {anoSerie && (
           <div>
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ano / Série</div>
             <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoSerie}</div>
           </div>
         )}
+        {disciplina && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
+          </div>
+        )}
       </div>
 
+      {/* Público-alvo obrigatório */}
+      {publicoAlvo && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-alvo</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{publicoAlvo}</div>
+        </div>
+      )}
+
+      {/* Objetivos de Aprendizagem obrigatório */}
       {objetivosAprendizagem && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivos</div>
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivos de Aprendizagem</div>
           <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivosAprendizagem}</div>
         </div>
       )}
 
-      {/* Informações específicas da sequência */}
+      {/* Badges com quantidades obrigatórias */}
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2 w-full">
           {quantidadeAulas && (
@@ -228,6 +238,7 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
           )}
         </div>
 
+        {/* BNCC / Competências (opcional) */}
         {bnccCompetencias && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">BNCC / Competências</div>
@@ -237,13 +248,7 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
           </div>
         )}
 
-        {publicoAlvo && (
-          <div className="w-full">
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-alvo</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{publicoAlvo}</div>
-          </div>
-        )}
-
+        {/* Cronograma (opcional) */}
         {cronograma && (
           <div className="w-full">
             <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cronograma</div>

@@ -24,28 +24,28 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
   const customFields = activity.customFields || {};
 
   return {
-    title: activity.personalizedTitle || activity.title || customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || customFields['titulo'] || '',
+    title: activity.personalizedTitle || activity.title || customFields['Título do Tema / Assunto'] || '',
     description: activity.personalizedDescription || activity.description || '',
-    subject: customFields['Disciplina'] || customFields['disciplina'] || 'Geografia',
-    theme: customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || customFields['titulo'] || customFields['tema'] || '',
-    schoolYear: customFields['Ano / Série'] || customFields['anoSerie'] || customFields['ano'] || customFields['serie'] || '6º ano',
+    subject: customFields['Disciplina'] || 'Geografia',
+    theme: customFields['Título do Tema / Assunto'] || '',
+    schoolYear: customFields['Ano / Série'] || '6º ano',
     numberOfQuestions: '',
     difficultyLevel: 'Médio',
     questionModel: '',
     sources: '',
-    objectives: customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || customFields['objetivos'] || '',
+    objectives: customFields['Objetivos de Aprendizagem'] || '',
     materials: '',
-    // Campos específicos da Sequência Didática
-    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || customFields['titulo'] || customFields['tema'] || '',
-    anoSerie: customFields['Ano / Série'] || customFields['anoSerie'] || customFields['ano'] || customFields['serie'] || '',
-    disciplina: customFields['Disciplina'] || customFields['disciplina'] || '',
-    bnccCompetencias: customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || customFields['bncc'] || customFields['competencias'] || '',
-    publicoAlvo: customFields['Público-alvo'] || customFields['publicoAlvo'] || customFields['publico'] || '',
-    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || customFields['objetivos'] || '',
-    quantidadeAulas: customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || customFields['aulas'] || '',
-    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || customFields['diagnosticos'] || '',
-    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || customFields['avaliacoes'] || '',
-    cronograma: customFields['Cronograma'] || customFields['cronograma'] || ''
+    // Campos específicos da Sequência Didática com nomes corretos
+    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+    anoSerie: customFields['Ano / Série'] || '',
+    disciplina: customFields['Disciplina'] || '',
+    bnccCompetencias: customFields['BNCC / Competências'] || '',
+    publicoAlvo: customFields['Público-alvo'] || '',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+    cronograma: customFields['Cronograma'] || ''
   };
 }
 
@@ -53,27 +53,27 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
  * Mapeia os campos da Sequência Didática para o formato do modal
  */
 export const sequenciaDidaticaFieldMapping = {
-  'tituloTemaAssunto': 'Título do Tema / Assunto',
-  'anoSerie': 'Ano / Série', 
-  'disciplina': 'Disciplina',
-  'bnccCompetencias': 'BNCC / Competências',
-  'publicoAlvo': 'Público-alvo',
-  'objetivosAprendizagem': 'Objetivos de Aprendizagem',
-  'quantidadeAulas': 'Quantidade de Aulas',
-  'quantidadeDiagnosticos': 'Quantidade de Diagnósticos',
-  'quantidadeAvaliacoes': 'Quantidade de Avaliações',
-  'cronograma': 'Cronograma'
+  'Título do Tema / Assunto': 'Título do Tema / Assunto',
+  'Ano / Série': 'Ano / Série', 
+  'Disciplina': 'Disciplina',
+  'BNCC / Competências': 'BNCC / Competências',
+  'Público-alvo': 'Público-alvo',
+  'Objetivos de Aprendizagem': 'Objetivos de Aprendizagem',
+  'Quantidade de Aulas': 'Quantidade de Aulas',
+  'Quantidade de Diagnósticos': 'Quantidade de Diagnósticos',
+  'Quantidade de Avaliações': 'Quantidade de Avaliações',
+  'Cronograma': 'Cronograma'
 };
 
 export interface SequenciaDidaticaFields {
-  tituloTemaAssunto: string;
-  anoSerie: string;
-  disciplina: string;
-  bnccCompetencias: string;
-  publicoAlvo: string;
-  objetivosAprendizagem: string;
-  quantidadeAulas: string;
-  quantidadeDiagnosticos: string;
-  quantidadeAvaliacoes: string;
-  cronograma: string;
+  'Título do Tema / Assunto': string;
+  'Ano / Série': string;
+  'Disciplina': string;
+  'BNCC / Competências': string;
+  'Público-alvo': string;
+  'Objetivos de Aprendizagem': string;
+  'Quantidade de Aulas': string;
+  'Quantidade de Diagnósticos': string;
+  'Quantidade de Avaliações': string;
+  'Cronograma': string;
 }

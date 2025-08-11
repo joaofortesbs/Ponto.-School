@@ -697,6 +697,8 @@ export function CardDeConstrucao({
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
           customFields: customFields
         });
+        
+        console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {
