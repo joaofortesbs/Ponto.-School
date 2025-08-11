@@ -160,6 +160,101 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   );
 };
 
+// Função para renderizar campos específicos da sequencia-didatica
+const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
+  console.log('📚 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
+
+  const tituloTema = customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || customFields['titulo'];
+  const anoSerie = customFields['Ano / Série'] || customFields['anoSerie'] || customFields['Ano/Série Escolar'];
+  const disciplina = customFields['Disciplina'] || customFields['disciplina'];
+  const bnccCompetencias = customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || customFields['Habilidades BNCC'];
+  const publicoAlvo = customFields['Público-alvo'] || customFields['publicoAlvo'];
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || customFields['objetivos'];
+  const quantidadeAulas = customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'];
+  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'];
+  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'];
+  const cronograma = customFields['Cronograma'] || customFields['cronograma'];
+
+  return (
+    <div className="space-y-3">
+      {/* Título do Tema em destaque */}
+      {tituloTema && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema Central</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tituloTema}</div>
+        </div>
+      )}
+
+      {/* Informações básicas */}
+      <div className="grid grid-cols-2 gap-2">
+        {disciplina && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
+          </div>
+        )}
+        {anoSerie && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ano / Série</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoSerie}</div>
+          </div>
+        )}
+      </div>
+
+      {objetivosAprendizagem && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivos</div>
+          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivosAprendizagem}</div>
+        </div>
+      )}
+
+      {/* Informações específicas da sequência */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2 w-full">
+          {quantidadeAulas && (
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
+              📖 {quantidadeAulas} aulas
+            </Badge>
+          )}
+          {quantidadeDiagnosticos && (
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
+              🔍 {quantidadeDiagnosticos} diagnósticos
+            </Badge>
+          )}
+          {quantidadeAvaliacoes && (
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 border-purple-200 text-purple-700">
+              ✅ {quantidadeAvaliacoes} avaliações
+            </Badge>
+          )}
+        </div>
+
+        {bnccCompetencias && (
+          <div className="w-full">
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">BNCC / Competências</div>
+            <Badge variant="outline" className="text-xs px-2 py-1 bg-orange-50 border-orange-200 text-orange-700">
+              🎯 {bnccCompetencias}
+            </Badge>
+          </div>
+        )}
+
+        {publicoAlvo && (
+          <div className="w-full">
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-alvo</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{publicoAlvo}</div>
+          </div>
+        )}
+
+        {cronograma && (
+          <div className="w-full">
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cronograma</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{cronograma}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];
   onApprove: (approvedItems: ActionPlanItem[]) => void;
@@ -487,11 +582,13 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                       {item.description}
                     </p>
 
-                    {/* Custom fields como badges - específico para plano-aula */}
+                    {/* Custom fields como badges - específico para cada tipo de atividade */}
                     {item.customFields && Object.keys(item.customFields).length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
                         {item.id === 'plano-aula' ? (
                           renderPlanoAulaFields(item.customFields)
+                        ) : item.id === 'sequencia-didatica' ? (
+                          renderSequenciaDidaticaFields(item.customFields)
                         ) : (
                           Object.entries(item.customFields).map(([key, value]) => (
                             <Badge

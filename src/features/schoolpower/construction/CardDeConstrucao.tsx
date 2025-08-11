@@ -687,7 +687,7 @@ export function CardDeConstrucao({
 
       // Preparar dados automáticos para preenchimento do modal com mapeamento completo
           const autoDataKey = `auto_activity_data_${activity.id}`;
-      
+
       // Processamento específico para Sequência Didática
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {

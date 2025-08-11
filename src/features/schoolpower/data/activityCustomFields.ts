@@ -252,6 +252,15 @@ function getSequenciaDidaticaCustomFields(): Record<string, any> {
     },
     cronograma: {
       type: 'textarea',
+      label: 'Cronograma',
+      placeholder: 'Descreva o cronograma de execução da sequência didática...',
+      required: false
+    },
+      placeholder: 'Ex: 3',
+      required: true
+    },
+    cronograma: {
+      type: 'textarea',
       label: 'Cronograma (opcional)',
       placeholder: 'Descreva o cronograma das aulas ou ordem sequencial...',
       required: false
