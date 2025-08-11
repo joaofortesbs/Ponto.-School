@@ -65,12 +65,16 @@ export const activityCustomFields: Record<string, string[]> = {
     "prazoEntrega"
   ],
   "sequencia-didatica": [
-    "tema",
+    "tituloTemaAssunto",
+    "anoSerie", 
     "disciplina",
-    "numeroAulas",
+    "bnccCompetencias",
+    "publicoAlvo",
     "objetivosAprendizagem",
-    "metodologias",
-    "avaliacaoFormativa"
+    "quantidadeAulas",
+    "quantidadeDiagnosticos",
+    "quantidadeAvaliacoes",
+    "cronograma"
   ],
   "plano-aula": [
     "tema",
@@ -180,6 +184,79 @@ export function getCustomFieldsForActivity(activityId: string): Record<string, a
   if (activityId === 'lista-exercicios') {
     return getListaExerciciosCustomFields();
   }
+  
+  // Campos específicos para sequência didática
+  if (activityId === 'sequencia-didatica') {
+    return getSequenciaDidaticaCustomFields();
+  }
+}
+
+/**
+ * Obtém os campos personalizados específicos para Sequência Didática
+ */
+function getSequenciaDidaticaCustomFields(): Record<string, any> {
+  return {
+    tituloTemaAssunto: {
+      type: 'text',
+      label: 'Título do Tema / Assunto',
+      placeholder: 'Ex: Substantivos Próprios e Verbos',
+      required: true
+    },
+    anoSerie: {
+      type: 'text', 
+      label: 'Ano / Série',
+      placeholder: 'Ex: 6º ano do Ensino Fundamental',
+      required: true
+    },
+    disciplina: {
+      type: 'select',
+      label: 'Disciplina',
+      options: ['Português', 'Matemática', 'Geografia', 'História', 'Ciências', 'Inglês', 'Arte', 'Educação Física'],
+      required: true
+    },
+    bnccCompetencias: {
+      type: 'text',
+      label: 'BNCC / Competências (opcional)',
+      placeholder: 'Ex: EF67LP32, EF67LP33',
+      required: false
+    },
+    publicoAlvo: {
+      type: 'text',
+      label: 'Público-alvo',
+      placeholder: 'Ex: Ensino Fundamental II',
+      required: true
+    },
+    objetivosAprendizagem: {
+      type: 'textarea',
+      label: 'Objetivos de Aprendizagem',
+      placeholder: 'Liste os objetivos de aprendizagem da sequência didática...',
+      required: true
+    },
+    quantidadeAulas: {
+      type: 'number',
+      label: 'Quantidade de Aulas',
+      placeholder: 'Ex: 8',
+      required: true
+    },
+    quantidadeDiagnosticos: {
+      type: 'number',
+      label: 'Quantidade de Diagnósticos',
+      placeholder: 'Ex: 2',
+      required: true
+    },
+    quantidadeAvaliacoes: {
+      type: 'number',
+      label: 'Quantidade de Avaliações',
+      placeholder: 'Ex: 3',
+      required: true
+    },
+    cronograma: {
+      type: 'textarea',
+      label: 'Cronograma (opcional)',
+      placeholder: 'Descreva o cronograma das aulas ou ordem sequencial...',
+      required: false
+    }
+  };
 }
 
 /**

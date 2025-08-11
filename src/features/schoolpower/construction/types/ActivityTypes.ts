@@ -41,6 +41,17 @@ export interface ActivityFormData {
   perfilTurma?: string;
   tipoAula?: string;
   observacoesProfessor?: string;
+  // Campos específicos da Sequência Didática
+  tituloTemaAssunto?: string;
+  anoSerie?: string;
+  disciplina?: string;
+  bnccCompetencias?: string;
+  publicoAlvo?: string;
+  objetivosAprendizagem?: string;
+  quantidadeAulas?: string;
+  quantidadeDiagnosticos?: string;
+  quantidadeAvaliacoes?: string;
+  cronograma?: string;
 }
 
 export interface GeneratedActivity {

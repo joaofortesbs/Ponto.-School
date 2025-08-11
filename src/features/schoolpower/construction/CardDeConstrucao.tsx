@@ -51,6 +51,7 @@ import atividadesTrilhas from '../data/atividadesTrilhas.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
 import { EditActivityModal } from './EditActivityModal';
 import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
+import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -686,18 +687,30 @@ export function CardDeConstrucao({
 
       // Preparar dados automáticos para preenchimento do modal com mapeamento completo
           const autoDataKey = `auto_activity_data_${activity.id}`;
-      const autoFormData = {
-        title: actionPlanActivity?.title || activity.title || originalData?.title || '',
-        description: actionPlanActivity?.description || activity.description || originalData?.description || '',
-        subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
-        theme: customFields['Tema'] || customFields['tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || '',
-        schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['ano'] || '',
-        numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || customFields['Quantidade de Palavras'] || '10',
-        difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || customFields['dificuldade'] || 'Médio',
-        questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || customFields['Tipo de Avaliação'] || '',
-        sources: customFields['Fontes'] || customFields['fontes'] || customFields['Referencias'] || '',
-        objectives: customFields['Objetivos'] || customFields['objetivos'] || customFields['Competências Trabalhadas'] || '',
-        materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
+      
+      // Processamento específico para Sequência Didática
+      let autoFormData;
+      if (activity.id === 'sequencia-didatica') {
+        autoFormData = processSequenciaDidaticaData({
+          id: activity.id,
+          title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+          description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+          customFields: customFields
+        });
+      } else {
+        // Processamento padrão para outras atividades
+        autoFormData = {
+          title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+          description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+          subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
+          theme: customFields['Tema'] || customFields['tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || '',
+          schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['ano'] || '',
+          numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || customFields['Quantidade de Palavras'] || '10',
+          difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || customFields['dificuldade'] || 'Médio',
+          questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || customFields['Tipo de Avaliação'] || '',
+          sources: customFields['Fontes'] || customFields['fontes'] || customFields['Referencias'] || '',
+          objectives: customFields['Objetivos'] || customFields['objetivos'] || customFields['Competências Trabalhadas'] || '',
+          materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
         instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
         evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
         // Campos adicionais específicos
