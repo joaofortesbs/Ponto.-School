@@ -711,28 +711,29 @@ export function CardDeConstrucao({
           sources: customFields['Fontes'] || customFields['fontes'] || customFields['Referencias'] || '',
           objectives: customFields['Objetivos'] || customFields['objetivos'] || customFields['Competências Trabalhadas'] || '',
           materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
-        instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
-        evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
-        // Campos adicionais específicos
-        timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
-        context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || customFields['contexto'] || '',
-        textType: customFields['Tipo de Texto'] || customFields['tipoTexto'] || '',
-        textGenre: customFields['Gênero Textual'] || customFields['generoTextual'] || '',
-        textLength: customFields['Extensão do Texto'] || customFields['extensaoTexto'] || '',
-        associatedQuestions: customFields['Questões Associadas'] || customFields['questoesAssociadas'] || '',
-        competencies: customFields['Competências Trabalhadas'] || customFields['competencias'] || '',
-        readingStrategies: customFields['Estratégias de Leitura'] || customFields['estrategiasLeitura'] || '',
-        visualResources: customFields['Recursos Visuais'] || customFields['recursosVisuais'] || '',
-        practicalActivities: customFields['Atividades Práticas'] || customFields['atividadesPraticas'] || '',
-        wordsIncluded: customFields['Palavras Incluídas'] || customFields['palavrasIncluidas'] || '',
-        gridFormat: customFields['Formato da Grade'] || customFields['formatoGrade'] || '',
-        providedHints: customFields['Dicas Fornecidas'] || customFields['dicasFornecidas'] || '',
-        vocabularyContext: customFields['Contexto de Uso'] || customFields['contextoUso'] || '',
-        language: customFields['Idioma'] || customFields['idioma'] || '',
-        associatedExercises: customFields['Exercícios Associados'] || customFields['exerciciosAssociados'] || '',
-        knowledgeArea: customFields['Área de Conhecimento'] || customFields['areaConhecimento'] || '',
-        complexityLevel: customFields['Nível de Complexidade'] || customFields['nivelComplexidade'] || ''
-      };
+          instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
+          evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
+          // Campos adicionais específicos
+          timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
+          context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || customFields['contexto'] || '',
+          textType: customFields['Tipo de Texto'] || customFields['tipoTexto'] || '',
+          textGenre: customFields['Gênero Textual'] || customFields['generoTextual'] || '',
+          textLength: customFields['Extensão do Texto'] || customFields['extensaoTexto'] || '',
+          associatedQuestions: customFields['Questões Associadas'] || customFields['questoesAssociadas'] || '',
+          competencies: customFields['Competências Trabalhadas'] || customFields['competencias'] || '',
+          readingStrategies: customFields['Estratégias de Leitura'] || customFields['estrategiasLeitura'] || '',
+          visualResources: customFields['Recursos Visuais'] || customFields['recursosVisuais'] || '',
+          practicalActivities: customFields['Atividades Práticas'] || customFields['atividadesPraticas'] || '',
+          wordsIncluded: customFields['Palavras Incluídas'] || customFields['palavrasIncluidas'] || '',
+          gridFormat: customFields['Formato da Grade'] || customFields['formatoGrade'] || '',
+          providedHints: customFields['Dicas Fornecidas'] || customFields['dicasFornecidas'] || '',
+          vocabularyContext: customFields['Contexto de Uso'] || customFields['contextoUso'] || '',
+          language: customFields['Idioma'] || customFields['idioma'] || '',
+          associatedExercises: customFields['Exercícios Associados'] || customFields['exerciciosAssociados'] || '',
+          knowledgeArea: customFields['Área de Conhecimento'] || customFields['areaConhecimento'] || '',
+          complexityLevel: customFields['Nível de Complexidade'] || customFields['nivelComplexidade'] || ''
+        };
+      }
 
       // Salvar dados automáticos no localStorage para o modal usar
       const autoData = {
