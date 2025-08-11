@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/toast';
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
@@ -90,7 +90,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     language: '',
     associatedExercises: '',
     knowledgeArea: '',
-    complexityLevel: ''
+    complexityLevel: '',
+    // Campos específicos para sequencia-didatica
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    bnccCompetencias: '',
+    publicoAlvo: '',
+    objetivosAprendizagem: '',
+    quantidadeAulas: '',
+    quantidadeDiagnosticos: '',
+    quantidadeAvaliacoes: '',
+    cronograma: ''
   });
 
   // Estado para conteúdo gerado
@@ -442,7 +453,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 language: '',
                 associatedExercises: '',
                 knowledgeArea: '',
-                complexityLevel: ''
+                complexityLevel: '',
+                // Campos específicos para sequencia-didatica
+                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || '',
+                anoSerie: consolidatedCustomFields['Ano / Série'] || '',
+                disciplina: consolidatedCustomFields['Disciplina'] || '',
+                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || '',
+                publicoAlvo: consolidatedCustomFields['Público-alvo'] || '',
+                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || '',
+                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || '',
+                cronograma: consolidatedCustomFields['Cronograma'] || ''
               };
 
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
@@ -459,6 +481,38 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               console.log('  - Perfil da Turma:', enrichedFormData.context);
               console.log('  - Tipo de Aula:', enrichedFormData.difficultyLevel);
               console.log('  - Observações:', enrichedFormData.evaluation);
+            } else if (activity?.id === 'sequencia-didatica') {
+              console.log('📚 Processando dados específicos de Sequência Didática');
+              console.log('🗂️ Custom fields consolidados para sequencia-didatica:', consolidatedCustomFields);
+
+              enrichedFormData = {
+                ...prevFormData, // Começa com os dados base do formulário
+                title: consolidatedData.title || autoFormData.title || activity.title || '',
+                description: consolidatedData.description || autoFormData.description || activity.description || '',
+                // Mapeamento dos campos específicos da Sequência Didática
+                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || '',
+                anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || '',
+                disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || activity?.customFields?.disciplina || '',
+                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || autoFormData.bnccCompetencias || '',
+                publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
+                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
+                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
+                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
+                // Mapeamento dos campos gerais que podem ser sobrescritos
+                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || activity?.customFields?.disciplina || 'Português',
+                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity?.theme || '',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || activity?.schoolYear || '',
+                competencies: consolidatedCustomFields['Competências'] || autoFormData.competencies || '',
+                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || '',
+                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || activity?.materials || '',
+                context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+              };
+
+              console.log('✅ Dados da Sequência Didática processados:', enrichedFormData);
+
             } else {
               // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
               enrichedFormData = {
@@ -493,7 +547,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                 language: consolidatedCustomFields['Idioma'] || consolidatedCustomFields['idioma'] || '',
                 associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
                 knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
-                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || ''
+                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || '',
+                // Campos específicos para sequencia-didatica
+                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || '',
+                anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || '',
+                disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || '',
+                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || autoFormData.bnccCompetencias || '',
+                publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
+                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
+                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
+                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || ''
               };
             }
 
@@ -557,7 +622,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               language: '',
               associatedExercises: '',
               knowledgeArea: '',
-              complexityLevel: ''
+              complexityLevel: '',
+              // Campos específicos para sequencia-didatica
+              tituloTemaAssunto: '',
+              anoSerie: '',
+              disciplina: '',
+              bnccCompetencias: '',
+              publicoAlvo: '',
+              objetivosAprendizagem: '',
+              quantidadeAulas: '',
+              quantidadeDiagnosticos: '',
+              quantidadeAvaliacoes: '',
+              cronograma: ''
             };
 
             setFormData(fallbackData);
@@ -637,7 +713,18 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               language: '',
               associatedExercises: '',
               knowledgeArea: '',
-              complexityLevel: ''
+              complexityLevel: '',
+              // Campos específicos para sequencia-didatica
+              tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+              anoSerie: customFields['Ano / Série'] || '',
+              disciplina: customFields['Disciplina'] || '',
+              bnccCompetencias: customFields['BNCC / Competências'] || '',
+              publicoAlvo: customFields['Público-alvo'] || '',
+              objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+              quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+              cronograma: customFields['Cronograma'] || ''
             };
 
             console.log('📝 Dados diretos processados para plano-aula:', directFormData);
@@ -674,17 +761,23 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               language: '',
               associatedExercises: '',
               knowledgeArea: '',
-              complexityLevel: ''
+              complexityLevel: '',
+              // Campos específicos para sequencia-didatica
+              tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+              anoSerie: customFields['Ano / Série'] || '',
+              disciplina: customFields['Disciplina'] || '',
+              bnccCompetencias: customFields['BNCC / Competências'] || '',
+              publicoAlvo: customFields['Público-alvo'] || '',
+              objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+              quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+              cronograma: customFields['Cronograma'] || ''
             };
           }
 
           setFormData(directFormData);
           console.log('📝 Formulário preenchido com dados diretos:', directFormData);
-        }
-
-        // Tentar carregar conteúdo salvo
-        if (loadSavedContent) {
-          loadSavedContent();
         }
       }
     };
@@ -827,6 +920,15 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       formData.subject.trim() &&
       formData.objectives.trim() &&
       formData.materials.trim()
+    : activity?.id === 'sequencia-didatica'
+    ? formData.tituloTemaAssunto?.trim() &&
+      formData.anoSerie?.trim() &&
+      formData.disciplina?.trim() &&
+      formData.publicoAlvo?.trim() &&
+      formData.objetivosAprendizagem?.trim() &&
+      formData.quantidadeAulas?.trim() &&
+      formData.quantidadeDiagnosticos?.trim() &&
+      formData.quantidadeAvaliacoes?.trim()
     : formData.title.trim() &&
       formData.description.trim() &&
       formData.objectives.trim();
@@ -851,7 +953,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
     if (!activity) return;
 
     try {
-      setIsSaving(true);
+      // setIsSaving(true); // Remover ou renomear conforme o uso
 
       // Obter customFields a partir dos dados da atividade
       const customFields = activity.customFields || {};
@@ -859,8 +961,41 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
       // Salvar os dados editados
       const updatedActivity = {
         ...activity,
-        ...formData,
-        customFields: customFields
+        ...formData, // Inclui todos os campos do formData
+        customFields: {
+          ...customFields,
+          // Mapeamento geral
+          'Disciplina': formData.subject,
+          'Tema': formData.theme,
+          'Ano de Escolaridade': formData.schoolYear,
+          'Tempo Limite': formData.timeLimit,
+          'Competências': formData.competencies,
+          'Objetivos': formData.objectives,
+          'Materiais': formData.materials,
+          'Contexto': formData.context,
+          'Nível de Dificuldade': formData.difficultyLevel,
+          'Critérios de Avaliação': formData.evaluation,
+          // Mapeamento condicional para lista-exercicios
+          ...(activity?.id === 'lista-exercicios' && {
+            'Quantidade de Questões': formData.numberOfQuestions,
+            'Modelo de Questões': formData.questionModel,
+            'Fontes': formData.sources,
+            'Instruções': formData.instructions
+          }),
+          // Mapeamento condicional para sequencia-didatica
+          ...(activity?.id === 'sequencia-didatica' && {
+            'Título do Tema / Assunto': formData.tituloTemaAssunto,
+            'Ano / Série': formData.anoSerie,
+            'Disciplina': formData.disciplina, // Sobrescreve o geral se for sequencia-didatica
+            'BNCC / Competências': formData.bnccCompetencias,
+            'Público-alvo': formData.publicoAlvo,
+            'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
+            'Quantidade de Aulas': formData.quantidadeAulas,
+            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
+            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
+            'Cronograma': formData.cronograma
+          })
+        }
       };
 
       // Chamar a função de atualização passada como prop
@@ -882,7 +1017,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         description: "Não foi possível salvar as alterações.",
       });
     } finally {
-      setIsSaving(false);
+      // setIsSaving(false); // Remover ou renomear conforme o uso
     }
   };
 
@@ -909,6 +1044,23 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
         formData.numberOfQuestions.trim() &&
         formData.difficultyLevel.trim() &&
         formData.questionModel.trim()
+      : activity?.id === 'plano-aula'
+      ? formData.title.trim() &&
+        formData.description.trim() &&
+        formData.theme.trim() &&
+        formData.schoolYear.trim() &&
+        formData.subject.trim() &&
+        formData.objectives.trim() &&
+        formData.materials.trim()
+      : activity?.id === 'sequencia-didatica'
+      ? formData.tituloTemaAssunto?.trim() &&
+        formData.anoSerie?.trim() &&
+        formData.disciplina?.trim() &&
+        formData.publicoAlvo?.trim() &&
+        formData.objetivosAprendizagem?.trim() &&
+        formData.quantidadeAulas?.trim() &&
+        formData.quantidadeDiagnosticos?.trim() &&
+        formData.quantidadeAvaliacoes?.trim()
       : formData.title.trim() &&
         formData.description.trim() &&
         formData.objectives.trim();
@@ -1034,28 +1186,29 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         />
                       </div>
 
-                      {/* Campos específicos para Lista de Exercícios */}
-                      {activity?.id === 'lista-exercicios' && (
-                        <>
+                      {/* Campos específicos para Sequência Didática */}
+                      {activity?.id === 'sequencia-didatica' && (
+                        <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="subject" className="text-sm">Disciplina</Label>
+                              <Label htmlFor="tituloTemaAssunto">Título do Tema / Assunto *</Label>
                               <Input
-                                id="subject"
-                                value={formData.subject}
-                                onChange={(e) => handleInputChange('subject', e.target.value)}
-                                placeholder="Ex: Português, Matemática, História..."
+                                id="tituloTemaAssunto"
+                                value={formData.tituloTemaAssunto || ''}
+                                onChange={(e) => handleInputChange('tituloTemaAssunto', e.target.value)}
+                                placeholder="Ex: Substantivos Próprios e Verbos"
+                                required
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
                             </div>
-
                             <div>
-                              <Label htmlFor="theme" className="text-sm">Tema</Label>
+                              <Label htmlFor="anoSerie">Ano / Série *</Label>
                               <Input
-                                id="theme"
-                                value={formData.theme}
-                                onChange={(e) => handleInputChange('theme', e.target.value)}
-                                placeholder="Ex: Substantivos e Verbos"
+                                id="anoSerie"
+                                value={formData.anoSerie || ''}
+                                onChange={(e) => handleInputChange('anoSerie', e.target.value)}
+                                placeholder="Ex: 6º Ano do Ensino Fundamental"
+                                required
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
                             </div>
@@ -1063,213 +1216,237 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
 
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="schoolYear" className="text-sm">Ano de Escolaridade</Label>
+                              <Label htmlFor="disciplina">Disciplina *</Label>
                               <Input
-                                id="schoolYear"
-                                value={formData.schoolYear}
-                                onChange={(e) => handleInputChange('schoolYear', e.target.value)}
-                                placeholder="Ex: 6º ano, 7º ano, 1º ano EM..."
+                                id="disciplina"
+                                value={formData.disciplina || ''}
+                                onChange={(e) => handleInputChange('disciplina', e.target.value)}
+                                placeholder="Ex: Língua Portuguesa"
+                                required
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
                             </div>
-
                             <div>
-                              <Label htmlFor="numberOfQuestions" className="text-sm">Número de Questões</Label>
+                              <Label htmlFor="bnccCompetencias">BNCC / Competências</Label>
+                              <Input
+                                id="bnccCompetencias"
+                                value={formData.bnccCompetencias || ''}
+                                onChange={(e) => handleInputChange('bnccCompetencias', e.target.value)}
+                                placeholder="Ex: EF06LP01, EF06LP02"
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="publicoAlvo">Público-alvo *</Label>
+                            <Textarea
+                              id="publicoAlvo"
+                              value={formData.publicoAlvo || ''}
+                              onChange={(e) => handleInputChange('publicoAlvo', e.target.value)}
+                              placeholder="Descrição detalhada do público-alvo..."
+                              rows={2}
+                              required
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="objetivosAprendizagem">Objetivos de Aprendizagem *</Label>
+                            <Textarea
+                              id="objetivosAprendizagem"
+                              value={formData.objetivosAprendizagem || ''}
+                              onChange={(e) => handleInputChange('objetivosAprendizagem', e.target.value)}
+                              placeholder="Objetivos específicos que os alunos devem alcançar..."
+                              rows={3}
+                              required
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <Label htmlFor="quantidadeAulas">Quantidade de Aulas *</Label>
+                              <Input
+                                id="quantidadeAulas"
+                                type="number"
+                                value={formData.quantidadeAulas || ''}
+                                onChange={(e) => handleInputChange('quantidadeAulas', e.target.value)}
+                                placeholder="Ex: 4"
+                                min="1"
+                                required
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="quantidadeDiagnosticos">Quantidade de Diagnósticos *</Label>
+                              <Input
+                                id="quantidadeDiagnosticos"
+                                type="number"
+                                value={formData.quantidadeDiagnosticos || ''}
+                                onChange={(e) => handleInputChange('quantidadeDiagnosticos', e.target.value)}
+                                placeholder="Ex: 1"
+                                min="0"
+                                required
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="quantidadeAvaliacoes">Quantidade de Avaliações *</Label>
+                              <Input
+                                id="quantidadeAvaliacoes"
+                                type="number"
+                                value={formData.quantidadeAvaliacoes || ''}
+                                onChange={(e) => handleInputChange('quantidadeAvaliacoes', e.target.value)}
+                                placeholder="Ex: 2"
+                                min="0"
+                                required
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="cronograma">Cronograma</Label>
+                            <Textarea
+                              id="cronograma"
+                              value={formData.cronograma || ''}
+                              onChange={(e) => handleInputChange('cronograma', e.target.value)}
+                              placeholder="Cronograma resumido da sequência didática..."
+                              rows={3}
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Campos específicos para Lista de Exercícios */}
+                      {activity?.id === 'lista-exercicios' && (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="numberOfQuestions">Número de Questões</Label>
                               <Input
                                 id="numberOfQuestions"
                                 value={formData.numberOfQuestions}
                                 onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
-                                placeholder="Ex: 5, 10, 15, 20..."
+                                placeholder="Ex: 10"
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
                             </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="difficultyLevel" className="text-sm">Nível de Dificuldade</Label>
-                              <Input
-                                id="difficultyLevel"
-                                value={formData.difficultyLevel}
-                                onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
-                                placeholder="Ex: Básico, Intermediário, Avançado..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="questionModel" className="text-sm">Modelo de Questões</Label>
-                              <Input
-                                id="questionModel"
-                                value={formData.questionModel}
-                                onChange={(e) => handleInputChange('questionModel', e.target.value)}
-                                placeholder="Ex: Múltipla Escolha, Dissertativa, Mista..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
+                              <Label htmlFor="difficultyLevel">Nível de Dificuldade</Label>
+                              <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
+                                <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500">
+                                  <SelectValue placeholder="Selecione a dificuldade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Fácil">Fácil</SelectItem>
+                                  <SelectItem value="Médio">Médio</SelectItem>
+                                  <SelectItem value="Difícil">Difícil</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
 
                           <div>
-                            <Label htmlFor="sources" className="text-sm">Fontes</Label>
+                            <Label htmlFor="questionModel">Modelo de Questões</Label>
+                            <Input
+                              id="questionModel"
+                              value={formData.questionModel}
+                              onChange={(e) => handleInputChange('questionModel', e.target.value)}
+                              placeholder="Ex: Múltipla escolha, discursivas..."
+                              className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="sources">Fontes</Label>
                             <Textarea
                               id="sources"
                               value={formData.sources}
                               onChange={(e) => handleInputChange('sources', e.target.value)}
-                              placeholder="Digite as fontes de referência..."
-                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
-
-                          {/* Campos adicionais específicos baseados nos customFields */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="timeLimit" className="text-sm">Tempo Limite</Label>
-                              <Input
-                                id="timeLimit"
-                                value={formData.timeLimit || ''}
-                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
-                                placeholder="Ex: 50 minutos, 1 hora..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="context" className="text-sm">Contexto de Aplicação</Label>
-                              <Input
-                                id="context"
-                                value={formData.context || ''}
-                                onChange={(e) => handleInputChange('context', e.target.value)}
-                                placeholder="Ex: Produção textual, Sala de aula..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                      {/* Campos específicos para Plano de Aula */}
-                      {activity?.id === 'plano-aula' && (
-                        <>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="tema" className="text-sm">Tema ou Tópico Central</Label>
-                              <Input
-                                id="tema"
-                                value={formData.theme}
-                                onChange={(e) => handleInputChange('theme', e.target.value)}
-                                placeholder="Digite o tema central da aula..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="anoSerie" className="text-sm">Ano/Série Escolar</Label>
-                              <Input
-                                id="anoSerie"
-                                value={formData.schoolYear}
-                                onChange={(e) => handleInputChange('schoolYear', e.target.value)}
-                                placeholder="Ex: 1º ano, 6º ano, 2º ano EM..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="componenteCurricular" className="text-sm">Componente Curricular</Label>
-                              <Input
-                                id="componenteCurricular"
-                                value={formData.subject}
-                                onChange={(e) => handleInputChange('subject', e.target.value)}
-                                placeholder="Ex: Matemática, Português, História..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="cargaHoraria" className="text-sm">Carga Horária</Label>
-                              <Input
-                                id="cargaHoraria"
-                                value={formData.timeLimit || ''}
-                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
-                                placeholder="Ex: 50 minutos, 2 horas..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <Label htmlFor="habilidadesBNCC" className="text-sm">Habilidades BNCC</Label>
-                            <Textarea
-                              id="habilidadesBNCC"
-                              value={formData.competencies || ''}
-                              onChange={(e) => handleInputChange('competencies', e.target.value)}
-                              placeholder="Liste as habilidades da BNCC que serão trabalhadas..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              placeholder="Fontes utilizadas para criar as questões..."
+                              rows={3}
+                              className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="objetivoGeral" className="text-sm">Objetivo Geral</Label>
+                            <Label htmlFor="objectives">Objetivos</Label>
                             <Textarea
-                              id="objetivoGeral"
+                              id="objectives"
                               value={formData.objectives}
                               onChange={(e) => handleInputChange('objectives', e.target.value)}
-                              placeholder="Descreva o objetivo geral da aula..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              placeholder="Objetivos da lista de exercícios..."
+                              rows={3}
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="materiaisRecursos" className="text-sm">Materiais/Recursos</Label>
+                            <Label htmlFor="materials">Materiais</Label>
                             <Textarea
-                              id="materiaisRecursos"
+                              id="materials"
                               value={formData.materials}
                               onChange={(e) => handleInputChange('materials', e.target.value)}
-                              placeholder="Liste os materiais e recursos necessários..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              placeholder="Materiais necessários..."
+                              rows={2}
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="instructions">Instruções</Label>
+                            <Textarea
+                              id="instructions"
+                              value={formData.instructions}
+                              onChange={(e) => handleInputChange('instructions', e.target.value)}
+                              placeholder="Instruções para aplicação..."
+                              rows={3}
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="evaluation">Critérios de Avaliação</Label>
+                            <Textarea
+                              id="evaluation"
+                              value={formData.evaluation}
+                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
+                              placeholder="Como avaliar as respostas..."
+                              rows={3}
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                           </div>
 
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <Label htmlFor="perfilTurma" className="text-sm">Perfil da Turma</Label>
-                              <Textarea
-                                id="perfilTurma"
-                                value={formData.context || ''}
-                                onChange={(e) => handleInputChange('context', e.target.value)}
-                                placeholder="Descreva o perfil e características da turma..."
-                                className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                              <Label htmlFor="timeLimit">Tempo Limite</Label>
+                              <Input
+                                id="timeLimit"
+                                value={formData.timeLimit}
+                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
+                                placeholder="Ex: 60 minutos"
+                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
                             </div>
-
                             <div>
-                              <Label htmlFor="tipoAula" className="text-sm">Tipo de Aula</Label>
+                              <Label htmlFor="context">Contexto de Aplicação</Label>
                               <Input
-                                id="tipoAula"
-                                value={formData.difficultyLevel || ''}
-                                onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
-                                placeholder="Ex: Expositiva, Prática, Dialogada..."
+                                id="context"
+                                value={formData.context}
+                                onChange={(e) => handleInputChange('context', e.target.value)}
+                                placeholder="Ex: Prova final, atividade em sala..."
                                 className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                               />
                             </div>
                           </div>
-
-                          <div>
-                            <Label htmlFor="observacoesProfessor" className="text-sm">Observações do Professor</Label>
-                            <Textarea
-                              id="observacoesProfessor"
-                              value={formData.evaluation}
-                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                              placeholder="Adicione observações, adaptações ou considerações especiais..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
-                        </>
+                        </div>
                       )}
 
                       {/* Campos genéricos para outras atividades */}
-                      {activity?.id !== 'lista-exercicios' && activity?.id !== 'plano-aula' && (
+                      {activity?.id !== 'lista-exercicios' && activity?.id !== 'plano-aula' && activity?.id !== 'sequencia-didatica' && (
                         <>
                           <div>
                             <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -1365,6 +1542,11 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
                         activityData={activity}
                         onRegenerateContent={handleRegenerateContent}
                       />
+                    ) : activity?.id === 'sequencia-didatica' ? (
+                      // Placeholder para visualização de Sequência Didática, se necessário
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">Visualização da Sequência Didática em desenvolvimento...</p>
+                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent}
@@ -1433,7 +1615,7 @@ export const EditActivityModal: React.FC<EditActivityModalProps> = ({
               </Button>
             )}
             <Button
-              onClick={handleSaveChanges}
+              onClick={handleSave}
               className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
             >
               <Save className="h-4 w-4 mr-2" />
