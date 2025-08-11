@@ -61,6 +61,16 @@ const getActivityName = (id: string): string => {
   return activity?.name || activity?.title || id;
 };
 
+// Helper function to format field names (e.g., "Tema ou Tópico Central" -> "Tema ou Tópico Central")
+const formatFieldName = (fieldName: string): string => {
+  return fieldName.replace(/([A-Z])/g, ' $1').trim();
+};
+
+// Helper function to truncate text
+const truncateText = (text: string, maxLength: number): string => {
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
 // Função para renderizar campos específicos do plano-aula
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
@@ -160,75 +170,50 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   );
 };
 
-// Nova função para renderizar campos específicos da Sequência Didática
+// Função para renderizar campos específicos da Sequência Didática
 const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
 
-  const tituloSequencia = customFields['Título da Sequência'] || customFields['Título'];
-  const duracaoTotal = customFields['Duração Total'] || customFields['Duração'];
-  const publicoAlvo = customFields['Público-Alvo'];
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'];
-  const metodologia = customFields['Metodologia'] || customFields['Abordagem'];
-  const recursosDidaticos = customFields['Recursos Didáticos'] || customFields['Materiais'];
+  const temaCentral = customFields['Tema Central'] || customFields['Título do Tema / Assunto'] || customFields['titulo'];
+  const objetivos = customFields['Objetivos'] || customFields['Objetivos de Aprendizagem'];
+  const etapas = customFields['Etapas'] || customFields['Metodologia'];
+  const recursos = customFields['Recursos'] || customFields['Recursos Didáticos'];
   const avaliacao = customFields['Avaliação'] || customFields['Critérios de Avaliação'];
-  const competividade = customFields['Competências e Habilidades']; // Verifique o nome exato do campo
 
   return (
     <div className="space-y-3">
-      {tituloSequencia && (
+      {temaCentral && (
         <div className="w-full">
-          <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Título da Sequência</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800">{tituloSequencia}</div>
+          <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Tema Central</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800">{temaCentral}</div>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        {duracaoTotal && (
-          <div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Duração Total</div>
-            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{duracaoTotal}</div>
-          </div>
-        )}
-        {publicoAlvo && (
-          <div>
-            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Público-Alvo</div>
-            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{publicoAlvo}</div>
-          </div>
-        )}
-      </div>
-
-      {objetivosAprendizagem && (
+      {objetivos && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Objetivos de Aprendizagem</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{objetivosAprendizagem}</div>
+          <div className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Objetivos</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-green-50 dark:bg-green-900/30 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">{objetivos}</div>
         </div>
       )}
 
-      {metodologia && (
+      {etapas && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Metodologia</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{metodologia}</div>
+          <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">Etapas</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-purple-50 dark:bg-purple-900/30 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800">{etapas}</div>
         </div>
       )}
 
-      {recursosDidaticos && (
+      {recursos && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Recursos Didáticos</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{recursosDidaticos}</div>
+          <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Recursos</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-orange-50 dark:bg-orange-900/30 px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-800">{recursos}</div>
         </div>
       )}
 
       {avaliacao && (
         <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Avaliação</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{avaliacao}</div>
-        </div>
-      )}
-
-      {competividade && (
-        <div className="w-full">
-          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Competências e Habilidades</div>
-          <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{competividade}</div>
+          <div className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">Avaliação</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-red-50 dark:bg-red-900/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-800">{avaliacao}</div>
         </div>
       )}
     </div>
@@ -598,15 +583,18 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                           ) : (
                             // Renderização padrão para outros tipos
                             <div className="flex flex-wrap gap-2">
-                              {Object.entries(item.customFields).map(([key, value]) => (
-                                <div
-                                  key={key}
-                                  className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
-                                >
-                                  <span className="font-semibold">{key}:</span>
-                                  <span className="ml-1 truncate max-w-[150px]">{value}</span>
-                                </div>
-                              ))}
+                              {Object.entries(item.customFields).slice(0, 4).map(([key, value]) => {
+                                if (!value || typeof value !== 'string') return null;
+                                return (
+                                  <div
+                                    key={key}
+                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
+                                  >
+                                    <span className="font-semibold">{key}:</span>
+                                    <span className="ml-1 truncate max-w-[150px]">{value}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
