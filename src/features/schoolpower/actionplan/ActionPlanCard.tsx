@@ -284,6 +284,198 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
   );
 };
 
+// Função para renderizar campos específicos da lista-exercicios
+const renderListaExerciciosFields = (customFields: Record<string, string>) => {
+  console.log('📝 [ActionPlanCard] Renderizando campos lista-exercicios:', customFields);
+
+  if (!customFields || typeof customFields !== 'object') {
+    return null;
+  }
+
+  const disciplina = String(customFields['Disciplina'] || customFields['Subject'] || '');
+  const tema = String(customFields['Tema'] || customFields['Theme'] || '');
+  const numeroQuestoes = String(customFields['Quantidade de Questões'] || customFields['Number of Questions'] || '');
+  const nivelDificuldade = String(customFields['Nível de Dificuldade'] || customFields['Difficulty Level'] || '');
+  const anoEscolaridade = String(customFields['Ano de Escolaridade'] || customFields['Grade Level'] || '');
+  const modeloQuestoes = String(customFields['Modelo de Questões'] || customFields['Question Model'] || '');
+
+  return (
+    <div className="space-y-3">
+      {tema && tema.trim() && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Tema</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{tema}</div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {disciplina && disciplina.trim() && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
+          </div>
+        )}
+        {anoEscolaridade && anoEscolaridade.trim() && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Ano de Escolaridade</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{anoEscolaridade}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 w-full">
+        {numeroQuestoes && numeroQuestoes.trim() && (
+          <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
+            📝 {numeroQuestoes} questões
+          </Badge>
+        )}
+        {nivelDificuldade && nivelDificuldade.trim() && (
+          <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
+            📊 {nivelDificuldade}
+          </Badge>
+        )}
+      </div>
+
+      {modeloQuestoes && modeloQuestoes.trim() && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Modelo de Questões</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{modeloQuestoes}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Função para renderizar campos específicos da prova
+const renderProvaFields = (customFields: Record<string, string>) => {
+  console.log('📋 [ActionPlanCard] Renderizando campos prova:', customFields);
+
+  if (!customFields || typeof customFields !== 'object') {
+    return null;
+  }
+
+  const disciplina = String(customFields['Disciplina'] || customFields['Subject'] || '');
+  const conteudo = String(customFields['Conteúdo Abordado'] || customFields['Content'] || '');
+  const numeroQuestoes = String(customFields['Número de Questões'] || customFields['Number of Questions'] || '');
+  const nivelDificuldade = String(customFields['Nível de Dificuldade'] || customFields['Difficulty Level'] || '');
+  const tempoProva = String(customFields['Tempo de Prova'] || customFields['Time Limit'] || '');
+  const tipoAvaliacao = String(customFields['Tipo de Avaliação'] || customFields['Evaluation Type'] || '');
+  const criteriosCorrecao = String(customFields['Critérios de Correção'] || customFields['Grading Criteria'] || '');
+
+  return (
+    <div className="space-y-3">
+      {conteudo && conteudo.trim() && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-[#FF6B00] mb-1">Conteúdo Abordado</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-gradient-to-r from-[#FF6B00]/10 to-orange-50 dark:to-gray-700 px-3 py-2 rounded-lg border border-[#FF6B00]/20">{conteudo}</div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {disciplina && disciplina.trim() && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Disciplina</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{disciplina}</div>
+          </div>
+        )}
+        {tipoAvaliacao && tipoAvaliacao.trim() && (
+          <div>
+            <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo de Avaliação</div>
+            <div className="text-sm text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{tipoAvaliacao}</div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 w-full">
+        {numeroQuestoes && numeroQuestoes.trim() && (
+          <Badge variant="outline" className="text-xs px-2 py-1 bg-blue-50 border-blue-200 text-blue-700">
+            📝 {numeroQuestoes} questões
+          </Badge>
+        )}
+        {nivelDificuldade && nivelDificuldade.trim() && (
+          <Badge variant="outline" className="text-xs px-2 py-1 bg-green-50 border-green-200 text-green-700">
+            📊 {nivelDificuldade}
+          </Badge>
+        )}
+        {tempoProva && tempoProva.trim() && (
+          <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-50 border-purple-200 text-purple-700">
+            ⏰ {tempoProva}
+          </Badge>
+        )}
+      </div>
+
+      {criteriosCorrecao && criteriosCorrecao.trim() && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Critérios de Correção</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded italic">{criteriosCorrecao}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Função para renderizar campos genéricos para outras atividades
+const renderGenericFields = (customFields: Record<string, string>) => {
+  console.log('🔧 [ActionPlanCard] Renderizando campos genéricos:', customFields);
+
+  if (!customFields || typeof customFields !== 'object') {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Object.entries(customFields).map(([key, value]) => {
+        let displayValue = '';
+        if (value !== null && value !== undefined) {
+          if (typeof value === 'object') {
+            displayValue = JSON.stringify(value);
+          } else {
+            displayValue = String(value);
+          }
+        }
+        
+        return (
+          <Badge
+            key={key}
+            variant="outline"
+            className="text-xs px-2 py-1"
+          >
+            {String(key)}: {displayValue.substring(0, 30)}{displayValue.length > 30 ? '...' : ''}
+          </Badge>
+        );
+      })}
+    </div>
+  );
+};
+
+// Função principal para renderizar campos baseado no ID da atividade
+const renderActivityFields = (activityId: string, customFields: Record<string, string>) => {
+  console.log('🎯 [ActionPlanCard] Renderizando campos para atividade:', activityId, customFields);
+
+  if (!customFields || typeof customFields !== 'object' || Object.keys(customFields).length === 0) {
+    return null;
+  }
+
+  // Renderização específica baseada no ID da atividade
+  switch (activityId) {
+    case 'plano-aula':
+      return renderPlanoAulaFields(customFields);
+    
+    case 'sequencia-didatica':
+      return renderSequenciaDidaticaFields(customFields);
+    
+    case 'lista-exercicios':
+      return renderListaExerciciosFields(customFields);
+    
+    case 'prova':
+    case 'simulado':
+      return renderProvaFields(customFields);
+    
+    default:
+      return renderGenericFields(customFields);
+  }
+};
+
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];
   onApprove: (approvedItems: ActionPlanItem[]) => void;
@@ -613,34 +805,8 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
                     {/* Custom fields como badges - específico para cada tipo de atividade */}
                     {item.customFields && Object.keys(item.customFields).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {item.id === 'plano-aula' ? (
-                          renderPlanoAulaFields(item.customFields)
-                        ) : item.id === 'sequencia-didatica' ? (
-                          renderSequenciaDidaticaFields(item.customFields)
-                        ) : (
-                          Object.entries(item.customFields).map(([key, value]) => {
-                            // Garantir que o valor seja uma string válida para renderização
-                            let displayValue = '';
-                            if (value !== null && value !== undefined) {
-                              if (typeof value === 'object') {
-                                displayValue = JSON.stringify(value);
-                              } else {
-                                displayValue = String(value);
-                              }
-                            }
-                            
-                            return (
-                              <Badge
-                                key={key}
-                                variant="outline"
-                                className="text-xs px-2 py-1"
-                              >
-                                {String(key)}: {displayValue.substring(0, 30)}{displayValue.length > 30 ? '...' : ''}
-                              </Badge>
-                            );
-                          })
-                        )}
+                      <div className="mt-3">
+                        {renderActivityFields(item.id, item.customFields)}
                       </div>
                     )}
 
