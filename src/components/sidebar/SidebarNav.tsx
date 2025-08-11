@@ -51,6 +51,13 @@ import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
 import TurmasNav from "./TurmasNav";
 
+// Função para processar dados de exercícios (adicionada)
+const processExerciseListData = (listData: any[]) => {
+  // Implementação da lógica de processamento, se necessário
+  // Por enquanto, retorna os dados como estão ou um array vazio se não houver dados
+  return listData || [];
+};
+
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -80,6 +87,7 @@ export function SidebarNav({
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const [isCardHovered, setIsCardHovered] = useState(false); // Variável isCardHovered agora está definida
 
   // Função para adicionar timeouts ao array
   const addTimeout = (timeout: NodeJS.Timeout) => {
