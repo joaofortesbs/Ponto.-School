@@ -85,6 +85,23 @@ Os campos obrigatórios são EXATAMENTE:
 
 USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
+    // Adicionar informações específicas para sequencia-didatica
+    const sequenciaDidaticaSpecificInfo = `
+ATENÇÃO ESPECIAL PARA SEQUENCIA-DIDATICA:
+Os campos obrigatórios são EXATAMENTE:
+- Título do Tema / Assunto
+- Ano / Série
+- Disciplina
+- BNCC / Competências
+- Público-alvo
+- Objetivos de Aprendizagem
+- Quantidade de Aulas
+- Quantidade de Diagnósticos
+- Quantidade de Avaliações
+- Cronograma
+
+USE EXATAMENTE ESTES NOMES DE CAMPOS para sequencia-didatica! NÃO use nomes como "Tema Central", "Objetivos", "Etapas", "Recursos", "Avaliação" - estes são INCORRETOS para sequencia-didatica!`;
+
     // Construir o prompt para a Gemini
     const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
@@ -104,6 +121,8 @@ CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
 
 ${planoAulaSpecificInfo}
+
+${sequenciaDidaticaSpecificInfo}
 
 INSTRUCTIONS:
 1. Carefully analyze the request and provided information

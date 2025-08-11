@@ -163,18 +163,33 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
 // Função para renderizar campos específicos da sequencia-didatica
 const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
   console.log('📚 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
+  console.log('📚 [ActionPlanCard] Campos disponíveis:', Object.keys(customFields));
 
-  // Campos obrigatórios conforme especificação
-  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || customFields['tituloTemaAssunto'] || '';
-  const anoSerie = customFields['Ano / Série'] || customFields['anoSerie'] || '';
-  const disciplina = customFields['Disciplina'] || customFields['disciplina'] || '';
-  const bnccCompetencias = customFields['BNCC / Competências'] || customFields['bnccCompetencias'] || '';
-  const publicoAlvo = customFields['Público-alvo'] || customFields['publicoAlvo'] || '';
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || customFields['objetivosAprendizagem'] || '';
-  const quantidadeAulas = customFields['Quantidade de Aulas'] || customFields['quantidadeAulas'] || '';
-  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || customFields['quantidadeDiagnosticos'] || '';
-  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || customFields['quantidadeAvaliacoes'] || '';
-  const cronograma = customFields['Cronograma'] || customFields['cronograma'] || '';
+  // Campos obrigatórios conforme especificação EXATA
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || '';
+  const anoSerie = customFields['Ano / Série'] || '';
+  const disciplina = customFields['Disciplina'] || '';
+  const bnccCompetencias = customFields['BNCC / Competências'] || '';
+  const publicoAlvo = customFields['Público-alvo'] || '';
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || '';
+  const quantidadeAulas = customFields['Quantidade de Aulas'] || '';
+  const quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || '';
+  const quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || '';
+  const cronograma = customFields['Cronograma'] || '';
+
+  // Log para debug - verificar quais campos estão sendo encontrados
+  console.log('🔍 [Debug] Campos extraídos:', {
+    tituloTemaAssunto,
+    anoSerie,
+    disciplina,
+    bnccCompetencias,
+    publicoAlvo,
+    objetivosAprendizagem,
+    quantidadeAulas,
+    quantidadeDiagnosticos,
+    quantidadeAvaliacoes,
+    cronograma
+  });
 
   return (
     <div className="space-y-3">
@@ -256,6 +271,21 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
           </div>
         )}
       </div>
+
+      {/* Fallback - mostrar outros campos se os principais não existirem */}
+      {!tituloTemaAssunto && !anoSerie && !disciplina && Object.keys(customFields).length > 0 && (
+        <div className="w-full p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+          <div className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-2">⚠️ Campos detectados (debug):</div>
+          <div className="space-y-1">
+            {Object.entries(customFields).slice(0, 5).map(([key, value]) => (
+              <div key={key} className="text-xs">
+                <span className="font-medium text-yellow-700 dark:text-yellow-300">{key}:</span>{' '}
+                <span className="text-yellow-600 dark:text-yellow-400">{String(value).substring(0, 50)}...</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

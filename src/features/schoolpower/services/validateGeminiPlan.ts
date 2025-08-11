@@ -1,5 +1,6 @@
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
 import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCustomFields';
+import { validateSequenciaDidaticaFields, fixSequenciaDidaticaFields } from './sequenciaDidaticaValidator';
 
 /**
  * Interface para atividade retornada pela Gemini
@@ -98,6 +99,41 @@ function validateSingleActivity(
     console.warn(`❌ Atividade não encontrada: ${normalizedId}`);
     return null;
   }
+
+  // Obtém os campos personalizados da atividade
+  let customFields = getCustomFieldsForActivity(originalActivity.id);
+
+  // Valida se tem customFields necessários
+  let hasValidCustomFields = customFields && Object.keys(customFields).length > 0;
+
+  // Validação específica para sequencia-didatica
+  if (activity.id === 'sequencia-didatica' && hasValidCustomFields) {
+    console.log('🔍 Validando campos específicos da Sequência Didática...');
+
+    // Corrigir campos mapeados incorretamente
+    const fixedFields = fixSequenciaDidaticaFields(customFields);
+    customFields = fixedFields;
+
+    // Validar campos específicos
+    const validation = validateSequenciaDidaticaFields(customFields);
+
+    if (!validation.isValid) {
+      console.error('❌ Sequência Didática com campos inválidos:', validation.errors);
+      return null;
+    }
+
+    if (validation.warnings.length > 0) {
+      console.warn('⚠️ Sequência Didática com avisos:', validation.warnings);
+    }
+
+    console.log('✅ Sequência Didática validada com sucesso');
+  }
+
+  if (!hasValidCustomFields) {
+    console.warn(`⚠️ Atividade ${activity.id} sem custom fields - será ignorada`);
+    return null;
+  }
+
 
   // Cria atividade validada
   const validatedActivity: ValidatedActivity = {

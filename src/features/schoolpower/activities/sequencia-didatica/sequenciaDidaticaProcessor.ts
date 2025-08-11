@@ -1,4 +1,5 @@
 
+
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface SequenciaDidaticaCustomFields {
@@ -35,7 +36,7 @@ export function processSequenciaDidaticaData(activity: SequenciaDidaticaActivity
     sources: '',
     objectives: customFields['Objetivos de Aprendizagem'] || '',
     materials: '',
-    // Campos específicos da Sequência Didática com nomes corretos
+    // Campos específicos da Sequência Didática com nomes CORRETOS
     tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
     anoSerie: customFields['Ano / Série'] || '',
     disciplina: customFields['Disciplina'] || '',
