@@ -243,14 +243,6 @@ export function CardDeConstrucao({
   useEffect(() => {
     if (actionPlan) {
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
-      
-      // Log específico para sequência didática
-      const sequenciaDidatica = actionPlan.find(item => item.id === 'sequencia-didatica');
-      if (sequenciaDidatica) {
-        console.log('📚 Sequência Didática encontrada:', sequenciaDidatica);
-        console.log('📋 Custom Fields da Sequência Didática:', sequenciaDidatica.customFields);
-      }
-      
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
 
@@ -699,14 +691,12 @@ export function CardDeConstrucao({
       // Processamento específico para Sequência Didática
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
-        console.log('🔄 Processando Sequência Didática com campos:', customFields);
         autoFormData = processSequenciaDidaticaData({
           id: activity.id,
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
           customFields: customFields
         });
-        console.log('✅ Dados processados da Sequência Didática:', autoFormData);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {

@@ -194,44 +194,6 @@ export function getCustomFieldsForActivity(activityId: string): Record<string, a
 /**
  * Obtém os campos personalizados específicos para Sequência Didática
  */
-export function getSequenciaDidaticaCustomFields(): Record<string, any> {
-  return {
-    temaCentral: {
-      type: 'text',
-      label: 'Tema Central',
-      required: true,
-      placeholder: 'Digite o tema central da sequência didática'
-    },
-    objetivos: {
-      type: 'textarea',
-      label: 'Objetivos',
-      required: true,
-      placeholder: 'Descreva os objetivos de aprendizagem'
-    },
-    etapas: {
-      type: 'textarea',
-      label: 'Etapas',
-      required: true,
-      placeholder: 'Descreva as etapas da sequência didática'
-    },
-    recursos: {
-      type: 'textarea',
-      label: 'Recursos',
-      required: true,
-      placeholder: 'Liste os recursos necessários'
-    },
-    avaliacao: {
-      type: 'textarea',
-      label: 'Avaliação',
-      required: true,
-      placeholder: 'Descreva os critérios de avaliação'
-    }
-  };
-}
-
-/**
- * Obtém os campos personalizados específicos para Sequência Didática
- */
 function getSequenciaDidaticaCustomFields(): Record<string, any> {
   return {
     tituloTemaAssunto: {
@@ -285,15 +247,6 @@ function getSequenciaDidaticaCustomFields(): Record<string, any> {
     quantidadeAvaliacoes: {
       type: 'number',
       label: 'Quantidade de Avaliações',
-      placeholder: 'Ex: 3',
-      required: true
-    },
-    cronograma: {
-      type: 'textarea',
-      label: 'Cronograma',
-      placeholder: 'Descreva o cronograma detalhado da sequência didática...',
-      required: false
-    },
       placeholder: 'Ex: 3',
       required: true
     },

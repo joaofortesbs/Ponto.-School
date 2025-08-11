@@ -61,16 +61,6 @@ const getActivityName = (id: string): string => {
   return activity?.name || activity?.title || id;
 };
 
-// Helper function to format field names (e.g., "Tema ou Tópico Central" -> "Tema ou Tópico Central")
-const formatFieldName = (fieldName: string): string => {
-  return fieldName.replace(/([A-Z])/g, ' $1').trim();
-};
-
-// Helper function to truncate text
-const truncateText = (text: string, maxLength: number): string => {
-  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-};
-
 // Função para renderizar campos específicos do plano-aula
 const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   console.log('🎯 [ActionPlanCard] Renderizando campos plano-aula:', customFields);
@@ -170,57 +160,6 @@ const renderPlanoAulaFields = (customFields: Record<string, string>) => {
   );
 };
 
-// Função para renderizar campos específicos da Sequência Didática
-const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => {
-  console.log('🎯 [ActionPlanCard] Renderizando campos sequencia-didatica:', customFields);
-
-  const temaCentral = customFields['Tema Central'] || customFields['Título do Tema / Assunto'] || customFields['titulo'];
-  const objetivos = customFields['Objetivos'] || customFields['Objetivos de Aprendizagem'];
-  const etapas = customFields['Etapas'] || customFields['Metodologia'];
-  const recursos = customFields['Recursos'] || customFields['Recursos Didáticos'];
-  const avaliacao = customFields['Avaliação'] || customFields['Critérios de Avaliação'];
-
-  return (
-    <div className="space-y-3">
-      {temaCentral && (
-        <div className="w-full">
-          <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Tema Central</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-blue-50 dark:bg-blue-900/30 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800">{temaCentral}</div>
-        </div>
-      )}
-
-      {objetivos && (
-        <div className="w-full">
-          <div className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Objetivos</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-green-50 dark:bg-green-900/30 px-3 py-2 rounded-lg border border-green-200 dark:border-green-800">{objetivos}</div>
-        </div>
-      )}
-
-      {etapas && (
-        <div className="w-full">
-          <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">Etapas</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-purple-50 dark:bg-purple-900/30 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800">{etapas}</div>
-        </div>
-      )}
-
-      {recursos && (
-        <div className="w-full">
-          <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Recursos</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-orange-50 dark:bg-orange-900/30 px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-800">{recursos}</div>
-        </div>
-      )}
-
-      {avaliacao && (
-        <div className="w-full">
-          <div className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">Avaliação</div>
-          <div className="text-sm font-medium text-gray-900 dark:text-gray-100 bg-red-50 dark:bg-red-900/30 px-3 py-2 rounded-lg border border-red-200 dark:border-red-800">{avaliacao}</div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];
   onApprove: (approvedItems: ActionPlanItem[]) => void;
@@ -251,8 +190,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
       'estudo-grupo': Users,
       'pesquisa-aprofundada': BookOpen,
       'exercicios-praticos': Target,
-      'apresentacao-oral': Users,
-      'sequencia-didatica': BookOpen // Ícone para Sequência Didática
+      'apresentacao-oral': Users
     };
 
     // Se o ID específico não for encontrado, usa um padrão baseado em palavras-chave
@@ -353,30 +291,6 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
         localStorage.setItem(autoDataKey, JSON.stringify(autoData));
         console.log('💾 Dados salvos para preenchimento automático:', autoData);
-      } else if (activity.id === 'sequencia-didatica') {
-         console.log('📚 Salvando dados específicos da Sequência Didática para preenchimento automático');
-         const autoDataKey = `auto_activity_data_${activity.id}`;
-         const autoData = {
-           formData: {
-             title: activity.personalizedTitle || activity.title,
-             description: activity.personalizedDescription || activity.description,
-             sequenceTitle: fullActivity.customFields?.['Título da Sequência'] || fullActivity.customFields?.['Título'] || '',
-             totalDuration: fullActivity.customFields?.['Duração Total'] || fullActivity.customFields?.['Duração'] || '',
-             targetAudience: fullActivity.customFields?.['Público-Alvo'] || '',
-             learningObjectives: fullActivity.customFields?.['Objetivos de Aprendizagem'] || '',
-             methodology: fullActivity.customFields?.['Metodologia'] || fullActivity.customFields?.['Abordagem'] || '',
-             didacticResources: fullActivity.customFields?.['Recursos Didáticos'] || fullActivity.customFields?.['Materiais'] || '',
-             evaluationCriteria: fullActivity.customFields?.['Avaliação'] || fullActivity.customFields?.['Critérios de Avaliação'] || '',
-             competenciesAndSkills: fullActivity.customFields?.['Competências e Habilidades'] || ''
-           },
-           customFields: fullActivity.customFields || {},
-           originalActivity: fullActivity,
-           actionPlanActivity: activity,
-           activityType: 'sequencia-didatica',
-           timestamp: Date.now()
-         };
-         localStorage.setItem(autoDataKey, JSON.stringify(autoData));
-         console.log('💾 Dados salvos para preenchimento automático:', autoData);
       }
 
       // Salvar no localStorage
@@ -573,32 +487,24 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                       {item.description}
                     </p>
 
-                    {/* Custom fields como badges - específico para plano-aula e sequencia-didatica */}
-                      {item.customFields && Object.keys(item.customFields).length > 0 && (
-                        <div className="mt-3">
-                          {item.id === 'sequencia-didatica' ? (
-                            renderSequenciaDidaticaFields(item.customFields)
-                          ) : item.id === 'plano-aula' ? (
-                            renderPlanoAulaFields(item.customFields)
-                          ) : (
-                            // Renderização padrão para outros tipos
-                            <div className="flex flex-wrap gap-2">
-                              {Object.entries(item.customFields).slice(0, 4).map(([key, value]) => {
-                                if (!value || typeof value !== 'string') return null;
-                                return (
-                                  <div
-                                    key={key}
-                                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
-                                  >
-                                    <span className="font-semibold">{key}:</span>
-                                    <span className="ml-1 truncate max-w-[150px]">{value}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    {/* Custom fields como badges - específico para plano-aula */}
+                    {item.customFields && Object.keys(item.customFields).length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {item.id === 'plano-aula' ? (
+                          renderPlanoAulaFields(item.customFields)
+                        ) : (
+                          Object.entries(item.customFields).map(([key, value]) => (
+                            <Badge
+                              key={key}
+                              variant="outline"
+                              className="text-xs px-2 py-1"
+                            >
+                              {key}: {String(value).substring(0, 30)}{String(value).length > 30 ? '...' : ''}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    )}
 
                     {/* ID da atividade (para debug) */}
                     <div className="mt-2">
