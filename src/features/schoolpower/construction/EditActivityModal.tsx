@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
@@ -18,6 +18,28 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import { CheckCircle2 } from 'lucide-react';
+
+// Função para processar dados da lista de exercícios
+const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
+  return {
+    title: formData.title,
+    description: formData.description,
+    subject: formData.subject,
+    schoolYear: formData.schoolYear,
+    numberOfQuestions: formData.numberOfQuestions,
+    difficultyLevel: formData.difficultyLevel,
+    questionModel: formData.questionModel,
+    sources: formData.sources,
+    objectives: formData.objectives,
+    materials: formData.materials,
+    instructions: formData.instructions,
+    evaluation: formData.evaluation,
+    timeLimit: formData.timeLimit,
+    context: formData.context,
+    questions: generatedContent?.questions || [],
+    ...generatedContent
+  };
+};
 
 interface EditActivityModalProps {
   isOpen: boolean;
@@ -1561,3 +1583,4 @@ const EditActivityModal = ({
 };
 
 export default EditActivityModal;
+export { EditActivityModal };
