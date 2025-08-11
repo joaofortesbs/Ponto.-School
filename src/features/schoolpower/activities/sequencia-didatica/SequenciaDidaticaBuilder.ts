@@ -171,35 +171,50 @@ Retorne APENAS o JSON, sem texto adicional.
       const dadosIA = JSON.parse(jsonString);
       console.log('📊 Dados parseados da IA:', dadosIA);
 
-      // Garantir que todos os campos estão presentes
+      // Garantir que todos os campos estão presentes com fallbacks mais robustos
       const sequenciaCompleta: SequenciaDidaticaCompleta = {
         tituloTemaAssunto: dadosIA.tituloTemaAssunto || formData.tituloTemaAssunto || formData.title || 'Sequência Didática',
-        anoSerie: dadosIA.anoSerie || formData.anoSerie || formData.schoolYear || '',
-        disciplina: dadosIA.disciplina || formData.disciplina || formData.subject || '',
-        bnccCompetencias: dadosIA.bnccCompetencias || formData.bnccCompetencias || formData.competencies || '',
-        publicoAlvo: dadosIA.publicoAlvo || formData.publicoAlvo || formData.context || '',
-        objetivosAprendizagem: dadosIA.objetivosAprendizagem || formData.objetivosAprendizagem || formData.objectives || '',
+        anoSerie: dadosIA.anoSerie || formData.anoSerie || formData.schoolYear || '6º Ano',
+        disciplina: dadosIA.disciplina || formData.disciplina || formData.subject || 'Português',
+        bnccCompetencias: dadosIA.bnccCompetencias || formData.bnccCompetencias || formData.competencies || 'Competências da BNCC a serem trabalhadas',
+        publicoAlvo: dadosIA.publicoAlvo || formData.publicoAlvo || formData.context || 'Estudantes do Ensino Fundamental',
+        objetivosAprendizagem: dadosIA.objetivosAprendizagem || formData.objetivosAprendizagem || formData.objectives || 'Desenvolver competências específicas da disciplina',
         quantidadeAulas: dadosIA.quantidadeAulas || formData.quantidadeAulas || '4',
         quantidadeDiagnosticos: dadosIA.quantidadeDiagnosticos || formData.quantidadeDiagnosticos || '1',
         quantidadeAvaliacoes: dadosIA.quantidadeAvaliacoes || formData.quantidadeAvaliacoes || '1',
-        cronograma: dadosIA.cronograma || formData.cronograma || 'Cronograma a ser definido',
-        duracaoTotal: dadosIA.duracaoTotal || `${dadosIA.quantidadeAulas || formData.quantidadeAulas || '4'} aulas`,
-        materiaisNecessarios: dadosIA.materiaisNecessarios || ['Quadro', 'Material didático', 'Recursos audiovisuais'],
-        competenciasDesenvolvidas: dadosIA.competenciasDesenvolvidas || ['Compreensão', 'Análise', 'Aplicação'],
-        aulas: this.processarAulas(dadosIA.aulas || []),
-        diagnosticos: this.processarDiagnosticos(dadosIA.diagnosticos || []),
-        avaliacoes: this.processarAvaliacoes(dadosIA.avaliacoes || []),
+        cronograma: dadosIA.cronograma || formData.cronograma || 'Cronograma flexível conforme o ritmo da turma',
+        duracaoTotal: dadosIA.duracaoTotal || `${dadosIA.quantidadeAulas || formData.quantidadeAulas || '4'} aulas de 50 minutos`,
+        materiaisNecessarios: Array.isArray(dadosIA.materiaisNecessarios) ? dadosIA.materiaisNecessarios : ['Quadro', 'Material didático', 'Recursos audiovisuais'],
+        competenciasDesenvolvidas: Array.isArray(dadosIA.competenciasDesenvolvidas) ? dadosIA.competenciasDesenvolvidas : ['Compreensão', 'Análise', 'Aplicação'],
+        aulas: this.processarAulas(dadosIA.aulas || [], parseInt(formData.quantidadeAulas || '4')),
+        diagnosticos: this.processarDiagnosticos(dadosIA.diagnosticos || [], parseInt(formData.quantidadeDiagnosticos || '1')),
+        avaliacoes: this.processarAvaliacoes(dadosIA.avaliacoes || [], parseInt(formData.quantidadeAvaliacoes || '1')),
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
       };
 
-      console.log('✅ Sequência didática completa processada:', sequenciaCompleta);
+      // Validar se a sequência tem o mínimo necessário
+      if (sequenciaCompleta.aulas.length === 0) {
+        console.warn('⚠️ Nenhuma aula foi processada, criando aulas básicas');
+        sequenciaCompleta.aulas = this.gerarAulasBasicas(formData);
+      }
+
+      console.log('✅ Sequência didática completa processada:', {
+        titulo: sequenciaCompleta.tituloTemaAssunto,
+        disciplina: sequenciaCompleta.disciplina,
+        aulasCount: sequenciaCompleta.aulas.length,
+        diagnosticosCount: sequenciaCompleta.diagnosticos.length,
+        avaliacoesCount: sequenciaCompleta.avaliacoes.length
+      });
+      
       return sequenciaCompleta;
 
     } catch (error) {
       console.error('❌ Erro ao processar resposta da IA:', error);
+      console.log('📝 Resposta da IA que causou erro:', respostaIA);
       
       // Fallback: criar sequência básica com os dados do formulário
+      console.log('🔄 Criando sequência fallback com dados do formulário');
       return this.criarSequenciaFallback(formData);
     }
   }
@@ -207,8 +222,8 @@ Retorne APENAS o JSON, sem texto adicional.
   /**
    * Processa as aulas recebidas da IA
    */
-  private processarAulas(aulas: any[]): AulaData[] {
-    return aulas.map((aula, index) => ({
+  private processarAulas(aulas: any[], quantidadeEsperada: number = 4): AulaData[] {
+    const aulasProcessadas = aulas.map((aula, index) => ({
       numero: aula.numero || index + 1,
       titulo: aula.titulo || `Aula ${index + 1}`,
       objetivo: aula.objetivo || 'Objetivo a ser definido',
@@ -218,6 +233,44 @@ Retorne APENAS o JSON, sem texto adicional.
       atividadePratica: aula.atividadePratica || 'Atividade prática a ser desenvolvida',
       avaliacao: aula.avaliacao || 'Avaliação da aula',
       tempoEstimado: aula.tempoEstimado || '50 minutos'
+    }));
+
+    // Se não temos aulas suficientes, gerar mais
+    while (aulasProcessadas.length < quantidadeEsperada) {
+      const numeroAula = aulasProcessadas.length + 1;
+      aulasProcessadas.push({
+        numero: numeroAula,
+        titulo: `Aula ${numeroAula}: Desenvolvimento do Tema`,
+        objetivo: 'Desenvolver conhecimentos específicos sobre o tema proposto',
+        conteudo: 'Conteúdo programático conforme objetivos de aprendizagem',
+        metodologia: 'Aula expositiva dialogada com atividades práticas',
+        recursos: ['Quadro', 'Material didático', 'Projetor'],
+        atividadePratica: 'Atividades práticas relacionadas ao conteúdo da aula',
+        avaliacao: 'Participação e desenvolvimento das atividades propostas',
+        tempoEstimado: '50 minutos'
+      });
+    }
+
+    return aulasProcessadas;
+  }
+
+  /**
+   * Gera aulas básicas quando a IA não consegue processar
+   */
+  private gerarAulasBasicas(formData: ActivityFormData): AulaData[] {
+    const quantidadeAulas = parseInt(formData.quantidadeAulas || '4');
+    const tema = formData.tituloTemaAssunto || formData.title || 'Tema da Sequência';
+    
+    return Array.from({ length: quantidadeAulas }, (_, index) => ({
+      numero: index + 1,
+      titulo: `Aula ${index + 1}: ${tema}`,
+      objetivo: formData.objetivosAprendizagem || 'Desenvolver compreensão sobre o tema',
+      conteudo: `Conteúdo da aula ${index + 1} sobre ${tema}`,
+      metodologia: 'Aula expositiva dialogada com atividades práticas',
+      recursos: ['Quadro', 'Material didático', 'Recursos audiovisuais'],
+      atividadePratica: `Atividade prática relacionada ao conteúdo da aula ${index + 1}`,
+      avaliacao: 'Participação e desenvolvimento das atividades propostas',
+      tempoEstimado: '50 minutos'
     }));
   }
 
@@ -321,13 +374,31 @@ Retorne APENAS o JSON, sem texto adicional.
   }
 
   /**
-   * Salva a sequência didática no localStorage
+   * Salva a sequência didática no localStorage com múltiplas chaves para garantir compatibilidade
    */
   private salvarSequencia(sequencia: SequenciaDidaticaCompleta): void {
     try {
-      const chaveArmazenamento = 'constructed_sequencia-didatica_latest';
-      localStorage.setItem(chaveArmazenamento, JSON.stringify(sequencia));
-      console.log('💾 Sequência didática salva no localStorage com chave:', chaveArmazenamento);
+      const chaves = [
+        'constructed_sequencia-didatica_sequencia-didatica',
+        'schoolpower_sequencia-didatica_content',
+        'activity_sequencia-didatica',
+        'constructed_sequencia-didatica_latest'
+      ];
+
+      chaves.forEach(chave => {
+        localStorage.setItem(chave, JSON.stringify(sequencia));
+        console.log(`💾 Sequência didática salva com chave: ${chave}`);
+      });
+
+      // Também salvar no cache de atividades construídas
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities['sequencia-didatica'] = {
+        generatedContent: sequencia,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      
+      console.log('✅ Sequência didática salva em todas as chaves necessárias');
     } catch (error) {
       console.error('❌ Erro ao salvar sequência no localStorage:', error);
     }

@@ -263,21 +263,65 @@ const EditActivityModal = ({
     if (activity && isOpen) {
       console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id}`);
 
-      // Verificar se a atividade foi construída automaticamente
+      // Para sequencia-didatica, verificar múltiplas chaves
+      if (activity.id === 'sequencia-didatica') {
+        const possibleKeys = [
+          `constructed_sequencia-didatica_${activity.id}`,
+          `schoolpower_sequencia-didatica_content`,
+          `activity_sequencia-didatica`,
+          `activity_${activity.id}`
+        ];
+
+        let contentToLoad = null;
+        let foundKey = null;
+
+        for (const key of possibleKeys) {
+          const savedContent = localStorage.getItem(key);
+          if (savedContent) {
+            try {
+              contentToLoad = JSON.parse(savedContent);
+              foundKey = key;
+              console.log(`✅ Conteúdo da sequência didática encontrado na chave: ${key}`);
+              console.log('📊 Estrutura do conteúdo:', {
+                hasAulas: !!contentToLoad?.aulas,
+                aulasCount: contentToLoad?.aulas?.length || 0,
+                hasDiagnosticos: !!contentToLoad?.diagnosticos,
+                diagnosticosCount: contentToLoad?.diagnosticos?.length || 0,
+                hasAvaliacoes: !!contentToLoad?.avaliacoes,
+                avaliacoesCount: contentToLoad?.avaliacoes?.length || 0,
+                hasAllRequiredFields: !!(contentToLoad?.tituloTemaAssunto && contentToLoad?.disciplina)
+              });
+              break;
+            } catch (error) {
+              console.error(`❌ Erro ao parsear conteúdo da chave ${key}:`, error);
+            }
+          }
+        }
+
+        setGeneratedContent(contentToLoad);
+        setIsContentLoaded(!!contentToLoad);
+        
+        if (contentToLoad) {
+          console.log(`🎯 Sequência didática carregada com sucesso da chave: ${foundKey}`);
+        } else {
+          console.log('⚠️ Nenhum conteúdo de sequência didática encontrado');
+        }
+        
+        return;
+      }
+
+      // Para outras atividades, usar a lógica original
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const savedContent = localStorage.getItem(`activity_${activity.id}`);
       const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`);
-      const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
         hasSavedContent: !!savedContent,
         hasPlanoAulaSavedContent: !!planoAulaSavedContent,
-        hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
         activityId: activity.id
       });
 
-      // Priorizar o conteúdo específico baseado no tipo da atividade
       let contentToLoad = null;
       if (activity.id === 'plano-aula' && planoAulaSavedContent) {
         try {
@@ -285,46 +329,16 @@ const EditActivityModal = ({
           console.log(`✅ Conteúdo específico do plano-aula encontrado para: ${activity.id}`);
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do plano-aula:', error);
-          console.error('📄 Conteúdo que causou erro:', planoAulaSavedContent);
-        }
-      } else if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
-          console.log(`✅ Conteúdo específico da sequencia-didatica encontrado para: ${activity.id}`);
-          console.log('📊 Estrutura do conteúdo da sequência didática:', {
-            hasAulas: !!contentToLoad?.aulas,
-            aulasCount: contentToLoad?.aulas?.length || 0,
-            hasDiagnosticos: !!contentToLoad?.diagnosticos,
-            diagnosticosCount: contentToLoad?.diagnosticos?.length || 0,
-            hasAvaliacoes: !!contentToLoad?.avaliacoes,
-            avaliacoesCount: contentToLoad?.avaliacoes?.length || 0
-          });
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico da sequencia-didatica:', error);
-          console.error('📄 Conteúdo que causou erro:', sequenciaDidaticaSavedContent);
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
         contentToLoad = constructedActivities[activity.id].generatedContent;
-        console.log(`📄 Estrutura do conteúdo do cache:`, {
-          hasQuestions: !!contentToLoad?.questions,
-          hasContent: !!contentToLoad?.content,
-          contentType: typeof contentToLoad,
-          keys: contentToLoad ? Object.keys(contentToLoad) : []
-        });
       } else if (savedContent) {
         console.log(`✅ Conteúdo salvo encontrado para: ${activity.id}`);
         try {
           contentToLoad = JSON.parse(savedContent);
-          console.log(`📄 Estrutura do conteúdo salvo:`, {
-            hasQuestions: !!contentToLoad?.questions,
-            hasContent: !!contentToLoad?.content,
-            contentType: typeof contentToLoad,
-            keys: contentToLoad ? Object.keys(contentToLoad) : []
-          });
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo salvo:', error);
-          console.error('📄 Conteúdo que causou erro:', savedContent);
           contentToLoad = null;
         }
       }
@@ -816,6 +830,16 @@ const EditActivityModal = ({
       // Lógica específica para sequencia-didatica
       if (activity.id === 'sequencia-didatica') {
         console.log('🏗️ Construindo Sequência Didática...');
+        console.log('📋 Dados formatados para builder:', {
+          tituloTemaAssunto: formData.tituloTemaAssunto,
+          disciplina: formData.disciplina,
+          anoSerie: formData.anoSerie,
+          objetivosAprendizagem: formData.objetivosAprendizagem,
+          quantidadeAulas: formData.quantidadeAulas,
+          quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
+          quantidadeAvaliacoes: formData.quantidadeAvaliacoes
+        });
+        
         result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(formData);
       } else {
         // Usar a lógica padrão para outras atividades
@@ -825,36 +849,47 @@ const EditActivityModal = ({
       clearInterval(progressTimer);
       setBuildProgress(100);
 
-      if (result.success) {
+      if (result.success && result.data) {
         console.log('✅ Atividade construída com sucesso:', result.data);
 
-        // Salvar no localStorage com a mesma chave usada pelo sistema
-        const storageKey = `schoolpower_${activity.type || activity.id}_content`;
-        localStorage.setItem(storageKey, JSON.stringify(result.data));
-
-        // Para plano-aula, também salvar com chave específica para visualização
-        if (activity.type === 'plano-aula' || activity.id === 'plano-aula') {
-          const viewStorageKey = `constructed_plano-aula_${activity.id}`;
-          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-          console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
-        }
-
-        // Para sequencia-didatica, salvar com chave específica
+        // Para sequencia-didatica, salvar com múltiplas chaves para garantir compatibilidade
         if (activity.id === 'sequencia-didatica') {
-          const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;
-          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-          console.log('💾 Dados da sequência didática salvos para visualização:', viewStorageKey);
+          const primaryKey = `constructed_sequencia-didatica_${activity.id}`;
+          const secondaryKey = `schoolpower_sequencia-didatica_content`;
+          const tertiaryKey = `activity_sequencia-didatica`;
+          
+          localStorage.setItem(primaryKey, JSON.stringify(result.data));
+          localStorage.setItem(secondaryKey, JSON.stringify(result.data));
+          localStorage.setItem(tertiaryKey, JSON.stringify(result.data));
+          
+          console.log('💾 Dados da sequência didática salvos com chaves:', {
+            primaryKey,
+            secondaryKey,
+            tertiaryKey
+          });
+        } else {
+          // Para outras atividades
+          const storageKey = `schoolpower_${activity.type || activity.id}_content`;
+          localStorage.setItem(storageKey, JSON.stringify(result.data));
+
+          if (activity.type === 'plano-aula' || activity.id === 'plano-aula') {
+            const viewStorageKey = `constructed_plano-aula_${activity.id}`;
+            localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
+            console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
+          }
         }
 
         // Também salvar na lista de atividades construídas
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
-        if (!constructedActivities.includes(activity.id)) {
-          constructedActivities.push(activity.id);
-          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-        }
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity.id] = {
+          generatedContent: result.data,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
         setBuiltContent(result.data);
         setGeneratedContent(result.data);
+        setIsContentLoaded(true);
         setActiveTab('preview');
 
         toast({
@@ -945,11 +980,30 @@ const EditActivityModal = ({
       formData.publicoAlvo?.trim() &&
       formData.objetivosAprendizagem?.trim() &&
       formData.quantidadeAulas?.trim() &&
+      parseInt(formData.quantidadeAulas || '0') > 0 &&
       formData.quantidadeDiagnosticos?.trim() &&
-      formData.quantidadeAvaliacoes?.trim()
+      parseInt(formData.quantidadeDiagnosticos || '0') >= 0 &&
+      formData.quantidadeAvaliacoes?.trim() &&
+      parseInt(formData.quantidadeAvaliacoes || '0') >= 0
     : formData.title.trim() &&
       formData.description.trim() &&
       formData.objectives.trim();
+
+  // Debug do estado de validação
+  if (activity?.id === 'sequencia-didatica') {
+    console.log('🔍 Validação do formulário de Sequência Didática:', {
+      isFormValid,
+      tituloTemaAssunto: !!formData.tituloTemaAssunto?.trim(),
+      anoSerie: !!formData.anoSerie?.trim(),
+      disciplina: !!formData.disciplina?.trim(),
+      publicoAlvo: !!formData.publicoAlvo?.trim(),
+      objetivosAprendizagem: !!formData.objetivosAprendizagem?.trim(),
+      quantidadeAulas: formData.quantidadeAulas,
+      quantidadeAulasValid: parseInt(formData.quantidadeAulas || '0') > 0,
+      quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
+      quantidadeAvaliacoes: formData.quantidadeAvaliacoes
+    });
+  }
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {

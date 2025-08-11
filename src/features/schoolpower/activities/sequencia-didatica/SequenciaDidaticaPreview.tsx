@@ -90,34 +90,62 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   const [selectedDiagnostico, setSelectedDiagnostico] = useState<DiagnosticoData | null>(null);
 
   console.log('🔍 SequenciaDidaticaPreview - Dados recebidos:', data);
+  console.log('🔍 SequenciaDidaticaPreview - Tipo dos dados:', typeof data);
+  console.log('🔍 SequenciaDidaticaPreview - Props activityData:', activityData);
 
   if (!data) {
     console.log('❌ SequenciaDidaticaPreview - Dados não encontrados');
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-600 mb-2">
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
           Sequência Didática não gerada
         </h3>
-        <p className="text-gray-500 mb-4">
+        <p className="text-gray-500 dark:text-gray-500 mb-4">
           Configure os campos necessários e clique em "Construir Atividade" para gerar sua sequência didática.
         </p>
       </div>
     );
   }
 
-  // Verificar se tem aulas geradas
-  const hasAulas = data.aulas && data.aulas.length > 0;
-  const hasDiagnosticos = data.diagnosticos && data.diagnosticos.length > 0;
-  const hasAvaliacoes = data.avaliacoes && data.avaliacoes.length > 0;
+  // Validar se os dados são válidos
+  if (typeof data !== 'object') {
+    console.error('❌ SequenciaDidaticaPreview - Dados inválidos (não é objeto):', data);
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+        <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+          Erro nos dados da Sequência Didática
+        </h3>
+        <p className="text-gray-500 dark:text-gray-500 mb-4">
+          Os dados da sequência didática estão corrompidos. Tente gerar novamente.
+        </p>
+      </div>
+    );
+  }
 
-  console.log('📊 SequenciaDidaticaPreview - Status:', {
+  // Verificar se tem aulas geradas
+  const hasAulas = data.aulas && Array.isArray(data.aulas) && data.aulas.length > 0;
+  const hasDiagnosticos = data.diagnosticos && Array.isArray(data.diagnosticos) && data.diagnosticos.length > 0;
+  const hasAvaliacoes = data.avaliacoes && Array.isArray(data.avaliacoes) && data.avaliacoes.length > 0;
+
+  console.log('📊 SequenciaDidaticaPreview - Status detalhado:', {
     hasAulas,
     hasDiagnosticos,
     hasAvaliacoes,
     aulasCount: data.aulas?.length || 0,
     diagnosticosCount: data.diagnosticos?.length || 0,
-    avaliacoesCount: data.avaliacoes?.length || 0
+    avaliacoesCount: data.avaliacoes?.length || 0,
+    aulasType: typeof data.aulas,
+    aulasIsArray: Array.isArray(data.aulas),
+    firstAula: data.aulas && data.aulas.length > 0 ? data.aulas[0] : null,
+    allKeys: Object.keys(data),
+    dataStructure: {
+      titulo: !!data.tituloTemaAssunto,
+      disciplina: !!data.disciplina,
+      anoSerie: !!data.anoSerie,
+      objetivos: !!data.objetivosAprendizagem
+    }
   });
 
   return (
