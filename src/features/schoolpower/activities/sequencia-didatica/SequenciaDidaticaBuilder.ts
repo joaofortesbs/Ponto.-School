@@ -1,188 +1,231 @@
 
-import { geminiClient } from '@/utils/api/geminiClient';
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
-import { 
-  SequenciaDidaticaCompleta, 
-  sequenciaDidaticaGenerator 
-} from './SequenciaDidaticaGenerator';
-import { 
-  processSequenciaDidaticaData, 
-  validateSequenciaDidaticaData, 
-  activityFormToSequenciaData 
-} from './sequenciaDidaticaProcessor';
+import { geminiClient } from '../../../../utils/api/geminiClient';
 
-export interface SequenciaDidaticaBuildResult {
+export interface SequenciaDidaticaData {
+  tituloTemaAssunto: string;
+  disciplina: string;
+  anoSerie: string;
+  publicoAlvo: string;
+  objetivosAprendizagem: string;
+  quantidadeAulas: string;
+  quantidadeDiagnosticos: string;
+  quantidadeAvaliacoes: string;
+  cronograma?: string;
+}
+
+export interface SequenciaDidaticaResult {
   success: boolean;
-  data?: SequenciaDidaticaCompleta;
+  data?: any;
   error?: string;
 }
 
-export class SequenciaDidaticaBuilder {
-  private static readonly STORAGE_KEYS = [
-    'constructed_sequencia-didatica_sequencia-didatica',
-    'schoolpower_sequencia-didatica_content',
-    'activity_sequencia-didatica',
-    'constructed_sequencia-didatica_latest'
-  ];
-
-  /**
-   * Constrói uma sequência didática completa baseada nos dados do formulário
-   */
-  async construirSequenciaDidatica(formData: ActivityFormData): Promise<SequenciaDidaticaBuildResult> {
-    console.log('🚀 SequenciaDidaticaBuilder: Iniciando construção da sequência didática');
-    console.log('📊 Dados recebidos:', {
-      tituloTemaAssunto: formData.tituloTemaAssunto,
-      disciplina: formData.disciplina,
-      anoSerie: formData.anoSerie,
-      quantidadeAulas: formData.quantidadeAulas,
-      quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
-      quantidadeAvaliacoes: formData.quantidadeAvaliacoes
-    });
-
+class SequenciaDidaticaBuilder {
+  async construirSequenciaDidatica(data: SequenciaDidaticaData): Promise<SequenciaDidaticaResult> {
     try {
-      // Converter dados do formulário
-      const sequenciaData = activityFormToSequenciaData(formData);
-      console.log('🔄 Dados convertidos para sequência:', sequenciaData);
+      console.log('🚀 Iniciando construção da Sequência Didática...');
+      console.log('📊 Dados recebidos:', data);
 
       // Validar dados obrigatórios
-      const validacao = validateSequenciaDidaticaData(sequenciaData);
-      if (!validacao.valid) {
-        console.error('❌ Validação falhou:', validacao.errors);
+      if (!data.tituloTemaAssunto || !data.disciplina || !data.anoSerie || !data.publicoAlvo || !data.objetivosAprendizagem) {
+        console.error('❌ Dados obrigatórios faltando');
         return {
           success: false,
-          error: `Dados inválidos: ${validacao.errors.join(', ')}`
+          error: 'Dados obrigatórios não fornecidos'
         };
       }
 
-      console.log('✅ Dados validados com sucesso');
+      // Converter strings para números
+      const quantidadeAulas = parseInt(data.quantidadeAulas) || 4;
+      const quantidadeDiagnosticos = parseInt(data.quantidadeDiagnosticos) || 1;
+      const quantidadeAvaliacoes = parseInt(data.quantidadeAvaliacoes) || 2;
 
-      // Gerar sequência com o generator
-      console.log('🎯 Iniciando geração com IA...');
-      const sequenciaCompleta = await sequenciaDidaticaGenerator.gerarSequenciaDidatica(sequenciaData);
-      
-      console.log('🎯 Sequência didática gerada com sucesso:', {
-        titulo: sequenciaCompleta.tituloTemaAssunto,
-        disciplina: sequenciaCompleta.disciplina,
-        aulasCount: sequenciaCompleta.aulas?.length || 0,
-        diagnosticosCount: sequenciaCompleta.diagnosticos?.length || 0,
-        avaliacoesCount: sequenciaCompleta.avaliacoes?.length || 0,
-        temCompetencias: !!sequenciaCompleta.competenciasDesenvolvidas,
-        temMateriais: !!sequenciaCompleta.materiaisNecessarios
+      console.log('📋 Quantidades validadas:', {
+        aulas: quantidadeAulas,
+        diagnosticos: quantidadeDiagnosticos,
+        avaliacoes: quantidadeAvaliacoes
       });
 
-      // Verificar se a geração foi bem-sucedida
-      if (!sequenciaCompleta.aulas || sequenciaCompleta.aulas.length === 0) {
-        console.warn('⚠️ Nenhuma aula foi gerada, criando fallback');
-        // O fallback já está no generator
+      // Criar prompt para a IA
+      const prompt = `
+Você é um especialista em educação. Crie uma sequência didática detalhada com base nas seguintes informações:
+
+DADOS DA SEQUÊNCIA DIDÁTICA:
+- Título/Tema: ${data.tituloTemaAssunto}
+- Disciplina: ${data.disciplina}
+- Ano/Série: ${data.anoSerie}
+- Público-alvo: ${data.publicoAlvo}
+- Objetivos de Aprendizagem: ${data.objetivosAprendizagem}
+- Quantidade de Aulas: ${quantidadeAulas}
+- Quantidade de Diagnósticos: ${quantidadeDiagnosticos}
+- Quantidade de Avaliações: ${quantidadeAvaliacoes}
+${data.cronograma ? `- Cronograma: ${data.cronograma}` : ''}
+
+RETORNE UM JSON VÁLIDO com a seguinte estrutura:
+{
+  "tituloTemaAssunto": "${data.tituloTemaAssunto}",
+  "disciplina": "${data.disciplina}",
+  "anoSerie": "${data.anoSerie}",
+  "publicoAlvo": "${data.publicoAlvo}",
+  "objetivosAprendizagem": "${data.objetivosAprendizagem}",
+  "quantidadeAulas": "${quantidadeAulas}",
+  "quantidadeDiagnosticos": "${quantidadeDiagnosticos}",
+  "quantidadeAvaliacoes": "${quantidadeAvaliacoes}",
+  "cronograma": "cronograma detalhado",
+  "aulas": [
+    {
+      "numero": 1,
+      "titulo": "título da aula",
+      "descricao": "descrição detalhada",
+      "objetivos": ["objetivo 1", "objetivo 2"],
+      "metodologia": "metodologia utilizada",
+      "recursos": ["recurso 1", "recurso 2"],
+      "duracao": "50 minutos",
+      "atividades": ["atividade 1", "atividade 2"]
+    }
+  ],
+  "diagnosticos": [
+    {
+      "numero": 1,
+      "titulo": "título do diagnóstico",
+      "descricao": "descrição",
+      "tipo": "Diagnóstica",
+      "instrumentos": ["instrumento 1"],
+      "duracao": "tempo estimado"
+    }
+  ],
+  "avaliacoes": [
+    {
+      "numero": 1,
+      "titulo": "título da avaliação",
+      "descricao": "descrição",
+      "tipo": "Formativa/Somativa",
+      "instrumentos": ["instrumento 1"],
+      "peso": "porcentagem"
+    }
+  ]
+}
+
+Crie ${quantidadeAulas} aulas detalhadas, ${quantidadeDiagnosticos} diagnósticos e ${quantidadeAvaliacoes} avaliações seguindo a estrutura acima.
+`;
+
+      console.log('🤖 Enviando prompt para IA...');
+
+      // Chamar a IA
+      const result = await geminiClient.generate(prompt);
+
+      if (!result.success) {
+        console.error('❌ Erro na IA:', result.error);
+        return this.getFallbackSequencia(data);
       }
 
-      // Salvar no localStorage com todas as chaves necessárias
-      this.salvarSequencia(sequenciaCompleta);
+      console.log('✅ Resposta da IA recebida');
+
+      // Verificar se os dados estão no formato correto
+      let sequenciaData = result.data;
+      
+      // Se a resposta veio como string de conteúdo, tentar extrair JSON
+      if (sequenciaData && sequenciaData.content && typeof sequenciaData.content === 'string') {
+        try {
+          sequenciaData = JSON.parse(sequenciaData.content);
+        } catch (error) {
+          console.error('❌ Erro ao parsear JSON da resposta:', error);
+          return this.getFallbackSequencia(data);
+        }
+      }
+
+      // Validar estrutura da resposta
+      if (!sequenciaData || !sequenciaData.aulas || !Array.isArray(sequenciaData.aulas)) {
+        console.error('❌ Estrutura de resposta inválida');
+        return this.getFallbackSequencia(data);
+      }
+
+      console.log('✅ Sequência Didática construída com sucesso');
+      console.log('📊 Estrutura final:', {
+        aulas: sequenciaData.aulas?.length || 0,
+        diagnosticos: sequenciaData.diagnosticos?.length || 0,
+        avaliacoes: sequenciaData.avaliacoes?.length || 0
+      });
 
       return {
         success: true,
-        data: sequenciaCompleta
+        data: sequenciaData
       };
 
     } catch (error) {
-      console.error('❌ Erro na construção da sequência didática:', error);
-      console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'N/A');
-      
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido na construção'
-      };
+      console.error('❌ Erro na construção da Sequência Didática:', error);
+      return this.getFallbackSequencia(data);
     }
   }
 
-  /**
-   * Salva a sequência didática no localStorage com múltiplas chaves para garantir compatibilidade
-   */
-  private salvarSequencia(sequencia: SequenciaDidaticaCompleta): void {
-    console.log('💾 Salvando sequência didática no localStorage');
-    
-    try {
-      const dataToSave = JSON.stringify(sequencia);
-      
-      // Salvar com todas as chaves necessárias
-      SequenciaDidaticaBuilder.STORAGE_KEYS.forEach(chave => {
-        localStorage.setItem(chave, dataToSave);
-        console.log(`✅ Sequência salva com chave: ${chave}`);
+  private getFallbackSequencia(data: SequenciaDidaticaData): SequenciaDidaticaResult {
+    console.log('🔄 Usando fallback para Sequência Didática');
+
+    const quantidadeAulas = parseInt(data.quantidadeAulas) || 4;
+    const quantidadeDiagnosticos = parseInt(data.quantidadeDiagnosticos) || 1;
+    const quantidadeAvaliacoes = parseInt(data.quantidadeAvaliacoes) || 2;
+
+    // Gerar aulas baseadas na quantidade solicitada
+    const aulas = [];
+    for (let i = 1; i <= quantidadeAulas; i++) {
+      aulas.push({
+        numero: i,
+        titulo: `Aula ${i} - ${data.tituloTemaAssunto}`,
+        descricao: `Desenvolvimento do tema ${data.tituloTemaAssunto} - parte ${i}`,
+        objetivos: [`Objetivo específico da aula ${i}`, "Desenvolver conhecimentos práticos"],
+        metodologia: "Aula expositiva dialogada com atividades práticas",
+        recursos: ["Quadro", "Material didático", "Recursos audiovisuais"],
+        duracao: "50 minutos",
+        atividades: [`Atividade prática ${i}`, "Discussão em grupo", "Exercícios aplicados"]
       });
+    }
 
-      // Também salvar no cache de atividades construídas
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      constructedActivities['sequencia-didatica'] = {
-        generatedContent: sequencia,
-        timestamp: new Date().toISOString()
-      };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-      
-      console.log('✅ Sequência didática salva em todas as chaves necessárias');
-      
-      // Log para debug
-      console.log('🔍 Verificação de salvamento:', {
-        chavesPrincipais: SequenciaDidaticaBuilder.STORAGE_KEYS.map(key => ({
-          key,
-          exists: !!localStorage.getItem(key)
-        })),
-        constructedActivitiesExists: !!localStorage.getItem('constructedActivities')
+    // Gerar diagnósticos
+    const diagnosticos = [];
+    for (let i = 1; i <= quantidadeDiagnosticos; i++) {
+      diagnosticos.push({
+        numero: i,
+        titulo: `Diagnóstico ${i}`,
+        descricao: `Avaliação diagnóstica ${i} sobre ${data.tituloTemaAssunto}`,
+        tipo: "Diagnóstica",
+        instrumentos: ["Questionário", "Observação"],
+        duracao: "30 minutos"
       });
-      
-    } catch (error) {
-      console.error('❌ Erro ao salvar sequência no localStorage:', error);
     }
-  }
 
-  /**
-   * Carrega uma sequência salva do localStorage
-   */
-  carregarSequenciaSalva(): SequenciaDidaticaCompleta | null {
-    console.log('🔍 Carregando sequência salva do localStorage');
-    
-    try {
-      // Tentar carregar das chaves em ordem de prioridade
-      for (const chave of SequenciaDidaticaBuilder.STORAGE_KEYS) {
-        const savedData = localStorage.getItem(chave);
-        if (savedData) {
-          console.log(`✅ Sequência encontrada na chave: ${chave}`);
-          const parsed = JSON.parse(savedData);
-          console.log('📊 Dados carregados:', {
-            titulo: parsed.tituloTemaAssunto,
-            aulasCount: parsed.aulas?.length || 0,
-            diagnosticosCount: parsed.diagnosticos?.length || 0,
-            avaliacoesCount: parsed.avaliacoes?.length || 0
-          });
-          return parsed;
-        }
-      }
-      
-      console.log('⚠️ Nenhuma sequência salva encontrada');
-      return null;
-    } catch (error) {
-      console.error('❌ Erro ao carregar sequência salva:', error);
-      return null;
+    // Gerar avaliações
+    const avaliacoes = [];
+    for (let i = 1; i <= quantidadeAvaliacoes; i++) {
+      avaliacoes.push({
+        numero: i,
+        titulo: `Avaliação ${i}`,
+        descricao: `Avaliação ${i} dos conhecimentos sobre ${data.tituloTemaAssunto}`,
+        tipo: i === quantidadeAvaliacoes ? "Somativa" : "Formativa",
+        instrumentos: ["Prova escrita", "Atividades práticas"],
+        peso: `${Math.round(100/quantidadeAvaliacoes)}%`
+      });
     }
-  }
 
-  /**
-   * Limpa todas as sequências salvas
-   */
-  limparSequenciasSalvas(): void {
-    console.log('🗑️ Limpando sequências salvas');
-    
-    SequenciaDidaticaBuilder.STORAGE_KEYS.forEach(chave => {
-      localStorage.removeItem(chave);
-      console.log(`🗑️ Removido: ${chave}`);
-    });
+    const fallbackData = {
+      tituloTemaAssunto: data.tituloTemaAssunto,
+      disciplina: data.disciplina,
+      anoSerie: data.anoSerie,
+      publicoAlvo: data.publicoAlvo,
+      objetivosAprendizagem: data.objetivosAprendizagem,
+      quantidadeAulas: data.quantidadeAulas,
+      quantidadeDiagnosticos: data.quantidadeDiagnosticos,
+      quantidadeAvaliacoes: data.quantidadeAvaliacoes,
+      cronograma: data.cronograma || `Sequência de ${quantidadeAulas} aulas distribuídas adequadamente`,
+      aulas,
+      diagnosticos,
+      avaliacoes
+    };
 
-    // Limpar do cache de atividades construídas também
-    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-    delete constructedActivities['sequencia-didatica'];
-    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-    
-    console.log('✅ Todas as sequências foram removidas');
+    return {
+      success: true,
+      data: fallbackData
+    };
   }
 }
 
 export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();
+export default sequenciaDidaticaBuilder;

@@ -208,17 +208,23 @@ const EditActivityModal = ({
       };
     } else if (type === 'sequencia-didatica') {
         console.log('🔄 Iniciando geração de Sequência Didática...');
-        console.log('📊 Dados enviados para o builder:', {
+
+        // Preparar dados específicos para sequência didática
+        const sequenciaData = {
           tituloTemaAssunto: data.tituloTemaAssunto,
           disciplina: data.disciplina,
           anoSerie: data.anoSerie,
+          publicoAlvo: data.publicoAlvo,
           objetivosAprendizagem: data.objetivosAprendizagem,
           quantidadeAulas: data.quantidadeAulas,
           quantidadeDiagnosticos: data.quantidadeDiagnosticos,
-          quantidadeAvaliacoes: data.quantidadeAvaliacoes
-        });
+          quantidadeAvaliacoes: data.quantidadeAvaliacoes,
+          cronograma: data.cronograma
+        };
 
-        const result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(data);
+        console.log('🔧 Enviando dados para sequenciaDidaticaBuilder:', sequenciaData);
+
+        const result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(sequenciaData);
 
         if (result.success && result.data) {
           console.log('✅ Sequência Didática gerada com sucesso!');
@@ -228,7 +234,7 @@ const EditActivityModal = ({
             diagnosticos: result.data.diagnosticos?.length || 0,
             avaliacoes: result.data.avaliacoes?.length || 0
           });
-          
+
           return {
             success: true,
             data: result.data
@@ -848,7 +854,22 @@ const EditActivityModal = ({
           quantidadeAvaliacoes: formData.quantidadeAvaliacoes
         });
 
-        result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(formData);
+        // Preparar dados específicos para sequência didática
+        const sequenciaData = {
+          tituloTemaAssunto: formData.tituloTemaAssunto,
+          disciplina: formData.disciplina,
+          anoSerie: formData.anoSerie,
+          publicoAlvo: formData.publicoAlvo,
+          objetivosAprendizagem: formData.objetivosAprendizagem,
+          quantidadeAulas: formData.quantidadeAulas,
+          quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
+          quantidadeAvaliacoes: formData.quantidadeAvaliacoes,
+          cronograma: formData.cronograma
+        };
+
+        console.log('🔧 Enviando dados para sequenciaDidaticaBuilder:', sequenciaData);
+
+        result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(sequenciaData);
       } else {
         // Usar a lógica padrão para outras atividades
         result = await generateActivityContent(activity.type || activity.id, formData);

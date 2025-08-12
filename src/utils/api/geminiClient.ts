@@ -1,4 +1,5 @@
 
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 class GeminiClient {
@@ -51,75 +52,127 @@ class GeminiClient {
     }
   }
 
+  // Método generate para compatibilidade
+  async generate(prompt: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      const content = await this.generateContent(prompt);
+      
+      // Tentar parsear como JSON primeiro
+      try {
+        const parsedContent = JSON.parse(content);
+        return { success: true, data: parsedContent };
+      } catch {
+        // Se não for JSON válido, retornar como texto
+        return { success: true, data: { content } };
+      }
+    } catch (error) {
+      console.error('❌ Erro no método generate:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      };
+    }
+  }
+
   private getFallbackResponse(prompt: string): string {
     console.log('🔄 Usando resposta de fallback');
     
     if (prompt.includes('sequência didática') || prompt.includes('sequencia didatica')) {
       return JSON.stringify({
-        titulo: "Sequência Didática - Tópico Educacional",
+        tituloTemaAssunto: "Sequência Didática - Tópico Educacional",
         disciplina: "Matéria Específica",
-        serie: "Série/Ano",
-        duracao: "4-6 aulas",
-        objetivos: [
-          "Compreender conceitos fundamentais do tema",
-          "Desenvolver habilidades práticas relacionadas",
-          "Aplicar conhecimentos em situações contextualizadas"
-        ],
-        atividades: [
+        anoSerie: "Série/Ano",
+        publicoAlvo: "Estudantes do ensino fundamental/médio",
+        objetivosAprendizagem: "Desenvolver conhecimentos específicos do tema proposto",
+        quantidadeAulas: "4",
+        quantidadeDiagnosticos: "1",
+        quantidadeAvaliacoes: "2",
+        cronograma: "Distribuição das atividades ao longo do período",
+        aulas: [
           {
-            aula: 1,
+            numero: 1,
             titulo: "Introdução ao Tema",
             descricao: "Apresentação dos conceitos básicos e levantamento de conhecimentos prévios",
+            objetivos: ["Compreender conceitos fundamentais", "Identificar conhecimentos prévios"],
+            metodologia: "Aula expositiva dialogada com atividades interativas",
             recursos: ["Quadro", "Material audiovisual", "Textos introdutórios"],
-            duracao: "50 minutos"
+            duracao: "50 minutos",
+            atividades: [
+              "Discussão inicial sobre o tema",
+              "Apresentação de conceitos básicos",
+              "Atividade de sondagem"
+            ]
           },
           {
-            aula: 2,
+            numero: 2,
             titulo: "Desenvolvimento Teórico",
             descricao: "Aprofundamento dos conceitos com exemplos práticos",
+            objetivos: ["Aprofundar conhecimentos teóricos", "Aplicar conceitos em exemplos"],
+            metodologia: "Aula teórico-prática com exercícios",
             recursos: ["Livro didático", "Exercícios práticos", "Material complementar"],
-            duracao: "50 minutos"
+            duracao: "50 minutos",
+            atividades: [
+              "Exposição teórica",
+              "Resolução de exercícios",
+              "Discussão de exemplos"
+            ]
           },
           {
-            aula: 3,
+            numero: 3,
             titulo: "Atividades Práticas",
             descricao: "Aplicação prática dos conceitos através de exercícios e atividades",
+            objetivos: ["Aplicar conhecimentos práticos", "Desenvolver habilidades específicas"],
+            metodologia: "Atividades práticas em grupo e individual",
             recursos: ["Material manipulativo", "Fichas de atividades", "Computador/tablet"],
-            duracao: "50 minutos"
+            duracao: "50 minutos",
+            atividades: [
+              "Atividades práticas",
+              "Trabalho em grupo",
+              "Aplicação de conceitos"
+            ]
           },
           {
-            aula: 4,
+            numero: 4,
             titulo: "Avaliação e Síntese",
             descricao: "Avaliação do aprendizado e síntese dos conteúdos estudados",
+            objetivos: ["Avaliar aprendizado", "Sintetizar conhecimentos"],
+            metodologia: "Avaliação formativa e síntese",
             recursos: ["Instrumentos de avaliação", "Material de síntese"],
-            duracao: "50 minutos"
+            duracao: "50 minutos",
+            atividades: [
+              "Avaliação dos conhecimentos",
+              "Síntese dos conteúdos",
+              "Feedback e orientações"
+            ]
           }
         ],
-        avaliacao: {
-          criterios: [
-            "Participação nas atividades propostas",
-            "Compreensão dos conceitos fundamentais",
-            "Aplicação prática dos conhecimentos",
-            "Qualidade das produções realizadas"
-          ],
-          instrumentos: [
-            "Observação direta",
-            "Atividades práticas",
-            "Produção textual",
-            "Autoavaliação"
-          ]
-        },
-        recursos_necessarios: [
-          "Quadro e material de escrita",
-          "Material audiovisual (projetor/TV)",
-          "Livros didáticos e textos complementares",
-          "Material manipulativo específico do tema",
-          "Computador/tablet (se necessário)"
+        diagnosticos: [
+          {
+            numero: 1,
+            titulo: "Diagnóstico Inicial",
+            descricao: "Avaliação dos conhecimentos prévios dos estudantes",
+            tipo: "Diagnóstica",
+            instrumentos: ["Questionário", "Discussão em grupo"],
+            duracao: "20 minutos"
+          }
         ],
-        referencias: [
-          "Livro didático adotado pela escola",
-          "Material complementar específico do tema",
-          "Recursos digitais educacionais"
+        avaliacoes: [
+          {
+            numero: 1,
+            titulo: "Avaliação Formativa",
+            descricao: "Avaliação contínua durante o processo",
+            tipo: "Formativa",
+            instrumentos: ["Observação", "Atividades práticas"],
+            peso: "40%"
+          },
+          {
+            numero: 2,
+            titulo: "Avaliação Somativa",
+            descricao: "Avaliação final dos conhecimentos adquiridos",
+            tipo: "Somativa",
+            instrumentos: ["Prova", "Trabalho final"],
+            peso: "60%"
+          }
         ]
       });
     }
@@ -139,11 +192,15 @@ class GeminiClient {
   }
 }
 
+// Criar instância singleton
+const geminiClient = new GeminiClient();
+
 // Exportar instância singleton
-export const geminiClient = new GeminiClient();
+export { geminiClient };
 
 // Exportar classe para casos que precisem de múltiplas instâncias
 export { GeminiClient };
 
 // Export default da instância
 export default geminiClient;
+
