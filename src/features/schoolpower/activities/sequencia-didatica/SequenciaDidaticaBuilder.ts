@@ -30,16 +30,24 @@ export class SequenciaDidaticaBuilder {
    */
   async construirSequenciaDidatica(formData: ActivityFormData): Promise<SequenciaDidaticaBuildResult> {
     console.log('🚀 SequenciaDidaticaBuilder: Iniciando construção da sequência didática');
-    console.log('📊 Dados recebidos:', formData);
+    console.log('📊 Dados recebidos:', {
+      tituloTemaAssunto: formData.tituloTemaAssunto,
+      disciplina: formData.disciplina,
+      anoSerie: formData.anoSerie,
+      quantidadeAulas: formData.quantidadeAulas,
+      quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
+      quantidadeAvaliacoes: formData.quantidadeAvaliacoes
+    });
 
     try {
       // Converter dados do formulário
       const sequenciaData = activityFormToSequenciaData(formData);
-      console.log('🔄 Dados convertidos:', sequenciaData);
+      console.log('🔄 Dados convertidos para sequência:', sequenciaData);
 
       // Validar dados obrigatórios
       const validacao = validateSequenciaDidaticaData(sequenciaData);
       if (!validacao.valid) {
+        console.error('❌ Validação falhou:', validacao.errors);
         return {
           success: false,
           error: `Dados inválidos: ${validacao.errors.join(', ')}`
@@ -49,15 +57,24 @@ export class SequenciaDidaticaBuilder {
       console.log('✅ Dados validados com sucesso');
 
       // Gerar sequência com o generator
+      console.log('🎯 Iniciando geração com IA...');
       const sequenciaCompleta = await sequenciaDidaticaGenerator.gerarSequenciaDidatica(sequenciaData);
       
-      console.log('🎯 Sequência didática gerada:', {
+      console.log('🎯 Sequência didática gerada com sucesso:', {
         titulo: sequenciaCompleta.tituloTemaAssunto,
         disciplina: sequenciaCompleta.disciplina,
-        aulasCount: sequenciaCompleta.aulas.length,
-        diagnosticosCount: sequenciaCompleta.diagnosticos.length,
-        avaliacoesCount: sequenciaCompleta.avaliacoes.length
+        aulasCount: sequenciaCompleta.aulas?.length || 0,
+        diagnosticosCount: sequenciaCompleta.diagnosticos?.length || 0,
+        avaliacoesCount: sequenciaCompleta.avaliacoes?.length || 0,
+        temCompetencias: !!sequenciaCompleta.competenciasDesenvolvidas,
+        temMateriais: !!sequenciaCompleta.materiaisNecessarios
       });
+
+      // Verificar se a geração foi bem-sucedida
+      if (!sequenciaCompleta.aulas || sequenciaCompleta.aulas.length === 0) {
+        console.warn('⚠️ Nenhuma aula foi gerada, criando fallback');
+        // O fallback já está no generator
+      }
 
       // Salvar no localStorage com todas as chaves necessárias
       this.salvarSequencia(sequenciaCompleta);
@@ -69,9 +86,11 @@ export class SequenciaDidaticaBuilder {
 
     } catch (error) {
       console.error('❌ Erro na construção da sequência didática:', error);
+      console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'N/A');
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: error instanceof Error ? error.message : 'Erro desconhecido na construção'
       };
     }
   }

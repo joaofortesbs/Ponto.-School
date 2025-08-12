@@ -1,53 +1,28 @@
 import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
 
+export interface GeminiResponse {
+  success: boolean;
+  result: string;
+  error?: string;
+}
+
 export interface GeminiRequest {
   prompt: string;
   temperature?: number;
   maxTokens?: number;
-  topP?: number;
-  topK?: number;
 }
 
-export interface GeminiResponse {
-  success: boolean;
-  result: string;
-  estimatedTokens: number;
-  estimatedPowerCost: number;
-  executionTime: number;
-  error?: string;
-}
+class GeminiClient {
+  private readonly apiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+  private readonly baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
-export class GeminiClient {
-  private apiKey: string;
-  private baseUrl: string;
-
-  // Adiciona um campo estático para a instância única
-  private static instance: GeminiClient;
-
-  // Torna o construtor privado para forçar o uso do Singleton
-  private constructor() {
-    this.apiKey = API_KEYS.GEMINI;
-    this.baseUrl = API_URLS.GEMINI;
-  }
-
-  // Método estático para obter a instância única
-  public static getInstance(): GeminiClient {
-    if (!GeminiClient.instance) {
-      GeminiClient.instance = new GeminiClient();
-    }
-    return GeminiClient.instance;
-  }
-
-  /**
-   * Faz requisição para a API Gemini
-   */
   async generate(request: GeminiRequest): Promise<GeminiResponse> {
-    const startTime = Date.now();
-
     try {
-      if (!this.apiKey) {
-        throw new Error('Chave da API Gemini não configurada');
-      }
+      console.log('🚀 Enviando requisição para Gemini:', {
+        promptLength: request.prompt.length,
+        temperature: request.temperature,
+        maxTokens: request.maxTokens
+      });
 
       const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
         method: 'POST',
@@ -56,69 +31,56 @@ export class GeminiClient {
         },
         body: JSON.stringify({
           contents: [{
-            parts: [{ text: request.prompt }]
+            parts: [{
+              text: request.prompt
+            }]
           }],
           generationConfig: {
             temperature: request.temperature || 0.7,
-            topP: request.topP || 0.8,
-            topK: request.topK || 40,
-            maxOutputTokens: request.maxTokens || 2048,
+            maxOutputTokens: request.maxTokens || 4000,
+            topP: 0.8,
+            topK: 40
           }
-        }),
-        signal: AbortSignal.timeout(API_CONFIG.timeout)
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ Erro na resposta do Gemini:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`API Error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      const executionTime = Date.now() - startTime;
+      console.log('📊 Resposta do Gemini recebida:', {
+        hasResponse: !!data,
+        candidatesLength: data.candidates?.length || 0
+      });
 
-      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Resposta inválida da API Gemini');
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('Nenhuma resposta gerada pelo Gemini');
       }
 
-      const responseText = data.candidates[0].content.parts[0].text;
-      const estimatedTokens = this.estimateTokens(request.prompt + responseText);
-      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GEMINI;
+      const result = data.candidates[0].content.parts[0].text;
+      console.log('✅ Conteúdo extraído com sucesso, length:', result.length);
 
       return {
         success: true,
-        result: responseText,
-        estimatedTokens,
-        estimatedPowerCost,
-        executionTime,
+        result: result
       };
 
     } catch (error) {
-      const executionTime = Date.now() - startTime;
-
+      console.error('❌ Erro no cliente Gemini:', error);
       return {
         success: false,
         result: '',
-        estimatedTokens: 0,
-        estimatedPowerCost: 0,
-        executionTime,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
     }
   }
-
-  /**
-   * Estimativa básica de tokens (aproximadamente 4 caracteres por token)
-   */
-  private estimateTokens(text: string): number {
-    return Math.ceil(text.length / 4);
-  }
-
-  /**
-   * Atualiza a chave da API
-   */
-  updateApiKey(newKey: string): void {
-    this.apiKey = newKey;
-  }
 }
 
-export const geminiClient = GeminiClient.getInstance();
-export default GeminiClient;
+export const geminiClient = new GeminiClient();

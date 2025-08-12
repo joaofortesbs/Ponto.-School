@@ -1,4 +1,3 @@
-
 import { geminiClient } from '@/utils/api/geminiClient';
 import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
@@ -65,7 +64,7 @@ export class SequenciaDidaticaGenerator {
 
   async gerarSequenciaDidatica(dados: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
     console.log('🚀 Gerando Sequência Didática com dados:', dados);
-    
+
     try {
       const prompt = this.construirPrompt(dados);
       console.log('📝 Prompt construído para IA:', prompt);
@@ -114,46 +113,46 @@ Retorne APENAS um JSON válido no seguinte formato:
   "tituloTemaAssunto": "${dados.tituloTemaAssunto}",
   "anoSerie": "${dados.anoSerie}",
   "disciplina": "${dados.disciplina}",
-  "bnccCompetencias": "${dados.bnccCompetencias || 'Competências BNCC aplicáveis'}",
+  "bnccCompetencias": "${dados.bnccCompetencias || 'Competências BNCC específicas para o tema'}",
   "publicoAlvo": "${dados.publicoAlvo}",
   "objetivosAprendizagem": "${dados.objetivosAprendizagem}",
   "quantidadeAulas": "${dados.quantidadeAulas}",
   "quantidadeDiagnosticos": "${dados.quantidadeDiagnosticos}",
   "quantidadeAvaliacoes": "${dados.quantidadeAvaliacoes}",
-  "cronograma": "${dados.cronograma || 'Distribuição flexível conforme necessidades'}",
-  "duracaoTotal": "${dados.quantidadeAulas} aulas de 50 minutos cada",
-  "materiaisNecessarios": ["Quadro", "Material didático", "Recursos audiovisuais"],
-  "competenciasDesenvolvidas": ["Compreensão", "Análise", "Aplicação prática"],
+  "cronograma": "Cronograma detalhado e específico para ${dados.tituloTemaAssunto}",
+  "duracaoTotal": "${dados.quantidadeAulas} aulas de 50 minutos cada - Total: ${parseInt(dados.quantidadeAulas) * 50} minutos",
+  "materiaisNecessarios": ["Lista específica de materiais para ${dados.tituloTemaAssunto}"],
+  "competenciasDesenvolvidas": ["Competências específicas desenvolvidas no tema"],
   "aulas": [
     {
       "numero": 1,
-      "titulo": "Introdução ao Tema",
-      "objetivo": "Apresentar conceitos fundamentais",
-      "conteudo": "Conteúdo introdutório sobre o tema",
-      "metodologia": "Aula expositiva dialogada",
-      "recursos": ["Quadro", "Projetor"],
-      "atividadePratica": "Atividade de sondagem de conhecimentos prévios",
-      "avaliacao": "Observação da participação e interesse",
+      "titulo": "Título específico da Aula 1 sobre ${dados.tituloTemaAssunto}",
+      "objetivo": "Objetivo específico e detalhado da primeira aula",
+      "conteudo": "Conteúdo específico e detalhado para ${dados.tituloTemaAssunto}",
+      "metodologia": "Metodologia específica adequada ao tema e público",
+      "recursos": ["Recursos específicos necessários"],
+      "atividadePratica": "Atividade prática específica relacionada ao tema",
+      "avaliacao": "Critério de avaliação específico da aula",
       "tempoEstimado": "50 minutos"
     }
   ],
   "diagnosticos": [
     {
       "numero": 1,
-      "titulo": "Diagnóstico Inicial",
-      "objetivo": "Avaliar conhecimentos prévios",
-      "questoes": ["Pergunta diagnóstica 1", "Pergunta diagnóstica 2"],
-      "criteriosAvaliacao": "Identificação do nível de conhecimento",
+      "titulo": "Diagnóstico específico para ${dados.tituloTemaAssunto}",
+      "objetivo": "Objetivo específico do diagnóstico",
+      "questoes": ["Questões específicas sobre ${dados.tituloTemaAssunto}"],
+      "criteriosAvaliacao": "Critérios específicos de avaliação diagnóstica",
       "tempoEstimado": "30 minutos"
     }
   ],
   "avaliacoes": [
     {
       "numero": 1,
-      "titulo": "Avaliação Formativa",
-      "objetivo": "Verificar aprendizagem",
-      "formato": "Avaliação prática",
-      "criterios": ["Compreensão", "Aplicação"],
+      "titulo": "Avaliação específica de ${dados.tituloTemaAssunto}",
+      "objetivo": "Objetivo específico da avaliação",
+      "formato": "Formato específico adequado ao tema",
+      "criterios": ["Critérios específicos de avaliação"],
       "tempoEstimado": "50 minutos"
     }
   ]
@@ -312,7 +311,7 @@ Retorne APENAS o JSON válido, sem texto adicional.
 
   private criarSequenciaFallback(dados: SequenciaDidaticaData): SequenciaDidaticaCompleta {
     console.log('🔄 Criando sequência fallback');
-    
+
     const quantAulas = parseInt(dados.quantidadeAulas || '4');
     const quantDiag = parseInt(dados.quantidadeDiagnosticos || '1');
     const quantAval = parseInt(dados.quantidadeAvaliacoes || '1');

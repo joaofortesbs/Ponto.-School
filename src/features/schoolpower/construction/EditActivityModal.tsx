@@ -207,17 +207,34 @@ const EditActivityModal = ({
         }
       };
     } else if (type === 'sequencia-didatica') {
-        console.log('🔄 Usando SequenciaDidaticaBuilder para gerar conteúdo...');
+        console.log('🔄 Iniciando geração de Sequência Didática...');
+        console.log('📊 Dados enviados para o builder:', {
+          tituloTemaAssunto: data.tituloTemaAssunto,
+          disciplina: data.disciplina,
+          anoSerie: data.anoSerie,
+          objetivosAprendizagem: data.objetivosAprendizagem,
+          quantidadeAulas: data.quantidadeAulas,
+          quantidadeDiagnosticos: data.quantidadeDiagnosticos,
+          quantidadeAvaliacoes: data.quantidadeAvaliacoes
+        });
+
         const result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(data);
 
         if (result.success && result.data) {
-          console.log('✅ Sequência Didática gerada com sucesso:', result.data);
+          console.log('✅ Sequência Didática gerada com sucesso!');
+          console.log('📋 Estrutura gerada:', {
+            titulo: result.data.tituloTemaAssunto,
+            aulas: result.data.aulas?.length || 0,
+            diagnosticos: result.data.diagnosticos?.length || 0,
+            avaliacoes: result.data.avaliacoes?.length || 0
+          });
+          
           return {
             success: true,
             data: result.data
           };
         } else {
-          console.error('❌ Erro ao gerar sequência:', result.error);
+          console.error('❌ Erro ao gerar sequência didática:', result.error);
           throw new Error(result.error || 'Erro na geração da sequência didática');
         }
       }
