@@ -1,103 +1,28 @@
 
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
-
-export interface SequenciaDidaticaCustomFields {
-  [key: string]: string;
-}
-
-export interface SequenciaDidaticaActivity {
-  id: string;
-  title: string;
-  description: string;
-  customFields: SequenciaDidaticaCustomFields;
-  personalizedTitle?: string;
-  personalizedDescription?: string;
-}
-
 export interface SequenciaDidaticaData {
   tituloTemaAssunto: string;
   anoSerie: string;
   disciplina: string;
-  bnccCompetencias: string;
+  bnccCompetencias?: string;
   publicoAlvo: string;
   objetivosAprendizagem: string;
   quantidadeAulas: string;
   quantidadeDiagnosticos: string;
   quantidadeAvaliacoes: string;
-  cronograma: string;
+  cronograma?: string;
 }
 
-export const sequenciaDidaticaFieldMapping = {
-  'Título do Tema / Assunto': 'tituloTemaAssunto',
-  'tituloTemaAssunto': 'tituloTemaAssunto',
-  'Ano / Série': 'anoSerie',
-  'anoSerie': 'anoSerie',
-  'Disciplina': 'disciplina',
-  'disciplina': 'disciplina',
-  'BNCC / Competências': 'bnccCompetencias',
-  'bnccCompetencias': 'bnccCompetencias',
-  'Público-alvo': 'publicoAlvo',
-  'publicoAlvo': 'publicoAlvo',
-  'Objetivos de Aprendizagem': 'objetivosAprendizagem',
-  'objetivosAprendizagem': 'objetivosAprendizagem',
-  'Quantidade de Aulas': 'quantidadeAulas',
-  'quantidadeAulas': 'quantidadeAulas',
-  'Quantidade de Diagnósticos': 'quantidadeDiagnosticos',
-  'quantidadeDiagnosticos': 'quantidadeDiagnosticos',
-  'Quantidade de Avaliações': 'quantidadeAvaliacoes',
-  'quantidadeAvaliacoes': 'quantidadeAvaliacoes',
-  'Cronograma': 'cronograma',
-  'cronograma': 'cronograma'
-};
-
-/**
- * Processa dados de uma atividade de Sequência Didática do Action Plan
- * para o formato do formulário do modal
- */
-export function processSequenciaDidaticaData(formData: ActivityFormData): SequenciaDidaticaData {
-  console.log('📚 Processando dados da Sequência Didática:', formData);
-
-  const processedData: SequenciaDidaticaData = {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-    anoSerie: formData.anoSerie || formData.schoolYear || '',
-    disciplina: formData.disciplina || formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
-    cronograma: formData.cronograma || ''
-  };
-
-  console.log('✅ Dados processados:', processedData);
-  return processedData;
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
 }
 
-/**
- * Converte dados do ActivityFormData para SequenciaDidaticaData
- */
-export function activityFormToSequenciaData(formData: ActivityFormData): SequenciaDidaticaData {
-  return {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-    anoSerie: formData.anoSerie || formData.schoolYear || '',
-    disciplina: formData.disciplina || formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
-    cronograma: formData.cronograma || ''
-  };
-}
-
-/**
- * Valida se os dados essenciais estão presentes
- */
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { valid: boolean; errors: string[] } {
+export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): ValidationResult {
   const errors: string[] = [];
 
+  console.log('🔍 Validando dados da sequência didática:', data);
+
+  // Validações obrigatórias
   if (!data.tituloTemaAssunto?.trim()) {
     errors.push('Título do tema/assunto é obrigatório');
   }
@@ -110,27 +35,97 @@ export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { va
     errors.push('Disciplina é obrigatória');
   }
 
+  if (!data.publicoAlvo?.trim()) {
+    errors.push('Público-alvo é obrigatório');
+  }
+
   if (!data.objetivosAprendizagem?.trim()) {
     errors.push('Objetivos de aprendizagem são obrigatórios');
   }
 
-  const quantAulas = parseInt(data.quantidadeAulas || '0');
-  if (quantAulas <= 0) {
-    errors.push('Quantidade de aulas deve ser maior que 0');
+  if (!data.quantidadeAulas?.trim()) {
+    errors.push('Quantidade de aulas é obrigatória');
+  } else {
+    const quantAulas = parseInt(data.quantidadeAulas);
+    if (isNaN(quantAulas) || quantAulas < 1) {
+      errors.push('Quantidade de aulas deve ser um número maior que 0');
+    }
   }
 
-  const quantDiag = parseInt(data.quantidadeDiagnosticos || '0');
-  if (quantDiag < 0) {
-    errors.push('Quantidade de diagnósticos deve ser 0 ou maior');
+  if (!data.quantidadeDiagnosticos?.trim()) {
+    errors.push('Quantidade de diagnósticos é obrigatória');
+  } else {
+    const quantDiag = parseInt(data.quantidadeDiagnosticos);
+    if (isNaN(quantDiag) || quantDiag < 0) {
+      errors.push('Quantidade de diagnósticos deve ser um número maior ou igual a 0');
+    }
   }
 
-  const quantAval = parseInt(data.quantidadeAvaliacoes || '0');
-  if (quantAval < 0) {
-    errors.push('Quantidade de avaliações deve ser 0 ou maior');
+  if (!data.quantidadeAvaliacoes?.trim()) {
+    errors.push('Quantidade de avaliações é obrigatória');
+  } else {
+    const quantAval = parseInt(data.quantidadeAvaliacoes);
+    if (isNaN(quantAval) || quantAval < 0) {
+      errors.push('Quantidade de avaliações deve ser um número maior ou igual a 0');
+    }
   }
+
+  const isValid = errors.length === 0;
+  console.log(`${isValid ? '✅' : '❌'} Validação ${isValid ? 'passou' : 'falhou'}:`, errors);
 
   return {
-    valid: errors.length === 0,
+    valid: isValid,
     errors
   };
 }
+
+export function processSequenciaDidaticaData(rawData: any): SequenciaDidaticaData {
+  console.log('🔄 Processando dados brutos:', rawData);
+
+  const processed: SequenciaDidaticaData = {
+    tituloTemaAssunto: rawData.tituloTemaAssunto || rawData.title || '',
+    anoSerie: rawData.anoSerie || rawData.schoolYear || '',
+    disciplina: rawData.disciplina || rawData.subject || '',
+    bnccCompetencias: rawData.bnccCompetencias || rawData.competencies || '',
+    publicoAlvo: rawData.publicoAlvo || rawData.context || '',
+    objetivosAprendizagem: rawData.objetivosAprendizagem || rawData.objectives || '',
+    quantidadeAulas: rawData.quantidadeAulas || '4',
+    quantidadeDiagnosticos: rawData.quantidadeDiagnosticos || '1',
+    quantidadeAvaliacoes: rawData.quantidadeAvaliacoes || '1',
+    cronograma: rawData.cronograma || ''
+  };
+
+  console.log('✅ Dados processados:', processed);
+  return processed;
+}
+
+export function activityFormToSequenciaData(formData: any): SequenciaDidaticaData {
+  console.log('🔄 Convertendo dados do formulário:', formData);
+
+  return {
+    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
+    anoSerie: formData.anoSerie || formData.schoolYear || '',
+    disciplina: formData.disciplina || formData.subject || '',
+    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
+    publicoAlvo: formData.publicoAlvo || formData.context || '',
+    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
+    quantidadeAulas: formData.quantidadeAulas || '4',
+    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
+    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
+    cronograma: formData.cronograma || ''
+  };
+}
+
+// Mapeamento de campos para compatibilidade
+export const sequenciaDidaticaFieldMapping = {
+  'Título do Tema / Assunto': 'tituloTemaAssunto',
+  'Ano / Série': 'anoSerie',
+  'Disciplina': 'disciplina',
+  'BNCC / Competências': 'bnccCompetencias',
+  'Público-alvo': 'publicoAlvo',
+  'Objetivos de Aprendizagem': 'objetivosAprendizagem',
+  'Quantidade de Aulas': 'quantidadeAulas',
+  'Quantidade de Diagnósticos': 'quantidadeDiagnosticos',
+  'Quantidade de Avaliações': 'quantidadeAvaliacoes',
+  'Cronograma': 'cronograma'
+};
