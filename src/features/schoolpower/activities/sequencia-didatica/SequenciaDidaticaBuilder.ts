@@ -37,30 +37,30 @@ export class SequenciaDidaticaBuilder {
       const sequenciaData = activityFormToSequenciaData(formData);
       console.log('🔄 Dados convertidos:', sequenciaData);
 
-      // Validar dados obrigatórios
-      const validacao = validateSequenciaDidaticaData(sequenciaData);
-      if (!validacao.valid) {
+      // Validar dados
+      const validation = validateSequenciaDidaticaData(sequenciaData);
+      if (!validation.valid) {
+        console.error('❌ Dados inválidos:', validation.errors);
         return {
           success: false,
-          error: `Dados inválidos: ${validacao.errors.join(', ')}`
+          error: `Dados inválidos: ${validation.errors.join(', ')}`
         };
       }
 
       console.log('✅ Dados validados com sucesso');
 
-      // Gerar sequência com o generator
+      // Gerar sequência didática usando o generator
       const sequenciaCompleta = await sequenciaDidaticaGenerator.gerarSequenciaDidatica(sequenciaData);
       
-      console.log('🎯 Sequência didática gerada:', {
+      console.log('🎯 Sequência gerada:', {
         titulo: sequenciaCompleta.tituloTemaAssunto,
-        disciplina: sequenciaCompleta.disciplina,
-        aulasCount: sequenciaCompleta.aulas.length,
-        diagnosticosCount: sequenciaCompleta.diagnosticos.length,
-        avaliacoesCount: sequenciaCompleta.avaliacoes.length
+        aulas: sequenciaCompleta.aulas?.length || 0,
+        diagnosticos: sequenciaCompleta.diagnosticos?.length || 0,
+        avaliacoes: sequenciaCompleta.avaliacoes?.length || 0
       });
 
-      // Salvar no localStorage com todas as chaves necessárias
-      this.salvarSequencia(sequenciaCompleta);
+      // Salvar em múltiplas chaves para compatibilidade
+      await this.salvarSequenciaDidatica(sequenciaCompleta);
 
       return {
         success: true,
@@ -71,98 +71,78 @@ export class SequenciaDidaticaBuilder {
       console.error('❌ Erro na construção da sequência didática:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: error instanceof Error ? error.message : 'Erro desconhecido na construção'
       };
     }
   }
 
   /**
-   * Salva a sequência didática no localStorage com múltiplas chaves para garantir compatibilidade
+   * Salva a sequência didática em múltiplas chaves do localStorage
    */
-  private salvarSequencia(sequencia: SequenciaDidaticaCompleta): void {
-    console.log('💾 Salvando sequência didática no localStorage');
-    
+  private async salvarSequenciaDidatica(sequencia: SequenciaDidaticaCompleta): Promise<void> {
     try {
       const dataToSave = JSON.stringify(sequencia);
       
-      // Salvar com todas as chaves necessárias
-      SequenciaDidaticaBuilder.STORAGE_KEYS.forEach(chave => {
-        localStorage.setItem(chave, dataToSave);
-        console.log(`✅ Sequência salva com chave: ${chave}`);
+      // Salvar em todas as chaves para garantir compatibilidade
+      this.STORAGE_KEYS.forEach(key => {
+        localStorage.setItem(key, dataToSave);
+        console.log(`💾 Sequência salva na chave: ${key}`);
       });
 
-      // Também salvar no cache de atividades construídas
+      // Também salvar na estrutura de atividades construídas
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities['sequencia-didatica'] = {
         generatedContent: sequencia,
         timestamp: new Date().toISOString()
       };
       localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-      
+
       console.log('✅ Sequência didática salva em todas as chaves necessárias');
-      
-      // Log para debug
-      console.log('🔍 Verificação de salvamento:', {
-        chavesPrincipais: SequenciaDidaticaBuilder.STORAGE_KEYS.map(key => ({
-          key,
-          exists: !!localStorage.getItem(key)
-        })),
-        constructedActivitiesExists: !!localStorage.getItem('constructedActivities')
-      });
-      
     } catch (error) {
-      console.error('❌ Erro ao salvar sequência no localStorage:', error);
+      console.error('❌ Erro ao salvar sequência didática:', error);
+      throw new Error('Erro ao salvar dados da sequência didática');
     }
   }
 
   /**
-   * Carrega uma sequência salva do localStorage
+   * Carrega uma sequência didática salva
    */
-  carregarSequenciaSalva(): SequenciaDidaticaCompleta | null {
-    console.log('🔍 Carregando sequência salva do localStorage');
-    
-    try {
-      // Tentar carregar das chaves em ordem de prioridade
-      for (const chave of SequenciaDidaticaBuilder.STORAGE_KEYS) {
-        const savedData = localStorage.getItem(chave);
-        if (savedData) {
-          console.log(`✅ Sequência encontrada na chave: ${chave}`);
-          const parsed = JSON.parse(savedData);
-          console.log('📊 Dados carregados:', {
-            titulo: parsed.tituloTemaAssunto,
-            aulasCount: parsed.aulas?.length || 0,
-            diagnosticosCount: parsed.diagnosticos?.length || 0,
-            avaliacoesCount: parsed.avaliacoes?.length || 0
-          });
-          return parsed;
+  static carregarSequenciaDidatica(): SequenciaDidaticaCompleta | null {
+    for (const key of SequenciaDidaticaBuilder.STORAGE_KEYS) {
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          const data = JSON.parse(saved);
+          console.log(`📥 Sequência carregada da chave: ${key}`);
+          return data;
         }
+      } catch (error) {
+        console.error(`❌ Erro ao carregar da chave ${key}:`, error);
       }
-      
-      console.log('⚠️ Nenhuma sequência salva encontrada');
-      return null;
-    } catch (error) {
-      console.error('❌ Erro ao carregar sequência salva:', error);
-      return null;
     }
+    
+    console.log('⚠️ Nenhuma sequência didática encontrada no localStorage');
+    return null;
   }
 
   /**
-   * Limpa todas as sequências salvas
+   * Limpa todas as sequências didáticas salvas
    */
-  limparSequenciasSalvas(): void {
-    console.log('🗑️ Limpando sequências salvas');
-    
-    SequenciaDidaticaBuilder.STORAGE_KEYS.forEach(chave => {
-      localStorage.removeItem(chave);
-      console.log(`🗑️ Removido: ${chave}`);
+  static limparSequenciasDidaticas(): void {
+    SequenciaDidaticaBuilder.STORAGE_KEYS.forEach(key => {
+      localStorage.removeItem(key);
     });
-
-    // Limpar do cache de atividades construídas também
-    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-    delete constructedActivities['sequencia-didatica'];
-    localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
     
-    console.log('✅ Todas as sequências foram removidas');
+    // Limpar também da estrutura de atividades construídas
+    try {
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      delete constructedActivities['sequencia-didatica'];
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+    } catch (error) {
+      console.error('Erro ao limpar constructedActivities:', error);
+    }
+    
+    console.log('🗑️ Todas as sequências didáticas foram limpas do localStorage');
   }
 }
 

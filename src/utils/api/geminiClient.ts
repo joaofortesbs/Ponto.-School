@@ -121,4 +121,5 @@ export class GeminiClient {
 }
 
 export const geminiClient = GeminiClient.getInstance();
+export { GeminiClient };
 export default GeminiClient;

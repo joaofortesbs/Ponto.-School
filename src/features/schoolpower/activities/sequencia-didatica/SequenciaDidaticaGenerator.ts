@@ -75,6 +75,13 @@ export class SequenciaDidaticaGenerator {
         temperature: 0.7,
         maxTokens: 4000
       });
+      
+      console.log('📡 Resposta da API Gemini:', {
+        success: response.success,
+        hasResult: !!response.result,
+        resultLength: response.result?.length || 0,
+        error: response.error
+      });
 
       if (!response.success) {
         throw new Error(`Erro na geração: ${response.error}`);
