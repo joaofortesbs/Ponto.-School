@@ -109,6 +109,7 @@ function App() {
 
   // Debug: Log da renderização do App
   console.log("App renderizando, location:", location.pathname);
+  console.log("App state:", { isLoading, isAuthRoute, showWelcomeModal });
 
   useEffect(() => {
     console.log("App carregado com sucesso!");

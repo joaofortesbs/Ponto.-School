@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface Props {
@@ -22,7 +21,13 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary - Erro detalhado:', error, errorInfo);
+    console.error('ErrorBoundary capturou um erro:', error, errorInfo);
+    // Log adicional para debug
+    console.log('Erro detalhado:', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack
+    });
   }
 
   render() {

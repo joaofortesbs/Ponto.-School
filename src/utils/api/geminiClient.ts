@@ -1,58 +1,43 @@
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export interface GeminiResponse {
-  text: string;
-  error?: string;
-}
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'sua-chave-api-aqui';
 
 export class GeminiClient {
   private genAI: GoogleGenerativeAI;
-  private model: any;
 
   constructor() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAzlddq4mQbPP0rTuGF1JjQKdtEGFEWcXE';
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    this.genAI = new GoogleGenerativeAI(API_KEY);
   }
 
-  async generateText(prompt: string): Promise<GeminiResponse> {
+  async generateContent(prompt: string, model: string = 'gemini-1.5-flash') {
     try {
-      const result = await this.model.generateContent(prompt);
+      const generativeModel = this.genAI.getGenerativeModel({ model });
+      const result = await generativeModel.generateContent(prompt);
       const response = await result.response;
-      const text = response.text();
-      
-      return { text };
+      return response.text();
     } catch (error) {
-      console.error('Erro no Gemini:', error);
-      return { 
-        text: '', 
-        error: error instanceof Error ? error.message : 'Erro desconhecido' 
-      };
+      console.error('Erro ao gerar conteúdo com Gemini:', error);
+      throw error;
     }
   }
 
-  async generateSequenciaDidatica(data: any): Promise<GeminiResponse> {
-    const prompt = `
-    Gere uma sequência didática completa baseada nos seguintes dados:
-    
-    Disciplina: ${data.disciplina || 'Não especificada'}
-    Série/Ano: ${data.serie || 'Não especificada'}
-    Tema: ${data.tema || 'Não especificado'}
-    Objetivos: ${data.objetivos || 'Não especificados'}
-    Duração: ${data.duracao || 'Não especificada'}
-    
-    Retorne uma sequência didática estruturada com:
-    1. Título
-    2. Objetivos de aprendizagem
-    3. Conteúdos programáticos
-    4. Metodologia
-    5. Recursos didáticos
-    6. Avaliação
-    7. Cronograma das atividades
-    `;
+  async generateStructuredContent(prompt: string, schema?: any) {
+    try {
+      const model = this.genAI.getGenerativeModel({ 
+        model: 'gemini-1.5-flash',
+        generationConfig: schema ? { 
+          responseMimeType: "application/json",
+          responseSchema: schema 
+        } : undefined
+      });
 
-    return this.generateText(prompt);
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Erro ao gerar conteúdo estruturado:', error);
+      throw error;
+    }
   }
 }
 
