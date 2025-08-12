@@ -1,27 +1,8 @@
 
-// Exportações principais
-export { SequenciaDidaticaBuilder, sequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
-export { SequenciaDidaticaGenerator, sequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
+export * from './sequenciaDidaticaProcessor';
+export { sequenciaDidaticaFieldMapping, processSequenciaDidaticaData, activityFormToSequenciaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+export type { SequenciaDidaticaData, SequenciaDidaticaActivity, SequenciaDidaticaCustomFields } from './sequenciaDidaticaProcessor';
+export { sequenciaDidaticaGenerator, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
+export { sequenciaDidaticaBuilder, SequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
 export { default as SequenciaDidaticaPreview } from './SequenciaDidaticaPreview';
-
-// Exportações de tipos e processamento
-export type { 
-  SequenciaDidaticaData,
-  ValidationResult
-} from './sequenciaDidaticaProcessor';
-
-export {
-  validateSequenciaDidaticaData,
-  processSequenciaDidaticaData,
-  activityFormToSequenciaData,
-  sequenciaDidaticaFieldMapping
-} from './sequenciaDidaticaProcessor';
-
-// Exportações de tipos do generator
-export type {
-  AulaData,
-  DiagnosticoData,
-  AvaliacaoData,
-  SequenciaDidaticaCompleta,
-  SequenciaDidaticaBuildResult
-} from './SequenciaDidaticaGenerator';
+export type { SequenciaDidaticaCompleta, AulaData, DiagnosticoData, AvaliacaoData } from './SequenciaDidaticaGenerator';

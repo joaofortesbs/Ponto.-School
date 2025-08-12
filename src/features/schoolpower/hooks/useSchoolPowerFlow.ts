@@ -1,8 +1,8 @@
-
 import React, { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
+import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
 export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
@@ -101,7 +101,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: message,
       contextualizationData: null,
       actionPlan: [],
-      manualActivities: [],
       timestamp: Date.now()
     };
 
@@ -148,7 +147,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: currentMessage, // Garantir que a mensagem está presente
       contextualizationData: contextData,
       actionPlan: [],
-      manualActivities: [],
       timestamp: Date.now()
     };
 
@@ -177,7 +175,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       const finalData = {
         ...dataWithContext,
         actionPlan,
-        manualActivities: actionPlan,
         timestamp: Date.now()
       };
 
@@ -202,7 +199,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
         const finalData = {
           ...dataWithContext,
           actionPlan: fallbackPlan,
-          manualActivities: fallbackPlan,
           timestamp: Date.now()
         };
 
@@ -229,7 +225,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       const newFlowData = {
         ...flowData,
         actionPlan: approvedItems,
-        manualActivities: approvedItems,
         timestamp: Date.now()
       };
 
@@ -240,6 +235,17 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       console.log('🎯 Transitando imediatamente para interface de construção...');
       setFlowState('activities');
       setIsLoading(false);
+
+      // Opcional: Se quiser manter a automação, pode fazer em background
+      // setTimeout(async () => {
+      //   try {
+      //     const AutomationController = (await import('../construction/automationController')).default;
+      //     const controller = AutomationController.getInstance();
+      //     // Processo de automação em background...
+      //   } catch (error) {
+      //     console.error('Erro na automação em background:', error);
+      //   }
+      // }, 100);
 
       console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
@@ -259,7 +265,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: null,
       contextualizationData: null,
       actionPlan: [],
-      manualActivities: [],
       timestamp: Date.now()
     };
 
