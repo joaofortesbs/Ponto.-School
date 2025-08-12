@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
-import { isActivityEligibleForTrilhas } from '../data/trilhasActivitiesConfig';
 
 export type FlowState = 'idle' | 'contextualizing' | 'actionplan' | 'generating' | 'generatingActivities' | 'activities';
 
@@ -75,102 +74,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     const storedData = loadStoredData();
     if (storedData) {
       setFlowData(storedData);
-      // Determinar o estado baseado nos dados carregados
-      if (storedData.actionPlan && storedData.actionPlan.length > 0) {
-        setFlowState('activities');
-      } else if (storedData.contextualizationData) {
-        setFlowState('actionplan');
-      } else if (storedData.initialMessage) {
-        setFlowState('contextualizing');
-      }
-    }
-  }, []);
-
-  // Função para enviar mensagem inicial
-  const sendInitialMessage = useCallback((message: string) => {
-    console.log('📤 Enviando mensagem inicial:', message);
-    const newData = {
-      ...flowData,
-      initialMessage: message,
-      timestamp: Date.now()
-    };
-    setFlowData(newData);
-    saveData(newData);
-    setFlowState('contextualizing');
-  }, [flowData, saveData]);
-
-  // Função para submeter contextualização
-  const submitContextualization = useCallback(async (data: ContextualizationData) => {
-    console.log('📝 Submetendo contextualização:', data);
-    setIsLoading(true);
-
-    try {
-      const newData = {
-        ...flowData,
-        contextualizationData: data,
-        timestamp: Date.now()
-      };
-      setFlowData(newData);
-      saveData(newData);
-      setFlowState('generating');
-
-      // Gerar plano de ação
-      const actionPlan = await generatePersonalizedPlan(flowData.initialMessage || '', data);
-      
-      const finalData = {
-        ...newData,
-        actionPlan: actionPlan || [],
-        timestamp: Date.now()
-      };
-      setFlowData(finalData);
-      saveData(finalData);
-      setFlowState('actionplan');
-    } catch (error) {
-      console.error('❌ Erro ao gerar plano:', error);
-      setFlowState('contextualizing');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [flowData, saveData]);
-
-  // Função para aprovar plano de ação
-  const approveActionPlan = useCallback((approvedItems: ActionPlanItem[]) => {
-    console.log('✅ Aprovando plano de ação:', approvedItems);
-    const newData = {
-      ...flowData,
-      actionPlan: approvedItems,
-      manualActivities: approvedItems,
-      timestamp: Date.now()
-    };
-    setFlowData(newData);
-    saveData(newData);
-    setFlowState('activities');
-  }, [flowData, saveData]);
-
-  // Função para resetar fluxo
-  const resetFlow = useCallback(() => {
-    console.log('🔄 Resetando fluxo');
-    localStorage.removeItem(STORAGE_KEY);
-    setFlowData({
-      initialMessage: null,
-      contextualizationData: null,
-      actionPlan: [],
-      manualActivities: [],
-      timestamp: Date.now()
-    });
-    setFlowState('idle');
-    setIsLoading(false);
-  }, []);
-
-  return {
-    flowState,
-    flowData,
-    sendInitialMessage,
-    submitContextualization,
-    approveActionPlan,
-    resetFlow,
-    isLoading
-  };ata(storedData);
 
       // Definir estado baseado nos dados carregados
       if (storedData.initialMessage && !storedData.contextualizationData) {
@@ -197,6 +100,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: message,
       contextualizationData: null,
       actionPlan: [],
+      manualActivities: [],
       timestamp: Date.now()
     };
 
@@ -243,6 +147,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: currentMessage, // Garantir que a mensagem está presente
       contextualizationData: contextData,
       actionPlan: [],
+      manualActivities: [],
       timestamp: Date.now()
     };
 
@@ -271,6 +176,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       const finalData = {
         ...dataWithContext,
         actionPlan,
+        manualActivities: actionPlan,
         timestamp: Date.now()
       };
 
@@ -295,6 +201,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
         const finalData = {
           ...dataWithContext,
           actionPlan: fallbackPlan,
+          manualActivities: fallbackPlan,
           timestamp: Date.now()
         };
 
@@ -321,6 +228,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       const newFlowData = {
         ...flowData,
         actionPlan: approvedItems,
+        manualActivities: approvedItems,
         timestamp: Date.now()
       };
 
@@ -331,17 +239,6 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       console.log('🎯 Transitando imediatamente para interface de construção...');
       setFlowState('activities');
       setIsLoading(false);
-
-      // Opcional: Se quiser manter a automação, pode fazer em background
-      // setTimeout(async () => {
-      //   try {
-      //     const AutomationController = (await import('../construction/automationController')).default;
-      //     const controller = AutomationController.getInstance();
-      //     // Processo de automação em background...
-      //   } catch (error) {
-      //     console.error('Erro na automação em background:', error);
-      //   }
-      // }, 100);
 
       console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
@@ -361,6 +258,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       initialMessage: null,
       contextualizationData: null,
       actionPlan: [],
+      manualActivities: [],
       timestamp: Date.now()
     };
 
