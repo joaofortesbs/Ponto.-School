@@ -1,4 +1,3 @@
-
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
 export interface SequenciaDidaticaData {
@@ -88,7 +87,7 @@ class SequenciaDidaticaBuilderClass {
       }
 
       const prompt = this.gerarPromptSequenciaDidatica(dados);
-      
+
       console.log('📤 Enviando prompt para IA...');
       const response = await this.geminiClient.generateContent(prompt);
 
@@ -264,10 +263,10 @@ IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional antes ou dep
     try {
       // Tentar parsear a resposta como JSON
       let dados: any;
-      
+
       // Limpar a resposta removendo possíveis caracteres extras
       const respostaLimpa = resposta.trim().replace(/```json|```/g, '');
-      
+
       try {
         dados = JSON.parse(respostaLimpa);
       } catch (parseError) {
@@ -311,7 +310,7 @@ IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional antes ou dep
 
     } catch (error) {
       console.error('❌ Erro ao processar resposta da IA:', error);
-      
+
       // Retornar estrutura básica em caso de erro
       return {
         tituloTemaAssunto: dadosOriginais.tituloTemaAssunto,
@@ -335,11 +334,6 @@ IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional antes ou dep
   }
 }
 
-// Instância singleton
+export { SequenciaDidaticaBuilder };
 export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilderClass();
-
-// Export da classe também
-export { SequenciaDidaticaBuilderClass as SequenciaDidaticaBuilder };
-
-// Export default
-export default sequenciaDidaticaBuilder;
+export default SequenciaDidaticaBuilderClass;
