@@ -604,11 +604,11 @@ export function SidebarNav({
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
                   <div className="flex justify-center mt-2">
-                    <div 
+                    <div
                       className="h-1 bg-[#FF6B00] rounded-full opacity-30"
                       style={{ width: "40px" }}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
                         style={{ width: "65%" }}
                       />
@@ -661,18 +661,18 @@ export function SidebarNav({
                       Nível {userProfile?.level || 1}
                     </p>
                     <div className="flex justify-center">
-                      <div 
+                      <div
                         className="h-1.5 bg-[#FF6B00] rounded-full opacity-30"
                         style={{ width: "80px" }}
                       >
-                        <div 
+                        <div
                           className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
                           style={{ width: "65%" }}
                         />
                       </div>
                     </div>
                     <div className="flex justify-center mt-2">
-                      <div 
+                      <div
                         className="px-5 py-0.5 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#FF6B00]">
@@ -807,11 +807,11 @@ export function SidebarNav({
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
                   <div className="flex justify-center mt-2">
-                    <div 
+                    <div
                       className="h-1 bg-[#2461E7] rounded-full opacity-30"
                       style={{ width: "40px" }}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
                         style={{ width: "65%" }}
                       />
@@ -846,18 +846,18 @@ export function SidebarNav({
                       Nível {userProfile?.level || 1}
                     </p>
                     <div className="flex justify-center">
-                      <div 
+                      <div
                         className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
                         style={{ width: "80px" }}
                       >
-                        <div 
+                        <div
                           className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
                           style={{ width: "65%" }}
                         />
                       </div>
                     </div>
                     <div className="flex justify-center mt-2">
-                      <div 
+                      <div
                         className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#2461E7]">
@@ -881,7 +881,7 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn(
-          "navigation-menu-container px-2", 
+          "navigation-menu-container px-2",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
           isModeChanging && "mode-changing"
@@ -891,8 +891,8 @@ export function SidebarNav({
             isMenuFlipping && "menu-flipping"
           )}>
             {navItems.map((item, index) => (
-              <div 
-                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`} 
+              <div
+                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`}
                 className={cn(
                   "relative menu-item-wrapper",
                   isMenuFlipping && "animate-menu-transition"
@@ -904,7 +904,7 @@ export function SidebarNav({
                 {item.label === "Agenda" && !isCollapsed ? (
                   <AgendaNav />
                 ) : (
-                  <div 
+                  <div
                     className={cn(
                       "menu-item",
                       isActive(item.path) ? "active" : ""
@@ -922,7 +922,7 @@ export function SidebarNav({
                       {!isCollapsed && (
                         <div className="item-text">
                           <span className="item-title">{item.label}</span>
-                                                </div>
+                        </div>
                       )}
                       <div className="item-indicator"></div>
                     </div>
@@ -1244,10 +1244,10 @@ color: #FF6B00 !important;
         }
 
         @keyframes navigationPulse {
-          0%, 100% { 
+          0%, 100% {
             box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.2);
           }
-          50% { 
+          50% {
             box-shadow: 0 0 0 8px rgba(255, 107, 0, 0);
           }
         }
@@ -1382,11 +1382,11 @@ color: #FF6B00 !important;
           }
           25% {
             transform: scale(1.02);
-            filter: brightness(1.1);
+            filter: brightness(1.05);
           }
           50% {
             transform: scale(0.98);
-            filter: brightness(1.05);
+            filter: brightness(1.1);
           }
           75% {
             transform: scale(1.01);
@@ -1395,9 +1395,8 @@ color: #FF6B00 !important;
         }
 
         /* Animações para o flip do menu */
-        .menu-animating .menu-item-wrapper {
-          animation: menuFlipCascade 1.5s ease-in-out;
-          animation-delay: var(--cascade-delay, 0s);
+        .menu-animating .menu-navigation {
+          animation: menuContainerPulse 2s ease-in-out;
         }
 
         .menu-item-flip-animation {

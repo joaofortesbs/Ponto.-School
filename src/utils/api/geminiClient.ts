@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDhzqOQOfqK4o1iKt6nOmKX2wY-mCBdGlU';
 
-class GeminiClient {
+export class GeminiClient {
   private genAI: GoogleGenerativeAI;
   private model: any;
 
@@ -72,6 +72,7 @@ class GeminiClient {
 }
 
 // Instância singleton
-export { GeminiClient };
-export const geminiClient = new GeminiClient();
-export default GeminiClient;
+const geminiClient = new GeminiClient();
+
+export { geminiClient };
+export default geminiClient;

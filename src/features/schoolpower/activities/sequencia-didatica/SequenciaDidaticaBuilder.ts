@@ -334,6 +334,10 @@ IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional antes ou dep
   }
 }
 
-export { SequenciaDidaticaBuilder };
-export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilderClass();
-export default SequenciaDidaticaBuilderClass;
+// Instância singleton
+const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilderClass();
+
+// Exportações
+export { SequenciaDidaticaBuilderClass as SequenciaDidaticaBuilder };
+export { sequenciaDidaticaBuilder };
+export default sequenciaDidaticaBuilder;
