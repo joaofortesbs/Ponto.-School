@@ -44,104 +44,25 @@ export const autoBuildActivities = async (
         throw new Error('Dados da atividade não encontrados no plano');
       }
 
-      console.log(`🔄 Construindo atividade: ${activity.id} - ${activity.title}`);
-
-      // Tratamento específico para Sequência Didática
-      if (activity.id === 'sequencia-didatica') {
-        console.log('🎯 Construindo Sequência Didática');
-
-        try {
-          // Importar as funções necessárias
-          const { processSequenciaDidaticaData } = await import('../activities/sequencia-didatica/sequenciaDidaticaProcessor');
-          const { SequenciaDidaticaGenerator } = await import('../activities/sequencia-didatica/SequenciaDidaticaGenerator');
-          
-          // Processar dados do formulário
-          const sequenciaDidaticaData = processSequenciaDidaticaData(activityData);
-
-          console.log('📊 Dados processados para validação:', sequenciaDidaticaData);
-
-          console.log('📝 Iniciando geração com IA...');
-
-          const generatedContent = await SequenciaDidaticaGenerator.generateSequenciaDidatica(sequenciaDidaticaData);
-
-          console.log('✅ Sequência Didática gerada com sucesso:', {
-            titulo: generatedContent.titulo,
-            numAulas: generatedContent.aulas?.length || 0,
-            temAvaliacao: !!generatedContent.avaliacaoFinal
-          });
-
-          // Salvar no localStorage para diferentes chaves
-          const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
-          const generalKey = `schoolpower_sequencia-didatica_content`;
-          const activityKey = `activity_${activity.id}`;
-
-          const resultData = {
-            id: activity.id,
-            title: generatedContent.titulo || activity.title || 'Sequência Didática',
-            description: activity.description || 'Sequência didática gerada automaticamente',
-            generatedContent,
-            originalData: sequenciaDidaticaData,
-            content: generatedContent,
-            approved: false,
-            isBuilt: true,
-            customFields: {},
-            generatedAt: new Date().toISOString()
-          };
-
-          // Salvar em múltiplas chaves para garantir compatibilidade
-          localStorage.setItem(constructedKey, JSON.stringify(resultData));
-          localStorage.setItem(generalKey, JSON.stringify(generatedContent));
-          localStorage.setItem(activityKey, JSON.stringify(resultData));
-
-          console.log('🎉 Resultado final da construção e salvamento:', resultData);
-
-        } catch (error) {
-          console.error('❌ Erro na construção da Sequência Didática:', error);
-
-          // Tentar criar fallback com dados disponíveis
-          try {
-            const { processSequenciaDidaticaData } = await import('../activities/sequencia-didatica/sequenciaDidaticaProcessor');
-            const sequenciaDidaticaData = processSequenciaDidaticaData(activityData);
-
-            const fallbackData = {
-              id: activity.id,
-              title: activity.title || 'Sequência Didática',
-              description: activity.description,
-              generatedContent: {
-                titulo: `Sequência Didática: ${sequenciaDidaticaData.tituloTemaAssunto}`,
-                introducao: `Esta sequência foi preparada para ${sequenciaDidaticaData.publicoAlvo}`,
-                aulas: [],
-                avaliacaoFinal: null,
-                recursosGerais: [],
-                bibliografia: []
-              },
-              originalData: sequenciaDidaticaData,
-              approved: false,
-              isBuilt: false,
-              error: error instanceof Error ? error.message : 'Erro na geração',
-              customFields: {}
-            };
-
-            // Salvar fallback
-            const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
-            localStorage.setItem(constructedKey, JSON.stringify(fallbackData));
-
-          } catch (fallbackError) {
-            console.error('❌ Erro até no fallback:', fallbackError);
-          }
-
-          errors.push(`Erro na Sequência Didática: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-        }
-      } else {
-        // Lógica para outras atividades
-        await fillActivityModalFields(activity.id, activityData);
-      }
+      // Preencher campos do modal automaticamente
+      await fillActivityModalFields(activity.id, activityData);
 
       // Marcar como construída
       markActivityAsBuilt(activity.id);
 
       completedActivities++;
-      console.log(`✅ Atividade construída: ${activity.title}`);
+      console.log(`✅ Atividade construída com EXATA MESMA LÓGICA do EditActivityModal: ${activity.title}`);
+
+      // Salvar no localStorage com as mesmas chaves do sistema manual
+      const storageKey = `schoolpower_${activityType}_content`;
+      localStorage.setItem(storageKey, JSON.stringify(result.data));
+
+      // Para plano-aula, também salvar com chave específica para visualização
+      if (activityType === 'plano-aula') {
+        const viewStorageKey = `constructed_plano-aula_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
+        console.log('💾 Auto-build: Dados do plano-aula salvos para visualização:', viewStorageKey);
+      }
 
       // Adicionar à lista de atividades construídas
       let constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
@@ -170,8 +91,8 @@ export const autoBuildActivities = async (
 // Função para marcar atividade como construída (adicionar badge visual)
 const markActivityAsBuilt = (activityId: string) => {
   // Dispara evento personalizado para atualizar UI
-  const event = new CustomEvent('activityBuilt', {
-    detail: { activityId }
+  const event = new CustomEvent('activityBuilt', { 
+    detail: { activityId } 
   });
   window.dispatchEvent(event);
 };

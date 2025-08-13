@@ -1,27 +1,12 @@
 import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
 import { SequenciaDidaticaData, processSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
-export interface SequenciaDidaticaBuilderInterface {
-  loadSequencia: (activityId: string) => Promise<any>;
-  saveSequencia: (activityId: string, data: any) => Promise<void>;
-  clearCache: (activityId: string) => void;
-}
-
-export class SequenciaDidaticaBuilder implements SequenciaDidaticaBuilderInterface {
-  private static instance: SequenciaDidaticaBuilder;
-
-  static getInstance(): SequenciaDidaticaBuilder {
-    if (!SequenciaDidaticaBuilder.instance) {
-      SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
-    }
-    return SequenciaDidaticaBuilder.instance;
-  }
-
-  async saveSequencia(activityId: string, data: any): Promise<void> {
+export class SequenciaDidaticaBuilder {
+  static async saveSequencia(data: any): Promise<void> {
     try {
       console.log('💾 Salvando Sequência Didática:', data);
 
-      const sequenciaId = activityId || data.id || `seq_${Date.now()}`;
+      const sequenciaId = data.id || `seq_${Date.now()}`;
       const storageKey = `constructed_sequencia-didatica_${sequenciaId}`;
 
       // Salvar no localStorage específico
@@ -51,54 +36,37 @@ export class SequenciaDidaticaBuilder implements SequenciaDidaticaBuilderInterfa
     }
   }
 
-  async loadSequencia(activityId: string): Promise<any> {
-    console.log(`🔍 SequenciaDidaticaBuilder: Carregando sequência para ID: ${activityId}`);
+  static async loadSequencia(id: string): Promise<any> {
+    try {
+      console.log('📂 Carregando Sequência Didática:', id);
 
-    const cacheKeys = [
-      `constructed_sequencia-didatica_${activityId}`,
-      `activity_${activityId}`,
-      `schoolpower_sequencia-didatica_content`
-    ];
+      // Tentar carregar do localStorage específico primeiro
+      const specificKey = `constructed_sequencia-didatica_${id}`;
+      const specificData = localStorage.getItem(specificKey);
 
-    for (const key of cacheKeys) {
-      try {
-        const cached = localStorage.getItem(key);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          console.log(`✅ Sequência carregada de ${key}`);
-
-          // Retornar o conteúdo gerado se existir, senão o objeto completo
-          return parsed.generatedContent || parsed.content || parsed;
-        }
-      } catch (error) {
-        console.warn(`⚠️ Erro ao carregar de ${key}:`, error);
+      if (specificData) {
+        console.log('✅ Sequência encontrada no storage específico');
+        return JSON.parse(specificData);
       }
-    }
 
-    console.log('⚠️ Nenhuma sequência encontrada no cache');
-    return null;
-  }
+      // Fallback para lista geral
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      const sequencia = savedSequencias.find((s: any) => s.id === id);
 
-  clearCache(activityId: string): void {
-    console.log(`🗑️ SequenciaDidaticaBuilder: Limpando cache para ID: ${activityId}`);
-
-    const cacheKeys = [
-      `constructed_sequencia-didatica_${activityId}`,
-      `activity_${activityId}`,
-      `schoolpower_sequencia-didatica_content`
-    ];
-
-    for (const key of cacheKeys) {
-      try {
-        localStorage.removeItem(key);
-        console.log(`✅ Cache ${key} limpo`);
-      } catch (error) {
-        console.warn(`⚠️ Erro ao limpar ${key}:`, error);
+      if (!sequencia) {
+        console.warn(`⚠️ Sequência Didática com ID ${id} não encontrada`);
+        return null;
       }
+
+      return sequencia;
+
+    } catch (error) {
+      console.error('❌ Erro ao carregar sequência salva:', error);
+      return null;
     }
   }
 
-  async buildSequenciaDidatica(formData: any): Promise<any> {
+  static async buildSequenciaDidatica(formData: any): Promise<any> {
     console.log('🔨 Iniciando construção da Sequência Didática:', formData);
 
     try {
@@ -140,7 +108,7 @@ export class SequenciaDidaticaBuilder implements SequenciaDidaticaBuilderInterfa
       };
 
       // Salvar automaticamente
-      await this.saveSequencia('sequencia-didatica', sequenciaCompleta);
+      await this.saveSequencia(sequenciaCompleta);
 
       console.log('✅ Sequência Didática construída e salva com sucesso:', sequenciaCompleta);
       return sequenciaCompleta;
@@ -151,7 +119,7 @@ export class SequenciaDidaticaBuilder implements SequenciaDidaticaBuilderInterfa
     }
   }
 
-  async regenerateSequencia(activityId: string, newData: any): Promise<any> {
+  static async regenerateSequencia(activityId: string, newData: any): Promise<any> {
     console.log('🔄 Regenerando Sequência Didática:', activityId, newData);
 
     try {
@@ -169,34 +137,7 @@ export class SequenciaDidaticaBuilder implements SequenciaDidaticaBuilderInterfa
       throw error;
     }
   }
-
-  // Método estático para carregar sequência (compatibilidade)
-  static async loadSequencia(activityId: string): Promise<any> {
-    const instance = SequenciaDidaticaBuilder.getInstance();
-    return instance.loadSequencia(activityId);
-  }
-
-  // Método estático para salvar sequência (compatibilidade)
-  static async saveSequencia(data: any): Promise<void> {
-    const instance = SequenciaDidaticaBuilder.getInstance();
-    const activityId = data.id || data.activityId || 'sequencia-didatica';
-    return instance.saveSequencia(activityId, data);
-  }
-
-  // Método estático para construir sequência (compatibilidade)
-  static async buildSequenciaDidatica(formData: any): Promise<any> {
-    const instance = SequenciaDidaticaBuilder.getInstance();
-    return instance.buildSequenciaDidatica(formData);
-  }
-
-  // Método estático para regenerar sequência (compatibilidade)
-  static async regenerateSequencia(activityId: string, newData: any): Promise<any> {
-    const instance = SequenciaDidaticaBuilder.getInstance();
-    return instance.regenerateSequencia(activityId, newData);
-  }
 }
 
 // Exportar instância singleton
-export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();
-
-console.log('🏗️ [SEQUENCIA_DIDATICA_BUILDER] Inicializado');
+export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();

@@ -388,76 +388,29 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       console.log('🧩 ActivityViewModal: Processando Sequência Didática');
 
       const constructedSequenciaKey = `constructed_sequencia-didatica_${activity.id}`;
-      const generalSequenciaCacheKey = `schoolpower_sequencia-didatica_content`;
-      const activitySequenciaCacheKey = `activity_${activity.id}`;
+      const constructedSequenciaContent = localStorage.getItem(constructedSequenciaKey);
 
-      const cacheKeys = [constructedSequenciaKey, activitySequenciaCacheKey, generalSequenciaCacheKey];
+      const generalSequenciaCacheKey = `schoolpower_sequencia-didatica_content`;
+      const generalSequenciaCachedContent = localStorage.getItem(generalSequenciaCacheKey);
+
+      const activitySequenciaCacheKey = `activity_${activity.id}`;
+      const activitySequenciaCachedContent = localStorage.getItem(activitySequenciaCacheKey);
+
+      console.log('🔍 ActivityViewModal: Verificando caches de sequencia-didatica:', {
+        constructedExists: !!constructedSequenciaContent,
+        generalExists: !!generalSequenciaCachedContent,
+        activityExists: !!activitySequenciaCachedContent
+      });
+
       let sequenciaContent = null;
 
-      console.log('🔍 ActivityViewModal: Verificando caches de sequencia-didatica');
-
-      // Tentar carregar de diferentes caches em ordem de prioridade
-      for (const key of cacheKeys) {
+      if (constructedSequenciaContent) {
         try {
-          const cached = localStorage.getItem(key);
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            
-            // Se tem generatedContent, usar isso
-            if (parsed.generatedContent) {
-              sequenciaContent = parsed.generatedContent;
-              console.log(`✅ Conteúdo da sequência didática carregado de ${key} (generatedContent)`);
-              break;
-            }
-            // Se tem content, usar isso
-            else if (parsed.content) {
-              sequenciaContent = parsed.content;
-              console.log(`✅ Conteúdo da sequência didática carregado de ${key} (content)`);
-              break;
-            }
-            // Se tem titulo ou aulas diretamente, é o conteúdo
-            else if (parsed.titulo || parsed.aulas) {
-              sequenciaContent = parsed;
-              console.log(`✅ Conteúdo da sequência didática carregado de ${key} (direto)`);
-              break;
-            }
-          }
+          sequenciaContent = JSON.parse(constructedSequenciaContent);
+          console.log('✅ Conteúdo específico da sequência didática carregado:', sequenciaContent);
         } catch (error) {
-          console.warn(`⚠️ Erro ao carregar de ${key}:`, error);
+          console.error('❌ Erro ao carregar conteúdo específico da sequência didática:', error);
         }
-      }
-
-      if (sequenciaContent) {
-        console.log('🔀 Aplicando conteúdo da sequência didática aos dados de preview');
-        previewData = {
-          ...previewData,
-          ...sequenciaContent,
-          id: activity.id,
-          type: activityType,
-          title: sequenciaContent.titulo || sequenciaContent.title || previewData.title,
-          description: sequenciaContent.introducao || sequenciaContent.description || previewData.description,
-          generatedContent: sequenciaContent,
-          content: sequenciaContent,
-          isBuilt: true
-        };
-        console.log('✅ Conteúdo específico da sequência didática carregado:', sequenciaContent);
-      } else {
-        console.log('⚠️ Nenhum conteúdo de sequência didática encontrado nos caches');
-        const customFields = activity.customFields || {};
-        previewData = {
-          ...previewData,
-          titulo: activity.title || activity.personalizedTitle || 'Sequência Didática',
-          descricao: activity.description || activity.personalizedDescription || 'Descrição da sequência didática',
-          disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
-          tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Sequência',
-          objetivos: customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || 'Objetivos da Sequência',
-          atividades: customFields['Atividades da Sequência'] || customFields['atividades'] || [],
-          recursos: customFields['Materiais Necessários'] || customFields['recursos'] || ['Recursos Digitais', 'Material Impresso'],
-          avaliacao: customFields['Formas de Avaliação'] || customFields['avaliacao'] || 'Avaliação formativa',
-          observacoes: customFields['Observações Adicionais'] || customFields['observacoes'] || 'Observações da sequência',
-        };
-        console.log('🔄 Usando dados de fallback completos para sequência didática:', previewData);
-      }
       }
 
       if (!sequenciaContent && generalSequenciaCachedContent) {
