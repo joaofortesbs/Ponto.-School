@@ -1,5 +1,8 @@
 
-<old_str>class SequenciaDidaticaBuilder {
+import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+import { SequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
+
+export class SequenciaDidaticaBuilder {
   static async saveSequencia(data: any): Promise<void> {
     try {
       console.log('💾 Salvando Sequência Didática:', data);
@@ -62,97 +65,84 @@
       console.error('❌ Erro ao carregar sequência salva:', error);
       return null;
     }
-  }</old_str>
-<new_str>class SequenciaDidaticaBuilder {
-  static async saveSequencia(data: any): Promise<void> {
+  }
+
+  static recuperarSequencia(id: string): Promise<any> {
+    return this.loadSequencia(id);
+  }
+
+  static async buildSequencia(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
     try {
-      console.log('💾 Salvando Sequência Didática:', data);
+      console.log('🔨 Construindo Sequência Didática:', formData);
 
-      const sequenciaId = data.id || `seq_${Date.now()}`;
-      const storageKey = `constructed_sequencia-didatica_${sequenciaId}`;
+      const generator = SequenciaDidaticaGenerator.getInstance();
+      const sequenciaCompleta = await generator.generateFromFormData(formData);
 
-      // Salvar no localStorage específico
-      localStorage.setItem(storageKey, JSON.stringify(data));
+      // Salvar a sequência construída
+      await this.saveSequencia(sequenciaCompleta);
 
-      // Também salvar na lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const existingIndex = savedSequencias.findIndex((s: any) => s.id === sequenciaId);
-
-      if (existingIndex >= 0) {
-        savedSequencias[existingIndex] = data;
-      } else {
-        savedSequencias.push({
-          ...data,
-          id: sequenciaId,
-          createdAt: new Date().toISOString()
-        });
-      }
-
-      localStorage.setItem('sequenciasDidaticas', JSON.stringify(savedSequencias));
-
-      console.log('✅ Sequência Didática salva com sucesso:', sequenciaId);
+      console.log('✅ Sequência Didática construída com sucesso');
+      return sequenciaCompleta;
 
     } catch (error) {
-      console.error('❌ Erro ao salvar Sequência Didática:', error);
+      console.error('❌ Erro ao construir Sequência Didática:', error);
       throw error;
     }
   }
 
-  static async loadSequencia(id: string): Promise<any> {
+  static async regenerateSequencia(id: string, formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
     try {
-      console.log('📂 Carregando Sequência Didática:', id);
+      console.log('🔄 Regenerando Sequência Didática:', id);
 
-      // Tentar carregar do localStorage específico primeiro
-      const specificKey = `constructed_sequencia-didatica_${id}`;
-      const specificData = localStorage.getItem(specificKey);
+      const generator = SequenciaDidaticaGenerator.getInstance();
+      const sequenciaCompleta = await generator.regenerateWithAI(formData);
 
-      if (specificData) {
-        console.log('✅ Sequência encontrada no storage específico');
-        return JSON.parse(specificData);
-      }
+      // Atualizar com o ID existente
+      const updatedSequencia = { ...sequenciaCompleta, id };
+      await this.saveSequencia(updatedSequencia);
 
-      // Fallback para lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const sequencia = savedSequencias.find((s: any) => s.id === id);
-
-      if (!sequencia) {
-        console.warn(`⚠️ Sequência Didática com ID ${id} não encontrada`);
-        return null;
-      }
-
-      return sequencia;
+      console.log('✅ Sequência Didática regenerada com sucesso');
+      return updatedSequencia;
 
     } catch (error) {
-      console.error('❌ Erro ao carregar sequência salva:', error);
-      return null;
+      console.error('❌ Erro ao regenerar Sequência Didática:', error);
+      throw error;
     }
   }
 
-  static async recuperarSequencia(id: string): Promise<any> {
+  static async deleteSequencia(id: string): Promise<void> {
     try {
-      console.log('🔍 Recuperando Sequência Didática:', id);
-      
-      // Primeiro tentar carregar dados existentes
-      const existingData = await this.loadSequencia(id);
-      
-      if (existingData && existingData.isBuilt) {
-        console.log('✅ Sequência encontrada e já construída');
-        return existingData;
-      }
+      console.log('🗑️ Removendo Sequência Didática:', id);
 
-      // Se não existe ou não está construída, tentar carregar dados básicos
-      const basicData = await this.loadSequencia(id);
-      
-      if (!basicData) {
-        console.warn('⚠️ Nenhuma sequência encontrada para recuperar');
-        return null;
-      }
+      // Remover do storage específico
+      const specificKey = `constructed_sequencia-didatica_${id}`;
+      localStorage.removeItem(specificKey);
 
-      console.log('📋 Dados básicos recuperados:', basicData);
-      return basicData;
+      // Remover da lista geral
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      const filteredSequencias = savedSequencias.filter((s: any) => s.id !== id);
+      localStorage.setItem('sequenciasDidaticas', JSON.stringify(filteredSequencias));
+
+      console.log('✅ Sequência Didática removida com sucesso');
 
     } catch (error) {
-      console.error('❌ Erro ao recuperar sequência:', error);
-      return null;
+      console.error('❌ Erro ao remover Sequência Didática:', error);
+      throw error;
     }
-  }</old_str>
+  }
+
+  static async listSequencias(): Promise<any[]> {
+    try {
+      console.log('📋 Listando todas as Sequências Didáticas');
+
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      return savedSequencias;
+
+    } catch (error) {
+      console.error('❌ Erro ao listar Sequências Didáticas:', error);
+      return [];
+    }
+  }
+}
+
+export default SequenciaDidaticaBuilder;
