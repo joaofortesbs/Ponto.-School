@@ -68,12 +68,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return null;
   };
 
-  // Função para validar se o formulário está válido (não utilizada no modal de visualização)
-  const isFormValid = React.useMemo(() => {
-    if (!activity) return false;
-    // Para o modal de visualização, sempre retorna true pois é apenas para exibição
-    return true;
-  }, [activity]);
+  // Modal de visualização não necessita validação de formulário
+  // A validação é feita apenas no EditActivityModal
 
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {

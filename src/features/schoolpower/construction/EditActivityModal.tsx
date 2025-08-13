@@ -188,11 +188,16 @@ const EditActivityModal = ({
 
   // Função para validar se o formulário está válido
   const isFormValid = useMemo(() => {
-    if (!activity) return false;
+    if (!activity) {
+      console.log('⚠️ [VALIDATION] Activity não encontrada');
+      return false;
+    }
+
+    console.log('🔍 [VALIDATION] Validando formulário para:', activity.id, formData);
 
     // Validação específica para sequencia-didatica
     if (activity.id === 'sequencia-didatica') {
-      return !!(
+      const isValid = !!(
         formData.tituloTemaAssunto?.trim() &&
         formData.anoSerie?.trim() &&
         formData.disciplina?.trim() &&
@@ -202,11 +207,24 @@ const EditActivityModal = ({
         formData.quantidadeDiagnosticos?.trim() &&
         formData.quantidadeAvaliacoes?.trim()
       );
+
+      console.log('✅ [VALIDATION] Sequência Didática válida:', isValid, {
+        tituloTemaAssunto: !!formData.tituloTemaAssunto?.trim(),
+        anoSerie: !!formData.anoSerie?.trim(),
+        disciplina: !!formData.disciplina?.trim(),
+        publicoAlvo: !!formData.publicoAlvo?.trim(),
+        objetivosAprendizagem: !!formData.objetivosAprendizagem?.trim(),
+        quantidadeAulas: !!formData.quantidadeAulas?.trim(),
+        quantidadeDiagnosticos: !!formData.quantidadeDiagnosticos?.trim(),
+        quantidadeAvaliacoes: !!formData.quantidadeAvaliacoes?.trim()
+      });
+
+      return isValid;
     }
 
     // Validação específica para lista-exercicios
     if (activity.id === 'lista-exercicios') {
-      return !!(
+      const isValid = !!(
         formData.title?.trim() &&
         formData.description?.trim() &&
         formData.subject?.trim() &&
@@ -216,11 +234,14 @@ const EditActivityModal = ({
         formData.difficultyLevel?.trim() &&
         formData.questionModel?.trim()
       );
+
+      console.log('✅ [VALIDATION] Lista de Exercícios válida:', isValid);
+      return isValid;
     }
 
     // Validação específica para plano-aula
     if (activity.id === 'plano-aula') {
-      return !!(
+      const isValid = !!(
         formData.title?.trim() &&
         formData.description?.trim() &&
         formData.theme?.trim() &&
@@ -229,14 +250,20 @@ const EditActivityModal = ({
         formData.objectives?.trim() &&
         formData.materials?.trim()
       );
+
+      console.log('✅ [VALIDATION] Plano de Aula válido:', isValid);
+      return isValid;
     }
 
     // Validação genérica para outras atividades
-    return !!(
+    const isValid = !!(
       formData.title?.trim() &&
       formData.description?.trim() &&
       formData.objectives?.trim()
     );
+
+    console.log('✅ [VALIDATION] Atividade genérica válida:', isValid);
+    return isValid;
   }, [activity, formData]);
 
   // Hook para geração de atividades
@@ -820,7 +847,24 @@ const EditActivityModal = ({
 
   // Função para construir a atividade
   const handleBuildActivity = useCallback(async () => {
-    if (!activity) return;
+    if (!activity) {
+      console.error('❌ [BUILD] Activity não encontrada');
+      return;
+    }
+
+    console.log('🔨 [BUILD] Iniciando construção da atividade:', activity.id);
+    console.log('📋 [BUILD] Dados do formulário:', formData);
+
+    // Validação rigorosa antes da construção
+    if (!isFormValid) {
+      console.error('❌ [BUILD] Formulário inválido, não é possível construir a atividade');
+      toast({
+        title: "Formulário Incompleto",
+        description: "Preencha todos os campos obrigatórios antes de construir a atividade.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsBuilding(true);
     setBuildingStatus({
@@ -834,14 +878,17 @@ const EditActivityModal = ({
 
       let builtData = null;
 
-      // Validar dados antes da construção
+      // Validação específica adicional para sequencia-didatica
       if (activity.id === 'sequencia-didatica') {
-        if (!formData.tituloTemaAssunto?.trim()) {
-          throw new Error('Título do tema/assunto é obrigatório');
+        console.log('📚 [BUILD] Validação específica para Sequência Didática');
+        
+        const validationResult = sequenciaDidaticaBuilder.validateFormData(formData);
+        
+        if (!validationResult.isValid) {
+          throw new Error(`Dados inválidos: ${validationResult.errors.join(', ')}`);
         }
-        if (!formData.disciplina?.trim()) {
-          throw new Error('Disciplina é obrigatória');
-        }
+
+        console.log('✅ [BUILD] Validação da Sequência Didática passou');
       }
 
       setBuildingStatus({
@@ -1680,6 +1727,7 @@ const EditActivityModal = ({
                   onClick={handleBuildActivity}
                   disabled={buildingStatus.isBuilding || !isFormValid}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!isFormValid ? 'Preencha todos os campos obrigatórios para construir a atividade' : 'Construir atividade com IA'}
                 >
                   {buildingStatus.isBuilding ? (
                     <>
@@ -1690,9 +1738,23 @@ const EditActivityModal = ({
                     <>
                       <Play className="h-4 w-4 mr-2" />
                       Construir Atividade
+                      {!isFormValid && activity?.id === 'sequencia-didatica' && (
+                        <span className="ml-2 text-xs opacity-75">
+                          (Campos obrigatórios pendentes)
+                        </span>
+                      )}
                     </>
                   )}
                 </Button>
+
+                {/* Debug info para desenvolvimento */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                    <strong>Debug:</strong> isFormValid = {isFormValid.toString()}, 
+                    Activity = {activity?.id}, 
+                    Building = {buildingStatus.isBuilding.toString()}
+                  </div>
+                )}
               </div>
             </div>
             )}

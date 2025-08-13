@@ -67,7 +67,48 @@ function calculateDuracaoTotal(aulas: number, diagnosticos: number, avaliacoes: 
   const horas = Math.floor(totalMinutos / 60);
   const minutos = totalMinutos % 60;
 
-  return `${horas}h${minutos > 0 ? minutos + 'min' : ''}`;
+  return `${horas}h${minutos > 0 ? minutos + 'mi};
+}
+
+function calculateDuracaoTotal(cronograma: string, quantidadeAulas: number): string {
+  if (!cronograma) {
+    // Estimativa padrão: 50 minutos por aula
+    const totalMinutos = quantidadeAulas * 50;
+    const horas = Math.floor(totalMinutos / 60);
+    const minutos = totalMinutos % 60;
+    
+    return horas > 0 
+      ? `${horas}h${minutos > 0 ? ` ${minutos}min` : ''}`
+      : `${minutos}min`;
+  }
+
+  // Tentar extrair duração do cronograma
+  const duracaoPatterns = [
+    /(\d+)\s*(?:horas?|h)/i,
+    /(\d+)\s*(?:minutos?|min)/i,
+    /(\d+)\s*(?:aulas?|encontros?)\s*de\s*(\d+)\s*(?:minutos?|min)/i
+  ];
+
+  for (const pattern of duracaoPatterns) {
+    const match = cronograma.match(pattern);
+    if (match) {
+      if (pattern.source.includes('aulas')) {
+        const aulas = parseInt(match[1]);
+        const minutosPorAula = parseInt(match[2]);
+        return `${Math.floor((aulas * minutosPorAula) / 60)}h ${(aulas * minutosPorAula) % 60}min`;
+      }
+      return match[0];
+    }
+  }
+
+  // Fallback para estimativa baseada na quantidade de aulas
+  const totalMinutos = quantidadeAulas * 50;
+  const horas = Math.floor(totalMinutos / 60);
+  const minutos = totalMinutos % 60;
+  
+  return horas > 0 
+    ? `${horas}h${minutos > 0 ? ` ${minutos}min` : ''}`
+    : `${minutos}min`;
 }
 
 function extractFrequenciaSemanal(cronograma: string): string {
@@ -109,6 +150,68 @@ export function processSequenciaDidaticaData(formData: ActivityFormData): Proces
   console.log('🔄 [SEQUENCIA_DIDATICA_PROCESSOR] Processando dados do formulário:', formData);
 
   const validationErrors: string[] = [];
+  
+  // Validação obrigatória de campos
+  const requiredFields = [
+    { field: 'tituloTemaAssunto', name: 'Título do Tema/Assunto' },
+    { field: 'anoSerie', name: 'Ano/Série' },
+    { field: 'disciplina', name: 'Disciplina' },
+    { field: 'publicoAlvo', name: 'Público-alvo' },
+    { field: 'objetivosAprendizagem', name: 'Objetivos de Aprendizagem' },
+    { field: 'quantidadeAulas', name: 'Quantidade de Aulas' },
+    { field: 'quantidadeDiagnosticos', name: 'Quantidade de Diagnósticos' },
+    { field: 'quantidadeAvaliacoes', name: 'Quantidade de Avaliações' }
+  ];
+
+  requiredFields.forEach(({ field, name }) => {
+    const value = formData[field as keyof ActivityFormData];
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      validationErrors.push(`${name} é obrigatório`);
+      console.log(`❌ [VALIDATION] ${name} está vazio`);
+    }
+  });
+
+  // Conversão e validação de números
+  const quantidadeAulas = parseInt(formData.quantidadeAulas || '0');
+  const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos || '0');
+  const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes || '0');
+
+  if (isNaN(quantidadeAulas) || quantidadeAulas <= 0) {
+    validationErrors.push('Quantidade de Aulas deve ser um número maior que zero');
+  }
+
+  if (isNaN(quantidadeDiagnosticos) || quantidadeDiagnosticos < 0) {
+    validationErrors.push('Quantidade de Diagnósticos deve ser um número não negativo');
+  }
+
+  if (isNaN(quantidadeAvaliacoes) || quantidadeAvaliacoes < 0) {
+    validationErrors.push('Quantidade de Avaliações deve ser um número não negativo');
+  }
+
+  // Cálculo de duração e frequência
+  const duracaoTotal = calculateDuracaoTotal(formData.cronograma || '', quantidadeAulas);
+  const frequenciaSemanal = extractFrequenciaSemanal(formData.cronograma || '');
+
+  const processedData: ProcessedSequenciaDidaticaData = {
+    tituloTemaAssunto: formData.tituloTemaAssunto || '',
+    anoSerie: formData.anoSerie || '',
+    disciplina: formData.disciplina || '',
+    bnccCompetencias: formData.bnccCompetencias || '',
+    publicoAlvo: formData.publicoAlvo || '',
+    objetivosAprendizagem: formData.objetivosAprendizagem || '',
+    quantidadeAulas,
+    quantidadeDiagnosticos,
+    quantidadeAvaliacoes,
+    cronograma: formData.cronograma || '',
+    duracaoTotal,
+    frequenciaSemanal,
+    isComplete: validationErrors.length === 0,
+    validationErrors
+  };
+
+  console.log('✅ [SEQUENCIA_DIDATICA_PROCESSOR] Dados processados:', processedData);
+  
+  return processedData;onErrors: string[] = [];
 
   // Aplicar valores padrão para campos ausentes
   const defaultValues = {

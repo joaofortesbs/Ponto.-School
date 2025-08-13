@@ -347,46 +347,81 @@ export class SequenciaDidaticaBuilder {
     return this.build(formData, contextualizationData);
   }
 
-  // Método para validar dados do formulário
+  // Método para validar dados do formulário com logs detalhados
   validateFormData(formData: ActivityFormData): { isValid: boolean; errors: string[] } {
+    console.log('🔍 [SEQUENCIA_DIDATICA_BUILDER] Validando dados do formulário:', formData);
+    
     const errors: string[] = [];
 
+    // Validações obrigatórias com logs individuais
     if (!formData.tituloTemaAssunto?.trim()) {
       errors.push('Título do tema/assunto é obrigatório');
+      console.log('❌ [VALIDATION] Título do tema/assunto está vazio');
     }
 
     if (!formData.disciplina?.trim()) {
       errors.push('Disciplina é obrigatória');
+      console.log('❌ [VALIDATION] Disciplina está vazia');
     }
 
     if (!formData.anoSerie?.trim()) {
       errors.push('Ano/Série é obrigatório');
+      console.log('❌ [VALIDATION] Ano/Série está vazio');
     }
 
     if (!formData.publicoAlvo?.trim()) {
       errors.push('Público-alvo é obrigatório');
+      console.log('❌ [VALIDATION] Público-alvo está vazio');
     }
 
     if (!formData.objetivosAprendizagem?.trim()) {
       errors.push('Objetivos de aprendizagem são obrigatórios');
+      console.log('❌ [VALIDATION] Objetivos de aprendizagem estão vazios');
     }
 
     if (!formData.quantidadeAulas?.trim()) {
       errors.push('Quantidade de aulas é obrigatória');
+      console.log('❌ [VALIDATION] Quantidade de aulas está vazia');
     }
 
     if (!formData.quantidadeDiagnosticos?.trim()) {
       errors.push('Quantidade de diagnósticos é obrigatória');
+      console.log('❌ [VALIDATION] Quantidade de diagnósticos está vazia');
     }
 
     if (!formData.quantidadeAvaliacoes?.trim()) {
       errors.push('Quantidade de avaliações é obrigatória');
+      console.log('❌ [VALIDATION] Quantidade de avaliações está vazia');
     }
 
-    return {
+    // Validações numéricas
+    const quantidadeAulas = parseInt(formData.quantidadeAulas || '0');
+    const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos || '0');
+    const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes || '0');
+
+    if (quantidadeAulas <= 0) {
+      errors.push('Quantidade de aulas deve ser maior que zero');
+      console.log('❌ [VALIDATION] Quantidade de aulas inválida:', quantidadeAulas);
+    }
+
+    if (quantidadeDiagnosticos < 0) {
+      errors.push('Quantidade de diagnósticos não pode ser negativa');
+      console.log('❌ [VALIDATION] Quantidade de diagnósticos inválida:', quantidadeDiagnosticos);
+    }
+
+    if (quantidadeAvaliacoes < 0) {
+      errors.push('Quantidade de avaliações não pode ser negativa');
+      console.log('❌ [VALIDATION] Quantidade de avaliações inválida:', quantidadeAvaliacoes);
+    }
+
+    const result = {
       isValid: errors.length === 0,
       errors
     };
+
+    console.log(`${result.isValid ? '✅' : '❌'} [SEQUENCIA_DIDATICA_BUILDER] Validação concluída:`, result);
+    
+    return result;
   }
 
   getDebugInfo() {
