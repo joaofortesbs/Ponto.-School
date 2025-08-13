@@ -1,91 +1,68 @@
-import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
-import { SequenciaDidaticaData, processSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+
+import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { processSequenciaDidaticaData, ProcessedSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+import { sequenciaDidaticaGenerator, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
+import { buildSequenciaDidaticaPrompt } from '../../prompts/sequenciaDidaticaPrompt';
+import { geminiClient } from '@/utils/api/geminiClient';
+
+export interface BuiltSequenciaDidaticaData {
+  // Metadados básicos
+  id: string;
+  activityId: string;
+  tituloTemaAssunto: string;
+  disciplina: string;
+  anoSerie: string;
+  objetivosAprendizagem: string;
+  publicoAlvo: string;
+  bnccCompetencias: string;
+  quantidadeAulas: number;
+  quantidadeDiagnosticos: number;
+  quantidadeAvaliacoes: number;
+  
+  // Dados gerados pela IA
+  aulas: any[];
+  diagnosticos: any[];
+  avaliacoes: any[];
+  cronogramaSugerido: any;
+  
+  // Status
+  isBuilt: boolean;
+  isGenerated: boolean;
+  buildTimestamp: string;
+  lastModified: string;
+}
 
 export class SequenciaDidaticaBuilder {
-  static async saveSequencia(data: any): Promise<void> {
-    try {
-      console.log('💾 Salvando Sequência Didática:', data);
-
-      const sequenciaId = data.id || `seq_${Date.now()}`;
-      const storageKey = `constructed_sequencia-didatica_${sequenciaId}`;
-
-      // Salvar no localStorage específico
-      localStorage.setItem(storageKey, JSON.stringify(data));
-
-      // Também salvar na lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const existingIndex = savedSequencias.findIndex((s: any) => s.id === sequenciaId);
-
-      if (existingIndex >= 0) {
-        savedSequencias[existingIndex] = data;
-      } else {
-        savedSequencias.push({
-          ...data,
-          id: sequenciaId,
-          createdAt: new Date().toISOString()
-        });
-      }
-
-      localStorage.setItem('sequenciasDidaticas', JSON.stringify(savedSequencias));
-
-      console.log('✅ Sequência Didática salva com sucesso:', sequenciaId);
-
-    } catch (error) {
-      console.error('❌ Erro ao salvar Sequência Didática:', error);
-      throw error;
+  private static instance: SequenciaDidaticaBuilder;
+  
+  public static getInstance(): SequenciaDidaticaBuilder {
+    if (!SequenciaDidaticaBuilder.instance) {
+      SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
     }
+    return SequenciaDidaticaBuilder.instance;
   }
 
-  static async loadSequencia(id: string): Promise<any> {
-    try {
-      console.log('📂 Carregando Sequência Didática:', id);
-
-      // Tentar carregar do localStorage específico primeiro
-      const specificKey = `constructed_sequencia-didatica_${id}`;
-      const specificData = localStorage.getItem(specificKey);
-
-      if (specificData) {
-        console.log('✅ Sequência encontrada no storage específico');
-        return JSON.parse(specificData);
-      }
-
-      // Fallback para lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const sequencia = savedSequencias.find((s: any) => s.id === id);
-
-      if (!sequencia) {
-        console.warn(`⚠️ Sequência Didática com ID ${id} não encontrada`);
-        return null;
-      }
-
-      return sequencia;
-
-    } catch (error) {
-      console.error('❌ Erro ao carregar sequência salva:', error);
-      return null;
-    }
-  }
-
-  static async buildSequenciaDidatica(formData: any): Promise<any> {
-    console.log('🔨 Iniciando construção da Sequência Didática:', formData);
+  async buildSequenciaDidatica(formData: ActivityFormData): Promise<BuiltSequenciaDidaticaData> {
+    console.log('🏗️ [SEQUENCIA_DIDATICA_BUILDER] Iniciando construção:', formData);
 
     try {
       // Processar e validar dados
       const processedData = processSequenciaDidaticaData(formData);
-      console.log('📋 Dados processados:', processedData);
-
-      if (!validateSequenciaDidaticaData(processedData)) {
-        throw new Error('Dados obrigatórios não preenchidos corretamente');
+      
+      if (!processedData.isComplete) {
+        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Dados incompletos:', processedData.validationErrors);
+        throw new Error(`Dados incompletos: ${processedData.validationErrors.join(', ')}`);
       }
 
-      // Gerar sequência completa usando o generator
-      console.log('🎯 Chamando generator para criar sequência...');
-      const sequenciaGerada = await SequenciaDidaticaGenerator.generateSequenciaDidatica(processedData);
+      console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Dados validados, iniciando geração com IA...');
+
+      // Gerar conteúdo com IA usando Gemini
+      const sequenciaGerada = await this.generateWithGemini(processedData);
 
       // Criar estrutura completa da sequência didática
-      const sequenciaCompleta = {
+      const sequenciaCompleta: BuiltSequenciaDidaticaData = {
         // Metadados básicos
-        id: `sequencia-didatica`,
+        id: `sequencia-didatica-${Date.now()}`,
         activityId: 'sequencia-didatica',
         tituloTemaAssunto: processedData.tituloTemaAssunto,
         disciplina: processedData.disciplina,
@@ -94,11 +71,14 @@ export class SequenciaDidaticaBuilder {
         publicoAlvo: processedData.publicoAlvo,
         bnccCompetencias: processedData.bnccCompetencias,
         quantidadeAulas: parseInt(processedData.quantidadeAulas) || 4,
-        quantidadeDiagnosticos: parseInt(processedData.quantidadeDiagnosticos) || 2,
+        quantidadeDiagnosticos: parseInt(processedData.quantidadeDiagnosticos) || 1,
         quantidadeAvaliacoes: parseInt(processedData.quantidadeAvaliacoes) || 2,
 
-        // Dados gerados
-        ...sequenciaGerada,
+        // Dados gerados pela IA
+        aulas: sequenciaGerada.aulas || [],
+        diagnosticos: sequenciaGerada.diagnosticos || [],
+        avaliacoes: sequenciaGerada.avaliacoes || [],
+        cronogramaSugerido: sequenciaGerada.cronogramaSugerido || {},
 
         // Status e timestamps
         isBuilt: true,
@@ -110,34 +90,131 @@ export class SequenciaDidaticaBuilder {
       // Salvar automaticamente
       await this.saveSequencia(sequenciaCompleta);
 
-      console.log('✅ Sequência Didática construída e salva com sucesso:', sequenciaCompleta);
+      console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Sequência Didática construída com sucesso:', sequenciaCompleta);
       return sequenciaCompleta;
 
     } catch (error) {
-      console.error('❌ Erro ao construir Sequência Didática:', error);
+      console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao construir:', error);
       throw new Error(`Erro na construção: ${error.message}`);
     }
   }
 
-  static async regenerateSequencia(activityId: string, newData: any): Promise<any> {
-    console.log('🔄 Regenerando Sequência Didática:', activityId, newData);
+  private async generateWithGemini(data: ProcessedSequenciaDidaticaData): Promise<any> {
+    console.log('🤖 [SEQUENCIA_DIDATICA_BUILDER] Gerando com Gemini API...');
 
     try {
-      // Carregar dados existentes
-      const existingData = await this.loadSequencia(activityId);
+      // Construir prompt específico
+      const prompt = buildSequenciaDidaticaPrompt({
+        tituloTemaAssunto: data.tituloTemaAssunto,
+        anoSerie: data.anoSerie,
+        disciplina: data.disciplina,
+        bnccCompetencias: data.bnccCompetencias,
+        publicoAlvo: data.publicoAlvo,
+        objetivosAprendizagem: data.objetivosAprendizagem,
+        quantidadeAulas: data.quantidadeAulas,
+        quantidadeDiagnosticos: data.quantidadeDiagnosticos,
+        quantidadeAvaliacoes: data.quantidadeAvaliacoes,
+        cronograma: data.cronograma
+      });
 
-      // Mesclar com novos dados
-      const mergedData = { ...existingData, ...newData };
+      console.log('📝 [SEQUENCIA_DIDATICA_BUILDER] Prompt gerado, enviando para Gemini...');
 
-      // Reconstruir
-      return await this.buildSequenciaDidatica(mergedData);
+      // Chamar API Gemini
+      const response = await geminiClient.generate({
+        prompt,
+        temperature: 0.7,
+        maxTokens: 4000,
+        topP: 0.9,
+        topK: 40
+      });
+
+      if (!response.success) {
+        throw new Error(`Erro na API Gemini: ${response.error}`);
+      }
+
+      console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Resposta recebida do Gemini');
+
+      // Processar resposta
+      let sequenciaData;
+      try {
+        const cleanedResponse = response.content.replace(/```json|```/g, '').trim();
+        sequenciaData = JSON.parse(cleanedResponse);
+        
+        // Verificar se tem a estrutura esperada
+        if (sequenciaData.sequenciaDidatica) {
+          sequenciaData = sequenciaData.sequenciaDidatica;
+        }
+
+      } catch (parseError) {
+        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao parsear resposta:', parseError);
+        console.log('📄 [SEQUENCIA_DIDATICA_BUILDER] Resposta bruta:', response.content);
+        
+        // Tentar extrair JSON válido
+        const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            sequenciaData = JSON.parse(jsonMatch[0]);
+            if (sequenciaData.sequenciaDidatica) {
+              sequenciaData = sequenciaData.sequenciaDidatica;
+            }
+          } catch (secondError) {
+            throw new Error('Resposta da IA em formato inválido');
+          }
+        } else {
+          throw new Error('Nenhum JSON válido encontrado na resposta da IA');
+        }
+      }
+
+      console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Dados processados com sucesso');
+      return sequenciaData;
 
     } catch (error) {
-      console.error('❌ Erro ao regenerar Sequência Didática:', error);
+      console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro na geração com Gemini:', error);
+      throw error;
+    }
+  }
+
+  private async saveSequencia(data: BuiltSequenciaDidaticaData): Promise<void> {
+    try {
+      const storageKey = `constructed_sequencia-didatica_${data.activityId}`;
+      localStorage.setItem(storageKey, JSON.stringify(data));
+      
+      console.log('💾 [SEQUENCIA_DIDATICA_BUILDER] Sequência salva no localStorage:', storageKey);
+    } catch (error) {
+      console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao salvar:', error);
+    }
+  }
+
+  private async loadSequencia(activityId: string): Promise<any> {
+    try {
+      const storageKey = `constructed_sequencia-didatica_${activityId}`;
+      const data = localStorage.getItem(storageKey);
+      
+      if (data) {
+        return JSON.parse(data);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao carregar:', error);
+      return null;
+    }
+  }
+
+  static async regenerateSequencia(activityId: string, newData: any): Promise<any> {
+    console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] Regenerando:', activityId);
+
+    try {
+      const instance = SequenciaDidaticaBuilder.getInstance();
+      const existingData = await instance.loadSequencia(activityId);
+      const mergedData = { ...existingData, ...newData };
+      return await instance.buildSequenciaDidatica(mergedData);
+    } catch (error) {
+      console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao regenerar:', error);
       throw error;
     }
   }
 }
 
 // Exportar instância singleton
-export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();
+export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();

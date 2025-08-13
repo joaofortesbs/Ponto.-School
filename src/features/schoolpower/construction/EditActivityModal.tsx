@@ -918,35 +918,41 @@ const EditActivityModal = ({
   };
 
   // Verificar se campos obrigatórios estão preenchidos
-  const isFormValid = activity?.id === 'lista-exercicios'
-    ? formData.title.trim() &&
-      formData.description.trim() &&
-      formData.subject.trim() &&
-      formData.theme.trim() &&
-      formData.schoolYear.trim() &&
-      formData.numberOfQuestions.trim() &&
-      formData.difficultyLevel.trim() &&
-      formData.questionModel.trim()
-    : activity?.id === 'plano-aula'
-    ? formData.title.trim() &&
-      formData.description.trim() &&
-      formData.theme.trim() &&
-      formData.schoolYear.trim() &&
-      formData.subject.trim() &&
-      formData.objectives.trim() &&
-      formData.materials.trim()
-    : activity?.id === 'sequencia-didatica'
-    ? formData.tituloTemaAssunto?.trim() &&
-      formData.anoSerie?.trim() &&
-      formData.disciplina?.trim() &&
-      formData.publicoAlvo?.trim() &&
-      formData.objetivosAprendizagem?.trim() &&
-      formData.quantidadeAulas?.trim() &&
-      formData.quantidadeDiagnosticos?.trim() &&
-      formData.quantidadeAvaliacoes?.trim()
-    : formData.title.trim() &&
-      formData.description.trim() &&
-      formData.objectives.trim();
+  const getFormValidation = () => {
+    if (activity?.id === 'lista-exercicios') {
+      return formData.title.trim() &&
+        formData.description.trim() &&
+        formData.subject.trim() &&
+        formData.theme.trim() &&
+        formData.schoolYear.trim() &&
+        formData.numberOfQuestions.trim() &&
+        formData.difficultyLevel.trim() &&
+        formData.questionModel.trim();
+    } else if (activity?.id === 'plano-aula') {
+      return formData.title.trim() &&
+        formData.description.trim() &&
+        formData.theme.trim() &&
+        formData.schoolYear.trim() &&
+        formData.subject.trim() &&
+        formData.objectives.trim() &&
+        formData.materials.trim();
+    } else if (activity?.id === 'sequencia-didatica') {
+      return formData.tituloTemaAssunto?.trim() &&
+        formData.anoSerie?.trim() &&
+        formData.disciplina?.trim() &&
+        formData.publicoAlvo?.trim() &&
+        formData.objetivosAprendizagem?.trim() &&
+        formData.quantidadeAulas?.trim() &&
+        formData.quantidadeDiagnosticos?.trim() &&
+        formData.quantidadeAvaliacoes?.trim();
+    } else {
+      return formData.title.trim() &&
+        formData.description.trim() &&
+        formData.objectives.trim();
+    }
+  };
+
+  const isFormValid = getFormValidation();
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -1044,35 +1050,7 @@ const EditActivityModal = ({
                            Object.keys(customFields).length > 0;
 
     // Verificar se todos os campos obrigatórios estão preenchidos
-    const todosCamposPreenchidos = activity?.id === 'lista-exercicios'
-      ? formData.title.trim() &&
-        formData.description.trim() &&
-        formData.subject.trim() &&
-        formData.theme.trim() &&
-        formData.schoolYear.trim() &&
-        formData.numberOfQuestions.trim() &&
-        formData.difficultyLevel.trim() &&
-        formData.questionModel.trim()
-      : activity?.id === 'plano-aula'
-      ? formData.title.trim() &&
-        formData.description.trim() &&
-        formData.theme.trim() &&
-        formData.schoolYear.trim() &&
-        formData.subject.trim() &&
-        formData.objectives.trim() &&
-        formData.materials.trim()
-      : activity?.id === 'sequencia-didatica'
-      ? formData.tituloTemaAssunto?.trim() &&
-        formData.anoSerie?.trim() &&
-        formData.disciplina?.trim() &&
-        formData.publicoAlvo?.trim() &&
-        formData.objetivosAprendizagem?.trim() &&
-        formData.quantidadeAulas?.trim() &&
-        formData.quantidadeDiagnosticos?.trim() &&
-        formData.quantidadeAvaliacoes?.trim()
-      : formData.title.trim() &&
-        formData.description.trim() &&
-        formData.objectives.trim();
+    const todosCamposPreenchidos = getFormValidation();
 
     // Agente automático: Acionar "Construir Atividade" quando preenchido pela IA
     if (todosCamposPreenchidos && preenchidoPorIA && !activity.isBuilt) {
