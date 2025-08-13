@@ -1,148 +1,108 @@
 
 import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
-import { SequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
+import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
 
 export class SequenciaDidaticaBuilder {
   static async saveSequencia(data: any): Promise<void> {
     try {
-      console.log('💾 Salvando Sequência Didática:', data);
-
-      const sequenciaId = data.id || `seq_${Date.now()}`;
-      const storageKey = `constructed_sequencia-didatica_${sequenciaId}`;
-
-      // Salvar no localStorage específico
+      const storageKey = `constructed_sequencia-didatica_${data.id || Date.now()}`;
       localStorage.setItem(storageKey, JSON.stringify(data));
-
-      // Também salvar na lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const existingIndex = savedSequencias.findIndex((s: any) => s.id === sequenciaId);
-
-      if (existingIndex >= 0) {
-        savedSequencias[existingIndex] = data;
-      } else {
-        savedSequencias.push({
-          ...data,
-          id: sequenciaId,
-          createdAt: new Date().toISOString()
-        });
-      }
-
-      localStorage.setItem('sequenciasDidaticas', JSON.stringify(savedSequencias));
-
-      console.log('✅ Sequência Didática salva com sucesso:', sequenciaId);
-
+      console.log('✅ Sequência Didática salva com sucesso:', storageKey);
     } catch (error) {
-      console.error('❌ Erro ao salvar Sequência Didática:', error);
+      console.error('❌ Erro ao salvar sequência:', error);
       throw error;
     }
   }
 
-  static async loadSequencia(id: string): Promise<any> {
+  static async loadSequencia(activityId: string): Promise<any> {
     try {
-      console.log('📂 Carregando Sequência Didática:', id);
-
-      // Tentar carregar do localStorage específico primeiro
-      const specificKey = `constructed_sequencia-didatica_${id}`;
-      const specificData = localStorage.getItem(specificKey);
-
-      if (specificData) {
-        console.log('✅ Sequência encontrada no storage específico');
-        return JSON.parse(specificData);
+      const storageKey = `constructed_sequencia-didatica_${activityId}`;
+      const savedData = localStorage.getItem(storageKey);
+      
+      if (savedData) {
+        console.log('✅ Sequência carregada do localStorage');
+        return JSON.parse(savedData);
       }
-
-      // Fallback para lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const sequencia = savedSequencias.find((s: any) => s.id === id);
-
-      if (!sequencia) {
-        console.warn(`⚠️ Sequência Didática com ID ${id} não encontrada`);
-        return null;
-      }
-
-      return sequencia;
-
+      
+      console.log('⚠️ Nenhuma sequência salva encontrada');
+      return null;
     } catch (error) {
       console.error('❌ Erro ao carregar sequência salva:', error);
       return null;
     }
   }
 
-  static recuperarSequencia(id: string): Promise<any> {
-    return this.loadSequencia(id);
-  }
-
   static async buildSequencia(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
     try {
-      console.log('🔨 Construindo Sequência Didática:', formData);
+      console.log('🔨 Iniciando construção da Sequência Didática:', formData);
 
-      const generator = SequenciaDidaticaGenerator.getInstance();
-      const sequenciaCompleta = await generator.generateFromFormData(formData);
+      // Validar dados obrigatórios
+      if (!formData.tituloTemaAssunto?.trim()) {
+        throw new Error('Título do tema/assunto é obrigatório');
+      }
+      if (!formData.disciplina?.trim()) {
+        throw new Error('Disciplina é obrigatória');
+      }
+      if (!formData.anoSerie?.trim()) {
+        throw new Error('Ano/Série é obrigatório');
+      }
 
-      // Salvar a sequência construída
-      await this.saveSequencia(sequenciaCompleta);
-
+      // Gerar sequência completa usando o generator
+      const sequenciaCompleta = await sequenciaDidaticaGenerator.generateFromFormData(formData);
+      
       console.log('✅ Sequência Didática construída com sucesso');
       return sequenciaCompleta;
 
     } catch (error) {
-      console.error('❌ Erro ao construir Sequência Didática:', error);
-      throw error;
+      console.error('❌ Erro na construção da sequência:', error);
+      throw new Error(`Falha na construção: ${error.message}`);
     }
   }
 
-  static async regenerateSequencia(id: string, formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+  static async recuperarSequencia(activityId: string): Promise<SequenciaDidaticaCompleta | null> {
     try {
-      console.log('🔄 Regenerando Sequência Didática:', id);
-
-      const generator = SequenciaDidaticaGenerator.getInstance();
-      const sequenciaCompleta = await generator.regenerateWithAI(formData);
-
-      // Atualizar com o ID existente
-      const updatedSequencia = { ...sequenciaCompleta, id };
-      await this.saveSequencia(updatedSequencia);
-
-      console.log('✅ Sequência Didática regenerada com sucesso');
-      return updatedSequencia;
-
+      console.log('🔍 Recuperando sequência para:', activityId);
+      
+      const savedData = await this.loadSequencia(activityId);
+      if (savedData) {
+        console.log('✅ Sequência recuperada com sucesso');
+        return savedData;
+      }
+      
+      console.log('⚠️ Nenhuma sequência encontrada para recuperar');
+      return null;
     } catch (error) {
-      console.error('❌ Erro ao regenerar Sequência Didática:', error);
-      throw error;
+      console.error('❌ Erro ao recuperar sequência:', error);
+      return null;
     }
   }
 
-  static async deleteSequencia(id: string): Promise<void> {
+  static async regenerarSequencia(
+    formData: SequenciaDidaticaData,
+    activityId?: string
+  ): Promise<SequenciaDidaticaCompleta> {
     try {
-      console.log('🗑️ Removendo Sequência Didática:', id);
-
-      // Remover do storage específico
-      const specificKey = `constructed_sequencia-didatica_${id}`;
-      localStorage.removeItem(specificKey);
-
-      // Remover da lista geral
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      const filteredSequencias = savedSequencias.filter((s: any) => s.id !== id);
-      localStorage.setItem('sequenciasDidaticas', JSON.stringify(filteredSequencias));
-
-      console.log('✅ Sequência Didática removida com sucesso');
-
+      console.log('🔄 Regenerando sequência didática...');
+      
+      // Regenerar usando o generator
+      const novaSequencia = await sequenciaDidaticaGenerator.generateFromFormData(formData);
+      
+      // Salvar nova versão
+      if (activityId) {
+        await this.saveSequencia({
+          ...novaSequencia,
+          id: activityId
+        });
+      }
+      
+      console.log('✅ Sequência regenerada com sucesso');
+      return novaSequencia;
     } catch (error) {
-      console.error('❌ Erro ao remover Sequência Didática:', error);
+      console.error('❌ Erro ao regenerar sequência:', error);
       throw error;
-    }
-  }
-
-  static async listSequencias(): Promise<any[]> {
-    try {
-      console.log('📋 Listando todas as Sequências Didáticas');
-
-      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
-      return savedSequencias;
-
-    } catch (error) {
-      console.error('❌ Erro ao listar Sequências Didáticas:', error);
-      return [];
     }
   }
 }
 
-export default SequenciaDidaticaBuilder;
+// Criar instância singleton para uso externo
+export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();

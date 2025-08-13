@@ -1,19 +1,4 @@
 
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
-
-export interface SequenciaDidaticaCustomFields {
-  [key: string]: string;
-}
-
-export interface SequenciaDidaticaActivity {
-  id: string;
-  title: string;
-  description: string;
-  customFields: SequenciaDidaticaCustomFields;
-  personalizedTitle?: string;
-  personalizedDescription?: string;
-}
-
 export interface SequenciaDidaticaData {
   tituloTemaAssunto: string;
   anoSerie: string;
@@ -40,41 +25,77 @@ export const sequenciaDidaticaFieldMapping = {
   'Cronograma': 'cronograma'
 };
 
-export function processSequenciaDidaticaData(formData: ActivityFormData): SequenciaDidaticaData {
-  console.log('🔄 Processando dados da Sequência Didática:', formData);
+export function processSequenciaDidaticaData(formData: any, customFields: any = {}): SequenciaDidaticaData {
+  console.log('📊 Processando dados da Sequência Didática:', { formData, customFields });
 
-  const processedData: SequenciaDidaticaData = {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-    anoSerie: formData.anoSerie || formData.schoolYear || '',
-    disciplina: formData.disciplina || formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '2',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '2',
-    cronograma: formData.cronograma || ''
+  return {
+    tituloTemaAssunto: formData.tituloTemaAssunto || 
+                      customFields['Título do Tema / Assunto'] || 
+                      formData.title || '',
+    anoSerie: formData.anoSerie || 
+              customFields['Ano / Série'] || 
+              formData.schoolYear || '',
+    disciplina: formData.disciplina || 
+                customFields['Disciplina'] || 
+                formData.subject || '',
+    bnccCompetencias: formData.bnccCompetencias || 
+                     customFields['BNCC / Competências'] || 
+                     formData.competencies || '',
+    publicoAlvo: formData.publicoAlvo || 
+                customFields['Público-alvo'] || 
+                formData.context || '',
+    objetivosAprendizagem: formData.objetivosAprendizagem || 
+                          customFields['Objetivos de Aprendizagem'] || 
+                          formData.objectives || '',
+    quantidadeAulas: formData.quantidadeAulas || 
+                    customFields['Quantidade de Aulas'] || '4',
+    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || 
+                           customFields['Quantidade de Diagnósticos'] || '1',
+    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || 
+                         customFields['Quantidade de Avaliações'] || '2',
+    cronograma: formData.cronograma || 
+                customFields['Cronograma'] || 
+                formData.timeLimit || ''
   };
-
-  console.log('✅ Dados processados da Sequência Didática:', processedData);
-  return processedData;
 }
 
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): boolean {
-  const requiredFields = [
-    'tituloTemaAssunto',
-    'disciplina',
-    'anoSerie',
-    'publicoAlvo',
-    'objetivosAprendizagem'
-  ];
+export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): string[] {
+  const errors: string[] = [];
 
-  for (const field of requiredFields) {
-    if (!data[field as keyof SequenciaDidaticaData]?.trim()) {
-      console.error(`❌ Campo obrigatório ausente: ${field}`);
-      return false;
-    }
+  if (!data.tituloTemaAssunto?.trim()) {
+    errors.push('Título do Tema / Assunto é obrigatório');
   }
 
-  return true;
+  if (!data.disciplina?.trim()) {
+    errors.push('Disciplina é obrigatória');
+  }
+
+  if (!data.anoSerie?.trim()) {
+    errors.push('Ano / Série é obrigatório');
+  }
+
+  if (!data.publicoAlvo?.trim()) {
+    errors.push('Público-alvo é obrigatório');
+  }
+
+  if (!data.objetivosAprendizagem?.trim()) {
+    errors.push('Objetivos de Aprendizagem são obrigatórios');
+  }
+
+  const quantidadeAulas = parseInt(data.quantidadeAulas);
+  if (isNaN(quantidadeAulas) || quantidadeAulas < 1) {
+    errors.push('Quantidade de Aulas deve ser um número maior que 0');
+  }
+
+  const quantidadeDiagnosticos = parseInt(data.quantidadeDiagnosticos);
+  if (isNaN(quantidadeDiagnosticos) || quantidadeDiagnosticos < 0) {
+    errors.push('Quantidade de Diagnósticos deve ser um número válido');
+  }
+
+  const quantidadeAvaliacoes = parseInt(data.quantidadeAvaliacoes);
+  if (isNaN(quantidadeAvaliacoes) || quantidadeAvaliacoes < 0) {
+    errors.push('Quantidade de Avaliações deve ser um número válido');
+  }
+
+  return errors;
 }
