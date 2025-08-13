@@ -1,0 +1,32 @@
+Agora o nosso objetivo é deixar a geração da atividade de Sequência Didática totalmente funcional e aplicavel e ativa!!!!!!!
+
+Se necessário mude a configuração de campo dentro da interface, para ser realmente um campo que possa receber eventos e dados do sistema que foram captados pela a IA do Google Gemini, e não seja apenas um dado ficticio e fixo dentro da interface!!!!!!!
+
+É extremamente importante que você altere arquivos exclusivos de dentro da atividade de Sequência Didática, e dentro da interface de Construção de Atividades e o modal de Editar Materiais! Falo isso porque é extremamente imrpotante que você não prejudique nenhuma lógia de geração e uso da API do Gemini dentro do Plano de Ação, é ultramente importante que você não altere coisas fora de CONTEXTO!!!!!!!
+
+Agora o nosso objetivo é deixar a geração da atividade de Sequência Didática totalmente funcional e aplicavel e ativa!!!!!!!
+
+Você precisa mapear absolutamente todos os campos de dentro da interface de visualização da interface da atividade de Sequência Didática, para que você consiga fazer um mapeamento e sistema de resposta completo para que o próprio sistema da plataforma, quando a atividade estiver sendo gerada automaticamente, pegue todas as informações de dentro do modal de Editar Materiais, de todos os campos de dentro da interface da mini-seção de Editar, e envie para a IA com a API do Google Gemini, para que ela analise todas as respostas recebidas e coletas, e que possa gerar uma resposta correta que responda absolutamente todos os prompts de dentro da interface de visualização da atividade de Sequência Didática!!!!!!!
+
+Você precisa fazer todas as integrações, todas as conexões e todas as sicronizações, e coleta e recebimento de dados corretamente! Você precisa garantir com toda certeza que a geração da atividade de Sequência Didática está sendo constuida corretamente, e crie um debg correto e completo para identificar em qual etapa o sistema está falhando caso a constução falhe!!!!!!!
+
+É extremamente importante que você não use ou coloque dados ficticios dentro da interface de visualização das atividades de Sequência Didática!!!!!!!
+
+É extremamente importante que você não comprometa ou prejudique negativamente outras funcionalidades já existentes e funcionais dentro da seção de School Power ou dentro do restante da plataforma! Seja ultramente preciso nas suas alterações, para que você não cometa erros ou bugs dentro da plataforma!!!!!!!
+
+Garanta que todas as chamadas API do Google Gemini funcione corretamente, e todos os caminhos e flows estejam configurados corretamente! Para que todas as respostas da IA sejam coletadas e ajustadas ao sistema de dentro da interface de Sequência Didática corretamente! É extremamente importante que o sistema coloque todas as informações corretamente dentro da interface de visualização!
+
+Faça que a IA e o sistema de visualização de dentro da plataforma estejam completamente configurados para que a IA escolha a quantidade de cards corretamente dentro da interface de visualização de Sequência Didática!!!!!!!
+
+É EXTREMAMENTE IMPORTANTE QUE VOCÊ MANTENHA A MESMA CONSCISTENCIA DE DESING DA INTERFACE DA ATIVIDADE GERADA ATUALMENTE, COM EXATAMENTE A MESMA ESTRUTURA, PORÉM ALTERANDO APENAS OS CAMPOS DE DENTRO DE CADA ELEMENTO, MAS MANTENDO A MESA ESTRUTURA!!!!!!!
+
+É EXTREMAMENTE IMPORTANTE QUE VOCÊ NÃO COMETA OS ERRO DE:
+
+isFormValid is not defined
+
+Verifique também:
+
+Erro de parsing JSON na resposta da IA
+Estrutura de dados incompatível entre geração e visualização
+Problemas no salvamento e recuperação dos dados
+Validação inadequada dos campos obrigatórios
