@@ -1,4 +1,3 @@
-
 import { geminiClient } from '@/utils/api/geminiClient';
 import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
@@ -63,13 +62,13 @@ export class SequenciaDidaticaGenerator {
     try {
       const prompt = this.construirPromptCompleto(dados);
       console.log('📝 Prompt construído, enviando para IA...');
-      
+
       const response = await geminiClient.generateContent(prompt);
       console.log('✅ Resposta recebida da IA');
-      
+
       const sequenciaGerada = this.processarRespostaIA(response, dados);
       console.log('🎯 Sequência processada e estruturada');
-      
+
       return sequenciaGerada;
     } catch (error) {
       console.error('❌ Erro na geração da Sequência Didática:', error);
@@ -193,7 +192,7 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
 
   private processarRespostaIA(response: any, dadosOriginais: SequenciaDidaticaData): SequenciaDidaticaCompleta {
     console.log('🔍 Processando resposta da IA...');
-    
+
     try {
       // Extrair JSON da resposta
       let jsonContent = response;
@@ -240,7 +239,7 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
       return sequenciaCompleta;
     } catch (error) {
       console.error('❌ Erro ao processar resposta da IA:', error);
-      
+
       // Retornar estrutura mínima em caso de erro
       return {
         metadados: dadosOriginais,
@@ -267,10 +266,75 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
     dadosAlterados: Partial<SequenciaDidaticaData>
   ): Promise<SequenciaDidaticaCompleta> {
     console.log('🔄 Regenerando sequência com alterações:', dadosAlterados);
-    
+
     const dadosCompletos = { ...dadosOriginais, ...dadosAlterados };
     return this.gerarSequenciaCompleta(dadosCompletos);
   }
+
+  static async generateSequenciaDidatica(data: any): Promise<any> {
+    console.log('🚀 Gerando Sequência Didática com dados:', data);
+
+    try {
+      // Dados básicos da sequência
+      const sequenciaData = {
+        titulo: data.tituloTemaAssunto || 'Sequência Didática',
+        anoSerie: data.anoSerie || 'Não especificado',
+        disciplina: data.disciplina || 'Não especificado',
+        publicoAlvo: data.publicoAlvo || 'Estudantes',
+        objetivos: data.objetivosAprendizagem || 'Objetivos a serem definidos',
+        competencias: data.bnccCompetencias || 'Competências da BNCC',
+        quantidadeAulas: parseInt(data.quantidadeAulas) || 1,
+        quantidadeDiagnosticos: parseInt(data.quantidadeDiagnosticos) || 1,
+        quantidadeAvaliacoes: parseInt(data.quantidadeAvaliacoes) || 1,
+        cronograma: data.cronograma || 'Cronograma a ser definido',
+        aulas: [],
+        diagnosticos: [],
+        avaliacoes: []
+      };
+
+      // Gerar aulas
+      for (let i = 0; i < sequenciaData.quantidadeAulas; i++) {
+        sequenciaData.aulas.push({
+          numero: i + 1,
+          titulo: `Aula ${i + 1}`,
+          objetivos: `Objetivos específicos da aula ${i + 1}`,
+          duracao: '50 minutos',
+          atividades: ['Atividade introdutória', 'Desenvolvimento', 'Encerramento'],
+          materiais: ['Material didático', 'Quadro', 'Recursos digitais'],
+          metodologia: 'Metodologia ativa'
+        });
+      }
+
+      // Gerar diagnósticos
+      for (let i = 0; i < sequenciaData.quantidadeDiagnosticos; i++) {
+        sequenciaData.diagnosticos.push({
+          numero: i + 1,
+          titulo: `Diagnóstico ${i + 1}`,
+          descricao: `Avaliação diagnóstica ${i + 1}`,
+          tipo: 'Diagnóstica',
+          instrumentos: ['Observação', 'Questionário', 'Atividade prática']
+        });
+      }
+
+      // Gerar avaliações
+      for (let i = 0; i < sequenciaData.quantidadeAvaliacoes; i++) {
+        sequenciaData.avaliacoes.push({
+          numero: i + 1,
+          titulo: `Avaliação ${i + 1}`,
+          descricao: `Avaliação formativa/somativa ${i + 1}`,
+          tipo: i === sequenciaData.quantidadeAvaliacoes - 1 ? 'Somativa' : 'Formativa',
+          instrumentos: ['Prova', 'Trabalho', 'Apresentação']
+        });
+      }
+
+      console.log('✅ Sequência Didática gerada:', sequenciaData);
+      return sequenciaData;
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar Sequência Didática:', error);
+      throw error;
+    }
+  }
 }
 
-export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator.getInstance();
+export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator;

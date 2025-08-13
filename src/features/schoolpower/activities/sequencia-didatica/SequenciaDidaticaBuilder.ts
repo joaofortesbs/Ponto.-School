@@ -1,4 +1,3 @@
-
 import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
 import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
@@ -44,7 +43,7 @@ export class SequenciaDidaticaBuilder {
       // Salvar no localStorage
       const storageKey = `sequencia_didatica_${Date.now()}`;
       localStorage.setItem(storageKey, JSON.stringify(sequenciaCompleta));
-      
+
       // Também salvar com chave específica para recuperação
       const activityKey = 'constructed_sequencia-didatica_latest';
       localStorage.setItem(activityKey, JSON.stringify(sequenciaCompleta));
@@ -73,7 +72,7 @@ export class SequenciaDidaticaBuilder {
 
     try {
       const sequenciaRegenerada = await sequenciaDidaticaGenerator.regenerarSequencia(dadosOriginais, alteracoes);
-      
+
       // Atualizar localStorage
       const activityKey = 'constructed_sequencia-didatica_latest';
       localStorage.setItem(activityKey, JSON.stringify(sequenciaRegenerada));
@@ -129,15 +128,39 @@ export class SequenciaDidaticaBuilder {
     try {
       const activityKey = 'constructed_sequencia-didatica_latest';
       const savedData = localStorage.getItem(activityKey);
-      
+
       if (savedData) {
         return JSON.parse(savedData);
       }
-      
+
       return null;
     } catch (error) {
       console.error('❌ Erro ao carregar sequência salva:', error);
       return null;
+    }
+  }
+
+  static async buildSequenciaDidatica(formData: any): Promise<any> {
+    console.log('🔨 Construindo Sequência Didática:', formData);
+
+    try {
+      // Usar o generator para criar a sequência
+      const sequenciaGerada = await SequenciaDidaticaGenerator.generateSequenciaDidatica(formData);
+
+      // Combinar dados do formulário com dados gerados
+      const sequenciaCompleta = {
+        ...formData,
+        ...sequenciaGerada,
+        isBuilt: true,
+        buildTimestamp: new Date().toISOString()
+      };
+
+      console.log('✅ Sequência Didática construída:', sequenciaCompleta);
+      return sequenciaCompleta;
+
+    } catch (error) {
+      console.error('❌ Erro ao construir Sequência Didática:', error);
+      throw error;
     }
   }
 }

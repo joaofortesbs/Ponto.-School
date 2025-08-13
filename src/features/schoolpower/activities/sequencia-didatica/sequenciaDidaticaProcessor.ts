@@ -57,6 +57,46 @@ export const sequenciaDidaticaFieldMapping = {
 export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaData {
   console.log('📚 Processando dados da Sequência Didática:', activityData);
 
+  const result: SequenciaDidaticaData = {
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    bnccCompetencias: '',
+    publicoAlvo: '',
+    objetivosAprendizagem: '',
+    quantidadeAulas: '1',
+    quantidadeDiagnosticos: '1',
+    quantidadeAvaliacoes: '1',
+    cronograma: ''
+  };
+
+  if (!activityData) {
+    return result;
+  }
+
+  // Processar campos de customFields se existirem
+  if (activityData.customFields) {
+    Object.entries(activityData.customFields).forEach(([key, value]) => {
+      const mappedField = sequenciaDidaticaFieldMapping[key];
+      if (mappedField && typeof value === 'string') {
+        (result as any)[mappedField] = value;
+      }
+    });
+  }
+
+  // Processar campos diretos do originalData
+  if (activityData.originalData) {
+    Object.entries(activityData.originalData).forEach(([key, value]) => {
+      const mappedField = sequenciaDidaticaFieldMapping[key];
+      if (mappedField && typeof value === 'string') {
+        (result as any)[mappedField] = value;
+      }
+    });
+  }
+
+  console.log('📚 Dados processados da Sequência Didática:', result);
+  return result activityData);
+
   const customFields = activityData.customFields || {};
   
   return {
