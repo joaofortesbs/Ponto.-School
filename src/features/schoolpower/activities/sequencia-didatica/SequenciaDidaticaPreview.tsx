@@ -46,8 +46,18 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     sequenciaData.aulas?.length > 0 ||
     sequenciaData.tituloTemaAssunto ||
     sequenciaData.metadados?.tituloTemaAssunto ||
+    sequenciaData.isBuilt ||
     isBuilt
   );
+
+  console.log('🔍 [SEQUENCIA_DIDATICA_PREVIEW] Detalhes da verificação:', {
+    temSequenciaData: !!sequenciaData,
+    temAulas: sequenciaData?.aulas?.length > 0,
+    temTitulo: !!sequenciaData?.tituloTemaAssunto,
+    temMetadadosTitulo: !!sequenciaData?.metadados?.tituloTemaAssunto,
+    isBuilt: sequenciaData?.isBuilt || isBuilt,
+    hasValidData
+  });
 
   console.log('🔍 [SEQUENCIA_DIDATICA_PREVIEW] Verificação de dados:', {
     hasValidData,
@@ -61,10 +71,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   const tituloTemaAssunto = metadados.tituloTemaAssunto || 
     sequenciaData.title || 
-    'Sequência Didática';
+    'Sequência Didática Personalizada';
 
   const objetivosAprendizagem = metadados.objetivosAprendizagem || 
-    'Objetivos de aprendizagem não definidos';
+    'Desenvolver competências e habilidades educacionais específicas';
+
+  const disciplina = metadados.disciplina || 'Educação Geral';
+  const anoSerie = metadados.anoSerie || '6º Ano do Ensino Fundamental';
+  const publicoAlvo = metadados.publicoAlvo || 'Estudantes do Ensino Fundamental';
 
   // Usar dados reais da IA
   const aulasList = sequenciaData.aulas || [];
@@ -147,11 +161,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         <div className="flex flex-col items-center gap-4">
           <BookOpen className="text-gray-400" size={48} />
           <h3 className="text-lg font-medium text-gray-600">
-            Nenhum conteúdo gerado ainda
+            Sequência Didática não construída ainda
           </h3>
-          <p className="text-sm text-gray-500 max-w-md">
-            Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
+          <p className="text-sm text-gray-500 max-w-md text-center">
+            Preencha os campos básicos na aba "Editar" e clique em "Construir Atividade" para gerar sua sequência didática personalizada.
           </p>
+          <div className="text-xs text-gray-400 mt-2">
+            💡 A sequência será gerada automaticamente com aulas, diagnósticos e avaliações
+          </div>
         </div>
       </div>
     );

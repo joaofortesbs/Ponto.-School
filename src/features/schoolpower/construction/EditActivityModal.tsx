@@ -762,13 +762,14 @@ const EditActivityModal = ({
       // Construir baseado no tipo de atividade
       switch (activity.id) {
         case 'sequencia-didatica':
-          console.log('📚 Construindo Sequência Didática com dados:', formData);
+          const formDataWithDefaults = getFormDataWithDefaults();
+          console.log('📚 Construindo Sequência Didática com dados:', formDataWithDefaults);
           setBuildingStatus({
             isBuilding: true,
             progress: 50,
             currentStep: 'Gerando sequência didática...'
           });
-          builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formData);
+          builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formDataWithDefaults);
           break;
 
         case 'plano-aula':
@@ -953,6 +954,26 @@ const EditActivityModal = ({
   };
 
   const isFormValid = getFormValidation();
+
+  // Função para definir dados padrão quando campos estão vazios
+  const getFormDataWithDefaults = () => {
+    if (activity?.id === 'sequencia-didatica') {
+      return {
+        ...formData,
+        tituloTemaAssunto: formData.tituloTemaAssunto || 'Sequência Didática Personalizada',
+        disciplina: formData.disciplina || 'Educação Geral',
+        anoSerie: formData.anoSerie || '6º Ano do Ensino Fundamental',
+        publicoAlvo: formData.publicoAlvo || 'Estudantes do Ensino Fundamental',
+        objetivosAprendizagem: formData.objetivosAprendizagem || 'Desenvolver habilidades e competências educacionais',
+        quantidadeAulas: formData.quantidadeAulas || '4',
+        quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
+        quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '2',
+        bnccCompetencias: formData.bnccCompetencias || 'Competências gerais da BNCC',
+        cronograma: formData.cronograma || 'Cronograma flexível adaptável'
+      };
+    }
+    return formData;
+  };
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -1494,7 +1515,7 @@ const EditActivityModal = ({
                   id="build-activity-button"
                   data-testid="build-activity-button"
                   onClick={handleBuildActivity}
-                  disabled={buildingStatus.isBuilding || !isFormValid}
+                  disabled={buildingStatus.isBuilding || (activity?.id !== 'sequencia-didatica' && !isFormValid)}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {buildingStatus.isBuilding ? (
