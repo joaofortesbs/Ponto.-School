@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { processSequenciaDidaticaData, ProcessedSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 import { buildSequenciaDidaticaPrompt } from '../../prompts/sequenciaDidaticaPrompt';
@@ -17,7 +16,7 @@ export interface BuiltSequenciaDidaticaData {
   quantidadeAulas: number;
   quantidadeDiagnosticos: number;
   quantidadeAvaliacoes: number;
-  
+
   // Metadados estruturados para preview
   metadados: {
     tituloTemaAssunto: string;
@@ -28,13 +27,13 @@ export interface BuiltSequenciaDidaticaData {
     bnccCompetencias: string;
     duracaoTotal: string;
   };
-  
+
   // Dados gerados pela IA
   aulas: any[];
   diagnosticos: any[];
   avaliacoes: any[];
   cronogramaSugerido: any;
-  
+
   // Status
   isBuilt: boolean;
   isGenerated: boolean;
@@ -44,7 +43,7 @@ export interface BuiltSequenciaDidaticaData {
 
 export class SequenciaDidaticaBuilder {
   private static instance: SequenciaDidaticaBuilder;
-  
+
   public static getInstance(): SequenciaDidaticaBuilder {
     if (!SequenciaDidaticaBuilder.instance) {
       SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
@@ -58,7 +57,7 @@ export class SequenciaDidaticaBuilder {
     try {
       // Processar e validar dados
       const processedData = processSequenciaDidaticaData(formData);
-      
+
       if (!processedData.isComplete) {
         console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Dados incompletos:', processedData.validationErrors);
         throw new Error(`Dados incompletos: ${processedData.validationErrors.join(', ')}`);
@@ -96,9 +95,9 @@ export class SequenciaDidaticaBuilder {
         },
 
         // Dados gerados pela IA ou dados padrão se falhar
-        aulas: sequenciaGerada.aulas || this.createDefaultAulas(parseInt(processedData.quantidadeAulas)),
-        diagnosticos: sequenciaGerada.diagnosticos || this.createDefaultDiagnosticos(parseInt(processedData.quantidadeDiagnosticos)),
-        avaliacoes: sequenciaGerada.avaliacoes || this.createDefaultAvaliacoes(parseInt(processedData.quantidadeAvaliacoes)),
+        aulas: sequenciaGerada.aulas || this.createDefaultAulas(parseInt(processedData.quantidadeAulas), processedData),
+        diagnosticos: sequenciaGerada.diagnosticos || this.createDefaultDiagnosticos(parseInt(processedData.quantidadeDiagnosticos), processedData),
+        avaliacoes: sequenciaGerada.avaliacoes || this.createDefaultAvaliacoes(parseInt(processedData.quantidadeAvaliacoes), processedData),
         cronogramaSugerido: sequenciaGerada.cronogramaSugerido || {
           duracao: `${parseInt(processedData.quantidadeAulas)} aulas`,
           distribuicao: 'Distribuição flexível conforme calendário escolar',
@@ -165,7 +164,7 @@ export class SequenciaDidaticaBuilder {
       try {
         // Primeira tentativa: remover markdown e parsear
         let cleanedResponse = response.content.replace(/```json|```/g, '').trim();
-        
+
         // Segunda tentativa: limpar caracteres problemáticos
         cleanedResponse = cleanedResponse
           .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove caracteres de controle
@@ -174,7 +173,7 @@ export class SequenciaDidaticaBuilder {
 
         // Tentar parsear diretamente
         sequenciaData = JSON.parse(cleanedResponse);
-        
+
         // Verificar se tem a estrutura esperada
         if (sequenciaData.sequenciaDidatica) {
           sequenciaData = sequenciaData.sequenciaDidatica;
@@ -182,7 +181,7 @@ export class SequenciaDidaticaBuilder {
 
       } catch (parseError) {
         console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao parsear resposta (primeira tentativa):', parseError);
-        
+
         try {
           // Terceira tentativa: extrair JSON válido com regex mais robusto
           const jsonMatches = response.content.match(/\{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*\}/g);
@@ -190,7 +189,7 @@ export class SequenciaDidaticaBuilder {
             // Tentar o maior JSON encontrado
             const largestJson = jsonMatches.reduce((a, b) => a.length > b.length ? a : b);
             sequenciaData = JSON.parse(largestJson);
-            
+
             if (sequenciaData.sequenciaDidatica) {
               sequenciaData = sequenciaData.sequenciaDidatica;
             }
@@ -199,7 +198,7 @@ export class SequenciaDidaticaBuilder {
           }
         } catch (secondError) {
           console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao parsear resposta (segunda tentativa):', secondError);
-          
+
           // Quarta tentativa: usar dados padrão estruturados
           console.log('⚠️ [SEQUENCIA_DIDATICA_BUILDER] Usando estrutura padrão devido a erro de parsing');
           sequenciaData = this.createFallbackSequenciaData(data);
@@ -208,13 +207,13 @@ export class SequenciaDidaticaBuilder {
 
       // Validar estrutura mínima dos dados
       if (!sequenciaData.aulas) {
-        sequenciaData.aulas = this.createDefaultAulas(parseInt(data.quantidadeAulas));
+        sequenciaData.aulas = this.createDefaultAulas(parseInt(data.quantidadeAulas), data);
       }
       if (!sequenciaData.diagnosticos) {
-        sequenciaData.diagnosticos = this.createDefaultDiagnosticos(parseInt(data.quantidadeDiagnosticos));
+        sequenciaData.diagnosticos = this.createDefaultDiagnosticos(parseInt(data.quantidadeDiagnosticos), data);
       }
       if (!sequenciaData.avaliacoes) {
-        sequenciaData.avaliacoes = this.createDefaultAvaliacoes(parseInt(data.quantidadeAvaliacoes));
+        sequenciaData.avaliacoes = this.createDefaultAvaliacoes(parseInt(data.quantidadeAvaliacoes), data);
       }
 
       console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Dados processados com sucesso');
@@ -236,9 +235,9 @@ export class SequenciaDidaticaBuilder {
 
   private createFallbackSequenciaData(data: ProcessedSequenciaDidaticaData): any {
     return {
-      aulas: this.createDefaultAulas(parseInt(data.quantidadeAulas)),
-      diagnosticos: this.createDefaultDiagnosticos(parseInt(data.quantidadeDiagnosticos)),
-      avaliacoes: this.createDefaultAvaliacoes(parseInt(data.quantidadeAvaliacoes)),
+      aulas: this.createDefaultAulas(parseInt(data.quantidadeAulas), data),
+      diagnosticos: this.createDefaultDiagnosticos(parseInt(data.quantidadeDiagnosticos), data),
+      avaliacoes: this.createDefaultAvaliacoes(parseInt(data.quantidadeAvaliacoes), data),
       cronogramaSugerido: {
         duracao: `${data.quantidadeAulas} aulas`,
         distribuicao: 'Distribuição flexível conforme calendário escolar',
@@ -256,7 +255,7 @@ export class SequenciaDidaticaBuilder {
     try {
       const storageKey = `constructed_sequencia-didatica_${data.activityId}`;
       localStorage.setItem(storageKey, JSON.stringify(data));
-      
+
       console.log('💾 [SEQUENCIA_DIDATICA_BUILDER] Sequência salva no localStorage:', storageKey);
     } catch (error) {
       console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao salvar:', error);
@@ -267,11 +266,11 @@ export class SequenciaDidaticaBuilder {
     try {
       const storageKey = `constructed_sequencia-didatica_${activityId}`;
       const data = localStorage.getItem(storageKey);
-      
+
       if (data) {
         return JSON.parse(data);
       }
-      
+
       return null;
     } catch (error) {
       console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Erro ao carregar:', error);
@@ -279,90 +278,131 @@ export class SequenciaDidaticaBuilder {
     }
   }
 
-  public createDefaultAulas(quantidade: number): any[] {
+  public createDefaultAulas(quantidade: number, dadosPersonalizados?: ProcessedSequenciaDidaticaData): any[] {
     const aulas = [];
+    const tema = dadosPersonalizados?.tituloTemaAssunto || 'Tema da Sequência Didática';
+    const disciplina = dadosPersonalizados?.disciplina || 'Disciplina';
+
     for (let i = 1; i <= quantidade; i++) {
       aulas.push({
         id: `aula-${i}`,
         numero: i,
-        titulo: `Aula ${i} - Desenvolvimento do Tema`,
-        objetivoEspecifico: `Objetivo específico da aula ${i}`,
-        resumoContexto: `Contextualização e desenvolvimento dos conceitos principais da aula ${i}`,
-        tempoEstimado: "50 min",
-        etapas: {
-          introducao: {
-            tempo: "10 min",
-            descricao: "Introdução aos conceitos da aula"
-          },
-          desenvolvimento: {
-            tempo: "30 min",
-            descricao: "Desenvolvimento dos conteúdos principais"
-          },
-          fechamento: {
-            tempo: "10 min",
-            descricao: "Síntese e conclusão da aula"
-          }
+        titulo: `Aula ${i} - ${tema} (Parte ${i})`,
+        objetivoEspecifico: `Desenvolver competências específicas de ${disciplina} relacionadas ao tema ${tema} - Etapa ${i}`,
+        resumoContexto: `Contextualização sobre ${tema} na perspectiva da ${disciplina}, abordando aspectos fundamentais para a compreensão na aula ${i}`,
+        passoAPasso: {
+          introducao: `Introdução ao ${tema} com foco nos objetivos da aula ${i}, conectando com conhecimentos prévios dos estudantes`,
+          desenvolvimento: `Desenvolvimento metodológico dos conceitos de ${tema} através de estratégias pedagógicas adequadas para ${dadosPersonalizados?.anoSerie || 'a série'}`,
+          fechamento: `Síntese dos aprendizados sobre ${tema} e conexão com a próxima aula da sequência`
         },
-        recursos: ["Quadro", "Material didático", "Projetor"],
-        atividadesPraticas: {
-          tipo: "Exercícios práticos",
-          descricao: "Atividades para consolidação do aprendizado",
-          tempo: "15 min"
-        }
+        recursos: [
+          "Material didático específico de " + disciplina,
+          "Recursos audiovisuais relacionados ao tema " + tema,
+          "Instrumentos de avaliação formativa"
+        ],
+        atividades: [
+          {
+            tipo: "Atividade introdutória",
+            descricao: `Atividade de sensibilização sobre ${tema}`,
+            tempo: "15 min"
+          },
+          {
+            tipo: "Atividade de desenvolvimento",
+            descricao: `Exploração prática dos conceitos de ${tema}`,
+            tempo: "25 min"
+          },
+          {
+            tipo: "Atividade de síntese",
+            descricao: `Consolidação dos aprendizados sobre ${tema}`,
+            tempo: "5 min"
+          }
+        ],
+        avaliacao: `Avaliação formativa focada nos objetivos de aprendizagem relacionados ao ${tema}`,
+        tempoEstimado: "45 min"
       });
     }
     return aulas;
   }
 
-  public createDefaultDiagnosticos(quantidade: number): any[] {
+  public createDefaultDiagnosticos(quantidade: number, dadosPersonalizados?: ProcessedSequenciaDidaticaData): any[] {
     const diagnosticos = [];
+    const tema = dadosPersonalizados?.tituloTemaAssunto || 'Tema da Sequência Didática';
+    const disciplina = dadosPersonalizados?.disciplina || 'Disciplina';
+
     for (let i = 1; i <= quantidade; i++) {
       diagnosticos.push({
         id: `diagnostico-${i}`,
         numero: i,
-        titulo: `Diagnóstico ${i} - Avaliação Formativa`,
-        objetivoAvaliativo: `Verificar o nível de compreensão dos conceitos apresentados`,
-        tipo: "Quiz Diagnóstico",
-        tempoEstimado: "20 min",
-        questoes: "5 questões",
-        formato: "Múltipla escolha",
-        criteriosCorrecao: {
-          excelente: "4-5 acertos: Excelente compreensão",
-          bom: "3 acertos: Boa compreensão",
-          precisaMelhorar: "<3 acertos: Necessita reforço"
+        titulo: `Diagnóstico ${i} - ${tema}`,
+        objetivo: `Identificar conhecimentos prévios dos estudantes sobre ${tema} em ${disciplina}`,
+        tipo: "Avaliação Diagnóstica",
+        instrumentos: [
+          `Questionário diagnóstico sobre ${tema}`,
+          "Observação direta das interações",
+          `Atividade prática relacionada ao ${tema}`
+        ],
+        criteriosAvaliacao: [
+          `Conhecimentos prévios sobre ${tema}`,
+          `Compreensão dos conceitos básicos de ${disciplina}`,
+          "Habilidades de análise e síntese",
+          "Capacidade de aplicação prática"
+        ],
+        resultadosEsperados: {
+          excelente: ">8 acertos: Domínio dos conceitos fundamentais de " + tema,
+          bom: "6-8 acertos: Compreensão parcial dos conceitos",
+          precisaMelhorar: "<6 acertos: Necessita reforço nos conceitos básicos"
         }
       });
     }
     return diagnosticos;
   }
 
-  public createDefaultAvaliacoes(quantidade: number): any[] {
+  public createDefaultAvaliacoes(quantidade: number, dadosPersonalizados?: ProcessedSequenciaDidaticaData): any[] {
     const avaliacoes = [];
+    const tema = dadosPersonalizados?.tituloTemaAssunto || 'Tema da Sequência Didática';
+    const disciplina = dadosPersonalizados?.disciplina || 'Disciplina';
+
     for (let i = 1; i <= quantidade; i++) {
       avaliacoes.push({
         id: `avaliacao-${i}`,
         numero: i,
-        titulo: `Avaliação ${i} - Prova Somativa`,
-        objetivoAvaliativo: `Avaliar o aprendizado adquirido durante o período`,
-        tipo: "Prova Escrita",
+        titulo: `Avaliação ${i} - ${tema}`,
+        objetivoAvaliativo: `Avaliar o aprendizado sobre ${tema} na disciplina de ${disciplina}`,
+        tipo: "Avaliação Somativa",
         tempoEstimado: "45 min",
         questoes: "10 questões",
         valorTotal: "10,0 pontos",
         composicao: {
           multipplaEscolha: {
             quantidade: 6,
-            pontos: "6,0 pts"
+            pontos: "6,0 pts",
+            foco: `Conceitos teóricos de ${tema}`
           },
           discursivas: {
             quantidade: 4,
-            pontos: "4,0 pts"
+            pontos: "4,0 pts",
+            foco: `Aplicação prática dos conceitos de ${tema}`
           }
         },
-        criteriosCorrecao: "Critérios baseados na BNCC e objetivos de aprendizagem",
-        gabarito: "Gabarito disponível para correção"
+        criteriosCorrecao: `Critérios baseados nos objetivos de aprendizagem específicos de ${tema} e competências da BNCC para ${disciplina}`,
+        gabarito: `Gabarito detalhado com justificativas baseadas no conteúdo de ${tema}`
       });
     }
     return avaliacoes;
+  }
+
+  // Função auxiliar para calcular duração total
+  private calculateDuracaoTotal(cronograma: string, quantidadeAulas: number): string {
+    if (!cronograma || cronograma.includes('Cronograma')) {
+      // Estimativa padrão: 45 minutos por aula
+      const totalMinutos = quantidadeAulas * 45;
+      const horas = Math.floor(totalMinutos / 60);
+      const minutos = totalMinutos % 60;
+
+      return `${horas}h${minutos > 0 ? ` ${minutos}min` : ''} (${quantidadeAulas} aulas)`;
+    }
+
+    return cronograma;
   }
 
   static async regenerateSequencia(activityId: string, newData: any): Promise<any> {

@@ -162,17 +162,21 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   if (!hasValidData) {
     return (
-      <div className="p-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <BookOpen className="text-gray-400" size={48} />
-          <h3 className="text-lg font-medium text-gray-600">
-            Sequência Didática não construída ainda
+      <div className="p-6 text-center">
+        <div className="mb-4">
+          <div className="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Sequência Didática Não Construída
           </h3>
-          <p className="text-sm text-gray-500 max-w-md text-center">
-            Preencha os campos básicos na aba "Editar" e clique em "Construir Atividade" para gerar sua sequência didática personalizada.
+          <p className="text-gray-600 mb-6">
+            Esta sequência didática ainda não foi construída. 
+            Para visualizar o conteúdo completo, preencha todos os campos obrigatórios e clique em "Construir Atividade".
           </p>
-          <div className="text-xs text-gray-400 mt-2">
-            💡 A sequência será gerada automaticamente com aulas, diagnósticos e avaliações
+          <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg">
+            <strong>Importante:</strong> Somente sequências didáticas construídas exibem conteúdo real. 
+            Nenhum dado fictício é usado nesta visualização.
           </div>
         </div>
       </div>

@@ -1,15 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ConstructionActivity } from './types';
 
 interface UseConstructionActivitiesReturn {
   activities: ConstructionActivity[];
   loading: boolean;
   refreshActivities: () => void;
+  buildAllActivities: () => Promise<void>;
+  buildingStatus: {
+    isBuilding: boolean;
+    progress: number;
+    currentStep: string;
+  };
 }
 
-export function useConstructionActivities(approvedActivities: any[]): UseConstructionActivitiesReturn {
+export function useConstructionActivities(approvedActivities: any[], toast: (options: any) => void): UseConstructionActivitiesReturn {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [buildingStatus, setBuildingStatus] = useState({
+    isBuilding: false,
+    progress: 0,
+    currentStep: '',
+  });
 
   const convertToConstructionActivity = (activity: any): ConstructionActivity => {
     console.log('🔄 Convertendo atividade:', activity);
@@ -76,6 +87,95 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
     loadActivities();
   };
 
+  const buildAllActivities = useCallback(async () => {
+    if (approvedActivities.length === 0) {
+      console.warn('⚠️ [BUILD_ALL] Nenhuma atividade aprovada para construir');
+      return;
+    }
+
+    setBuildingStatus({
+      isBuilding: true,
+      progress: 0,
+      currentStep: 'Iniciando construção automática...'
+    });
+
+    try {
+      console.log('🏗️ [BUILD_ALL] Iniciando construção automática de todas as atividades');
+      console.log('📊 [BUILD_ALL] Atividades a serem construídas:', approvedActivities);
+
+      // Importar o serviço de construção automática
+      const { autoBuildActivities } = await import('../auto/autoBuildActivities');
+
+      for (let i = 0; i < approvedActivities.length; i++) {
+        const activity = approvedActivities[i];
+        const progress = Math.round(((i + 1) / approvedActivities.length) * 100);
+
+        setBuildingStatus({
+          isBuilding: true,
+          progress,
+          currentStep: `Construindo ${activity.title}...`
+        });
+
+        console.log(`🔨 [BUILD_ALL] Construindo atividade ${i + 1}/${approvedActivities.length}:`, activity);
+
+        try {
+          // Construir usando o sistema automático
+          const builtActivities = await autoBuildActivities([activity]);
+
+          if (builtActivities && builtActivities.length > 0) {
+            console.log(`✅ [BUILD_ALL] Atividade construída com sucesso: ${activity.title}`);
+
+            // Salvar no localStorage para compatibilidade
+            const builtActivity = builtActivities[0];
+            const storageKey = `constructed_${activity.id}_${builtActivity.activityId || Date.now()}`;
+            localStorage.setItem(storageKey, JSON.stringify(builtActivity));
+
+            console.log(`💾 [BUILD_ALL] Atividade salva no localStorage: ${storageKey}`);
+          } else {
+            console.warn(`⚠️ [BUILD_ALL] Nenhuma atividade foi construída para: ${activity.title}`);
+          }
+
+        } catch (activityError) {
+          console.error(`❌ [BUILD_ALL] Erro ao construir atividade específica ${activity.title}:`, activityError);
+          // Continuar com as próximas atividades mesmo se uma falhar
+        }
+      }
+
+      setBuildingStatus({
+        isBuilding: false,
+        progress: 100,
+        currentStep: 'Concluído!'
+      });
+
+      toast({
+        title: "Construção Concluída",
+        description: `Processo de construção automática finalizado!`,
+      });
+
+      // Recarregar a página para mostrar as atividades construídas
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (error) {
+      console.error('❌ [BUILD_ALL] Erro na construção automática:', error);
+      console.error('🔍 [BUILD_ALL] Stack trace:', error.stack);
+
+      setBuildingStatus({
+        isBuilding: false,
+        progress: 0,
+        currentStep: 'Erro na construção'
+      });
+
+      toast({
+        title: "Erro na Construção",
+        description: `Erro durante a construção automática: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  }, [approvedActivities, toast]);
+
+
   useEffect(() => {
     loadActivities();
   }, [approvedActivities]);
@@ -97,6 +197,8 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
   return {
     activities,
     loading,
-    refreshActivities
+    refreshActivities,
+    buildAllActivities,
+    buildingStatus,
   };
 }
