@@ -3,7 +3,18 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Target, Users, Clock, Calendar, CheckCircle, FileText, Lightbulb, Edit3, RotateCcw, Plus, Minus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  BookOpen, 
+  Target, 
+  Calendar, 
+  BarChart3, 
+  CheckSquare, 
+  RefreshCw,
+  LayoutGrid,
+  Clock,
+  List
+} from 'lucide-react';
 
 interface SequenciaDidaticaPreviewProps {
   data: any;
@@ -28,6 +39,9 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     avaliacoes: 2
   });
 
+  // Estado para visualização
+  const [viewMode, setViewMode] = useState('cards');
+
   // Processar dados da sequência
   const sequenciaData = data || activityData || {};
   
@@ -43,474 +57,182 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     hasValidData,
     sequenciaDataKeys: Object.keys(sequenciaData),
     hasAulas: !!sequenciaData.aulas,
-    aulaCount: sequenciaData.aulas?.length || 0
+    aulaCount: sequenciaData.aulas?.length
   });
 
-  // Se não há dados válidos e não foi construído, mostrar estado vazio
-  if (!hasValidData && !isBuilt) {
+  // Extrair valores dos campos customizados
+  const customFields = sequenciaData.customFields || {};
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
+    sequenciaData.objetivosAprendizagem || 
+    'Desenvolver competências específicas da disciplina através de metodologias ativas';
+
+  const quantidadeAulas = parseInt(customFields['Quantidade de Aulas'] || sequenciaData.quantidadeAulas) || 4;
+  const quantidadeDiagnosticos = parseInt(customFields['Quantidade de Diagnósticos'] || sequenciaData.quantidadeDiagnosticos) || 2;
+  const quantidadeAvaliacoes = parseInt(customFields['Quantidade de Avaliações'] || sequenciaData.quantidadeAvaliacoes) || 2;
+
+  const handleRegenerateSequence = () => {
+    console.log('🔄 Regenerando sequência didática...');
+    // Implementar lógica de regeneração
+  };
+
+  const handleViewModeChange = (mode: string) => {
+    setViewMode(mode);
+    console.log('👁️ Modo de visualização alterado para:', mode);
+  };
+
+  if (!hasValidData) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
-        <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-          Sequência Didática não gerada
-        </h4>
-        <p className="text-gray-500 dark:text-gray-500">
-          Configure os campos necessários e clique em "Construir Atividade" para gerar sua sequência didática.
-        </p>
+      <div className="p-8 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <BookOpen className="text-gray-400" size={48} />
+          <h3 className="text-lg font-medium text-gray-600">
+            Nenhum conteúdo gerado ainda
+          </h3>
+          <p className="text-sm text-gray-500 max-w-md">
+            Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Dados processados para exibição
-  const processedData = {
-    tituloTemaAssunto: sequenciaData.tituloTemaAssunto || sequenciaData.title || 'Sequência Didática',
-    disciplina: sequenciaData.disciplina || sequenciaData.subject || 'Não especificado',
-    anoSerie: sequenciaData.anoSerie || sequenciaData.schoolYear || 'Não especificado',
-    objetivosAprendizagem: sequenciaData.objetivosAprendizagem || sequenciaData.objectives || 'Objetivos de aprendizagem a serem definidos.',
-    publicoAlvo: sequenciaData.publicoAlvo || sequenciaData.context || 'Público-alvo a ser definido.',
-    bnccCompetencias: sequenciaData.bnccCompetencias || sequenciaData.competencies || 'Competências BNCC a serem especificadas.',
-    quantidadeAulas: parseInt(sequenciaData.quantidadeAulas) || sequenciaData.aulas?.length || 4,
-    quantidadeDiagnosticos: parseInt(sequenciaData.quantidadeDiagnosticos) || sequenciaData.diagnosticos?.length || 2,
-    quantidadeAvaliacoes: parseInt(sequenciaData.quantidadeAvaliacoes) || sequenciaData.avaliacoes?.length || 2,
-    aulas: sequenciaData.aulas || [],
-    diagnosticos: sequenciaData.diagnosticos || [],
-    avaliacoes: sequenciaData.avaliacoes || [],
-    cronogramaSugerido: sequenciaData.cronogramaSugerido || null,
-    encadeamento: sequenciaData.encadeamento || null
-  };
-
-  console.log('📋 Dados processados para visualização:', processedData);
-
-  const handleSaveObjectives = () => {
-    setIsEditingObjectives(false);
-    console.log('💾 Salvando objetivos:', tempObjectives);
-  };
-
-  const handleSaveQuantities = () => {
-    setIsEditingQuantities(false);
-    console.log('💾 Salvando quantidades:', tempQuantities);
-  };
-
-  const handleRegenerate = () => {
-    console.log('🔄 Regenerando Sequência Didática...');
-  };
-
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6 overflow-y-auto h-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
-      
-      {/* Cabeçalho Principal */}
-      <div className="text-center pb-8">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-full">
-            <BookOpen className="text-orange-600 dark:text-orange-400" size={32} />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-            Sequência Didática
-          </h1>
-        </div>
-        
-        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-          {processedData.tituloTemaAssunto}
-        </h2>
-        
-        <div className="flex flex-wrap justify-center gap-3">
-          <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
-            {processedData.disciplina}
-          </Badge>
-          <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
-            {processedData.anoSerie}
-          </Badge>
-        </div>
-      </div>
+    <div className="space-y-6 p-6">
+      {/* Cabeçalho Flutuante */}
+      <Card className="sticky top-4 z-10 bg-white/95 backdrop-blur-sm border-2 border-orange-200 shadow-lg">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Lado Esquerdo - Informações Principais */}
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Target className="text-orange-500" size={18} />
+                <div className="text-sm">
+                  <span className="font-medium text-gray-700">Objetivos:</span>
+                  <p className="text-xs text-gray-600 max-w-xs truncate">
+                    {objetivosAprendizagem}
+                  </p>
+                </div>
+              </div>
 
-      {/* Botão de Regenerar */}
-      <div className="flex justify-center mb-6">
-        <Button 
-          onClick={handleRegenerate}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-        >
-          <RotateCcw className="mr-2 h-5 w-5" />
-          Regenerar Sequência Didática
-        </Button>
-      </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Calendar className="text-blue-500" size={16} />
+                  <Badge variant="outline" className="text-xs">
+                    {quantidadeAulas} Aulas
+                  </Badge>
+                </div>
 
-      {/* Card de Informações Básicas */}
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Target className="text-blue-600 dark:text-blue-400" size={24} />
+                <div className="flex items-center gap-1">
+                  <BarChart3 className="text-green-500" size={16} />
+                  <Badge variant="outline" className="text-xs">
+                    {quantidadeDiagnosticos} Diagnósticos
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <CheckSquare className="text-purple-500" size={16} />
+                  <Badge variant="outline" className="text-xs">
+                    {quantidadeAvaliacoes} Avaliações
+                  </Badge>
+                </div>
+              </div>
             </div>
-            Informações Básicas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          
-          {/* Objetivos de Aprendizagem - Editável */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                <Target size={18} />
-                Objetivos de Aprendizagem
-              </h4>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setTempObjectives(processedData.objetivosAprendizagem);
-                  setIsEditingObjectives(true);
-                }}
-                className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-400 dark:hover:text-blue-200"
+
+            {/* Lado Direito - Controles */}
+            <div className="flex items-center gap-3">
+              {/* Seletor de Visualização */}
+              <Select value={viewMode} onValueChange={handleViewModeChange}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cards">
+                    <div className="flex items-center gap-2">
+                      <LayoutGrid size={14} />
+                      Cards
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="timeline">
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} />
+                      Timeline
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="grade">
+                    <div className="flex items-center gap-2">
+                      <List size={14} />
+                      Grade
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Botão Regenerar */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRegenerateSequence}
+                className="flex items-center gap-2 hover:bg-orange-50 hover:border-orange-300"
               >
-                <Edit3 size={16} />
+                <RefreshCw size={14} />
+                Regenerar
               </Button>
             </div>
-            
-            {isEditingObjectives ? (
-              <div className="space-y-3">
-                <textarea
-                  value={tempObjectives}
-                  onChange={(e) => setTempObjectives(e.target.value)}
-                  className="w-full p-3 border border-blue-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                  rows={4}
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSaveObjectives}
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Salvar
-                  </Button>
-                  <Button
-                    onClick={() => setIsEditingObjectives(false)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-900/20 p-2 rounded transition-colors"
-                 onClick={() => {
-                   setTempObjectives(processedData.objetivosAprendizagem);
-                   setIsEditingObjectives(true);
-                 }}>
-                {processedData.objetivosAprendizagem}
-              </p>
-            )}
-          </div>
-
-          {/* Outras informações básicas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-              <h4 className="font-medium flex items-center gap-2 mb-2 text-green-800 dark:text-green-200">
-                <Users size={16} />
-                Público-alvo
-              </h4>
-              <p className="text-gray-600 dark:text-gray-300">{processedData.publicoAlvo}</p>
-            </div>
-
-            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-              <h4 className="font-medium flex items-center gap-2 mb-2 text-purple-800 dark:text-purple-200">
-                <CheckCircle size={16} />
-                BNCC / Competências
-              </h4>
-              <p className="text-gray-600 dark:text-gray-300">{processedData.bnccCompetencias}</p>
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Card de Estrutura da Sequência */}
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-              <Calendar className="text-indigo-600 dark:text-indigo-400" size={24} />
-            </div>
-            Estrutura da Sequência
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setTempQuantities({
-                  aulas: processedData.quantidadeAulas,
-                  diagnosticos: processedData.quantidadeDiagnosticos,
-                  avaliacoes: processedData.quantidadeAvaliacoes
-                });
-                setIsEditingQuantities(true);
-              }}
-              className="ml-auto text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 dark:text-indigo-400"
-            >
-              <Edit3 size={16} />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isEditingQuantities ? (
-            <div className="space-y-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Aulas</label>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTempQuantities(prev => ({ ...prev, aulas: Math.max(1, prev.aulas - 1) }))}
-                    >
-                      <Minus size={16} />
-                    </Button>
-                    <span className="font-bold text-lg w-8 text-center">{tempQuantities.aulas}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTempQuantities(prev => ({ ...prev, aulas: prev.aulas + 1 }))}
-                    >
-                      <Plus size={16} />
-                    </Button>
-                  </div>
+      {/* Área de Conteúdo Principal */}
+      <div className="space-y-6">
+        {viewMode === 'cards' && (
+          <div className="grid gap-6">
+            {/* Conteúdo será renderizado aqui baseado no modo de visualização */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center text-gray-500">
+                  <BookOpen size={48} className="mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium mb-2">Visualização em Cards</h3>
+                  <p className="text-sm">
+                    O conteúdo da sequência didática será exibido em formato de cards interativos.
+                  </p>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-                <div className="text-center">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Diagnósticos</label>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTempQuantities(prev => ({ ...prev, diagnosticos: Math.max(0, prev.diagnosticos - 1) }))}
-                    >
-                      <Minus size={16} />
-                    </Button>
-                    <span className="font-bold text-lg w-8 text-center">{tempQuantities.diagnosticos}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTempQuantities(prev => ({ ...prev, diagnosticos: prev.diagnosticos + 1 }))}
-                    >
-                      <Plus size={16} />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="text-center">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Avaliações</label>
-                  <div className="flex items-center justify-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTempQuantities(prev => ({ ...prev, avaliacoes: Math.max(0, prev.avaliacoes - 1) }))}
-                    >
-                      <Minus size={16} />
-                    </Button>
-                    <span className="font-bold text-lg w-8 text-center">{tempQuantities.avaliacoes}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setTempQuantities(prev => ({ ...prev, avaliacoes: prev.avaliacoes + 1 }))}
-                    >
-                      <Plus size={16} />
-                    </Button>
-                  </div>
-                </div>
+        {viewMode === 'timeline' && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-gray-500">
+                <Clock size={48} className="mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-medium mb-2">Visualização Timeline</h3>
+                <p className="text-sm">
+                  O conteúdo da sequência didática será exibido em formato de linha do tempo cronológica.
+                </p>
               </div>
+            </CardContent>
+          </Card>
+        )}
 
-              <div className="flex gap-2 justify-center pt-3">
-                <Button
-                  onClick={handleSaveQuantities}
-                  size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  Salvar Alterações
-                </Button>
-                <Button
-                  onClick={() => setIsEditingQuantities(false)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Cancelar
-                </Button>
+        {viewMode === 'grade' && (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center text-gray-500">
+                <List size={48} className="mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-medium mb-2">Visualização em Grade</h3>
+                <p className="text-sm">
+                  O conteúdo da sequência didática será exibido em formato de grade organizacional.
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-6">
-              <div 
-                className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
-                onClick={() => {
-                  setTempQuantities({
-                    aulas: processedData.quantidadeAulas,
-                    diagnosticos: processedData.quantidadeDiagnosticos,
-                    avaliacoes: processedData.quantidadeAvaliacoes
-                  });
-                  setIsEditingQuantities(true);
-                }}
-              >
-                <div className="text-4xl font-bold mb-2">{processedData.quantidadeAulas}</div>
-                <div className="text-sm font-medium opacity-90">Aulas</div>
-              </div>
-
-              <div 
-                className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
-                onClick={() => {
-                  setTempQuantities({
-                    aulas: processedData.quantidadeAulas,
-                    diagnosticos: processedData.quantidadeDiagnosticos,
-                    avaliacoes: processedData.quantidadeAvaliacoes
-                  });
-                  setIsEditingQuantities(true);
-                }}
-              >
-                <div className="text-4xl font-bold mb-2">{processedData.quantidadeDiagnosticos}</div>
-                <div className="text-sm font-medium opacity-90">Diagnósticos</div>
-              </div>
-
-              <div 
-                className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
-                onClick={() => {
-                  setTempQuantities({
-                    aulas: processedData.quantidadeAulas,
-                    diagnosticos: processedData.quantidadeDiagnosticos,
-                    avaliacoes: processedData.quantidadeAvaliacoes
-                  });
-                  setIsEditingQuantities(true);
-                }}
-              >
-                <div className="text-4xl font-bold mb-2">{processedData.quantidadeAvaliacoes}</div>
-                <div className="text-sm font-medium opacity-90">Avaliações</div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Card de Conteúdo Gerado */}
-      <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Lightbulb className="text-green-600 dark:text-green-400" size={24} />
-            </div>
-            Conteúdo da Sequência Didática
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {processedData.aulas?.length > 0 || processedData.diagnosticos?.length > 0 || processedData.avaliacoes?.length > 0 ? (
-            <div className="space-y-6">
-              
-              {/* Aulas Geradas */}
-              {processedData.aulas?.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <BookOpen size={20} />
-                    Aulas ({processedData.aulas.length})
-                  </h4>
-                  <div className="space-y-4">
-                    {processedData.aulas.slice(0, 2).map((aula: any, index: number) => (
-                      <div key={aula.id || index} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <h5 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">{aula.titulo}</h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{aula.objetivoEspecifico}</p>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          <span className="inline-flex items-center gap-1">
-                            <Clock size={12} />
-                            {aula.tempoEstimado || '50 minutos'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {processedData.aulas.length > 2 && (
-                      <div className="text-center py-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          E mais {processedData.aulas.length - 2} aula(s)...
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Diagnósticos */}
-              {processedData.diagnosticos?.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <Target size={20} />
-                    Diagnósticos ({processedData.diagnosticos.length})
-                  </h4>
-                  <div className="space-y-3">
-                    {processedData.diagnosticos.map((diagnostico: any, index: number) => (
-                      <div key={diagnostico.id || index} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <h5 className="font-medium text-green-800 dark:text-green-200">{diagnostico.titulo}</h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{diagnostico.objetivo}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Avaliações */}
-              {processedData.avaliacoes?.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <CheckCircle size={20} />
-                    Avaliações ({processedData.avaliacoes.length})
-                  </h4>
-                  <div className="space-y-3">
-                    {processedData.avaliacoes.map((avaliacao: any, index: number) => (
-                      <div key={avaliacao.id || index} className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                        <h5 className="font-medium text-purple-800 dark:text-purple-200">{avaliacao.titulo}</h5>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{avaliacao.objetivo}</p>
-                        {avaliacao.peso && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Peso: {avaliacao.peso * 100}%
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Cronograma */}
-              {processedData.cronogramaSugerido && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <Calendar size={20} />
-                    Cronograma Sugerido
-                  </h4>
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="font-medium">Duração:</span> {processedData.cronogramaSugerido.duracao}
-                      </div>
-                      <div>
-                        <span className="font-medium">Distribuição:</span> {processedData.cronogramaSugerido.distribuicao}
-                      </div>
-                      {processedData.cronogramaSugerido.observacoes && (
-                        <div>
-                          <span className="font-medium">Observações:</span> {processedData.cronogramaSugerido.observacoes}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              <FileText className="mx-auto h-16 w-16 mb-4 opacity-50" />
-              <h4 className="text-lg font-medium mb-2">Conteúdo será exibido aqui</h4>
-              <p className="text-sm">
-                Após finalizar a estrutura e configurações, o conteúdo detalhado das aulas, 
-                diagnósticos e avaliações será gerado e exibido nesta seção.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Informações de Geração */}
       <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
-        Sequência didática gerada em {new Date().toLocaleString('pt-BR')}
+        Sequência didática gerada em {new Date().toLocaleDateString('pt-BR')} • Modo de visualização: {viewMode}
       </div>
     </div>
   );
