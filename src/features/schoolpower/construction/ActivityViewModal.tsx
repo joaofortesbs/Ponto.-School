@@ -441,9 +441,23 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           isBuilt: true
         };
         console.log('✅ Conteúdo específico da sequência didática carregado:', sequenciaContent);
-        } catch (error) {
-          console.error('❌ Erro ao carregar conteúdo específico da sequência didática:', error);
-        }
+      } else {
+        console.log('⚠️ Nenhum conteúdo de sequência didática encontrado nos caches');
+        const customFields = activity.customFields || {};
+        previewData = {
+          ...previewData,
+          titulo: activity.title || activity.personalizedTitle || 'Sequência Didática',
+          descricao: activity.description || activity.personalizedDescription || 'Descrição da sequência didática',
+          disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
+          tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Sequência',
+          objetivos: customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || 'Objetivos da Sequência',
+          atividades: customFields['Atividades da Sequência'] || customFields['atividades'] || [],
+          recursos: customFields['Materiais Necessários'] || customFields['recursos'] || ['Recursos Digitais', 'Material Impresso'],
+          avaliacao: customFields['Formas de Avaliação'] || customFields['avaliacao'] || 'Avaliação formativa',
+          observacoes: customFields['Observações Adicionais'] || customFields['observacoes'] || 'Observações da sequência',
+        };
+        console.log('🔄 Usando dados de fallback completos para sequência didática:', previewData);
+      }
       }
 
       if (!sequenciaContent && generalSequenciaCachedContent) {
