@@ -193,7 +193,7 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
 - Critérios objetivos e transparentes
 - Formatos diversificados
 
-#### ENCADEAMENTO:
+#### ENcadeAMENTO:
 - Demonstre conexão entre todas as aulas
 - Progressão didática clara e justificada
 - Preparação para próximas etapas

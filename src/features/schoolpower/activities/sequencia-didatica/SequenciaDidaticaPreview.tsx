@@ -184,66 +184,151 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     });
   };
 
-  // Dados mock para os cards (kept from original, to be passed to new components)
-  const getMockAulaData = (index: number) => ({
-    aulaIndex: index,
-    titulo: "Introdução às Funções do 1º Grau",
-    objetivoEspecifico: "Compreender o conceito de função linear e sua representação gráfica.",
-    resumo: "Contextualização sobre situações cotidianas que envolvem relações lineares.",
-    etapas: [
-      {
-        tipo: "Introdução",
-        tempo: "10 min",
-        descricao: "Apresentação do conceito através de exemplos práticos",
-        cor: "green"
-      },
-      {
-        tipo: "Desenvolvimento",
-        tempo: "30 min", 
-        descricao: "Construção de gráficos e análise de propriedades",
-        cor: "orange"
-      },
-      {
-        tipo: "Fechamento",
-        tempo: "10 min",
-        descricao: "Síntese dos conceitos e resolução de dúvidas",
-        cor: "purple"
-      }
-    ],
-    recursos: ["Quadro", "GeoGebra", "Material impresso"],
-    atividadePratica: "Lista de exercícios sobre identificação e construção de gráficos lineares",
-    tempo: "50 min" // Added tempo from original card
-  });
+  // Função para obter dados reais das aulas ou dados mock
+  const getMockAulaData = (index: number) => {
+    // Tentar obter dados reais da sequência gerada
+    if (sequenciaData.aulas && sequenciaData.aulas[index - 1]) {
+      const aulaReal = sequenciaData.aulas[index - 1];
+      return {
+        aulaIndex: index,
+        titulo: aulaReal.titulo || `Aula ${index}`,
+        objetivoEspecifico: aulaReal.objetivo_especifico || aulaReal.objetivoEspecifico || "Objetivo a ser definido",
+        resumo: aulaReal.conteudo_programatico || aulaReal.resumo || "Conteúdo da aula",
+        etapas: aulaReal.etapas || [
+          {
+            tipo: "Introdução",
+            tempo: "10 min",
+            descricao: aulaReal.metodologia?.split('.')[0] || "Apresentação do conteúdo",
+            cor: "green"
+          },
+          {
+            tipo: "Desenvolvimento",
+            tempo: "30 min", 
+            descricao: aulaReal.atividades_praticas || aulaReal.atividadesPraticas || "Atividades práticas",
+            cor: "orange"
+          },
+          {
+            tipo: "Fechamento",
+            tempo: "10 min",
+            descricao: aulaReal.avaliacao_aula || aulaReal.avaliacaoAula || "Síntese e avaliação",
+            cor: "purple"
+          }
+        ],
+        recursos: aulaReal.recursos_necessarios || aulaReal.recursos || ["Material básico"],
+        atividadePratica: aulaReal.atividades_praticas || aulaReal.atividadesPraticas || "Atividades da aula",
+        tempo: aulaReal.duracao || "50 min"
+      };
+    }
 
-  const getMockDiagnosticoData = (index: number) => ({
-    diagIndex: index,
-    titulo: "Avaliação Diagnóstica - Conhecimentos Prévios",
-    objetivoAvaliativo: "Identificar conhecimentos prévios sobre álgebra básica e coordenadas cartesianas.",
-    tipoAvaliacao: "Quiz Interativo",
-    quantidadeQuestoes: 8,
-    formato: "Múltipla escolha",
-    criteriosCorrecao: [
-      { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
-      { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
-      { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
-    ],
-    tempo: "20 min" // Added tempo from original card
-  });
+    // Fallback para dados mock se não há dados reais
+    return {
+      aulaIndex: index,
+      titulo: "Introdução às Funções do 1º Grau",
+      objetivoEspecifico: "Compreender o conceito de função linear e sua representação gráfica.",
+      resumo: "Contextualização sobre situações cotidianas que envolvem relações lineares.",
+      etapas: [
+        {
+          tipo: "Introdução",
+          tempo: "10 min",
+          descricao: "Apresentação do conceito através de exemplos práticos",
+          cor: "green"
+        },
+        {
+          tipo: "Desenvolvimento",
+          tempo: "30 min", 
+          descricao: "Construção de gráficos e análise de propriedades",
+          cor: "orange"
+        },
+        {
+          tipo: "Fechamento",
+          tempo: "10 min",
+          descricao: "Síntese dos conceitos e resolução de dúvidas",
+          cor: "purple"
+        }
+      ],
+      recursos: ["Quadro", "GeoGebra", "Material impresso"],
+      atividadePratica: "Lista de exercícios sobre identificação e construção de gráficos lineares",
+      tempo: "50 min"
+    };
+  };
 
-  const getMockAvaliacaoData = (index: number) => ({
-    avalIndex: index,
-    titulo: "Prova Somativa - Funções Lineares",
-    objetivoAvaliativo: "Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas.",
-    tipoAvaliacao: "Prova Escrita",
-    quantidadeQuestoes: 12,
-    valorTotal: "10,0 pontos",
-    composicao: [
-      { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
-      { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
-    ],
-    gabarito: "Disponível após aplicação com critérios detalhados de correção",
-    tempo: "45 min" // Added tempo from original card
-  });
+  const getMockDiagnosticoData = (index: number) => {
+    // Tentar obter dados reais dos diagnósticos gerados
+    if (sequenciaData.diagnosticos && sequenciaData.diagnosticos[index - 1]) {
+      const diagReal = sequenciaData.diagnosticos[index - 1];
+      return {
+        diagIndex: index,
+        titulo: diagReal.titulo || `Diagnóstico ${index}`,
+        objetivoAvaliativo: diagReal.objetivo || "Objetivo diagnóstico",
+        tipoAvaliacao: diagReal.tipo || "Avaliação",
+        quantidadeQuestoes: diagReal.quantidade_questoes || 8,
+        formato: diagReal.formato || "Misto",
+        criteriosCorrecao: diagReal.criterios_analise ? [
+          { faixa: "Excelente", resultado: diagReal.criterios_analise.split('.')[0] || "Resultado excelente", cor: "text-green-600" },
+          { faixa: "Bom", resultado: "Resultado satisfatório", cor: "text-yellow-600" },
+          { faixa: "Precisa melhorar", resultado: "Necessita reforço", cor: "text-red-600" }
+        ] : [
+          { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
+          { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
+          { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
+        ],
+        tempo: diagReal.tempo_aplicacao || "20 min"
+      };
+    }
+
+    // Fallback para dados mock
+    return {
+      diagIndex: index,
+      titulo: "Avaliação Diagnóstica - Conhecimentos Prévios",
+      objetivoAvaliativo: "Identificar conhecimentos prévios sobre álgebra básica e coordenadas cartesianas.",
+      tipoAvaliacao: "Quiz Interativo",
+      quantidadeQuestoes: 8,
+      formato: "Múltipla escolha",
+      criteriosCorrecao: [
+        { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
+        { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
+        { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
+      ],
+      tempo: "20 min"
+    };
+  };
+
+  const getMockAvaliacaoData = (index: number) => {
+    // Tentar obter dados reais das avaliações geradas
+    if (sequenciaData.avaliacoes && sequenciaData.avaliacoes[index - 1]) {
+      const avalReal = sequenciaData.avaliacoes[index - 1];
+      return {
+        avalIndex: index,
+        titulo: avalReal.titulo || `Avaliação ${index}`,
+        objetivoAvaliativo: avalReal.objetivos_avaliados || avalReal.objetivo || "Objetivo avaliativo",
+        tipoAvaliacao: avalReal.tipo || "Prova",
+        quantidadeQuestoes: avalReal.quantidade_questoes || 12,
+        valorTotal: avalReal.valor_pontos || "10,0 pontos",
+        composicao: avalReal.composicao || [
+          { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
+          { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
+        ],
+        gabarito: avalReal.criterios_correcao || "Critérios de correção conforme orientações",
+        tempo: avalReal.tempo_realizacao || "45 min"
+      };
+    }
+
+    // Fallback para dados mock
+    return {
+      avalIndex: index,
+      titulo: "Prova Somativa - Funções Lineares",
+      objetivoAvaliativo: "Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas.",
+      tipoAvaliacao: "Prova Escrita",
+      quantidadeQuestoes: 12,
+      valorTotal: "10,0 pontos",
+      composicao: [
+        { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
+        { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
+      ],
+      gabarito: "Disponível após aplicação com critérios detalhados de correção",
+      tempo: "45 min"
+    };
+  };
 
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
