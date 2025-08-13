@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface SequenciaDidaticaCustomFields {
@@ -47,66 +46,6 @@ export const sequenciaDidaticaFieldMapping = {
 
 export function processSequenciaDidaticaData(formData: ActivityFormData): ProcessedSequenciaDidaticaData {
   console.log('🔄 [SEQUENCIA_DIDATICA_PROCESSOR] Processando dados da Sequência Didática:', formData);
-
-  const processedData: ProcessedSequenciaDidaticaData = {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || 'Sequência Didática Personalizada',
-    anoSerie: formData.anoSerie || formData.schoolYear || '6º Ano do Ensino Fundamental',
-    disciplina: formData.disciplina || formData.subject || 'Educação Geral',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || 'Competências gerais da BNCC',
-    publicoAlvo: formData.publicoAlvo || 'Estudantes do Ensino Fundamental',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || 'Desenvolver habilidades e competências educacionais',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '2',
-    cronograma: formData.cronograma || 'Cronograma flexível adaptável',
-    isComplete: false,
-    validationErrors: []
-  };
-
-  // Validação dos campos obrigatórios
-  if (!processedData.tituloTemaAssunto.trim()) {
-    processedData.validationErrors.push('Título do tema/assunto é obrigatório');
-  }
-  if (!processedData.disciplina.trim()) {
-    processedData.validationErrors.push('Disciplina é obrigatória');
-  }
-  if (!processedData.anoSerie.trim()) {
-    processedData.validationErrors.push('Ano/série é obrigatório');
-  }
-
-  // Validação de números
-  const quantidadeAulas = parseInt(processedData.quantidadeAulas);
-  const quantidadeDiagnosticos = parseInt(processedData.quantidadeDiagnosticos);
-  const quantidadeAvaliacoes = parseInt(processedData.quantidadeAvaliacoes);
-
-  if (isNaN(quantidadeAulas) || quantidadeAulas < 1) {
-    processedData.validationErrors.push('Quantidade de aulas deve ser um número maior que 0');
-  }
-  if (isNaN(quantidadeDiagnosticos) || quantidadeDiagnosticos < 0) {
-    processedData.validationErrors.push('Quantidade de diagnósticos deve ser um número maior ou igual a 0');
-  }
-  if (isNaN(quantidadeAvaliacoes) || quantidadeAvaliacoes < 0) {
-    processedData.validationErrors.push('Quantidade de avaliações deve ser um número maior ou igual a 0');
-  }
-
-  processedData.isComplete = processedData.validationErrors.length === 0;
-
-  console.log('✅ [SEQUENCIA_DIDATICA_PROCESSOR] Dados processados:', processedData);
-  return processedData;
-}
-
-export function validateSequenciaDidaticaData(data: any): boolean {
-  return !!(
-    data.tituloTemaAssunto &&
-    data.disciplina &&
-    data.anoSerie &&
-    data.publicoAlvo &&
-    data.objetivosAprendizagem &&
-    data.quantidadeAulas &&
-    data.quantidadeDiagnosticos !== undefined &&
-    data.quantidadeAvaliacoes !== undefined
-  );
-}, formData);
 
   const validationErrors: string[] = [];
 
@@ -166,7 +105,7 @@ export function validateSequenciaDidaticaData(data: any): boolean {
   };
 
   console.log('✅ [SEQUENCIA_DIDATICA_PROCESSOR] Dados processados:', processedData);
-  
+
   return processedData;
 }
 
@@ -196,9 +135,9 @@ function calculateDuracaoTotal(cronograma: string, quantidadeAulas: number): str
     const totalMinutos = quantidadeAulas * 50;
     const horas = Math.floor(totalMinutos / 60);
     const minutos = totalMinutos % 60;
-    
+
     return `${horas}h${minutos > 0 ? ` ${minutos}min` : ''}`;
   }
-  
+
   return cronograma;
 }
