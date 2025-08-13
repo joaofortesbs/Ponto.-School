@@ -8,6 +8,7 @@ import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
+import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -337,8 +338,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       // Se encontrou conteúdo, mesclar com os dados existentes
       if (planoContent) {
         console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
-        previewData = { 
-          ...previewData, 
+        previewData = {
+          ...previewData,
           ...planoContent,
           // Garantir que os dados essenciais sejam preservados
           id: activity.id,
@@ -382,6 +383,86 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       }
     }
 
+    // Tratamento específico para Sequência Didática
+    if (activityType === 'sequencia-didatica') {
+      console.log('🧩 ActivityViewModal: Processando Sequência Didática');
+
+      const constructedSequenciaKey = `constructed_sequencia-didatica_${activity.id}`;
+      const constructedSequenciaContent = localStorage.getItem(constructedSequenciaKey);
+
+      const generalSequenciaCacheKey = `schoolpower_sequencia-didatica_content`;
+      const generalSequenciaCachedContent = localStorage.getItem(generalSequenciaCacheKey);
+
+      const activitySequenciaCacheKey = `activity_${activity.id}`;
+      const activitySequenciaCachedContent = localStorage.getItem(activitySequenciaCacheKey);
+
+      console.log('🔍 ActivityViewModal: Verificando caches de sequencia-didatica:', {
+        constructedExists: !!constructedSequenciaContent,
+        generalExists: !!generalSequenciaCachedContent,
+        activityExists: !!activitySequenciaCachedContent
+      });
+
+      let sequenciaContent = null;
+
+      if (constructedSequenciaContent) {
+        try {
+          sequenciaContent = JSON.parse(constructedSequenciaContent);
+          console.log('✅ Conteúdo específico da sequência didática carregado:', sequenciaContent);
+        } catch (error) {
+          console.error('❌ Erro ao carregar conteúdo específico da sequência didática:', error);
+        }
+      }
+
+      if (!sequenciaContent && generalSequenciaCachedContent) {
+        try {
+          sequenciaContent = JSON.parse(generalSequenciaCachedContent);
+          console.log('✅ Conteúdo geral da sequência didática carregado:', sequenciaContent);
+        } catch (error) {
+          console.error('❌ Erro ao carregar conteúdo geral da sequência didática:', error);
+        }
+      }
+
+      if (!sequenciaContent && activitySequenciaCachedContent) {
+        try {
+          const activityContent = JSON.parse(activitySequenciaCachedContent);
+          if (activityContent && typeof activityContent === 'object') {
+            sequenciaContent = activityContent;
+            console.log('✅ Conteúdo da atividade da sequência didática carregado:', sequenciaContent);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao carregar conteúdo da atividade da sequência didática:', error);
+        }
+      }
+
+      if (sequenciaContent) {
+        console.log('🔀 Mesclando conteúdo da sequência didática com dados existentes');
+        previewData = {
+          ...previewData,
+          ...sequenciaContent,
+          id: activity.id,
+          type: activityType,
+          title: sequenciaContent.titulo || sequenciaContent.title || previewData.title,
+          description: sequenciaContent.descricao || sequenciaContent.description || previewData.description
+        };
+      } else {
+        console.log('⚠️ Nenhum conteúdo de sequência didática encontrado nos caches');
+        const customFields = activity.customFields || {};
+        previewData = {
+          ...previewData,
+          titulo: activity.title || activity.personalizedTitle || 'Sequência Didática',
+          descricao: activity.description || activity.personalizedDescription || 'Descrição da sequência didática',
+          disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
+          tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Sequência',
+          objetivos: customFields['Objetivos de Aprendizagem'] || customFields['objetivos'] || 'Objetivos da Sequência',
+          atividades: customFields['Atividades da Sequência'] || customFields['atividades'] || [],
+          recursos: customFields['Materiais Necessários'] || customFields['recursos'] || ['Recursos Digitais', 'Material Impresso'],
+          avaliacao: customFields['Formas de Avaliação'] || customFields['avaliacao'] || 'Avaliação formativa',
+          observacoes: customFields['Observações Adicionais'] || customFields['observacoes'] || 'Observações da sequência',
+        };
+        console.log('🔄 Usando dados de fallback completos para sequência didática:', previewData);
+      }
+    }
+
     console.log('📊 ActivityViewModal: Dados finais para preview:', previewData);
 
     switch (activityType) {
@@ -398,6 +479,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('📚 Renderizando PlanoAulaPreview com dados:', previewData);
         return (
           <PlanoAulaPreview
+            data={previewData}
+            activityData={activity}
+          />
+        );
+
+      case 'sequencia-didatica':
+        console.log('🧩 Renderizando SequenciaDidaticaPreview com dados:', previewData);
+        return (
+          <SequenciaDidaticaPreview
             data={previewData}
             activityData={activity}
           />
@@ -424,7 +514,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         onClick={onClose}
       >
         <motion.div
-          className={`${activityType === 'plano-aula' ? 'max-w-7xl' : 'max-w-6xl'} w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
+          className={`${activityType === 'plano-aula' ? 'max-w-7xl' : activityType === 'sequencia-didatica' ? 'max-w-7xl' : 'max-w-6xl'} w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
@@ -435,6 +525,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             .modal-header {
               background: ${activityType === 'plano-aula'
                 ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
+                : activityType === 'sequencia-didatica'
+                ? 'linear-gradient(135deg, #9370db 0%, #7b68ee 100%)' // Cor roxa para Sequência Didática
                 : 'transparent'
               };
             }
@@ -526,11 +618,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                 <div className={`p-2 rounded-lg ${
                   activityType === 'plano-aula'
                     ? 'bg-orange-100'
+                    : activityType === 'sequencia-didatica'
+                    ? 'bg-purple-100' // Cor roxa para Sequência Didática
                     : isLightMode ? 'bg-blue-100' : 'bg-blue-900/30'
                 }`}>
                   <BookOpen className={`h-6 w-6 ${
                     activityType === 'plano-aula'
                       ? 'text-orange-600'
+                      : activityType === 'sequencia-didatica'
+                      ? 'text-purple-600' // Cor roxa para Sequência Didática
                       : isLightMode ? 'text-blue-600' : 'text-blue-400'
                   }`} />
                 </div>
@@ -597,6 +693,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                   className={`${
                     activityType === 'plano-aula'
                       ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                      : activityType === 'sequencia-didatica'
+                      ? 'bg-white/10 border-purple-200 text-purple-600 hover:bg-purple-100'
                       : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
                   }`}
                 >

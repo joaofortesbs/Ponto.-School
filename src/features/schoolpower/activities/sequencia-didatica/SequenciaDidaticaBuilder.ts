@@ -1,4 +1,3 @@
-
 import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
 import { SequenciaDidaticaData, processSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
@@ -16,7 +15,7 @@ export class SequenciaDidaticaBuilder {
       // Também salvar na lista geral
       const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
       const existingIndex = savedSequencias.findIndex((s: any) => s.id === sequenciaId);
-      
+
       if (existingIndex >= 0) {
         savedSequencias[existingIndex] = data;
       } else {
@@ -26,7 +25,7 @@ export class SequenciaDidaticaBuilder {
           createdAt: new Date().toISOString()
         });
       }
-      
+
       localStorage.setItem('sequenciasDidaticas', JSON.stringify(savedSequencias));
 
       console.log('✅ Sequência Didática salva com sucesso:', sequenciaId);
@@ -44,7 +43,7 @@ export class SequenciaDidaticaBuilder {
       // Tentar carregar do localStorage específico primeiro
       const specificKey = `constructed_sequencia-didatica_${id}`;
       const specificData = localStorage.getItem(specificKey);
-      
+
       if (specificData) {
         console.log('✅ Sequência encontrada no storage específico');
         return JSON.parse(specificData);
@@ -126,10 +125,10 @@ export class SequenciaDidaticaBuilder {
     try {
       // Carregar dados existentes
       const existingData = await this.loadSequencia(activityId);
-      
+
       // Mesclar com novos dados
       const mergedData = { ...existingData, ...newData };
-      
+
       // Reconstruir
       return await this.buildSequenciaDidatica(mergedData);
 

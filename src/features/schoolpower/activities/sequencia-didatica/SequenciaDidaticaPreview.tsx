@@ -57,7 +57,11 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
     sequenciaData.aulas?.length > 0 ||
-    Object.keys(sequenciaData).length > 5
+    Object.keys(sequenciaData).length > 5 ||
+    isBuilt || // Se foi construído, considera válido
+    sequenciaData.conteudo_gerado_ia?.length > 0 ||
+    sequenciaData.customFields?.['Título do Tema / Assunto'] ||
+    sequenciaData.customFields?.['Objetivos de Aprendizagem']
   );
 
   console.log('🔍 Verificação de dados válidos:', {
@@ -69,13 +73,34 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   // Extrair valores dos campos customizados
   const customFields = sequenciaData.customFields || {};
+  
+  // Tentar extrair dados de diferentes fontes
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
+    sequenciaData.tituloTemaAssunto || 
+    sequenciaData.title || 
+    'Sequência Didática';
+
   const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
     sequenciaData.objetivosAprendizagem || 
     'Desenvolver competências específicas da disciplina através de metodologias ativas';
 
-  const quantidadeAulas = parseInt(customFields['Quantidade de Aulas'] || sequenciaData.quantidadeAulas) || 4;
-  const quantidadeDiagnosticos = parseInt(customFields['Quantidade de Diagnósticos'] || sequenciaData.quantidadeDiagnosticos) || 2;
-  const quantidadeAvaliacoes = parseInt(customFields['Quantidade de Avaliações'] || sequenciaData.quantidadeAvaliacoes) || 2;
+  const quantidadeAulas = parseInt(
+    customFields['Quantidade de Aulas'] || 
+    sequenciaData.quantidadeAulas ||
+    sequenciaData.aulas?.length
+  ) || 4;
+  
+  const quantidadeDiagnosticos = parseInt(
+    customFields['Quantidade de Diagnósticos'] || 
+    sequenciaData.quantidadeDiagnosticos ||
+    sequenciaData.diagnosticos?.length
+  ) || 2;
+  
+  const quantidadeAvaliacoes = parseInt(
+    customFields['Quantidade de Avaliações'] || 
+    sequenciaData.quantidadeAvaliacoes ||
+    sequenciaData.avaliacoes?.length
+  ) || 2;
 
   const handleRegenerateSequence = () => {
     console.log('🔄 Regenerando sequência didática...');
@@ -145,19 +170,24 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   if (!hasValidData) {
-    return (
-      <div className="p-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <BookOpen className="text-gray-400" size={48} />
-          <h3 className="text-lg font-medium text-gray-600">
-            Nenhum conteúdo gerado ainda
-          </h3>
-          <p className="text-sm text-gray-500 max-w-md">
-            Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
-          </p>
+    // Se estamos no modo de visualização (isBuilt), mostrar dados básicos mesmo sem conteúdo
+    if (isBuilt) {
+      console.log('📄 Sequência didática no modo visualização sem dados completos, mostrando estrutura básica');
+    } else {
+      return (
+        <div className="p-8 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <BookOpen className="text-gray-400" size={48} />
+            <h3 className="text-lg font-medium text-gray-600">
+              Nenhum conteúdo gerado ainda
+            </h3>
+            <p className="text-sm text-gray-500 max-w-md">
+              Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
+            </p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return (
@@ -165,6 +195,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       {/* Cabeçalho Flutuante */}
       <Card className="sticky top-4 z-10 bg-white/95 backdrop-blur-sm border-2 border-orange-200 shadow-lg">
         <CardContent className="p-4">
+          {/* Título da Sequência */}
+          <div className="mb-4 pb-3 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <BookOpen className="text-orange-500" size={24} />
+              {tituloTemaAssunto}
+            </h2>
+          </div>
+          
           <div className="flex items-center justify-between gap-4">
             {/* Lado Esquerdo - Informações Principais */}
             <div className="flex items-center gap-6">
