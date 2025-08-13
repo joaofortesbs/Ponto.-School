@@ -28,22 +28,26 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     avaliacoes: 2
   });
 
-  // Usar dados reais se disponíveis, caso contrário usar dados fictícios
-  const sequenciaData = {
-    tituloTemaAssunto: data?.tituloTemaAssunto || activityData?.tituloTemaAssunto || 'Substantivos Próprios e Verbos',
-    disciplina: data?.disciplina || activityData?.disciplina || 'Português',
-    anoSerie: data?.anoSerie || activityData?.anoSerie || '6º Ano',
-    objetivosAprendizagem: data?.objetivosAprendizagem || activityData?.objetivosAprendizagem || 'Identificar e classificar substantivos próprios e verbos em textos diversos, compreendendo suas funções sintáticas e semânticas. Aplicar corretamente o uso de substantivos próprios e verbos na produção textual.',
-    publicoAlvo: data?.publicoAlvo || activityData?.publicoAlvo || 'Estudantes do 6º ano do Ensino Fundamental',
-    bnccCompetencias: data?.bnccCompetencias || activityData?.bnccCompetencias || 'EF67LP32, EF67LP33',
-    quantidadeAulas: parseInt(data?.quantidadeAulas || activityData?.quantidadeAulas) || 4,
-    quantidadeDiagnosticos: parseInt(data?.quantidadeDiagnosticos || activityData?.quantidadeDiagnosticos) || 2,
-    quantidadeAvaliacoes: parseInt(data?.quantidadeAvaliacoes || activityData?.quantidadeAvaliacoes) || 2
-  };
+  // Processar dados da sequência
+  const sequenciaData = data || activityData || {};
+  
+  // Verificar se há dados válidos
+  const hasValidData = sequenciaData && (
+    sequenciaData.tituloTemaAssunto || 
+    sequenciaData.title || 
+    sequenciaData.aulas?.length > 0 ||
+    Object.keys(sequenciaData).length > 5
+  );
 
-  console.log('📊 Dados da sequência processados:', sequenciaData);
+  console.log('🔍 Verificação de dados válidos:', {
+    hasValidData,
+    sequenciaDataKeys: Object.keys(sequenciaData),
+    hasAulas: !!sequenciaData.aulas,
+    aulaCount: sequenciaData.aulas?.length || 0
+  });
 
-  if (!isBuilt) {
+  // Se não há dados válidos e não foi construído, mostrar estado vazio
+  if (!hasValidData && !isBuilt) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -57,18 +61,37 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     );
   }
 
+  // Dados processados para exibição
+  const processedData = {
+    tituloTemaAssunto: sequenciaData.tituloTemaAssunto || sequenciaData.title || 'Sequência Didática',
+    disciplina: sequenciaData.disciplina || sequenciaData.subject || 'Não especificado',
+    anoSerie: sequenciaData.anoSerie || sequenciaData.schoolYear || 'Não especificado',
+    objetivosAprendizagem: sequenciaData.objetivosAprendizagem || sequenciaData.objectives || 'Objetivos de aprendizagem a serem definidos.',
+    publicoAlvo: sequenciaData.publicoAlvo || sequenciaData.context || 'Público-alvo a ser definido.',
+    bnccCompetencias: sequenciaData.bnccCompetencias || sequenciaData.competencies || 'Competências BNCC a serem especificadas.',
+    quantidadeAulas: parseInt(sequenciaData.quantidadeAulas) || sequenciaData.aulas?.length || 4,
+    quantidadeDiagnosticos: parseInt(sequenciaData.quantidadeDiagnosticos) || sequenciaData.diagnosticos?.length || 2,
+    quantidadeAvaliacoes: parseInt(sequenciaData.quantidadeAvaliacoes) || sequenciaData.avaliacoes?.length || 2,
+    aulas: sequenciaData.aulas || [],
+    diagnosticos: sequenciaData.diagnosticos || [],
+    avaliacoes: sequenciaData.avaliacoes || [],
+    cronogramaSugerido: sequenciaData.cronogramaSugerido || null,
+    encadeamento: sequenciaData.encadeamento || null
+  };
+
+  console.log('📋 Dados processados para visualização:', processedData);
+
   const handleSaveObjectives = () => {
     setIsEditingObjectives(false);
-    // Aqui implementaremos a lógica de salvamento
+    console.log('💾 Salvando objetivos:', tempObjectives);
   };
 
   const handleSaveQuantities = () => {
     setIsEditingQuantities(false);
-    // Aqui implementaremos a lógica de salvamento
+    console.log('💾 Salvando quantidades:', tempQuantities);
   };
 
   const handleRegenerate = () => {
-    // Aqui implementaremos a lógica de regeneração
     console.log('🔄 Regenerando Sequência Didática...');
   };
 
@@ -87,15 +110,15 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         </div>
         
         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-          {sequenciaData.tituloTemaAssunto}
+          {processedData.tituloTemaAssunto}
         </h2>
         
         <div className="flex flex-wrap justify-center gap-3">
           <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
-            {sequenciaData.disciplina}
+            {processedData.disciplina}
           </Badge>
           <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
-            {sequenciaData.anoSerie}
+            {processedData.anoSerie}
           </Badge>
         </div>
       </div>
@@ -134,7 +157,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setTempObjectives(sequenciaData.objetivosAprendizagem);
+                  setTempObjectives(processedData.objetivosAprendizagem);
                   setIsEditingObjectives(true);
                 }}
                 className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:text-blue-400 dark:hover:text-blue-200"
@@ -171,10 +194,10 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
             ) : (
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-900/20 p-2 rounded transition-colors"
                  onClick={() => {
-                   setTempObjectives(sequenciaData.objetivosAprendizagem);
+                   setTempObjectives(processedData.objetivosAprendizagem);
                    setIsEditingObjectives(true);
                  }}>
-                {sequenciaData.objetivosAprendizagem}
+                {processedData.objetivosAprendizagem}
               </p>
             )}
           </div>
@@ -186,7 +209,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 <Users size={16} />
                 Público-alvo
               </h4>
-              <p className="text-gray-600 dark:text-gray-300">{sequenciaData.publicoAlvo}</p>
+              <p className="text-gray-600 dark:text-gray-300">{processedData.publicoAlvo}</p>
             </div>
 
             <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
@@ -194,7 +217,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 <CheckCircle size={16} />
                 BNCC / Competências
               </h4>
-              <p className="text-gray-600 dark:text-gray-300">{sequenciaData.bnccCompetencias}</p>
+              <p className="text-gray-600 dark:text-gray-300">{processedData.bnccCompetencias}</p>
             </div>
           </div>
         </CardContent>
@@ -213,9 +236,9 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               size="sm"
               onClick={() => {
                 setTempQuantities({
-                  aulas: sequenciaData.quantidadeAulas,
-                  diagnosticos: sequenciaData.quantidadeDiagnosticos,
-                  avaliacoes: sequenciaData.quantidadeAvaliacoes
+                  aulas: processedData.quantidadeAulas,
+                  diagnosticos: processedData.quantidadeDiagnosticos,
+                  avaliacoes: processedData.quantidadeAvaliacoes
                 });
                 setIsEditingQuantities(true);
               }}
@@ -316,14 +339,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
                 onClick={() => {
                   setTempQuantities({
-                    aulas: sequenciaData.quantidadeAulas,
-                    diagnosticos: sequenciaData.quantidadeDiagnosticos,
-                    avaliacoes: sequenciaData.quantidadeAvaliacoes
+                    aulas: processedData.quantidadeAulas,
+                    diagnosticos: processedData.quantidadeDiagnosticos,
+                    avaliacoes: processedData.quantidadeAvaliacoes
                   });
                   setIsEditingQuantities(true);
                 }}
               >
-                <div className="text-4xl font-bold mb-2">{sequenciaData.quantidadeAulas}</div>
+                <div className="text-4xl font-bold mb-2">{processedData.quantidadeAulas}</div>
                 <div className="text-sm font-medium opacity-90">Aulas</div>
               </div>
 
@@ -331,14 +354,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
                 onClick={() => {
                   setTempQuantities({
-                    aulas: sequenciaData.quantidadeAulas,
-                    diagnosticos: sequenciaData.quantidadeDiagnosticos,
-                    avaliacoes: sequenciaData.quantidadeAvaliacoes
+                    aulas: processedData.quantidadeAulas,
+                    diagnosticos: processedData.quantidadeDiagnosticos,
+                    avaliacoes: processedData.quantidadeAvaliacoes
                   });
                   setIsEditingQuantities(true);
                 }}
               >
-                <div className="text-4xl font-bold mb-2">{sequenciaData.quantidadeDiagnosticos}</div>
+                <div className="text-4xl font-bold mb-2">{processedData.quantidadeDiagnosticos}</div>
                 <div className="text-sm font-medium opacity-90">Diagnósticos</div>
               </div>
 
@@ -346,14 +369,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105"
                 onClick={() => {
                   setTempQuantities({
-                    aulas: sequenciaData.quantidadeAulas,
-                    diagnosticos: sequenciaData.quantidadeDiagnosticos,
-                    avaliacoes: sequenciaData.quantidadeAvaliacoes
+                    aulas: processedData.quantidadeAulas,
+                    diagnosticos: processedData.quantidadeDiagnosticos,
+                    avaliacoes: processedData.quantidadeAvaliacoes
                   });
                   setIsEditingQuantities(true);
                 }}
               >
-                <div className="text-4xl font-bold mb-2">{sequenciaData.quantidadeAvaliacoes}</div>
+                <div className="text-4xl font-bold mb-2">{processedData.quantidadeAvaliacoes}</div>
                 <div className="text-sm font-medium opacity-90">Avaliações</div>
               </div>
             </div>
@@ -372,18 +395,18 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {(data?.aulas || activityData?.aulas) ? (
+          {processedData.aulas?.length > 0 || processedData.diagnosticos?.length > 0 || processedData.avaliacoes?.length > 0 ? (
             <div className="space-y-6">
               
               {/* Aulas Geradas */}
-              {(data?.aulas || activityData?.aulas || []).length > 0 && (
+              {processedData.aulas?.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
                     <BookOpen size={20} />
-                    Aulas ({(data?.aulas || activityData?.aulas || []).length})
+                    Aulas ({processedData.aulas.length})
                   </h4>
                   <div className="space-y-4">
-                    {(data?.aulas || activityData?.aulas || []).slice(0, 2).map((aula: any, index: number) => (
+                    {processedData.aulas.slice(0, 2).map((aula: any, index: number) => (
                       <div key={aula.id || index} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                         <h5 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">{aula.titulo}</h5>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{aula.objetivoEspecifico}</p>
@@ -395,10 +418,10 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                         </div>
                       </div>
                     ))}
-                    {(data?.aulas || activityData?.aulas || []).length > 2 && (
+                    {processedData.aulas.length > 2 && (
                       <div className="text-center py-2">
                         <span className="text-sm text-gray-500 dark:text-gray-400">
-                          E mais {(data?.aulas || activityData?.aulas || []).length - 2} aula(s)...
+                          E mais {processedData.aulas.length - 2} aula(s)...
                         </span>
                       </div>
                     )}
@@ -407,14 +430,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               )}
 
               {/* Diagnósticos */}
-              {(data?.diagnosticos || activityData?.diagnosticos || []).length > 0 && (
+              {processedData.diagnosticos?.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
                     <Target size={20} />
-                    Diagnósticos ({(data?.diagnosticos || activityData?.diagnosticos || []).length})
+                    Diagnósticos ({processedData.diagnosticos.length})
                   </h4>
                   <div className="space-y-3">
-                    {(data?.diagnosticos || activityData?.diagnosticos || []).map((diagnostico: any, index: number) => (
+                    {processedData.diagnosticos.map((diagnostico: any, index: number) => (
                       <div key={diagnostico.id || index} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                         <h5 className="font-medium text-green-800 dark:text-green-200">{diagnostico.titulo}</h5>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{diagnostico.objetivo}</p>
@@ -425,14 +448,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               )}
 
               {/* Avaliações */}
-              {(data?.avaliacoes || activityData?.avaliacoes || []).length > 0 && (
+              {processedData.avaliacoes?.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
                     <CheckCircle size={20} />
-                    Avaliações ({(data?.avaliacoes || activityData?.avaliacoes || []).length})
+                    Avaliações ({processedData.avaliacoes.length})
                   </h4>
                   <div className="space-y-3">
-                    {(data?.avaliacoes || activityData?.avaliacoes || []).map((avaliacao: any, index: number) => (
+                    {processedData.avaliacoes.map((avaliacao: any, index: number) => (
                       <div key={avaliacao.id || index} className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                         <h5 className="font-medium text-purple-800 dark:text-purple-200">{avaliacao.titulo}</h5>
                         <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{avaliacao.objetivo}</p>
@@ -448,7 +471,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               )}
 
               {/* Cronograma */}
-              {(data?.cronogramaSugerido || activityData?.cronogramaSugerido) && (
+              {processedData.cronogramaSugerido && (
                 <div>
                   <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
                     <Calendar size={20} />
@@ -457,14 +480,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div className="space-y-2 text-sm">
                       <div>
-                        <span className="font-medium">Duração:</span> {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.duracao}
+                        <span className="font-medium">Duração:</span> {processedData.cronogramaSugerido.duracao}
                       </div>
                       <div>
-                        <span className="font-medium">Distribuição:</span> {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.distribuicao}
+                        <span className="font-medium">Distribuição:</span> {processedData.cronogramaSugerido.distribuicao}
                       </div>
-                      {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.observacoes && (
+                      {processedData.cronogramaSugerido.observacoes && (
                         <div>
-                          <span className="font-medium">Observações:</span> {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.observacoes}
+                          <span className="font-medium">Observações:</span> {processedData.cronogramaSugerido.observacoes}
                         </div>
                       )}
                     </div>

@@ -29,130 +29,21 @@ export interface SequenciaDidaticaData {
 
 export const sequenciaDidaticaFieldMapping = {
   'Título do Tema / Assunto': 'tituloTemaAssunto',
-  'tituloTemaAssunto': 'tituloTemaAssunto',
   'Ano / Série': 'anoSerie',
-  'anoSerie': 'anoSerie',
   'Disciplina': 'disciplina',
-  'disciplina': 'disciplina',
   'BNCC / Competências': 'bnccCompetencias',
-  'bnccCompetencias': 'bnccCompetencias',
   'Público-alvo': 'publicoAlvo',
-  'publicoAlvo': 'publicoAlvo',
   'Objetivos de Aprendizagem': 'objetivosAprendizagem',
-  'objetivosAprendizagem': 'objetivosAprendizagem',
   'Quantidade de Aulas': 'quantidadeAulas',
-  'quantidadeAulas': 'quantidadeAulas',
   'Quantidade de Diagnósticos': 'quantidadeDiagnosticos',
-  'quantidadeDiagnosticos': 'quantidadeDiagnosticos',
   'Quantidade de Avaliações': 'quantidadeAvaliacoes',
-  'quantidadeAvaliacoes': 'quantidadeAvaliacoes',
-  'Cronograma': 'cronograma',
-  'cronograma': 'cronograma'
+  'Cronograma': 'cronograma'
 };
 
-/**
- * Processa dados de uma atividade de Sequência Didática do Action Plan
- * para o formato do formulário do modal
- */
-export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaData {
-  console.log('📚 Processando dados da Sequência Didática:', activityData);
+export function processSequenciaDidaticaData(formData: ActivityFormData): SequenciaDidaticaData {
+  console.log('🔄 Processando dados da Sequência Didática:', formData);
 
-  const result: SequenciaDidaticaData = {
-    tituloTemaAssunto: '',
-    anoSerie: '',
-    disciplina: '',
-    bnccCompetencias: '',
-    publicoAlvo: '',
-    objetivosAprendizagem: '',
-    quantidadeAulas: '1',
-    quantidadeDiagnosticos: '1',
-    quantidadeAvaliacoes: '1',
-    cronograma: ''
-  };
-
-  if (!activityData) {
-    return result;
-  }
-
-  // Processar campos de customFields se existirem
-  if (activityData.customFields) {
-    Object.entries(activityData.customFields).forEach(([key, value]) => {
-      const mappedField = sequenciaDidaticaFieldMapping[key];
-      if (mappedField && typeof value === 'string') {
-        (result as any)[mappedField] = value;
-      }
-    });
-  }
-
-  // Processar campos diretos do originalData
-  if (activityData.originalData) {
-    Object.entries(activityData.originalData).forEach(([key, value]) => {
-      const mappedField = sequenciaDidaticaFieldMapping[key];
-      if (mappedField && typeof value === 'string') {
-        (result as any)[mappedField] = value;
-      }
-    });
-  }
-
-  // Processar campos diretos se não tiver customFields
-  const customFields = activityData.customFields || {};
-  
-  // Mapeamento alternativo usando campos diretos
-  result.tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
-                            customFields['tituloTemaAssunto'] || 
-                            activityData.title || 
-                            result.tituloTemaAssunto;
-                            
-  result.anoSerie = customFields['Ano / Série'] || 
-                    customFields['anoSerie'] || 
-                    activityData.schoolYear || 
-                    result.anoSerie;
-                    
-  result.disciplina = customFields['Disciplina'] || 
-                      customFields['disciplina'] || 
-                      activityData.subject || 
-                      result.disciplina;
-                      
-  result.bnccCompetencias = customFields['BNCC / Competências'] || 
-                           customFields['bnccCompetencias'] || 
-                           activityData.competencies || 
-                           result.bnccCompetencias;
-                           
-  result.publicoAlvo = customFields['Público-alvo'] || 
-                       customFields['publicoAlvo'] || 
-                       activityData.context || 
-                       result.publicoAlvo;
-                       
-  result.objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
-                                customFields['objetivosAprendizagem'] || 
-                                activityData.objectives || 
-                                result.objetivosAprendizagem;
-                                
-  result.quantidadeAulas = customFields['Quantidade de Aulas'] || 
-                          customFields['quantidadeAulas'] || 
-                          result.quantidadeAulas;
-                          
-  result.quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || 
-                                 customFields['quantidadeDiagnosticos'] || 
-                                 result.quantidadeDiagnosticos;
-                                 
-  result.quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || 
-                               customFields['quantidadeAvaliacoes'] || 
-                               result.quantidadeAvaliacoes;
-                               
-  result.cronograma = customFields['Cronograma'] || 
-                     customFields['cronograma'] || 
-                     result.cronograma;
-
-  console.log('📚 Dados processados da Sequência Didática:', result);
-  return result;
-}
-
-/**
- * Converte dados do formulário para o formato esperado pela API
- */
-export function formDataToSequenciaDidatica(formData: ActivityFormData): SequenciaDidaticaData {
-  return {
+  const processedData: SequenciaDidaticaData = {
     tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
     anoSerie: formData.anoSerie || formData.schoolYear || '',
     disciplina: formData.disciplina || formData.subject || '',
@@ -160,51 +51,30 @@ export function formDataToSequenciaDidatica(formData: ActivityFormData): Sequenc
     publicoAlvo: formData.publicoAlvo || formData.context || '',
     objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
     quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
+    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '2',
+    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '2',
     cronograma: formData.cronograma || ''
   };
+
+  console.log('✅ Dados processados da Sequência Didática:', processedData);
+  return processedData;
 }
 
-/**
- * Valida se os dados da Sequência Didática estão completos
- */
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { 
-  isValid: boolean; 
-  errors: string[] 
-} {
-  const errors: string[] = [];
+export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): boolean {
+  const requiredFields = [
+    'tituloTemaAssunto',
+    'disciplina',
+    'anoSerie',
+    'publicoAlvo',
+    'objetivosAprendizagem'
+  ];
 
-  if (!data.tituloTemaAssunto?.trim()) {
-    errors.push('Título do tema/assunto é obrigatório');
+  for (const field of requiredFields) {
+    if (!data[field as keyof SequenciaDidaticaData]?.trim()) {
+      console.error(`❌ Campo obrigatório ausente: ${field}`);
+      return false;
+    }
   }
 
-  if (!data.disciplina?.trim()) {
-    errors.push('Disciplina é obrigatória');
-  }
-
-  if (!data.anoSerie?.trim()) {
-    errors.push('Ano/série é obrigatório');
-  }
-
-  if (!data.objetivosAprendizagem?.trim()) {
-    errors.push('Objetivos de aprendizagem são obrigatórios');
-  }
-
-  if (!data.quantidadeAulas || parseInt(data.quantidadeAulas) < 1) {
-    errors.push('Quantidade de aulas deve ser pelo menos 1');
-  }
-
-  if (data.quantidadeDiagnosticos && parseInt(data.quantidadeDiagnosticos) < 0) {
-    errors.push('Quantidade de diagnósticos não pode ser negativa');
-  }
-
-  if (data.quantidadeAvaliacoes && parseInt(data.quantidadeAvaliacoes) < 0) {
-    errors.push('Quantidade de avaliações não pode ser negativa');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  return true;
 }
