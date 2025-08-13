@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react'; // Import useMemo
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,17 +20,17 @@ import {
 } from 'lucide-react';
 
 interface SequenciaDidaticaPreviewProps {
-  data: any; // Renamed from activity for clarity, assuming it holds the sequence data
-  activityData?: any; // This prop seems redundant if 'data' already contains the activity info
+  data: any;
+  activityData?: any;
   isBuilt?: boolean;
 }
 
 const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ 
-  data: activity, // Renamed to 'activity' to match the new structure in changes
-  activityData, // This prop is no longer used in the provided changes
+  data, 
+  activityData,
   isBuilt = false 
 }) => {
-  console.log('📚 SequenciaDidaticaPreview - Dados recebidos:', { activity, activityData, isBuilt });
+  console.log('📚 SequenciaDidaticaPreview - Dados recebidos:', { data, activityData, isBuilt });
 
   // Estados para edição
   const [isEditingObjectives, setIsEditingObjectives] = useState(false);
@@ -43,44 +44,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   // Estado para visualização
   const [viewMode, setViewMode] = useState('cards');
-
+  
   // Estado para calendário
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Processar dados da sequência
-  // Extrair dados reais da atividade ou usar dados padrão
-  const sequenciaData = useMemo(() => {
-    if (activity?.data) {
-      return {
-        tituloTemaAssunto: activity.data.tituloTemaAssunto || activity.data.title || "Sequência Didática",
-        anoSerie: activity.data.anoSerie || activity.data.schoolYear || "6º ano",
-        disciplina: activity.data.disciplina || activity.data.subject || "Disciplina",
-        bnccCompetencias: activity.data.bnccCompetencias || activity.data.competencies || "Competências específicas conforme BNCC",
-        publicoAlvo: activity.data.publicoAlvo || activity.data.context || "Estudantes do ensino fundamental",
-        objetivosAprendizagem: activity.data.objetivosAprendizagem || activity.data.objectives || "Desenvolver conhecimentos e habilidades específicas",
-        quantidadeAulas: activity.data.quantidadeAulas || "4 aulas",
-        quantidadeDiagnosticos: activity.data.quantidadeDiagnosticos || "2 diagnósticos",
-        quantidadeAvaliacoes: activity.data.quantidadeAvaliacoes || "2 avaliações",
-        cronograma: activity.data.cronograma || "Cronograma conforme planejamento escolar"
-      };
-    }
-
-    // Dados padrão quando não há dados da atividade
-    return {
-      tituloTemaAssunto: "Sequência Didática",
-      anoSerie: "6º ano",
-      disciplina: "Disciplina",
-      bnccCompetencias: "Competências específicas conforme BNCC",
-      publicoAlvo: "Estudantes do ensino fundamental",
-      objetivosAprendizagem: "Desenvolver conhecimentos e habilidades específicas",
-      quantidadeAulas: "4 aulas",
-      quantidadeDiagnosticos: "2 diagnósticos",
-      quantidadeAvaliacoes: "2 avaliações",
-      cronograma: "Cronograma conforme planejamento escolar"
-    };
-  }, [activity]);
-
+  const sequenciaData = data || activityData || {};
+  
   // Verificar se há dados válidos
   const hasValidData = sequenciaData && (
     sequenciaData.tituloTemaAssunto || 
@@ -101,9 +72,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   });
 
   // Extrair valores dos campos customizados
-  // This part might need adjustment if customFields are directly in activity.data
-  const customFields = activity?.data?.customFields || {};
-
+  const customFields = sequenciaData.customFields || {};
+  
   // Tentar extrair dados de diferentes fontes
   const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
     sequenciaData.tituloTemaAssunto || 
@@ -119,13 +89,13 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     sequenciaData.quantidadeAulas ||
     sequenciaData.aulas?.length
   ) || 4;
-
+  
   const quantidadeDiagnosticos = parseInt(
     customFields['Quantidade de Diagnósticos'] || 
     sequenciaData.quantidadeDiagnosticos ||
     sequenciaData.diagnosticos?.length
   ) || 2;
-
+  
   const quantidadeAvaliacoes = parseInt(
     customFields['Quantidade de Avaliações'] || 
     sequenciaData.quantidadeAvaliacoes ||
@@ -150,10 +120,10 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(firstDay.getDate() - firstDay.getDay());
-
+    
     const days = [];
     const currentDateObj = new Date(startDate);
-
+    
     // Gerar dias que terão aulas (simulação baseada nas aulas da sequência)
     const aulaDays = [];
     const today = new Date();
@@ -164,12 +134,12 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         aulaDays.push(aulaDate.getDate());
       }
     }
-
+    
     for (let i = 0; i < 42; i++) {
       const isCurrentMonth = currentDateObj.getMonth() === month;
       const isToday = currentDateObj.toDateString() === new Date().toDateString();
       const hasAula = isCurrentMonth && aulaDays.includes(currentDateObj.getDate());
-
+      
       days.push({
         date: new Date(currentDateObj),
         day: currentDateObj.getDate(),
@@ -177,10 +147,10 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         isToday,
         hasAula
       });
-
+      
       currentDateObj.setDate(currentDateObj.getDate() + 1);
     }
-
+    
     return days;
   };
 
@@ -232,7 +202,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               {tituloTemaAssunto}
             </h2>
           </div>
-
+          
           <div className="flex items-center justify-between gap-4">
             {/* Lado Esquerdo - Informações Principais */}
             <div className="flex items-center gap-6">
@@ -323,11 +293,11 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                       >
                         <ChevronLeft size={16} />
                       </Button>
-
+                      
                       <h3 className="font-semibold text-lg">
                         {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                       </h3>
-
+                      
                       <Button
                         variant="ghost"
                         size="sm"
@@ -424,7 +394,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
                     <p className="text-sm text-gray-600">Compreender o conceito de função linear e sua representação gráfica.</p>
                   </div>
-
+                  
                   <div>
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Resumo</h4>
                     <p className="text-sm text-gray-600">Contextualização sobre situações cotidianas que envolvem relações lineares.</p>
@@ -595,7 +565,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
             {/* Timeline de Sequência Didática */}
             <div className="relative min-w-[800px]">
               <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-green-500 to-purple-500"></div>
-
+              
               {/* Aulas na Timeline */}
               {[1, 2, 3, 4].map((aulaIndex) => (
                 <div key={`timeline-aula-${aulaIndex}`} className="relative flex items-start space-x-4 pb-8">
@@ -621,7 +591,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                             <h4 className="font-semibold text-gray-700 mb-2">Objetivo Específico</h4>
                             <p className="text-sm text-gray-600">Compreender o conceito de função linear e sua representação gráfica através de exemplos práticos.</p>
                           </div>
-
+                          
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Recursos Necessários</h4>
                             <div className="flex flex-wrap gap-2">
@@ -632,7 +602,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                             </div>
                           </div>
                         </div>
-
+                        
                         <div className="space-y-4">
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-3">Estrutura da Aula</h4>
@@ -739,9 +709,9 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                         <div className="space-y-4">
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Objetivo Avaliativo</h4>
-                            <p className="text-sm text-gray-600">Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas contextualizados.</p>
+                            <p className="text-sm text-gray-600">Avaliar compreensão dos conceitos de função linear e capacidade de resolução de problemas contextualizados.</p>
                           </div>
-
+                          
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Composição</h4>
                             <div className="space-y-2">
@@ -761,7 +731,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                             </div>
                           </div>
                         </div>
-
+                        
                         <div className="space-y-4">
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Critérios de Correção</h4>
@@ -776,7 +746,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                               </div>
                             </div>
                           </div>
-
+                          
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Gabarito</h4>
                             <p className="text-sm text-gray-600">Disponibilizado após aplicação com justificativas detalhadas e critérios específicos.</p>
@@ -813,7 +783,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                       <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
                       <p className="text-sm text-gray-600">Compreender o conceito de função linear e sua representação gráfica.</p>
                     </div>
-
+                    
                     <div>
                       <h4 className="font-medium text-sm text-gray-700 mb-1">Resumo</h4>
                       <p className="text-sm text-gray-600">Contextualização sobre situações cotidianas que envolvem relações lineares.</p>
@@ -982,30 +952,30 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               <Card>
                 <CardContent className="p-4 text-center">
                   <Calendar className="text-blue-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-blue-600">{quantidadeAulas}</h3>
+                  <h3 className="font-bold text-2xl text-blue-600">4</h3>
                   <p className="text-sm text-gray-600">Aulas Planejadas</p>
                   <p className="text-xs text-gray-500">200 min totais</p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardContent className="p-4 text-center">
                   <BarChart3 className="text-green-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-green-600">{quantidadeDiagnosticos}</h3>
+                  <h3 className="font-bold text-2xl text-green-600">2</h3>
                   <p className="text-sm text-gray-600">Diagnósticos</p>
                   <p className="text-xs text-gray-500">40 min totais</p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardContent className="p-4 text-center">
                   <CheckSquare className="text-purple-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-purple-600">{quantidadeAvaliacoes}</h3>
+                  <h3 className="font-bold text-2xl text-purple-600">2</h3>
                   <p className="text-sm text-gray-600">Avaliações</p>
                   <p className="text-xs text-gray-500">90 min totais</p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardContent className="p-4 text-center">
                   <Clock className="text-orange-500 mx-auto mb-2" size={24} />
