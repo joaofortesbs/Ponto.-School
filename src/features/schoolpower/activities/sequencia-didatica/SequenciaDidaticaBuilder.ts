@@ -347,6 +347,48 @@ export class SequenciaDidaticaBuilder {
     return this.build(formData, contextualizationData);
   }
 
+  // Método para validar dados do formulário
+  validateFormData(formData: ActivityFormData): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    if (!formData.tituloTemaAssunto?.trim()) {
+      errors.push('Título do tema/assunto é obrigatório');
+    }
+
+    if (!formData.disciplina?.trim()) {
+      errors.push('Disciplina é obrigatória');
+    }
+
+    if (!formData.anoSerie?.trim()) {
+      errors.push('Ano/Série é obrigatório');
+    }
+
+    if (!formData.publicoAlvo?.trim()) {
+      errors.push('Público-alvo é obrigatório');
+    }
+
+    if (!formData.objetivosAprendizagem?.trim()) {
+      errors.push('Objetivos de aprendizagem são obrigatórios');
+    }
+
+    if (!formData.quantidadeAulas?.trim()) {
+      errors.push('Quantidade de aulas é obrigatória');
+    }
+
+    if (!formData.quantidadeDiagnosticos?.trim()) {
+      errors.push('Quantidade de diagnósticos é obrigatória');
+    }
+
+    if (!formData.quantidadeAvaliacoes?.trim()) {
+      errors.push('Quantidade de avaliações é obrigatória');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
   getDebugInfo() {
     return this.debugInfo;
   }

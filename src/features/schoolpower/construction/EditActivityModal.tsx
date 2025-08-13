@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -187,7 +187,7 @@ const EditActivityModal = ({
   const { toast } = useToast();
 
   // Função para validar se o formulário está válido
-  const isFormValid = (() => {
+  const isFormValid = useMemo(() => {
     if (!activity) return false;
 
     // Validação específica para sequencia-didatica
@@ -237,7 +237,7 @@ const EditActivityModal = ({
       formData.description?.trim() &&
       formData.objectives?.trim()
     );
-  })();
+  }, [activity, formData]);
 
   // Hook para geração de atividades
   const {
