@@ -1,3 +1,4 @@
+
 import { geminiClient } from '@/utils/api/geminiClient';
 import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
@@ -298,6 +299,65 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
       const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos) || 1;
       const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes) || 2;
 
+      // Validar dados antes da geração
+      if (!formData.tituloTemaAssunto?.trim()) {
+        throw new Error('Título do tema/assunto é obrigatório para gerar a sequência');
+      }
+
+      // Gerar conteúdo com IA do Gemini
+      const prompt = this.createSequenciaDidaticaPrompt(formData);
+      console.log('📝 Prompt gerado para IA');
+
+      let aiResponse;
+      try {
+        console.log('🔄 Enviando requisição para Gemini API...');
+        aiResponse = await geminiClient.generateContent(prompt);
+        console.log('✅ Resposta da IA recebida com sucesso');
+        
+        // Log detalhado da resposta para debug
+        if (typeof aiResponse === 'string') {
+          console.log('📄 Resposta da IA (texto):', aiResponse.substring(0, 500) + '...');
+        } else {
+          console.log('📄 Resposta da IA (objeto):', Object.keys(aiResponse));
+        }
+      } catch (error) {
+        console.error('❌ Erro na API Gemini:', error);
+        console.warn('⚠️ Gerando conteúdo estruturado padrão...');
+        aiResponse = this.generateFallbackContent(formData);
+      }
+
+      // Processar resposta da IA e estruturar dados
+      const sequenciaData = this.processAIResponse(aiResponse, formData, quantidadeAulas, quantidadeDiagnosticos, quantidadeAvaliacoes);
+
+      // Validar se a sequência foi gerada corretamente
+      if (!sequenciaData.aulas || sequenciaData.aulas.length === 0) {
+        console.warn('⚠️ Nenhuma aula foi gerada, criando estrutura básica...');
+        sequenciaData.aulas = this.generateBasicAulas(formData, quantidadeAulas);
+      }
+
+      if (!sequenciaData.diagnosticos || sequenciaData.diagnosticos.length === 0) {
+        console.warn('⚠️ Nenhum diagnóstico foi gerado, criando estrutura básica...');
+        sequenciaData.diagnosticos = this.generateBasicDiagnosticos(formData, quantidadeDiagnosticos);
+      }
+
+      if (!sequenciaData.avaliacoes || sequenciaData.avaliacoes.length === 0) {
+        console.warn('⚠️ Nenhuma avaliação foi gerada, criando estrutura básica...');
+        sequenciaData.avaliacoes = this.generateBasicAvaliacoes(formData, quantidadeAvaliacoes);
+      }
+
+      console.log('✅ Sequência Didática gerada com sucesso:', {
+        aulas: sequenciaData.aulas.length,
+        diagnosticos: sequenciaData.diagnosticos.length,
+        avaliacoes: sequenciaData.avaliacoes.length
+      });
+
+      return sequenciaData;
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar Sequência Didática:', error);
+      throw new Error(`Erro na geração: ${error.message}`);
+    }
+  }
 
   // Métodos auxiliares para geração de conteúdo básico
   private generateBasicAulas(formData: SequenciaDidaticaData, quantidade: number): AulaData[] {
@@ -397,75 +457,6 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
     }
     
     return avaliacoes;
-
-
-  // Método estático para facilitar o uso da classe
-  static async generateSequenciaDidatica(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
-    const generator = SequenciaDidaticaGenerator.getInstance();
-    return generator.generateFromFormData(formData);
-  }
-
-  }
-
-
-      // Validar dados antes da geração
-      if (!formData.tituloTemaAssunto?.trim()) {
-        throw new Error('Título do tema/assunto é obrigatório para gerar a sequência');
-      }
-
-      // Gerar conteúdo com IA do Gemini
-      const prompt = this.createSequenciaDidaticaPrompt(formData);
-      console.log('📝 Prompt gerado para IA');
-
-      let aiResponse;
-      try {
-        console.log('🔄 Enviando requisição para Gemini API...');
-        aiResponse = await geminiClient.generateContent(prompt);
-        console.log('✅ Resposta da IA recebida com sucesso');
-        
-        // Log detalhado da resposta para debug
-        if (typeof aiResponse === 'string') {
-          console.log('📄 Resposta da IA (texto):', aiResponse.substring(0, 500) + '...');
-        } else {
-          console.log('📄 Resposta da IA (objeto):', Object.keys(aiResponse));
-        }
-      } catch (error) {
-        console.error('❌ Erro na API Gemini:', error);
-        console.warn('⚠️ Gerando conteúdo estruturado padrão...');
-        aiResponse = this.generateFallbackContent(formData);
-      }
-
-      // Processar resposta da IA e estruturar dados
-      const sequenciaData = this.processAIResponse(aiResponse, formData, quantidadeAulas, quantidadeDiagnosticos, quantidadeAvaliacoes);
-
-      // Validar se a sequência foi gerada corretamente
-      if (!sequenciaData.aulas || sequenciaData.aulas.length === 0) {
-        console.warn('⚠️ Nenhuma aula foi gerada, criando estrutura básica...');
-        sequenciaData.aulas = this.generateBasicAulas(formData, quantidadeAulas);
-      }
-
-      if (!sequenciaData.diagnosticos || sequenciaData.diagnosticos.length === 0) {
-        console.warn('⚠️ Nenhum diagnóstico foi gerado, criando estrutura básica...');
-        sequenciaData.diagnosticos = this.generateBasicDiagnosticos(formData, quantidadeDiagnosticos);
-      }
-
-      if (!sequenciaData.avaliacoes || sequenciaData.avaliacoes.length === 0) {
-        console.warn('⚠️ Nenhuma avaliação foi gerada, criando estrutura básica...');
-        sequenciaData.avaliacoes = this.generateBasicAvaliacoes(formData, quantidadeAvaliacoes);
-      }
-
-      console.log('✅ Sequência Didática gerada com sucesso:', {
-        aulas: sequenciaData.aulas.length,
-        diagnosticos: sequenciaData.diagnosticos.length,
-        avaliacoes: sequenciaData.avaliacoes.length
-      });
-
-      return sequenciaData;
-
-    } catch (error) {
-      console.error('❌ Erro ao gerar Sequência Didática:', error);
-      throw new Error(`Erro na geração: ${error.message}`);
-    }
   }
 
   private createSequenciaDidaticaPrompt(dados: SequenciaDidaticaData): string {
@@ -743,6 +734,12 @@ Você deve gerar uma Sequência Didática COMPLETA seguindo EXATAMENTE a estrutu
   async regenerateWithAI(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
     console.log('🤖 Regeneração com IA em desenvolvimento...');
     return SequenciaDidaticaGenerator.generateSequenciaDidatica(formData);
+  }
+
+  // Método estático para facilitar o uso da classe
+  static async generateSequenciaDidatica(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+    const generator = SequenciaDidaticaGenerator.getInstance();
+    return generator.generateFromFormData(formData);
   }
 }
 
