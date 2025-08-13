@@ -65,8 +65,9 @@ export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): bool
 
   const requiredFields = [
     'tituloTemaAssunto',
-    'disciplina', 
+    'disciplina',
     'anoSerie',
+    'publicoAlvo',
     'objetivosAprendizagem'
   ];
 
@@ -102,21 +103,5 @@ export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): bool
   }
 
   console.log('✅ Dados válidos para Sequência Didática');
-  return true;
-  const requiredFields = [
-    'tituloTemaAssunto',
-    'disciplina',
-    'anoSerie',
-    'publicoAlvo',
-    'objetivosAprendizagem'
-  ];
-
-  for (const field of requiredFields) {
-    if (!data[field as keyof SequenciaDidaticaData]?.trim()) {
-      console.error(`❌ Campo obrigatório ausente: ${field}`);
-      return false;
-    }
-  }
-
   return true;
 }
