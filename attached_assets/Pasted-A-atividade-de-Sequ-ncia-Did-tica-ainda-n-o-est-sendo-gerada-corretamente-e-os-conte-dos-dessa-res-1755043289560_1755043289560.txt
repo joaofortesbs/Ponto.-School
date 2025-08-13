@@ -1,0 +1,16 @@
+A atividade de Sequência Didática ainda não está sendo gerada corretamente, e os conteúdos dessa respectiva atividade ainda não está sendo gerados! Você precisa verificar se a lógica de geração da atividade de Sequência Didática está funcionando corretamente e se está sendo possivel construir essa atividade da maneira correta e completamente personalizada dentro do modal de Editar Materiais!
+
+Preciso que você:
+
+Verifique se a API do Gemini está funcionando corretamente para que as chamadas funcionem, com um sistema completo e todas as váriedades e possibilidades!!!!!!!
+Preciso que você verifique se a interface da mini-seção de "Pré-visualização" está configurada corretamente para receber todos os dados e mostrar toda a estrutura corretamente! Se ainda não estiver tudo pronto, faça toda a configuração corretamente dentro da interface do modal!
+Verifique se o arquivo que cuida da visualizaçãp da atividade de Sequência Didática está completamente configurado corretamente, para mostrar todos os dados com a estrutura que eu te pedi! Se necessário simplifique o processo para que o sistema funcione corretamente, preciso que você verifique tudo para garantir com 100% de certeza que tudo está funcionando corretamente e a atividade de Sequência Didática está sendo construida e visualizada corretamente dentro do modal de Editar Materiais e alguns ambientes externos!!!!!!!
+Garanta que não tenha dados ficticios dentro da geração da atividade!
+É extremante importante que você foque exclusivamente na atividade de Sequência Didática, foque como o seu objetivo principal deixar essa atividade totalmente funcional para ser construida!
+Se inspie nos sistemas e organização de atividades que já conseguem ser construidas automaticamente, como por exemplo o Plano de Aula e Lista de Exercicios!!!!!!!
+
+Eu quero uma resposta, onde você me diz que identificou exatamente onde estão os erros, para que não altere coisas fora de contexto, e modifique os arquivos corretos, mapeando e identificando tudo corretamente, sem cometer erros ou bugs dentro da plataforma!!!!!!!
+
+Faça que a ativição de construção automatica dentro do modal de Editar Materiais das atividades de Sequência Didática funcione corretamente!!!!!!! É extremamente importante que você não prejudique negativamente as funcionalidades já existentes dentro da plataforma ou dentro da seção de School Power, faça que todo o fluxo continue funcionando corretamente!!!!!!!
+
+Os erros que eu te falei ainda não foram corrigidos, analise e reflita sobre todos os arquivos de dentro da plataforma e principalmente de dentro da Seção School Power! Analise e pense o porque esses erros acontecem, analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!
