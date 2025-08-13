@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -6,28 +6,25 @@ import {
   BarChart3, 
   CheckSquare, 
   Clock,
-  BookOpen,
-  LayoutGrid,
-  List,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight
+  BookOpen, // Added for the initial empty state icon
+  LayoutGrid, // Added for view mode selector
+  List, // Added for view mode selector
+  RefreshCw, // Added for regenerate button
+  ChevronLeft, // Added for calendar navigation
+  ChevronRight // Added for calendar navigation
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button'; // Added for calendar navigation and regenerate button
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Added for view mode selector
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; // Added for calendar
 
-// Importar os componentes
+// Importar os novos componentes
+// Assuming these components are correctly placed in './components'
 import { 
   SequenciaDidaticaHeader,
   AulaCard,
   DiagnosticoCard,
   AvaliacaoCard
 } from './components';
-
-// Importar tipos
-import { SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
-import { SequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
 
 interface SequenciaDidaticaPreviewProps {
   data: any;
@@ -42,141 +39,94 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 }) => {
   console.log('📚 SequenciaDidaticaPreview - Dados recebidos:', { data, activityData, isBuilt });
 
+  // Estados para edição (commented out as per the new structure)
+  // const [isEditingObjectives, setIsEditingObjectives] = useState(false);
+  // const [isEditingQuantities, setIsEditingQuantities] = useState(false);
+  // const [tempObjectives, setTempObjectives] = useState('');
+  // const [tempQuantities, setTempQuantities] = useState({
+  //   aulas: 4,
+  //   diagnosticos: 2,
+  //   avaliacoes: 2
+  // });
+
   // Estados para visualização
   const [viewMode, setViewMode] = useState('cards');
+
+  // Estado para calendário
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [sequenciaCompleta, setSequenciaCompleta] = useState<SequenciaDidaticaCompleta | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Carregar dados da sequência
-  useEffect(() => {
-    const carregarSequencia = () => {
-      console.log('🔄 Carregando dados da sequência...');
-
-      // Primeiro, tentar recuperar dados já processados
-      let sequenciaData: SequenciaDidaticaCompleta | null = null;
-
-      // Verificar se data já é uma sequência completa
-      if (data && typeof data === 'object' && data.aulas && data.diagnosticos && data.avaliacoes) {
-        console.log('✅ Dados já estão no formato completo');
-        sequenciaData = data as SequenciaDidaticaCompleta;
-      } 
-      // Tentar carregar do localStorage
-      else if (data?.id) {
-        console.log('🔍 Tentando carregar do localStorage...');
-        sequenciaData = SequenciaDidaticaBuilder.recuperarSequencia(data.id);
-      }
-      // Verificar activityData
-      else if (activityData?.id) {
-        console.log('🔍 Tentando carregar activityData do localStorage...');
-        sequenciaData = SequenciaDidaticaBuilder.recuperarSequencia(activityData.id);
-      }
-
-      if (sequenciaData) {
-        console.log('📋 Sequência carregada:', sequenciaData);
-        setSequenciaCompleta(sequenciaData);
-      } else {
-        console.log('⚠️ Nenhuma sequência completa encontrada');
-        // Se ainda assim temos dados básicos, criar estrutura mínima
-        if (data || activityData) {
-          const dadosBasicos = data || activityData;
-          console.log('🔧 Criando estrutura básica com:', dadosBasicos);
-          setSequenciaCompleta(criarEstruturaBasica(dadosBasicos));
-        }
-      }
-    };
-
-    carregarSequencia();
-  }, [data, activityData, isBuilt]);
-
-  // Função para criar estrutura básica quando não há dados completos
-  const criarEstruturaBasica = (dadosBasicos: any): SequenciaDidaticaCompleta => {
-    const customFields = dadosBasicos?.customFields || {};
-
-    return {
-      id: dadosBasicos?.id || `sequencia-${Date.now()}`,
-      titulo: customFields['Título do Tema / Assunto'] || dadosBasicos?.title || 'Sequência Didática',
-      disciplina: customFields['Disciplina'] || dadosBasicos?.subject || 'Disciplina',
-      anoSerie: customFields['Ano / Série'] || dadosBasicos?.schoolYear || 'Ano/Série',
-      objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || dadosBasicos?.objectives || 'Desenvolver competências específicas',
-      publicoAlvo: customFields['Público-alvo'] || 'Estudantes do ensino fundamental/médio',
-      bnccCompetencias: customFields['BNCC / Competências'] || '',
-      cronograma: customFields['Cronograma'] || 'A ser desenvolvido',
-      aulas: [],
-      diagnosticos: [],
-      avaliacoes: [],
-      resumoEstatistico: {
-        totalAulas: parseInt(customFields['Quantidade de Aulas'] || '4'),
-        totalDiagnosticos: parseInt(customFields['Quantidade de Diagnósticos'] || '2'),
-        totalAvaliacoes: parseInt(customFields['Quantidade de Avaliações'] || '2'),
-        tempoTotalMinutos: 0
-      },
-      metadados: {
-        dataGeracao: new Date().toISOString(),
-        versao: "1.0",
-        sistemaGerador: "School Power IA"
-      }
-    };
-  };
+  // Processar dados da sequência
+  const sequenciaData = data || activityData || {};
 
   // Verificar se há dados válidos
-  const hasValidData = sequenciaCompleta && (
-    sequenciaCompleta.aulas?.length > 0 ||
-    sequenciaCompleta.titulo !== 'Sequência Didática' ||
-    isBuilt
+  const hasValidData = sequenciaData && (
+    sequenciaData.tituloTemaAssunto || 
+    sequenciaData.title || 
+    sequenciaData.aulas?.length > 0 ||
+    Object.keys(sequenciaData).length > 5 ||
+    isBuilt || // Se foi construído, considera válido
+    sequenciaData.conteudo_gerado_ia?.length > 0 ||
+    sequenciaData.customFields?.['Título do Tema / Assunto'] ||
+    sequenciaData.customFields?.['Objetivos de Aprendizagem']
   );
 
   console.log('🔍 Verificação de dados válidos:', {
     hasValidData,
-    sequenciaCompleta,
-    hasAulas: !!sequenciaCompleta?.aulas?.length,
-    aulaCount: sequenciaCompleta?.aulas?.length
+    sequenciaDataKeys: Object.keys(sequenciaData),
+    hasAulas: !!sequenciaData.aulas,
+    aulaCount: sequenciaData.aulas?.length
   });
 
-  const handleRegenerateSequence = async () => {
-    console.log('🔄 Regenerando sequência didática...');
-    setIsLoading(true);
+  // Extrair valores dos campos customizados
+  const customFields = sequenciaData.customFields || {};
 
-    try {
-      // Implementar regeneração se necessário
-      // Por enquanto, apenas simular
-      setTimeout(() => {
-        setIsLoading(false);
-        console.log('✅ Regeneração concluída');
-      }, 2000);
-    } catch (error) {
-      console.error('❌ Erro na regeneração:', error);
-      setIsLoading(false);
-    }
+  // Tentar extrair dados de diferentes fontes
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
+    sequenciaData.tituloTemaAssunto || 
+    sequenciaData.title || 
+    'Sequência Didática';
+
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
+    sequenciaData.objetivosAprendizagem || 
+    'Desenvolver competências específicas da disciplina através de metodologias ativas';
+
+  const quantidadeAulas = parseInt(
+    customFields['Quantidade de Aulas'] || 
+    sequenciaData.quantidadeAulas ||
+    sequenciaData.aulas?.length
+  ) || 4;
+
+  const quantidadeDiagnosticos = parseInt(
+    customFields['Quantidade de Diagnósticos'] || 
+    sequenciaData.quantidadeDiagnosticos ||
+    sequenciaData.diagnosticos?.length
+  ) || 2;
+
+  const quantidadeAvaliacoes = parseInt(
+    customFields['Quantidade de Avaliações'] || 
+    sequenciaData.quantidadeAvaliacoes ||
+    sequenciaData.avaliacoes?.length
+  ) || 2;
+
+  const handleRegenerateSequence = () => {
+    console.log('🔄 Regenerando sequência didática...');
+    // Implementar lógica de regeneração
   };
 
   const handleFieldUpdate = (field: string, value: string | number) => {
     console.log(`📝 Atualizando campo ${field} com valor:`, value);
-
-    if (sequenciaCompleta) {
-      const sequenciaAtualizada = { ...sequenciaCompleta };
-
-      // Atualizar campo específico
-      if (field.includes('.')) {
-        const [parent, child] = field.split('.');
-        // Ensure nested structure exists before assignment
-        if ((sequenciaAtualizada as any)[parent] && typeof (sequenciaAtualizada as any)[parent] === 'object') {
-          (sequenciaAtualizada as any)[parent][child] = value;
-        } else {
-          console.warn(`Parent field "${parent}" not found or not an object for update.`);
-          return; // Prevent assignment if parent structure doesn't exist
-        }
-      } else {
-        (sequenciaAtualizada as any)[field] = value;
-      }
-
-      setSequenciaCompleta(sequenciaAtualizada);
-
-      // Salvar no localStorage
-      const storageKey = `constructed_sequencia-didatica_${sequenciaCompleta.id}`;
-      localStorage.setItem(storageKey, JSON.stringify(sequenciaAtualizada));
-    }
+    // Aqui você pode implementar a lógica para salvar os dados atualizados
+    // Por exemplo, salvar no localStorage ou enviar para uma API
+    
+    // Salvar no localStorage temporariamente
+    const storageKey = `sequencia_didatica_${data?.id || 'preview'}`;
+    const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const updatedData = { ...currentData, [field]: value };
+    localStorage.setItem(storageKey, JSON.stringify(updatedData));
+    
+    // Aqui você poderia também atualizar o estado local se necessário
+    // ou disparar um callback para o componente pai
   };
 
   const handleViewModeChange = (mode: string) => {
@@ -189,31 +139,29 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
-    // Adjust to the first day of the week (Sunday)
     startDate.setDate(firstDay.getDate() - firstDay.getDay());
-
+    
     const days = [];
     const currentDateObj = new Date(startDate);
-
-    // Gerar dias que terão aulas (baseado nas aulas reais da sequência)
+    
+    // Gerar dias que terão aulas (simulação baseada nas aulas da sequência)
     const aulaDays = [];
     const today = new Date();
-    const totalAulas = sequenciaCompleta?.resumoEstatistico?.totalAulas || 4;
-
-    for (let i = 0; i < totalAulas; i++) {
+    for (let i = 0; i < quantidadeAulas; i++) {
       const aulaDate = new Date(today);
       aulaDate.setDate(today.getDate() + (i * 3)); // Aulas a cada 3 dias
       if (aulaDate.getMonth() === month && aulaDate.getFullYear() === year) {
         aulaDays.push(aulaDate.getDate());
       }
     }
-
+    
     for (let i = 0; i < 42; i++) {
       const isCurrentMonth = currentDateObj.getMonth() === month;
       const isToday = currentDateObj.toDateString() === new Date().toDateString();
       const hasAula = isCurrentMonth && aulaDays.includes(currentDateObj.getDate());
-
+      
       days.push({
         date: new Date(currentDateObj),
         day: currentDateObj.getDate(),
@@ -221,10 +169,10 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         isToday,
         hasAula
       });
-
+      
       currentDateObj.setDate(currentDateObj.getDate() + 1);
     }
-
+    
     return days;
   };
 
@@ -236,6 +184,67 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     });
   };
 
+  // Dados mock para os cards (kept from original, to be passed to new components)
+  const getMockAulaData = (index: number) => ({
+    aulaIndex: index,
+    titulo: "Introdução às Funções do 1º Grau",
+    objetivoEspecifico: "Compreender o conceito de função linear e sua representação gráfica.",
+    resumo: "Contextualização sobre situações cotidianas que envolvem relações lineares.",
+    etapas: [
+      {
+        tipo: "Introdução",
+        tempo: "10 min",
+        descricao: "Apresentação do conceito através de exemplos práticos",
+        cor: "green"
+      },
+      {
+        tipo: "Desenvolvimento",
+        tempo: "30 min", 
+        descricao: "Construção de gráficos e análise de propriedades",
+        cor: "orange"
+      },
+      {
+        tipo: "Fechamento",
+        tempo: "10 min",
+        descricao: "Síntese dos conceitos e resolução de dúvidas",
+        cor: "purple"
+      }
+    ],
+    recursos: ["Quadro", "GeoGebra", "Material impresso"],
+    atividadePratica: "Lista de exercícios sobre identificação e construção de gráficos lineares",
+    tempo: "50 min" // Added tempo from original card
+  });
+
+  const getMockDiagnosticoData = (index: number) => ({
+    diagIndex: index,
+    titulo: "Avaliação Diagnóstica - Conhecimentos Prévios",
+    objetivoAvaliativo: "Identificar conhecimentos prévios sobre álgebra básica e coordenadas cartesianas.",
+    tipoAvaliacao: "Quiz Interativo",
+    quantidadeQuestoes: 8,
+    formato: "Múltipla escolha",
+    criteriosCorrecao: [
+      { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
+      { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
+      { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
+    ],
+    tempo: "20 min" // Added tempo from original card
+  });
+
+  const getMockAvaliacaoData = (index: number) => ({
+    avalIndex: index,
+    titulo: "Prova Somativa - Funções Lineares",
+    objetivoAvaliativo: "Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas.",
+    tipoAvaliacao: "Prova Escrita",
+    quantidadeQuestoes: 12,
+    valorTotal: "10,0 pontos",
+    composicao: [
+      { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
+      { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
+    ],
+    gabarito: "Disponível após aplicação com critérios detalhados de correção",
+    tempo: "45 min" // Added tempo from original card
+  });
+
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -243,46 +252,37 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-  // Se não há dados válidos, mostrar estado vazio
-  if (!hasValidData && !isBuilt) {
-    return (
-      <div className="p-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <BookOpen className="text-gray-400" size={48} />
-          <h3 className="text-lg font-medium text-gray-600">
-            Nenhum conteúdo gerado ainda
-          </h3>
-          <p className="text-sm text-gray-500 max-w-md">
-            Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
-  // Se não há sequência completa, mostrar loading ou estrutura básica
-  if (!sequenciaCompleta) {
-    return (
-      <div className="p-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6B00]"></div>
-          <h3 className="text-lg font-medium text-gray-600">
-            Carregando sequência didática...
-          </h3>
+  if (!hasValidData) {
+    // Se estamos no modo de visualização (isBuilt), mostrar dados básicos mesmo sem conteúdo
+    if (isBuilt) {
+      console.log('📄 Sequência didática no modo visualização sem dados completos, mostrando estrutura básica');
+    } else {
+      return (
+        <div className="p-8 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <BookOpen className="text-gray-400" size={48} /> {/* Changed icon to BookOpen for empty state */}
+            <h3 className="text-lg font-medium text-gray-600">
+              Nenhum conteúdo gerado ainda
+            </h3>
+            <p className="text-sm text-gray-500 max-w-md">
+              Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
+            </p>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return (
     <div className="space-y-6 p-6 overflow-x-auto">
       {/* Cabeçalho Flutuante */}
       <SequenciaDidaticaHeader
-        tituloTemaAssunto={sequenciaCompleta.titulo}
-        objetivosAprendizagem={sequenciaCompleta.objetivosAprendizagem}
-        quantidadeAulas={sequenciaCompleta.resumoEstatistico.totalAulas}
-        quantidadeDiagnosticos={sequenciaCompleta.resumoEstatistico.totalDiagnosticos}
-        quantidadeAvaliacoes={sequenciaCompleta.resumoEstatistico.totalAvaliacoes}
+        tituloTemaAssunto={tituloTemaAssunto}
+        objetivosAprendizagem={objetivosAprendizagem}
+        quantidadeAulas={quantidadeAulas}
+        quantidadeDiagnosticos={quantidadeDiagnosticos}
+        quantidadeAvaliacoes={quantidadeAvaliacoes}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         onRegenerateSequence={handleRegenerateSequence}
@@ -294,7 +294,6 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         monthNames={monthNames}
         weekDays={weekDays}
         onFieldUpdate={handleFieldUpdate}
-        isLoading={isLoading}
       />
 
       {/* Área de Conteúdo Principal */}
@@ -302,191 +301,72 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         {viewMode === 'cards' && (
           <div className="flex gap-6 pb-4 min-w-max overflow-x-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-w-max">
-              {/* Cards de Aulas - Usar dados reais se disponíveis */}
-              {sequenciaCompleta.aulas && sequenciaCompleta.aulas.length > 0 ? (
-                sequenciaCompleta.aulas.map((aula) => (
-                  <AulaCard
-                    key={aula.id}
-                    aulaIndex={aula.numero}
-                    titulo={aula.titulo}
-                    objetivoEspecifico={aula.objetivoEspecifico}
-                    resumo={aula.resumo}
-                    etapas={[
-                      {
-                        tipo: "Introdução",
-                        tempo: aula.etapas.introducao.tempo,
-                        descricao: aula.etapas.introducao.descricao,
-                        cor: aula.etapas.introducao.cor
-                      },
-                      {
-                        tipo: "Desenvolvimento",
-                        tempo: aula.etapas.desenvolvimento.tempo,
-                        descricao: aula.etapas.desenvolvimento.descricao,
-                        cor: aula.etapas.desenvolvimento.cor
-                      },
-                      {
-                        tipo: "Fechamento",
-                        tempo: aula.etapas.fechamento.tempo,
-                        descricao: aula.etapas.fechamento.descricao,
-                        cor: aula.etapas.fechamento.cor
-                      }
-                    ]}
-                    recursos={aula.recursos}
-                    atividadePratica={aula.atividadePratica}
-                    tempo={aula.tempoTotal}
-                    onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${aula.numero}_${field}`, value)}
-                  />
-                ))
-              ) : (
-                // Cards padrão se não há dados gerados
-                [1, 2, 3, 4].slice(0, sequenciaCompleta.resumoEstatistico.totalAulas).map((aulaIndex) => (
-                  <AulaCard
-                    key={`aula-default-${aulaIndex}`}
-                    aulaIndex={aulaIndex}
-                    titulo={`Aula ${aulaIndex}: ${sequenciaCompleta.titulo}`}
-                    objetivoEspecifico={`Desenvolver competências específicas da aula ${aulaIndex}`}
-                    resumo={`Contextualização sobre ${sequenciaCompleta.titulo} - Aula ${aulaIndex}`}
-                    etapas={[
-                      {
-                        tipo: "Introdução",
-                        tempo: "10 min",
-                        descricao: "Apresentação do conceito através de exemplos práticos",
-                        cor: "green"
-                      },
-                      {
-                        tipo: "Desenvolvimento",
-                        tempo: "30 min", 
-                        descricao: "Desenvolvimento do conteúdo principal",
-                        cor: "orange"
-                      },
-                      {
-                        tipo: "Fechamento",
-                        tempo: "10 min",
-                        descricao: "Síntese dos conceitos e resolução de dúvidas",
-                        cor: "purple"
-                      }
-                    ]}
-                    recursos={["Quadro", "Material didático", "Recursos digitais"]}
-                    atividadePratica={`Atividade prática da aula ${aulaIndex}`}
-                    tempo="50 min"
-                    onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${aulaIndex}_${field}`, value)}
-                  />
-                ))
-              )}
+            {/* Cards de Aulas */}
+            {[1, 2, 3, 4].map((aulaIndex) => (
+              <AulaCard
+                key={`aula-${aulaIndex}`}
+                {...getMockAulaData(aulaIndex)}
+                onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${aulaIndex}_${field}`, value)}
+              />
+            ))}
 
-              {/* Cards de Diagnósticos */}
-              {sequenciaCompleta.diagnosticos && sequenciaCompleta.diagnosticos.length > 0 ? (
-                sequenciaCompleta.diagnosticos.map((diagnostico) => (
-                  <DiagnosticoCard
-                    key={diagnostico.id}
-                    diagIndex={diagnostico.numero}
-                    titulo={diagnostico.titulo}
-                    objetivoAvaliativo={diagnostico.objetivoAvaliativo}
-                    tipoAvaliacao={diagnostico.tipoAvaliacao}
-                    quantidadeQuestoes={diagnostico.quantidadeQuestoes}
-                    formato={diagnostico.formato}
-                    criteriosCorrecao={diagnostico.criteriosCorrecao}
-                    tempo={diagnostico.tempo}
-                  />
-                ))
-              ) : (
-                [1, 2].slice(0, sequenciaCompleta.resumoEstatistico.totalDiagnosticos).map((diagIndex) => (
-                  <DiagnosticoCard
-                    key={`diagnostico-default-${diagIndex}`}
-                    diagIndex={diagIndex}
-                    titulo={`Avaliação Diagnóstica ${diagIndex}`}
-                    objetivoAvaliativo={`Identificar conhecimentos prévios sobre ${sequenciaCompleta.titulo}`}
-                    tipoAvaliacao="Quiz Interativo"
-                    quantidadeQuestoes={8}
-                    formato="Múltipla escolha"
-                    criteriosCorrecao={[
-                      { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
-                      { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
-                      { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
-                    ]}
-                    tempo="20 min"
-                  />
-                ))
-              )}
+            {/* Cards de Diagnósticos */}
+            {[1, 2].map((diagIndex) => (
+              <DiagnosticoCard
+                key={`diagnostico-${diagIndex}`}
+                {...getMockDiagnosticoData(diagIndex)}
+              />
+            ))}
 
-              {/* Cards de Avaliações */}
-              {sequenciaCompleta.avaliacoes && sequenciaCompleta.avaliacoes.length > 0 ? (
-                sequenciaCompleta.avaliacoes.map((avaliacao) => (
-                  <AvaliacaoCard
-                    key={avaliacao.id}
-                    avalIndex={avaliacao.numero}
-                    titulo={avaliacao.titulo}
-                    objetivoAvaliativo={avaliacao.objetivoAvaliativo}
-                    tipoAvaliacao={avaliacao.tipoAvaliacao}
-                    quantidadeQuestoes={avaliacao.quantidadeQuestoes}
-                    valorTotal={avaliacao.valorTotal}
-                    composicao={avaliacao.composicao}
-                    gabarito={avaliacao.gabarito}
-                    tempo={avaliacao.tempo}
-                  />
-                ))
-              ) : (
-                [1, 2].slice(0, sequenciaCompleta.resumoEstatistico.totalAvaliacoes).map((avalIndex) => (
-                  <AvaliacaoCard
-                    key={`avaliacao-default-${avalIndex}`}
-                    avalIndex={avalIndex}
-                    titulo={`Avaliação ${avalIndex}: ${sequenciaCompleta.titulo}`}
-                    objetivoAvaliativo={`Avaliar a compreensão dos conceitos de ${sequenciaCompleta.titulo}`}
-                    tipoAvaliacao="Prova Escrita"
-                    quantidadeQuestoes={12}
-                    valorTotal="10,0 pontos"
-                    composicao={[
-                      { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
-                      { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
-                    ]}
-                    gabarito="Disponibilizado após aplicação com critérios detalhados de correção"
-                    tempo="45 min"
-                  />
-                ))
-              )}
+            {/* Cards de Avaliações */}
+            {[1, 2].map((avalIndex) => (
+              <AvaliacaoCard
+                key={`avaliacao-${avalIndex}`}
+                {...getMockAvaliacaoData(avalIndex)}
+              />
+            ))}
             </div>
           </div>
         )}
 
-        {/* Timeline View - implementation similar but using real data */}
         {viewMode === 'timeline' && (
           <div className="space-y-8 overflow-x-auto pb-4">
+            {/* Timeline de Sequência Didática */}
             <div className="relative min-w-[800px]">
               <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-green-500 to-purple-500"></div>
-
-              {/* Timeline content using real data */}
-              {/* Implementation similar to previous code but with sequenciaCompleta data */}
-              {/* Example for AulaCard in timeline */}
-              {sequenciaCompleta.aulas?.map((aula) => (
-                <div key={`timeline-aula-${aula.numero}`} className="relative flex items-start space-x-4 pb-8">
+              
+              {/* Aulas na Timeline */}
+              {[1, 2, 3, 4].map((aulaIndex) => (
+                <div key={`timeline-aula-${aulaIndex}`} className="relative flex items-start space-x-4 pb-8">
                   <div className="flex-shrink-0 w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    A{aula.numero}
+                    A{aulaIndex}
                   </div>
                   <Card className="flex-1 ml-4">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <Calendar className="text-blue-500" size={16} />
-                          <span className="font-semibold text-blue-700">Aula {aula.numero}</span>
-                          <Badge variant="secondary">{aula.tempoTotal}</Badge>
+                          <span className="font-semibold text-blue-700">Aula {aulaIndex}</span>
+                          <Badge variant="secondary">50 min</Badge>
                         </div>
-                        <span className="text-sm text-gray-500">{aula.semana || `Semana ${aula.numero}`}</span>
+                        <span className="text-sm text-gray-500">Semana {aulaIndex}</span>
                       </div>
-                      <h3 className="text-xl font-bold mb-4">{aula.titulo}</h3>
+                      <h3 className="text-xl font-bold mb-4">Introdução às Funções do 1º Grau</h3>
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Objetivo Específico</h4>
-                            <p className="text-sm text-gray-600">{aula.objetivoEspecifico}</p>
+                            <p className="text-sm text-gray-600">Compreender o conceito de função linear e sua representação gráfica através de exemplos práticos.</p>
                           </div>
                           
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Recursos Necessários</h4>
                             <div className="flex flex-wrap gap-2">
-                              {aula.recursos.map((recurso: string, index: number) => (
-                                <Badge key={index} variant="outline">{recurso}</Badge>
-                              ))}
+                              <Badge variant="outline">Quadro branco</Badge>
+                              <Badge variant="outline">GeoGebra</Badge>
+                              <Badge variant="outline">Material impresso</Badge>
+                              <Badge variant="outline">Calculadora</Badge>
                             </div>
                           </div>
                         </div>
@@ -495,80 +375,76 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-3">Estrutura da Aula</h4>
                             <div className="space-y-3">
-                              {aula.etapas.introducao && (
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-3 h-3 rounded-full bg-${aula.etapas.introducao.cor}-500 mt-1 flex-shrink-0`}></div>
-                                  <div>
-                                    <span className={`text-sm font-medium text-${aula.etapas.introducao.cor}-700`}>Introdução ({aula.etapas.introducao.tempo})</span>
-                                    <p className="text-xs text-gray-600">{aula.etapas.introducao.descricao}</p>
-                                  </div>
+                              <div className="flex items-start gap-3">
+                                <div className="w-3 h-3 rounded-full bg-green-500 mt-1 flex-shrink-0"></div>
+                                <div>
+                                  <span className="text-sm font-medium text-green-700">Introdução (10 min)</span>
+                                  <p className="text-xs text-gray-600">Situações problema do cotidiano</p>
                                 </div>
-                              )}
-                              {aula.etapas.desenvolvimento && (
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-3 h-3 rounded-full bg-${aula.etapas.desenvolvimento.cor}-500 mt-1 flex-shrink-0`}></div>
-                                  <div>
-                                    <span className={`text-sm font-medium text-${aula.etapas.desenvolvimento.cor}-700`}>Desenvolvimento ({aula.etapas.desenvolvimento.tempo})</span>
-                                    <p className="text-xs text-gray-600">{aula.etapas.desenvolvimento.descricao}</p>
-                                  </div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="w-3 h-3 rounded-full bg-orange-500 mt-1 flex-shrink-0"></div>
+                                <div>
+                                  <span className="text-sm font-medium text-orange-700">Desenvolvimento (30 min)</span>
+                                  <p className="text-xs text-gray-600">Construção de gráficos e análise</p>
                                 </div>
-                              )}
-                              {aula.etapas.fechamento && (
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-3 h-3 rounded-full bg-${aula.etapas.fechamento.cor}-500 mt-1 flex-shrink-0`}></div>
-                                  <div>
-                                    <span className={`text-sm font-medium text-${aula.etapas.fechamento.cor}-700`}>Fechamento ({aula.etapas.fechamento.tempo})</span>
-                                    <p className="text-xs text-gray-600">{aula.etapas.fechamento.descricao}</p>
-                                  </div>
+                              </div>
+                              <div className="flex items-start gap-3">
+                                <div className="w-3 h-3 rounded-full bg-purple-500 mt-1 flex-shrink-0"></div>
+                                <div>
+                                  <span className="text-sm font-medium text-purple-700">Fechamento (10 min)</span>
+                                  <p className="text-xs text-gray-600">Síntese e esclarecimento de dúvidas</p>
                                 </div>
-                              )}
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <h4 className="font-semibold text-gray-700 mb-2">Atividade Prática</h4>
-                        <p className="text-sm text-gray-600">{aula.atividadePratica}</p>
+                        <p className="text-sm text-gray-600">Lista com 10 exercícios sobre identificação de funções lineares e construção de gráficos</p>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
               ))}
-              {/* Timeline content for Diagnosticos */}
-              {sequenciaCompleta.diagnosticos?.map((diagnostico) => (
-                <div key={`timeline-diag-${diagnostico.numero}`} className="relative flex items-start space-x-4 pb-8">
+
+              {/* Diagnósticos na Timeline */}
+              {[1, 2].map((diagIndex) => (
+                <div key={`timeline-diag-${diagIndex}`} className="relative flex items-start space-x-4 pb-8">
                   <div className="flex-shrink-0 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    D{diagnostico.numero}
+                    D{diagIndex}
                   </div>
                   <Card className="flex-1 ml-4">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <BarChart3 className="text-green-500" size={16} />
-                          <span className="font-semibold text-green-700">Diagnóstico {diagnostico.numero}</span>
-                          <Badge variant="secondary">{diagnostico.tempo}</Badge>
+                          <span className="font-semibold text-green-700">Diagnóstico {diagIndex}</span>
+                          <Badge variant="secondary">20 min</Badge>
                         </div>
-                        <Badge variant="outline" className={`bg-green-50 text-green-700`}>{diagnostico.tipoAvaliacao}</Badge>
+                        <Badge variant="outline" className="bg-green-50 text-green-700">Quiz</Badge>
                       </div>
-                      <h3 className="text-xl font-bold mb-4">{diagnostico.titulo}</h3>
+                      <h3 className="text-xl font-bold mb-4">Avaliação Diagnóstica - Conhecimentos Prévios</h3>
 
                       <div className="grid md:grid-cols-3 gap-6">
                         <div>
                           <h4 className="font-semibold text-gray-700 mb-2">Objetivo</h4>
-                          <p className="text-sm text-gray-600">{diagnostico.objetivoAvaliativo}</p>
+                          <p className="text-sm text-gray-600">Identificar conhecimentos sobre álgebra básica e coordenadas cartesianas.</p>
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-700 mb-2">Formato</h4>
                           <div className="space-y-1">
-                            <p className="text-sm"><strong>{diagnostico.quantidadeQuestoes} questões</strong> {diagnostico.formato}</p>
+                            <p className="text-sm"><strong>8 questões</strong> múltipla escolha</p>
+                            <p className="text-sm">Plataforma digital interativa</p>
                           </div>
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-700 mb-2">Critérios</h4>
                           <div className="space-y-1 text-xs">
-                            {diagnostico.criteriosCorrecao.map((criterio, index) => (
-                              <div key={index} className={criterio.cor}>{criterio.faixa}: {criterio.resultado}</div>
-                            ))}
+                            <div><span className="text-green-600">●</span> 7-8 acertos: Pronto</div>
+                            <div><span className="text-yellow-600">●</span> 5-6 acertos: Revisão</div>
+                            <div><span className="text-red-600">●</span> &lt;5 acertos: Reforço</div>
                           </div>
                         </div>
                       </div>
@@ -576,44 +452,47 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                   </Card>
                 </div>
               ))}
-              {/* Timeline content for Avaliacoes */}
-              {sequenciaCompleta.avaliacoes?.map((avaliacao) => (
-                <div key={`timeline-aval-${avaliacao.numero}`} className="relative flex items-start space-x-4 pb-8">
+
+              {/* Avaliações na Timeline */}
+              {[1, 2].map((avalIndex) => (
+                <div key={`timeline-aval-${avalIndex}`} className="relative flex items-start space-x-4 pb-8">
                   <div className="flex-shrink-0 w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    P{avaliacao.numero}
+                    P{avalIndex}
                   </div>
                   <Card className="flex-1 ml-4">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <CheckSquare className="text-purple-500" size={16} />
-                          <span className="font-semibold text-purple-700">Avaliação {avaliacao.numero}</span>
-                          <Badge variant="secondary">{avaliacao.tempo}</Badge>
+                          <span className="font-semibold text-purple-700">Avaliação {avalIndex}</span>
+                          <Badge variant="secondary">45 min</Badge>
                         </div>
-                        <Badge variant="outline" className={`bg-purple-50 text-purple-700`}>{avaliacao.tipoAvaliacao}</Badge>
+                        <Badge variant="outline" className="bg-purple-50 text-purple-700">Prova</Badge>
                       </div>
-                      <h3 className="text-xl font-bold mb-4">{avaliacao.titulo}</h3>
+                      <h3 className="text-xl font-bold mb-4">Prova Somativa - Funções Lineares</h3>
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Objetivo Avaliativo</h4>
-                            <p className="text-sm text-gray-600">{avaliacao.objetivoAvaliativo}</p>
+                            <p className="text-sm text-gray-600">Avaliar compreensão dos conceitos de função linear e capacidade de resolução de problemas contextualizados.</p>
                           </div>
                           
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Composição</h4>
                             <div className="space-y-2">
-                              {avaliacao.composicao.map((comp, index) => (
-                                <div key={index} className="flex justify-between text-sm">
-                                  <span>{comp.quantidade} {comp.tipo}</span>
-                                  <span className="font-medium">{comp.pontos}</span>
-                                </div>
-                              ))}
+                              <div className="flex justify-between text-sm">
+                                <span>8 questões múltipla escolha</span>
+                                <span className="font-medium">6,0 pts</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span>4 questões discursivas</span>
+                                <span className="font-medium">4,0 pts</span>
+                              </div>
                               <hr className="my-2" />
                               <div className="flex justify-between text-sm font-bold">
                                 <span>Total</span>
-                                <span>{avaliacao.valorTotal}</span>
+                                <span>10,0 pts</span>
                               </div>
                             </div>
                           </div>
@@ -623,8 +502,20 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                           <div>
                             <h4 className="font-semibold text-gray-700 mb-2">Critérios de Correção</h4>
                             <div className="space-y-2 text-sm">
-                              {avaliacao.gabarito}
+                              <div>
+                                <span className="font-medium">Questões Objetivas:</span>
+                                <p className="text-gray-600">0,75 pontos cada (tudo ou nada)</p>
+                              </div>
+                              <div>
+                                <span className="font-medium">Questões Discursivas:</span>
+                                <p className="text-gray-600">Avaliação por etapas de resolução</p>
+                              </div>
                             </div>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-semibold text-gray-700 mb-2">Gabarito</h4>
+                            <p className="text-sm text-gray-600">Disponibilizado após aplicação com justificativas detalhadas e critérios específicos.</p>
                           </div>
                         </div>
                       </div>
@@ -641,52 +532,26 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
             {/* Grade de Cards - 4 por linha */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {/* Cards de Aulas */}
-              {sequenciaCompleta.aulas?.map((aula) => (
+              {[1, 2, 3, 4].map((aulaIndex) => (
                 <AulaCard
-                  key={`grade-aula-${aula.numero}`}
-                  aulaIndex={aula.numero}
-                  titulo={aula.titulo}
-                  objetivoEspecifico={aula.objetivoEspecifico}
-                  resumo={aula.resumo}
-                  etapas={[
-                    { tipo: "Introdução", tempo: aula.etapas.introducao.tempo, descricao: aula.etapas.introducao.descricao, cor: aula.etapas.introducao.cor },
-                    { tipo: "Desenvolvimento", tempo: aula.etapas.desenvolvimento.tempo, descricao: aula.etapas.desenvolvimento.descricao, cor: aula.etapas.desenvolvimento.cor },
-                    { tipo: "Fechamento", tempo: aula.etapas.fechamento.tempo, descricao: aula.etapas.fechamento.descricao, cor: aula.etapas.fechamento.cor }
-                  ]}
-                  recursos={aula.recursos}
-                  atividadePratica={aula.atividadePratica}
-                  tempo={aula.tempoTotal}
+                  key={`grade-aula-${aulaIndex}`}
+                  {...getMockAulaData(aulaIndex)}
                 />
               ))}
 
               {/* Cards de Diagnósticos */}
-              {sequenciaCompleta.diagnosticos?.map((diagnostico) => (
+              {[1, 2].map((diagIndex) => (
                 <DiagnosticoCard
-                  key={`grade-diagnostico-${diagnostico.numero}`}
-                  diagIndex={diagnostico.numero}
-                  titulo={diagnostico.titulo}
-                  objetivoAvaliativo={diagnostico.objetivoAvaliativo}
-                  tipoAvaliacao={diagnostico.tipoAvaliacao}
-                  quantidadeQuestoes={diagnostico.quantidadeQuestoes}
-                  formato={diagnostico.formato}
-                  criteriosCorrecao={diagnostico.criteriosCorrecao}
-                  tempo={diagnostico.tempo}
+                  key={`grade-diagnostico-${diagIndex}`}
+                  {...getMockDiagnosticoData(diagIndex)}
                 />
               ))}
 
               {/* Cards de Avaliações */}
-              {sequenciaCompleta.avaliacoes?.map((avaliacao) => (
+              {[1, 2].map((avalIndex) => (
                 <AvaliacaoCard
-                  key={`grade-avaliacao-${avaliacao.numero}`}
-                  avalIndex={avaliacao.numero}
-                  titulo={avaliacao.titulo}
-                  objetivoAvaliativo={avaliacao.objetivoAvaliativo}
-                  tipoAvaliacao={avaliacao.tipoAvaliacao}
-                  quantidadeQuestoes={avaliacao.quantidadeQuestoes}
-                  valorTotal={avaliacao.valorTotal}
-                  composicao={avaliacao.composicao}
-                  gabarito={avaliacao.gabarito}
-                  tempo={avaliacao.tempo}
+                  key={`grade-avaliacao-${avalIndex}`}
+                  {...getMockAvaliacaoData(avalIndex)}
                 />
               ))}
             </div>
@@ -696,36 +561,36 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               <Card>
                 <CardContent className="p-4 text-center">
                   <Calendar className="text-blue-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-blue-600">{sequenciaCompleta.resumoEstatistico.totalAulas}</h3>
+                  <h3 className="font-bold text-2xl text-blue-600">4</h3>
                   <p className="text-sm text-gray-600">Aulas Planejadas</p>
-                  <p className="text-xs text-gray-500">{sequenciaCompleta.resumoEstatistico.totalAulas * 50} min totais</p>
+                  <p className="text-xs text-gray-500">200 min totais</p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardContent className="p-4 text-center">
                   <BarChart3 className="text-green-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-green-600">{sequenciaCompleta.resumoEstatistico.totalDiagnosticos}</h3>
+                  <h3 className="font-bold text-2xl text-green-600">2</h3>
                   <p className="text-sm text-gray-600">Diagnósticos</p>
-                  <p className="text-xs text-gray-500">{sequenciaCompleta.resumoEstatistico.totalDiagnosticos * 20} min totais</p>
+                  <p className="text-xs text-gray-500">40 min totais</p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardContent className="p-4 text-center">
                   <CheckSquare className="text-purple-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-purple-600">{sequenciaCompleta.resumoEstatistico.totalAvaliacoes}</h3>
+                  <h3 className="font-bold text-2xl text-purple-600">2</h3>
                   <p className="text-sm text-gray-600">Avaliações</p>
-                  <p className="text-xs text-gray-500">{sequenciaCompleta.resumoEstatistico.totalAvaliacoes * 45} min totais</p>
+                  <p className="text-xs text-gray-500">90 min totais</p>
                 </CardContent>
               </Card>
-
+              
               <Card>
                 <CardContent className="p-4 text-center">
                   <Clock className="text-orange-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-orange-600">{sequenciaCompleta.resumoEstatistico.tempoTotalMinutos}</h3>
+                  <h3 className="font-bold text-2xl text-orange-600">330</h3>
                   <p className="text-sm text-gray-600">Minutos Totais</p>
-                  <p className="text-xs text-gray-500">≈ {Math.round(sequenciaCompleta.resumoEstatistico.tempoTotalMinutos / 60 * 10) / 10} horas</p>
+                  <p className="text-xs text-gray-500">≈ 5,5 horas</p>
                 </CardContent>
               </Card>
             </div>
@@ -735,9 +600,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
       {/* Informações de Geração */}
       <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
-        Sequência didática gerada em {new Date(sequenciaCompleta.metadados.dataGeracao).toLocaleDateString('pt-BR')} • 
-        Modo de visualização: {viewMode} • 
-        {sequenciaCompleta.metadados.sistemaGerador}
+        Sequência didática gerada em {new Date().toLocaleDateString('pt-BR')} • Modo de visualização: {viewMode}
       </div>
     </div>
   );

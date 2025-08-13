@@ -765,21 +765,10 @@ const EditActivityModal = ({
           console.log('📚 Construindo Sequência Didática com dados:', formData);
           setBuildingStatus({
             isBuilding: true,
-            progress: 30,
-            currentStep: 'Preparando dados para IA...'
+            progress: 50,
+            currentStep: 'Gerando sequência didática...'
           });
-          
-          // Aguardar um pouco para mostrar progresso
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          setBuildingStatus({
-            isBuilding: true,
-            progress: 60,
-            currentStep: 'Gerando sequência didática com IA...'
-          });
-          
           builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formData);
-          console.log('📚 Sequência didática construída:', builtData);
           break;
 
         case 'plano-aula':

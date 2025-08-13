@@ -1,169 +1,143 @@
-
-import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
+import { SequenciaDidaticaData, processSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
 export class SequenciaDidaticaBuilder {
-  private static instance: SequenciaDidaticaBuilder;
-
-  static getInstance(): SequenciaDidaticaBuilder {
-    if (!SequenciaDidaticaBuilder.instance) {
-      SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
-    }
-    return SequenciaDidaticaBuilder.instance;
-  }
-
-  async buildSequenciaDidatica(formData: ActivityFormData): Promise<SequenciaDidaticaCompleta> {
-    console.log('🏗️ Iniciando construção da Sequência Didática:', formData);
-
+  static async saveSequencia(data: any): Promise<void> {
     try {
-      // Validar dados obrigatórios
-      this.validarDadosObrigatorios(formData);
+      console.log('💾 Salvando Sequência Didática:', data);
 
-      // Preparar dados para a IA
-      const dadosPreparados = this.prepararDadosParaIA(formData);
-      console.log('📋 Dados preparados para IA:', dadosPreparados);
-
-      // Gerar sequência usando o gerador com IA
-      const sequenciaGerada = await sequenciaDidaticaGenerator.gerarSequenciaCompleta(dadosPreparados);
-      console.log('🎯 Sequência gerada com sucesso');
-
-      // Processar e enriquecer dados
-      const sequenciaProcessada = this.processarSequenciaGerada(sequenciaGerada, formData);
-      console.log('✅ Sequência processada e pronta');
-
-      return sequenciaProcessada;
-
-    } catch (error) {
-      console.error('❌ Erro na construção da Sequência Didática:', error);
-      throw new Error(`Falha na construção: ${error.message}`);
-    }
-  }
-
-  private validarDadosObrigatorios(formData: ActivityFormData): void {
-    const camposObrigatorios = [
-      { campo: 'tituloTemaAssunto', valor: formData.tituloTemaAssunto },
-      { campo: 'disciplina', valor: formData.disciplina },
-      { campo: 'anoSerie', valor: formData.anoSerie },
-      { campo: 'publicoAlvo', valor: formData.publicoAlvo },
-      { campo: 'objetivosAprendizagem', valor: formData.objetivosAprendizagem },
-      { campo: 'quantidadeAulas', valor: formData.quantidadeAulas },
-      { campo: 'quantidadeDiagnosticos', valor: formData.quantidadeDiagnosticos },
-      { campo: 'quantidadeAvaliacoes', valor: formData.quantidadeAvaliacoes }
-    ];
-
-    const camposFaltando = camposObrigatorios.filter(item => 
-      !item.valor || item.valor.toString().trim() === ''
-    );
-
-    if (camposFaltando.length > 0) {
-      const campos = camposFaltando.map(item => item.campo).join(', ');
-      throw new Error(`Campos obrigatórios não preenchidos: ${campos}`);
-    }
-  }
-
-  private prepararDadosParaIA(formData: ActivityFormData): any {
-    return {
-      id: `sequencia-${Date.now()}`,
-      tituloTemaAssunto: formData.tituloTemaAssunto?.trim(),
-      disciplina: formData.disciplina?.trim(),
-      anoSerie: formData.anoSerie?.trim(),
-      publicoAlvo: formData.publicoAlvo?.trim(),
-      objetivosAprendizagem: formData.objetivosAprendizagem?.trim(),
-      bnccCompetencias: formData.bnccCompetencias?.trim() || '',
-      quantidadeAulas: formData.quantidadeAulas?.trim() || '4',
-      quantidadeDiagnosticos: formData.quantidadeDiagnosticos?.trim() || '2',
-      quantidadeAvaliacoes: formData.quantidadeAvaliacoes?.trim() || '2',
-      cronograma: formData.cronograma?.trim() || '',
-      // Dados complementares do formulário
-      title: formData.title?.trim(),
-      description: formData.description?.trim(),
-      subject: formData.subject?.trim(),
-      schoolYear: formData.schoolYear?.trim(),
-      objectives: formData.objectives?.trim(),
-      materials: formData.materials?.trim(),
-      context: formData.context?.trim(),
-      evaluation: formData.evaluation?.trim()
-    };
-  }
-
-  private processarSequenciaGerada(sequencia: SequenciaDidaticaCompleta, formDataOriginal: ActivityFormData): SequenciaDidaticaCompleta {
-    // Enriquecer com dados adicionais se necessário
-    const sequenciaEnriquecida = {
-      ...sequencia,
-      // Garantir que dados obrigatórios estejam presentes
-      titulo: sequencia.titulo || formDataOriginal.tituloTemaAssunto || formDataOriginal.title || 'Sequência Didática',
-      disciplina: sequencia.disciplina || formDataOriginal.disciplina || formDataOriginal.subject || 'Disciplina',
-      anoSerie: sequencia.anoSerie || formDataOriginal.anoSerie || formDataOriginal.schoolYear || 'Ano/Série',
-      
-      // Metadados aprimorados
-      metadados: {
-        ...sequencia.metadados,
-        formDataOriginal: {
-          title: formDataOriginal.title,
-          description: formDataOriginal.description,
-          materials: formDataOriginal.materials,
-          context: formDataOriginal.context,
-          evaluation: formDataOriginal.evaluation
-        },
-        processadoEm: new Date().toISOString(),
-        sistemaVersao: "School Power v2.0"
-      }
-    };
-
-    // Salvar no localStorage com chave específica
-    const storageKey = `constructed_sequencia-didatica_${sequencia.id}`;
-    localStorage.setItem(storageKey, JSON.stringify(sequenciaEnriquecida));
-    console.log('💾 Sequência salva no localStorage:', storageKey);
-
-    return sequenciaEnriquecida;
-  }
-
-  // Método para recuperar sequência do localStorage
-  static recuperarSequencia(sequenciaId: string): SequenciaDidaticaCompleta | null {
-    try {
+      const sequenciaId = data.id || `seq_${Date.now()}`;
       const storageKey = `constructed_sequencia-didatica_${sequenciaId}`;
-      const data = localStorage.getItem(storageKey);
-      return data ? JSON.parse(data) : null;
+
+      // Salvar no localStorage específico
+      localStorage.setItem(storageKey, JSON.stringify(data));
+
+      // Também salvar na lista geral
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      const existingIndex = savedSequencias.findIndex((s: any) => s.id === sequenciaId);
+
+      if (existingIndex >= 0) {
+        savedSequencias[existingIndex] = data;
+      } else {
+        savedSequencias.push({
+          ...data,
+          id: sequenciaId,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      localStorage.setItem('sequenciasDidaticas', JSON.stringify(savedSequencias));
+
+      console.log('✅ Sequência Didática salva com sucesso:', sequenciaId);
+
     } catch (error) {
-      console.error('❌ Erro ao recuperar sequência do localStorage:', error);
+      console.error('❌ Erro ao salvar Sequência Didática:', error);
+      throw error;
+    }
+  }
+
+  static async loadSequencia(id: string): Promise<any> {
+    try {
+      console.log('📂 Carregando Sequência Didática:', id);
+
+      // Tentar carregar do localStorage específico primeiro
+      const specificKey = `constructed_sequencia-didatica_${id}`;
+      const specificData = localStorage.getItem(specificKey);
+
+      if (specificData) {
+        console.log('✅ Sequência encontrada no storage específico');
+        return JSON.parse(specificData);
+      }
+
+      // Fallback para lista geral
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      const sequencia = savedSequencias.find((s: any) => s.id === id);
+
+      if (!sequencia) {
+        console.warn(`⚠️ Sequência Didática com ID ${id} não encontrada`);
+        return null;
+      }
+
+      return sequencia;
+
+    } catch (error) {
+      console.error('❌ Erro ao carregar sequência salva:', error);
       return null;
     }
   }
 
-  // Método para limpar sequências antigas
-  static limparSequenciasAntigas(diasRetencao: number = 7): void {
-    try {
-      const agora = new Date();
-      const limiteTempo = new Date(agora.getTime() - (diasRetencao * 24 * 60 * 60 * 1000));
+  static async buildSequenciaDidatica(formData: any): Promise<any> {
+    console.log('🔨 Iniciando construção da Sequência Didática:', formData);
 
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('constructed_sequencia-didatica_')) {
-          try {
-            const data = JSON.parse(localStorage.getItem(key) || '{}');
-            const dataGeracao = new Date(data.metadados?.dataGeracao || 0);
-            
-            if (dataGeracao < limiteTempo) {
-              localStorage.removeItem(key);
-              console.log('🗑️ Sequência antiga removida:', key);
-            }
-          } catch (error) {
-            // Se houver erro ao parsear, remove o item
-            localStorage.removeItem(key);
-          }
-        }
-      });
+    try {
+      // Processar e validar dados
+      const processedData = processSequenciaDidaticaData(formData);
+      console.log('📋 Dados processados:', processedData);
+
+      if (!validateSequenciaDidaticaData(processedData)) {
+        throw new Error('Dados obrigatórios não preenchidos corretamente');
+      }
+
+      // Gerar sequência completa usando o generator
+      console.log('🎯 Chamando generator para criar sequência...');
+      const sequenciaGerada = await SequenciaDidaticaGenerator.generateSequenciaDidatica(processedData);
+
+      // Criar estrutura completa da sequência didática
+      const sequenciaCompleta = {
+        // Metadados básicos
+        id: `sequencia-didatica`,
+        activityId: 'sequencia-didatica',
+        tituloTemaAssunto: processedData.tituloTemaAssunto,
+        disciplina: processedData.disciplina,
+        anoSerie: processedData.anoSerie,
+        objetivosAprendizagem: processedData.objetivosAprendizagem,
+        publicoAlvo: processedData.publicoAlvo,
+        bnccCompetencias: processedData.bnccCompetencias,
+        quantidadeAulas: parseInt(processedData.quantidadeAulas) || 4,
+        quantidadeDiagnosticos: parseInt(processedData.quantidadeDiagnosticos) || 2,
+        quantidadeAvaliacoes: parseInt(processedData.quantidadeAvaliacoes) || 2,
+
+        // Dados gerados
+        ...sequenciaGerada,
+
+        // Status e timestamps
+        isBuilt: true,
+        isGenerated: true,
+        buildTimestamp: new Date().toISOString(),
+        lastModified: new Date().toISOString()
+      };
+
+      // Salvar automaticamente
+      await this.saveSequencia(sequenciaCompleta);
+
+      console.log('✅ Sequência Didática construída e salva com sucesso:', sequenciaCompleta);
+      return sequenciaCompleta;
+
     } catch (error) {
-      console.error('❌ Erro ao limpar sequências antigas:', error);
+      console.error('❌ Erro ao construir Sequência Didática:', error);
+      throw new Error(`Erro na construção: ${error.message}`);
+    }
+  }
+
+  static async regenerateSequencia(activityId: string, newData: any): Promise<any> {
+    console.log('🔄 Regenerando Sequência Didática:', activityId, newData);
+
+    try {
+      // Carregar dados existentes
+      const existingData = await this.loadSequencia(activityId);
+
+      // Mesclar com novos dados
+      const mergedData = { ...existingData, ...newData };
+
+      // Reconstruir
+      return await this.buildSequenciaDidatica(mergedData);
+
+    } catch (error) {
+      console.error('❌ Erro ao regenerar Sequência Didática:', error);
+      throw error;
     }
   }
 }
 
-export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();aDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();
-
-// Inicializar limpeza automática quando o módulo for carregado
-if (typeof window !== 'undefined') {
-  // Executar limpeza uma vez ao carregar
-  setTimeout(() => {
-    SequenciaDidaticaBuilder.limparSequenciasAntigas();
-  }, 1000);
-}
+// Exportar instância singleton
+export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();
