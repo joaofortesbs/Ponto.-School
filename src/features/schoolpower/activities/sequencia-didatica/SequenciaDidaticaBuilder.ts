@@ -297,6 +297,11 @@ export class SequenciaDidaticaBuilder {
     return { isValid, errors };
   }
 
+  async buildSequenciaDidatica(formData: ActivityFormData, contextualizationData?: any): Promise<SequenciaDidaticaBuildResult> {
+    console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] Método buildSequenciaDidatica chamado');
+    return this.build(formData, contextualizationData);
+  }
+
   getDebugInfo() {
     return this.debugInfo;
   }

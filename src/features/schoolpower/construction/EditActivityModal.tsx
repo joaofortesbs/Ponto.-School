@@ -186,6 +186,59 @@ const EditActivityModal = ({
 
   const { toast } = useToast();
 
+  // Função para validar se o formulário está válido
+  const isFormValid = (() => {
+    if (!activity) return false;
+
+    // Validação específica para sequencia-didatica
+    if (activity.id === 'sequencia-didatica') {
+      return !!(
+        formData.tituloTemaAssunto?.trim() &&
+        formData.anoSerie?.trim() &&
+        formData.disciplina?.trim() &&
+        formData.publicoAlvo?.trim() &&
+        formData.objetivosAprendizagem?.trim() &&
+        formData.quantidadeAulas?.trim() &&
+        formData.quantidadeDiagnosticos?.trim() &&
+        formData.quantidadeAvaliacoes?.trim()
+      );
+    }
+
+    // Validação específica para lista-exercicios
+    if (activity.id === 'lista-exercicios') {
+      return !!(
+        formData.title?.trim() &&
+        formData.description?.trim() &&
+        formData.subject?.trim() &&
+        formData.theme?.trim() &&
+        formData.schoolYear?.trim() &&
+        formData.numberOfQuestions?.trim() &&
+        formData.difficultyLevel?.trim() &&
+        formData.questionModel?.trim()
+      );
+    }
+
+    // Validação específica para plano-aula
+    if (activity.id === 'plano-aula') {
+      return !!(
+        formData.title?.trim() &&
+        formData.description?.trim() &&
+        formData.theme?.trim() &&
+        formData.schoolYear?.trim() &&
+        formData.subject?.trim() &&
+        formData.objectives?.trim() &&
+        formData.materials?.trim()
+      );
+    }
+
+    // Validação genérica para outras atividades
+    return !!(
+      formData.title?.trim() &&
+      formData.description?.trim() &&
+      formData.objectives?.trim()
+    );
+  })();
+
   // Hook para geração de atividades
   const {
     generateActivity,
