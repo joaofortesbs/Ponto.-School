@@ -1,195 +1,16 @@
 
-import { ProcessedSequenciaDidaticaData } from '../activities/sequencia-didatica/sequenciaDidaticaProcessor';
-
-export interface SequenciaDidaticaPromptData extends ProcessedSequenciaDidaticaData {
+export interface SequenciaDidaticaPromptData {
+  tituloTemaAssunto: string;
+  disciplina: string;
+  anoSerie: string;
+  bnccCompetencias?: string;
+  publicoAlvo: string;
+  objetivosAprendizagem: string;
+  quantidadeAulas: string;
+  quantidadeDiagnosticos: string;
+  quantidadeAvaliacoes: string;
+  cronograma?: string;
   contextualizationData?: any;
-}
-
-export function buildSequenciaDidaticaPrompt(data: SequenciaDidaticaPromptData): string {
-  console.log('📝 [SEQUENCIA_DIDATICA_PROMPT] Construindo prompt para IA:', {
-    titulo: data.tituloTemaAssunto,
-    disciplina: data.disciplina,
-    quantidadeAulas: data.quantidadeAulas,
-    timestamp: new Date().toISOString()
-  });
-
-  const prompt = `
-# GERAÇÃO DE SEQUÊNCIA DIDÁTICA COMPLETA
-
-## DADOS DE ENTRADA:
-**Título/Tema:** ${data.tituloTemaAssunto}
-**Ano/Série:** ${data.anoSerie}  
-**Disciplina:** ${data.disciplina}
-**BNCC/Competências:** ${data.bnccCompetencias}
-**Público-alvo:** ${data.publicoAlvo}
-**Objetivos de Aprendizagem:** ${data.objetivosAprendizagem}
-**Quantidade de Aulas:** ${data.quantidadeAulas}
-**Quantidade de Diagnósticos:** ${data.quantidadeDiagnosticos}
-**Quantidade de Avaliações:** ${data.quantidadeAvaliacoes}
-**Cronograma:** ${data.cronograma}
-
-## INSTRUÇÕES ESPECÍFICAS:
-
-Você deve gerar uma sequência didática COMPLETA e DETALHADA em formato JSON com a seguinte estrutura:
-
-\`\`\`json
-{
-  "metadados": {
-    "titulo": "${data.tituloTemaAssunto}",
-    "disciplina": "${data.disciplina}",
-    "anoSerie": "${data.anoSerie}",
-    "duracaoTotal": "${data.contextualData.duracaoTotal}",
-    "objetivosGerais": "${data.objetivosAprendizagem}",
-    "competenciasBNCC": "${data.bnccCompetencias}",
-    "publicoAlvo": "${data.publicoAlvo}"
-  },
-  "aulas": [
-    // GERAR EXATAMENTE ${data.quantidadeAulas} AULAS
-    {
-      "id": "aula-1",
-      "numero": 1,
-      "titulo": "Título específico da aula",
-      "objetivoEspecifico": "Objetivo claro e mensurável",
-      "resumoContexto": "Breve contexto da aula",
-      "tempoEstimado": "50 min",
-      "estrutura": {
-        "introducao": {
-          "tempo": "10 min",
-          "atividades": ["Atividade específica 1", "Atividade específica 2"],
-          "descricao": "Descrição detalhada da introdução"
-        },
-        "desenvolvimento": {
-          "tempo": "30 min", 
-          "atividades": ["Atividade de desenvolvimento 1", "Atividade de desenvolvimento 2"],
-          "descricao": "Descrição detalhada do desenvolvimento"
-        },
-        "fechamento": {
-          "tempo": "10 min",
-          "atividades": ["Atividade de fechamento 1"],
-          "descricao": "Descrição detalhada do fechamento"
-        }
-      },
-      "recursos": ["Recurso 1", "Recurso 2", "Recurso 3"],
-      "metodologia": "Descrição da metodologia utilizada",
-      "avaliacaoFormativa": "Como será avaliado o aprendizado",
-      "observacoes": "Observações importantes para o professor"
-    }
-  ],
-  "diagnosticos": [
-    // GERAR EXATAMENTE ${data.quantidadeDiagnosticos} DIAGNÓSTICOS
-    {
-      "id": "diagnostico-1",
-      "numero": 1,
-      "titulo": "Título do diagnóstico",
-      "objetivo": "Objetivo específico da avaliação diagnóstica",
-      "tipo": "Quiz/Prova/Observação/Portfólio",
-      "tempoEstimado": "20 min",
-      "instrumentos": ["Instrumento 1", "Instrumento 2"],
-      "criterios": ["Critério 1", "Critério 2", "Critério 3"],
-      "questoesSugeridas": [
-        {
-          "tipo": "multipla_escolha",
-          "enunciado": "Pergunta específica relacionada ao conteúdo",
-          "alternativas": ["A) Opção 1", "B) Opção 2", "C) Opção 3", "D) Opção 4"],
-          "respostaCorreta": "A",
-          "justificativa": "Explicação da resposta correta"
-        }
-      ],
-      "resultadosEsperados": "Descrição dos resultados esperados",
-      "acoesPosResultado": "Ações a serem tomadas com base nos resultados"
-    }
-  ],
-  "avaliacoes": [
-    // GERAR EXATAMENTE ${data.quantidadeAvaliacoes} AVALIAÇÕES
-    {
-      "id": "avaliacao-1", 
-      "numero": 1,
-      "titulo": "Título da avaliação",
-      "objetivo": "Objetivo específico da avaliação",
-      "tipo": "Prova/Trabalho/Projeto/Apresentação",
-      "tempoEstimado": "45 min",
-      "peso": 5.0,
-      "criterios": [
-        {
-          "criterio": "Nome do critério",
-          "peso": 2.5,
-          "descricao": "Descrição do que será avaliado"
-        }
-      ],
-      "rubricas": [
-        {
-          "nivel": "Excelente",
-          "pontuacao": "9-10",
-          "descricao": "Critérios para excelente"
-        },
-        {
-          "nivel": "Bom", 
-          "pontuacao": "7-8",
-          "descricao": "Critérios para bom"
-        }
-      ],
-      "questoesSugeridas": [
-        {
-          "tipo": "discursiva",
-          "enunciado": "Questão discursiva específica",
-          "pontuacao": 2.5,
-          "criterios": ["O que deve conter na resposta"]
-        }
-      ],
-      "recursos": ["Recursos necessários"],
-      "observacoes": "Observações importantes"
-    }
-  ],
-  "cronogramaSugerido": {
-    "distribuicaoSemanal": "${data.contextualData.frequenciaSemanal}",
-    "duracaoTotal": "${data.contextualData.duracaoTotal}",
-    "sequenciaLogica": [
-      {
-        "semana": 1,
-        "atividades": ["Diagnóstico 1", "Aula 1"],
-        "observacoes": "Observações da semana"
-      }
-    ]
-  },
-  "encadeamentoDidatico": {
-    "progressaoConceitual": "Como os conceitos se conectam progressivamente",
-    "pré-requisitos": ["Conhecimento 1", "Conhecimento 2"],
-    "conexoes": "Como as aulas se relacionam entre si"
-  },
-  "recursosComplementares": {
-    "materiaisApoio": ["Material 1", "Material 2"],
-    "tecnologias": ["Tecnologia 1", "Tecnologia 2"], 
-    "espacosAprendizagem": ["Sala de aula", "Laboratório"]
-  },
-  "adaptacoesPossíveis": {
-    "necessidadesEspeciais": "Sugestões para adaptação",
-    "diferenciacaoEnsino": "Estratégias para diferentes ritmos",
-    "recursosAlternativos": "Alternativas para recursos indisponíveis"
-  }
-}
-\`\`\`
-
-## REQUISITOS OBRIGATÓRIOS:
-
-1. **QUANTIDADE EXATA**: Gere exatamente ${data.quantidadeAulas} aulas, ${data.quantidadeDiagnosticos} diagnósticos e ${data.quantidadeAvaliacoes} avaliações
-2. **CONSISTÊNCIA**: Todos os elementos devem estar alinhados com o tema "${data.tituloTemaAssunto}" e disciplina "${data.disciplina}"
-3. **PROGRESSÃO LÓGICA**: As aulas devem seguir uma sequência pedagógica coerente
-4. **ESPECIFICIDADE**: Cada elemento deve ser específico para o ano/série "${data.anoSerie}"
-5. **OBJETIVOS CLAROS**: Cada aula, diagnóstico e avaliação deve ter objetivos mensuráveis
-6. **RECURSOS REALISTAS**: Sugerir apenas recursos disponíveis em escolas regulares
-7. **TEMPO ADEQUADO**: Respeitar os tempos padrão de aula (50 min), diagnóstico (20 min) e avaliação (45 min)
-
-## FORMATO DE RESPOSTA:
-Responda APENAS com o JSON válido, sem texto adicional antes ou depois.
-O JSON deve estar completo e seguir exatamente a estrutura solicitada.
-Todos os campos são obrigatórios e devem ser preenchidos com conteúdo educacionalmente relevante.
-
-IMPORTANTE: A resposta deve ser um JSON válido que pode ser parseado diretamente pelo JavaScript.
-`;
-
-  console.log('✅ [SEQUENCIA_DIDATICA_PROMPT] Prompt construído com sucesso, tamanho:', prompt.length);
-  
-  return prompt;
 }
 
 export function validatePromptData(data: SequenciaDidaticaPromptData): string[] {
@@ -198,33 +19,155 @@ export function validatePromptData(data: SequenciaDidaticaPromptData): string[] 
   if (!data.tituloTemaAssunto?.trim()) {
     errors.push('Título do tema/assunto é obrigatório');
   }
-  
   if (!data.disciplina?.trim()) {
     errors.push('Disciplina é obrigatória');
   }
-  
   if (!data.anoSerie?.trim()) {
     errors.push('Ano/série é obrigatório');
   }
-  
+  if (!data.publicoAlvo?.trim()) {
+    errors.push('Público-alvo é obrigatório');
+  }
   if (!data.objetivosAprendizagem?.trim()) {
     errors.push('Objetivos de aprendizagem são obrigatórios');
   }
   
-  const quantAulas = parseInt(data.quantidadeAulas);
-  if (!quantAulas || quantAulas < 1 || quantAulas > 20) {
-    errors.push('Quantidade de aulas deve ser entre 1 e 20');
-  }
+  const qtdAulas = parseInt(data.quantidadeAulas);
+  const qtdDiag = parseInt(data.quantidadeDiagnosticos);
+  const qtdAval = parseInt(data.quantidadeAvaliacoes);
   
-  const quantDiag = parseInt(data.quantidadeDiagnosticos);
-  if (!quantDiag || quantDiag < 1 || quantDiag > 10) {
-    errors.push('Quantidade de diagnósticos deve ser entre 1 e 10');
+  if (isNaN(qtdAulas) || qtdAulas < 1) {
+    errors.push('Quantidade de aulas deve ser um número válido maior que 0');
   }
-  
-  const quantAval = parseInt(data.quantidadeAvaliacoes);
-  if (!quantAval || quantAval < 1 || quantAval > 10) {
-    errors.push('Quantidade de avaliações deve ser entre 1 e 10');
+  if (isNaN(qtdDiag) || qtdDiag < 0) {
+    errors.push('Quantidade de diagnósticos deve ser um número válido maior ou igual a 0');
+  }
+  if (isNaN(qtdAval) || qtdAval < 1) {
+    errors.push('Quantidade de avaliações deve ser um número válido maior que 0');
   }
   
   return errors;
+}
+
+export function buildSequenciaDidaticaPrompt(data: SequenciaDidaticaPromptData): string {
+  const qtdAulas = parseInt(data.quantidadeAulas);
+  const qtdDiag = parseInt(data.quantidadeDiagnosticos);
+  const qtdAval = parseInt(data.quantidadeAvaliacoes);
+
+  return `
+Você é um especialista em educação e precisa criar uma Sequência Didática completa e detalhada.
+
+**DADOS DE ENTRADA:**
+- Título/Tema: ${data.tituloTemaAssunto}
+- Disciplina: ${data.disciplina}
+- Ano/Série: ${data.anoSerie}
+- BNCC/Competências: ${data.bnccCompetencias || 'Competências gerais da BNCC'}
+- Público-alvo: ${data.publicoAlvo}
+- Objetivos: ${data.objetivosAprendizagem}
+- Quantidade de Aulas: ${qtdAulas}
+- Quantidade de Diagnósticos: ${qtdDiag}
+- Quantidade de Avaliações: ${qtdAval}
+- Cronograma: ${data.cronograma || 'A definir'}
+
+**INSTRUÇÕES IMPORTANTES:**
+1. Retorne APENAS um JSON válido, sem texto adicional
+2. Crie exatamente ${qtdAulas} aulas, ${qtdDiag} diagnósticos e ${qtdAval} avaliações
+3. Cada elemento deve ser detalhado e pedagogicamente consistente
+4. Use linguagem educacional apropriada para ${data.anoSerie}
+
+**FORMATO DE RESPOSTA JSON:**
+\`\`\`json
+{
+  "metadados": {
+    "titulo": "${data.tituloTemaAssunto}",
+    "disciplina": "${data.disciplina}",
+    "anoSerie": "${data.anoSerie}",
+    "competenciasBNCC": "${data.bnccCompetencias || 'Competências da BNCC'}",
+    "publicoAlvo": "${data.publicoAlvo}",
+    "objetivosGerais": "${data.objetivosAprendizagem}",
+    "duracaoTotal": "${qtdAulas} aulas",
+    "criadoPor": "IA Educacional",
+    "dataGeracao": "${new Date().toISOString()}"
+  },
+  "aulas": [
+    ${Array.from({length: qtdAulas}, (_, i) => `
+    {
+      "numero": ${i + 1},
+      "titulo": "Aula ${i + 1}: [Título específico]",
+      "duracao": "50 minutos",
+      "objetivos": [
+        "Objetivo específico da aula ${i + 1}",
+        "Segundo objetivo específico"
+      ],
+      "conteudo": "Conteúdo detalhado a ser abordado na aula ${i + 1}",
+      "metodologia": "Metodologia pedagógica apropriada",
+      "atividades": [
+        "Atividade prática 1",
+        "Atividade prática 2"
+      ],
+      "recursos": [
+        "Recurso necessário 1",
+        "Recurso necessário 2"
+      ],
+      "avaliacao": "Forma de avaliação da aprendizagem",
+      "observacoes": "Observações importantes para o professor"
+    }${i < qtdAulas - 1 ? ',' : ''}`).join('')}
+  ],
+  "diagnosticos": [
+    ${Array.from({length: qtdDiag}, (_, i) => `
+    {
+      "titulo": "Diagnóstico ${i + 1}",
+      "descricao": "Avaliação diagnóstica ${i + 1} para verificar conhecimentos prévios",
+      "momento": "${i === 0 ? 'Início da sequência' : `Após aula ${Math.ceil((i + 1) * qtdAulas / qtdDiag)}`}",
+      "tipo": "Diagnóstica",
+      "instrumentos": [
+        "Questionário",
+        "Observação sistemática",
+        "Atividade prática"
+      ],
+      "criterios": [
+        "Conhecimentos prévios",
+        "Habilidades desenvolvidas",
+        "Dificuldades identificadas"
+      ],
+      "feedback": "Como usar os resultados para adaptar o ensino"
+    }${i < qtdDiag - 1 ? ',' : ''}`).join('')}
+  ],
+  "avaliacoes": [
+    ${Array.from({length: qtdAval}, (_, i) => `
+    {
+      "titulo": "Avaliação ${i + 1}",
+      "descricao": "Avaliação ${i % 2 === 0 ? 'formativa' : 'somativa'} ${i + 1}",
+      "momento": "Após aula ${Math.ceil((i + 1) * qtdAulas / qtdAval)}",
+      "tipo": "${i % 2 === 0 ? 'Formativa' : 'Somativa'}",
+      "instrumentos": [
+        "${i % 2 === 0 ? 'Atividade em grupo' : 'Prova individual'}",
+        "${i % 2 === 0 ? 'Portfólio' : 'Questões dissertativas'}",
+        "Autoavaliação"
+      ],
+      "criterios": [
+        "Domínio do conteúdo",
+        "Aplicação prática",
+        "Participação e engajamento"
+      ],
+      "peso": ${i === qtdAval - 1 ? '40' : '30'},
+      "rubrica": "Critérios específicos de avaliação detalhados"
+    }${i < qtdAval - 1 ? ',' : ''}`).join('')}
+  ],
+  "recursos_gerais": [
+    "Quadro/lousa",
+    "Projetor/computador",
+    "Material impresso",
+    "Recursos digitais específicos"
+  ],
+  "bibliografia": [
+    "Referência bibliográfica 1 relacionada ao tema",
+    "Referência bibliográfica 2 para aprofundamento"
+  ],
+  "observacoes_finais": "Considerações importantes sobre a implementação da sequência didática e adaptações necessárias"
+}
+\`\`\`
+
+Gere uma sequência didática completa, coerente e aplicável seguindo exatamente este formato JSON.
+`;
 }

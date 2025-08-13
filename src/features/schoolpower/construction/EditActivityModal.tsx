@@ -911,6 +911,26 @@ const EditActivityModal = ({
         setGeneratedContent(builtData);
         setIsContentLoaded(true);
 
+        // Salvar dados no localStorage
+        try {
+          localStorage.setItem(`constructed_${activity.id}_${activity.id}`, JSON.stringify(builtData));
+          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(builtData));
+
+          // Marcar atividade como construída
+          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+          constructedActivities[activity.id] = {
+            ...activity,
+            isBuilt: true,
+            generatedContent: builtData,
+            builtAt: new Date().toISOString()
+          };
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+          console.log('💾 Dados salvos com sucesso no localStorage');
+        } catch (error) {
+          console.error('❌ Erro ao salvar no localStorage:', error);
+        }
+
         setBuildingStatus({
           isBuilding: true,
           progress: 100,
