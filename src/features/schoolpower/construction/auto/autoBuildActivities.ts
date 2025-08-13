@@ -44,25 +44,43 @@ export const autoBuildActivities = async (
         throw new Error('Dados da atividade não encontrados no plano');
       }
 
-      // Preencher campos do modal automaticamente
-      await fillActivityModalFields(activity.id, activityData);
+      console.log(`🔄 Construindo atividade: ${activity.id} - ${activity.title}`);
+
+      // Tratamento específico para Sequência Didática
+      if (activity.id === 'sequencia-didatica') {
+        console.log('🎯 Construindo Sequência Didática automaticamente...');
+        
+        // Importar o builder específico
+        const { SequenciaDidaticaBuilder } = await import('../../activities/sequencia-didatica/SequenciaDidaticaBuilder');
+        
+        // Mapear dados do plano para os campos da sequência didática
+        const sequenciaData = {
+          tituloTemaAssunto: activity.personalizedTitle || activity.title,
+          disciplina: activityData.subject || 'Não especificada',
+          anoSerie: activityData.schoolYear || '6º Ano',
+          objetivosAprendizagem: activity.personalizedDescription || activity.description,
+          publicoAlvo: `Estudantes do ${activityData.schoolYear || '6º Ano'}`,
+          bnccCompetencias: 'Competências específicas da disciplina',
+          quantidadeAulas: '4',
+          quantidadeDiagnosticos: '2',
+          quantidadeAvaliacoes: '2'
+        };
+
+        // Construir a sequência didática
+        const sequenciaCompleta = await SequenciaDidaticaBuilder.buildSequenciaDidatica(sequenciaData);
+        
+        console.log('✅ Sequência Didática construída:', sequenciaCompleta);
+        
+      } else {
+        // Lógica para outras atividades
+        await fillActivityModalFields(activity.id, activityData);
+      }
 
       // Marcar como construída
       markActivityAsBuilt(activity.id);
 
-      completedActivities++;
-      console.log(`✅ Atividade construída com EXATA MESMA LÓGICA do EditActivityModal: ${activity.title}`);
-
-      // Salvar no localStorage com as mesmas chaves do sistema manual
-      const storageKey = `schoolpower_${activityType}_content`;
-      localStorage.setItem(storageKey, JSON.stringify(result.data));
-
-      // Para plano-aula, também salvar com chave específica para visualização
-      if (activityType === 'plano-aula') {
-        const viewStorageKey = `constructed_plano-aula_${activity.id}`;
-        localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-        console.log('💾 Auto-build: Dados do plano-aula salvos para visualização:', viewStorageKey);
-      }
+      completedActividades++;
+      console.log(`✅ Atividade construída: ${activity.title}`);
 
       // Adicionar à lista de atividades construídas
       let constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');

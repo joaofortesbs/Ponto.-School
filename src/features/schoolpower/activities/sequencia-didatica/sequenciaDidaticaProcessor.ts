@@ -61,6 +61,48 @@ export function processSequenciaDidaticaData(formData: ActivityFormData): Sequen
 }
 
 export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): boolean {
+  console.log('🔍 Validando dados da Sequência Didática:', data);
+
+  const requiredFields = [
+    'tituloTemaAssunto',
+    'disciplina', 
+    'anoSerie',
+    'objetivosAprendizagem'
+  ];
+
+  const errors: string[] = [];
+
+  requiredFields.forEach(field => {
+    if (!data[field as keyof SequenciaDidaticaData] || 
+        !data[field as keyof SequenciaDidaticaData].trim()) {
+      errors.push(`Campo obrigatório: ${field}`);
+    }
+  });
+
+  // Validar campos numéricos
+  const quantidadeAulas = parseInt(data.quantidadeAulas) || 0;
+  const quantidadeDiagnosticos = parseInt(data.quantidadeDiagnosticos) || 0;
+  const quantidadeAvaliacoes = parseInt(data.quantidadeAvaliacoes) || 0;
+
+  if (quantidadeAulas < 1 || quantidadeAulas > 20) {
+    errors.push('Quantidade de aulas deve ser entre 1 e 20');
+  }
+
+  if (quantidadeDiagnosticos < 1 || quantidadeDiagnosticos > 10) {
+    errors.push('Quantidade de diagnósticos deve ser entre 1 e 10');
+  }
+
+  if (quantidadeAvaliacoes < 1 || quantidadeAvaliacoes > 10) {
+    errors.push('Quantidade de avaliações deve ser entre 1 e 10');
+  }
+
+  if (errors.length > 0) {
+    console.warn('❌ Erros de validação encontrados:', errors);
+    return false;
+  }
+
+  console.log('✅ Dados válidos para Sequência Didática');
+  return true;
   const requiredFields = [
     'tituloTemaAssunto',
     'disciplina',

@@ -290,158 +290,21 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
     return this.gerarSequenciaCompleta(dadosCompletos);
   }
 
-  static async generateSequenciaDidatica(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
-    console.log('🎯 Gerando Sequência Didática com dados:', formData);
+  static async generateSequenciaDidatica(data: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+    console.log('🎯 Iniciando geração da Sequência Didática:', data);
+
+    if (!SequenciaDidaticaGenerator.instance) {
+      SequenciaDidaticaGenerator.instance = new SequenciaDidaticaGenerator();
+    }
 
     try {
-      // Preparar estrutura base
-      const sequenciaData: SequenciaDidaticaCompleta = {
-        metadados: formData,
-        aulas: [],
-        diagnosticos: [],
-        avaliacoes: [],
-        encadeamento: {
-          progressaoDidatica: '',
-          conexoesEntrAulas: []
-        },
-        cronogramaSugerido: {
-          duracao: '',
-          distribuicao: '',
-          observacoes: ''
-        },
-        generatedAt: new Date().toISOString(),
-        versao: '1.0'
-      };
-
-      // Gerar aulas
-      const quantidadeAulas = parseInt(formData.quantidadeAulas) || 4;
-      console.log(`📚 Gerando ${quantidadeAulas} aulas`);
-
-      for (let i = 0; i < quantidadeAulas; i++) {
-        sequenciaData.aulas.push({
-          id: `aula_${i + 1}`,
-          titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto}`,
-          objetivoEspecifico: `Desenvolver conhecimentos sobre ${formData.tituloTemaAssunto} - Parte ${i + 1}`,
-          resumoContexto: `Esta aula aborda aspectos específicos de ${formData.tituloTemaAssunto}, construindo conhecimento de forma progressiva e contextualizada.`,
-          passoAPasso: {
-            introducao: `Introdução ao tema com revisão dos conceitos anteriores e apresentação dos objetivos da aula ${i + 1}.`,
-            desenvolvimento: `Desenvolvimento prático dos conceitos através de exemplos, exercícios e discussões sobre ${formData.tituloTemaAssunto}.`,
-            fechamento: `Síntese dos conteúdos abordados, esclarecimento de dúvidas e preparação para a próxima aula.`
-          },
-          recursos: [
-            'Material didático impresso',
-            'Quadro ou lousa digital',
-            'Recursos audiovisuais',
-            'Computador/tablet (se disponível)'
-          ],
-          atividades: [
-            {
-              tipo: 'Atividade Inicial',
-              descricao: 'Dinâmica de aquecimento e revisão',
-              tempo: '10 minutos'
-            },
-            {
-              tipo: 'Atividade Principal',
-              descricao: 'Desenvolvimento do conteúdo central',
-              tempo: '25 minutos'
-            },
-            {
-              tipo: 'Atividade de Fixação',
-              descricao: 'Exercícios práticos e discussão',
-              tempo: '15 minutos'
-            }
-          ],
-          avaliacao: `Avaliação formativa através de participação, exercícios e questionamentos durante a aula ${i + 1}.`,
-          tempoEstimado: '50 minutos'
-        });
-      }
-
-      // Gerar diagnósticos
-      const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos) || 2;
-      console.log(`🔍 Gerando ${quantidadeDiagnosticos} diagnósticos`);
-
-      for (let i = 0; i < quantidadeDiagnosticos; i++) {
-        sequenciaData.diagnosticos.push({
-          id: `diagnostico_${i + 1}`,
-          titulo: `Diagnóstico ${i + 1}: ${formData.tituloTemaAssunto}`,
-          objetivo: `Avaliar o nível de compreensão dos estudantes sobre ${formData.tituloTemaAssunto}`,
-          tipo: i === 0 ? 'Diagnóstico Inicial' : 'Diagnóstico Processual',
-          instrumentos: [
-            'Questionário diagnóstico',
-            'Observação direta',
-            'Atividade prática',
-            'Discussão em grupo'
-          ],
-          criteriosAvaliacao: [
-            'Conhecimento prévio do tema',
-            'Capacidade de análise',
-            'Participação e engajamento',
-            'Identificação de dificuldades'
-          ],
-          resultadosEsperados: `Identificar pontos fortes e necessidades de aprendizagem relacionados a ${formData.tituloTemaAssunto}`
-        });
-      }
-
-      // Gerar avaliações
-      const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes) || 2;
-      console.log(`📝 Gerando ${quantidadeAvaliacoes} avaliações`);
-
-      for (let i = 0; i < quantidadeAvaliacoes; i++) {
-        sequenciaData.avaliacoes.push({
-          id: `avaliacao_${i + 1}`,
-          titulo: `Avaliação ${i + 1}: ${formData.tituloTemaAssunto}`,
-          objetivo: `Verificar o aprendizado e desenvolvimento das competências relacionadas a ${formData.tituloTemaAssunto}`,
-          tipo: i === 0 ? 'Avaliação Formativa' : 'Avaliação Somativa',
-          instrumentos: [
-            'Prova escrita',
-            'Trabalho em grupo',
-            'Apresentação oral',
-            'Portfolio de atividades'
-          ],
-          criteriosAvaliacao: [
-            'Domínio do conteúdo',
-            'Aplicação prática',
-            'Capacidade de síntese',
-            'Criatividade e originalidade'
-          ],
-          peso: i === 0 ? 0.4 : 0.6,
-          dataPrevisao: `A definir conforme cronograma`
-        });
-      }
-
-      // Configurar encadeamento didático
-      sequenciaData.encadeamento = {
-        progressaoDidatica: `A sequência didática sobre ${formData.tituloTemaAssunto} foi estruturada de forma progressiva, partindo de conceitos básicos até aplicações mais complexas, garantindo a construção gradual do conhecimento.`,
-        conexoesEntrAulas: sequenciaData.aulas.map((aula, index) => {
-          if (index === 0) {
-            return `${aula.titulo} - Introdução ao tema e conceitos fundamentais`;
-          } else if (index === sequenciaData.aulas.length - 1) {
-            return `${aula.titulo} - Síntese e aplicação dos conhecimentos adquiridos`;
-          } else {
-            return `${aula.titulo} - Desenvolvimento e aprofundamento dos conceitos`;
-          }
-        })
-      };
-
-      // Configurar cronograma
-      sequenciaData.cronogramaSugerido = {
-        duracao: `${quantidadeAulas} aulas + ${quantidadeDiagnosticos} diagnósticos + ${quantidadeAvaliacoes} avaliações`,
-        distribuicao: 'Sugestão: 2 aulas por semana, com diagnósticos e avaliações intercalados',
-        observacoes: formData.cronograma || 'Cronograma flexível, adaptável conforme necessidades da turma e calendário escolar'
-      };
-
-      console.log('✅ Sequência Didática gerada com sucesso');
-      return sequenciaData;
-
+      const resultado = await SequenciaDidaticaGenerator.instance.generate(data);
+      console.log('✅ Sequência Didática gerada com sucesso:', resultado);
+      return resultado;
     } catch (error) {
-      console.error('❌ Erro ao gerar Sequência Didática:', error);
-      throw new Error(`Erro na geração: ${error.message}`);
+      console.error('❌ Erro na geração da Sequência Didática:', error);
+      throw error;
     }
-  }
-
-  async regenerateWithAI(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
-    console.log('🤖 Regeneração com IA em desenvolvimento...');
-    return SequenciaDidaticaGenerator.generateSequenciaDidatica(formData);
   }
 }
 
