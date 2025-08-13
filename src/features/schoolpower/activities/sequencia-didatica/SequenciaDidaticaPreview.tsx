@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
@@ -15,8 +14,10 @@ import {
   Clock,
   List,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Play
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface SequenciaDidaticaPreviewProps {
   data: any;
@@ -161,13 +162,26 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
           loadedData = data;
         } else if (activityData?.id) {
           // Tentar carregar do localStorage
-          const { SequenciaDidaticaBuilder } = await import('./SequenciaDidaticaBuilder'); // Assumindo que este arquivo existe e exporta SequenciaDidaticaBuilder
-          loadedData = await SequenciaDidaticaBuilder.loadSequencia(activityData.id);
+          // Tentar carregar do localStorage - assumindo que o builder tenha uma função loadSequencia
+          // Se não, a lógica abaixo vai usar os dados fornecidos via 'data' ou 'activityData'
+          try {
+            const { SequenciaDidaticaBuilder } = await import('./SequenciaDidaticaBuilder'); 
+            const loadedFromBuilder = await SequenciaDidaticaBuilder.loadSequencia(activityData.id);
+            if (loadedFromBuilder) {
+              loadedData = loadedFromBuilder;
+            }
+          } catch (builderError) {
+            console.warn('⚠️ Não foi possível carregar SequenciaDidaticaBuilder ou a função loadSequencia:', builderError);
+          }
         }
 
+        // Se não carregou de lugar nenhum, usar os dados fornecidos
         if (!loadedData && data) {
-          // Fallback para dados do formulário
           loadedData = data;
+        }
+        // Se ainda não temos dados, tentar extrair de activityData caso tenha a estrutura correta
+        if (!loadedData && activityData && (activityData.generatedContent || activityData.content)) {
+          loadedData = activityData.generatedContent || activityData.content;
         }
 
         console.log('📋 Dados carregados:', loadedData);
@@ -206,56 +220,97 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   if (!sequenciaData) {
     return (
-      <div className="text-center p-8">
-        <div className="text-gray-400 mb-2">📚</div>
-        <p className="text-gray-600">Nenhuma sequência didática encontrada</p>
-        <p className="text-sm text-gray-400 mt-2">Construa a atividade para visualizar o conteúdo</p>
-      </div>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Sequência Didática
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Play className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-muted-foreground">
+              Clique em "Gerar com IA" para criar sua Sequência Didática
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Extrair dados da estrutura
-  const metadados = sequenciaData.metadados || sequenciaData;
+  // Extrair dados da estrutura, tentando ser flexível
+  const metadados = sequenciaData.metadados || sequenciaData; // Fallback para metadados
   const aulas = sequenciaData.aulas || [];
   const diagnosticos = sequenciaData.diagnosticos || [];
   const avaliacoes = sequenciaData.avaliacoes || [];
   const cronograma = sequenciaData.cronogramaSugerido;
+
+  // Informações gerais do formulário original, se disponíveis
+  const originalData = activityData?.originalData || activityData?.inputData || {};
+
+  // Verificar se há conteúdo gerado ou se os dados são apenas do formulário
+  const hasGeneratedContent = aulas.length > 0 || diagnosticos.length > 0 || avaliacoes.length > 0;
+
+  if (!hasGeneratedContent && !metadados.tituloTemaAssunto) {
+      return (
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Sequência Didática
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <Play className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-muted-foreground">
+                Conteúdo sendo gerado... Aguarde um momento.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      );
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       {/* Cabeçalho */}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800 mb-3">
-          {metadados.tituloTemaAssunto || 'Sequência Didática'}
+          {metadados.tituloTemaAssunto || originalData.tituloTemaAssunto || 'Sequência Didática'}
         </h2>
         <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-            📚 {metadados.disciplina}
+            📚 {metadados.disciplina || originalData.disciplina || 'Disciplina não especificada'}
           </span>
           <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
-            🎓 {metadados.anoSerie}
+            🎓 {metadados.anoSerie || originalData.anoSerie || 'Série não especificada'}
           </span>
           <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full">
-            ⏰ {aulas.length} aulas
+            ⏰ {aulas.length || originalData.quantidadeAulas || 0} aulas
           </span>
         </div>
       </div>
 
       {/* Informações Gerais */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">📋 Informações Gerais</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Target className="h-5 w-5 text-green-600" />
+          Informações Gerais
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
             <strong className="text-gray-700">Público-alvo:</strong>
-            <p className="text-gray-600 mt-1">{metadados.publicoAlvo}</p>
+            <p className="text-gray-600 mt-1">{metadados.publicoAlvo || originalData.publicoAlvo || 'Não especificado'}</p>
           </div>
           <div>
             <strong className="text-gray-700">Objetivos de Aprendizagem:</strong>
-            <p className="text-gray-600 mt-1">{metadados.objetivosAprendizagem}</p>
+            <p className="text-gray-600 mt-1">{metadados.objetivosAprendizagem || originalData.objetivosAprendizagem || 'Não especificado'}</p>
           </div>
           <div>
             <strong className="text-gray-700">BNCC/Competências:</strong>
-            <p className="text-gray-600 mt-1">{metadados.bnccCompetencias}</p>
+            <p className="text-gray-600 mt-1">{metadados.bnccCompetencias || originalData.bnccCompetencias || 'Não especificado'}</p>
           </div>
           {cronograma && (
             <div>
@@ -270,7 +325,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       {aulas.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            🎓 Aulas ({aulas.length})
+            <Play className="h-5 w-5" />
+            Aulas ({aulas.length})
           </h3>
           <div className="space-y-4">
             {aulas.map((aula: any, index: number) => (
@@ -284,7 +340,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       {diagnosticos.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            🔍 Diagnósticos ({diagnosticos.length})
+            <Target className="h-5 w-5 text-orange-500" />
+            Diagnósticos ({diagnosticos.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {diagnosticos.map((diagnostico: any, index: number) => (
@@ -298,7 +355,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       {avaliacoes.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            📊 Avaliações ({avaliacoes.length})
+            <BarChart3 className="h-5 w-5 text-green-500" />
+            Avaliações ({avaliacoes.length})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {avaliacoes.map((avaliacao: any, index: number) => (

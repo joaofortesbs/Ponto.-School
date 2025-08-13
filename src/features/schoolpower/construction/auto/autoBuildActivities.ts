@@ -48,29 +48,67 @@ export const autoBuildActivities = async (
 
       // Tratamento específico para Sequência Didática
       if (activity.id === 'sequencia-didatica') {
-        console.log('🎯 Construindo Sequência Didática automaticamente...');
-        
-        // Importar o builder específico
-        const { SequenciaDidaticaBuilder } = await import('../../activities/sequencia-didatica/SequenciaDidaticaBuilder');
-        
-        // Mapear dados do plano para os campos da sequência didática
-        const sequenciaData = {
-          tituloTemaAssunto: activity.personalizedTitle || activity.title,
-          disciplina: activityData.subject || 'Não especificada',
-          anoSerie: activityData.schoolYear || '6º Ano',
-          objetivosAprendizagem: activity.personalizedDescription || activity.description,
-          publicoAlvo: `Estudantes do ${activityData.schoolYear || '6º Ano'}`,
-          bnccCompetencias: 'Competências específicas da disciplina',
-          quantidadeAulas: '4',
-          quantidadeDiagnosticos: '2',
-          quantidadeAvaliacoes: '2'
-        };
+        console.log('🎯 Construindo Sequência Didática');
 
-        // Construir a sequência didática
-        const sequenciaCompleta = await SequenciaDidaticaBuilder.buildSequenciaDidatica(sequenciaData);
-        
-        console.log('✅ Sequência Didática construída:', sequenciaCompleta);
-        
+        try {
+          const sequenciaDidaticaData = processSequenciaDidaticaData(formData);
+
+          console.log('📊 Dados processados para validação:', sequenciaDidaticaData);
+
+          if (!validateSequenciaDidaticaData(sequenciaDidaticaData)) {
+            console.warn('⚠️ Dados da Sequência Didática com problemas, mas continuando...');
+          }
+
+          console.log('📝 Iniciando geração com IA...');
+
+          const generatedContent = await generateSequenciaDidatica(sequenciaDidaticaData);
+
+          console.log('✅ Sequência Didática gerada com sucesso:', {
+            titulo: generatedContent.titulo,
+            numAulas: generatedContent.aulas?.length || 0,
+            temAvaliacao: !!generatedContent.avaliacaoFinal
+          });
+
+          const result = {
+            id: activity.id,
+            title: generatedContent.titulo || activity.title || 'Sequência Didática',
+            description: activity.description || 'Sequência didática gerada automaticamente',
+            generatedContent,
+            originalData: sequenciaDidaticaData,
+            content: generatedContent, // Para compatibilidade
+            approved: false,
+            isBuilt: true,
+            customFields: {}
+          };
+
+          console.log('🎉 Resultado final da construção:', result);
+          return result;
+
+        } catch (error) {
+          console.error('❌ Erro na construção da Sequência Didática:', error);
+
+          // Tentar criar fallback com dados disponíveis
+          const sequenciaDidaticaData = processSequenciaDidaticaData(formData);
+
+          return {
+            id: activity.id,
+            title: activity.title || 'Sequência Didática',
+            description: activity.description,
+            generatedContent: {
+              titulo: `Sequência Didática: ${sequenciaDidaticaData.tituloTemaAssunto}`,
+              introducao: `Esta sequência foi preparada para ${sequenciaDidaticaData.publicoAlvo}`,
+              aulas: [],
+              avaliacaoFinal: null,
+              recursosGerais: [],
+              bibliografia: []
+            },
+            originalData: sequenciaDidaticaData,
+            approved: false,
+            isBuilt: false,
+            error: error instanceof Error ? error.message : 'Erro na geração',
+            customFields: {}
+          };
+        }
       } else {
         // Lógica para outras atividades
         await fillActivityModalFields(activity.id, activityData);
@@ -79,7 +117,7 @@ export const autoBuildActivities = async (
       // Marcar como construída
       markActivityAsBuilt(activity.id);
 
-      completedActividades++;
+      completedActivities++;
       console.log(`✅ Atividade construída: ${activity.title}`);
 
       // Adicionar à lista de atividades construídas
@@ -109,8 +147,8 @@ export const autoBuildActivities = async (
 // Função para marcar atividade como construída (adicionar badge visual)
 const markActivityAsBuilt = (activityId: string) => {
   // Dispara evento personalizado para atualizar UI
-  const event = new CustomEvent('activityBuilt', { 
-    detail: { activityId } 
+  const event = new CustomEvent('activityBuilt', {
+    detail: { activityId }
   });
   window.dispatchEvent(event);
 };

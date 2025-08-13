@@ -1,35 +1,51 @@
+export function sequenciaDidaticaPrompt(data: SequenciaDidaticaData): string {
+  const numAulas = parseInt(data.quantidadeAulas) || 4;
 
-export const sequenciaDidaticaPrompt = `
-Você é um especialista em criação de sequências didáticas educacionais. Baseando-se no contexto fornecido, gere uma sequência didática completa seguindo exatamente este formato JSON:
+  return `
+Você é um especialista em educação. Crie uma sequência didática detalhada e estruturada.
+
+DADOS:
+- Título: ${data.tituloTemaAssunto}
+- Disciplina: ${data.disciplina}
+- Ano/Série: ${data.anoSerie}
+- Público: ${data.publicoAlvo}
+- Objetivos: ${data.objetivosAprendizagem}
+- Aulas: ${numAulas}
+- BNCC: ${data.bnccCompetencias || 'Conforme diretrizes'}
+
+CRIAR:
+- ${numAulas} aulas completas e sequenciais
+- Objetivos específicos por aula
+- Atividades práticas e teóricas
+- Avaliação contínua e final
+- Recursos necessários
+
+RETORNE APENAS JSON VÁLIDO:
 
 {
-  "id": "sequencia-didatica",
-  "title": "Título da Sequência Didática",
-  "description": "Descrição detalhada da sequência didática",
-  "personalizedTitle": "Título personalizado baseado no contexto",
-  "personalizedDescription": "Descrição personalizada baseada no contexto",
-  "duration": "Duração estimada (ex: 4-6 aulas)",
-  "difficulty": "Nível de dificuldade (Iniciante/Intermediário/Avançado)",
-  "category": "Sequência Didática",
-  "type": "Planejamento Pedagógico",
-  "customFields": {
-    "Título do Tema / Assunto": "Tema central da sequência",
-    "Ano / Série": "Ano ou série específica",
-    "Disciplina": "Disciplina principal",
-    "BNCC / Competências": "Competências e habilidades da BNCC",
-    "Público-alvo": "Descrição do público-alvo",
-    "Objetivos de Aprendizagem": "Objetivos específicos a serem alcançados",
-    "Quantidade de Aulas": "Número de aulas previstas",
-    "Quantidade de Diagnósticos": "Número de avaliações diagnósticas",
-    "Quantidade de Avaliações": "Número de avaliações formativas/somativas",
-    "Cronograma": "Cronograma resumido da sequência"
-  }
+  "titulo": "Sequência Didática: [TEMA]",
+  "introducao": "Descrição da sequência, público-alvo e objetivos gerais",
+  "aulas": [
+    {
+      "numero": 1,
+      "titulo": "Título da Aula 1",
+      "objetivos": ["Objetivo 1", "Objetivo 2"],
+      "conteudo": "Detalhamento do conteúdo da aula",
+      "atividades": ["Atividade 1", "Atividade 2", "Atividade 3"],
+      "recursos": ["Recurso 1", "Recurso 2"],
+      "avaliacao": "Como avaliar esta aula",
+      "duracao": "50 minutos"
+    }
+  ],
+  "avaliacaoFinal": {
+    "tipo": "Formativa e Somativa",
+    "criterios": ["Critério 1", "Critério 2", "Critério 3"],
+    "descricao": "Descrição da avaliação final"
+  },
+  "recursosGerais": ["Recurso geral 1", "Recurso geral 2"],
+  "bibliografia": ["Referência 1", "Referência 2"]
 }
 
-IMPORTANTE: 
-- Retorne APENAS o JSON válido, sem texto adicional
-- Todos os valores devem ser strings, não objetos
-- Preencha todos os campos customFields baseando-se no contexto fornecido
-- Use termos educacionais apropriados e específicos
-- Garanta que os campos sejam consistentes com o nível educacional solicitado
-`;
+Responda SOMENTE com o JSON válido, sem markdown ou texto adicional.
+  `.trim();
+}
