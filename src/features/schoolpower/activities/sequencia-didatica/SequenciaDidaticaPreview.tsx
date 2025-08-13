@@ -52,55 +52,101 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   // Processar dados da sequência
   const sequenciaData = data || activityData || {};
   
-  // Verificar se há dados válidos
-  const hasValidData = sequenciaData && (
+  console.log('📊 [SEQUENCIA_DIDATICA_PREVIEW] Dados recebidos para análise:', {
+    hasData: !!data,
+    hasActivityData: !!activityData,
+    isBuilt,
+    sequenciaDataKeys: Object.keys(sequenciaData),
+    hasMetadados: !!sequenciaData.metadados,
+    hasAulas: !!sequenciaData.aulas,
+    hasDebugInfo: !!sequenciaData.debugInfo
+  });
+  
+  // Verificar se há dados válidos da IA
+  const hasAIGeneratedData = sequenciaData && (
+    sequenciaData.metadados || 
+    sequenciaData.aulas?.length > 0 ||
+    sequenciaData.isGeneratedByAI
+  );
+  
+  // Verificar se há dados de formulário
+  const hasFormData = sequenciaData && (
     sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
-    sequenciaData.aulas?.length > 0 ||
-    Object.keys(sequenciaData).length > 5 ||
-    isBuilt || // Se foi construído, considera válido
-    sequenciaData.conteudo_gerado_ia?.length > 0 ||
     sequenciaData.customFields?.['Título do Tema / Assunto'] ||
     sequenciaData.customFields?.['Objetivos de Aprendizagem']
   );
+  
+  const hasValidData = hasAIGeneratedData || hasFormData || (isBuilt && Object.keys(sequenciaData).length > 0);
 
-  console.log('🔍 Verificação de dados válidos:', {
+  console.log('🔍 [SEQUENCIA_DIDATICA_PREVIEW] Verificação de dados válidos:', {
     hasValidData,
-    sequenciaDataKeys: Object.keys(sequenciaData),
-    hasAulas: !!sequenciaData.aulas,
-    aulaCount: sequenciaData.aulas?.length
+    hasAIGeneratedData,
+    hasFormData,
+    isBuilt,
+    aulaCount: sequenciaData.aulas?.length || 0,
+    diagnosticoCount: sequenciaData.diagnosticos?.length || 0,
+    avaliacaoCount: sequenciaData.avaliacoes?.length || 0
   });
 
-  // Extrair valores dos campos customizados
+  // Extrair dados da IA ou formulário
+  const isAIGenerated = sequenciaData.isGeneratedByAI;
+  const metadados = sequenciaData.metadados || {};
   const customFields = sequenciaData.customFields || {};
   
-  // Tentar extrair dados de diferentes fontes
-  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
+  console.log('📋 [SEQUENCIA_DIDATICA_PREVIEW] Fontes de dados disponíveis:', {
+    isAIGenerated,
+    hasMetadados: !!metadados,
+    hasCustomFields: !!Object.keys(customFields).length,
+    metadadosKeys: Object.keys(metadados),
+    customFieldsKeys: Object.keys(customFields)
+  });
+  
+  // Tentar extrair dados de diferentes fontes (priorizar dados da IA)
+  const tituloTemaAssunto = 
+    metadados.titulo || 
+    customFields['Título do Tema / Assunto'] || 
     sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
     'Sequência Didática';
 
-  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
+  const objetivosAprendizagem = 
+    metadados.objetivosGerais ||
+    customFields['Objetivos de Aprendizagem'] || 
     sequenciaData.objetivosAprendizagem || 
     'Desenvolver competências específicas da disciplina através de metodologias ativas';
 
-  const quantidadeAulas = parseInt(
-    customFields['Quantidade de Aulas'] || 
-    sequenciaData.quantidadeAulas ||
-    sequenciaData.aulas?.length
-  ) || 4;
+  const disciplina = 
+    metadados.disciplina ||
+    customFields['Disciplina'] ||
+    sequenciaData.disciplina ||
+    'Disciplina';
+
+  const anoSerie =
+    metadados.anoSerie ||
+    customFields['Ano / Série'] ||
+    sequenciaData.anoSerie ||
+    'Ano/Série';
+
+  // Quantidades reais dos dados gerados
+  const quantidadeAulas = sequenciaData.aulas?.length || 
+    parseInt(customFields['Quantidade de Aulas'] || sequenciaData.quantidadeAulas) || 4;
   
-  const quantidadeDiagnosticos = parseInt(
-    customFields['Quantidade de Diagnósticos'] || 
-    sequenciaData.quantidadeDiagnosticos ||
-    sequenciaData.diagnosticos?.length
-  ) || 2;
+  const quantidadeDiagnosticos = sequenciaData.diagnosticos?.length ||
+    parseInt(customFields['Quantidade de Diagnósticos'] || sequenciaData.quantidadeDiagnosticos) || 2;
   
-  const quantidadeAvaliacoes = parseInt(
-    customFields['Quantidade de Avaliações'] || 
-    sequenciaData.quantidadeAvaliacoes ||
-    sequenciaData.avaliacoes?.length
-  ) || 2;
+  const quantidadeAvaliacoes = sequenciaData.avaliacoes?.length ||
+    parseInt(customFields['Quantidade de Avaliações'] || sequenciaData.quantidadeAvaliacoes) || 2;
+
+  console.log('📊 [SEQUENCIA_DIDATICA_PREVIEW] Dados extraídos:', {
+    tituloTemaAssunto,
+    disciplina, 
+    anoSerie,
+    quantidadeAulas,
+    quantidadeDiagnosticos,
+    quantidadeAvaliacoes,
+    isFromAI: isAIGenerated
+  });
 
   const handleRegenerateSequence = () => {
     console.log('🔄 Regenerando sequência didática...');
@@ -376,19 +422,97 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         {viewMode === 'cards' && (
           <div className="flex gap-6 pb-4 min-w-max overflow-x-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-w-max">
-            {/* Cards de Aulas */}
-            {[1, 2, 3, 4].map((aulaIndex) => (
-              <Card key={`aula-${aulaIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                      <Calendar size={12} className="mr-1" />
-                      Aula {aulaIndex}
-                    </Badge>
-                    <span className="text-sm text-gray-500">50 min</span>
-                  </div>
-                  <CardTitle className="text-lg">Introdução às Funções do 1º Grau</CardTitle>
-                </CardHeader>
+            {/* Cards de Aulas - Dados Reais */}
+            {(sequenciaData.aulas || []).length > 0 ? 
+              sequenciaData.aulas.map((aula: any, index: number) => (
+                <Card key={`aula-${aula.id || index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        <Calendar size={12} className="mr-1" />
+                        Aula {aula.numero || index + 1}
+                      </Badge>
+                      <span className="text-sm text-gray-500">{aula.tempoEstimado || '50 min'}</span>
+                    </div>
+                    <CardTitle className="text-lg">{aula.titulo || `Aula ${index + 1}`}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
+                      <p className="text-sm text-gray-600">{aula.objetivoEspecifico || 'Objetivo não especificado'}</p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Resumo</h4>
+                      <p className="text-sm text-gray-600">{aula.resumoContexto || 'Resumo não especificado'}</p>
+                    </div>
+
+                    {aula.estrutura && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-2">Etapas da Aula</h4>
+                        <div className="space-y-2">
+                          {aula.estrutura.introducao && (
+                            <div className="flex items-start gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
+                              <div>
+                                <span className="text-xs font-medium text-green-700">Introdução ({aula.estrutura.introducao.tempo})</span>
+                                <p className="text-xs text-gray-600">{aula.estrutura.introducao.descricao}</p>
+                              </div>
+                            </div>
+                          )}
+                          {aula.estrutura.desenvolvimento && (
+                            <div className="flex items-start gap-2">
+                              <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0"></div>
+                              <div>
+                                <span className="text-xs font-medium text-orange-700">Desenvolvimento ({aula.estrutura.desenvolvimento.tempo})</span>
+                                <p className="text-xs text-gray-600">{aula.estrutura.desenvolvimento.descricao}</p>
+                              </div>
+                            </div>
+                          )}
+                          {aula.estrutura.fechamento && (
+                            <div className="flex items-start gap-2">
+                              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0"></div>
+                              <div>
+                                <span className="text-xs font-medium text-purple-700">Fechamento ({aula.estrutura.fechamento.tempo})</span>
+                                <p className="text-xs text-gray-600">{aula.estrutura.fechamento.descricao}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {aula.recursos && aula.recursos.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Recursos Necessários</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {aula.recursos.slice(0, 3).map((recurso: string, idx: number) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">{recurso}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Metodologia</h4>
+                      <p className="text-xs text-gray-600">{aula.metodologia || 'Metodologia não especificada'}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )) : 
+              // Fallback quando não há dados da IA
+              Array.from({length: quantidadeAulas}, (_, index) => (
+                <Card key={`aula-placeholder-${index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        <Calendar size={12} className="mr-1" />
+                        Aula {index + 1}
+                      </Badge>
+                      <span className="text-sm text-gray-500">50 min</span>
+                    </div>
+                    <CardTitle className="text-lg">{tituloTemaAssunto} - Parte {index + 1}</CardTitle>
+                  </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
@@ -444,8 +568,59 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               </Card>
             ))}
 
-            {/* Cards de Diagnósticos */}
-            {[1, 2].map((diagIndex) => (
+            {/* Cards de Diagnósticos - Dados Reais */}
+            {(sequenciaData.diagnosticos || []).length > 0 ?
+              sequenciaData.diagnosticos.map((diagnostico: any, index: number) => (
+                <Card key={`diagnostico-${diagnostico.id || index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500 min-w-[320px] flex-shrink-0">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        <BarChart3 size={12} className="mr-1" />
+                        Diagnóstico {diagnostico.numero || index + 1}
+                      </Badge>
+                      <span className="text-sm text-gray-500">{diagnostico.tempoEstimado || '20 min'}</span>
+                    </div>
+                    <CardTitle className="text-lg">{diagnostico.titulo || `Diagnóstico ${index + 1}`}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Avaliativo</h4>
+                      <p className="text-sm text-gray-600">{diagnostico.objetivo || 'Objetivo não especificado'}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tipo de Avaliação</h4>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">{diagnostico.tipo || 'Não especificado'}</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Questões</h4>
+                        <p className="text-lg font-bold text-green-600">{diagnostico.questoesSugeridas?.length || 0} questões</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Formato</h4>
+                        <p className="text-sm text-gray-600">{diagnostico.tipo || 'Não especificado'}</p>
+                      </div>
+                    </div>
+
+                    {diagnostico.criterios && diagnostico.criterios.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Critérios de Avaliação</h4>
+                        <div className="space-y-1 text-xs">
+                          {diagnostico.criterios.slice(0, 3).map((criterio: string, idx: number) => (
+                            <div key={idx} className="flex justify-between">
+                              <span>{criterio}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )) :
+              // Fallback para diagnósticos
+              Array.from({length: quantidadeDiagnosticos}, (_, index) => (
               <Card key={`diagnostico-${diagIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -500,8 +675,67 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               </Card>
             ))}
 
-            {/* Cards de Avaliações */}
-            {[1, 2].map((avalIndex) => (
+            {/* Cards de Avaliações - Dados Reais */}
+            {(sequenciaData.avaliacoes || []).length > 0 ?
+              sequenciaData.avaliacoes.map((avaliacao: any, index: number) => (
+                <Card key={`avaliacao-${avaliacao.id || index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500 min-w-[320px] flex-shrink-0">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                        <CheckSquare size={12} className="mr-1" />
+                        Avaliação {avaliacao.numero || index + 1}
+                      </Badge>
+                      <span className="text-sm text-gray-500">{avaliacao.tempoEstimado || '45 min'}</span>
+                    </div>
+                    <CardTitle className="text-lg">{avaliacao.titulo || `Avaliação ${index + 1}`}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Avaliativo</h4>
+                      <p className="text-sm text-gray-600">{avaliacao.objetivo || 'Objetivo não especificado'}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tipo de Avaliação</h4>
+                      <Badge variant="outline" className="bg-red-50 text-red-700">{avaliacao.tipo || 'Não especificado'}</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Questões</h4>
+                        <p className="text-lg font-bold text-purple-600">{avaliacao.questoesSugeridas?.length || 0} questões</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Valor Total</h4>
+                        <p className="text-sm text-gray-600">{avaliacao.peso || '10,0'} pontos</p>
+                      </div>
+                    </div>
+
+                    {avaliacao.criterios && avaliacao.criterios.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Critérios</h4>
+                        <div className="space-y-1 text-xs">
+                          {avaliacao.criterios.slice(0, 2).map((criterio: any, idx: number) => (
+                            <div key={idx} className="flex justify-between">
+                              <span>{criterio.criterio || criterio}</span>
+                              {criterio.peso && <span className="font-medium">{criterio.peso} pts</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {avaliacao.observacoes && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Observações</h4>
+                        <p className="text-xs text-gray-600">{avaliacao.observacoes}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )) :
+              // Fallback para avaliações
+              Array.from({length: quantidadeAvaliacoes}, (_, index) => (
               <Card key={`avaliacao-${avalIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">

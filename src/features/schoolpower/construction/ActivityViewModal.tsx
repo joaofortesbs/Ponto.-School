@@ -490,6 +490,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <SequenciaDidaticaPreview
             data={previewData}
             activityData={activity}
+            isBuilt={true}
           />
         );
 
