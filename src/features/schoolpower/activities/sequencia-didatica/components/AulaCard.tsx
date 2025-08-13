@@ -1,8 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Calendar, Clock, Target, BookOpen, Users, Edit2, Check, X } from 'lucide-react';
 
 interface EtapaAula {
   tipo: string;
@@ -20,6 +22,7 @@ interface AulaCardProps {
   recursos: string[];
   atividadePratica: string;
   duracao?: string;
+  onFieldUpdate?: (field: string, value: string | string[]) => void;
 }
 
 export const AulaCard: React.FC<AulaCardProps> = ({
@@ -30,8 +33,89 @@ export const AulaCard: React.FC<AulaCardProps> = ({
   etapas,
   recursos,
   atividadePratica,
-  duracao = "50 min"
+  duracao = "50 min",
+  onFieldUpdate
 }) => {
+  const [editingFields, setEditingFields] = useState<{ [key: string]: boolean }>({});
+  const [tempValues, setTempValues] = useState<{ [key: string]: any }>({});
+
+  const handleStartEdit = (field: string, currentValue: any) => {
+    setEditingFields({ ...editingFields, [field]: true });
+    setTempValues({ ...tempValues, [field]: currentValue });
+  };
+
+  const handleSaveEdit = (field: string) => {
+    if (onFieldUpdate && tempValues[field] !== undefined) {
+      onFieldUpdate(field, tempValues[field]);
+    }
+    setEditingFields({ ...editingFields, [field]: false });
+    setTempValues({ ...tempValues, [field]: undefined });
+  };
+
+  const handleCancelEdit = (field: string) => {
+    setEditingFields({ ...editingFields, [field]: false });
+    setTempValues({ ...tempValues, [field]: undefined });
+  };
+
+  const renderEditableField = (field: string, currentValue: any, isTextarea = false) => {
+    const isEditing = editingFields[field];
+
+    if (isEditing) {
+      return (
+        <div className="flex flex-col gap-2">
+          {isTextarea ? (
+            <Textarea
+              value={tempValues[field] || ''}
+              onChange={(e) => setTempValues({ ...tempValues, [field]: e.target.value })}
+              className="min-h-[80px] text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) handleSaveEdit(field);
+                if (e.key === 'Escape') handleCancelEdit(field);
+              }}
+            />
+          ) : (
+            <Input
+              value={tempValues[field] || ''}
+              onChange={(e) => setTempValues({ ...tempValues, [field]: e.target.value })}
+              className="text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveEdit(field);
+                if (e.key === 'Escape') handleCancelEdit(field);
+              }}
+              autoFocus
+            />
+          )}
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleSaveEdit(field)}>
+              <Check className="h-4 w-4 mr-1" />
+              Salvar
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => handleCancelEdit(field)}>
+              <X className="h-4 w-4 mr-1" />
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="group relative">
+        <div>{currentValue}</div>
+        {onFieldUpdate && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="absolute -top-2 -right-2 h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => handleStartEdit(field, currentValue)}
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   const getEtapaColor = (tipo: string) => {
     switch (tipo.toLowerCase()) {
       case 'introdução':
@@ -56,17 +140,30 @@ export const AulaCard: React.FC<AulaCardProps> = ({
           </Badge>
           <span className="text-sm text-gray-500">{duracao}</span>
         </div>
-        <CardTitle className="text-lg">{titulo}</CardTitle>
+        <CardTitle className="text-lg">
+          <div className="mb-2">
+            <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200">
+              {renderEditableField('titulo', titulo)}
+            </h3>
+          </div>
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
+        <div className="mb-4">
           <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
-          <p className="text-sm text-gray-600">{objetivoEspecifico}</p>
+          <p className="text-sm text-gray-600">
+            {renderEditableField('objetivoEspecifico', objetivoEspecifico, true)}
+          </p>
         </div>
-        
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1">Resumo</h4>
-          <p className="text-sm text-gray-600">{resumo}</p>
+
+        <div className="mb-4">
+          <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+            <Target className="w-4 h-4 mr-2" />
+            Resumo da Aula
+          </h4>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {renderEditableField('resumo', resumo, true)}
+          </div>
         </div>
 
         <div>
@@ -101,8 +198,13 @@ export const AulaCard: React.FC<AulaCardProps> = ({
         </div>
 
         <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1">Atividade Prática</h4>
-          <p className="text-xs text-gray-600">{atividadePratica}</p>
+          <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+            <Users className="w-4 h-4 mr-2" />
+            Atividade Prática
+          </h4>
+          <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+            {renderEditableField('atividadePratica', atividadePratica, true)}
+          </div>
         </div>
       </CardContent>
     </Card>

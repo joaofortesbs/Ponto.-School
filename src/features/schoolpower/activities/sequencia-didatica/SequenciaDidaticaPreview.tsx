@@ -114,6 +114,21 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     // Implementar lógica de regeneração
   };
 
+  const handleFieldUpdate = (field: string, value: string | number) => {
+    console.log(`📝 Atualizando campo ${field} com valor:`, value);
+    // Aqui você pode implementar a lógica para salvar os dados atualizados
+    // Por exemplo, salvar no localStorage ou enviar para uma API
+    
+    // Salvar no localStorage temporariamente
+    const storageKey = `sequencia_didatica_${data?.id || 'preview'}`;
+    const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const updatedData = { ...currentData, [field]: value };
+    localStorage.setItem(storageKey, JSON.stringify(updatedData));
+    
+    // Aqui você poderia também atualizar o estado local se necessário
+    // ou disparar um callback para o componente pai
+  };
+
   const handleViewModeChange = (mode: string) => {
     setViewMode(mode);
     console.log('👁️ Modo de visualização alterado para:', mode);
@@ -276,8 +291,9 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         calendarDays={generateCalendar()}
         isCalendarOpen={isCalendarOpen}
         setIsCalendarOpen={setIsCalendarOpen}
-        monthNames={monthNames} // Pass monthNames
-        weekDays={weekDays}     // Pass weekDays
+        monthNames={monthNames}
+        weekDays={weekDays}
+        onFieldUpdate={handleFieldUpdate}
       />
 
       {/* Área de Conteúdo Principal */}
@@ -290,6 +306,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               <AulaCard
                 key={`aula-${aulaIndex}`}
                 {...getMockAulaData(aulaIndex)}
+                onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${aulaIndex}_${field}`, value)}
               />
             ))}
 
