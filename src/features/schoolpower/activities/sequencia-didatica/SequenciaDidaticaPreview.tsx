@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -16,7 +16,6 @@ import {
 import { Button } from '@/components/ui/button'; // Added for calendar navigation and regenerate button
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Added for view mode selector
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; // Added for calendar
-import { SequenciaDidaticaGenerator, SequenciaDidaticaData } from './SequenciaDidaticaGenerator';
 
 // Importar os novos componentes
 // Assuming these components are correctly placed in './components'
@@ -40,10 +39,15 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 }) => {
   console.log('📚 SequenciaDidaticaPreview - Dados recebidos:', { data, activityData, isBuilt });
 
-  // Estados para geração automática
-  const [generatedData, setGeneratedData] = useState<SequenciaDidaticaData | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generator] = useState(() => new SequenciaDidaticaGenerator());
+  // Estados para edição (commented out as per the new structure)
+  // const [isEditingObjectives, setIsEditingObjectives] = useState(false);
+  // const [isEditingQuantities, setIsEditingQuantities] = useState(false);
+  // const [tempObjectives, setTempObjectives] = useState('');
+  // const [tempQuantities, setTempQuantities] = useState({
+  //   aulas: 4,
+  //   diagnosticos: 2,
+  //   avaliacoes: 2
+  // });
 
   // Estados para visualização
   const [viewMode, setViewMode] = useState('cards');
@@ -52,11 +56,11 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Usar dados gerados pela IA ou dados originais como fallback
-  const sequenciaData = generatedData || data || activityData || {};
+  // Processar dados da sequência
+  const sequenciaData = data || activityData || {};
 
-  // Verificar se há dados válidos (incluindo geração em andamento)
-  const hasValidData = isGenerating || sequenciaData && (
+  // Verificar se há dados válidos
+  const hasValidData = sequenciaData && (
     sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
     sequenciaData.aulas?.length > 0 ||
@@ -69,110 +73,60 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   console.log('🔍 Verificação de dados válidos:', {
     hasValidData,
-    isGenerating,
-    hasGeneratedData: !!generatedData,
     sequenciaDataKeys: Object.keys(sequenciaData),
     hasAulas: !!sequenciaData.aulas,
     aulaCount: sequenciaData.aulas?.length
   });
 
-  // Extrair valores dos campos customizados ou dados gerados
+  // Extrair valores dos campos customizados
   const customFields = sequenciaData.customFields || {};
 
-  // Tentar extrair dados de diferentes fontes (priorizar dados gerados)
-  const tituloTemaAssunto = sequenciaData.tituloTemaAssunto ||
-    customFields['Título do Tema / Assunto'] || 
+  // Tentar extrair dados de diferentes fontes
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
+    sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
     'Sequência Didática';
 
-  const objetivosAprendizagem = sequenciaData.objetivosAprendizagem ||
-    customFields['Objetivos de Aprendizagem'] || 
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
+    sequenciaData.objetivosAprendizagem || 
     'Desenvolver competências específicas da disciplina através de metodologias ativas';
 
-  const quantidadeAulas = sequenciaData.quantidadeAulas || parseInt(
+  const quantidadeAulas = parseInt(
     customFields['Quantidade de Aulas'] || 
+    sequenciaData.quantidadeAulas ||
     sequenciaData.aulas?.length
   ) || 4;
 
-  const quantidadeDiagnosticos = sequenciaData.quantidadeDiagnosticos || parseInt(
+  const quantidadeDiagnosticos = parseInt(
     customFields['Quantidade de Diagnósticos'] || 
+    sequenciaData.quantidadeDiagnosticos ||
     sequenciaData.diagnosticos?.length
   ) || 2;
 
-  const quantidadeAvaliacoes = sequenciaData.quantidadeAvaliacoes || parseInt(
+  const quantidadeAvaliacoes = parseInt(
     customFields['Quantidade de Avaliações'] || 
+    sequenciaData.quantidadeAvaliacoes ||
     sequenciaData.avaliacoes?.length
   ) || 2;
 
-  // Efeito para gerar automaticamente quando dados estão disponíveis
-  useEffect(() => {
-    const shouldGenerate = (data || activityData) && isBuilt && !generatedData && !isGenerating;
-    
-    if (shouldGenerate) {
-      console.log('🚀 Iniciando geração automática da Sequência Didática');
-      generateSequenciaContent();
-    }
-  }, [data, activityData, isBuilt, generatedData, isGenerating]);
-
-  const generateSequenciaContent = async () => {
-    try {
-      setIsGenerating(true);
-      console.log('🎯 Gerando conteúdo da Sequência Didática...');
-
-      // Extrair dados dos campos de edição
-      const contextData = extractContextFromEditData();
-      
-      // Gerar com a API Gemini
-      const generatedContent = await generator.generateSequenciaDidatica(contextData);
-      
-      setGeneratedData(generatedContent);
-      console.log('✅ Sequência Didática gerada com sucesso');
-    } catch (error) {
-      console.error('❌ Erro ao gerar Sequência Didática:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const extractContextFromEditData = () => {
-    const sourceData = data || activityData || {};
-    const customFields = sourceData.customFields || {};
-    
-    return {
-      disciplina: customFields['Disciplina'] || sourceData.disciplina || 'Matemática',
-      tema: customFields['Título do Tema / Assunto'] || sourceData.tema || 'Tema de Estudo',
-      anoEscolaridade: customFields['Ano de Escolaridade'] || sourceData.anoEscolaridade || '9º ano',
-      objetivos: customFields['Objetivos de Aprendizagem'] || sourceData.objetivos || 'Desenvolver competências específicas',
-      quantidadeAulas: parseInt(customFields['Quantidade de Aulas'] || sourceData.quantidadeAulas || '4'),
-      quantidadeDiagnosticos: parseInt(customFields['Quantidade de Diagnósticos'] || sourceData.quantidadeDiagnosticos || '2'),
-      quantidadeAvaliacoes: parseInt(customFields['Quantidade de Avaliações'] || sourceData.quantidadeAvaliacoes || '2'),
-      duracaoAula: customFields['Duração da Aula'] || sourceData.duracaoAula || '50 minutos'
-    };
-  };
-
   const handleRegenerateSequence = () => {
     console.log('🔄 Regenerando sequência didática...');
-    setGeneratedData(null);
-    generateSequenciaContent();
+    // Implementar lógica de regeneração
   };
 
-  const handleFieldUpdate = async (field: string, value: string | number) => {
+  const handleFieldUpdate = (field: string, value: string | number) => {
     console.log(`📝 Atualizando campo ${field} com valor:`, value);
+    // Aqui você pode implementar a lógica para salvar os dados atualizados
+    // Por exemplo, salvar no localStorage ou enviar para uma API
     
-    if (generatedData) {
-      try {
-        const updatedData = await generator.updateFieldData(field, value, generatedData);
-        setGeneratedData(updatedData);
-      } catch (error) {
-        console.error('❌ Erro ao atualizar campo:', error);
-      }
-    }
-    
-    // Salvar no localStorage como backup
+    // Salvar no localStorage temporariamente
     const storageKey = `sequencia_didatica_${data?.id || 'preview'}`;
     const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
     const updatedData = { ...currentData, [field]: value };
     localStorage.setItem(storageKey, JSON.stringify(updatedData));
+    
+    // Aqui você poderia também atualizar o estado local se necessário
+    // ou disparar um callback para o componente pai
   };
 
   const handleViewModeChange = (mode: string) => {
@@ -299,23 +253,6 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 
-  // Estado de carregamento durante geração
-  if (isGenerating) {
-    return (
-      <div className="p-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          <h3 className="text-lg font-medium text-gray-600">
-            Gerando Sequência Didática com IA...
-          </h3>
-          <p className="text-sm text-gray-500 max-w-md">
-            Nossa IA está criando uma sequência didática personalizada com base nos seus dados de configuração.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (!hasValidData) {
     // Se estamos no modo de visualização (isBuilt), mostrar dados básicos mesmo sem conteúdo
     if (isBuilt) {
@@ -324,7 +261,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       return (
         <div className="p-8 text-center">
           <div className="flex flex-col items-center gap-4">
-            <BookOpen className="text-gray-400" size={48} />
+            <BookOpen className="text-gray-400" size={48} /> {/* Changed icon to BookOpen for empty state */}
             <h3 className="text-lg font-medium text-gray-600">
               Nenhum conteúdo gerado ainda
             </h3>
@@ -364,50 +301,28 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         {viewMode === 'cards' && (
           <div className="flex gap-6 pb-4 min-w-max overflow-x-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-w-max">
-            {/* Cards de Aulas - Usar dados reais da IA */}
-            {(sequenciaData.aulas || Array(quantidadeAulas).fill(null)).map((aula, index) => (
+            {/* Cards de Aulas */}
+            {[1, 2, 3, 4].map((aulaIndex) => (
               <AulaCard
-                key={`aula-${index + 1}`}
-                aulaIndex={index + 1}
-                titulo={aula?.titulo || `Aula ${index + 1}`}
-                objetivoEspecifico={aula?.objetivoEspecifico || 'Objetivo específico da aula'}
-                resumo={aula?.resumo || 'Resumo da aula será gerado pela IA'}
-                etapas={aula?.etapas || []}
-                recursos={aula?.recursos || []}
-                atividadePratica={aula?.atividadePratica || 'Atividade prática será definida'}
-                duracao={aula?.duracao || '50 min'}
-                onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${index + 1}_${field}`, value)}
+                key={`aula-${aulaIndex}`}
+                {...getMockAulaData(aulaIndex)}
+                onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${aulaIndex}_${field}`, value)}
               />
             ))}
 
-            {/* Cards de Diagnósticos - Usar dados reais da IA */}
-            {(sequenciaData.diagnosticos || Array(quantidadeDiagnosticos).fill(null)).map((diagnostico, index) => (
+            {/* Cards de Diagnósticos */}
+            {[1, 2].map((diagIndex) => (
               <DiagnosticoCard
-                key={`diagnostico-${index + 1}`}
-                diagIndex={index + 1}
-                titulo={diagnostico?.titulo || `Diagnóstico ${index + 1}`}
-                objetivoAvaliativo={diagnostico?.objetivoAvaliativo || 'Objetivo avaliativo do diagnóstico'}
-                tipoAvaliacao={diagnostico?.tipoAvaliacao || 'Quiz Interativo'}
-                quantidadeQuestoes={diagnostico?.quantidadeQuestoes || 8}
-                formato={diagnostico?.formato || 'Múltipla escolha'}
-                criteriosCorrecao={diagnostico?.criteriosCorrecao || []}
-                tempo={diagnostico?.tempo || '20 min'}
+                key={`diagnostico-${diagIndex}`}
+                {...getMockDiagnosticoData(diagIndex)}
               />
             ))}
 
-            {/* Cards de Avaliações - Usar dados reais da IA */}
-            {(sequenciaData.avaliacoes || Array(quantidadeAvaliacoes).fill(null)).map((avaliacao, index) => (
+            {/* Cards de Avaliações */}
+            {[1, 2].map((avalIndex) => (
               <AvaliacaoCard
-                key={`avaliacao-${index + 1}`}
-                avalIndex={index + 1}
-                titulo={avaliacao?.titulo || `Avaliação ${index + 1}`}
-                objetivoAvaliativo={avaliacao?.objetivoAvaliativo || 'Objetivo avaliativo da prova'}
-                tipoAvaliacao={avaliacao?.tipoAvaliacao || 'Prova Escrita'}
-                quantidadeQuestoes={avaliacao?.quantidadeQuestoes || 12}
-                valorTotal={avaliacao?.valorTotal || '10,0 pontos'}
-                composicao={avaliacao?.composicao || []}
-                gabarito={avaliacao?.gabarito || 'Gabarito será disponibilizado'}
-                tempo={avaliacao?.tempo || '45 min'}
+                key={`avaliacao-${avalIndex}`}
+                {...getMockAvaliacaoData(avalIndex)}
               />
             ))}
             </div>
