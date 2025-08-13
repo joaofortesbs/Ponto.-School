@@ -57,9 +57,6 @@ import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 
-// Debug: Log inicial do App
-console.log("App component iniciando...");
-
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
@@ -106,10 +103,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
-
-  // Debug: Log da renderização do App
-  console.log("App renderizando, location:", location.pathname);
-  console.log("App state:", { isLoading, isAuthRoute, showWelcomeModal });
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -184,13 +177,90 @@ function App() {
     checkRootRoute();
   }, [location.pathname, navigate]);
 
-  // Se ainda estiver carregando, mostrar loader
-  if (isLoading) {
-    return <TypewriterLoader />;
-  }
+  useEffect(() => {
+    const preventScroll = () => {
+      document.body.classList.add('modal-open');
+    };
 
-  // Debug: Log antes da renderização das rotas
-  console.log("Renderizando rotas, isAuthRoute:", isAuthRoute);
+    const restoreScroll = () => {
+      document.body.classList.remove('modal-open');
+    };
+
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await checkAuthentication();
+
+        const isAuthRoute = [
+          "/login",
+          "/register",
+          "/forgot-password",
+          "/reset-password",
+          "/select-plan",
+        ].some((route) => location.pathname.startsWith(route));
+
+        if (isAuthRoute) {
+          setShowWelcomeModal(false);
+          if (location.pathname === "/login") {
+            sessionStorage.removeItem('welcomeModalShown');
+          }
+          restoreScroll();
+          return;
+        }
+
+        if (isAuthenticated) {
+          const { data: { session } } = await supabase.auth.getSession();
+          const currentUserId = session?.user?.id;
+
+          if (!currentUserId) return;
+
+          const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
+          const sessionKey = `currentSession_${currentUserId}`;
+          const userHasLoggedBefore = localStorage.getItem(userLoginKey);
+          const currentSession = sessionStorage.getItem(sessionKey);
+
+          if (!userHasLoggedBefore) {
+            console.log("Primeiro login detectado para esta conta!");
+            setIsFirstLogin(true);
+            setShowWelcomeModal(true);
+            preventScroll();
+            localStorage.setItem(userLoginKey, 'true');
+            localStorage.setItem('hasLoggedInBefore', 'true');
+            sessionStorage.setItem(sessionKey, 'active');
+          } else if (!currentSession) {
+            console.log("Nova sessão detectada - mostrando modal de boas-vindas");
+            setIsFirstLogin(false);
+            setShowWelcomeModal(true);
+            preventScroll();
+            sessionStorage.setItem(sessionKey, 'active');
+          } else if (location.pathname === "/") {
+            setIsFirstLogin(false);
+            setShowWelcomeModal(true);
+            preventScroll();
+          } else {
+            console.log("Navegação dentro da mesma sessão - modal não será mostrado");
+            setShowWelcomeModal(false);
+            restoreScroll();
+          }
+        }
+        console.log("Aplicação inicializada com sucesso.");
+
+      } catch (error) {
+        console.error("Erro ao inicializar aplicação:", error);
+        setShowWelcomeModal(false);
+        restoreScroll();
+      }
+    };
+
+    const timer = setTimeout(() => {
+      console.log("Iniciando aplicação e verificando autenticação...");
+      checkAuth();
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      restoreScroll();
+    };
+  }, [location.pathname]);
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -198,86 +268,85 @@ function App() {
         <StudyGoalProvider>
           <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-              {/* Debug: Indicador visual */}
-              <div style={{ position: 'fixed', top: 0, right: 0, background: 'red', color: 'white', padding: '4px', zIndex: 9999 }}>
-                App Ativo - {location.pathname}
-              </div>
+              <Routes>
+                {/* Auth Routes - Públicas */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/select-plan" element={<PlanSelectionPage />} />
 
-              <Suspense fallback={<TypewriterLoader />}>
-                <Routes>
-                  {/* Auth Routes - Públicas */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  <Route path="/select-plan" element={<PlanSelectionPage />} />
+                {/* Página em branco - Pública para teste */}
+                <Route path="/blank" element={<BlankPage />} />
+                 {/* Rota pública para quiz */}
+                 <Route path="/quiz" element={<QuizPage />} />
 
-                  {/* Página em branco - Pública para teste */}
-                  <Route path="/blank" element={<BlankPage />} />
-                  {/* Rota pública para quiz */}
-                  <Route path="/quiz" element={<QuizPage />} />
+                {/* Main App Routes - Protegidas */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<Dashboard />} />
+                  <Route path="turmas" element={<Turmas />} />
+                  <Route path="turmas/:id" element={<TurmaDetail />} />
+                  <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
+                  <Route path="turmas/grupos" element={<GruposEstudo />} />
+                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
+                  <Route path="comunidades" element={<Comunidades />} />
+                  <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
+                  <Route path="epictus-ia" element={<EpictusIAPage />} />
+                  <Route path="/school-power" element={<SchoolPowerPageIndex />} />
+                  <Route path="agenda" element={<Agenda />} />
+                  <Route path="biblioteca" element={<Biblioteca />} />
+                  <Route path="conquistas" element={<Conquistas />} />
+                  <Route path="carteira" element={<Carteira />} />
+                  <Route path="organizacao" element={<Organizacao />} />
+                  <Route path="novidades" element={<Novidades />} />
+                  <Route path="configuracoes" element={<Configuracoes />} />
+                  <Route path="planos-estudo" element={<PlanosEstudo />} />
+                  <Route path="portal" element={<Portal />} />
+                </Route>
 
-                  {/* Main App Routes - Protegidas */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Home />
-                    </ProtectedRoute>
-                  }>
-                    <Route index element={<Dashboard />} />
-                    <Route path="turmas" element={<Turmas />} />
-                    <Route path="turmas/:id" element={<TurmaDetail />} />
-                    <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
-                    <Route path="turmas/grupos" element={<GruposEstudo />} />
-                    <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
-                    <Route path="comunidades" element={<Comunidades />} />
-                    <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
-                    <Route path="epictus-ia" element={<EpictusIAPage />} />
-                    <Route path="/school-power" element={<SchoolPowerPageIndex />} />
-                    <Route path="agenda" element={<Agenda />} />
-                    <Route path="biblioteca" element={<Biblioteca />} />
-                    <Route path="conquistas" element={<Conquistas />} />
-                    <Route path="carteira" element={<Carteira />} />
-                    <Route path="organizacao" element={<Organizacao />} />
-                    <Route path="novidades" element={<Novidades />} />
-                    <Route path="configuracoes" element={<Configuracoes />} />
-                    <Route path="planos-estudo" element={<PlanosEstudo />} />
-                    <Route path="portal" element={<Portal />} />
-                  </Route>
+                {/* User Profile - Protegida */}
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
 
-                  {/* User Profile - Protegida */}
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  } />
+                {/* Agenda standalone - Protegida */}
+                <Route path="/agenda-preview" element={
+                  <ProtectedRoute>
+                    <Agenda />
+                  </ProtectedRoute>
+                } />
+                <Route path="/agenda-standalone" element={
+                  <ProtectedRoute>
+                    <Agenda />
+                  </ProtectedRoute>
+                } />
 
-                  {/* Agenda standalone - Protegida */}
-                  <Route path="/agenda-preview" element={
-                    <ProtectedRoute>
-                      <Agenda />
-                    </ProtectedRoute>
-                  } />
-
-                  {/* Fallback Route - Redireciona para login */}
-                  <Route path="*" element={<Navigate to="/login" />} />
-                </Routes>
-              </Suspense>
+                {/* Fallback Route - Redireciona para login */}
+                <Route path="*" element={<Navigate to="/login" />} />
+              </Routes>
 
               {/* Floating Chat Support */}
-              {!isAuthRoute && !isLoading && (
-                <Suspense fallback={null}>
-                  <FloatingChatSupport />
-                </Suspense>
-              )}
+              {!isAuthRoute && !isLoading && <FloatingChatSupport />}
 
-              {/* Welcome Modal */}
-              {!isAuthRoute && showWelcomeModal && (
+              {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+              {!isAuthRoute &&
                 <WelcomeModal
                   isOpen={showWelcomeModal}
                   onClose={() => setShowWelcomeModal(false)}
                   isFirstLogin={isFirstLogin}
                 />
-              )}
+              }
             </div>
             <Toaster />
           </ErrorBoundary>

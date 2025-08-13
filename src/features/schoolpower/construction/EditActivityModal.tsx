@@ -832,17 +832,6 @@ const EditActivityModal = ({
         });
 
         result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(formData);
-        
-        // Garantir que o resultado tenha a estrutura esperada
-        if (!result.success) {
-          throw new Error(result.error || 'Erro na construção da sequência didática');
-        }
-        
-        // Transformar para o formato esperado
-        result = {
-          success: true,
-          data: result.data
-        };
       } else {
         // Usar a lógica padrão para outras atividades
         result = await generateActivityContent(activity.type || activity.id, formData);

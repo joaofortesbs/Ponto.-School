@@ -1,44 +1,124 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'sua-chave-api-aqui';
+export interface GeminiRequest {
+  prompt: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  topK?: number;
+}
+
+export interface GeminiResponse {
+  success: boolean;
+  result: string;
+  estimatedTokens: number;
+  estimatedPowerCost: number;
+  executionTime: number;
+  error?: string;
+}
 
 export class GeminiClient {
-  private genAI: GoogleGenerativeAI;
+  private apiKey: string;
+  private baseUrl: string;
 
-  constructor() {
-    this.genAI = new GoogleGenerativeAI(API_KEY);
+  // Adiciona um campo estático para a instância única
+  private static instance: GeminiClient;
+
+  // Torna o construtor privado para forçar o uso do Singleton
+  private constructor() {
+    this.apiKey = API_KEYS.GEMINI;
+    this.baseUrl = API_URLS.GEMINI;
   }
 
-  async generateContent(prompt: string, model: string = 'gemini-1.5-flash') {
-    try {
-      const generativeModel = this.genAI.getGenerativeModel({ model });
-      const result = await generativeModel.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Erro ao gerar conteúdo com Gemini:', error);
-      throw error;
+  // Método estático para obter a instância única
+  public static getInstance(): GeminiClient {
+    if (!GeminiClient.instance) {
+      GeminiClient.instance = new GeminiClient();
     }
+    return GeminiClient.instance;
   }
 
-  async generateStructuredContent(prompt: string, schema?: any) {
+  /**
+   * Faz requisição para a API Gemini
+   */
+  async generate(request: GeminiRequest): Promise<GeminiResponse> {
+    const startTime = Date.now();
+
     try {
-      const model = this.genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        generationConfig: schema ? { 
-          responseMimeType: "application/json",
-          responseSchema: schema 
-        } : undefined
+      if (!this.apiKey) {
+        throw new Error('Chave da API Gemini não configurada');
+      }
+
+      const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: request.prompt }]
+          }],
+          generationConfig: {
+            temperature: request.temperature || 0.7,
+            topP: request.topP || 0.8,
+            topK: request.topK || 40,
+            maxOutputTokens: request.maxTokens || 2048,
+          }
+        }),
+        signal: AbortSignal.timeout(API_CONFIG.timeout)
       });
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const executionTime = Date.now() - startTime;
+
+      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+        throw new Error('Resposta inválida da API Gemini');
+      }
+
+      const responseText = data.candidates[0].content.parts[0].text;
+      const estimatedTokens = this.estimateTokens(request.prompt + responseText);
+      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GEMINI;
+
+      return {
+        success: true,
+        result: responseText,
+        estimatedTokens,
+        estimatedPowerCost,
+        executionTime,
+      };
+
     } catch (error) {
-      console.error('Erro ao gerar conteúdo estruturado:', error);
-      throw error;
+      const executionTime = Date.now() - startTime;
+
+      return {
+        success: false,
+        result: '',
+        estimatedTokens: 0,
+        estimatedPowerCost: 0,
+        executionTime,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
     }
+  }
+
+  /**
+   * Estimativa básica de tokens (aproximadamente 4 caracteres por token)
+   */
+  private estimateTokens(text: string): number {
+    return Math.ceil(text.length / 4);
+  }
+
+  /**
+   * Atualiza a chave da API
+   */
+  updateApiKey(newKey: string): void {
+    this.apiKey = newKey;
   }
 }
 
-export const geminiClient = new GeminiClient();
+export const geminiClient = GeminiClient.getInstance();
+export default GeminiClient;

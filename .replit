@@ -52,15 +52,8 @@ externalPort = 8080
 localPort = 8081
 externalPort = 8081
 
-[[ports]]
-localPort = 8082
-externalPort = 6800
-
-[[ports]]
-localPort = 8083
-externalPort = 8000
-
 [workflows]
+runButton = "Run"
 
 [[workflows.workflow]]
 name = "Run App"
