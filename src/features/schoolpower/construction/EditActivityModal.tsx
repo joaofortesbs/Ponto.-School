@@ -762,127 +762,13 @@ const EditActivityModal = ({
       // Construir baseado no tipo de atividade
       switch (activity.id) {
         case 'sequencia-didatica':
-          const formDataWithDefaults = getFormDataWithDefaults();
-          console.log('📚 Construindo Sequência Didática com dados:', formDataWithDefaults);
+          console.log('📚 Construindo Sequência Didática com dados:', formData);
           setBuildingStatus({
             isBuilding: true,
             progress: 50,
             currentStep: 'Gerando sequência didática...'
           });
-          
-          try {
-            builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formDataWithDefaults);
-            console.log('✅ Sequência Didática construída com sucesso:', builtData);
-            
-            // Verificar se os dados essenciais estão presentes
-            if (!builtData.aulas || builtData.aulas.length === 0) {
-              console.log('⚠️ Dados de aulas não encontrados, criando dados padrão');
-              builtData.aulas = sequenciaDidaticaBuilder.createDefaultAulas(parseInt(formDataWithDefaults.quantidadeAulas) || 4);
-            }
-            
-            if (!builtData.diagnosticos || builtData.diagnosticos.length === 0) {
-              console.log('⚠️ Dados de diagnósticos não encontrados, criando dados padrão');
-              builtData.diagnosticos = sequenciaDidaticaBuilder.createDefaultDiagnosticos(parseInt(formDataWithDefaults.quantidadeDiagnosticos) || 1);
-            }
-            
-            if (!builtData.avaliacoes || builtData.avaliacoes.length === 0) {
-              console.log('⚠️ Dados de avaliações não encontrados, criando dados padrão');
-              builtData.avaliacoes = sequenciaDidaticaBuilder.createDefaultAvaliacoes(parseInt(formDataWithDefaults.quantidadeAvaliacoes) || 2);
-            }
-            
-          } catch (sequenciaError) {
-            console.error('❌ Erro específico na construção da Sequência Didática:', sequenciaError);
-            
-            // Criar dados padrão em caso de erro
-            builtData = {
-              id: `sequencia-didatica-${Date.now()}`,
-              activityId: 'sequencia-didatica',
-              tituloTemaAssunto: formDataWithDefaults.tituloTemaAssunto,
-              disciplina: formDataWithDefaults.disciplina,
-              anoSerie: formDataWithDefaults.anoSerie,
-              objetivosAprendizagem: formDataWithDefaults.objetivosAprendizagem,
-              publicoAlvo: formDataWithDefaults.publicoAlvo,
-              bnccCompetencias: formDataWithDefaults.bnccCompetencias,
-              quantidadeAulas: parseInt(formDataWithDefaults.quantidadeAulas) || 4,
-              quantidadeDiagnosticos: parseInt(formDataWithDefaults.quantidadeDiagnosticos) || 1,
-              quantidadeAvaliacoes: parseInt(formDataWithDefaults.quantidadeAvaliacoes) || 2,
-              aulas: [],
-              diagnosticos: [],
-              avaliacoes: [],
-              isBuilt: true,
-              isGenerated: false, // Indica que foi criado com dados padrão
-              buildTimestamp: new Date().toISOString(),
-              lastModified: new Date().toISOString(),
-              errorMessage: `Erro na geração da IA: ${sequenciaError.message}. Usando estrutura padrão.`
-            };
-            
-            // Adicionar dados padrão
-            const quantidadeAulasNum = parseInt(formDataWithDefaults.quantidadeAulas) || 4;
-            const quantidadeDiagnosticosNum = parseInt(formDataWithDefaults.quantidadeDiagnosticos) || 1;
-            const quantidadeAvaliacoesNum = parseInt(formDataWithDefaults.quantidadeAvaliacoes) || 2;
-            
-            // Criar dados básicos usando os métodos da classe
-            for (let i = 1; i <= quantidadeAulasNum; i++) {
-              builtData.aulas.push({
-                id: `aula-${i}`,
-                numero: i,
-                titulo: `${formDataWithDefaults.tituloTemaAssunto} - Aula ${i}`,
-                objetivoEspecifico: `Desenvolver conhecimentos sobre ${formDataWithDefaults.tituloTemaAssunto} - Etapa ${i}`,
-                resumoContexto: `Contextualização e desenvolvimento dos conceitos da aula ${i}`,
-                tempoEstimado: "50 min",
-                etapas: {
-                  introducao: { tempo: "10 min", descricao: "Introdução aos conceitos" },
-                  desenvolvimento: { tempo: "30 min", descricao: "Desenvolvimento dos conteúdos" },
-                  fechamento: { tempo: "10 min", descricao: "Síntese e conclusão" }
-                },
-                recursos: ["Quadro", "Material didático", "Projetor"],
-                atividadesPraticas: {
-                  tipo: "Exercícios práticos",
-                  descricao: "Atividades para consolidação",
-                  tempo: "15 min"
-                }
-              });
-            }
-            
-            for (let i = 1; i <= quantidadeDiagnosticosNum; i++) {
-              builtData.diagnosticos.push({
-                id: `diagnostico-${i}`,
-                numero: i,
-                titulo: `Diagnóstico ${i} - ${formDataWithDefaults.tituloTemaAssunto}`,
-                objetivoAvaliativo: "Verificar compreensão dos conceitos",
-                tipo: "Quiz Diagnóstico",
-                tempoEstimado: "20 min",
-                questoes: "5 questões",
-                formato: "Múltipla escolha",
-                criteriosCorrecao: {
-                  excelente: "4-5 acertos",
-                  bom: "3 acertos",
-                  precisaMelhorar: "Menos de 3 acertos"
-                }
-              });
-            }
-            
-            for (let i = 1; i <= quantidadeAvaliacoesNum; i++) {
-              builtData.avaliacoes.push({
-                id: `avaliacao-${i}`,
-                numero: i,
-                titulo: `Avaliação ${i} - ${formDataWithDefaults.tituloTemaAssunto}`,
-                objetivoAvaliativo: "Avaliar aprendizado adquirido",
-                tipo: "Prova Escrita",
-                tempoEstimado: "45 min",
-                questoes: "10 questões",
-                valorTotal: "10,0 pontos",
-                composicao: {
-                  multipplaEscolha: { quantidade: 6, pontos: "6,0 pts" },
-                  discursivas: { quantidade: 4, pontos: "4,0 pts" }
-                },
-                criteriosCorrecao: "Critérios baseados na BNCC",
-                gabarito: "Gabarito disponível"
-              });
-            }
-            
-            console.log('🔄 Sequência Didática criada com dados padrão devido a erro na IA');
-          }
+          builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formData);
           break;
 
         case 'plano-aula':
@@ -1032,61 +918,35 @@ const EditActivityModal = ({
   };
 
   // Verificar se campos obrigatórios estão preenchidos
-  const getFormValidation = () => {
-    if (activity?.id === 'lista-exercicios') {
-      return formData.title.trim() &&
-        formData.description.trim() &&
-        formData.subject.trim() &&
-        formData.theme.trim() &&
-        formData.schoolYear.trim() &&
-        formData.numberOfQuestions.trim() &&
-        formData.difficultyLevel.trim() &&
-        formData.questionModel.trim();
-    } else if (activity?.id === 'plano-aula') {
-      return formData.title.trim() &&
-        formData.description.trim() &&
-        formData.theme.trim() &&
-        formData.schoolYear.trim() &&
-        formData.subject.trim() &&
-        formData.objectives.trim() &&
-        formData.materials.trim();
-    } else if (activity?.id === 'sequencia-didatica') {
-      return formData.tituloTemaAssunto?.trim() &&
-        formData.anoSerie?.trim() &&
-        formData.disciplina?.trim() &&
-        formData.publicoAlvo?.trim() &&
-        formData.objetivosAprendizagem?.trim() &&
-        formData.quantidadeAulas?.trim() &&
-        formData.quantidadeDiagnosticos?.trim() &&
-        formData.quantidadeAvaliacoes?.trim();
-    } else {
-      return formData.title.trim() &&
-        formData.description.trim() &&
-        formData.objectives.trim();
-    }
-  };
-
-  const isFormValid = getFormValidation();
-
-  // Função para definir dados padrão quando campos estão vazios
-  const getFormDataWithDefaults = () => {
-    if (activity?.id === 'sequencia-didatica') {
-      return {
-        ...formData,
-        tituloTemaAssunto: formData.tituloTemaAssunto || 'Sequência Didática Personalizada',
-        disciplina: formData.disciplina || 'Educação Geral',
-        anoSerie: formData.anoSerie || '6º Ano do Ensino Fundamental',
-        publicoAlvo: formData.publicoAlvo || 'Estudantes do Ensino Fundamental',
-        objetivosAprendizagem: formData.objetivosAprendizagem || 'Desenvolver habilidades e competências educacionais',
-        quantidadeAulas: formData.quantidadeAulas || '4',
-        quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-        quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '2',
-        bnccCompetencias: formData.bnccCompetencias || 'Competências gerais da BNCC',
-        cronograma: formData.cronograma || 'Cronograma flexível adaptável'
-      };
-    }
-    return formData;
-  };
+  const isFormValid = activity?.id === 'lista-exercicios'
+    ? formData.title.trim() &&
+      formData.description.trim() &&
+      formData.subject.trim() &&
+      formData.theme.trim() &&
+      formData.schoolYear.trim() &&
+      formData.numberOfQuestions.trim() &&
+      formData.difficultyLevel.trim() &&
+      formData.questionModel.trim()
+    : activity?.id === 'plano-aula'
+    ? formData.title.trim() &&
+      formData.description.trim() &&
+      formData.theme.trim() &&
+      formData.schoolYear.trim() &&
+      formData.subject.trim() &&
+      formData.objectives.trim() &&
+      formData.materials.trim()
+    : activity?.id === 'sequencia-didatica'
+    ? formData.tituloTemaAssunto?.trim() &&
+      formData.anoSerie?.trim() &&
+      formData.disciplina?.trim() &&
+      formData.publicoAlvo?.trim() &&
+      formData.objetivosAprendizagem?.trim() &&
+      formData.quantidadeAulas?.trim() &&
+      formData.quantidadeDiagnosticos?.trim() &&
+      formData.quantidadeAvaliacoes?.trim()
+    : formData.title.trim() &&
+      formData.description.trim() &&
+      formData.objectives.trim();
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -1184,7 +1044,35 @@ const EditActivityModal = ({
                            Object.keys(customFields).length > 0;
 
     // Verificar se todos os campos obrigatórios estão preenchidos
-    const todosCamposPreenchidos = getFormValidation();
+    const todosCamposPreenchidos = activity?.id === 'lista-exercicios'
+      ? formData.title.trim() &&
+        formData.description.trim() &&
+        formData.subject.trim() &&
+        formData.theme.trim() &&
+        formData.schoolYear.trim() &&
+        formData.numberOfQuestions.trim() &&
+        formData.difficultyLevel.trim() &&
+        formData.questionModel.trim()
+      : activity?.id === 'plano-aula'
+      ? formData.title.trim() &&
+        formData.description.trim() &&
+        formData.theme.trim() &&
+        formData.schoolYear.trim() &&
+        formData.subject.trim() &&
+        formData.objectives.trim() &&
+        formData.materials.trim()
+      : activity?.id === 'sequencia-didatica'
+      ? formData.tituloTemaAssunto?.trim() &&
+        formData.anoSerie?.trim() &&
+        formData.disciplina?.trim() &&
+        formData.publicoAlvo?.trim() &&
+        formData.objetivosAprendizagem?.trim() &&
+        formData.quantidadeAulas?.trim() &&
+        formData.quantidadeDiagnosticos?.trim() &&
+        formData.quantidadeAvaliacoes?.trim()
+      : formData.title.trim() &&
+        formData.description.trim() &&
+        formData.objectives.trim();
 
     // Agente automático: Acionar "Construir Atividade" quando preenchido pela IA
     if (todosCamposPreenchidos && preenchidoPorIA && !activity.isBuilt) {
@@ -1628,7 +1516,7 @@ const EditActivityModal = ({
                   id="build-activity-button"
                   data-testid="build-activity-button"
                   onClick={handleBuildActivity}
-                  disabled={buildingStatus.isBuilding || (activity?.id !== 'sequencia-didatica' && !isFormValid)}
+                  disabled={buildingStatus.isBuilding || !isFormValid}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {buildingStatus.isBuilding ? (
