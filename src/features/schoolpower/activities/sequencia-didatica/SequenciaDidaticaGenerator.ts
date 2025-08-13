@@ -1,320 +1,276 @@
-import { geminiClient } from '@/utils/api/geminiClient';
-import { SequenciaDidaticaBuilder, SequenciaDidaticaData } from './SequenciaDidaticaBuilder';
 
-export interface SequenciaDidaticaGenerationParams {
-  tema: string;
-  disciplina: string;
-  serieAno: string;
-  duracao?: string;
-  objetivos?: string;
-  contexto?: string;
-  competenciasBNCC?: string[];
-  recursosDisponiveis?: string[];
+import { geminiClient } from '@/utils/api/geminiClient';
+import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+
+export interface AulaData {
+  id: string;
+  titulo: string;
+  objetivoEspecifico: string;
+  resumoContexto: string;
+  passoAPasso: {
+    introducao: string;
+    desenvolvimento: string;
+    fechamento: string;
+  };
+  recursos: string[];
+  atividadePratica: string;
+  tempoEstimado: string;
+  ordem: number;
+}
+
+export interface DiagnosticoData {
+  id: string;
+  titulo: string;
+  tipo: 'diagnostico' | 'avaliacao';
+  objetivos: string[];
+  questoes: any[];
+  criteriosAvaliacao: string;
+  tempoEstimado: string;
+  posicaoSequencia: number;
+}
+
+export interface SequenciaDidaticaCompleta {
+  metadados: SequenciaDidaticaData;
+  aulas: AulaData[];
+  diagnosticos: DiagnosticoData[];
+  avaliacoes: DiagnosticoData[];
+  encadeamento: {
+    progressaoDidatica: string;
+    conexoesEntrAulas: string[];
+  };
+  cronogramaSugerido: {
+    duracao: string;
+    distribuicao: string;
+    observacoes: string;
+  };
+  generatedAt: string;
+  versao: string;
 }
 
 export class SequenciaDidaticaGenerator {
-  private builder: SequenciaDidaticaBuilder;
+  private static instance: SequenciaDidaticaGenerator;
 
-  constructor() {
-    console.log('🤖 SequenciaDidaticaGenerator: Inicializando gerador');
-    this.builder = new SequenciaDidaticaBuilder();
+  static getInstance(): SequenciaDidaticaGenerator {
+    if (!SequenciaDidaticaGenerator.instance) {
+      SequenciaDidaticaGenerator.instance = new SequenciaDidaticaGenerator();
+    }
+    return SequenciaDidaticaGenerator.instance;
   }
 
-  async generate(params: SequenciaDidaticaGenerationParams): Promise<SequenciaDidaticaData> {
-    console.log('🤖 SequenciaDidaticaGenerator: Iniciando geração com parâmetros:', params);
+  async gerarSequenciaCompleta(dados: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+    console.log('🔄 Iniciando geração da Sequência Didática completa:', dados);
 
     try {
-      // Gerar prompt para a IA
-      const prompt = this.createPrompt(params);
-      console.log('🤖 SequenciaDidaticaGenerator: Prompt criado:', prompt);
+      const prompt = this.construirPromptCompleto(dados);
+      console.log('📝 Prompt construído, enviando para IA...');
+      
+      const response = await geminiClient.generateContent(prompt);
+      console.log('✅ Resposta recebida da IA');
+      
+      const sequenciaGerada = this.processarRespostaIA(response, dados);
+      console.log('🎯 Sequência processada e estruturada');
+      
+      return sequenciaGerada;
+    } catch (error) {
+      console.error('❌ Erro na geração da Sequência Didática:', error);
+      throw new Error(`Falha na geração: ${error.message}`);
+    }
+  }
 
-      // Fazer chamada para a API Gemini
-      const response = await geminiClient.generate({
-        prompt,
-        temperature: 0.7,
-        maxTokens: 3000
-      });
+  private construirPromptCompleto(dados: SequenciaDidaticaData): string {
+    return `
+# GERAÇÃO DE SEQUÊNCIA DIDÁTICA COMPLETA
 
-      console.log('🤖 SequenciaDidaticaGenerator: Resposta da API:', response);
+## DADOS DE ENTRADA:
+- **Título/Tema:** ${dados.tituloTemaAssunto}
+- **Disciplina:** ${dados.disciplina}
+- **Ano/Série:** ${dados.anoSerie}
+- **Público-alvo:** ${dados.publicoAlvo}
+- **BNCC/Competências:** ${dados.bnccCompetencias}
+- **Objetivos de Aprendizagem:** ${dados.objetivosAprendizagem}
+- **Quantidade de Aulas:** ${dados.quantidadeAulas}
+- **Quantidade de Diagnósticos:** ${dados.quantidadeDiagnosticos}
+- **Quantidade de Avaliações:** ${dados.quantidadeAvaliacoes}
+- **Cronograma:** ${dados.cronograma}
 
-      if (!response.success) {
-        console.error('❌ SequenciaDidaticaGenerator: Erro na API:', response.error);
-        return this.generateFallback(params);
+## INSTRUÇÕES PARA GERAÇÃO:
+
+Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas especificações:
+
+### 1. ESTRUTURA DE RESPOSTA (JSON):
+\`\`\`json
+{
+  "aulas": [
+    {
+      "id": "aula_001",
+      "titulo": "Título da Aula",
+      "objetivoEspecifico": "Objetivo específico e claro",
+      "resumoContexto": "Resumo contextual da aula",
+      "passoAPasso": {
+        "introducao": "Como iniciar a aula (5-10 min)",
+        "desenvolvimento": "Atividades principais (25-30 min)",
+        "fechamento": "Síntese e próximos passos (5-10 min)"
+      },
+      "recursos": ["Material 1", "Material 2", "Material 3"],
+      "atividadePratica": "Descrição detalhada da atividade prática",
+      "tempoEstimado": "45 minutos",
+      "ordem": 1
+    }
+  ],
+  "diagnosticos": [
+    {
+      "id": "diag_001",
+      "titulo": "Diagnóstico Inicial",
+      "tipo": "diagnostico",
+      "objetivos": ["Identificar conhecimentos prévios"],
+      "questoes": [],
+      "criteriosAvaliacao": "Critérios específicos",
+      "tempoEstimado": "30 minutos",
+      "posicaoSequencia": 1
+    }
+  ],
+  "avaliacoes": [
+    {
+      "id": "aval_001",
+      "titulo": "Avaliação Formativa",
+      "tipo": "avaliacao",
+      "objetivos": ["Verificar aprendizagem"],
+      "questoes": [],
+      "criteriosAvaliacao": "Critérios específicos",
+      "tempoEstimado": "50 minutos",
+      "posicaoSequencia": 5
+    }
+  ],
+  "encadeamento": {
+    "progressaoDidatica": "Descrição da progressão lógica",
+    "conexoesEntrAulas": ["Conexão 1", "Conexão 2"]
+  },
+  "cronogramaSugerido": {
+    "duracao": "4 semanas",
+    "distribuicao": "2 aulas por semana",
+    "observacoes": "Observações importantes"
+  }
+}
+\`\`\`
+
+### 2. DIRETRIZES ESPECÍFICAS:
+
+#### Para as AULAS:
+- Crie exatamente ${dados.quantidadeAulas} aulas
+- Cada aula deve ter progressão clara e lógica
+- Passo a passo detalhado e prático
+- Recursos específicos e acessíveis
+- Atividades práticas envolventes
+- Tempo estimado realista
+
+#### Para DIAGNÓSTICOS:
+- Crie exatamente ${dados.quantidadeDiagnosticos} diagnósticos
+- Posicione estrategicamente na sequência
+- Foque em identificar lacunas de aprendizagem
+- Critérios claros de análise
+
+#### Para AVALIAÇÕES:
+- Crie exatamente ${dados.quantidadeAvaliacoes} avaliações
+- Avalie competências desenvolvidas
+- Critérios objetivos e transparentes
+- Formatos diversificados
+
+#### ENCADEAMENTO:
+- Demonstre conexão entre todas as aulas
+- Progressão didática clara e justificada
+- Preparação para próximas etapas
+
+### 3. QUALIDADE EXIGIDA:
+- Conteúdo prático e aplicável
+- Linguagem clara e direta
+- Atividades engajadoras
+- Recursos acessíveis
+- Avaliação formativa contínua
+
+**IMPORTANTE:** Retorne APENAS o JSON estruturado, sem texto adicional.
+    `;
+  }
+
+  private processarRespostaIA(response: any, dadosOriginais: SequenciaDidaticaData): SequenciaDidaticaCompleta {
+    console.log('🔍 Processando resposta da IA...');
+    
+    try {
+      // Extrair JSON da resposta
+      let jsonContent = response;
+      if (typeof response === 'string') {
+        // Tentar extrair JSON se vier como string
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          jsonContent = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('JSON não encontrado na resposta');
+        }
       }
 
-      // Construir sequência didática a partir da resposta
-      const sequenciaDidatica = this.builder
-        .buildFromAIResponse(response.result)
-        .build();
+      // Validar estrutura mínima
+      if (!jsonContent.aulas || !Array.isArray(jsonContent.aulas)) {
+        throw new Error('Estrutura de aulas inválida');
+      }
 
-      console.log('✅ SequenciaDidaticaGenerator: Sequência didática gerada com sucesso');
-      return sequenciaDidatica;
+      // Construir objeto completo
+      const sequenciaCompleta: SequenciaDidaticaCompleta = {
+        metadados: dadosOriginais,
+        aulas: jsonContent.aulas || [],
+        diagnosticos: jsonContent.diagnosticos || [],
+        avaliacoes: jsonContent.avaliacoes || [],
+        encadeamento: jsonContent.encadeamento || {
+          progressaoDidatica: 'Progressão lógica e sequencial',
+          conexoesEntrAulas: []
+        },
+        cronogramaSugerido: jsonContent.cronogramaSugerido || {
+          duracao: `${dadosOriginais.quantidadeAulas} aulas`,
+          distribuicao: 'Conforme cronograma escolar',
+          observacoes: 'Ajustar conforme necessidade da turma'
+        },
+        generatedAt: new Date().toISOString(),
+        versao: '1.0'
+      };
 
+      console.log('✅ Sequência estruturada com sucesso:', {
+        aulas: sequenciaCompleta.aulas.length,
+        diagnosticos: sequenciaCompleta.diagnosticos.length,
+        avaliacoes: sequenciaCompleta.avaliacoes.length
+      });
+
+      return sequenciaCompleta;
     } catch (error) {
-      console.error('❌ SequenciaDidaticaGenerator: Erro durante geração:', error);
-      return this.generateFallback(params);
+      console.error('❌ Erro ao processar resposta da IA:', error);
+      
+      // Retornar estrutura mínima em caso de erro
+      return {
+        metadados: dadosOriginais,
+        aulas: [],
+        diagnosticos: [],
+        avaliacoes: [],
+        encadeamento: {
+          progressaoDidatica: 'Erro na geração - tente novamente',
+          conexoesEntrAulas: []
+        },
+        cronogramaSugerido: {
+          duracao: 'Não definido',
+          distribuicao: 'Não definido',
+          observacoes: 'Erro na geração'
+        },
+        generatedAt: new Date().toISOString(),
+        versao: '1.0'
+      };
     }
   }
 
-  private createPrompt(params: SequenciaDidaticaGenerationParams): string {
-    console.log('📝 SequenciaDidaticaGenerator: Criando prompt personalizado');
-
-    return `
-Você é um especialista em educação e precisa criar uma SEQUÊNCIA DIDÁTICA completa e detalhada.
-
-INFORMAÇÕES FORNECIDAS:
-- Tema: ${params.tema}
-- Disciplina: ${params.disciplina}
-- Série/Ano: ${params.serieAno}
-- Duração: ${params.duracao || '4 aulas de 50 minutos'}
-- Objetivos específicos: ${params.objetivos || 'Não especificado'}
-- Contexto: ${params.contexto || 'Ensino regular'}
-- Competências BNCC: ${params.competenciasBNCC?.join(', ') || 'A definir'}
-- Recursos disponíveis: ${params.recursosDisponiveis?.join(', ') || 'Recursos básicos de sala de aula'}
-
-ESTRUTURA OBRIGATÓRIA DA SEQUÊNCIA DIDÁTICA:
-
-{
-  "titulo": "Título claro e específico da sequência didática",
-  "disciplina": "${params.disciplina}",
-  "serieAno": "${params.serieAno}",
-  "duracao": "${params.duracao || '4 aulas de 50 minutos'}",
-
-  "objetivos": {
-    "geral": "Objetivo geral amplo e claro",
-    "especificos": [
-      "Objetivo específico 1",
-      "Objetivo específico 2",
-      "Objetivo específico 3"
-    ]
-  },
-
-  "competenciasBNCC": [
-    "Competência 1 específica da BNCC",
-    "Competência 2 específica da BNCC",
-    "Competência 3 específica da BNCC"
-  ],
-
-  "conteudos": [
-    "Conteúdo conceitual 1",
-    "Conteúdo procedimental 2",
-    "Conteúdo atitudinal 3"
-  ],
-
-  "metodologia": {
-    "estrategias": [
-      "Estratégia metodológica 1",
-      "Estratégia metodológica 2",
-      "Estratégia metodológica 3"
-    ],
-    "recursos": [
-      "Recurso didático 1",
-      "Recurso didático 2",
-      "Recurso didático 3"
-    ]
-  },
-
-  "etapas": [
-    {
-      "numero": 1,
-      "titulo": "Título da Etapa 1",
-      "duracao": "1 aula",
-      "objetivoEspecifico": "Objetivo específico desta etapa",
-      "atividades": [
-        "Atividade 1.1 - Descrição detalhada",
-        "Atividade 1.2 - Descrição detalhada",
-        "Atividade 1.3 - Descrição detalhada"
-      ],
-      "recursos": [
-        "Recurso específico 1",
-        "Recurso específico 2"
-      ],
-      "avaliacao": "Como será avaliada esta etapa"
-    },
-    {
-      "numero": 2,
-      "titulo": "Título da Etapa 2",
-      "duracao": "2 aulas",
-      "objetivoEspecifico": "Objetivo específico desta etapa",
-      "atividades": [
-        "Atividade 2.1 - Descrição detalhada",
-        "Atividade 2.2 - Descrição detalhada",
-        "Atividade 2.3 - Descrição detalhada"
-      ],
-      "recursos": [
-        "Recurso específico 1",
-        "Recurso específico 2"
-      ],
-      "avaliacao": "Como será avaliada esta etapa"
-    },
-    {
-      "numero": 3,
-      "titulo": "Título da Etapa 3",
-      "duracao": "1 aula",
-      "objetivoEspecifico": "Objetivo específico desta etapa",
-      "atividades": [
-        "Atividade 3.1 - Descrição detalhada",
-        "Atividade 3.2 - Descrição detalhada",
-        "Atividade 3.3 - Descrição detalhada"
-      ],
-      "recursos": [
-        "Recurso específico 1",
-        "Recurso específico 2"
-      ],
-      "avaliacao": "Como será avaliada esta etapa"
-    }
-  ],
-
-  "avaliacaoFinal": {
-    "criterios": [
-      "Critério de avaliação 1",
-      "Critério de avaliação 2",
-      "Critério de avaliação 3"
-    ],
-    "instrumentos": [
-      "Instrumento 1",
-      "Instrumento 2",
-      "Instrumento 3"
-    ],
-    "forma": "Descrição da forma de avaliação"
-  },
-
-  "recursosNecessarios": [
-    "Recurso necessário 1",
-    "Recurso necessário 2",
-    "Recurso necessário 3"
-  ],
-
-  "referencias": [
-    "Referência bibliográfica 1",
-    "Referência bibliográfica 2",
-    "Referência bibliográfica 3"
-  ]
-}
-
-DIRETRIZES IMPORTANTES:
-1. A sequência deve ser ESPECÍFICA para o tema "${params.tema}" na disciplina ${params.disciplina}
-2. Adapte o conteúdo para a faixa etária de ${params.serieAno}
-3. Cada etapa deve ter progressão lógica e conexão com as outras
-4. As atividades devem ser práticas, viáveis e envolventes
-5. Inclua diferentes estratégias metodológicas para atender diversos estilos de aprendizagem
-6. A avaliação deve ser formativa e processual
-7. Use competências reais da BNCC para ${params.disciplina}
-8. NÃO use dados fictícios ou genéricos demais
-
-RETORNE APENAS o JSON válido da sequência didática, sem explicações adicionais.
-    `.trim();
-  }
-
-  private generateFallback(params: SequenciaDidaticaGenerationParams): SequenciaDidaticaData {
-    console.log('🔄 SequenciaDidaticaGenerator: Gerando sequência didática de fallback');
-
-    return this.builder
-      .setTitulo(`Sequência Didática: ${params.tema}`)
-      .setDisciplina(params.disciplina)
-      .setSerieAno(params.serieAno)
-      .setDuracao(params.duracao || '4 aulas de 50 minutos')
-      .setObjetivos(
-        `Desenvolver conhecimentos e habilidades sobre ${params.tema}`,
-        [
-          `Compreender os conceitos básicos de ${params.tema}`,
-          `Aplicar os conhecimentos em situações práticas`,
-          `Desenvolver pensamento crítico sobre o tema`
-        ]
-      )
-      .setCompetenciasBNCC([
-        'Competência específica da área de conhecimento',
-        'Desenvolvimento de habilidades cognitivas',
-        'Formação para cidadania'
-      ])
-      .setConteudos([
-        `Fundamentos teóricos de ${params.tema}`,
-        'Aplicações práticas e contextualizadas',
-        'Reflexões e análises críticas'
-      ])
-      .setMetodologia(
-        [
-          'Aula expositiva dialogada',
-          'Atividades práticas em grupos',
-          'Discussões e debates',
-          'Resolução de problemas'
-        ],
-        [
-          'Quadro e projetor',
-          'Material impresso',
-          'Recursos audiovisuais',
-          'Atividades interativas'
-        ]
-      )
-      .addEtapa({
-        numero: 1,
-        titulo: `Introdução a ${params.tema}`,
-        duracao: '1 aula',
-        objetivoEspecifico: `Apresentar e contextualizar ${params.tema}`,
-        atividades: [
-          'Discussão inicial sobre conhecimentos prévios',
-          `Apresentação conceitual de ${params.tema}`,
-          'Atividade diagnóstica'
-        ],
-        recursos: ['Quadro', 'Projetor', 'Material impresso'],
-        avaliacao: 'Participação nas discussões e atividade diagnóstica'
-      })
-      .addEtapa({
-        numero: 2,
-        titulo: `Desenvolvimento dos Conceitos de ${params.tema}`,
-        duracao: '2 aulas',
-        objetivoEspecifico: `Aprofundar o conhecimento sobre ${params.tema}`,
-        atividades: [
-          'Explicação detalhada dos conceitos',
-          'Exercícios práticos orientados',
-          'Trabalho colaborativo em grupos',
-          'Apresentação dos resultados'
-        ],
-        recursos: ['Livro didático', 'Atividades práticas', 'Material de apoio'],
-        avaliacao: 'Resolução de exercícios e apresentação em grupo'
-      })
-      .addEtapa({
-        numero: 3,
-        titulo: `Aplicação e Síntese de ${params.tema}`,
-        duracao: '1 aula',
-        objetivoEspecifico: `Aplicar os conhecimentos adquiridos sobre ${params.tema}`,
-        atividades: [
-          'Atividade de aplicação prática',
-          'Síntese coletiva dos aprendizados',
-          'Avaliação final do processo',
-          'Reflexão sobre a aplicabilidade'
-        ],
-        recursos: ['Material para atividade prática', 'Ficha de avaliação'],
-        avaliacao: 'Atividade prática e participação na síntese'
-      })
-      .setAvaliacaoFinal(
-        [
-          'Compreensão dos conceitos fundamentais',
-          'Capacidade de aplicação prática',
-          'Participação ativa nas atividades',
-          'Colaboração e trabalho em equipe'
-        ],
-        [
-          'Observação sistemática',
-          'Atividades escritas',
-          'Apresentações orais',
-          'Autoavaliação'
-        ],
-        'Avaliação formativa e processual durante toda a sequência'
-      )
-      .setRecursosNecessarios([
-        'Sala de aula adequada',
-        'Material didático específico',
-        'Recursos audiovisuais básicos',
-        'Tempo suficiente para desenvolvimento'
-      ])
-      .setReferencias([
-        'Base Nacional Comum Curricular (BNCC)',
-        'Livro didático da disciplina',
-        'Materiais complementares específicos do tema'
-      ])
-      .build();
+  async regenerarSequencia(
+    dadosOriginais: SequenciaDidaticaData, 
+    dadosAlterados: Partial<SequenciaDidaticaData>
+  ): Promise<SequenciaDidaticaCompleta> {
+    console.log('🔄 Regenerando sequência com alterações:', dadosAlterados);
+    
+    const dadosCompletos = { ...dadosOriginais, ...dadosAlterados };
+    return this.gerarSequenciaCompleta(dadosCompletos);
   }
 }
 
-export default SequenciaDidaticaGenerator;
+export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator.getInstance();

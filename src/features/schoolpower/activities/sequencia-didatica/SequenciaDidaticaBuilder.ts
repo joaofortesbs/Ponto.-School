@@ -1,376 +1,145 @@
 
-export interface SequenciaDidaticaData {
-  titulo: string;
-  disciplina: string;
-  serieAno: string;
-  duracao: string;
-  objetivos: {
-    geral: string;
-    especificos: string[];
-  };
-  competenciasBNCC: string[];
-  conteudos: string[];
-  metodologia: {
-    estrategias: string[];
-    recursos: string[];
-  };
-  etapas: {
-    numero: number;
-    titulo: string;
-    duracao: string;
-    objetivoEspecifico: string;
-    atividades: string[];
-    recursos: string[];
-    avaliacao: string;
-  }[];
-  avaliacaoFinal: {
-    criterios: string[];
-    instrumentos: string[];
-    forma: string;
-  };
-  recursosNecessarios: string[];
-  referencias: string[];
-}
+import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
+import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
 export class SequenciaDidaticaBuilder {
-  private data: Partial<SequenciaDidaticaData> = {};
+  private static instance: SequenciaDidaticaBuilder;
 
-  constructor() {
-    console.log('🏗️ SequenciaDidaticaBuilder: Inicializando builder');
-    this.initializeDefaults();
+  static getInstance(): SequenciaDidaticaBuilder {
+    if (!SequenciaDidaticaBuilder.instance) {
+      SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
+    }
+    return SequenciaDidaticaBuilder.instance;
   }
 
-  private initializeDefaults(): void {
-    this.data = {
-      titulo: '',
-      disciplina: '',
-      serieAno: '',
-      duracao: '',
-      objetivos: {
-        geral: '',
-        especificos: []
-      },
-      competenciasBNCC: [],
-      conteudos: [],
-      metodologia: {
-        estrategias: [],
-        recursos: []
-      },
-      etapas: [],
-      avaliacaoFinal: {
-        criterios: [],
-        instrumentos: [],
-        forma: ''
-      },
-      recursosNecessarios: [],
-      referencias: []
-    };
-  }
+  async construirSequenciaDidatica(formData: any): Promise<{ success: boolean; data?: SequenciaDidaticaCompleta; error?: string }> {
+    console.log('🏗️ Iniciando construção da Sequência Didática:', formData);
 
-  setTitulo(titulo: string): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo título:', titulo);
-    this.data.titulo = titulo;
-    return this;
-  }
-
-  setDisciplina(disciplina: string): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo disciplina:', disciplina);
-    this.data.disciplina = disciplina;
-    return this;
-  }
-
-  setSerieAno(serieAno: string): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo série/ano:', serieAno);
-    this.data.serieAno = serieAno;
-    return this;
-  }
-
-  setDuracao(duracao: string): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo duração:', duracao);
-    this.data.duracao = duracao;
-    return this;
-  }
-
-  setObjetivos(geral: string, especificos: string[]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo objetivos');
-    this.data.objetivos = { geral, especificos };
-    return this;
-  }
-
-  setCompetenciasBNCC(competencias: string[]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo competências BNCC');
-    this.data.competenciasBNCC = competencias;
-    return this;
-  }
-
-  setConteudos(conteudos: string[]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo conteúdos');
-    this.data.conteudos = conteudos;
-    return this;
-  }
-
-  setMetodologia(estrategias: string[], recursos: string[]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo metodologia');
-    this.data.metodologia = { estrategias, recursos };
-    return this;
-  }
-
-  addEtapa(etapa: SequenciaDidaticaData['etapas'][0]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Adicionando etapa:', etapa.titulo);
-    if (!this.data.etapas) this.data.etapas = [];
-    this.data.etapas.push(etapa);
-    return this;
-  }
-
-  setAvaliacaoFinal(criterios: string[], instrumentos: string[], forma: string): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo avaliação final');
-    this.data.avaliacaoFinal = { criterios, instrumentos, forma };
-    return this;
-  }
-
-  setRecursosNecessarios(recursos: string[]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo recursos necessários');
-    this.data.recursosNecessarios = recursos;
-    return this;
-  }
-
-  setReferencias(referencias: string[]): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Definindo referências');
-    this.data.referencias = referencias;
-    return this;
-  }
-
-  // Método para construir a partir de dados brutos da IA
-  buildFromAIResponse(response: string): this {
-    console.log('🏗️ SequenciaDidaticaBuilder: Construindo a partir da resposta da IA');
-    
     try {
-      // Tentar parsear como JSON primeiro
-      const jsonData = JSON.parse(response);
-      this.buildFromStructuredData(jsonData);
+      // Mapear dados do formulário para formato esperado
+      const dadosSequencia: SequenciaDidaticaData = {
+        tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
+        anoSerie: formData.anoSerie || formData.schoolYear || '',
+        disciplina: formData.disciplina || formData.subject || '',
+        bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
+        publicoAlvo: formData.publicoAlvo || formData.context || '',
+        objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
+        quantidadeAulas: formData.quantidadeAulas || '4',
+        quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
+        quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
+        cronograma: formData.cronograma || ''
+      };
+
+      console.log('📋 Dados mapeados:', dadosSequencia);
+
+      // Validar dados essenciais
+      const validacao = this.validarDados(dadosSequencia);
+      if (!validacao.valido) {
+        throw new Error(`Dados inválidos: ${validacao.erro}`);
+      }
+
+      // Gerar sequência completa
+      const sequenciaCompleta = await sequenciaDidaticaGenerator.gerarSequenciaCompleta(dadosSequencia);
+
+      // Salvar no localStorage
+      const storageKey = `sequencia_didatica_${Date.now()}`;
+      localStorage.setItem(storageKey, JSON.stringify(sequenciaCompleta));
+      
+      // Também salvar com chave específica para recuperação
+      const activityKey = 'constructed_sequencia-didatica_latest';
+      localStorage.setItem(activityKey, JSON.stringify(sequenciaCompleta));
+
+      console.log('✅ Sequência Didática construída e salva:', storageKey);
+
+      return {
+        success: true,
+        data: sequenciaCompleta
+      };
+
     } catch (error) {
-      console.log('🏗️ SequenciaDidaticaBuilder: Resposta não é JSON, processando como texto');
-      this.buildFromTextResponse(response);
-    }
-
-    return this;
-  }
-
-  private buildFromStructuredData(data: any): void {
-    console.log('🏗️ SequenciaDidaticaBuilder: Construindo a partir de dados estruturados');
-    
-    if (data.titulo) this.setTitulo(data.titulo);
-    if (data.disciplina) this.setDisciplina(data.disciplina);
-    if (data.serieAno || data.serie_ano) this.setSerieAno(data.serieAno || data.serie_ano);
-    if (data.duracao) this.setDuracao(data.duracao);
-    
-    if (data.objetivos) {
-      this.setObjetivos(
-        data.objetivos.geral || '',
-        data.objetivos.especificos || []
-      );
-    }
-    
-    if (data.competenciasBNCC || data.competencias) {
-      this.setCompetenciasBNCC(data.competenciasBNCC || data.competencias);
-    }
-    
-    if (data.conteudos) {
-      this.setConteudos(data.conteudos);
-    }
-    
-    if (data.metodologia) {
-      this.setMetodologia(
-        data.metodologia.estrategias || [],
-        data.metodologia.recursos || []
-      );
-    }
-    
-    if (data.etapas && Array.isArray(data.etapas)) {
-      data.etapas.forEach((etapa: any) => {
-        this.addEtapa({
-          numero: etapa.numero || 1,
-          titulo: etapa.titulo || '',
-          duracao: etapa.duracao || '',
-          objetivoEspecifico: etapa.objetivoEspecifico || etapa.objetivo || '',
-          atividades: etapa.atividades || [],
-          recursos: etapa.recursos || [],
-          avaliacao: etapa.avaliacao || ''
-        });
-      });
-    }
-    
-    if (data.avaliacaoFinal || data.avaliacao_final) {
-      const avaliacao = data.avaliacaoFinal || data.avaliacao_final;
-      this.setAvaliacaoFinal(
-        avaliacao.criterios || [],
-        avaliacao.instrumentos || [],
-        avaliacao.forma || ''
-      );
-    }
-    
-    if (data.recursosNecessarios || data.recursos_necessarios) {
-      this.setRecursosNecessarios(data.recursosNecessarios || data.recursos_necessarios);
-    }
-    
-    if (data.referencias) {
-      this.setReferencias(data.referencias);
+      console.error('❌ Erro na construção da Sequência Didática:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro desconhecido na construção'
+      };
     }
   }
 
-  private buildFromTextResponse(response: string): void {
-    console.log('🏗️ SequenciaDidaticaBuilder: Construindo a partir de resposta textual');
-    
-    // Extrair título
-    const tituloMatch = response.match(/(?:título|title)[:\s]*([^\n]+)/i);
-    if (tituloMatch) this.setTitulo(tituloMatch[1].trim());
-    
-    // Extrair disciplina
-    const disciplinaMatch = response.match(/(?:disciplina|subject)[:\s]*([^\n]+)/i);
-    if (disciplinaMatch) this.setDisciplina(disciplinaMatch[1].trim());
-    
-    // Extrair série/ano
-    const serieMatch = response.match(/(?:série|ano|grade|series?)[:\s]*([^\n]+)/i);
-    if (serieMatch) this.setSerieAno(serieMatch[1].trim());
-    
-    // Extrair duração
-    const duracaoMatch = response.match(/(?:duração|duration|tempo)[:\s]*([^\n]+)/i);
-    if (duracaoMatch) this.setDuracao(duracaoMatch[1].trim());
-    
-    // Definir valores padrão quando não encontrados
-    if (!this.data.titulo) this.setTitulo('Sequência Didática');
-    if (!this.data.disciplina) this.setDisciplina('Multidisciplinar');
-    if (!this.data.serieAno) this.setSerieAno('Ensino Fundamental');
-    if (!this.data.duracao) this.setDuracao('4 aulas');
-    
-    // Adicionar etapa padrão se não houver etapas
-    if (!this.data.etapas || this.data.etapas.length === 0) {
-      this.addEtapa({
-        numero: 1,
-        titulo: 'Introdução ao Tema',
-        duracao: '1 aula',
-        objetivoEspecifico: 'Apresentar o tema central da sequência didática',
-        atividades: ['Discussão inicial', 'Apresentação conceitual', 'Atividade diagnóstica'],
-        recursos: ['Quadro', 'Material audiovisual', 'Folhas para atividades'],
-        avaliacao: 'Participação nas discussões e resolução da atividade diagnóstica'
-      });
+  async regenerarSequencia(
+    dadosOriginais: SequenciaDidaticaData,
+    alteracoes: Partial<SequenciaDidaticaData>
+  ): Promise<{ success: boolean; data?: SequenciaDidaticaCompleta; error?: string }> {
+    console.log('🔄 Regenerando Sequência Didática com alterações:', alteracoes);
+
+    try {
+      const sequenciaRegenerada = await sequenciaDidaticaGenerator.regenerarSequencia(dadosOriginais, alteracoes);
       
-      this.addEtapa({
-        numero: 2,
-        titulo: 'Desenvolvimento dos Conceitos',
-        duracao: '2 aulas',
-        objetivoEspecifico: 'Aprofundar o conhecimento sobre o tema',
-        atividades: ['Explicação teórica', 'Exercícios práticos', 'Trabalho em grupos'],
-        recursos: ['Livro didático', 'Exercícios impressos', 'Material de apoio'],
-        avaliacao: 'Resolução de exercícios e apresentação dos grupos'
-      });
-      
-      this.addEtapa({
-        numero: 3,
-        titulo: 'Aplicação e Síntese',
-        duracao: '1 aula',
-        objetivoEspecifico: 'Aplicar os conhecimentos adquiridos',
-        atividades: ['Atividade de aplicação', 'Síntese dos aprendizados', 'Avaliação final'],
-        recursos: ['Atividade impressa', 'Material para apresentação'],
-        avaliacao: 'Atividade de aplicação e participação na síntese'
-      });
+      // Atualizar localStorage
+      const activityKey = 'constructed_sequencia-didatica_latest';
+      localStorage.setItem(activityKey, JSON.stringify(sequenciaRegenerada));
+
+      console.log('✅ Sequência regenerada com sucesso');
+
+      return {
+        success: true,
+        data: sequenciaRegenerada
+      };
+    } catch (error) {
+      console.error('❌ Erro na regeneração:', error);
+      return {
+        success: false,
+        error: error.message || 'Erro na regeneração'
+      };
     }
   }
 
-  build(): SequenciaDidaticaData {
-    console.log('🏗️ SequenciaDidaticaBuilder: Construindo objeto final');
-    
-    // Validar dados essenciais
-    if (!this.data.titulo) this.data.titulo = 'Sequência Didática';
-    if (!this.data.disciplina) this.data.disciplina = 'Multidisciplinar';
-    if (!this.data.serieAno) this.data.serieAno = 'Ensino Fundamental';
-    if (!this.data.duracao) this.data.duracao = '4 aulas';
-    
-    // Garantir estrutura completa
-    if (!this.data.objetivos) {
-      this.data.objetivos = {
-        geral: 'Promover o aprendizado significativo através de atividades sequenciadas',
-        especificos: [
-          'Desenvolver habilidades específicas do tema',
-          'Estimular o pensamento crítico',
-          'Promover a participação ativa dos estudantes'
-        ]
-      };
+  private validarDados(dados: SequenciaDidaticaData): { valido: boolean; erro?: string } {
+    if (!dados.tituloTemaAssunto?.trim()) {
+      return { valido: false, erro: 'Título do tema/assunto é obrigatório' };
     }
-    
-    if (!this.data.competenciasBNCC) {
-      this.data.competenciasBNCC = [
-        'Competência específica relacionada ao tema',
-        'Desenvolvimento do pensamento científico',
-        'Comunicação e expressão'
-      ];
+
+    if (!dados.disciplina?.trim()) {
+      return { valido: false, erro: 'Disciplina é obrigatória' };
     }
-    
-    if (!this.data.conteudos) {
-      this.data.conteudos = [
-        'Conceitos fundamentais do tema',
-        'Aplicações práticas',
-        'Relações interdisciplinares'
-      ];
+
+    if (!dados.anoSerie?.trim()) {
+      return { valido: false, erro: 'Ano/série é obrigatório' };
     }
-    
-    if (!this.data.metodologia) {
-      this.data.metodologia = {
-        estrategias: [
-          'Aula expositiva dialogada',
-          'Trabalho em grupos',
-          'Atividades práticas',
-          'Discussão e debate'
-        ],
-        recursos: [
-          'Quadro e giz/marcador',
-          'Material audiovisual',
-          'Livro didático',
-          'Atividades impressas'
-        ]
-      };
+
+    if (!dados.objetivosAprendizagem?.trim()) {
+      return { valido: false, erro: 'Objetivos de aprendizagem são obrigatórios' };
     }
-    
-    if (!this.data.avaliacaoFinal) {
-      this.data.avaliacaoFinal = {
-        criterios: [
-          'Participação nas atividades',
-          'Compreensão dos conceitos',
-          'Aplicação dos conhecimentos',
-          'Trabalho colaborativo'
-        ],
-        instrumentos: [
-          'Observação direta',
-          'Atividades escritas',
-          'Apresentações',
-          'Autoavaliação'
-        ],
-        forma: 'Avaliação processual e formativa'
-      };
+
+    if (!dados.quantidadeAulas || parseInt(dados.quantidadeAulas) < 1) {
+      return { valido: false, erro: 'Quantidade de aulas deve ser pelo menos 1' };
     }
-    
-    if (!this.data.recursosNecessarios) {
-      this.data.recursosNecessarios = [
-        'Espaço físico adequado',
-        'Material didático',
-        'Recursos audiovisuais',
-        'Tempo suficiente para desenvolvimento'
-      ];
+
+    if (!dados.quantidadeDiagnosticos || parseInt(dados.quantidadeDiagnosticos) < 0) {
+      return { valido: false, erro: 'Quantidade de diagnósticos deve ser 0 ou maior' };
     }
-    
-    if (!this.data.referencias) {
-      this.data.referencias = [
-        'Base Nacional Comum Curricular (BNCC)',
-        'Livro didático adotado',
-        'Recursos complementares específicos do tema'
-      ];
+
+    if (!dados.quantidadeAvaliacoes || parseInt(dados.quantidadeAvaliacoes) < 0) {
+      return { valido: false, erro: 'Quantidade de avaliações deve ser 0 ou maior' };
     }
-    
-    const result = this.data as SequenciaDidaticaData;
-    console.log('✅ SequenciaDidaticaBuilder: Sequência didática construída com sucesso', result);
-    
-    return result;
+
+    return { valido: true };
+  }
+
+  carregarSequenciaSalva(): SequenciaDidaticaCompleta | null {
+    try {
+      const activityKey = 'constructed_sequencia-didatica_latest';
+      const savedData = localStorage.getItem(activityKey);
+      
+      if (savedData) {
+        return JSON.parse(savedData);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Erro ao carregar sequência salva:', error);
+      return null;
+    }
   }
 }
 
-export default SequenciaDidaticaBuilder;
+export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();

@@ -1,6 +1,5 @@
+
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
-import { SequenciaDidaticaGenerator, SequenciaDidaticaGenerationParams } from './SequenciaDidaticaGenerator';
-import { SequenciaDidaticaData } from './SequenciaDidaticaBuilder';
 
 export interface SequenciaDidaticaCustomFields {
   [key: string]: string;
@@ -55,30 +54,45 @@ export const sequenciaDidaticaFieldMapping = {
  * Processa dados de uma atividade de Sequência Didática do Action Plan
  * para o formato do formulário do modal
  */
-export function processSequenciaDidaticaData(formData: ActivityFormData): SequenciaDidaticaData {
-  console.log('📚 Processando dados da Sequência Didática:', formData);
+export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaData {
+  console.log('📚 Processando dados da Sequência Didática:', activityData);
 
-  const processedData: SequenciaDidaticaData = {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-    anoSerie: formData.anoSerie || formData.schoolYear || '',
-    disciplina: formData.disciplina || formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
-    cronograma: formData.cronograma || ''
+  const customFields = activityData.customFields || {};
+  
+  return {
+    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || 
+                      customFields['tituloTemaAssunto'] || 
+                      activityData.title || '',
+    anoSerie: customFields['Ano / Série'] || 
+              customFields['anoSerie'] || 
+              activityData.schoolYear || '',
+    disciplina: customFields['Disciplina'] || 
+                customFields['disciplina'] || 
+                activityData.subject || '',
+    bnccCompetencias: customFields['BNCC / Competências'] || 
+                      customFields['bnccCompetencias'] || 
+                      activityData.competencies || '',
+    publicoAlvo: customFields['Público-alvo'] || 
+                 customFields['publicoAlvo'] || 
+                 activityData.context || '',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || 
+                           customFields['objetivosAprendizagem'] || 
+                           activityData.objectives || '',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || 
+                     customFields['quantidadeAulas'] || '4',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || 
+                            customFields['quantidadeDiagnosticos'] || '1',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || 
+                          customFields['quantidadeAvaliacoes'] || '1',
+    cronograma: customFields['Cronograma'] || 
+                customFields['cronograma'] || ''
   };
-
-  console.log('✅ Dados processados:', processedData);
-  return processedData;
 }
 
 /**
- * Converte dados do ActivityFormData para SequenciaDidaticaData
+ * Converte dados do formulário para o formato esperado pela API
  */
-export function activityFormToSequenciaData(formData: ActivityFormData): SequenciaDidaticaData {
+export function formDataToSequenciaDidatica(formData: ActivityFormData): SequenciaDidaticaData {
   return {
     tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
     anoSerie: formData.anoSerie || formData.schoolYear || '',
@@ -94,149 +108,44 @@ export function activityFormToSequenciaData(formData: ActivityFormData): Sequenc
 }
 
 /**
- * Valida se os dados essenciais estão presentes
+ * Valida se os dados da Sequência Didática estão completos
  */
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { valid: boolean; errors: string[] } {
+export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { 
+  isValid: boolean; 
+  errors: string[] 
+} {
   const errors: string[] = [];
 
   if (!data.tituloTemaAssunto?.trim()) {
     errors.push('Título do tema/assunto é obrigatório');
   }
 
-  if (!data.anoSerie?.trim()) {
-    errors.push('Ano/série é obrigatório');
-  }
-
   if (!data.disciplina?.trim()) {
     errors.push('Disciplina é obrigatória');
+  }
+
+  if (!data.anoSerie?.trim()) {
+    errors.push('Ano/série é obrigatório');
   }
 
   if (!data.objetivosAprendizagem?.trim()) {
     errors.push('Objetivos de aprendizagem são obrigatórios');
   }
 
-  const quantAulas = parseInt(data.quantidadeAulas || '0');
-  if (quantAulas <= 0) {
-    errors.push('Quantidade de aulas deve ser maior que 0');
+  if (!data.quantidadeAulas || parseInt(data.quantidadeAulas) < 1) {
+    errors.push('Quantidade de aulas deve ser pelo menos 1');
   }
 
-  const quantDiag = parseInt(data.quantidadeDiagnosticos || '0');
-  if (quantDiag < 0) {
-    errors.push('Quantidade de diagnósticos deve ser 0 ou maior');
+  if (data.quantidadeDiagnosticos && parseInt(data.quantidadeDiagnosticos) < 0) {
+    errors.push('Quantidade de diagnósticos não pode ser negativa');
   }
 
-  const quantAval = parseInt(data.quantidadeAvaliacoes || '0');
-  if (quantAval < 0) {
-    errors.push('Quantidade de avaliações deve ser 0 ou maior');
+  if (data.quantidadeAvaliacoes && parseInt(data.quantidadeAvaliacoes) < 0) {
+    errors.push('Quantidade de avaliações não pode ser negativa');
   }
 
   return {
-    valid: errors.length === 0,
+    isValid: errors.length === 0,
     errors
   };
 }
-
-export interface ProcessSequenciaDidaticaParams {
-  tema: string;
-  disciplina: string;
-  serieAno: string;
-  duracao?: string;
-  objetivos?: string;
-  contexto?: string;
-  competenciasBNCC?: string[];
-  recursosDisponiveis?: string[];
-}
-
-export class SequenciaDidaticaProcessor {
-  private generator: SequenciaDidaticaGenerator;
-
-  constructor() {
-    console.log('⚙️ SequenciaDidaticaProcessor: Inicializando processador');
-    this.generator = new SequenciaDidaticaGenerator();
-  }
-
-  async process(params: ProcessSequenciaDidaticaParams): Promise<SequenciaDidaticaData> {
-    console.log('⚙️ SequenciaDidaticaProcessor: Processando parâmetros:', params);
-
-    try {
-      // Validar parâmetros obrigatórios
-      this.validateParams(params);
-
-      // Converter parâmetros para o formato do gerador
-      const generationParams: SequenciaDidaticaGenerationParams = {
-        tema: params.tema,
-        disciplina: params.disciplina,
-        serieAno: params.serieAno,
-        duracao: params.duracao || '4 aulas de 50 minutos',
-        objetivos: params.objetivos,
-        contexto: params.contexto,
-        competenciasBNCC: params.competenciasBNCC,
-        recursosDisponiveis: params.recursosDisponiveis
-      };
-
-      console.log('⚙️ SequenciaDidaticaProcessor: Parâmetros convertidos:', generationParams);
-
-      // Gerar sequência didática
-      const sequenciaDidatica = await this.generator.generate(generationParams);
-
-      console.log('✅ SequenciaDidaticaProcessor: Sequência didática processada com sucesso');
-      return sequenciaDidatica;
-
-    } catch (error) {
-      console.error('❌ SequenciaDidaticaProcessor: Erro durante processamento:', error);
-      throw new Error(`Erro ao processar sequência didática: ${error.message}`);
-    }
-  }
-
-  private validateParams(params: ProcessSequenciaDidaticaParams): void {
-    console.log('🔍 SequenciaDidaticaProcessor: Validando parâmetros');
-
-    if (!params.tema || params.tema.trim().length === 0) {
-      throw new Error('Tema é obrigatório para gerar a sequência didática');
-    }
-
-    if (!params.disciplina || params.disciplina.trim().length === 0) {
-      throw new Error('Disciplina é obrigatória para gerar a sequência didática');
-    }
-
-    if (!params.serieAno || params.serieAno.trim().length === 0) {
-      throw new Error('Série/Ano é obrigatório para gerar a sequência didática');
-    }
-
-    console.log('✅ SequenciaDidaticaProcessor: Parâmetros validados com sucesso');
-  }
-
-  // Método para processar dados vindos do modal
-  async processFromModal(modalData: any): Promise<SequenciaDidaticaData> {
-    console.log('📝 SequenciaDidaticaProcessor: Processando dados do modal:', modalData);
-
-    // Extrair dados do modal
-    const params: ProcessSequenciaDidaticaParams = {
-      tema: modalData.tema || modalData.titulo || '',
-      disciplina: modalData.disciplina || '',
-      serieAno: modalData.serieAno || modalData.serie_ano || '',
-      duracao: modalData.duracao || '',
-      objetivos: modalData.objetivos || '',
-      contexto: modalData.contexto || '',
-      competenciasBNCC: modalData.competenciasBNCC || [],
-      recursosDisponiveis: modalData.recursosDisponiveis || []
-    };
-
-    return this.process(params);
-  }
-
-  // Método para processar com dados mínimos (fallback)
-  async processMinimal(tema: string, disciplina: string, serieAno: string): Promise<SequenciaDidaticaData> {
-    console.log('🔄 SequenciaDidaticaProcessor: Processamento mínimo:', { tema, disciplina, serieAno });
-
-    return this.process({
-      tema,
-      disciplina,
-      serieAno,
-      duracao: '4 aulas de 50 minutos',
-      contexto: 'Ensino regular'
-    });
-  }
-}
-
-export default SequenciaDidaticaProcessor;

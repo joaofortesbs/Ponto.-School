@@ -80,7 +80,7 @@ export function SidebarNav({
   const [isModeTransitioning, setIsModeTransitioning] = useState(false);
   const [isMenuAnimating, setIsMenuAnimating] = useState(false);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
-  const [isCardHovered, setIsCardHovered] = useState(false);
+  const [isCardHovered, setIsCardHovered] = useState(false); // Variável isCardHovered agora está definida
 
   // Função para adicionar timeouts ao array
   const addTimeout = (timeout: NodeJS.Timeout) => {
