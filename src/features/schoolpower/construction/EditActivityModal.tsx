@@ -768,7 +768,20 @@ const EditActivityModal = ({
             progress: 50,
             currentStep: 'Gerando sequência didática...'
           });
-          builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formData);
+          const sequenciaCompleta = await sequenciaDidaticaBuilder.buildSequencia(formData);
+
+              console.log('🎯 Sequência Didática construída com sucesso:', sequenciaCompleta);
+
+              // Atualizar dados no armazenamento
+              await sequenciaDidaticaBuilder.saveSequencia(sequenciaCompleta);
+
+              // Definir dados da atividade construída com ID único
+              builtData = {
+                ...sequenciaCompleta,
+                id: activity.id,
+                createdAt: new Date().toISOString(),
+                isBuilt: true
+              };
           break;
 
         case 'plano-aula':
