@@ -158,7 +158,7 @@ export class SequenciaDidaticaBuilder {
   }
 }
 
-export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();
+export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();aDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();
 
 // Inicializar limpeza automática quando o módulo for carregado
 if (typeof window !== 'undefined') {

@@ -27,7 +27,7 @@ import {
 
 // Importar tipos
 import { SequenciaDidaticaCompleta } from './SequenciaDidaticaGenerator';
-import { sequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
+import { SequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
 
 interface SequenciaDidaticaPreviewProps {
   data: any;
@@ -65,12 +65,12 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       // Tentar carregar do localStorage
       else if (data?.id) {
         console.log('🔍 Tentando carregar do localStorage...');
-        sequenciaData = sequenciaDidaticaBuilder.recuperarSequencia(data.id);
+        sequenciaData = SequenciaDidaticaBuilder.recuperarSequencia(data.id);
       }
       // Verificar activityData
       else if (activityData?.id) {
         console.log('🔍 Tentando carregar activityData do localStorage...');
-        sequenciaData = sequenciaDidaticaBuilder.recuperarSequencia(activityData.id);
+        sequenciaData = SequenciaDidaticaBuilder.recuperarSequencia(activityData.id);
       }
 
       if (sequenciaData) {
