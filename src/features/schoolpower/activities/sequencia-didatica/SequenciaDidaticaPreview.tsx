@@ -1,494 +1,396 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  BookOpen, 
-  Clock, 
-  Users, 
-  Target, 
-  CheckCircle, 
-  FileText, 
-  Calendar,
-  PlayCircle,
-  Edit,
-  Download,
-  Copy
-} from 'lucide-react';
-
-export interface AulaData {
-  numero: number;
-  titulo: string;
-  objetivo: string;
-  conteudo: string;
-  metodologia: string;
-  recursos: string[];
-  atividadePratica: string;
-  avaliacao: string;
-  tempoEstimado: string;
-}
-
-export interface DiagnosticoData {
-  numero: number;
-  titulo: string;
-  objetivo: string;
-  questoes: string[];
-  criteriosAvaliacao: string;
-  tempoEstimado: string;
-}
-
-export interface AvaliacaoData {
-  numero: number;
-  titulo: string;
-  objetivo: string;
-  formato: string;
-  criterios: string[];
-  tempoEstimado: string;
-}
-
-export interface SequenciaDidaticaCompleta {
-  tituloTemaAssunto: string;
-  anoSerie: string;
-  disciplina: string;
-  bnccCompetencias: string;
-  publicoAlvo: string;
-  objetivosAprendizagem: string;
-  quantidadeAulas: string;
-  quantidadeDiagnosticos: string;
-  quantidadeAvaliacoes: string;
-  cronograma: string;
-  aulas: AulaData[];
-  diagnosticos: DiagnosticoData[];
-  avaliacoes: AvaliacaoData[];
-  duracaoTotal: string;
-  materiaisNecessarios: string[];
-  competenciasDesenvolvidas: string[];
-  generatedAt?: string;
-  isGeneratedByAI?: boolean;
-}
+import { Clock, BookOpen, Target, Users, CheckSquare, FileText, Award } from 'lucide-react';
+import { SequenciaDidaticaData } from './SequenciaDidaticaBuilder';
 
 interface SequenciaDidaticaPreviewProps {
-  data: SequenciaDidaticaCompleta;
-  activityData?: any;
-  onRegenerate?: () => void;
-  onTransformToGrid?: () => void;
-  onEditObjectives?: () => void;
+  data: SequenciaDidaticaData;
+  className?: string;
 }
 
-const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
-  data,
-  activityData,
-  onRegenerate,
-  onTransformToGrid,
-  onEditObjectives
+const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ 
+  data, 
+  className = "" 
 }) => {
-  const [viewMode, setViewMode] = useState<'cards' | 'grid'>('cards');
-  const [selectedAula, setSelectedAula] = useState<AulaData | null>(null);
-  const [selectedDiagnostico, setSelectedDiagnostico] = useState<DiagnosticoData | null>(null);
-
-  console.log('🔍 SequenciaDidaticaPreview - Dados recebidos:', data);
-  console.log('🔍 SequenciaDidaticaPreview - Tipo dos dados:', typeof data);
-  console.log('🔍 SequenciaDidaticaPreview - Props activityData:', activityData);
+  console.log('🎨 SequenciaDidaticaPreview: Renderizando preview com dados:', data);
 
   if (!data) {
-    console.log('❌ SequenciaDidaticaPreview - Dados não encontrados');
+    console.warn('⚠️ SequenciaDidaticaPreview: Dados não fornecidos');
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-          Sequência Didática não gerada
-        </h3>
-        <p className="text-gray-500 dark:text-gray-500 mb-4">
-          Configure os campos necessários e clique em "Construir Atividade" para gerar sua sequência didática.
-        </p>
-      </div>
+      <Card className={className}>
+        <CardContent className="p-6">
+          <div className="text-center text-gray-500">
+            Nenhum dados da sequência didática disponível
+          </div>
+        </CardContent>
+      </Card>
     );
   }
-
-  // Validar se os dados são válidos
-  if (typeof data !== 'object') {
-    console.error('❌ SequenciaDidaticaPreview - Dados inválidos (não é objeto):', data);
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center p-8">
-        <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-          Erro nos dados da Sequência Didática
-        </h3>
-        <p className="text-gray-500 dark:text-gray-500 mb-4">
-          Os dados da sequência didática estão corrompidos. Tente gerar novamente.
-        </p>
-      </div>
-    );
-  }
-
-  // Verificar se tem aulas geradas
-  const hasAulas = data.aulas && Array.isArray(data.aulas) && data.aulas.length > 0;
-  const hasDiagnosticos = data.diagnosticos && Array.isArray(data.diagnosticos) && data.diagnosticos.length > 0;
-  const hasAvaliacoes = data.avaliacoes && Array.isArray(data.avaliacoes) && data.avaliacoes.length > 0;
-
-  console.log('📊 SequenciaDidaticaPreview - Status detalhado:', {
-    hasAulas,
-    hasDiagnosticos,
-    hasAvaliacoes,
-    aulasCount: data.aulas?.length || 0,
-    diagnosticosCount: data.diagnosticos?.length || 0,
-    avaliacoesCount: data.avaliacoes?.length || 0,
-    aulasType: typeof data.aulas,
-    aulasIsArray: Array.isArray(data.aulas),
-    firstAula: data.aulas && data.aulas.length > 0 ? data.aulas[0] : null,
-    allKeys: Object.keys(data),
-    dataStructure: {
-      titulo: !!data.tituloTemaAssunto,
-      disciplina: !!data.disciplina,
-      anoSerie: !!data.anoSerie,
-      objetivos: !!data.objetivosAprendizagem
-    }
-  });
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-white dark:bg-gray-900">
+    <div className={`space-y-6 ${className}`}>
       {/* Header da Sequência Didática */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-              <BookOpen className="h-5 w-5 text-white" />
+      <Card className="border-blue-200 dark:border-blue-800">
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-2">
+                {data.titulo}
+              </CardTitle>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  <BookOpen className="h-3 w-3 mr-1" />
+                  {data.disciplina}
+                </Badge>
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  <Users className="h-3 w-3 mr-1" />
+                  {data.serieAno}
+                </Badge>
+                <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {data.duracao}
+                </Badge>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                {data.tituloTemaAssunto || 'Sequência Didática'}
-              </h1>
-              <p className="text-sm text-gray-500">
-                {data.disciplina} • {data.anoSerie}
-              </p>
-            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Objetivos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Target className="h-5 w-5 text-green-600" />
+            Objetivos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">
+              Objetivo Geral:
+            </h4>
+            <p className="text-gray-700 dark:text-gray-300 pl-4 border-l-2 border-green-400">
+              {data.objetivos.geral}
+            </p>
           </div>
           
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onRegenerate}>
-              <Edit className="h-4 w-4 mr-2" />
-              Regenerar
-            </Button>
-            <Button variant="outline" size="sm">
-              <Copy className="h-4 w-4 mr-2" />
-              Copiar
-            </Button>
-          </div>
-        </div>
-
-        {/* Badges de informações */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary">
-            <Clock className="h-3 w-3 mr-1" />
-            {data.duracaoTotal || `${data.quantidadeAulas} aulas`}
-          </Badge>
-          <Badge variant="secondary">
-            <Users className="h-3 w-3 mr-1" />
-            {data.publicoAlvo}
-          </Badge>
-          <Badge variant="secondary">
-            <Target className="h-3 w-3 mr-1" />
-            {data.quantidadeDiagnosticos} diagnósticos
-          </Badge>
-          <Badge variant="secondary">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            {data.quantidadeAvaliacoes} avaliações
-          </Badge>
-        </div>
-
-        {/* Objetivos de Aprendizagem */}
-        <Card className="mb-4">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Objetivos de Aprendizagem</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {data.objetivosAprendizagem}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs de conteúdo */}
-      <Tabs defaultValue="aulas" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="aulas">
-            Aulas ({data.aulas?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="diagnosticos">
-            Diagnósticos ({data.diagnosticos?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="avaliacoes">
-            Avaliações ({data.avaliacoes?.length || 0})
-          </TabsTrigger>
-          <TabsTrigger value="cronograma">
-            Cronograma
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab de Aulas */}
-        <TabsContent value="aulas" className="space-y-4">
-          {hasAulas ? (
-            <div className="grid gap-4">
-              {data.aulas.map((aula, index) => (
-                <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">
-                        Aula {aula.numero}: {aula.titulo}
-                      </CardTitle>
-                      <Badge variant="outline">
-                        {aula.tempoEstimado}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Objetivo</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {aula.objetivo}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Conteúdo</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {aula.conteudo}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Metodologia</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {aula.metodologia}
-                        </p>
-                      </div>
-
-                      {aula.recursos && aula.recursos.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Recursos Necessários</h4>
-                          <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside">
-                            {aula.recursos.map((recurso, idx) => (
-                              <li key={idx}>{recurso}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {aula.atividadePratica && (
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Atividade Prática</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {aula.atividadePratica}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex justify-end">
-                        <Button size="sm" variant="outline">
-                          <PlayCircle className="h-4 w-4 mr-2" />
-                          Ver Detalhes
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma aula gerada ainda</p>
+          {data.objetivos.especificos.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-2">
+                Objetivos Específicos:
+              </h4>
+              <ul className="space-y-1 pl-4">
+                {data.objetivos.especificos.map((objetivo, index) => (
+                  <li key={index} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                    <span className="text-green-600 font-bold mt-1">•</span>
+                    {objetivo}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-        </TabsContent>
+        </CardContent>
+      </Card>
 
-        {/* Tab de Diagnósticos */}
-        <TabsContent value="diagnosticos" className="space-y-4">
-          {hasDiagnosticos ? (
-            <div className="grid gap-4">
-              {data.diagnosticos.map((diagnostico, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      Diagnóstico {diagnostico.numero}: {diagnostico.titulo}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Objetivo</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {diagnostico.objetivo}
-                        </p>
-                      </div>
-                      
-                      {diagnostico.questoes && diagnostico.questoes.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Questões</h4>
-                          <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                            {diagnostico.questoes.map((questao, idx) => (
-                              <li key={idx}>{idx + 1}. {questao}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {diagnostico.tempoEstimado}
-                        </Badge>
-                        <Button size="sm" variant="outline">
-                          Ver Detalhes
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum diagnóstico gerado ainda</p>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Tab de Avaliações */}
-        <TabsContent value="avaliacoes" className="space-y-4">
-          {hasAvaliacoes ? (
-            <div className="grid gap-4">
-              {data.avaliacoes.map((avaliacao, index) => (
-                <Card key={index}>
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      Avaliação {avaliacao.numero}: {avaliacao.titulo}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Objetivo</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {avaliacao.objetivo}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-medium text-sm mb-1">Formato</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {avaliacao.formato}
-                        </p>
-                      </div>
-
-                      {avaliacao.criterios && avaliacao.criterios.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm mb-1">Critérios de Avaliação</h4>
-                          <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside">
-                            {avaliacao.criterios.map((criterio, idx) => (
-                              <li key={idx}>{criterio}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {avaliacao.tempoEstimado}
-                        </Badge>
-                        <Button size="sm" variant="outline">
-                          Ver Detalhes
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma avaliação gerada ainda</p>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Tab de Cronograma */}
-        <TabsContent value="cronograma" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Cronograma da Sequência Didática
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {data.cronograma ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {data.cronograma}
-                  </p>
-                  
-                  {/* Resumo visual do cronograma */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {data.quantidadeAulas}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Aulas</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {data.quantidadeDiagnosticos}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Diagnósticos</div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {data.quantidadeAvaliacoes}
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Avaliações</div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Cronograma não definido</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Informações adicionais */}
-      {data.bnccCompetencias && (
-        <Card className="mt-6">
+      {/* Competências BNCC */}
+      {data.competenciasBNCC.length > 0 && (
+        <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Competências BNCC</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Award className="h-5 w-5 text-purple-600" />
+              Competências BNCC
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {data.bnccCompetencias}
-            </p>
+            <div className="grid gap-2">
+              {data.competenciasBNCC.map((competencia, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg"
+                >
+                  <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                  <span className="text-gray-800 dark:text-gray-200">{competencia}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Footer com informações de geração */}
-      {data.generatedAt && (
-        <div className="mt-6 pt-4 border-t text-xs text-gray-500 text-center">
-          Sequência Didática gerada em {new Date(data.generatedAt).toLocaleString('pt-BR')}
-          {data.isGeneratedByAI && ' • Gerado por IA'}
-        </div>
+      {/* Conteúdos */}
+      {data.conteudos.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Conteúdos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2">
+              {data.conteudos.map((conteudo, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"
+                >
+                  <CheckSquare className="h-4 w-4 text-blue-600" />
+                  <span className="text-gray-800 dark:text-gray-200">{conteudo}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Metodologia */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Users className="h-5 w-5 text-indigo-600" />
+            Metodologia
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {data.metodologia.estrategias.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-indigo-700 dark:text-indigo-400 mb-2">
+                Estratégias:
+              </h4>
+              <div className="grid gap-1">
+                {data.metodologia.estrategias.map((estrategia, index) => (
+                  <div key={index} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <span className="text-indigo-600">▸</span>
+                    {estrategia}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {data.metodologia.recursos.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-indigo-700 dark:text-indigo-400 mb-2">
+                Recursos:
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {data.metodologia.recursos.map((recurso, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline" 
+                    className="bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300"
+                  >
+                    {recurso}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Etapas */}
+      {data.etapas.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="h-5 w-5 text-orange-600" />
+              Etapas da Sequência Didática
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {data.etapas.map((etapa, index) => (
+                <div key={index} className="relative">
+                  {/* Linha conectora entre etapas */}
+                  {index < data.etapas.length - 1 && (
+                    <div className="absolute left-6 top-16 w-0.5 h-6 bg-gray-300 dark:bg-gray-600"></div>
+                  )}
+                  
+                  <div className="flex gap-4">
+                    {/* Número da etapa */}
+                    <div className="flex-shrink-0 w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold">
+                      {etapa.numero}
+                    </div>
+                    
+                    {/* Conteúdo da etapa */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          {etapa.titulo}
+                        </h4>
+                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                          {etapa.duracao}
+                        </Badge>
+                      </div>
+                      
+                      <p className="text-gray-700 dark:text-gray-300 italic">
+                        {etapa.objetivoEspecifico}
+                      </p>
+                      
+                      {/* Atividades */}
+                      {etapa.atividades.length > 0 && (
+                        <div>
+                          <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                            Atividades:
+                          </h5>
+                          <ul className="space-y-1 pl-4">
+                            {etapa.atividades.map((atividade, atividadeIndex) => (
+                              <li key={atividadeIndex} className="flex items-start gap-2 text-gray-600 dark:text-gray-400">
+                                <span className="text-orange-600 font-bold mt-1">•</span>
+                                {atividade}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* Recursos */}
+                      {etapa.recursos.length > 0 && (
+                        <div>
+                          <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                            Recursos:
+                          </h5>
+                          <div className="flex flex-wrap gap-1">
+                            {etapa.recursos.map((recurso, recursoIndex) => (
+                              <Badge 
+                                key={recursoIndex} 
+                                variant="secondary" 
+                                className="text-xs bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                              >
+                                {recurso}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Avaliação */}
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+                        <h5 className="font-medium text-yellow-800 dark:text-yellow-300 mb-1">
+                          Avaliação:
+                        </h5>
+                        <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                          {etapa.avaliacao}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {index < data.etapas.length - 1 && <Separator className="mt-6" />}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Avaliação Final */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <CheckSquare className="h-5 w-5 text-red-600" />
+            Avaliação Final
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {data.avaliacaoFinal.criterios.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">
+                Critérios de Avaliação:
+              </h4>
+              <ul className="grid gap-1">
+                {data.avaliacaoFinal.criterios.map((criterio, index) => (
+                  <li key={index} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <span className="text-red-600">✓</span>
+                    {criterio}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {data.avaliacaoFinal.instrumentos.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-red-700 dark:text-red-400 mb-2">
+                Instrumentos:
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {data.avaliacaoFinal.instrumentos.map((instrumento, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline" 
+                    className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-300"
+                  >
+                    {instrumento}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {data.avaliacaoFinal.forma && (
+            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+              <h4 className="font-semibold text-red-700 dark:text-red-400 mb-1">
+                Forma de Avaliação:
+              </h4>
+              <p className="text-red-700 dark:text-red-300">
+                {data.avaliacaoFinal.forma}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Recursos Necessários */}
+      {data.recursosNecessarios.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="h-5 w-5 text-gray-600" />
+              Recursos Necessários
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-2">
+              {data.recursosNecessarios.map((recurso, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded"
+                >
+                  <div className="w-2 h-2 bg-gray-600 rounded-full"></div>
+                  <span className="text-gray-800 dark:text-gray-200">{recurso}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Referências */}
+      {data.referencias.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <BookOpen className="h-5 w-5 text-gray-600" />
+              Referências
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {data.referencias.map((referencia, index) => (
+                <li 
+                  key={index} 
+                  className="text-gray-700 dark:text-gray-300 pl-4 border-l-2 border-gray-300 dark:border-gray-600"
+                >
+                  {referencia}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

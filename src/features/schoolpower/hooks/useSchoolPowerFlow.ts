@@ -26,7 +26,7 @@ interface UseSchoolPowerFlowReturn {
 
 const STORAGE_KEY = 'schoolpower_flow_data';
 
-export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
+export function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [flowData, setFlowData] = useState<SchoolPowerFlowData>({
     initialMessage: null,
@@ -293,3 +293,5 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     isLoading
   };
 }
+
+export default useSchoolPowerFlow;

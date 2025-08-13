@@ -1,5 +1,6 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { SequenciaDidaticaGenerator, SequenciaDidaticaGenerationParams } from './SequenciaDidaticaGenerator';
+import { SequenciaDidaticaData } from './SequenciaDidaticaBuilder';
 
 export interface SequenciaDidaticaCustomFields {
   [key: string]: string;
@@ -134,3 +135,108 @@ export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { va
     errors
   };
 }
+
+export interface ProcessSequenciaDidaticaParams {
+  tema: string;
+  disciplina: string;
+  serieAno: string;
+  duracao?: string;
+  objetivos?: string;
+  contexto?: string;
+  competenciasBNCC?: string[];
+  recursosDisponiveis?: string[];
+}
+
+export class SequenciaDidaticaProcessor {
+  private generator: SequenciaDidaticaGenerator;
+
+  constructor() {
+    console.log('⚙️ SequenciaDidaticaProcessor: Inicializando processador');
+    this.generator = new SequenciaDidaticaGenerator();
+  }
+
+  async process(params: ProcessSequenciaDidaticaParams): Promise<SequenciaDidaticaData> {
+    console.log('⚙️ SequenciaDidaticaProcessor: Processando parâmetros:', params);
+
+    try {
+      // Validar parâmetros obrigatórios
+      this.validateParams(params);
+
+      // Converter parâmetros para o formato do gerador
+      const generationParams: SequenciaDidaticaGenerationParams = {
+        tema: params.tema,
+        disciplina: params.disciplina,
+        serieAno: params.serieAno,
+        duracao: params.duracao || '4 aulas de 50 minutos',
+        objetivos: params.objetivos,
+        contexto: params.contexto,
+        competenciasBNCC: params.competenciasBNCC,
+        recursosDisponiveis: params.recursosDisponiveis
+      };
+
+      console.log('⚙️ SequenciaDidaticaProcessor: Parâmetros convertidos:', generationParams);
+
+      // Gerar sequência didática
+      const sequenciaDidatica = await this.generator.generate(generationParams);
+
+      console.log('✅ SequenciaDidaticaProcessor: Sequência didática processada com sucesso');
+      return sequenciaDidatica;
+
+    } catch (error) {
+      console.error('❌ SequenciaDidaticaProcessor: Erro durante processamento:', error);
+      throw new Error(`Erro ao processar sequência didática: ${error.message}`);
+    }
+  }
+
+  private validateParams(params: ProcessSequenciaDidaticaParams): void {
+    console.log('🔍 SequenciaDidaticaProcessor: Validando parâmetros');
+
+    if (!params.tema || params.tema.trim().length === 0) {
+      throw new Error('Tema é obrigatório para gerar a sequência didática');
+    }
+
+    if (!params.disciplina || params.disciplina.trim().length === 0) {
+      throw new Error('Disciplina é obrigatória para gerar a sequência didática');
+    }
+
+    if (!params.serieAno || params.serieAno.trim().length === 0) {
+      throw new Error('Série/Ano é obrigatório para gerar a sequência didática');
+    }
+
+    console.log('✅ SequenciaDidaticaProcessor: Parâmetros validados com sucesso');
+  }
+
+  // Método para processar dados vindos do modal
+  async processFromModal(modalData: any): Promise<SequenciaDidaticaData> {
+    console.log('📝 SequenciaDidaticaProcessor: Processando dados do modal:', modalData);
+
+    // Extrair dados do modal
+    const params: ProcessSequenciaDidaticaParams = {
+      tema: modalData.tema || modalData.titulo || '',
+      disciplina: modalData.disciplina || '',
+      serieAno: modalData.serieAno || modalData.serie_ano || '',
+      duracao: modalData.duracao || '',
+      objetivos: modalData.objetivos || '',
+      contexto: modalData.contexto || '',
+      competenciasBNCC: modalData.competenciasBNCC || [],
+      recursosDisponiveis: modalData.recursosDisponiveis || []
+    };
+
+    return this.process(params);
+  }
+
+  // Método para processar com dados mínimos (fallback)
+  async processMinimal(tema: string, disciplina: string, serieAno: string): Promise<SequenciaDidaticaData> {
+    console.log('🔄 SequenciaDidaticaProcessor: Processamento mínimo:', { tema, disciplina, serieAno });
+
+    return this.process({
+      tema,
+      disciplina,
+      serieAno,
+      duracao: '4 aulas de 50 minutos',
+      contexto: 'Ensino regular'
+    });
+  }
+}
+
+export default SequenciaDidaticaProcessor;

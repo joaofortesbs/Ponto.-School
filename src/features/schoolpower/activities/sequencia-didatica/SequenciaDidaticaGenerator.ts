@@ -1,373 +1,320 @@
-
 import { geminiClient } from '@/utils/api/geminiClient';
-import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
+import { SequenciaDidaticaBuilder, SequenciaDidaticaData } from './SequenciaDidaticaBuilder';
 
-export interface AulaData {
-  numero: number;
-  titulo: string;
-  objetivo: string;
-  conteudo: string;
-  metodologia: string;
-  recursos: string[];
-  atividadePratica: string;
-  avaliacao: string;
-  tempoEstimado: string;
-}
-
-export interface DiagnosticoData {
-  numero: number;
-  titulo: string;
-  objetivo: string;
-  questoes: string[];
-  criteriosAvaliacao: string;
-  tempoEstimado: string;
-}
-
-export interface AvaliacaoData {
-  numero: number;
-  titulo: string;
-  objetivo: string;
-  formato: string;
-  criterios: string[];
-  tempoEstimado: string;
-}
-
-export interface SequenciaDidaticaCompleta {
-  tituloTemaAssunto: string;
-  anoSerie: string;
+export interface SequenciaDidaticaGenerationParams {
+  tema: string;
   disciplina: string;
-  bnccCompetencias: string;
-  publicoAlvo: string;
-  objetivosAprendizagem: string;
-  quantidadeAulas: string;
-  quantidadeDiagnosticos: string;
-  quantidadeAvaliacoes: string;
-  cronograma: string;
-  duracaoTotal: string;
-  materiaisNecessarios: string[];
-  competenciasDesenvolvidas: string[];
-  aulas: AulaData[];
-  diagnosticos: DiagnosticoData[];
-  avaliacoes: AvaliacaoData[];
-  generatedAt: string;
-  isGeneratedByAI: boolean;
+  serieAno: string;
+  duracao?: string;
+  objetivos?: string;
+  contexto?: string;
+  competenciasBNCC?: string[];
+  recursosDisponiveis?: string[];
 }
 
 export class SequenciaDidaticaGenerator {
-  private static instance: SequenciaDidaticaGenerator;
+  private builder: SequenciaDidaticaBuilder;
 
-  static getInstance(): SequenciaDidaticaGenerator {
-    if (!SequenciaDidaticaGenerator.instance) {
-      SequenciaDidaticaGenerator.instance = new SequenciaDidaticaGenerator();
-    }
-    return SequenciaDidaticaGenerator.instance;
+  constructor() {
+    console.log('🤖 SequenciaDidaticaGenerator: Inicializando gerador');
+    this.builder = new SequenciaDidaticaBuilder();
   }
 
-  async gerarSequenciaDidatica(dados: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
-    console.log('🚀 Gerando Sequência Didática com dados:', dados);
-    
-    try {
-      const prompt = this.construirPrompt(dados);
-      console.log('📝 Prompt construído para IA:', prompt);
+  async generate(params: SequenciaDidaticaGenerationParams): Promise<SequenciaDidaticaData> {
+    console.log('🤖 SequenciaDidaticaGenerator: Iniciando geração com parâmetros:', params);
 
+    try {
+      // Gerar prompt para a IA
+      const prompt = this.createPrompt(params);
+      console.log('🤖 SequenciaDidaticaGenerator: Prompt criado:', prompt);
+
+      // Fazer chamada para a API Gemini
       const response = await geminiClient.generate({
         prompt,
         temperature: 0.7,
-        maxTokens: 4000
+        maxTokens: 3000
       });
 
+      console.log('🤖 SequenciaDidaticaGenerator: Resposta da API:', response);
+
       if (!response.success) {
-        throw new Error(`Erro na geração: ${response.error}`);
+        console.error('❌ SequenciaDidaticaGenerator: Erro na API:', response.error);
+        return this.generateFallback(params);
       }
 
-      const sequenciaCompleta = this.processarResposta(response.result, dados);
-      console.log('✅ Sequência Didática gerada:', sequenciaCompleta);
+      // Construir sequência didática a partir da resposta
+      const sequenciaDidatica = this.builder
+        .buildFromAIResponse(response.result)
+        .build();
 
-      return sequenciaCompleta;
+      console.log('✅ SequenciaDidaticaGenerator: Sequência didática gerada com sucesso');
+      return sequenciaDidatica;
+
     } catch (error) {
-      console.error('❌ Erro na geração:', error);
-      return this.criarSequenciaFallback(dados);
+      console.error('❌ SequenciaDidaticaGenerator: Erro durante geração:', error);
+      return this.generateFallback(params);
     }
   }
 
-  private construirPrompt(dados: SequenciaDidaticaData): string {
+  private createPrompt(params: SequenciaDidaticaGenerationParams): string {
+    console.log('📝 SequenciaDidaticaGenerator: Criando prompt personalizado');
+
     return `
-Crie uma sequência didática COMPLETA e estruturada com as seguintes especificações:
+Você é um especialista em educação e precisa criar uma SEQUÊNCIA DIDÁTICA completa e detalhada.
 
-## DADOS BÁSICOS:
-- Título: ${dados.tituloTemaAssunto}
-- Disciplina: ${dados.disciplina}
-- Ano/Série: ${dados.anoSerie}
-- Público-alvo: ${dados.publicoAlvo}
-- Objetivos: ${dados.objetivosAprendizagem}
-- BNCC: ${dados.bnccCompetencias || 'A definir conforme currículo'}
+INFORMAÇÕES FORNECIDAS:
+- Tema: ${params.tema}
+- Disciplina: ${params.disciplina}
+- Série/Ano: ${params.serieAno}
+- Duração: ${params.duracao || '4 aulas de 50 minutos'}
+- Objetivos específicos: ${params.objetivos || 'Não especificado'}
+- Contexto: ${params.contexto || 'Ensino regular'}
+- Competências BNCC: ${params.competenciasBNCC?.join(', ') || 'A definir'}
+- Recursos disponíveis: ${params.recursosDisponiveis?.join(', ') || 'Recursos básicos de sala de aula'}
 
-## ESTRUTURA REQUERIDA:
-- Quantidade de Aulas: ${dados.quantidadeAulas}
-- Quantidade de Diagnósticos: ${dados.quantidadeDiagnosticos}
-- Quantidade de Avaliações: ${dados.quantidadeAvaliacoes}
-- Cronograma: ${dados.cronograma || 'Flexível conforme ritmo da turma'}
-
-Retorne APENAS um JSON válido no seguinte formato:
+ESTRUTURA OBRIGATÓRIA DA SEQUÊNCIA DIDÁTICA:
 
 {
-  "tituloTemaAssunto": "${dados.tituloTemaAssunto}",
-  "anoSerie": "${dados.anoSerie}",
-  "disciplina": "${dados.disciplina}",
-  "bnccCompetencias": "${dados.bnccCompetencias || 'Competências BNCC aplicáveis'}",
-  "publicoAlvo": "${dados.publicoAlvo}",
-  "objetivosAprendizagem": "${dados.objetivosAprendizagem}",
-  "quantidadeAulas": "${dados.quantidadeAulas}",
-  "quantidadeDiagnosticos": "${dados.quantidadeDiagnosticos}",
-  "quantidadeAvaliacoes": "${dados.quantidadeAvaliacoes}",
-  "cronograma": "${dados.cronograma || 'Distribuição flexível conforme necessidades'}",
-  "duracaoTotal": "${dados.quantidadeAulas} aulas de 50 minutos cada",
-  "materiaisNecessarios": ["Quadro", "Material didático", "Recursos audiovisuais"],
-  "competenciasDesenvolvidas": ["Compreensão", "Análise", "Aplicação prática"],
-  "aulas": [
+  "titulo": "Título claro e específico da sequência didática",
+  "disciplina": "${params.disciplina}",
+  "serieAno": "${params.serieAno}",
+  "duracao": "${params.duracao || '4 aulas de 50 minutos'}",
+
+  "objetivos": {
+    "geral": "Objetivo geral amplo e claro",
+    "especificos": [
+      "Objetivo específico 1",
+      "Objetivo específico 2",
+      "Objetivo específico 3"
+    ]
+  },
+
+  "competenciasBNCC": [
+    "Competência 1 específica da BNCC",
+    "Competência 2 específica da BNCC",
+    "Competência 3 específica da BNCC"
+  ],
+
+  "conteudos": [
+    "Conteúdo conceitual 1",
+    "Conteúdo procedimental 2",
+    "Conteúdo atitudinal 3"
+  ],
+
+  "metodologia": {
+    "estrategias": [
+      "Estratégia metodológica 1",
+      "Estratégia metodológica 2",
+      "Estratégia metodológica 3"
+    ],
+    "recursos": [
+      "Recurso didático 1",
+      "Recurso didático 2",
+      "Recurso didático 3"
+    ]
+  },
+
+  "etapas": [
     {
       "numero": 1,
-      "titulo": "Introdução ao Tema",
-      "objetivo": "Apresentar conceitos fundamentais",
-      "conteudo": "Conteúdo introdutório sobre o tema",
-      "metodologia": "Aula expositiva dialogada",
-      "recursos": ["Quadro", "Projetor"],
-      "atividadePratica": "Atividade de sondagem de conhecimentos prévios",
-      "avaliacao": "Observação da participação e interesse",
-      "tempoEstimado": "50 minutos"
+      "titulo": "Título da Etapa 1",
+      "duracao": "1 aula",
+      "objetivoEspecifico": "Objetivo específico desta etapa",
+      "atividades": [
+        "Atividade 1.1 - Descrição detalhada",
+        "Atividade 1.2 - Descrição detalhada",
+        "Atividade 1.3 - Descrição detalhada"
+      ],
+      "recursos": [
+        "Recurso específico 1",
+        "Recurso específico 2"
+      ],
+      "avaliacao": "Como será avaliada esta etapa"
+    },
+    {
+      "numero": 2,
+      "titulo": "Título da Etapa 2",
+      "duracao": "2 aulas",
+      "objetivoEspecifico": "Objetivo específico desta etapa",
+      "atividades": [
+        "Atividade 2.1 - Descrição detalhada",
+        "Atividade 2.2 - Descrição detalhada",
+        "Atividade 2.3 - Descrição detalhada"
+      ],
+      "recursos": [
+        "Recurso específico 1",
+        "Recurso específico 2"
+      ],
+      "avaliacao": "Como será avaliada esta etapa"
+    },
+    {
+      "numero": 3,
+      "titulo": "Título da Etapa 3",
+      "duracao": "1 aula",
+      "objetivoEspecifico": "Objetivo específico desta etapa",
+      "atividades": [
+        "Atividade 3.1 - Descrição detalhada",
+        "Atividade 3.2 - Descrição detalhada",
+        "Atividade 3.3 - Descrição detalhada"
+      ],
+      "recursos": [
+        "Recurso específico 1",
+        "Recurso específico 2"
+      ],
+      "avaliacao": "Como será avaliada esta etapa"
     }
   ],
-  "diagnosticos": [
-    {
-      "numero": 1,
-      "titulo": "Diagnóstico Inicial",
-      "objetivo": "Avaliar conhecimentos prévios",
-      "questoes": ["Pergunta diagnóstica 1", "Pergunta diagnóstica 2"],
-      "criteriosAvaliacao": "Identificação do nível de conhecimento",
-      "tempoEstimado": "30 minutos"
-    }
+
+  "avaliacaoFinal": {
+    "criterios": [
+      "Critério de avaliação 1",
+      "Critério de avaliação 2",
+      "Critério de avaliação 3"
+    ],
+    "instrumentos": [
+      "Instrumento 1",
+      "Instrumento 2",
+      "Instrumento 3"
+    ],
+    "forma": "Descrição da forma de avaliação"
+  },
+
+  "recursosNecessarios": [
+    "Recurso necessário 1",
+    "Recurso necessário 2",
+    "Recurso necessário 3"
   ],
-  "avaliacoes": [
-    {
-      "numero": 1,
-      "titulo": "Avaliação Formativa",
-      "objetivo": "Verificar aprendizagem",
-      "formato": "Avaliação prática",
-      "criterios": ["Compreensão", "Aplicação"],
-      "tempoEstimado": "50 minutos"
-    }
+
+  "referencias": [
+    "Referência bibliográfica 1",
+    "Referência bibliográfica 2",
+    "Referência bibliográfica 3"
   ]
 }
 
-INSTRUÇÕES ESPECÍFICAS:
-1. Crie EXATAMENTE ${dados.quantidadeAulas} aulas detalhadas e progressivas
-2. Desenvolva ${dados.quantidadeDiagnosticos} diagnóstico(s) completo(s)
-3. Elabore ${dados.quantidadeAvaliacoes} avaliação(ões) adequada(s)
-4. Garanta progressão lógica entre as aulas
-5. Foque nos objetivos definidos
-6. Use metodologias variadas e recursos adequados
+DIRETRIZES IMPORTANTES:
+1. A sequência deve ser ESPECÍFICA para o tema "${params.tema}" na disciplina ${params.disciplina}
+2. Adapte o conteúdo para a faixa etária de ${params.serieAno}
+3. Cada etapa deve ter progressão lógica e conexão com as outras
+4. As atividades devem ser práticas, viáveis e envolventes
+5. Inclua diferentes estratégias metodológicas para atender diversos estilos de aprendizagem
+6. A avaliação deve ser formativa e processual
+7. Use competências reais da BNCC para ${params.disciplina}
+8. NÃO use dados fictícios ou genéricos demais
 
-Retorne APENAS o JSON válido, sem texto adicional.
-`;
+RETORNE APENAS o JSON válido da sequência didática, sem explicações adicionais.
+    `.trim();
   }
 
-  private processarResposta(resposta: string, dados: SequenciaDidaticaData): SequenciaDidaticaCompleta {
-    try {
-      // Limpar resposta
-      let jsonString = resposta.trim();
-      if (jsonString.startsWith('```json')) {
-        jsonString = jsonString.replace(/```json\s*/, '').replace(/\s*```$/, '');
-      } else if (jsonString.startsWith('```')) {
-        jsonString = jsonString.replace(/```\s*/, '').replace(/\s*```$/, '');
-      }
+  private generateFallback(params: SequenciaDidaticaGenerationParams): SequenciaDidaticaData {
+    console.log('🔄 SequenciaDidaticaGenerator: Gerando sequência didática de fallback');
 
-      const dadosIA = JSON.parse(jsonString);
-      console.log('📊 Dados parseados da IA:', dadosIA);
-
-      // Processar aulas
-      const aulas = this.processarAulas(dadosIA.aulas || [], parseInt(dados.quantidadeAulas));
-      const diagnosticos = this.processarDiagnosticos(dadosIA.diagnosticos || [], parseInt(dados.quantidadeDiagnosticos));
-      const avaliacoes = this.processarAvaliacoes(dadosIA.avaliacoes || [], parseInt(dados.quantidadeAvaliacoes));
-
-      const sequenciaCompleta: SequenciaDidaticaCompleta = {
-        tituloTemaAssunto: dadosIA.tituloTemaAssunto || dados.tituloTemaAssunto,
-        anoSerie: dadosIA.anoSerie || dados.anoSerie,
-        disciplina: dadosIA.disciplina || dados.disciplina,
-        bnccCompetencias: dadosIA.bnccCompetencias || dados.bnccCompetencias || 'A definir',
-        publicoAlvo: dadosIA.publicoAlvo || dados.publicoAlvo,
-        objetivosAprendizagem: dadosIA.objetivosAprendizagem || dados.objetivosAprendizagem,
-        quantidadeAulas: dadosIA.quantidadeAulas || dados.quantidadeAulas,
-        quantidadeDiagnosticos: dadosIA.quantidadeDiagnosticos || dados.quantidadeDiagnosticos,
-        quantidadeAvaliacoes: dadosIA.quantidadeAvaliacoes || dados.quantidadeAvaliacoes,
-        cronograma: dadosIA.cronograma || dados.cronograma || 'Cronograma flexível',
-        duracaoTotal: dadosIA.duracaoTotal || `${dados.quantidadeAulas} aulas de 50 minutos`,
-        materiaisNecessarios: Array.isArray(dadosIA.materiaisNecessarios) 
-          ? dadosIA.materiaisNecessarios 
-          : ['Quadro', 'Material didático', 'Recursos audiovisuais'],
-        competenciasDesenvolvidas: Array.isArray(dadosIA.competenciasDesenvolvidas) 
-          ? dadosIA.competenciasDesenvolvidas 
-          : ['Compreensão', 'Análise', 'Aplicação'],
-        aulas,
-        diagnosticos,
-        avaliacoes,
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true
-      };
-
-      console.log('✅ Sequência processada com sucesso:', {
-        titulo: sequenciaCompleta.tituloTemaAssunto,
-        aulasCount: sequenciaCompleta.aulas.length,
-        diagnosticosCount: sequenciaCompleta.diagnosticos.length,
-        avaliacoesCount: sequenciaCompleta.avaliacoes.length
-      });
-
-      return sequenciaCompleta;
-    } catch (error) {
-      console.error('❌ Erro ao processar resposta da IA:', error);
-      return this.criarSequenciaFallback(dados);
-    }
-  }
-
-  private processarAulas(aulas: any[], quantidade: number): AulaData[] {
-    const aulasProcessadas = aulas.map((aula, index) => ({
-      numero: aula.numero || index + 1,
-      titulo: aula.titulo || `Aula ${index + 1}`,
-      objetivo: aula.objetivo || 'Objetivo a ser definido',
-      conteudo: aula.conteudo || 'Conteúdo a ser desenvolvido',
-      metodologia: aula.metodologia || 'Metodologia a ser aplicada',
-      recursos: Array.isArray(aula.recursos) ? aula.recursos : ['Recursos básicos'],
-      atividadePratica: aula.atividadePratica || 'Atividade prática relacionada',
-      avaliacao: aula.avaliacao || 'Observação da participação',
-      tempoEstimado: aula.tempoEstimado || '50 minutos'
-    }));
-
-    // Garantir quantidade correta de aulas
-    while (aulasProcessadas.length < quantidade) {
-      const numeroAula = aulasProcessadas.length + 1;
-      aulasProcessadas.push({
-        numero: numeroAula,
-        titulo: `Aula ${numeroAula}: Desenvolvimento`,
-        objetivo: 'Desenvolver conhecimentos específicos',
-        conteudo: 'Conteúdo programático da aula',
-        metodologia: 'Aula expositiva dialogada',
-        recursos: ['Quadro', 'Material didático'],
-        atividadePratica: 'Atividade prática relacionada',
-        avaliacao: 'Participação e desenvolvimento',
-        tempoEstimado: '50 minutos'
-      });
-    }
-
-    return aulasProcessadas.slice(0, quantidade);
-  }
-
-  private processarDiagnosticos(diagnosticos: any[], quantidade: number): DiagnosticoData[] {
-    const diagnosticosProcessados = diagnosticos.map((diag, index) => ({
-      numero: diag.numero || index + 1,
-      titulo: diag.titulo || `Diagnóstico ${index + 1}`,
-      objetivo: diag.objetivo || 'Avaliar conhecimentos',
-      questoes: Array.isArray(diag.questoes) ? diag.questoes : ['Questão diagnóstica'],
-      criteriosAvaliacao: diag.criteriosAvaliacao || 'Critérios de avaliação',
-      tempoEstimado: diag.tempoEstimado || '30 minutos'
-    }));
-
-    while (diagnosticosProcessados.length < quantidade) {
-      const numero = diagnosticosProcessados.length + 1;
-      diagnosticosProcessados.push({
-        numero,
-        titulo: `Diagnóstico ${numero}`,
-        objetivo: 'Avaliar conhecimentos dos estudantes',
-        questoes: ['O que você já conhece sobre este tema?'],
-        criteriosAvaliacao: 'Identificação do nível de conhecimento',
-        tempoEstimado: '30 minutos'
-      });
-    }
-
-    return diagnosticosProcessados.slice(0, quantidade);
-  }
-
-  private processarAvaliacoes(avaliacoes: any[], quantidade: number): AvaliacaoData[] {
-    const avaliacoesProcessadas = avaliacoes.map((aval, index) => ({
-      numero: aval.numero || index + 1,
-      titulo: aval.titulo || `Avaliação ${index + 1}`,
-      objetivo: aval.objetivo || 'Verificar aprendizagem',
-      formato: aval.formato || 'Avaliação escrita',
-      criterios: Array.isArray(aval.criterios) ? aval.criterios : ['Compreensão dos conceitos'],
-      tempoEstimado: aval.tempoEstimado || '50 minutos'
-    }));
-
-    while (avaliacoesProcessadas.length < quantidade) {
-      const numero = avaliacoesProcessadas.length + 1;
-      avaliacoesProcessadas.push({
-        numero,
-        titulo: `Avaliação ${numero}`,
-        objetivo: 'Verificar alcance dos objetivos',
-        formato: 'Avaliação mista',
-        criterios: ['Compreensão', 'Aplicação'],
-        tempoEstimado: '50 minutos'
-      });
-    }
-
-    return avaliacoesProcessadas.slice(0, quantidade);
-  }
-
-  private criarSequenciaFallback(dados: SequenciaDidaticaData): SequenciaDidaticaCompleta {
-    console.log('🔄 Criando sequência fallback');
-    
-    const quantAulas = parseInt(dados.quantidadeAulas || '4');
-    const quantDiag = parseInt(dados.quantidadeDiagnosticos || '1');
-    const quantAval = parseInt(dados.quantidadeAvaliacoes || '1');
-
-    const aulas = Array.from({ length: quantAulas }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Aula ${i + 1}: ${dados.tituloTemaAssunto}`,
-      objetivo: dados.objetivosAprendizagem || 'Desenvolver competências',
-      conteudo: `Conteúdo da aula ${i + 1}`,
-      metodologia: 'Aula expositiva dialogada',
-      recursos: ['Quadro', 'Material didático'],
-      atividadePratica: `Atividade prática da aula ${i + 1}`,
-      avaliacao: 'Observação da participação',
-      tempoEstimado: '50 minutos'
-    }));
-
-    const diagnosticos = Array.from({ length: quantDiag }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Diagnóstico ${i + 1}`,
-      objetivo: 'Avaliar conhecimentos prévios',
-      questoes: ['O que você já conhece sobre este tema?'],
-      criteriosAvaliacao: 'Identificação do nível de conhecimento',
-      tempoEstimado: '30 minutos'
-    }));
-
-    const avaliacoes = Array.from({ length: quantAval }, (_, i) => ({
-      numero: i + 1,
-      titulo: `Avaliação ${i + 1}`,
-      objetivo: 'Verificar aprendizagem',
-      formato: 'Avaliação mista',
-      criterios: ['Compreensão', 'Aplicação'],
-      tempoEstimado: '50 minutos'
-    }));
-
-    return {
-      tituloTemaAssunto: dados.tituloTemaAssunto,
-      anoSerie: dados.anoSerie,
-      disciplina: dados.disciplina,
-      bnccCompetencias: dados.bnccCompetencias || 'A definir',
-      publicoAlvo: dados.publicoAlvo,
-      objetivosAprendizagem: dados.objetivosAprendizagem,
-      quantidadeAulas: dados.quantidadeAulas,
-      quantidadeDiagnosticos: dados.quantidadeDiagnosticos,
-      quantidadeAvaliacoes: dados.quantidadeAvaliacoes,
-      cronograma: dados.cronograma || 'Cronograma flexível',
-      duracaoTotal: `${quantAulas} aulas de 50 minutos`,
-      materiaisNecessarios: ['Quadro', 'Material didático', 'Recursos audiovisuais'],
-      competenciasDesenvolvidas: ['Compreensão', 'Análise', 'Aplicação'],
-      aulas,
-      diagnosticos,
-      avaliacoes,
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false
-    };
+    return this.builder
+      .setTitulo(`Sequência Didática: ${params.tema}`)
+      .setDisciplina(params.disciplina)
+      .setSerieAno(params.serieAno)
+      .setDuracao(params.duracao || '4 aulas de 50 minutos')
+      .setObjetivos(
+        `Desenvolver conhecimentos e habilidades sobre ${params.tema}`,
+        [
+          `Compreender os conceitos básicos de ${params.tema}`,
+          `Aplicar os conhecimentos em situações práticas`,
+          `Desenvolver pensamento crítico sobre o tema`
+        ]
+      )
+      .setCompetenciasBNCC([
+        'Competência específica da área de conhecimento',
+        'Desenvolvimento de habilidades cognitivas',
+        'Formação para cidadania'
+      ])
+      .setConteudos([
+        `Fundamentos teóricos de ${params.tema}`,
+        'Aplicações práticas e contextualizadas',
+        'Reflexões e análises críticas'
+      ])
+      .setMetodologia(
+        [
+          'Aula expositiva dialogada',
+          'Atividades práticas em grupos',
+          'Discussões e debates',
+          'Resolução de problemas'
+        ],
+        [
+          'Quadro e projetor',
+          'Material impresso',
+          'Recursos audiovisuais',
+          'Atividades interativas'
+        ]
+      )
+      .addEtapa({
+        numero: 1,
+        titulo: `Introdução a ${params.tema}`,
+        duracao: '1 aula',
+        objetivoEspecifico: `Apresentar e contextualizar ${params.tema}`,
+        atividades: [
+          'Discussão inicial sobre conhecimentos prévios',
+          `Apresentação conceitual de ${params.tema}`,
+          'Atividade diagnóstica'
+        ],
+        recursos: ['Quadro', 'Projetor', 'Material impresso'],
+        avaliacao: 'Participação nas discussões e atividade diagnóstica'
+      })
+      .addEtapa({
+        numero: 2,
+        titulo: `Desenvolvimento dos Conceitos de ${params.tema}`,
+        duracao: '2 aulas',
+        objetivoEspecifico: `Aprofundar o conhecimento sobre ${params.tema}`,
+        atividades: [
+          'Explicação detalhada dos conceitos',
+          'Exercícios práticos orientados',
+          'Trabalho colaborativo em grupos',
+          'Apresentação dos resultados'
+        ],
+        recursos: ['Livro didático', 'Atividades práticas', 'Material de apoio'],
+        avaliacao: 'Resolução de exercícios e apresentação em grupo'
+      })
+      .addEtapa({
+        numero: 3,
+        titulo: `Aplicação e Síntese de ${params.tema}`,
+        duracao: '1 aula',
+        objetivoEspecifico: `Aplicar os conhecimentos adquiridos sobre ${params.tema}`,
+        atividades: [
+          'Atividade de aplicação prática',
+          'Síntese coletiva dos aprendizados',
+          'Avaliação final do processo',
+          'Reflexão sobre a aplicabilidade'
+        ],
+        recursos: ['Material para atividade prática', 'Ficha de avaliação'],
+        avaliacao: 'Atividade prática e participação na síntese'
+      })
+      .setAvaliacaoFinal(
+        [
+          'Compreensão dos conceitos fundamentais',
+          'Capacidade de aplicação prática',
+          'Participação ativa nas atividades',
+          'Colaboração e trabalho em equipe'
+        ],
+        [
+          'Observação sistemática',
+          'Atividades escritas',
+          'Apresentações orais',
+          'Autoavaliação'
+        ],
+        'Avaliação formativa e processual durante toda a sequência'
+      )
+      .setRecursosNecessarios([
+        'Sala de aula adequada',
+        'Material didático específico',
+        'Recursos audiovisuais básicos',
+        'Tempo suficiente para desenvolvimento'
+      ])
+      .setReferencias([
+        'Base Nacional Comum Curricular (BNCC)',
+        'Livro didático da disciplina',
+        'Materiais complementares específicos do tema'
+      ])
+      .build();
   }
 }
 
-export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator.getInstance();
+export default SequenciaDidaticaGenerator;
