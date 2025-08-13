@@ -40,28 +40,6 @@ export const sequenciaDidaticaFieldMapping = {
   'Cronograma': 'cronograma'
 };
 
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): boolean {
-  console.log('🔍 Validando dados da Sequência Didática:', data);
-  
-  const requiredFields = [
-    'tituloTemaAssunto',
-    'anoSerie', 
-    'disciplina',
-    'publicoAlvo',
-    'objetivosAprendizagem'
-  ];
-  
-  for (const field of requiredFields) {
-    if (!data[field] || data[field].trim() === '') {
-      console.warn(`⚠️ Campo obrigatório ausente: ${field}`);
-      return false;
-    }
-  }
-  
-  console.log('✅ Dados validados com sucesso');
-  return true;
-}
-
 export function processSequenciaDidaticaData(formData: ActivityFormData): SequenciaDidaticaData {
   console.log('🔄 Processando dados da Sequência Didática:', formData);
 
@@ -101,23 +79,6 @@ export function processSequenciaDidaticaData(formData: ActivityFormData): Sequen
                 formData.cronograma || 
                 'Conforme cronograma escolar'
   };
-}, formData);
-
-  const processedData: SequenciaDidaticaData = {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-    anoSerie: formData.anoSerie || formData.schoolYear || '',
-    disciplina: formData.disciplina || formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '2',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '2',
-    cronograma: formData.cronograma || ''
-  };
-
-  console.log('✅ Dados processados da Sequência Didática:', processedData);
-  return processedData;
 }
 
 export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): boolean {
