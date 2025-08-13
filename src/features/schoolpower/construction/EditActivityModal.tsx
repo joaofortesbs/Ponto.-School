@@ -773,88 +773,87 @@ const EditActivityModal = ({
     }));
   };
 
+  const [activityData, setActivityData] = useState<any>(null); // Estado para armazenar dados da atividade construída
+  const [isBuilt, setIsBuilt] = useState<boolean>(false); // Estado para indicar se a atividade foi construída
+
   // Função para construir a atividade
   const handleBuildActivity = useCallback(async () => {
-    if (!activity || isBuilding) return;
-
-    console.log('🚀 Iniciando construção da atividade:', activity.title);
-    console.log('📊 Dados do formulário:', formData);
+    if (!activity) return;
 
     setIsBuilding(true);
-    setError(null);
-    setBuildProgress(0);
-
     try {
-      // Simular progresso
-      const progressTimer = setInterval(() => {
-        setBuildProgress(prev => Math.min(prev + 10, 90));
-      }, 200);
+      console.log('🔨 Iniciando construção da atividade:', activity.id, formData);
 
-      let result;
+      let builtData = null;
 
-      // Lógica específica para sequencia-didatica
+      // Validar dados antes da construção
       if (activity.id === 'sequencia-didatica') {
-        console.log('🏗️ Construindo Sequência Didática...');
-        result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(formData);
-      } else {
-        // Usar a lógica padrão para outras atividades
-        result = await generateActivityContent(activity.type || activity.id, formData);
+        if (!formData.tituloTemaAssunto?.trim()) {
+          throw new Error('Título do tema/assunto é obrigatório');
+        }
+        if (!formData.disciplina?.trim()) {
+          throw new Error('Disciplina é obrigatória');
+        }
       }
 
-      clearInterval(progressTimer);
-      setBuildProgress(100);
+      // Construir baseado no tipo de atividade
+      switch (activity.id) {
+        case 'sequencia-didatica':
+          console.log('📚 Construindo Sequência Didática com dados:', formData);
+          builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formData);
+          break;
 
-      if (result.success) {
-        console.log('✅ Atividade construída com sucesso:', result.data);
+        case 'plano-aula':
+          console.log('📝 Construindo Plano de Aula');
+          if (typeof planoAulaBuilder !== 'undefined') {
+            builtData = await planoAulaBuilder.buildPlanoAula(formData);
+          } else {
+            builtData = {
+              ...formData,
+              activityType: activity.id,
+              isBuilt: true,
+              buildTimestamp: new Date().toISOString()
+            };
+          }
+          break;
 
-        // Salvar no localStorage com a mesma chave usada pelo sistema
-        const storageKey = `schoolpower_${activity.type || activity.id}_content`;
-        localStorage.setItem(storageKey, JSON.stringify(result.data));
+        default:
+          console.log('🔧 Construção padrão para:', activity.id);
+          builtData = {
+            ...formData,
+            activityType: activity.id,
+            isBuilt: true,
+            buildTimestamp: new Date().toISOString()
+          };
+      }
 
-        // Para plano-aula, também salvar com chave específica para visualização
-        if (activity.type === 'plano-aula' || activity.id === 'plano-aula') {
-          const viewStorageKey = `constructed_plano-aula_${activity.id}`;
-          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-          console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
-        }
+      if (builtData) {
+        console.log('🎯 Atividade construída, atualizando estado:', builtData);
 
-        // Para sequencia-didatica, salvar com chave específica
-        if (activity.id === 'sequencia-didatica') {
-          const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;
-          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-          console.log('💾 Dados da sequência didática salvos para visualização:', viewStorageKey);
-        }
+        // Atualizar o estado da atividade construída
+        setActivityData(builtData);
+        setIsBuilt(true);
 
-        // Também salvar na lista de atividades construídas
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
-        if (!constructedActivities.includes(activity.id)) {
-          constructedActivities.push(activity.id);
-          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-        }
+        console.log('✅ Atividade construída com sucesso:', builtData);
 
-        setBuiltContent(result.data);
-        setGeneratedContent(result.data);
-        setActiveTab('preview');
-
+        // Feedback para o usuário
         toast({
-          title: "Atividade construída!",
-          description: "Sua atividade foi gerada com sucesso.",
+          title: "Atividade Construída!",
+          description: `${activity.title} foi construída com sucesso.`,
+          variant: "default"
         });
       } else {
-        throw new Error(result.error || 'Erro na geração da atividade');
+        throw new Error('Falha na construção da atividade - dados não gerados');
       }
     } catch (error) {
-      console.error('❌ Erro na construção:', error);
-      setError(`Erro ao construir atividade: ${error.message}`);
-
+      console.error('❌ Erro ao construir atividade:', error);
       toast({
-        title: "Erro na construção",
-        description: "Houve um problema ao gerar sua atividade. Tente novamente.",
-        variant: "destructive",
+        title: "Erro na Construção",
+        description: error.message || "Ocorreu um erro ao construir a atividade. Tente novamente.",
+        variant: "destructive"
       });
     } finally {
       setIsBuilding(false);
-      setBuildProgress(0);
     }
   }, [activity, formData, isBuilding, toast]);
 
@@ -878,11 +877,11 @@ const EditActivityModal = ({
   }, [activity, formData, isGenerating, handleBuildActivity]);
 
   const handleSaveChanges = () => {
-    const activityData = {
+    const activityDataToSave = {
       ...formData,
       generatedContent
     };
-    onSave(activityData);
+    onSave(activityDataToSave);
     onClose();
   };
 

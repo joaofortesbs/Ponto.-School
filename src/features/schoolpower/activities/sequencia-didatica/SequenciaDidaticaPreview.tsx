@@ -28,18 +28,20 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     avaliacoes: 2
   });
 
-  // Dados fictícios para demonstração do design
+  // Usar dados reais se disponíveis, caso contrário usar dados fictícios
   const sequenciaData = {
-    tituloTemaAssunto: 'Substantivos Próprios e Verbos',
-    disciplina: 'Português',
-    anoSerie: '6º Ano',
-    objetivosAprendizagem: 'Identificar e classificar substantivos próprios e verbos em textos diversos, compreendendo suas funções sintáticas e semânticas. Aplicar corretamente o uso de substantivos próprios e verbos na produção textual.',
-    publicoAlvo: 'Estudantes do 6º ano do Ensino Fundamental',
-    bnccCompetencias: 'EF67LP32, EF67LP33',
-    quantidadeAulas: 4,
-    quantidadeDiagnosticos: 2,
-    quantidadeAvaliacoes: 2
+    tituloTemaAssunto: data?.tituloTemaAssunto || activityData?.tituloTemaAssunto || 'Substantivos Próprios e Verbos',
+    disciplina: data?.disciplina || activityData?.disciplina || 'Português',
+    anoSerie: data?.anoSerie || activityData?.anoSerie || '6º Ano',
+    objetivosAprendizagem: data?.objetivosAprendizagem || activityData?.objetivosAprendizagem || 'Identificar e classificar substantivos próprios e verbos em textos diversos, compreendendo suas funções sintáticas e semânticas. Aplicar corretamente o uso de substantivos próprios e verbos na produção textual.',
+    publicoAlvo: data?.publicoAlvo || activityData?.publicoAlvo || 'Estudantes do 6º ano do Ensino Fundamental',
+    bnccCompetencias: data?.bnccCompetencias || activityData?.bnccCompetencias || 'EF67LP32, EF67LP33',
+    quantidadeAulas: parseInt(data?.quantidadeAulas || activityData?.quantidadeAulas) || 4,
+    quantidadeDiagnosticos: parseInt(data?.quantidadeDiagnosticos || activityData?.quantidadeDiagnosticos) || 2,
+    quantidadeAvaliacoes: parseInt(data?.quantidadeAvaliacoes || activityData?.quantidadeAvaliacoes) || 2
   };
+
+  console.log('📊 Dados da sequência processados:', sequenciaData);
 
   if (!isBuilt) {
     return (
@@ -370,14 +372,116 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-            <FileText className="mx-auto h-16 w-16 mb-4 opacity-50" />
-            <h4 className="text-lg font-medium mb-2">Conteúdo será exibido aqui</h4>
-            <p className="text-sm">
-              Após finalizar a estrutura e configurações, o conteúdo detalhado das aulas, 
-              diagnósticos e avaliações será gerado e exibido nesta seção.
-            </p>
-          </div>
+          {(data?.aulas || activityData?.aulas) ? (
+            <div className="space-y-6">
+              
+              {/* Aulas Geradas */}
+              {(data?.aulas || activityData?.aulas || []).length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <BookOpen size={20} />
+                    Aulas ({(data?.aulas || activityData?.aulas || []).length})
+                  </h4>
+                  <div className="space-y-4">
+                    {(data?.aulas || activityData?.aulas || []).slice(0, 2).map((aula: any, index: number) => (
+                      <div key={aula.id || index} className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h5 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">{aula.titulo}</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{aula.objetivoEspecifico}</p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock size={12} />
+                            {aula.tempoEstimado || '50 minutos'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {(data?.aulas || activityData?.aulas || []).length > 2 && (
+                      <div className="text-center py-2">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          E mais {(data?.aulas || activityData?.aulas || []).length - 2} aula(s)...
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Diagnósticos */}
+              {(data?.diagnosticos || activityData?.diagnosticos || []).length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <Target size={20} />
+                    Diagnósticos ({(data?.diagnosticos || activityData?.diagnosticos || []).length})
+                  </h4>
+                  <div className="space-y-3">
+                    {(data?.diagnosticos || activityData?.diagnosticos || []).map((diagnostico: any, index: number) => (
+                      <div key={diagnostico.id || index} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <h5 className="font-medium text-green-800 dark:text-green-200">{diagnostico.titulo}</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{diagnostico.objetivo}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Avaliações */}
+              {(data?.avaliacoes || activityData?.avaliacoes || []).length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <CheckCircle size={20} />
+                    Avaliações ({(data?.avaliacoes || activityData?.avaliacoes || []).length})
+                  </h4>
+                  <div className="space-y-3">
+                    {(data?.avaliacoes || activityData?.avaliacoes || []).map((avaliacao: any, index: number) => (
+                      <div key={avaliacao.id || index} className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <h5 className="font-medium text-purple-800 dark:text-purple-200">{avaliacao.titulo}</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{avaliacao.objetivo}</p>
+                        {avaliacao.peso && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Peso: {avaliacao.peso * 100}%
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Cronograma */}
+              {(data?.cronogramaSugerido || activityData?.cronogramaSugerido) && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <Calendar size={20} />
+                    Cronograma Sugerido
+                  </h4>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium">Duração:</span> {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.duracao}
+                      </div>
+                      <div>
+                        <span className="font-medium">Distribuição:</span> {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.distribuicao}
+                      </div>
+                      {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.observacoes && (
+                        <div>
+                          <span className="font-medium">Observações:</span> {(data?.cronogramaSugerido || activityData?.cronogramaSugerido)?.observacoes}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+              <FileText className="mx-auto h-16 w-16 mb-4 opacity-50" />
+              <h4 className="text-lg font-medium mb-2">Conteúdo será exibido aqui</h4>
+              <p className="text-sm">
+                Após finalizar a estrutura e configurações, o conteúdo detalhado das aulas, 
+                diagnósticos e avaliações será gerado e exibido nesta seção.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
