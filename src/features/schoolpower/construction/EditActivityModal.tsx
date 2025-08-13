@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,34 +21,6 @@ import { CheckCircle2 } from 'lucide-react';
 import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
 import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping, sequenciaDidaticaBuilder } from '../activities/sequencia-didatica';
 import SequenciaDidaticaPreview from '../activities/sequencia-didatica/SequenciaDidaticaPreview';
-
-// Mocks or placeholders for functions that might be used by the original code but not provided here.
-// In a real scenario, these would be imported or defined.
-const processListaExerciciosData = (formData: ActivityFormData) => {
-  console.log('processListaExerciciosData called with:', formData);
-  return formData; // Placeholder
-};
-const generateListaExerciciosContent = async (data: any) => {
-  console.log('generateListaExerciciosContent called with:', data);
-  return { ...data, generatedContent: "Placeholder for generated list of exercises" }; // Placeholder
-};
-const generateActivityContent = async (activity: ConstructionActivity, formData: ActivityFormData) => {
-  console.log('generateActivityContent called with:', activity.id, formData);
-  return { ...formData, generatedContent: `Placeholder for generic activity content for ${activity.id}` }; // Placeholder
-};
-// Mock for planoAulaBuilder if it's not defined elsewhere
-const planoAulaBuilder = {
-  buildPlanoAula: async (data: any) => {
-    console.log('buildPlanoAula called with:', data);
-    return { success: true, data: { ...data, generatedContent: "Placeholder for Plano de Aula" } }; // Placeholder
-  }
-};
-
-// Placeholder for the actual setGeneratedActivityData and setIsPreviewOpen which are likely from a parent component or context.
-// For this example, we'll use local state to simulate their effect.
-let setGeneratedActivityData: React.Dispatch<React.SetStateAction<any>> = () => {};
-let setIsPreviewOpen: React.Dispatch<React.SetStateAction<boolean>> = () => {};
-
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
@@ -174,97 +146,7 @@ const EditActivityModal = ({
   const [error, setError] = useState<string | null>(null);
   const [builtContent, setBuiltContent] = useState<any>(null); // Adicionado para uso local
 
-  // Mock state setters for functions used in handleGenerateActivity
-  const [generatedActivityData, setGeneratedActivityDataState] = useState<any>(null);
-  const [isPreviewOpenState, setIsPreviewOpenState] = useState<boolean>(false);
-
-  // Assign mock setters to the actual setters
-  useEffect(() => {
-    setGeneratedActivityData = setGeneratedActivityDataState;
-    setIsPreviewOpen = setIsPreviewOpenState;
-  }, []);
-
   const { toast } = useToast();
-
-  // Função para validar se o formulário está válido
-  const isFormValid = useMemo(() => {
-    if (!activity) {
-      console.log('⚠️ [VALIDATION] Activity não encontrada');
-      return false;
-    }
-
-    console.log('🔍 [VALIDATION] Validando formulário para:', activity.id, formData);
-
-    // Validação específica para sequencia-didatica
-    if (activity.id === 'sequencia-didatica') {
-      const isValid = !!(
-        formData.tituloTemaAssunto?.trim() &&
-        formData.anoSerie?.trim() &&
-        formData.disciplina?.trim() &&
-        formData.publicoAlvo?.trim() &&
-        formData.objetivosAprendizagem?.trim() &&
-        formData.quantidadeAulas?.trim() &&
-        formData.quantidadeDiagnosticos?.trim() &&
-        formData.quantidadeAvaliacoes?.trim()
-      );
-
-      console.log('✅ [VALIDATION] Sequência Didática válida:', isValid, {
-        tituloTemaAssunto: !!formData.tituloTemaAssunto?.trim(),
-        anoSerie: !!formData.anoSerie?.trim(),
-        disciplina: !!formData.disciplina?.trim(),
-        publicoAlvo: !!formData.publicoAlvo?.trim(),
-        objetivosAprendizagem: !!formData.objetivosAprendizagem?.trim(),
-        quantidadeAulas: !!formData.quantidadeAulas?.trim(),
-        quantidadeDiagnosticos: !!formData.quantidadeDiagnosticos?.trim(),
-        quantidadeAvaliacoes: !!formData.quantidadeAvaliacoes?.trim()
-      });
-
-      return isValid;
-    }
-
-    // Validação específica para lista-exercicios
-    if (activity.id === 'lista-exercicios') {
-      const isValid = !!(
-        formData.title?.trim() &&
-        formData.description?.trim() &&
-        formData.subject?.trim() &&
-        formData.theme?.trim() &&
-        formData.schoolYear?.trim() &&
-        formData.numberOfQuestions?.trim() &&
-        formData.difficultyLevel?.trim() &&
-        formData.questionModel?.trim()
-      );
-
-      console.log('✅ [VALIDATION] Lista de Exercícios válida:', isValid);
-      return isValid;
-    }
-
-    // Validação específica para plano-aula
-    if (activity.id === 'plano-aula') {
-      const isValid = !!(
-        formData.title?.trim() &&
-        formData.description?.trim() &&
-        formData.theme?.trim() &&
-        formData.schoolYear?.trim() &&
-        formData.subject?.trim() &&
-        formData.objectives?.trim() &&
-        formData.materials?.trim()
-      );
-
-      console.log('✅ [VALIDATION] Plano de Aula válido:', isValid);
-      return isValid;
-    }
-
-    // Validação genérica para outras atividades
-    const isValid = !!(
-      formData.title?.trim() &&
-      formData.description?.trim() &&
-      formData.objectives?.trim()
-    );
-
-    console.log('✅ [VALIDATION] Atividade genérica válida:', isValid);
-    return isValid;
-  }, [activity, formData]);
 
   // Hook para geração de atividades
   const {
@@ -847,24 +729,7 @@ const EditActivityModal = ({
 
   // Função para construir a atividade
   const handleBuildActivity = useCallback(async () => {
-    if (!activity) {
-      console.error('❌ [BUILD] Activity não encontrada');
-      return;
-    }
-
-    console.log('🔨 [BUILD] Iniciando construção da atividade:', activity.id);
-    console.log('📋 [BUILD] Dados do formulário:', formData);
-
-    // Validação rigorosa antes da construção
-    if (!isFormValid) {
-      console.error('❌ [BUILD] Formulário inválido, não é possível construir a atividade');
-      toast({
-        title: "Formulário Incompleto",
-        description: "Preencha todos os campos obrigatórios antes de construir a atividade.",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!activity) return;
 
     setIsBuilding(true);
     setBuildingStatus({
@@ -878,17 +743,14 @@ const EditActivityModal = ({
 
       let builtData = null;
 
-      // Validação específica adicional para sequencia-didatica
+      // Validar dados antes da construção
       if (activity.id === 'sequencia-didatica') {
-        console.log('📚 [BUILD] Validação específica para Sequência Didática');
-        
-        const validationResult = sequenciaDidaticaBuilder.validateFormData(formData);
-        
-        if (!validationResult.isValid) {
-          throw new Error(`Dados inválidos: ${validationResult.errors.join(', ')}`);
+        if (!formData.tituloTemaAssunto?.trim()) {
+          throw new Error('Título do tema/assunto é obrigatório');
         }
-
-        console.log('✅ [BUILD] Validação da Sequência Didática passou');
+        if (!formData.disciplina?.trim()) {
+          throw new Error('Disciplina é obrigatória');
+        }
       }
 
       setBuildingStatus({
@@ -957,26 +819,6 @@ const EditActivityModal = ({
         setIsBuilt(true);
         setGeneratedContent(builtData);
         setIsContentLoaded(true);
-
-        // Salvar dados no localStorage
-        try {
-          localStorage.setItem(`constructed_${activity.id}_${activity.id}`, JSON.stringify(builtData));
-          localStorage.setItem(`activity_${activity.id}`, JSON.stringify(builtData));
-
-          // Marcar atividade como construída
-          const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-          constructedActivities[activity.id] = {
-            ...activity,
-            isBuilt: true,
-            generatedContent: builtData,
-            builtAt: new Date().toISOString()
-          };
-          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-          console.log('💾 Dados salvos com sucesso no localStorage');
-        } catch (error) {
-          console.error('❌ Erro ao salvar no localStorage:', error);
-        }
 
         setBuildingStatus({
           isBuilding: true,
@@ -1074,6 +916,37 @@ const EditActivityModal = ({
   const handleExportPDF = () => {
     console.log('Exportar PDF em desenvolvimento');
   };
+
+  // Verificar se campos obrigatórios estão preenchidos
+  const isFormValid = activity?.id === 'lista-exercicios'
+    ? formData.title.trim() &&
+      formData.description.trim() &&
+      formData.subject.trim() &&
+      formData.theme.trim() &&
+      formData.schoolYear.trim() &&
+      formData.numberOfQuestions.trim() &&
+      formData.difficultyLevel.trim() &&
+      formData.questionModel.trim()
+    : activity?.id === 'plano-aula'
+    ? formData.title.trim() &&
+      formData.description.trim() &&
+      formData.theme.trim() &&
+      formData.schoolYear.trim() &&
+      formData.subject.trim() &&
+      formData.objectives.trim() &&
+      formData.materials.trim()
+    : activity?.id === 'sequencia-didatica'
+    ? formData.tituloTemaAssunto?.trim() &&
+      formData.anoSerie?.trim() &&
+      formData.disciplina?.trim() &&
+      formData.publicoAlvo?.trim() &&
+      formData.objetivosAprendizagem?.trim() &&
+      formData.quantidadeAulas?.trim() &&
+      formData.quantidadeDiagnosticos?.trim() &&
+      formData.quantidadeAvaliacoes?.trim()
+    : formData.title.trim() &&
+      formData.description.trim() &&
+      formData.objectives.trim();
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -1215,100 +1088,6 @@ const EditActivityModal = ({
       return () => clearTimeout(timer);
     }
   }, [formData, activity, isOpen, handleBuildActivity]);
-
-  // Mocking the handleGenerateActivity function that was in the original code
-  // This is a placeholder and should be replaced with the actual implementation
-  const handleGenerateActivity = async () => {
-    if (!activity) return;
-
-    try {
-      setIsGenerating(true);
-      setIsPreviewOpenState(true); // Use the mocked setter
-
-      console.log('🔄 [EDIT_ACTIVITY_MODAL] Gerando atividade:', activity.id);
-
-      let generatedData;
-
-      if (activity.id === 'lista-exercicios') {
-        console.log('📝 [EDIT_ACTIVITY_MODAL] Processando Lista de Exercícios...');
-
-        const processedData = processListaExerciciosData(formData);
-        generatedData = await generateListaExerciciosContent(processedData);
-
-      } else if (activity.id === 'sequencia-didatica') {
-        console.log('🎯 [EDIT_ACTIVITY_MODAL] Processando Sequência Didática...');
-        console.log('📋 [EDIT_ACTIVITY_MODAL] FormData atual:', formData);
-
-        const buildResult = await sequenciaDidaticaBuilder.build(formData, {
-          activityTitle: activity.title,
-          activityDescription: activity.description,
-          timestamp: new Date().toISOString()
-        });
-
-        console.log('🔍 [EDIT_ACTIVITY_MODAL] Resultado do build:', buildResult);
-
-        if (buildResult.success) {
-          generatedData = buildResult.data;
-          console.log('✅ [EDIT_ACTIVITY_MODAL] Sequência Didática gerada:', {
-            hasMetadados: !!generatedData.metadados,
-            aulasCount: generatedData.aulas?.length || 0,
-            diagnosticosCount: generatedData.diagnosticos?.length || 0,
-            avaliacoesCount: generatedData.avaliacoes?.length || 0,
-            debugSteps: buildResult.debugInfo?.processingSteps?.length || 0
-          });
-
-          if (buildResult.debugInfo) {
-            console.log('🐛 [EDIT_ACTIVITY_MODAL] Debug Info:', buildResult.debugInfo);
-          }
-
-        } else {
-          console.error('❌ [EDIT_ACTIVITY_MODAL] Falha na geração:', {
-            error: buildResult.error,
-            debugInfo: buildResult.debugInfo
-          });
-
-          throw new Error(buildResult.error || 'Falha na geração da sequência didática');
-        }
-
-      } else {
-        console.log('🔧 [EDIT_ACTIVITY_MODAL] Processando atividade genérica...');
-        generatedData = await generateActivityContent(activity, formData);
-      }
-
-      if (generatedData) {
-        setGeneratedActivityDataState(generatedData); // Use the mocked setter
-        setIsBuilt(true);
-
-        console.log('✅ [EDIT_ACTIVITY_MODAL] Atividade gerada e configurada:', {
-          activityId: activity.id,
-          isBuilt: true,
-          dataKeys: Object.keys(generatedData)
-        });
-
-        toast({
-          title: "Atividade gerada com sucesso!",
-          description: `${activity.title} foi construída e está pronta para visualização.`,
-        });
-      } else {
-        throw new Error('Nenhum conteúdo foi gerado pela IA');
-      }
-
-    } catch (error) {
-      console.error('❌ [EDIT_ACTIVITY_MODAL] Erro ao gerar atividade:', error);
-
-      toast({
-        title: "Erro ao gerar atividade",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-
-      setIsPreviewOpenState(true); // Use the mocked setter
-
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
 
   if (!isOpen) return null;
 
@@ -1638,6 +1417,18 @@ const EditActivityModal = ({
                             />
                           </div>
 
+                          <div>
+                            <Label htmlFor="evaluation">Critérios de Avaliação</Label>
+                            <Textarea
+                              id="evaluation"
+                              value={formData.evaluation}
+                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
+                              placeholder="Como avaliar as respostas..."
+                              rows={3}
+                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                            />
+                          </div>
+
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <Label htmlFor="timeLimit">Tempo Limite</Label>
@@ -1727,7 +1518,6 @@ const EditActivityModal = ({
                   onClick={handleBuildActivity}
                   disabled={buildingStatus.isBuilding || !isFormValid}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!isFormValid ? 'Preencha todos os campos obrigatórios para construir a atividade' : 'Construir atividade com IA'}
                 >
                   {buildingStatus.isBuilding ? (
                     <>
@@ -1738,23 +1528,9 @@ const EditActivityModal = ({
                     <>
                       <Play className="h-4 w-4 mr-2" />
                       Construir Atividade
-                      {!isFormValid && activity?.id === 'sequencia-didatica' && (
-                        <span className="ml-2 text-xs opacity-75">
-                          (Campos obrigatórios pendentes)
-                        </span>
-                      )}
                     </>
                   )}
                 </Button>
-
-                {/* Debug info para desenvolvimento */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-                    <strong>Debug:</strong> isFormValid = {isFormValid.toString()}, 
-                    Activity = {activity?.id}, 
-                    Building = {buildingStatus.isBuilding.toString()}
-                  </div>
-                )}
               </div>
             </div>
             )}

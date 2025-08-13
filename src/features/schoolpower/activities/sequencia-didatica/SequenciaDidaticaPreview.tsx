@@ -52,101 +52,55 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   // Processar dados da sequência
   const sequenciaData = data || activityData || {};
   
-  console.log('📊 [SEQUENCIA_DIDATICA_PREVIEW] Dados recebidos para análise:', {
-    hasData: !!data,
-    hasActivityData: !!activityData,
-    isBuilt,
-    sequenciaDataKeys: Object.keys(sequenciaData),
-    hasMetadados: !!sequenciaData.metadados,
-    hasAulas: !!sequenciaData.aulas,
-    hasDebugInfo: !!sequenciaData.debugInfo
-  });
-  
-  // Verificar se há dados válidos da IA
-  const hasAIGeneratedData = sequenciaData && (
-    sequenciaData.metadados || 
-    sequenciaData.aulas?.length > 0 ||
-    sequenciaData.isGeneratedByAI
-  );
-  
-  // Verificar se há dados de formulário
-  const hasFormData = sequenciaData && (
+  // Verificar se há dados válidos
+  const hasValidData = sequenciaData && (
     sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
+    sequenciaData.aulas?.length > 0 ||
+    Object.keys(sequenciaData).length > 5 ||
+    isBuilt || // Se foi construído, considera válido
+    sequenciaData.conteudo_gerado_ia?.length > 0 ||
     sequenciaData.customFields?.['Título do Tema / Assunto'] ||
     sequenciaData.customFields?.['Objetivos de Aprendizagem']
   );
-  
-  const hasValidData = hasAIGeneratedData || hasFormData || (isBuilt && Object.keys(sequenciaData).length > 0);
 
-  console.log('🔍 [SEQUENCIA_DIDATICA_PREVIEW] Verificação de dados válidos:', {
+  console.log('🔍 Verificação de dados válidos:', {
     hasValidData,
-    hasAIGeneratedData,
-    hasFormData,
-    isBuilt,
-    aulaCount: sequenciaData.aulas?.length || 0,
-    diagnosticoCount: sequenciaData.diagnosticos?.length || 0,
-    avaliacaoCount: sequenciaData.avaliacoes?.length || 0
+    sequenciaDataKeys: Object.keys(sequenciaData),
+    hasAulas: !!sequenciaData.aulas,
+    aulaCount: sequenciaData.aulas?.length
   });
 
-  // Extrair dados da IA ou formulário
-  const isAIGenerated = sequenciaData.isGeneratedByAI;
-  const metadados = sequenciaData.metadados || {};
+  // Extrair valores dos campos customizados
   const customFields = sequenciaData.customFields || {};
   
-  console.log('📋 [SEQUENCIA_DIDATICA_PREVIEW] Fontes de dados disponíveis:', {
-    isAIGenerated,
-    hasMetadados: !!metadados,
-    hasCustomFields: !!Object.keys(customFields).length,
-    metadadosKeys: Object.keys(metadados),
-    customFieldsKeys: Object.keys(customFields)
-  });
-  
-  // Tentar extrair dados de diferentes fontes (priorizar dados da IA)
-  const tituloTemaAssunto = 
-    metadados.titulo || 
-    customFields['Título do Tema / Assunto'] || 
+  // Tentar extrair dados de diferentes fontes
+  const tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
     sequenciaData.tituloTemaAssunto || 
     sequenciaData.title || 
     'Sequência Didática';
 
-  const objetivosAprendizagem = 
-    metadados.objetivosGerais ||
-    customFields['Objetivos de Aprendizagem'] || 
+  const objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
     sequenciaData.objetivosAprendizagem || 
     'Desenvolver competências específicas da disciplina através de metodologias ativas';
 
-  const disciplina = 
-    metadados.disciplina ||
-    customFields['Disciplina'] ||
-    sequenciaData.disciplina ||
-    'Disciplina';
-
-  const anoSerie =
-    metadados.anoSerie ||
-    customFields['Ano / Série'] ||
-    sequenciaData.anoSerie ||
-    'Ano/Série';
-
-  // Quantidades reais dos dados gerados
-  const quantidadeAulas = sequenciaData.aulas?.length || 
-    parseInt(customFields['Quantidade de Aulas'] || sequenciaData.quantidadeAulas) || 4;
+  const quantidadeAulas = parseInt(
+    customFields['Quantidade de Aulas'] || 
+    sequenciaData.quantidadeAulas ||
+    sequenciaData.aulas?.length
+  ) || 4;
   
-  const quantidadeDiagnosticos = sequenciaData.diagnosticos?.length ||
-    parseInt(customFields['Quantidade de Diagnósticos'] || sequenciaData.quantidadeDiagnosticos) || 2;
+  const quantidadeDiagnosticos = parseInt(
+    customFields['Quantidade de Diagnósticos'] || 
+    sequenciaData.quantidadeDiagnosticos ||
+    sequenciaData.diagnosticos?.length
+  ) || 2;
   
-  const quantidadeAvaliacoes = sequenciaData.avaliacoes?.length ||
-    parseInt(customFields['Quantidade de Avaliações'] || sequenciaData.quantidadeAvaliacoes) || 2;
-
-  console.log('📊 [SEQUENCIA_DIDATICA_PREVIEW] Dados extraídos:', {
-    tituloTemaAssunto,
-    disciplina, 
-    anoSerie,
-    quantidadeAulas,
-    quantidadeDiagnosticos,
-    quantidadeAvaliacoes,
-    isFromAI: isAIGenerated
-  });
+  const quantidadeAvaliacoes = parseInt(
+    customFields['Quantidade de Avaliações'] || 
+    sequenciaData.quantidadeAvaliacoes ||
+    sequenciaData.avaliacoes?.length
+  ) || 2;
 
   const handleRegenerateSequence = () => {
     console.log('🔄 Regenerando sequência didática...');
@@ -422,97 +376,19 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         {viewMode === 'cards' && (
           <div className="flex gap-6 pb-4 min-w-max overflow-x-auto">
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-w-max">
-            {/* Cards de Aulas - Dados Reais */}
-            {(sequenciaData.aulas || []).length > 0 ? 
-              sequenciaData.aulas.map((aula: any, index: number) => (
-                <Card key={`aula-${aula.id || index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        <Calendar size={12} className="mr-1" />
-                        Aula {aula.numero || index + 1}
-                      </Badge>
-                      <span className="text-sm text-gray-500">{aula.tempoEstimado || '50 min'}</span>
-                    </div>
-                    <CardTitle className="text-lg">{aula.titulo || `Aula ${index + 1}`}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
-                      <p className="text-sm text-gray-600">{aula.objetivoEspecifico || 'Objetivo não especificado'}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Resumo</h4>
-                      <p className="text-sm text-gray-600">{aula.resumoContexto || 'Resumo não especificado'}</p>
-                    </div>
-
-                    {aula.estrutura && (
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-2">Etapas da Aula</h4>
-                        <div className="space-y-2">
-                          {aula.estrutura.introducao && (
-                            <div className="flex items-start gap-2">
-                              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-                              <div>
-                                <span className="text-xs font-medium text-green-700">Introdução ({aula.estrutura.introducao.tempo})</span>
-                                <p className="text-xs text-gray-600">{aula.estrutura.introducao.descricao}</p>
-                              </div>
-                            </div>
-                          )}
-                          {aula.estrutura.desenvolvimento && (
-                            <div className="flex items-start gap-2">
-                              <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0"></div>
-                              <div>
-                                <span className="text-xs font-medium text-orange-700">Desenvolvimento ({aula.estrutura.desenvolvimento.tempo})</span>
-                                <p className="text-xs text-gray-600">{aula.estrutura.desenvolvimento.descricao}</p>
-                              </div>
-                            </div>
-                          )}
-                          {aula.estrutura.fechamento && (
-                            <div className="flex items-start gap-2">
-                              <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0"></div>
-                              <div>
-                                <span className="text-xs font-medium text-purple-700">Fechamento ({aula.estrutura.fechamento.tempo})</span>
-                                <p className="text-xs text-gray-600">{aula.estrutura.fechamento.descricao}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {aula.recursos && aula.recursos.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Recursos Necessários</h4>
-                        <div className="flex flex-wrap gap-1">
-                          {aula.recursos.slice(0, 3).map((recurso: string, idx: number) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">{recurso}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Metodologia</h4>
-                      <p className="text-xs text-gray-600">{aula.metodologia || 'Metodologia não especificada'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )) : 
-              // Fallback quando não há dados da IA
-              Array.from({length: quantidadeAulas}, (_, index) => (
-                <Card key={`aula-placeholder-${index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                        <Calendar size={12} className="mr-1" />
-                        Aula {index + 1}
-                      </Badge>
-                      <span className="text-sm text-gray-500">50 min</span>
-                    </div>
-                    <CardTitle className="text-lg">{tituloTemaAssunto} - Parte {index + 1}</CardTitle>
-                  </CardHeader>
+            {/* Cards de Aulas */}
+            {[1, 2, 3, 4].map((aulaIndex) => (
+              <Card key={`aula-${aulaIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                      <Calendar size={12} className="mr-1" />
+                      Aula {aulaIndex}
+                    </Badge>
+                    <span className="text-sm text-gray-500">50 min</span>
+                  </div>
+                  <CardTitle className="text-lg">Introdução às Funções do 1º Grau</CardTitle>
+                </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
@@ -568,59 +444,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               </Card>
             ))}
 
-            {/* Cards de Diagnósticos - Dados Reais */}
-            {(sequenciaData.diagnosticos || []).length > 0 ?
-              sequenciaData.diagnosticos.map((diagnostico: any, index: number) => (
-                <Card key={`diagnostico-${diagnostico.id || index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500 min-w-[320px] flex-shrink-0">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
-                        <BarChart3 size={12} className="mr-1" />
-                        Diagnóstico {diagnostico.numero || index + 1}
-                      </Badge>
-                      <span className="text-sm text-gray-500">{diagnostico.tempoEstimado || '20 min'}</span>
-                    </div>
-                    <CardTitle className="text-lg">{diagnostico.titulo || `Diagnóstico ${index + 1}`}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Avaliativo</h4>
-                      <p className="text-sm text-gray-600">{diagnostico.objetivo || 'Objetivo não especificado'}</p>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tipo de Avaliação</h4>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">{diagnostico.tipo || 'Não especificado'}</Badge>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Questões</h4>
-                        <p className="text-lg font-bold text-green-600">{diagnostico.questoesSugeridas?.length || 0} questões</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Formato</h4>
-                        <p className="text-sm text-gray-600">{diagnostico.tipo || 'Não especificado'}</p>
-                      </div>
-                    </div>
-
-                    {diagnostico.criterios && diagnostico.criterios.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Critérios de Avaliação</h4>
-                        <div className="space-y-1 text-xs">
-                          {diagnostico.criterios.slice(0, 3).map((criterio: string, idx: number) => (
-                            <div key={idx} className="flex justify-between">
-                              <span>{criterio}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )) :
-              // Fallback para diagnósticos
-              Array.from({length: quantidadeDiagnosticos}, (_, index) => (
+            {/* Cards de Diagnósticos */}
+            {[1, 2].map((diagIndex) => (
               <Card key={`diagnostico-${diagIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -675,67 +500,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               </Card>
             ))}
 
-            {/* Cards de Avaliações - Dados Reais */}
-            {(sequenciaData.avaliacoes || []).length > 0 ?
-              sequenciaData.avaliacoes.map((avaliacao: any, index: number) => (
-                <Card key={`avaliacao-${avaliacao.id || index}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500 min-w-[320px] flex-shrink-0">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                        <CheckSquare size={12} className="mr-1" />
-                        Avaliação {avaliacao.numero || index + 1}
-                      </Badge>
-                      <span className="text-sm text-gray-500">{avaliacao.tempoEstimado || '45 min'}</span>
-                    </div>
-                    <CardTitle className="text-lg">{avaliacao.titulo || `Avaliação ${index + 1}`}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Avaliativo</h4>
-                      <p className="text-sm text-gray-600">{avaliacao.objetivo || 'Objetivo não especificado'}</p>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tipo de Avaliação</h4>
-                      <Badge variant="outline" className="bg-red-50 text-red-700">{avaliacao.tipo || 'Não especificado'}</Badge>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Questões</h4>
-                        <p className="text-lg font-bold text-purple-600">{avaliacao.questoesSugeridas?.length || 0} questões</p>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Valor Total</h4>
-                        <p className="text-sm text-gray-600">{avaliacao.peso || '10,0'} pontos</p>
-                      </div>
-                    </div>
-
-                    {avaliacao.criterios && avaliacao.criterios.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Critérios</h4>
-                        <div className="space-y-1 text-xs">
-                          {avaliacao.criterios.slice(0, 2).map((criterio: any, idx: number) => (
-                            <div key={idx} className="flex justify-between">
-                              <span>{criterio.criterio || criterio}</span>
-                              {criterio.peso && <span className="font-medium">{criterio.peso} pts</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {avaliacao.observacoes && (
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-700 mb-1">Observações</h4>
-                        <p className="text-xs text-gray-600">{avaliacao.observacoes}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )) :
-              // Fallback para avaliações
-              Array.from({length: quantidadeAvaliacoes}, (_, index) => (
+            {/* Cards de Avaliações */}
+            {[1, 2].map((avalIndex) => (
               <Card key={`avaliacao-${avalIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -997,160 +763,192 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
         {viewMode === 'grade' && (
           <div className="space-y-6 overflow-x-auto pb-4">
-            {/* Tabela em Grade */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <List className="text-gray-600" size={20} />
-                  Visão Geral da Sequência Didática
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse min-w-[1000px]">
-                    <thead>
-                      <tr className="border-b-2 border-gray-200">
-                        <th className="text-left p-4 font-semibold text-gray-700">Item</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Título</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Objetivo</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Duração</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Tipo</th>
-                        <th className="text-left p-4 font-semibold text-gray-700">Recursos</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* Aulas */}
-                      {[1, 2, 3, 4].map((aulaIndex) => (
-                        <tr key={`grade-aula-${aulaIndex}`} className="border-b border-gray-100 hover:bg-blue-50 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                A{aulaIndex}
-                              </div>
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700">Aula</Badge>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <h4 className="font-medium text-gray-900">Introdução às Funções do 1º Grau</h4>
-                              <p className="text-sm text-gray-600">Conceitos fundamentais e representação gráfica</p>
-                            </div>
-                          </td>
-                          <td className="p-4 max-w-xs">
-                            <p className="text-sm text-gray-600">Compreender o conceito de função linear e sua representação gráfica através de exemplos práticos do cotidiano.</p>
-                          </td>
-                          <td className="p-4">
-                            <div className="text-center">
-                              <span className="font-bold text-lg">50</span>
-                              <p className="text-xs text-gray-500">minutos</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <p className="text-sm">Expositiva</p>
-                              <p className="text-sm">Prática</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-wrap gap-1">
-                              <Badge variant="secondary" className="text-xs">Quadro</Badge>
-                              <Badge variant="secondary" className="text-xs">GeoGebra</Badge>
-                              <Badge variant="secondary" className="text-xs">Material</Badge>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+            {/* Grade de Cards - 4 por linha */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Cards de Aulas */}
+              {[1, 2, 3, 4].map((aulaIndex) => (
+                <Card key={`grade-aula-${aulaIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        <Calendar size={12} className="mr-1" />
+                        Aula {aulaIndex}
+                      </Badge>
+                      <span className="text-sm text-gray-500">50 min</span>
+                    </div>
+                    <CardTitle className="text-lg">Introdução às Funções do 1º Grau</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Específico</h4>
+                      <p className="text-sm text-gray-600">Compreender o conceito de função linear e sua representação gráfica.</p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Resumo</h4>
+                      <p className="text-sm text-gray-600">Contextualização sobre situações cotidianas que envolvem relações lineares.</p>
+                    </div>
 
-                      {/* Diagnósticos */}
-                      {[1, 2].map((diagIndex) => (
-                        <tr key={`grade-diag-${diagIndex}`} className="border-b border-gray-100 hover:bg-green-50 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                D{diagIndex}
-                              </div>
-                              <Badge variant="outline" className="bg-green-50 text-green-700">Diagnóstico</Badge>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <h4 className="font-medium text-gray-900">Avaliação Diagnóstica - Conhecimentos Prévios</h4>
-                              <p className="text-sm text-gray-600">Quiz sobre álgebra básica e coordenadas</p>
-                            </div>
-                          </td>
-                          <td className="p-4 max-w-xs">
-                            <p className="text-sm text-gray-600">Identificar conhecimentos prévios dos alunos sobre álgebra básica e sistema de coordenadas cartesianas.</p>
-                          </td>
-                          <td className="p-4">
-                            <div className="text-center">
-                              <span className="font-bold text-lg">20</span>
-                              <p className="text-xs text-gray-500">minutos</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <p className="text-sm">Quiz Digital</p>
-                              <p className="text-sm font-medium text-green-600">8 questões</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-wrap gap-1">
-                              <Badge variant="secondary" className="text-xs">Computador</Badge>
-                              <Badge variant="secondary" className="text-xs">Internet</Badge>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-2">Etapas da Aula</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
+                          <div>
+                            <span className="text-xs font-medium text-green-700">Introdução (10 min)</span>
+                            <p className="text-xs text-gray-600">Apresentação do conceito através de exemplos práticos</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0"></div>
+                          <div>
+                            <span className="text-xs font-medium text-orange-700">Desenvolvimento (30 min)</span>
+                            <p className="text-xs text-gray-600">Construção de gráficos e análise de propriedades</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0"></div>
+                          <div>
+                            <span className="text-xs font-medium text-purple-700">Fechamento (10 min)</span>
+                            <p className="text-xs text-gray-600">Síntese dos conceitos e resolução de dúvidas</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                      {/* Avaliações */}
-                      {[1, 2].map((avalIndex) => (
-                        <tr key={`grade-aval-${avalIndex}`} className="border-b border-gray-100 hover:bg-purple-50 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                P{avalIndex}
-                              </div>
-                              <Badge variant="outline" className="bg-purple-50 text-purple-700">Prova</Badge>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div>
-                              <h4 className="font-medium text-gray-900">Prova Somativa - Funções Lineares</h4>
-                              <p className="text-sm text-gray-600">Avaliação formal dos conhecimentos adquiridos</p>
-                            </div>
-                          </td>
-                          <td className="p-4 max-w-xs">
-                            <p className="text-sm text-gray-600">Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas contextualizados.</p>
-                          </td>
-                          <td className="p-4">
-                            <div className="text-center">
-                              <span className="font-bold text-lg">45</span>
-                              <p className="text-xs text-gray-500">minutos</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              <p className="text-sm">Prova Escrita</p>
-                              <p className="text-sm font-medium text-purple-600">12 questões</p>
-                              <p className="text-xs text-gray-500">8 objetivas + 4 discursivas</p>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-wrap gap-1">
-                              <Badge variant="secondary" className="text-xs">Papel</Badge>
-                              <Badge variant="secondary" className="text-xs">Calculadora</Badge>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Recursos Necessários</h4>
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="secondary" className="text-xs">Quadro</Badge>
+                        <Badge variant="secondary" className="text-xs">GeoGebra</Badge>
+                        <Badge variant="secondary" className="text-xs">Material impresso</Badge>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Atividade Prática</h4>
+                      <p className="text-xs text-gray-600">Lista de exercícios sobre identificação e construção de gráficos lineares</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Cards de Diagnósticos */}
+              {[1, 2].map((diagIndex) => (
+                <Card key={`grade-diagnostico-${diagIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                        <BarChart3 size={12} className="mr-1" />
+                        Diagnóstico {diagIndex}
+                      </Badge>
+                      <span className="text-sm text-gray-500">20 min</span>
+                    </div>
+                    <CardTitle className="text-lg">Avaliação Diagnóstica - Conhecimentos Prévios</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Avaliativo</h4>
+                      <p className="text-sm text-gray-600">Identificar conhecimentos prévios sobre álgebra básica e coordenadas cartesianas.</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tipo de Avaliação</h4>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">Quiz Interativo</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Questões</h4>
+                        <p className="text-lg font-bold text-green-600">8 questões</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Formato</h4>
+                        <p className="text-sm text-gray-600">Múltipla escolha</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Critérios de Correção</h4>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span>Excelente (8-7 acertos)</span>
+                          <span className="text-green-600 font-medium">Pronto para avançar</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Bom (6-5 acertos)</span>
+                          <span className="text-yellow-600 font-medium">Revisão leve</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Precisa melhorar (&lt;5)</span>
+                          <span className="text-red-600 font-medium">Revisão necessária</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Cards de Avaliações */}
+              {[1, 2].map((avalIndex) => (
+                <Card key={`grade-avaliacao-${avalIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                        <CheckSquare size={12} className="mr-1" />
+                        Avaliação {avalIndex}
+                      </Badge>
+                      <span className="text-sm text-gray-500">45 min</span>
+                    </div>
+                    <CardTitle className="text-lg">Prova Somativa - Funções Lineares</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Objetivo Avaliativo</h4>
+                      <p className="text-sm text-gray-600">Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas.</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Tipo de Avaliação</h4>
+                      <Badge variant="outline" className="bg-red-50 text-red-700">Prova Escrita</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Questões</h4>
+                        <p className="text-lg font-bold text-purple-600">12 questões</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-700 mb-1">Valor Total</h4>
+                        <p className="text-sm text-gray-600">10,0 pontos</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Composição</h4>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span>8 Múltipla escolha</span>
+                          <span className="font-medium">6,0 pts</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>4 Discursivas</span>
+                          <span className="font-medium">4,0 pts</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-sm text-gray-700 mb-1">Gabarito</h4>
+                      <p className="text-xs text-gray-600">Disponível após aplicação com critérios detalhados de correção</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
             {/* Resumo Estatístico */}
-            <div className="grid md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
               <Card>
                 <CardContent className="p-4 text-center">
                   <Calendar className="text-blue-500 mx-auto mb-2" size={24} />

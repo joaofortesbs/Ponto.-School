@@ -1,433 +1,143 @@
-
-import { processSequenciaDidaticaData, ProcessedSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
-import { buildSequenciaDidaticaPrompt, validatePromptData } from '../../prompts/sequenciaDidaticaPrompt';
-import { GeminiClient } from '../../../../utils/api/geminiClient';
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
-
-export interface SequenciaDidaticaBuildResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-  debugInfo?: {
-    processingSteps: string[];
-    errors: string[];
-    aiResponse?: string;
-    timestamp: string;
-  };
-}
+import { sequenciaDidaticaGenerator, SequenciaDidaticaCompleta, SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
+import { SequenciaDidaticaData, processSequenciaDidaticaData, validateSequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
 export class SequenciaDidaticaBuilder {
-  private geminiClient: GeminiClient;
-  private debugInfo: {
-    processingSteps: string[];
-    errors: string[];
-    aiResponse?: string;
-    timestamp: string;
-  };
-
-  constructor() {
-    this.geminiClient = new GeminiClient();
-    this.debugInfo = {
-      processingSteps: [],
-      errors: [],
-      timestamp: new Date().toISOString()
-    };
-    
-    console.log('🏗️ [SEQUENCIA_DIDATICA_BUILDER] Inicializado');
-  }
-
-  async build(formData: ActivityFormData, contextualizationData?: any): Promise<SequenciaDidaticaBuildResult> {
-    console.log('🚀 [SEQUENCIA_DIDATICA_BUILDER] Iniciando construção da sequência didática');
-    
-    this.debugInfo.processingSteps.push('Início da construção');
-    
+  static async saveSequencia(data: any): Promise<void> {
     try {
-      // Etapa 1: Processar dados do formulário
-      this.debugInfo.processingSteps.push('Processando dados do formulário');
-      console.log('📋 [SEQUENCIA_DIDATICA_BUILDER] Processando dados do formulário...');
-      
-      const processedData = processSequenciaDidaticaData(formData);
-      
-      if (!processedData.isComplete) {
-        const error = `Dados incompletos: ${processedData.validationErrors.join(', ')}`;
-        this.debugInfo.errors.push(error);
-        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER]', error);
-        
-        return {
-          success: false,
-          error,
-          debugInfo: this.debugInfo
-        };
+      console.log('💾 Salvando Sequência Didática:', data);
+
+      const sequenciaId = data.id || `seq_${Date.now()}`;
+      const storageKey = `constructed_sequencia-didatica_${sequenciaId}`;
+
+      // Salvar no localStorage específico
+      localStorage.setItem(storageKey, JSON.stringify(data));
+
+      // Também salvar na lista geral
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      const existingIndex = savedSequencias.findIndex((s: any) => s.id === sequenciaId);
+
+      if (existingIndex >= 0) {
+        savedSequencias[existingIndex] = data;
+      } else {
+        savedSequencias.push({
+          ...data,
+          id: sequenciaId,
+          createdAt: new Date().toISOString()
+        });
       }
 
-      this.debugInfo.processingSteps.push('Dados processados com sucesso');
-      console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Dados processados:', processedData);
+      localStorage.setItem('sequenciasDidaticas', JSON.stringify(savedSequencias));
 
-      // Etapa 2: Validar dados para o prompt
-      this.debugInfo.processingSteps.push('Validando dados para o prompt');
-      console.log('🔍 [SEQUENCIA_DIDATICA_BUILDER] Validando dados para o prompt...');
-      
-      const promptErrors = validatePromptData({
-        ...processedData,
-        contextualizationData
-      });
-
-      if (promptErrors.length > 0) {
-        const error = `Erros de validação do prompt: ${promptErrors.join(', ')}`;
-        this.debugInfo.errors.push(error);
-        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER]', error);
-        
-        return {
-          success: false,
-          error,
-          debugInfo: this.debugInfo
-        };
-      }
-
-      this.debugInfo.processingSteps.push('Validação do prompt concluída');
-
-      // Etapa 3: Construir prompt para IA
-      this.debugInfo.processingSteps.push('Construindo prompt para IA');
-      console.log('📝 [SEQUENCIA_DIDATICA_BUILDER] Construindo prompt...');
-      
-      const prompt = buildSequenciaDidaticaPrompt({
-        ...processedData,
-        contextualizationData
-      });
-
-      console.log('📤 [SEQUENCIA_DIDATICA_BUILDER] Prompt construído, tamanho:', prompt.length);
-
-      // Etapa 4: Chamar API Gemini
-      this.debugInfo.processingSteps.push('Chamando API Gemini');
-      console.log('🤖 [SEQUENCIA_DIDATICA_BUILDER] Enviando para API Gemini...');
-      
-      const geminiResponse = await this.geminiClient.generate({
-        prompt,
-        temperature: 0.7,
-        maxTokens: 6000,
-        topP: 0.9,
-        topK: 40
-      });
-
-      if (!geminiResponse.success) {
-        const error = `Erro na API Gemini: ${geminiResponse.error}`;
-        this.debugInfo.errors.push(error);
-        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER]', error);
-        
-        return {
-          success: false,
-          error,
-          debugInfo: this.debugInfo
-        };
-      }
-
-      this.debugInfo.processingSteps.push('Resposta da API Gemini recebida');
-      this.debugInfo.aiResponse = geminiResponse.content;
-      console.log('📥 [SEQUENCIA_DIDATICA_BUILDER] Resposta da IA recebida, tamanho:', geminiResponse.content?.length);
-
-      // Etapa 5: Processar resposta da IA
-      this.debugInfo.processingSteps.push('Processando resposta da IA');
-      console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] Processando resposta da IA...');
-      
-      const parsedData = this.parseAIResponse(geminiResponse.content);
-      
-      if (!parsedData) {
-        const error = 'Falha ao processar resposta da IA - JSON inválido';
-        this.debugInfo.errors.push(error);
-        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER]', error);
-        
-        return {
-          success: false,
-          error,
-          debugInfo: this.debugInfo
-        };
-      }
-
-      this.debugInfo.processingSteps.push('Resposta da IA processada com sucesso');
-
-      // Etapa 6: Validar estrutura da resposta
-      this.debugInfo.processingSteps.push('Validando estrutura da resposta');
-      console.log('🔍 [SEQUENCIA_DIDATICA_BUILDER] Validando estrutura da resposta...');
-      
-      const validationResult = this.validateAIResponse(parsedData, processedData);
-      
-      if (!validationResult.isValid) {
-        const error = `Resposta da IA inválida: ${validationResult.errors.join(', ')}`;
-        this.debugInfo.errors.push(error);
-        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER]', error);
-        
-        return {
-          success: false,
-          error,
-          debugInfo: this.debugInfo
-        };
-      }
-
-      this.debugInfo.processingSteps.push('Validação da estrutura concluída');
-
-      // Etapa 7: Finalizar dados
-      this.debugInfo.processingSteps.push('Finalizando dados');
-      const finalData = {
-        ...parsedData,
-        generatedAt: new Date().toISOString(),
-        inputData: processedData,
-        isGeneratedByAI: true,
-        debugInfo: this.debugInfo
-      };
-
-      console.log('✅ [SEQUENCIA_DIDATICA_BUILDER] Sequência didática construída com sucesso!');
-      this.debugInfo.processingSteps.push('Construção finalizada com sucesso');
-
-      return {
-        success: true,
-        data: finalData,
-        debugInfo: this.debugInfo
-      };
+      console.log('✅ Sequência Didática salva com sucesso:', sequenciaId);
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      this.debugInfo.errors.push(`Erro crítico: ${errorMessage}`);
-      console.error('💥 [SEQUENCIA_DIDATICA_BUILDER] Erro crítico:', error);
-      
-      return {
-        success: false,
-        error: `Erro crítico na construção: ${errorMessage}`,
-        debugInfo: this.debugInfo
-      };
+      console.error('❌ Erro ao salvar Sequência Didática:', error);
+      throw error;
     }
   }
 
-  private parseAIResponse(content?: string): any | null {
-    if (!content) {
-      console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Conteúdo da IA vazio');
-      return null;
-    }
-
+  static async loadSequencia(id: string): Promise<any> {
     try {
-      // Tentar parse direto primeiro
-      console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] Tentando parse direto do JSON...');
-      return JSON.parse(content);
-      
-    } catch (firstError) {
-      console.log('⚠️ [SEQUENCIA_DIDATICA_BUILDER] Parse direto falhou, tentando extrair JSON...');
-      
-      try {
-        // Tentar extrair JSON do conteúdo
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const extractedJson = jsonMatch[0];
-          console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] JSON extraído, tentando parse...');
-          return JSON.parse(extractedJson);
-        }
-        
-        // Tentar encontrar entre ```json
-        const codeBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-        if (codeBlockMatch) {
-          console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] JSON encontrado em code block...');
-          return JSON.parse(codeBlockMatch[1]);
-        }
-        
-        throw new Error('Nenhum JSON válido encontrado no conteúdo');
-        
-      } catch (secondError) {
-        console.error('❌ [SEQUENCIA_DIDATICA_BUILDER] Falha completa no parse:', {
-          firstError: firstError.message,
-          secondError: secondError.message,
-          contentPreview: content.substring(0, 500)
-        });
+      console.log('📂 Carregando Sequência Didática:', id);
+
+      // Tentar carregar do localStorage específico primeiro
+      const specificKey = `constructed_sequencia-didatica_${id}`;
+      const specificData = localStorage.getItem(specificKey);
+
+      if (specificData) {
+        console.log('✅ Sequência encontrada no storage específico');
+        return JSON.parse(specificData);
+      }
+
+      // Fallback para lista geral
+      const savedSequencias = JSON.parse(localStorage.getItem('sequenciasDidaticas') || '[]');
+      const sequencia = savedSequencias.find((s: any) => s.id === id);
+
+      if (!sequencia) {
+        console.warn(`⚠️ Sequência Didática com ID ${id} não encontrada`);
         return null;
       }
+
+      return sequencia;
+
+    } catch (error) {
+      console.error('❌ Erro ao carregar sequência salva:', error);
+      return null;
     }
   }
 
-  private validateAIResponse(data: any, processedData: ProcessedSequenciaDidaticaData): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    
-    console.log('🔍 [SEQUENCIA_DIDATICA_BUILDER] Validando resposta da IA...');
+  static async buildSequenciaDidatica(formData: any): Promise<any> {
+    console.log('🔨 Iniciando construção da Sequência Didática:', formData);
 
-    // Validar estrutura básica
-    if (!data || typeof data !== 'object') {
-      errors.push('Resposta não é um objeto válido');
-      return { isValid: false, errors };
-    }
+    try {
+      // Processar e validar dados
+      const processedData = processSequenciaDidaticaData(formData);
+      console.log('📋 Dados processados:', processedData);
 
-    // Validar metadados - mais flexível
-    if (!data.metadados && !data.metadata) {
-      console.warn('⚠️ [SEQUENCIA_DIDATICA_BUILDER] Metadados ausentes, criando estrutura básica...');
-      data.metadados = {
-        titulo: processedData.tituloTemaAssunto || 'Sequência Didática',
-        disciplina: processedData.disciplina || 'Educação',
-        anoSerie: processedData.anoSerie || 'Ensino Fundamental',
-        objetivos: processedData.objetivosAprendizagem || 'Objetivos de aprendizagem'
+      if (!validateSequenciaDidaticaData(processedData)) {
+        throw new Error('Dados obrigatórios não preenchidos corretamente');
+      }
+
+      // Gerar sequência completa usando o generator
+      console.log('🎯 Chamando generator para criar sequência...');
+      const sequenciaGerada = await SequenciaDidaticaGenerator.generateSequenciaDidatica(processedData);
+
+      // Criar estrutura completa da sequência didática
+      const sequenciaCompleta = {
+        // Metadados básicos
+        id: `sequencia-didatica`,
+        activityId: 'sequencia-didatica',
+        tituloTemaAssunto: processedData.tituloTemaAssunto,
+        disciplina: processedData.disciplina,
+        anoSerie: processedData.anoSerie,
+        objetivosAprendizagem: processedData.objetivosAprendizagem,
+        publicoAlvo: processedData.publicoAlvo,
+        bnccCompetencias: processedData.bnccCompetencias,
+        quantidadeAulas: parseInt(processedData.quantidadeAulas) || 4,
+        quantidadeDiagnosticos: parseInt(processedData.quantidadeDiagnosticos) || 2,
+        quantidadeAvaliacoes: parseInt(processedData.quantidadeAvaliacoes) || 2,
+
+        // Dados gerados
+        ...sequenciaGerada,
+
+        // Status e timestamps
+        isBuilt: true,
+        isGenerated: true,
+        buildTimestamp: new Date().toISOString(),
+        lastModified: new Date().toISOString()
       };
+
+      // Salvar automaticamente
+      await this.saveSequencia(sequenciaCompleta);
+
+      console.log('✅ Sequência Didática construída e salva com sucesso:', sequenciaCompleta);
+      return sequenciaCompleta;
+
+    } catch (error) {
+      console.error('❌ Erro ao construir Sequência Didática:', error);
+      throw new Error(`Erro na construção: ${error.message}`);
     }
-
-    // Validar aulas - mais flexível
-    if (!Array.isArray(data.aulas)) {
-      console.warn('⚠️ [SEQUENCIA_DIDATICA_BUILDER] Aulas não é array, criando estrutura...');
-      data.aulas = [];
-      const expectedAulas = parseInt(processedData.quantidadeAulas) || 1;
-      for (let i = 1; i <= expectedAulas; i++) {
-        data.aulas.push({
-          numero: i,
-          titulo: `Aula ${i}`,
-          duracao: '50 minutos',
-          objetivos: [`Objetivo da aula ${i}`],
-          conteudo: `Conteúdo da aula ${i}`,
-          atividades: [`Atividade da aula ${i}`],
-          recursos: ['Recursos necessários'],
-          avaliacao: 'Avaliação formativa'
-        });
-      }
-    }
-
-    // Validar diagnósticos - mais flexível
-    if (!Array.isArray(data.diagnosticos)) {
-      console.warn('⚠️ [SEQUENCIA_DIDATICA_BUILDER] Diagnósticos não é array, criando estrutura...');
-      data.diagnosticos = [];
-      const expectedDiag = parseInt(processedData.quantidadeDiagnosticos) || 1;
-      for (let i = 1; i <= expectedDiag; i++) {
-        data.diagnosticos.push({
-          titulo: `Diagnóstico ${i}`,
-          descricao: `Avaliação diagnóstica ${i}`,
-          tipo: 'Diagnóstica',
-          instrumentos: ['Questionário', 'Observação'],
-          criterios: ['Participação', 'Compreensão']
-        });
-      }
-    }
-
-    // Validar avaliações - mais flexível
-    if (!Array.isArray(data.avaliacoes)) {
-      console.warn('⚠️ [SEQUENCIA_DIDATICA_BUILDER] Avaliações não é array, criando estrutura...');
-      data.avaliacoes = [];
-      const expectedAval = parseInt(processedData.quantidadeAvaliacoes) || 1;
-      for (let i = 1; i <= expectedAval; i++) {
-        data.avaliacoes.push({
-          titulo: `Avaliação ${i}`,
-          descricao: `Avaliação formativa ${i}`,
-          tipo: 'Formativa',
-          instrumentos: ['Prova', 'Atividade prática'],
-          criterios: ['Conhecimento', 'Aplicação'],
-          peso: 1
-        });
-      }
-    }
-
-    // Após correções automáticas, validar novamente
-    const hasValidStructure = 
-      data.metadados && 
-      Array.isArray(data.aulas) && 
-      Array.isArray(data.diagnosticos) && 
-      Array.isArray(data.avaliacoes);
-
-    if (!hasValidStructure) {
-      errors.push('Estrutura básica inválida mesmo após correções automáticas');
-    }
-
-    const isValid = errors.length === 0;
-    
-    console.log(`${isValid ? '✅' : '❌'} [SEQUENCIA_DIDATICA_BUILDER] Validação da resposta:`, {
-      isValid,
-      errorsCount: errors.length,
-      errors,
-      structure: {
-        hasMetadados: !!data.metadados,
-        aulasCount: data.aulas?.length || 0,
-        diagnosticosCount: data.diagnosticos?.length || 0,
-        avaliacoesCount: data.avaliacoes?.length || 0
-      }
-    });
-
-    return { isValid, errors };
   }
 
-  async buildSequenciaDidatica(formData: ActivityFormData, contextualizationData?: any): Promise<SequenciaDidaticaBuildResult> {
-    console.log('🔄 [SEQUENCIA_DIDATICA_BUILDER] Método buildSequenciaDidatica chamado');
-    return this.build(formData, contextualizationData);
-  }
+  static async regenerateSequencia(activityId: string, newData: any): Promise<any> {
+    console.log('🔄 Regenerando Sequência Didática:', activityId, newData);
 
-  // Método para validar dados do formulário com logs detalhados
-  validateFormData(formData: ActivityFormData): { isValid: boolean; errors: string[] } {
-    console.log('🔍 [SEQUENCIA_DIDATICA_BUILDER] Validando dados do formulário:', formData);
-    
-    const errors: string[] = [];
+    try {
+      // Carregar dados existentes
+      const existingData = await this.loadSequencia(activityId);
 
-    // Validações obrigatórias com logs individuais
-    if (!formData.tituloTemaAssunto?.trim()) {
-      errors.push('Título do tema/assunto é obrigatório');
-      console.log('❌ [VALIDATION] Título do tema/assunto está vazio');
+      // Mesclar com novos dados
+      const mergedData = { ...existingData, ...newData };
+
+      // Reconstruir
+      return await this.buildSequenciaDidatica(mergedData);
+
+    } catch (error) {
+      console.error('❌ Erro ao regenerar Sequência Didática:', error);
+      throw error;
     }
-
-    if (!formData.disciplina?.trim()) {
-      errors.push('Disciplina é obrigatória');
-      console.log('❌ [VALIDATION] Disciplina está vazia');
-    }
-
-    if (!formData.anoSerie?.trim()) {
-      errors.push('Ano/Série é obrigatório');
-      console.log('❌ [VALIDATION] Ano/Série está vazio');
-    }
-
-    if (!formData.publicoAlvo?.trim()) {
-      errors.push('Público-alvo é obrigatório');
-      console.log('❌ [VALIDATION] Público-alvo está vazio');
-    }
-
-    if (!formData.objetivosAprendizagem?.trim()) {
-      errors.push('Objetivos de aprendizagem são obrigatórios');
-      console.log('❌ [VALIDATION] Objetivos de aprendizagem estão vazios');
-    }
-
-    if (!formData.quantidadeAulas?.trim()) {
-      errors.push('Quantidade de aulas é obrigatória');
-      console.log('❌ [VALIDATION] Quantidade de aulas está vazia');
-    }
-
-    if (!formData.quantidadeDiagnosticos?.trim()) {
-      errors.push('Quantidade de diagnósticos é obrigatória');
-      console.log('❌ [VALIDATION] Quantidade de diagnósticos está vazia');
-    }
-
-    if (!formData.quantidadeAvaliacoes?.trim()) {
-      errors.push('Quantidade de avaliações é obrigatória');
-      console.log('❌ [VALIDATION] Quantidade de avaliações está vazia');
-    }
-
-    // Validações numéricas
-    const quantidadeAulas = parseInt(formData.quantidadeAulas || '0');
-    const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos || '0');
-    const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes || '0');
-
-    if (quantidadeAulas <= 0) {
-      errors.push('Quantidade de aulas deve ser maior que zero');
-      console.log('❌ [VALIDATION] Quantidade de aulas inválida:', quantidadeAulas);
-    }
-
-    if (quantidadeDiagnosticos < 0) {
-      errors.push('Quantidade de diagnósticos não pode ser negativa');
-      console.log('❌ [VALIDATION] Quantidade de diagnósticos inválida:', quantidadeDiagnosticos);
-    }
-
-    if (quantidadeAvaliacoes < 0) {
-      errors.push('Quantidade de avaliações não pode ser negativa');
-      console.log('❌ [VALIDATION] Quantidade de avaliações inválida:', quantidadeAvaliacoes);
-    }
-
-    const result = {
-      isValid: errors.length === 0,
-      errors
-    };
-
-    console.log(`${result.isValid ? '✅' : '❌'} [SEQUENCIA_DIDATICA_BUILDER] Validação concluída:`, result);
-    
-    return result;
-  }
-
-  getDebugInfo() {
-    return this.debugInfo;
   }
 }
 
-// Export default instance
+// Exportar instância singleton
 export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();

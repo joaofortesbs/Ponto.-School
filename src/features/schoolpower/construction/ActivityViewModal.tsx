@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, BarChart3, CheckSquare } from "lucide-react"; // Import Eye component
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
@@ -68,9 +68,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return null;
   };
 
-  // Modal de visualização não necessita validação de formulário
-  // A validação é feita apenas no EditActivityModal
-
   // Resetar estado do sidebar quando o modal abre
   React.useEffect(() => {
     if (isOpen) {
@@ -93,8 +90,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
-    setSelectedQuestionId(questionId);
     setSelectedQuestionIndex(questionIndex);
+    setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
   };
 
@@ -128,7 +125,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
       }
     };
 
@@ -466,28 +463,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       }
     }
 
-    // Para 'sequencia-didatica', precisamos carregar os dados em sequenciaData para os cards
-    let sequenciaData = {};
-    if (activityType === 'sequencia-didatica') {
-      sequenciaData = previewData;
-    }
-
-    // Para 'plano-aula', também precisamos dos dados em planoAulaData
-    let planoAulaData = {};
-    if (activityType === 'plano-aula') {
-      planoAulaData = previewData;
-    }
-
-    // Para 'lista-exercicios', precisamos dos dados em exerciseListData
-    let exerciseListData = {};
-    if (activityType === 'lista-exercicios') {
-      exerciseListData = previewData;
-    }
-
-    // Determinar a quantidade de diagnósticos e avaliações para fallback
-    const quantidadeDiagnosticos = 3; // Exemplo, pode ser dinâmico
-    const quantidadeAvaliacoes = 2; // Exemplo, pode ser dinâmico
-
     console.log('📊 ActivityViewModal: Dados finais para preview:', previewData);
 
     switch (activityType) {
@@ -515,7 +490,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <SequenciaDidaticaPreview
             data={previewData}
             activityData={activity}
-            isBuilt={true}
           />
         );
 
