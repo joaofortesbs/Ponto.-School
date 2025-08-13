@@ -51,17 +51,18 @@ export const autoBuildActivities = async (
         console.log('🎯 Construindo Sequência Didática');
 
         try {
-          const sequenciaDidaticaData = processSequenciaDidaticaData(formData);
+          // Importar as funções necessárias
+          const { processSequenciaDidaticaData } = await import('../activities/sequencia-didatica/sequenciaDidaticaProcessor');
+          const { SequenciaDidaticaGenerator } = await import('../activities/sequencia-didatica/SequenciaDidaticaGenerator');
+          
+          // Processar dados do formulário
+          const sequenciaDidaticaData = processSequenciaDidaticaData(activityData);
 
           console.log('📊 Dados processados para validação:', sequenciaDidaticaData);
 
-          if (!validateSequenciaDidaticaData(sequenciaDidaticaData)) {
-            console.warn('⚠️ Dados da Sequência Didática com problemas, mas continuando...');
-          }
-
           console.log('📝 Iniciando geração com IA...');
 
-          const generatedContent = await generateSequenciaDidatica(sequenciaDidaticaData);
+          const generatedContent = await SequenciaDidaticaGenerator.generateSequenciaDidatica(sequenciaDidaticaData);
 
           console.log('✅ Sequência Didática gerada com sucesso:', {
             titulo: generatedContent.titulo,
@@ -69,45 +70,67 @@ export const autoBuildActivities = async (
             temAvaliacao: !!generatedContent.avaliacaoFinal
           });
 
-          const result = {
+          // Salvar no localStorage para diferentes chaves
+          const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
+          const generalKey = `schoolpower_sequencia-didatica_content`;
+          const activityKey = `activity_${activity.id}`;
+
+          const resultData = {
             id: activity.id,
             title: generatedContent.titulo || activity.title || 'Sequência Didática',
             description: activity.description || 'Sequência didática gerada automaticamente',
             generatedContent,
             originalData: sequenciaDidaticaData,
-            content: generatedContent, // Para compatibilidade
+            content: generatedContent,
             approved: false,
             isBuilt: true,
-            customFields: {}
+            customFields: {},
+            generatedAt: new Date().toISOString()
           };
 
-          console.log('🎉 Resultado final da construção:', result);
-          return result;
+          // Salvar em múltiplas chaves para garantir compatibilidade
+          localStorage.setItem(constructedKey, JSON.stringify(resultData));
+          localStorage.setItem(generalKey, JSON.stringify(generatedContent));
+          localStorage.setItem(activityKey, JSON.stringify(resultData));
+
+          console.log('🎉 Resultado final da construção e salvamento:', resultData);
 
         } catch (error) {
           console.error('❌ Erro na construção da Sequência Didática:', error);
 
           // Tentar criar fallback com dados disponíveis
-          const sequenciaDidaticaData = processSequenciaDidaticaData(formData);
+          try {
+            const { processSequenciaDidaticaData } = await import('../activities/sequencia-didatica/sequenciaDidaticaProcessor');
+            const sequenciaDidaticaData = processSequenciaDidaticaData(activityData);
 
-          return {
-            id: activity.id,
-            title: activity.title || 'Sequência Didática',
-            description: activity.description,
-            generatedContent: {
-              titulo: `Sequência Didática: ${sequenciaDidaticaData.tituloTemaAssunto}`,
-              introducao: `Esta sequência foi preparada para ${sequenciaDidaticaData.publicoAlvo}`,
-              aulas: [],
-              avaliacaoFinal: null,
-              recursosGerais: [],
-              bibliografia: []
-            },
-            originalData: sequenciaDidaticaData,
-            approved: false,
-            isBuilt: false,
-            error: error instanceof Error ? error.message : 'Erro na geração',
-            customFields: {}
-          };
+            const fallbackData = {
+              id: activity.id,
+              title: activity.title || 'Sequência Didática',
+              description: activity.description,
+              generatedContent: {
+                titulo: `Sequência Didática: ${sequenciaDidaticaData.tituloTemaAssunto}`,
+                introducao: `Esta sequência foi preparada para ${sequenciaDidaticaData.publicoAlvo}`,
+                aulas: [],
+                avaliacaoFinal: null,
+                recursosGerais: [],
+                bibliografia: []
+              },
+              originalData: sequenciaDidaticaData,
+              approved: false,
+              isBuilt: false,
+              error: error instanceof Error ? error.message : 'Erro na geração',
+              customFields: {}
+            };
+
+            // Salvar fallback
+            const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
+            localStorage.setItem(constructedKey, JSON.stringify(fallbackData));
+
+          } catch (fallbackError) {
+            console.error('❌ Erro até no fallback:', fallbackError);
+          }
+
+          errors.push(`Erro na Sequência Didática: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
         }
       } else {
         // Lógica para outras atividades

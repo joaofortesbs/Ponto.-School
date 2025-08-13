@@ -141,3 +141,105 @@ export class SequenciaDidaticaBuilder {
 
 // Exportar instância singleton
 export const sequenciaDidaticaBuilder = new SequenciaDidaticaBuilder();
+export interface SequenciaDidaticaBuilderInterface {
+  loadSequencia: (activityId: string) => Promise<any>;
+  saveSequencia: (activityId: string, data: any) => Promise<void>;
+  clearCache: (activityId: string) => void;
+}
+
+export class SequenciaDidaticaBuilder implements SequenciaDidaticaBuilderInterface {
+  private static instance: SequenciaDidaticaBuilder;
+
+  static getInstance(): SequenciaDidaticaBuilder {
+    if (!SequenciaDidaticaBuilder.instance) {
+      SequenciaDidaticaBuilder.instance = new SequenciaDidaticaBuilder();
+    }
+    return SequenciaDidaticaBuilder.instance;
+  }
+
+  async loadSequencia(activityId: string): Promise<any> {
+    console.log(`🔍 SequenciaDidaticaBuilder: Carregando sequência para ID: ${activityId}`);
+    
+    const cacheKeys = [
+      `constructed_sequencia-didatica_${activityId}`,
+      `activity_${activityId}`,
+      `schoolpower_sequencia-didatica_content`
+    ];
+
+    for (const key of cacheKeys) {
+      try {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          console.log(`✅ Sequência carregada de ${key}`);
+          
+          // Retornar o conteúdo gerado se existir, senão o objeto completo
+          return parsed.generatedContent || parsed.content || parsed;
+        }
+      } catch (error) {
+        console.warn(`⚠️ Erro ao carregar de ${key}:`, error);
+      }
+    }
+
+    console.log('⚠️ Nenhuma sequência encontrada no cache');
+    return null;
+  }
+
+  async saveSequencia(activityId: string, data: any): Promise<void> {
+    console.log(`💾 SequenciaDidaticaBuilder: Salvando sequência para ID: ${activityId}`);
+    
+    const cacheKeys = [
+      `constructed_sequencia-didatica_${activityId}`,
+      `activity_${activityId}`,
+      `schoolpower_sequencia-didatica_content`
+    ];
+
+    const saveData = {
+      id: activityId,
+      generatedContent: data,
+      content: data,
+      savedAt: new Date().toISOString(),
+      isBuilt: true
+    };
+
+    // Salvar em múltiplas chaves para compatibilidade
+    for (const key of cacheKeys) {
+      try {
+        localStorage.setItem(key, JSON.stringify(saveData));
+        console.log(`✅ Sequência salva em ${key}`);
+      } catch (error) {
+        console.error(`❌ Erro ao salvar em ${key}:`, error);
+      }
+    }
+  }
+
+  clearCache(activityId: string): void {
+    console.log(`🗑️ SequenciaDidaticaBuilder: Limpando cache para ID: ${activityId}`);
+    
+    const cacheKeys = [
+      `constructed_sequencia-didatica_${activityId}`,
+      `activity_${activityId}`,
+      `schoolpower_sequencia-didatica_content`
+    ];
+
+    for (const key of cacheKeys) {
+      try {
+        localStorage.removeItem(key);
+        console.log(`✅ Cache ${key} limpo`);
+      } catch (error) {
+        console.warn(`⚠️ Erro ao limpar ${key}:`, error);
+      }
+    }
+  }
+
+  // Método estático para carregar sequência (compatibilidade)
+  static async loadSequencia(activityId: string): Promise<any> {
+    const instance = SequenciaDidaticaBuilder.getInstance();
+    return instance.loadSequencia(activityId);
+  }
+}
+
+// Exportar instância singleton
+export const sequenciaDidaticaBuilder = SequenciaDidaticaBuilder.getInstance();
+
+console.log('🏗️ [SEQUENCIA_DIDATICA_BUILDER] Inicializado');

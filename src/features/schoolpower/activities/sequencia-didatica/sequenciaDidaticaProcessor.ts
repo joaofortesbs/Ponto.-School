@@ -40,8 +40,68 @@ export const sequenciaDidaticaFieldMapping = {
   'Cronograma': 'cronograma'
 };
 
+export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): boolean {
+  console.log('🔍 Validando dados da Sequência Didática:', data);
+  
+  const requiredFields = [
+    'tituloTemaAssunto',
+    'anoSerie', 
+    'disciplina',
+    'publicoAlvo',
+    'objetivosAprendizagem'
+  ];
+  
+  for (const field of requiredFields) {
+    if (!data[field] || data[field].trim() === '') {
+      console.warn(`⚠️ Campo obrigatório ausente: ${field}`);
+      return false;
+    }
+  }
+  
+  console.log('✅ Dados validados com sucesso');
+  return true;
+}
+
 export function processSequenciaDidaticaData(formData: ActivityFormData): SequenciaDidaticaData {
   console.log('🔄 Processando dados da Sequência Didática:', formData);
+
+  // Extrair dados dos campos customizados
+  const customFields = formData.customFields || {};
+  
+  return {
+    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || 
+                      formData.tituloTemaAssunto || 
+                      formData.title || 
+                      'Sequência Didática',
+    anoSerie: customFields['Ano / Série'] || 
+              formData.anoSerie || 
+              '6º Ano',
+    disciplina: customFields['Disciplina'] || 
+                formData.disciplina || 
+                'Matemática',
+    bnccCompetencias: customFields['BNCC / Competências'] || 
+                      formData.bnccCompetencias || 
+                      'Competências específicas da BNCC',
+    publicoAlvo: customFields['Público-alvo'] || 
+                 formData.publicoAlvo || 
+                 'Estudantes do ensino fundamental',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || 
+                          formData.objetivosAprendizagem || 
+                          'Desenvolver habilidades específicas da disciplina',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || 
+                     formData.quantidadeAulas || 
+                     '4',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || 
+                           formData.quantidadeDiagnosticos || 
+                           '1',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || 
+                         formData.quantidadeAvaliacoes || 
+                         '1',
+    cronograma: customFields['Cronograma'] || 
+                formData.cronograma || 
+                'Conforme cronograma escolar'
+  };
+}, formData);
 
   const processedData: SequenciaDidaticaData = {
     tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',

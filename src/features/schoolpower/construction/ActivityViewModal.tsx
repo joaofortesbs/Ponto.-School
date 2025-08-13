@@ -388,26 +388,59 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       console.log('🧩 ActivityViewModal: Processando Sequência Didática');
 
       const constructedSequenciaKey = `constructed_sequencia-didatica_${activity.id}`;
-      const constructedSequenciaContent = localStorage.getItem(constructedSequenciaKey);
-
       const generalSequenciaCacheKey = `schoolpower_sequencia-didatica_content`;
-      const generalSequenciaCachedContent = localStorage.getItem(generalSequenciaCacheKey);
-
       const activitySequenciaCacheKey = `activity_${activity.id}`;
-      const activitySequenciaCachedContent = localStorage.getItem(activitySequenciaCacheKey);
 
-      console.log('🔍 ActivityViewModal: Verificando caches de sequencia-didatica:', {
-        constructedExists: !!constructedSequenciaContent,
-        generalExists: !!generalSequenciaCachedContent,
-        activityExists: !!activitySequenciaCachedContent
-      });
-
+      const cacheKeys = [constructedSequenciaKey, activitySequenciaCacheKey, generalSequenciaCacheKey];
       let sequenciaContent = null;
 
-      if (constructedSequenciaContent) {
+      console.log('🔍 ActivityViewModal: Verificando caches de sequencia-didatica');
+
+      // Tentar carregar de diferentes caches em ordem de prioridade
+      for (const key of cacheKeys) {
         try {
-          sequenciaContent = JSON.parse(constructedSequenciaContent);
-          console.log('✅ Conteúdo específico da sequência didática carregado:', sequenciaContent);
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            
+            // Se tem generatedContent, usar isso
+            if (parsed.generatedContent) {
+              sequenciaContent = parsed.generatedContent;
+              console.log(`✅ Conteúdo da sequência didática carregado de ${key} (generatedContent)`);
+              break;
+            }
+            // Se tem content, usar isso
+            else if (parsed.content) {
+              sequenciaContent = parsed.content;
+              console.log(`✅ Conteúdo da sequência didática carregado de ${key} (content)`);
+              break;
+            }
+            // Se tem titulo ou aulas diretamente, é o conteúdo
+            else if (parsed.titulo || parsed.aulas) {
+              sequenciaContent = parsed;
+              console.log(`✅ Conteúdo da sequência didática carregado de ${key} (direto)`);
+              break;
+            }
+          }
+        } catch (error) {
+          console.warn(`⚠️ Erro ao carregar de ${key}:`, error);
+        }
+      }
+
+      if (sequenciaContent) {
+        console.log('🔀 Aplicando conteúdo da sequência didática aos dados de preview');
+        previewData = {
+          ...previewData,
+          ...sequenciaContent,
+          id: activity.id,
+          type: activityType,
+          title: sequenciaContent.titulo || sequenciaContent.title || previewData.title,
+          description: sequenciaContent.introducao || sequenciaContent.description || previewData.description,
+          generatedContent: sequenciaContent,
+          content: sequenciaContent,
+          isBuilt: true
+        };
+        console.log('✅ Conteúdo específico da sequência didática carregado:', sequenciaContent);
         } catch (error) {
           console.error('❌ Erro ao carregar conteúdo específico da sequência didática:', error);
         }

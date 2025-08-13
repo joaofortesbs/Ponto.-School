@@ -1,3 +1,5 @@
+import { SequenciaDidaticaData } from '../activities/sequencia-didatica/sequenciaDidaticaProcessor';
+
 export function sequenciaDidaticaPrompt(data: SequenciaDidaticaData): string {
   const numAulas = parseInt(data.quantidadeAulas) || 4;
 

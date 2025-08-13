@@ -156,35 +156,70 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
         let loadedData = null;
 
-        // Tentar carregar dados construídos
+        // Prioridade 1: dados já construídos passados como props
         if (isBuilt && data) {
-          // Se já temos dados construídos
           loadedData = data;
-        } else if (activityData?.id) {
-          // Tentar carregar do localStorage
-          // Tentar carregar do localStorage - assumindo que o builder tenha uma função loadSequencia
-          // Se não, a lógica abaixo vai usar os dados fornecidos via 'data' ou 'activityData'
-          try {
-            const { SequenciaDidaticaBuilder } = await import('./SequenciaDidaticaBuilder'); 
-            const loadedFromBuilder = await SequenciaDidaticaBuilder.loadSequencia(activityData.id);
-            if (loadedFromBuilder) {
-              loadedData = loadedFromBuilder;
-            }
-          } catch (builderError) {
-            console.warn('⚠️ Não foi possível carregar SequenciaDidaticaBuilder ou a função loadSequencia:', builderError);
+          console.log('📋 Usando dados construídos passados como props');
+        }
+
+        // Prioridade 2: dados em activityData
+        if (!loadedData && activityData) {
+          if (activityData.generatedContent) {
+            loadedData = activityData.generatedContent;
+            console.log('📋 Usando generatedContent de activityData');
+          } else if (activityData.content) {
+            loadedData = activityData.content;
+            console.log('📋 Usando content de activityData');
           }
         }
 
-        // Se não carregou de lugar nenhum, usar os dados fornecidos
-        if (!loadedData && data) {
-          loadedData = data;
-        }
-        // Se ainda não temos dados, tentar extrair de activityData caso tenha a estrutura correta
-        if (!loadedData && activityData && (activityData.generatedContent || activityData.content)) {
-          loadedData = activityData.generatedContent || activityData.content;
+        // Prioridade 3: tentar carregar do localStorage se temos um ID
+        if (!loadedData && activityData?.id) {
+          const constructedKey = `constructed_sequencia-didatica_${activityData.id}`;
+          const generalKey = `schoolpower_sequencia-didatica_content`;
+          const activityKey = `activity_${activityData.id}`;
+
+          // Tentar diferentes chaves do localStorage
+          const cacheKeys = [constructedKey, activityKey, generalKey];
+          
+          for (const key of cacheKeys) {
+            try {
+              const cached = localStorage.getItem(key);
+              if (cached) {
+                const parsedCache = JSON.parse(cached);
+                
+                // Se é um objeto com generatedContent, extrair isso
+                if (parsedCache.generatedContent) {
+                  loadedData = parsedCache.generatedContent;
+                  console.log(`📋 Carregado generatedContent do localStorage (${key})`);
+                  break;
+                }
+                // Se é um objeto com content, extrair isso
+                else if (parsedCache.content) {
+                  loadedData = parsedCache.content;
+                  console.log(`📋 Carregado content do localStorage (${key})`);
+                  break;
+                }
+                // Se é diretamente os dados da sequência
+                else if (parsedCache.titulo || parsedCache.aulas) {
+                  loadedData = parsedCache;
+                  console.log(`📋 Carregado dados diretos do localStorage (${key})`);
+                  break;
+                }
+              }
+            } catch (storageError) {
+              console.warn(`⚠️ Erro ao carregar de ${key}:`, storageError);
+            }
+          }
         }
 
-        console.log('📋 Dados carregados:', loadedData);
+        // Prioridade 4: dados passados diretamente
+        if (!loadedData && data) {
+          loadedData = data;
+          console.log('📋 Usando dados passados diretamente');
+        }
+
+        console.log('📋 Dados finais carregados:', loadedData);
         setSequenciaData(loadedData);
 
       } catch (err) {
