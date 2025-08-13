@@ -125,7 +125,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
       }
     };
 
