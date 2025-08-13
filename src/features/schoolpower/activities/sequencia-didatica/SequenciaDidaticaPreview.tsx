@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   BookOpen, 
   Target, 
@@ -13,7 +14,9 @@ import {
   RefreshCw,
   LayoutGrid,
   Clock,
-  List
+  List,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface SequenciaDidaticaPreviewProps {
@@ -41,6 +44,10 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
   // Estado para visualização
   const [viewMode, setViewMode] = useState('cards');
+  
+  // Estado para calendário
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Processar dados da sequência
   const sequenciaData = data || activityData || {};
@@ -80,6 +87,63 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
     console.log('👁️ Modo de visualização alterado para:', mode);
   };
 
+  // Função para gerar calendário
+  const generateCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(firstDay.getDate() - firstDay.getDay());
+    
+    const days = [];
+    const currentDateObj = new Date(startDate);
+    
+    // Gerar dias que terão aulas (simulação baseada nas aulas da sequência)
+    const aulaDays = [];
+    const today = new Date();
+    for (let i = 0; i < quantidadeAulas; i++) {
+      const aulaDate = new Date(today);
+      aulaDate.setDate(today.getDate() + (i * 3)); // Aulas a cada 3 dias
+      if (aulaDate.getMonth() === month && aulaDate.getFullYear() === year) {
+        aulaDays.push(aulaDate.getDate());
+      }
+    }
+    
+    for (let i = 0; i < 42; i++) {
+      const isCurrentMonth = currentDateObj.getMonth() === month;
+      const isToday = currentDateObj.toDateString() === new Date().toDateString();
+      const hasAula = isCurrentMonth && aulaDays.includes(currentDateObj.getDate());
+      
+      days.push({
+        date: new Date(currentDateObj),
+        day: currentDateObj.getDate(),
+        isCurrentMonth,
+        isToday,
+        hasAula
+      });
+      
+      currentDateObj.setDate(currentDateObj.getDate() + 1);
+    }
+    
+    return days;
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
+      return newDate;
+    });
+  };
+
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
   if (!hasValidData) {
     return (
       <div className="p-8 text-center">
@@ -97,7 +161,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 overflow-x-auto">
       {/* Cabeçalho Flutuante */}
       <Card className="sticky top-4 z-10 bg-white/95 backdrop-blur-sm border-2 border-orange-200 shadow-lg">
         <CardContent className="p-4">
@@ -167,6 +231,93 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 </SelectContent>
               </Select>
 
+              {/* Calendário Dropdown */}
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300"
+                  >
+                    <Calendar size={14} />
+                    Calendário
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="end">
+                  <div className="space-y-4">
+                    {/* Cabeçalho do Calendário */}
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigateMonth('prev')}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronLeft size={16} />
+                      </Button>
+                      
+                      <h3 className="font-semibold text-lg">
+                        {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                      </h3>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigateMonth('next')}
+                        className="h-8 w-8 p-0"
+                      >
+                        <ChevronRight size={16} />
+                      </Button>
+                    </div>
+
+                    {/* Dias da Semana */}
+                    <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500">
+                      {weekDays.map(day => (
+                        <div key={day} className="p-2">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Grade do Calendário */}
+                    <div className="grid grid-cols-7 gap-1">
+                      {generateCalendar().map((day, index) => (
+                        <div
+                          key={index}
+                          className={`
+                            p-2 text-center text-sm rounded-md cursor-pointer transition-colors relative
+                            ${!day.isCurrentMonth ? 'text-gray-300' : 'text-gray-700'}
+                            ${day.isToday ? 'bg-blue-500 text-white font-bold' : ''}
+                            ${day.hasAula && !day.isToday ? 'bg-orange-100 text-orange-700 font-semibold ring-2 ring-orange-300' : ''}
+                            ${day.isCurrentMonth && !day.isToday && !day.hasAula ? 'hover:bg-gray-100' : ''}
+                          `}
+                        >
+                          {day.day}
+                          {day.hasAula && (
+                            <div className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full transform translate-x-1 -translate-y-1"></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Legenda */}
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-orange-100 rounded border-2 border-orange-300"></div>
+                        <span>Dias com aulas programadas</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                        <span>Hoje</span>
+                      </div>
+                      <p className="text-gray-600 mt-2">
+                        <strong>{quantidadeAulas} aulas</strong> distribuídas ao longo do período
+                      </p>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
               {/* Botão Regenerar */}
               <Button 
                 variant="outline" 
@@ -185,10 +336,11 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
       {/* Área de Conteúdo Principal */}
       <div className="space-y-6">
         {viewMode === 'cards' && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="flex gap-6 pb-4 min-w-max overflow-x-auto">
+            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-w-max">
             {/* Cards de Aulas */}
             {[1, 2, 3, 4].map((aulaIndex) => (
-              <Card key={`aula-${aulaIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+              <Card key={`aula-${aulaIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -256,7 +408,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
             {/* Cards de Diagnósticos */}
             {[1, 2].map((diagIndex) => (
-              <Card key={`diagnostico-${diagIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+              <Card key={`diagnostico-${diagIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="bg-green-50 text-green-700">
@@ -312,7 +464,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
 
             {/* Cards de Avaliações */}
             {[1, 2].map((avalIndex) => (
-              <Card key={`avaliacao-${avalIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
+              <Card key={`avaliacao-${avalIndex}`} className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500 min-w-[320px] flex-shrink-0">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline" className="bg-purple-50 text-purple-700">
@@ -366,13 +518,14 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
                 </CardContent>
               </Card>
             ))}
+            </div>
           </div>
         )}
 
         {viewMode === 'timeline' && (
-          <div className="space-y-8">
+          <div className="space-y-8 overflow-x-auto pb-4">
             {/* Timeline de Sequência Didática */}
-            <div className="relative">
+            <div className="relative min-w-[800px]">
               <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-green-500 to-purple-500"></div>
               
               {/* Aulas na Timeline */}
@@ -571,7 +724,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
         )}
 
         {viewMode === 'grade' && (
-          <div className="space-y-6">
+          <div className="space-y-6 overflow-x-auto pb-4">
             {/* Tabela em Grade */}
             <Card>
               <CardHeader>
@@ -582,7 +735,7 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
                       <tr className="border-b-2 border-gray-200">
                         <th className="text-left p-4 font-semibold text-gray-700">Item</th>
