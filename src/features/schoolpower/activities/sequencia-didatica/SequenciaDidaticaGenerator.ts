@@ -1,63 +1,90 @@
+
 import { geminiClient } from '@/utils/api/geminiClient';
-import { SequenciaDidaticaData } from './sequenciaDidaticaProcessor';
 
 export interface AulaData {
   id: string;
+  numero: number;
   titulo: string;
   objetivoEspecifico: string;
-  resumoContexto: string;
-  passoAPasso: {
-    introducao: string;
-    desenvolvimento: string;
-    fechamento: string;
+  resumo: string;
+  etapas: {
+    introducao: {
+      tempo: string;
+      descricao: string;
+      cor: string;
+    };
+    desenvolvimento: {
+      tempo: string;
+      descricao: string;
+      cor: string;
+    };
+    fechamento: {
+      tempo: string;
+      descricao: string;
+      cor: string;
+    };
   };
   recursos: string[];
-  atividades: {
-    tipo: string;
-    descricao: string;
-    tempo: string;
-  }[];
-  avaliacao: string;
-  tempoEstimado: string;
+  atividadePratica: string;
+  tempoTotal: string;
 }
 
 export interface DiagnosticoData {
   id: string;
+  numero: number;
   titulo: string;
-  objetivo: string;
-  tipo: string;
-  instrumentos: string[];
-  criteriosAvaliacao: string[];
-  resultadosEsperados: string;
+  objetivoAvaliativo: string;
+  tipoAvaliacao: string;
+  quantidadeQuestoes: number;
+  formato: string;
+  criteriosCorrecao: {
+    faixa: string;
+    resultado: string;
+    cor: string;
+  }[];
+  tempo: string;
 }
 
 export interface AvaliacaoData {
   id: string;
+  numero: number;
   titulo: string;
-  objetivo: string;
-  tipo: string;
-  instrumentos: string[];
-  criteriosAvaliacao: string[];
-  peso: number;
-  dataPrevisao: string;
+  objetivoAvaliativo: string;
+  tipoAvaliacao: string;
+  quantidadeQuestoes: number;
+  valorTotal: string;
+  composicao: {
+    tipo: string;
+    quantidade: number;
+    pontos: string;
+  }[];
+  gabarito: string;
+  tempo: string;
 }
 
 export interface SequenciaDidaticaCompleta {
-  metadados: SequenciaDidaticaData;
+  id: string;
+  titulo: string;
+  disciplina: string;
+  anoSerie: string;
+  objetivosAprendizagem: string;
+  publicoAlvo: string;
+  bnccCompetencias: string;
+  cronograma: string;
   aulas: AulaData[];
   diagnosticos: DiagnosticoData[];
   avaliacoes: AvaliacaoData[];
-  encadeamento: {
-    progressaoDidatica: string;
-    conexoesEntrAulas: string[];
+  resumoEstatistico: {
+    totalAulas: number;
+    totalDiagnosticos: number;
+    totalAvaliacoes: number;
+    tempoTotalMinutos: number;
   };
-  cronogramaSugerido: {
-    duracao: string;
-    distribuicao: string;
-    observacoes: string;
+  metadados: {
+    dataGeracao: string;
+    versao: string;
+    sistemaGerador: string;
   };
-  generatedAt: string;
-  versao: string;
 }
 
 export class SequenciaDidaticaGenerator {
@@ -70,7 +97,7 @@ export class SequenciaDidaticaGenerator {
     return SequenciaDidaticaGenerator.instance;
   }
 
-  async gerarSequenciaCompleta(dados: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+  async gerarSequenciaCompleta(dados: any): Promise<SequenciaDidaticaCompleta> {
     console.log('🔄 Iniciando geração da Sequência Didática completa:', dados);
 
     try {
@@ -83,6 +110,11 @@ export class SequenciaDidaticaGenerator {
       const sequenciaGerada = this.processarRespostaIA(response, dados);
       console.log('🎯 Sequência processada e estruturada');
 
+      // Salvar no localStorage para persistência
+      const storageKey = `constructed_sequencia-didatica_${dados.id || Date.now()}`;
+      localStorage.setItem(storageKey, JSON.stringify(sequenciaGerada));
+      console.log('💾 Sequência salva no localStorage:', storageKey);
+
       return sequenciaGerada;
     } catch (error) {
       console.error('❌ Erro na geração da Sequência Didática:', error);
@@ -90,360 +122,333 @@ export class SequenciaDidaticaGenerator {
     }
   }
 
-  private construirPromptCompleto(dados: SequenciaDidaticaData): string {
+  private construirPromptCompleto(dados: any): string {
     return `
 # GERAÇÃO DE SEQUÊNCIA DIDÁTICA COMPLETA
 
+Você é um especialista em pedagogia e criação de sequências didáticas. Gere uma sequência didática completa e detalhada baseada nos dados fornecidos.
+
 ## DADOS DE ENTRADA:
-- **Título/Tema:** ${dados.tituloTemaAssunto}
-- **Disciplina:** ${dados.disciplina}
-- **Ano/Série:** ${dados.anoSerie}
-- **Público-alvo:** ${dados.publicoAlvo}
-- **BNCC/Competências:** ${dados.bnccCompetencias}
-- **Objetivos de Aprendizagem:** ${dados.objetivosAprendizagem}
-- **Quantidade de Aulas:** ${dados.quantidadeAulas}
-- **Quantidade de Diagnósticos:** ${dados.quantidadeDiagnosticos}
-- **Quantidade de Avaliações:** ${dados.quantidadeAvaliacoes}
-- **Cronograma:** ${dados.cronograma}
+- **Título/Tema:** ${dados.tituloTemaAssunto || dados.title || 'Não especificado'}
+- **Disciplina:** ${dados.disciplina || dados.subject || 'Não especificado'}
+- **Ano/Série:** ${dados.anoSerie || dados.schoolYear || 'Não especificado'}
+- **Público-alvo:** ${dados.publicoAlvo || 'Estudantes do ensino fundamental/médio'}
+- **Objetivos de Aprendizagem:** ${dados.objetivosAprendizagem || dados.objectives || 'Desenvolver competências específicas'}
+- **Competências BNCC:** ${dados.bnccCompetencias || 'A definir conforme disciplina'}
+- **Quantidade de Aulas:** ${dados.quantidadeAulas || '4'}
+- **Quantidade de Diagnósticos:** ${dados.quantidadeDiagnosticos || '2'}
+- **Quantidade de Avaliações:** ${dados.quantidadeAvaliacoes || '2'}
+- **Cronograma:** ${dados.cronograma || 'A ser desenvolvido ao longo de 2-3 semanas'}
 
-## INSTRUÇÕES PARA GERAÇÃO:
+## INSTRUÇÕES DE GERAÇÃO:
 
-Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas especificações:
+Gere uma resposta JSON válida seguindo EXATAMENTE esta estrutura:
 
-### 1. ESTRUTURA DE RESPOSTA (JSON):
 \`\`\`json
 {
+  "id": "sequencia-didatica-${Date.now()}",
+  "titulo": "${dados.tituloTemaAssunto || dados.title || 'Sequência Didática'}",
+  "disciplina": "${dados.disciplina || dados.subject}",
+  "anoSerie": "${dados.anoSerie || dados.schoolYear}",
+  "objetivosAprendizagem": "${dados.objetivosAprendizagem || dados.objectives}",
+  "publicoAlvo": "${dados.publicoAlvo}",
+  "bnccCompetencias": "${dados.bnccCompetencias}",
+  "cronograma": "${dados.cronograma}",
   "aulas": [
-    {
-      "id": "aula_001",
-      "titulo": "Título da Aula",
-      "objetivoEspecifico": "Objetivo específico e claro",
-      "resumoContexto": "Resumo contextual da aula",
-      "passoAPasso": {
-        "introducao": "Como iniciar a aula (5-10 min)",
-        "desenvolvimento": "Atividades principais (25-30 min)",
-        "fechamento": "Síntese e próximos passos (5-10 min)"
-      },
-      "recursos": ["Material 1", "Material 2", "Material 3"],
-      "atividades": [
-        {
-          "tipo": "Atividade Prática",
-          "descricao": "Descrição da atividade",
-          "tempo": "20 minutos"
-        }
-      ],
-      "avaliacao": "Avaliação formativa",
-      "tempoEstimado": "45 minutos"
-    }
+    ${this.gerarTemplateAulas(parseInt(dados.quantidadeAulas || '4'))}
   ],
   "diagnosticos": [
-    {
-      "id": "diag_001",
-      "titulo": "Diagnóstico Inicial",
-      "objetivo": "Avaliar conhecimentos prévios",
-      "tipo": "Diagnóstico Inicial",
-      "instrumentos": ["Questionário", "Observação"],
-      "criteriosAvaliacao": ["Conhecimento prévio", "Participação"],
-      "resultadosEsperados": "Identificar lacunas de aprendizagem"
-    }
+    ${this.gerarTemplateDiagnosticos(parseInt(dados.quantidadeDiagnosticos || '2'))}
   ],
   "avaliacoes": [
-    {
-      "id": "aval_001",
-      "titulo": "Avaliação Formativa",
-      "objetivo": "Verificar aprendizagem",
-      "tipo": "Avaliação Formativa",
-      "instrumentos": ["Prova", "Trabalho"],
-      "criteriosAvaliacao": ["Conteúdo", "Aplicação"],
-      "peso": 0.5,
-      "dataPrevisao": "Semana 3"
-    }
+    ${this.gerarTemplateAvaliacoes(parseInt(dados.quantidadeAvaliacoes || '2'))}
   ],
-  "encadeamento": {
-    "progressaoDidatica": "Descrição da progressão lógica",
-    "conexoesEntrAulas": ["Conexão 1", "Conexão 2"]
+  "resumoEstatistico": {
+    "totalAulas": ${dados.quantidadeAulas || 4},
+    "totalDiagnosticos": ${dados.quantidadeDiagnosticos || 2},
+    "totalAvaliacoes": ${dados.quantidadeAvaliacoes || 2},
+    "tempoTotalMinutos": ${(parseInt(dados.quantidadeAulas || '4') * 50) + (parseInt(dados.quantidadeDiagnosticos || '2') * 20) + (parseInt(dados.quantidadeAvaliacoes || '2') * 45)}
   },
-  "cronogramaSugerido": {
-    "duracao": "4 semanas",
-    "distribuicao": "2 aulas por semana",
-    "observacoes": "Observações importantes"
+  "metadados": {
+    "dataGeracao": "${new Date().toISOString()}",
+    "versao": "1.0",
+    "sistemaGerador": "School Power IA"
   }
 }
 \`\`\`
 
-### 2. DIRETRIZES ESPECÍFICAS:
-
-#### Para as AULAS:
-- Crie exatamente ${dados.quantidadeAulas} aulas
-- Cada aula deve ter progressão clara e lógica
-- Passo a passo detalhado e prático
-- Recursos específicos e acessíveis
-- Atividades práticas envolventes
-- Tempo estimado realista
-
-#### Para DIAGNÓSTICOS:
-- Crie exatamente ${dados.quantidadeDiagnosticos} diagnósticos
-- Posicione estrategicamente na sequência
-- Foque em identificar lacunas de aprendizagem
-- Critérios claros de análise
-
-#### Para AVALIAÇÕES:
-- Crie exatamente ${dados.quantidadeAvaliacoes} avaliações
-- Avalie competências desenvolvidas
-- Critérios objetivos e transparentes
-- Formatos diversificados
-
-#### ENCADEAMENTO:
-- Demonstre conexão entre todas as aulas
-- Progressão didática clara e justificada
-- Preparação para próximas etapas
-
-### 3. QUALIDADE EXIGIDA:
-- Conteúdo prático e aplicável
-- Linguagem clara e direta
-- Atividades engajadoras
-- Recursos acessíveis
-- Avaliação formativa contínua
-
-**IMPORTANTE:** Retorne APENAS o JSON estruturado, sem texto adicional.
-    `;
+**IMPORTANTE:** 
+- Gere conteúdo pedagógico rico e contextualizado
+- Mantenha coerência entre todos os elementos
+- Use linguagem adequada ao nível educacional
+- Inclua recursos diversificados e metodologias ativas
+- Certifique-se de que o JSON está válido e completo
+- NÃO inclua comentários no JSON
+- NÃO use caracteres especiais que quebrem o JSON
+`;
   }
 
-  private processarRespostaIA(response: any, dadosOriginais: SequenciaDidaticaData): SequenciaDidaticaCompleta {
-    console.log('🔍 Processando resposta da IA...');
-
-    try {
-      // Extrair JSON da resposta
-      let jsonContent = response;
-      if (typeof response === 'string') {
-        // Tentar extrair JSON se vier como string
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          jsonContent = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error('JSON não encontrado na resposta');
+  private gerarTemplateAulas(quantidade: number): string {
+    const aulas = [];
+    for (let i = 1; i <= quantidade; i++) {
+      aulas.push(`
+    {
+      "id": "aula-${i}",
+      "numero": ${i},
+      "titulo": "Aula ${i}: [Título específico relacionado ao tema]",
+      "objetivoEspecifico": "Objetivo específico da aula ${i}",
+      "resumo": "Resumo contextualizado da aula ${i}",
+      "etapas": {
+        "introducao": {
+          "tempo": "10 min",
+          "descricao": "Introdução contextualizada",
+          "cor": "green"
+        },
+        "desenvolvimento": {
+          "tempo": "30 min",
+          "descricao": "Desenvolvimento principal",
+          "cor": "orange"
+        },
+        "fechamento": {
+          "tempo": "10 min",
+          "descricao": "Fechamento e síntese",
+          "cor": "purple"
         }
-      }
-
-      // Validar estrutura mínima
-      if (!jsonContent.aulas || !Array.isArray(jsonContent.aulas)) {
-        throw new Error('Estrutura de aulas inválida');
-      }
-
-      // Construir objeto completo
-      const sequenciaCompleta: SequenciaDidaticaCompleta = {
-        metadados: dadosOriginais,
-        aulas: jsonContent.aulas || [],
-        diagnosticos: jsonContent.diagnosticos || [],
-        avaliacoes: jsonContent.avaliacoes || [],
-        encadeamento: jsonContent.encadeamento || {
-          progressaoDidatica: 'Progressão lógica e sequencial',
-          conexoesEntrAulas: []
-        },
-        cronogramaSugerido: jsonContent.cronogramaSugerido || {
-          duracao: `${dadosOriginais.quantidadeAulas} aulas`,
-          distribuicao: 'Conforme cronograma escolar',
-          observacoes: 'Ajustar conforme necessidade da turma'
-        },
-        generatedAt: new Date().toISOString(),
-        versao: '1.0'
-      };
-
-      console.log('✅ Sequência estruturada com sucesso:', {
-        aulas: sequenciaCompleta.aulas.length,
-        diagnosticos: sequenciaCompleta.diagnosticos.length,
-        avaliacoes: sequenciaCompleta.avaliacoes.length
-      });
-
-      return sequenciaCompleta;
-    } catch (error) {
-      console.error('❌ Erro ao processar resposta da IA:', error);
-
-      // Retornar estrutura mínima em caso de erro
-      return {
-        metadados: dadosOriginais,
-        aulas: [],
-        diagnosticos: [],
-        avaliacoes: [],
-        encadeamento: {
-          progressaoDidatica: 'Erro na geração - tente novamente',
-          conexoesEntrAulas: []
-        },
-        cronogramaSugerido: {
-          duracao: 'Não definido',
-          distribuicao: 'Não definido',
-          observacoes: 'Erro na geração'
-        },
-        generatedAt: new Date().toISOString(),
-        versao: '1.0'
-      };
+      },
+      "recursos": ["Quadro", "Material impresso", "Recursos digitais"],
+      "atividadePratica": "Atividade prática específica da aula ${i}",
+      "tempoTotal": "50 min"
+    }`);
     }
+    return aulas.join(',');
   }
 
-  async regenerarSequencia(
-    dadosOriginais: SequenciaDidaticaData,
-    dadosAlterados: Partial<SequenciaDidaticaData>
-  ): Promise<SequenciaDidaticaCompleta> {
-    console.log('🔄 Regenerando sequência com alterações:', dadosAlterados);
-
-    const dadosCompletos = { ...dadosOriginais, ...dadosAlterados };
-    return this.gerarSequenciaCompleta(dadosCompletos);
+  private gerarTemplateDiagnosticos(quantidade: number): string {
+    const diagnosticos = [];
+    for (let i = 1; i <= quantidade; i++) {
+      diagnosticos.push(`
+    {
+      "id": "diagnostico-${i}",
+      "numero": ${i},
+      "titulo": "Diagnóstico ${i}: [Título específico]",
+      "objetivoAvaliativo": "Objetivo avaliativo do diagnóstico ${i}",
+      "tipoAvaliacao": "Quiz Interativo",
+      "quantidadeQuestoes": 8,
+      "formato": "Múltipla escolha",
+      "criteriosCorrecao": [
+        {
+          "faixa": "Excelente (8-7 acertos)",
+          "resultado": "Pronto para avançar",
+          "cor": "text-green-600"
+        },
+        {
+          "faixa": "Bom (6-5 acertos)",
+          "resultado": "Revisão leve",
+          "cor": "text-yellow-600"
+        },
+        {
+          "faixa": "Precisa melhorar (<5)",
+          "resultado": "Revisão necessária",
+          "cor": "text-red-600"
+        }
+      ],
+      "tempo": "20 min"
+    }`);
+    }
+    return diagnosticos.join(',');
   }
 
-  static async generateSequenciaDidatica(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
-    console.log('🎯 Gerando Sequência Didática com dados:', formData);
+  private gerarTemplateAvaliacoes(quantidade: number): string {
+    const avaliacoes = [];
+    for (let i = 1; i <= quantidade; i++) {
+      avaliacoes.push(`
+    {
+      "id": "avaliacao-${i}",
+      "numero": ${i},
+      "titulo": "Avaliação ${i}: [Título específico]",
+      "objetivoAvaliativo": "Objetivo avaliativo da avaliação ${i}",
+      "tipoAvaliacao": "Prova Escrita",
+      "quantidadeQuestoes": 12,
+      "valorTotal": "10,0 pontos",
+      "composicao": [
+        {
+          "tipo": "Múltipla escolha",
+          "quantidade": 8,
+          "pontos": "6,0 pts"
+        },
+        {
+          "tipo": "Discursivas",
+          "quantidade": 4,
+          "pontos": "4,0 pts"
+        }
+      ],
+      "gabarito": "Disponível após aplicação com critérios detalhados",
+      "tempo": "45 min"
+    }`);
+    }
+    return avaliacoes.join(',');
+  }
 
+  private processarRespostaIA(response: any, dadosOriginais: any): SequenciaDidaticaCompleta {
     try {
-      // Preparar estrutura base
-      const sequenciaData: SequenciaDidaticaCompleta = {
-        metadados: formData,
-        aulas: [],
-        diagnosticos: [],
-        avaliacoes: [],
-        encadeamento: {
-          progressaoDidatica: '',
-          conexoesEntrAulas: []
-        },
-        cronogramaSugerido: {
-          duracao: '',
-          distribuicao: '',
-          observacoes: ''
-        },
-        generatedAt: new Date().toISOString(),
-        versao: '1.0'
-      };
-
-      // Gerar aulas
-      const quantidadeAulas = parseInt(formData.quantidadeAulas) || 4;
-      console.log(`📚 Gerando ${quantidadeAulas} aulas`);
-
-      for (let i = 0; i < quantidadeAulas; i++) {
-        sequenciaData.aulas.push({
-          id: `aula_${i + 1}`,
-          titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto}`,
-          objetivoEspecifico: `Desenvolver conhecimentos sobre ${formData.tituloTemaAssunto} - Parte ${i + 1}`,
-          resumoContexto: `Esta aula aborda aspectos específicos de ${formData.tituloTemaAssunto}, construindo conhecimento de forma progressiva e contextualizada.`,
-          passoAPasso: {
-            introducao: `Introdução ao tema com revisão dos conceitos anteriores e apresentação dos objetivos da aula ${i + 1}.`,
-            desenvolvimento: `Desenvolvimento prático dos conceitos através de exemplos, exercícios e discussões sobre ${formData.tituloTemaAssunto}.`,
-            fechamento: `Síntese dos conteúdos abordados, esclarecimento de dúvidas e preparação para a próxima aula.`
-          },
-          recursos: [
-            'Material didático impresso',
-            'Quadro ou lousa digital',
-            'Recursos audiovisuais',
-            'Computador/tablet (se disponível)'
-          ],
-          atividades: [
-            {
-              tipo: 'Atividade Inicial',
-              descricao: 'Dinâmica de aquecimento e revisão',
-              tempo: '10 minutos'
-            },
-            {
-              tipo: 'Atividade Principal',
-              descricao: 'Desenvolvimento do conteúdo central',
-              tempo: '25 minutos'
-            },
-            {
-              tipo: 'Atividade de Fixação',
-              descricao: 'Exercícios práticos e discussão',
-              tempo: '15 minutos'
-            }
-          ],
-          avaliacao: `Avaliação formativa através de participação, exercícios e questionamentos durante a aula ${i + 1}.`,
-          tempoEstimado: '50 minutos'
-        });
+      console.log('🔄 Processando resposta da IA...');
+      
+      let content = '';
+      if (response?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        content = response.candidates[0].content.parts[0].text;
+      } else if (typeof response === 'string') {
+        content = response;
+      } else {
+        throw new Error('Formato de resposta inválido da IA');
       }
 
-      // Gerar diagnósticos
-      const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos) || 2;
-      console.log(`🔍 Gerando ${quantidadeDiagnosticos} diagnósticos`);
-
-      for (let i = 0; i < quantidadeDiagnosticos; i++) {
-        sequenciaData.diagnosticos.push({
-          id: `diagnostico_${i + 1}`,
-          titulo: `Diagnóstico ${i + 1}: ${formData.tituloTemaAssunto}`,
-          objetivo: `Avaliar o nível de compreensão dos estudantes sobre ${formData.tituloTemaAssunto}`,
-          tipo: i === 0 ? 'Diagnóstico Inicial' : 'Diagnóstico Processual',
-          instrumentos: [
-            'Questionário diagnóstico',
-            'Observação direta',
-            'Atividade prática',
-            'Discussão em grupo'
-          ],
-          criteriosAvaliacao: [
-            'Conhecimento prévio do tema',
-            'Capacidade de análise',
-            'Participação e engajamento',
-            'Identificação de dificuldades'
-          ],
-          resultadosEsperados: `Identificar pontos fortes e necessidades de aprendizagem relacionados a ${formData.tituloTemaAssunto}`
-        });
+      // Extrair JSON da resposta
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('JSON não encontrado na resposta da IA');
       }
 
-      // Gerar avaliações
-      const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes) || 2;
-      console.log(`📝 Gerando ${quantidadeAvaliacoes} avaliações`);
-
-      for (let i = 0; i < quantidadeAvaliacoes; i++) {
-        sequenciaData.avaliacoes.push({
-          id: `avaliacao_${i + 1}`,
-          titulo: `Avaliação ${i + 1}: ${formData.tituloTemaAssunto}`,
-          objetivo: `Verificar o aprendizado e desenvolvimento das competências relacionadas a ${formData.tituloTemaAssunto}`,
-          tipo: i === 0 ? 'Avaliação Formativa' : 'Avaliação Somativa',
-          instrumentos: [
-            'Prova escrita',
-            'Trabalho em grupo',
-            'Apresentação oral',
-            'Portfolio de atividades'
-          ],
-          criteriosAvaliacao: [
-            'Domínio do conteúdo',
-            'Aplicação prática',
-            'Capacidade de síntese',
-            'Criatividade e originalidade'
-          ],
-          peso: i === 0 ? 0.4 : 0.6,
-          dataPrevisao: `A definir conforme cronograma`
-        });
+      const sequenciaData = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+      
+      // Validar estrutura básica
+      if (!sequenciaData.aulas || !sequenciaData.diagnosticos || !sequenciaData.avaliacoes) {
+        throw new Error('Estrutura de dados incompleta na resposta da IA');
       }
 
-      // Configurar encadeamento didático
-      sequenciaData.encadeamento = {
-        progressaoDidatica: `A sequência didática sobre ${formData.tituloTemaAssunto} foi estruturada de forma progressiva, partindo de conceitos básicos até aplicações mais complexas, garantindo a construção gradual do conhecimento.`,
-        conexoesEntrAulas: sequenciaData.aulas.map((aula, index) => {
-          if (index === 0) {
-            return `${aula.titulo} - Introdução ao tema e conceitos fundamentais`;
-          } else if (index === sequenciaData.aulas.length - 1) {
-            return `${aula.titulo} - Síntese e aplicação dos conhecimentos adquiridos`;
-          } else {
-            return `${aula.titulo} - Desenvolvimento e aprofundamento dos conceitos`;
-          }
-        })
-      };
-
-      // Configurar cronograma
-      sequenciaData.cronogramaSugerido = {
-        duracao: `${quantidadeAulas} aulas + ${quantidadeDiagnosticos} diagnósticos + ${quantidadeAvaliacoes} avaliações`,
-        distribuicao: 'Sugestão: 2 aulas por semana, com diagnósticos e avaliações intercalados',
-        observacoes: formData.cronograma || 'Cronograma flexível, adaptável conforme necessidades da turma e calendário escolar'
-      };
-
-      console.log('✅ Sequência Didática gerada com sucesso');
+      console.log('✅ Resposta da IA processada com sucesso');
       return sequenciaData;
 
     } catch (error) {
-      console.error('❌ Erro ao gerar Sequência Didática:', error);
-      throw new Error(`Erro na geração: ${error.message}`);
+      console.error('❌ Erro ao processar resposta da IA:', error);
+      
+      // Fallback: gerar estrutura básica com os dados fornecidos
+      console.log('🔄 Gerando estrutura de fallback...');
+      return this.gerarEstruturaNFallback(dadosOriginais);
     }
   }
 
-  async regenerateWithAI(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
-    console.log('🤖 Regeneração com IA em desenvolvimento...');
-    return SequenciaDidaticaGenerator.generateSequenciaDidatica(formData);
+  private gerarEstruturaNFallback(dados: any): SequenciaDidaticaCompleta {
+    const quantidadeAulas = parseInt(dados.quantidadeAulas || '4');
+    const quantidadeDiagnosticos = parseInt(dados.quantidadeDiagnosticos || '2');
+    const quantidadeAvaliacoes = parseInt(dados.quantidadeAvaliacoes || '2');
+
+    // Gerar aulas
+    const aulas: AulaData[] = [];
+    for (let i = 1; i <= quantidadeAulas; i++) {
+      aulas.push({
+        id: `aula-${i}`,
+        numero: i,
+        titulo: `Aula ${i}: ${dados.tituloTemaAssunto || 'Conteúdo Programático'}`,
+        objetivoEspecifico: `Desenvolver competências específicas relacionadas ao ${dados.tituloTemaAssunto || 'tema da disciplina'}`,
+        resumo: `Contextualização e desenvolvimento do conteúdo da aula ${i}`,
+        etapas: {
+          introducao: {
+            tempo: "10 min",
+            descricao: "Apresentação do tema e contextualização",
+            cor: "green"
+          },
+          desenvolvimento: {
+            tempo: "30 min",
+            descricao: "Desenvolvimento principal do conteúdo",
+            cor: "orange"
+          },
+          fechamento: {
+            tempo: "10 min",
+            descricao: "Síntese e esclarecimento de dúvidas",
+            cor: "purple"
+          }
+        },
+        recursos: ["Quadro branco", "Material impresso", "Recursos digitais", "Livro didático"],
+        atividadePratica: `Atividade prática contextualizada para a aula ${i}`,
+        tempoTotal: "50 min"
+      });
+    }
+
+    // Gerar diagnósticos
+    const diagnosticos: DiagnosticoData[] = [];
+    for (let i = 1; i <= quantidadeDiagnosticos; i++) {
+      diagnosticos.push({
+        id: `diagnostico-${i}`,
+        numero: i,
+        titulo: `Avaliação Diagnóstica ${i}`,
+        objetivoAvaliativo: `Identificar conhecimentos prévios sobre ${dados.tituloTemaAssunto || 'o tema'}`,
+        tipoAvaliacao: "Quiz Interativo",
+        quantidadeQuestoes: 8,
+        formato: "Múltipla escolha",
+        criteriosCorrecao: [
+          {
+            faixa: "Excelente (8-7 acertos)",
+            resultado: "Pronto para avançar",
+            cor: "text-green-600"
+          },
+          {
+            faixa: "Bom (6-5 acertos)",
+            resultado: "Revisão leve",
+            cor: "text-yellow-600"
+          },
+          {
+            faixa: "Precisa melhorar (<5)",
+            resultado: "Revisão necessária",
+            cor: "text-red-600"
+          }
+        ],
+        tempo: "20 min"
+      });
+    }
+
+    // Gerar avaliações
+    const avaliacoes: AvaliacaoData[] = [];
+    for (let i = 1; i <= quantidadeAvaliacoes; i++) {
+      avaliacoes.push({
+        id: `avaliacao-${i}`,
+        numero: i,
+        titulo: `Avaliação ${i}: ${dados.tituloTemaAssunto || 'Conteúdo Programático'}`,
+        objetivoAvaliativo: `Avaliar a compreensão e aplicação dos conceitos de ${dados.tituloTemaAssunto || 'tema estudado'}`,
+        tipoAvaliacao: "Prova Escrita",
+        quantidadeQuestoes: 12,
+        valorTotal: "10,0 pontos",
+        composicao: [
+          {
+            tipo: "Múltipla escolha",
+            quantidade: 8,
+            pontos: "6,0 pts"
+          },
+          {
+            tipo: "Discursivas",
+            quantidade: 4,
+            pontos: "4,0 pts"
+          }
+        ],
+        gabarito: "Disponível após aplicação com critérios detalhados de correção",
+        tempo: "45 min"
+      });
+    }
+
+    return {
+      id: `sequencia-didatica-${Date.now()}`,
+      titulo: dados.tituloTemaAssunto || dados.title || 'Sequência Didática',
+      disciplina: dados.disciplina || dados.subject || 'Disciplina',
+      anoSerie: dados.anoSerie || dados.schoolYear || 'Ano/Série',
+      objetivosAprendizagem: dados.objetivosAprendizagem || dados.objectives || 'Desenvolver competências específicas',
+      publicoAlvo: dados.publicoAlvo || 'Estudantes do ensino fundamental/médio',
+      bnccCompetencias: dados.bnccCompetencias || 'Competências BNCC aplicáveis',
+      cronograma: dados.cronograma || 'Desenvolvimento ao longo de 2-3 semanas',
+      aulas,
+      diagnosticos,
+      avaliacoes,
+      resumoEstatistico: {
+        totalAulas: quantidadeAulas,
+        totalDiagnosticos: quantidadeDiagnosticos,
+        totalAvaliacoes: quantidadeAvaliacoes,
+        tempoTotalMinutos: (quantidadeAulas * 50) + (quantidadeDiagnosticos * 20) + (quantidadeAvaliacoes * 45)
+      },
+      metadados: {
+        dataGeracao: new Date().toISOString(),
+        versao: "1.0",
+        sistemaGerador: "School Power IA"
+      }
+    };
   }
 }
 
-// Exportar instância singleton
 export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator.getInstance();

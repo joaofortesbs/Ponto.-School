@@ -1,27 +1,25 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
-  BookOpen, 
-  Target, 
   Calendar, 
   BarChart3, 
   CheckSquare, 
-  RefreshCw,
-  LayoutGrid,
-  Clock,
-  List,
-  ChevronLeft,
+  LayoutGrid, 
+  List, 
+  RefreshCw, 
+  ChevronLeft, 
   ChevronRight,
-  Edit2,
-  Check,
+  Edit,
+  Save,
   X
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface SequenciaDidaticaHeaderProps {
   tituloTemaAssunto: string;
@@ -39,7 +37,8 @@ interface SequenciaDidaticaHeaderProps {
   setIsCalendarOpen: (open: boolean) => void;
   monthNames: string[];
   weekDays: string[];
-  onFieldUpdate?: (field: string, value: string | number) => void;
+  onFieldUpdate: (field: string, value: string | number) => void;
+  isLoading?: boolean;
 }
 
 const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({
@@ -58,386 +57,253 @@ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({
   setIsCalendarOpen,
   monthNames,
   weekDays,
-  onFieldUpdate
+  onFieldUpdate,
+  isLoading = false
 }) => {
-  const [editingFields, setEditingFields] = useState<{ [key: string]: boolean }>({});
-  const [tempValues, setTempValues] = useState<{ [key: string]: string | number }>({});
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingObjectives, setIsEditingObjectives] = useState(false);
+  const [tempTitle, setTempTitle] = useState(tituloTemaAssunto);
+  const [tempObjectives, setTempObjectives] = useState(objetivosAprendizagem);
 
-  const handleStartEdit = (field: string, currentValue: string | number) => {
-    setEditingFields({ ...editingFields, [field]: true });
-    setTempValues({ ...tempValues, [field]: currentValue });
+  const handleSaveTitle = () => {
+    onFieldUpdate('titulo', tempTitle);
+    setIsEditingTitle(false);
   };
 
-  const handleSaveEdit = (field: string) => {
-    if (onFieldUpdate && tempValues[field] !== undefined) {
-      onFieldUpdate(field, tempValues[field]);
+  const handleSaveObjectives = () => {
+    onFieldUpdate('objetivosAprendizagem', tempObjectives);
+    setIsEditingObjectives(false);
+  };
+
+  const handleCancelEdit = (field: 'title' | 'objectives') => {
+    if (field === 'title') {
+      setTempTitle(tituloTemaAssunto);
+      setIsEditingTitle(false);
+    } else {
+      setTempObjectives(objetivosAprendizagem);
+      setIsEditingObjectives(false);
     }
-    setEditingFields({ ...editingFields, [field]: false });
-    setTempValues({ ...tempValues, [field]: undefined });
-  };
-
-  const handleCancelEdit = (field: string) => {
-    setEditingFields({ ...editingFields, [field]: false });
-    setTempValues({ ...tempValues, [field]: undefined });
-  };
-
-  const renderEditableField = (
-    field: string, 
-    currentValue: string | number, 
-    isTextarea = false,
-    isNumber = false
-  ) => {
-    const isEditing = editingFields[field];
-
-    if (isEditing) {
-      return (
-        <div className="flex items-center gap-2 flex-1">
-          {isTextarea ? (
-            <Textarea
-              value={tempValues[field] as string || ''}
-              onChange={(e) => setTempValues({ ...tempValues, [field]: e.target.value })}
-              className="min-h-[60px] text-sm"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                  handleSaveEdit(field);
-                }
-                if (e.key === 'Escape') {
-                  handleCancelEdit(field);
-                }
-              }}
-            />
-          ) : (
-            <Input
-              type={isNumber ? 'number' : 'text'}
-              value={tempValues[field] || ''}
-              onChange={(e) => setTempValues({ ...tempValues, [field]: isNumber ? parseInt(e.target.value) || 0 : e.target.value })}
-              className="text-sm"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSaveEdit(field);
-                }
-                if (e.key === 'Escape') {
-                  handleCancelEdit(field);
-                }
-              }}
-              autoFocus
-            />
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => handleSaveEdit(field)}
-            className="h-8 w-8 p-0 text-green-600 hover:bg-green-100"
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => handleCancelEdit(field)}
-            className="h-8 w-8 p-0 text-red-600 hover:bg-red-100"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex items-start gap-2 flex-1 group">
-        <div className="flex-1">
-          {isTextarea ? (
-            <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-              {currentValue}
-            </p>
-          ) : (
-            <span className="text-sm">{currentValue}</span>
-          )}
-        </div>
-        {onFieldUpdate && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => handleStartEdit(field, currentValue)}
-            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-    );
   };
 
   return (
-    <Card className="sticky top-4 z-10 bg-white/95 backdrop-blur-sm border-2 border-orange-200 shadow-lg">
-      <CardContent className="p-4">
-        {/* Título da Sequência */}
-        <div className="mb-4 pb-3 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <BookOpen className="text-orange-500" size={24} />
-            {renderEditableField('tituloTemaAssunto', tituloTemaAssunto)}
-          </h2>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          {/* Lado Esquerdo - Informações Principais */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Target className="text-orange-500" size={18} />
-              <div className="text-sm flex-1">
-                <span className="font-medium text-gray-700">Objetivos:</span>
-                <div className="group">
-                  {renderEditableField('objetivosAprendizagem', objetivosAprendizagem, true)}
-                </div>
+    <Card className="sticky top-4 z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-2 border-[#FF6B00]/20 shadow-lg">
+      <CardContent className="p-6">
+        {/* Linha Superior: Título e Controles */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1 mr-4">
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  className="text-2xl font-bold"
+                  placeholder="Título da Sequência Didática"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSaveTitle}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  <Save className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleCancelEdit('title')}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 group">
-                <Badge variant="outline" className="bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  {editingFields['quantidadeAulas'] ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        value={tempValues['quantidadeAulas'] || quantidadeAulas}
-                        onChange={(e) => setTempValues({ ...tempValues, quantidadeAulas: parseInt(e.target.value) || 0 })}
-                        className="w-16 h-6 text-xs p-1"
-                        min="1"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit('quantidadeAulas');
-                          if (e.key === 'Escape') handleCancelEdit('quantidadeAulas');
-                        }}
-                      />
-                      <Check 
-                        className="w-3 h-3 cursor-pointer text-green-600" 
-                        onClick={() => handleSaveEdit('quantidadeAulas')}
-                      />
-                      <X 
-                        className="w-3 h-3 cursor-pointer text-red-600" 
-                        onClick={() => handleCancelEdit('quantidadeAulas')}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {quantidadeAulas} Aulas
-                      {onFieldUpdate && (
-                        <Edit2 
-                          className="w-3 h-3 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ml-1" 
-                          onClick={() => handleStartEdit('quantidadeAulas', quantidadeAulas)}
-                        />
-                      )}
-                    </div>
-                  )}
-                </Badge>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {tituloTemaAssunto}
+                </h2>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditingTitle(true)}
+                  className="opacity-60 hover:opacity-100"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
               </div>
-
-              <div className="flex items-center gap-2 group">
-                <Badge variant="outline" className="bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700">
-                  <BarChart3 className="w-4 h-4 mr-1" />
-                  {editingFields['quantidadeDiagnosticos'] ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        value={tempValues['quantidadeDiagnosticos'] || quantidadeDiagnosticos}
-                        onChange={(e) => setTempValues({ ...tempValues, quantidadeDiagnosticos: parseInt(e.target.value) || 0 })}
-                        className="w-16 h-6 text-xs p-1"
-                        min="1"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit('quantidadeDiagnosticos');
-                          if (e.key === 'Escape') handleCancelEdit('quantidadeDiagnosticos');
-                        }}
-                      />
-                      <Check 
-                        className="w-3 h-3 cursor-pointer text-green-600" 
-                        onClick={() => handleSaveEdit('quantidadeDiagnosticos')}
-                      />
-                      <X 
-                        className="w-3 h-3 cursor-pointer text-red-600" 
-                        onClick={() => handleCancelEdit('quantidadeDiagnosticos')}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {quantidadeDiagnosticos} Diagnósticos
-                      {onFieldUpdate && (
-                        <Edit2 
-                          className="w-3 h-3 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ml-1" 
-                          onClick={() => handleStartEdit('quantidadeDiagnosticos', quantidadeDiagnosticos)}
-                        />
-                      )}
-                    </div>
-                  )}
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-2 group">
-                <Badge variant="outline" className="bg-purple-50 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700">
-                  <CheckSquare className="w-4 h-4 mr-1" />
-                  {editingFields['quantidadeAvaliacoes'] ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        value={tempValues['quantidadeAvaliacoes'] || quantidadeAvaliacoes}
-                        onChange={(e) => setTempValues({ ...tempValues, quantidadeAvaliacoes: parseInt(e.target.value) || 0 })}
-                        className="w-16 h-6 text-xs p-1"
-                        min="1"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveEdit('quantidadeAvaliacoes');
-                          if (e.key === 'Escape') handleCancelEdit('quantidadeAvaliacoes');
-                        }}
-                      />
-                      <Check 
-                        className="w-3 h-3 cursor-pointer text-green-600" 
-                        onClick={() => handleSaveEdit('quantidadeAvaliacoes')}
-                      />
-                      <X 
-                        className="w-3 h-3 cursor-pointer text-red-600" 
-                        onClick={() => handleCancelEdit('quantidadeAvaliacoes')}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {quantidadeAvaliacoes} Avaliações
-                      {onFieldUpdate && (
-                        <Edit2 
-                          className="w-3 h-3 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity ml-1" 
-                          onClick={() => handleStartEdit('quantidadeAvaliacoes', quantidadeAvaliacoes)}
-                        />
-                      )}
-                    </div>
-                  )}
-                </Badge>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Lado Direito - Controles */}
+          {/* Controles do lado direito */}
           <div className="flex items-center gap-3">
-            {/* Seletor de Visualização */}
+            {/* Seletor de Modo de Visualização */}
             <Select value={viewMode} onValueChange={onViewModeChange}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cards">
                   <div className="flex items-center gap-2">
-                    <LayoutGrid size={14} />
+                    <LayoutGrid className="w-4 h-4" />
                     Cards
                   </div>
                 </SelectItem>
                 <SelectItem value="timeline">
                   <div className="flex items-center gap-2">
-                    <Clock size={14} />
+                    <List className="w-4 h-4" />
                     Timeline
                   </div>
                 </SelectItem>
                 <SelectItem value="grade">
                   <div className="flex items-center gap-2">
-                    <List size={14} />
+                    <LayoutGrid className="w-4 h-4" />
                     Grade
                   </div>
                 </SelectItem>
               </SelectContent>
             </Select>
 
-            {/* Calendário Dropdown */}
+            {/* Calendário */}
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300"
-                >
-                  <Calendar size={14} />
-                  Calendário
+                <Button variant="outline" className="w-10 h-10 p-0">
+                  <Calendar className="w-4 h-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-4" align="end">
-                <div className="space-y-4">
-                  {/* Cabeçalho do Calendário */}
-                  <div className="flex items-center justify-between">
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-4">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onNavigateMonth('prev')}
-                      className="h-8 w-8 p-0"
                     >
-                      <ChevronLeft size={16} />
+                      <ChevronLeft className="w-4 h-4" />
                     </Button>
-
-                    <h3 className="font-semibold text-lg">
+                    <h3 className="font-semibold">
                       {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                     </h3>
-
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onNavigateMonth('next')}
-                      className="h-8 w-8 p-0"
                     >
-                      <ChevronRight size={16} />
+                      <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
-
-                  {/* Dias da Semana */}
-                  <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500">
+                  
+                  <div className="grid grid-cols-7 gap-1 mb-2">
                     {weekDays.map(day => (
-                      <div key={day} className="p-2">
+                      <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
                         {day}
                       </div>
                     ))}
                   </div>
-
-                  {/* Grade do Calendário */}
+                  
                   <div className="grid grid-cols-7 gap-1">
                     {calendarDays.map((day, index) => (
                       <div
                         key={index}
                         className={`
-                          p-2 text-center text-sm rounded-md cursor-pointer transition-colors relative
-                          ${!day.isCurrentMonth ? 'text-gray-300' : 'text-gray-700'}
-                          ${day.isToday ? 'bg-blue-500 text-white font-bold' : ''}
-                          ${day.hasAula && !day.isToday ? 'bg-orange-100 text-orange-700 font-semibold ring-2 ring-orange-300' : ''}
-                          ${day.isCurrentMonth && !day.isToday && !day.hasAula ? 'hover:bg-gray-100' : ''}
+                          text-center text-sm p-2 rounded cursor-pointer
+                          ${day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}
+                          ${day.isToday ? 'bg-blue-500 text-white' : ''}
+                          ${day.hasAula ? 'bg-green-100 border border-green-300' : ''}
+                          hover:bg-gray-100
                         `}
                       >
                         {day.day}
-                        {day.hasAula && (
-                          <div className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full transform translate-x-1 -translate-y-1"></div>
-                        )}
                       </div>
                     ))}
-                  </div>
-
-                  {/* Legenda */}
-                  <div className="space-y-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-orange-100 rounded border-2 border-orange-300"></div>
-                      <span>Dias com aulas programadas</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                      <span>Hoje</span>
-                    </div>
-                    <p className="text-gray-600 mt-2">
-                      <strong>{quantidadeAulas} aulas</strong> distribuídas ao longo do período
-                    </p>
                   </div>
                 </div>
               </PopoverContent>
             </Popover>
 
             {/* Botão Regenerar */}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
               onClick={onRegenerateSequence}
-              className="flex items-center gap-2 hover:bg-orange-50 hover:border-orange-300"
+              disabled={isLoading}
+              className="bg-[#FF6B00] hover:bg-[#FF8C40] text-white"
             >
-              <RefreshCw size={14} />
-              Regenerar
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              {isLoading ? 'Regenerando...' : 'Regenerar'}
             </Button>
+          </div>
+        </div>
+
+        {/* Linha do Meio: Objetivos de Aprendizagem */}
+        <div className="mb-4">
+          {isEditingObjectives ? (
+            <div className="space-y-2">
+              <Textarea
+                value={tempObjectives}
+                onChange={(e) => setTempObjectives(e.target.value)}
+                placeholder="Objetivos de aprendizagem da sequência didática"
+                rows={3}
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleSaveObjectives}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  Salvar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleCancelEdit('objectives')}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2">
+              <p className="text-gray-600 dark:text-gray-400 leading-relaxed flex-1">
+                <strong>Objetivos de Aprendizagem:</strong> {objetivosAprendizagem}
+              </p>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditingObjectives(true)}
+                className="opacity-60 hover:opacity-100 flex-shrink-0"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Linha Inferior: Estatísticas */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-blue-500" />
+            <span className="text-sm font-medium">
+              <span className="text-blue-600 font-bold">{quantidadeAulas}</span> Aulas
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-green-500" />
+            <span className="text-sm font-medium">
+              <span className="text-green-600 font-bold">{quantidadeDiagnosticos}</span> Diagnósticos
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <CheckSquare className="w-5 h-5 text-purple-500" />
+            <span className="text-sm font-medium">
+              <span className="text-purple-600 font-bold">{quantidadeAvaliacoes}</span> Avaliações
+            </span>
+          </div>
+
+          <div className="ml-auto text-sm text-gray-500">
+            Total: {(quantidadeAulas * 50) + (quantidadeDiagnosticos * 20) + (quantidadeAvaliacoes * 45)} minutos
           </div>
         </div>
       </CardContent>
