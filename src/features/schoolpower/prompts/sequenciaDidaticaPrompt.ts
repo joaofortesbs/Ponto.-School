@@ -13,34 +13,32 @@ export interface SequenciaDidaticaPromptData {
   cronograma: string;
 }
 
-export function buildSequenciaDidaticaPrompt(data: any): string {
-  console.log('📝 [SEQUENCIA_DIDATICA_PROMPT] Construindo prompt para:', data);
+export function buildSequenciaDidaticaPrompt(dados: any): string {
+  return `
+**INSTRUÇÃO PARA GERAÇÃO DE SEQUÊNCIA DIDÁTICA COMPLETA**
 
-  return `Você é um especialista em educação e deve criar uma sequência didática detalhada. 
+## DADOS DE ENTRADA:
+- **Título/Tema:** ${dados.tituloTemaAssunto}
+- **Disciplina:** ${dados.disciplina}
+- **Ano/Série:** ${dados.anoSerie}
+- **Público-alvo:** ${dados.publicoAlvo}
+- **BNCC/Competências:** ${dados.bnccCompetencias}
+- **Objetivos de Aprendizagem:** ${dados.objetivosAprendizagem}
+- **Quantidade de Aulas:** ${dados.quantidadeAulas}
+- **Quantidade de Diagnósticos:** ${dados.quantidadeDiagnosticos}
+- **Quantidade de Avaliações:** ${dados.quantidadeAvaliacoes}
+- **Cronograma:** ${dados.cronograma}
 
-IMPORTANTE: Responda APENAS com um JSON válido, sem markdown ou texto adicional.
+## INSTRUÇÕES PARA GERAÇÃO:
 
-Dados fornecidos:
-- Título/Tema: ${data.tituloTemaAssunto}
-- Disciplina: ${data.disciplina}
-- Ano/Série: ${data.anoSerie}
-- Público-alvo: ${data.publicoAlvo}
-- Objetivos: ${data.objetivosAprendizagem}
-- BNCC/Competências: ${data.bnccCompetencias}
-- Quantidade de aulas: ${data.quantidadeAulas}
-- Quantidade de diagnósticos: ${data.quantidadeDiagnosticos}
-- Quantidade de avaliações: ${data.quantidadeAvaliacoes}
-
-Crie uma sequência didática estruturada seguindo EXATAMENTE este formato JSON:
+Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo EXATAMENTE este formato JSON:
 
 {
   "aulas": [
     {
-      "id": "aula-1",
-      "numero": 1,
       "titulo": "Título da Aula 1",
-      "objetivoEspecifico": "Objetivo específico desta aula",
-      "resumoContexto": "Resumo do contexto e desenvolvimento",
+      "objetivoEspecifico": "Objetivo específico da aula",
+      "resumoContexto": "Resumo do contexto e conteúdo da aula",
       "tempoEstimado": "50 min",
       "etapas": {
         "introducao": {
@@ -58,61 +56,72 @@ Crie uma sequência didática estruturada seguindo EXATAMENTE este formato JSON:
       },
       "recursos": ["Recurso 1", "Recurso 2"],
       "atividadesPraticas": {
-        "tipo": "Tipo de atividade",
-        "descricao": "Descrição da atividade prática",
-        "tempo": "15 min"
+        "descricao": "Descrição das atividades práticas"
       }
     }
   ],
   "diagnosticos": [
     {
-      "id": "diagnostico-1",
-      "numero": 1,
       "titulo": "Título do Diagnóstico 1",
-      "objetivoAvaliativo": "Objetivo do diagnóstico",
-      "tipo": "Quiz Diagnóstico",
-      "tempoEstimado": "20 min",
-      "questoes": "5 questões",
+      "objetivoAvaliativo": "Objetivo da avaliação diagnóstica",
+      "tipo": "Diagnóstica",
+      "questoes": 10,
       "formato": "Múltipla escolha",
+      "tempoEstimado": "20 min",
       "criteriosCorrecao": {
-        "excelente": "4-5 acertos",
-        "bom": "3 acertos",
-        "precisaMelhorar": "Menos de 3 acertos"
+        "excelente": "9-10 acertos",
+        "bom": "7-8 acertos",
+        "precisaMelhorar": "0-6 acertos"
       }
     }
   ],
   "avaliacoes": [
     {
-      "id": "avaliacao-1",
-      "numero": 1,
       "titulo": "Título da Avaliação 1",
       "objetivoAvaliativo": "Objetivo da avaliação",
-      "tipo": "Prova Escrita",
-      "tempoEstimado": "45 min",
-      "questoes": "10 questões",
+      "tipo": "Formativa",
+      "questoes": 15,
       "valorTotal": "10,0 pontos",
+      "tempoEstimado": "45 min",
       "composicao": {
         "multipplaEscolha": {
-          "quantidade": 6,
-          "pontos": "6,0 pts"
+          "quantidade": 10,
+          "pontos": "6,0 pontos"
         },
         "discursivas": {
-          "quantidade": 4,
-          "pontos": "4,0 pts"
+          "quantidade": 3,
+          "pontos": "4,0 pontos"
         }
       },
-      "criteriosCorrecao": "Critérios baseados na BNCC",
-      "gabarito": "Gabarito disponível"
+      "gabarito": "Descrição do gabarito"
     }
   ],
   "cronogramaSugerido": {
-    "duracao": "${data.quantidadeAulas} aulas",
+    "duracao": "${dados.quantidadeAulas} aulas",
     "distribuicao": "Sugestão de distribuição temporal",
     "observacoes": "Observações sobre o cronograma"
   }
 }
 
-Crie exatamente ${data.quantidadeAulas} aulas, ${data.quantidadeDiagnosticos} diagnósticos e ${data.quantidadeAvaliacoes} avaliações. Certifique-se de que o JSON seja válido e completo.`;
+## REQUISITOS OBRIGATÓRIOS:
+
+1. **GERE EXATAMENTE ${dados.quantidadeAulas} AULAS**
+2. **GERE EXATAMENTE ${dados.quantidadeDiagnosticos} DIAGNÓSTICOS**
+3. **GERE EXATAMENTE ${dados.quantidadeAvaliacoes} AVALIAÇÕES**
+4. **RETORNE APENAS O JSON VÁLIDO, SEM TEXTO ADICIONAL**
+5. **Cada aula deve ter etapas detalhadas (introdução, desenvolvimento, fechamento)**
+6. **Cada diagnóstico deve ter critérios claros de correção**
+7. **Cada avaliação deve ter composição detalhada das questões**
+
+## CONTEXTO EDUCACIONAL:
+- Disciplina: ${dados.disciplina}
+- Nível: ${dados.anoSerie}
+- Tema: ${dados.tituloTemaAssunto}
+- Objetivos: ${dados.objetivosAprendizagem}
+- Competências BNCC: ${dados.bnccCompetencias}
+
+**IMPORTANTE:** Retorne APENAS o JSON válido, sem markdown, sem explicações adicionais.
+`;
 }
 
 export const sequenciaDidaticaPrompt = {

@@ -45,6 +45,7 @@ export const autoBuildActivities = async (
   const totalActivities = planData.length;
   let completedActivities = 0;
   const errors: string[] = [];
+  const builtActivities: any[] = []; // Array para armazenar atividades construídas para retorno
 
   const updateProgress = (currentActivity: string) => {
     if (onProgress) {
@@ -144,6 +145,15 @@ export const autoBuildActivities = async (
           constructedActivities.push(activity.id);
           localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
         }
+        builtActivities.push({ // Adicionar ao array de retorno
+          activityId: activity.id,
+          activityType: activity.id === 'sequencia-didatica' ? 'sequencia-didatica' : 'other', // Ajustar tipo se necessário
+          title: activity.title,
+          isBuilt: true,
+          buildTimestamp: new Date().toISOString(),
+          data: builtActivity,
+          originalActivity: activity
+        });
       } else {
         console.warn(`⚠️ [AUTO_BUILD] Nenhuma atividade construída para: ${activity.id}`);
         // Se buildActivityByType retornar null, podemos considerar como um erro ou apenas pular
@@ -156,7 +166,7 @@ export const autoBuildActivities = async (
       errors.push(errorMessage);
       // Incrementa `completedActivities` mesmo com erro para que o progresso não fique travado
       // e a barra de progresso avance. Considerar se este é o comportamento desejado.
-      completedActivities++; 
+      completedActivities++;
       console.error(`🔍 [AUTO_BUILD] Stack trace:`, error.stack);
       console.error(`📊 [AUTO_BUILD] Dados da atividade com erro:`, activity);
     }
