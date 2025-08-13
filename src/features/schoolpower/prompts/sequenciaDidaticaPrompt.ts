@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../construction/types/ActivityTypes';
 
 export interface SequenciaDidaticaPromptData {
@@ -14,126 +13,106 @@ export interface SequenciaDidaticaPromptData {
   cronograma: string;
 }
 
-export function buildSequenciaDidaticaPrompt(data: SequenciaDidaticaPromptData): string {
-  console.log('🎯 Construindo prompt para Sequência Didática:', data);
+export function buildSequenciaDidaticaPrompt(data: any): string {
+  console.log('📝 [SEQUENCIA_DIDATICA_PROMPT] Construindo prompt para:', data);
 
-  return `Você é um especialista em pedagogia e planejamento educacional. Crie uma SEQUÊNCIA DIDÁTICA COMPLETA E ESTRUTURADA baseada nas informações fornecidas.
+  return `Você é um especialista em educação e deve criar uma sequência didática detalhada. 
 
-DADOS DA SEQUÊNCIA DIDÁTICA:
-- Título/Tema/Assunto: ${data.tituloTemaAssunto}
-- Ano/Série: ${data.anoSerie}
+IMPORTANTE: Responda APENAS com um JSON válido, sem markdown ou texto adicional.
+
+Dados fornecidos:
+- Título/Tema: ${data.tituloTemaAssunto}
 - Disciplina: ${data.disciplina}
-- Competências BNCC: ${data.bnccCompetencias}
+- Ano/Série: ${data.anoSerie}
 - Público-alvo: ${data.publicoAlvo}
-- Objetivos de Aprendizagem: ${data.objetivosAprendizagem}
-- Quantidade de Aulas: ${data.quantidadeAulas}
-- Quantidade de Diagnósticos: ${data.quantidadeDiagnosticos}
-- Quantidade de Avaliações: ${data.quantidadeAvaliacoes}
-- Cronograma: ${data.cronograma}
+- Objetivos: ${data.objetivosAprendizagem}
+- BNCC/Competências: ${data.bnccCompetencias}
+- Quantidade de aulas: ${data.quantidadeAulas}
+- Quantidade de diagnósticos: ${data.quantidadeDiagnosticos}
+- Quantidade de avaliações: ${data.quantidadeAvaliacoes}
 
-ESTRUTURA OBRIGATÓRIA DA RESPOSTA (JSON):
+Crie uma sequência didática estruturada seguindo EXATAMENTE este formato JSON:
+
 {
-  "sequenciaDidatica": {
-    "metadados": {
-      "tituloTemaAssunto": "string",
-      "disciplina": "string",
-      "anoSerie": "string",
-      "objetivosAprendizagem": "string",
-      "publicoAlvo": "string",
-      "bnccCompetencias": "string",
-      "duracaoTotal": "string"
-    },
-    "aulas": [
-      {
-        "id": "aula-1",
-        "numero": 1,
-        "titulo": "string",
-        "objetivoEspecifico": "string",
-        "resumoContexto": "string",
-        "tempoEstimado": "50 min",
-        "etapas": {
-          "introducao": {
-            "tempo": "10 min",
-            "descricao": "string"
-          },
-          "desenvolvimento": {
-            "tempo": "30 min",
-            "descricao": "string"
-          },
-          "fechamento": {
-            "tempo": "10 min",
-            "descricao": "string"
-          }
+  "aulas": [
+    {
+      "id": "aula-1",
+      "numero": 1,
+      "titulo": "Título da Aula 1",
+      "objetivoEspecifico": "Objetivo específico desta aula",
+      "resumoContexto": "Resumo do contexto e desenvolvimento",
+      "tempoEstimado": "50 min",
+      "etapas": {
+        "introducao": {
+          "tempo": "10 min",
+          "descricao": "Descrição da introdução"
         },
-        "recursos": ["string"],
-        "atividadesPraticas": {
-          "tipo": "string",
-          "descricao": "string",
-          "tempo": "string"
-        }
-      }
-    ],
-    "diagnosticos": [
-      {
-        "id": "diagnostico-1",
-        "numero": 1,
-        "titulo": "string",
-        "objetivoAvaliativo": "string",
-        "tipo": "Quiz Interativo",
-        "tempoEstimado": "20 min",
-        "questoes": "8 questões",
-        "formato": "Múltipla escolha",
-        "criteriosCorrecao": {
-          "excelente": "7-8 acertos: Pronto para avançar",
-          "bom": "5-6 acertos: Revisão leve",
-          "precisaMelhorar": "<5 acertos: Reforço necessário"
-        }
-      }
-    ],
-    "avaliacoes": [
-      {
-        "id": "avaliacao-1",
-        "numero": 1,
-        "titulo": "string",
-        "objetivoAvaliativo": "string",
-        "tipo": "Prova Escrita",
-        "tempoEstimado": "45 min",
-        "questoes": "12 questões",
-        "valorTotal": "10,0 pontos",
-        "composicao": {
-          "multipplaEscolha": {
-            "quantidade": 8,
-            "pontos": "6,0 pts"
-          },
-          "discursivas": {
-            "quantidade": 4,
-            "pontos": "4,0 pts"
-          }
+        "desenvolvimento": {
+          "tempo": "30 min",
+          "descricao": "Descrição do desenvolvimento"
         },
-        "criteriosCorrecao": "string",
-        "gabarito": "string"
+        "fechamento": {
+          "tempo": "10 min",
+          "descricao": "Descrição do fechamento"
+        }
+      },
+      "recursos": ["Recurso 1", "Recurso 2"],
+      "atividadesPraticas": {
+        "tipo": "Tipo de atividade",
+        "descricao": "Descrição da atividade prática",
+        "tempo": "15 min"
       }
-    ],
-    "cronogramaSugerido": {
-      "duracao": "string",
-      "distribuicao": "string",
-      "observacoes": "string"
     }
+  ],
+  "diagnosticos": [
+    {
+      "id": "diagnostico-1",
+      "numero": 1,
+      "titulo": "Título do Diagnóstico 1",
+      "objetivoAvaliativo": "Objetivo do diagnóstico",
+      "tipo": "Quiz Diagnóstico",
+      "tempoEstimado": "20 min",
+      "questoes": "5 questões",
+      "formato": "Múltipla escolha",
+      "criteriosCorrecao": {
+        "excelente": "4-5 acertos",
+        "bom": "3 acertos",
+        "precisaMelhorar": "Menos de 3 acertos"
+      }
+    }
+  ],
+  "avaliacoes": [
+    {
+      "id": "avaliacao-1",
+      "numero": 1,
+      "titulo": "Título da Avaliação 1",
+      "objetivoAvaliativo": "Objetivo da avaliação",
+      "tipo": "Prova Escrita",
+      "tempoEstimado": "45 min",
+      "questoes": "10 questões",
+      "valorTotal": "10,0 pontos",
+      "composicao": {
+        "multipplaEscolha": {
+          "quantidade": 6,
+          "pontos": "6,0 pts"
+        },
+        "discursivas": {
+          "quantidade": 4,
+          "pontos": "4,0 pts"
+        }
+      },
+      "criteriosCorrecao": "Critérios baseados na BNCC",
+      "gabarito": "Gabarito disponível"
+    }
+  ],
+  "cronogramaSugerido": {
+    "duracao": "${data.quantidadeAulas} aulas",
+    "distribuicao": "Sugestão de distribuição temporal",
+    "observacoes": "Observações sobre o cronograma"
   }
 }
 
-INSTRUÇÕES ESPECÍFICAS:
-1. Crie exatamente ${data.quantidadeAulas} aulas detalhadas
-2. Crie exatamente ${data.quantidadeDiagnosticos} diagnósticos
-3. Crie exatamente ${data.quantidadeAvaliacoes} avaliações
-4. Cada aula deve ter objetivos específicos alinhados aos objetivos gerais
-5. Os diagnósticos devem verificar conhecimentos prévios ou intermediários
-6. As avaliações devem ser somativas e abrangentes
-7. Todos os conteúdos devem ser adequados ao ${data.anoSerie}
-8. Integre as competências BNCC de forma natural
-9. Use linguagem adequada ao público-alvo especificado
-
-RESPONDA APENAS COM O JSON VÁLIDO, SEM TEXTO ADICIONAL.`;
+Crie exatamente ${data.quantidadeAulas} aulas, ${data.quantidadeDiagnosticos} diagnósticos e ${data.quantidadeAvaliacoes} avaliações. Certifique-se de que o JSON seja válido e completo.`;
 }
 
 export const sequenciaDidaticaPrompt = {

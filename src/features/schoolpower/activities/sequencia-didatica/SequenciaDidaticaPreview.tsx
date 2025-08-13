@@ -44,6 +44,8 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   // Verificar se há dados válidos gerados pela IA
   const hasValidData = sequenciaData && (
     sequenciaData.aulas?.length > 0 ||
+    sequenciaData.diagnosticos?.length > 0 ||
+    sequenciaData.avaliacoes?.length > 0 ||
     sequenciaData.tituloTemaAssunto ||
     sequenciaData.metadados?.tituloTemaAssunto ||
     sequenciaData.isBuilt ||
@@ -53,10 +55,13 @@ const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({
   console.log('🔍 [SEQUENCIA_DIDATICA_PREVIEW] Detalhes da verificação:', {
     temSequenciaData: !!sequenciaData,
     temAulas: sequenciaData?.aulas?.length > 0,
+    temDiagnosticos: sequenciaData?.diagnosticos?.length > 0,
+    temAvaliacoes: sequenciaData?.avaliacoes?.length > 0,
     temTitulo: !!sequenciaData?.tituloTemaAssunto,
     temMetadadosTitulo: !!sequenciaData?.metadados?.tituloTemaAssunto,
     isBuilt: sequenciaData?.isBuilt || isBuilt,
-    hasValidData
+    hasValidData,
+    sequenciaDataKeys: sequenciaData ? Object.keys(sequenciaData) : []
   });
 
   console.log('🔍 [SEQUENCIA_DIDATICA_PREVIEW] Verificação de dados:', {

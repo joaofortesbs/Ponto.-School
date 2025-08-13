@@ -769,7 +769,120 @@ const EditActivityModal = ({
             progress: 50,
             currentStep: 'Gerando sequência didática...'
           });
-          builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formDataWithDefaults);
+          
+          try {
+            builtData = await sequenciaDidaticaBuilder.buildSequenciaDidatica(formDataWithDefaults);
+            console.log('✅ Sequência Didática construída com sucesso:', builtData);
+            
+            // Verificar se os dados essenciais estão presentes
+            if (!builtData.aulas || builtData.aulas.length === 0) {
+              console.log('⚠️ Dados de aulas não encontrados, criando dados padrão');
+              builtData.aulas = sequenciaDidaticaBuilder.createDefaultAulas(parseInt(formDataWithDefaults.quantidadeAulas) || 4);
+            }
+            
+            if (!builtData.diagnosticos || builtData.diagnosticos.length === 0) {
+              console.log('⚠️ Dados de diagnósticos não encontrados, criando dados padrão');
+              builtData.diagnosticos = sequenciaDidaticaBuilder.createDefaultDiagnosticos(parseInt(formDataWithDefaults.quantidadeDiagnosticos) || 1);
+            }
+            
+            if (!builtData.avaliacoes || builtData.avaliacoes.length === 0) {
+              console.log('⚠️ Dados de avaliações não encontrados, criando dados padrão');
+              builtData.avaliacoes = sequenciaDidaticaBuilder.createDefaultAvaliacoes(parseInt(formDataWithDefaults.quantidadeAvaliacoes) || 2);
+            }
+            
+          } catch (sequenciaError) {
+            console.error('❌ Erro específico na construção da Sequência Didática:', sequenciaError);
+            
+            // Criar dados padrão em caso de erro
+            builtData = {
+              id: `sequencia-didatica-${Date.now()}`,
+              activityId: 'sequencia-didatica',
+              tituloTemaAssunto: formDataWithDefaults.tituloTemaAssunto,
+              disciplina: formDataWithDefaults.disciplina,
+              anoSerie: formDataWithDefaults.anoSerie,
+              objetivosAprendizagem: formDataWithDefaults.objetivosAprendizagem,
+              publicoAlvo: formDataWithDefaults.publicoAlvo,
+              bnccCompetencias: formDataWithDefaults.bnccCompetencias,
+              quantidadeAulas: parseInt(formDataWithDefaults.quantidadeAulas) || 4,
+              quantidadeDiagnosticos: parseInt(formDataWithDefaults.quantidadeDiagnosticos) || 1,
+              quantidadeAvaliacoes: parseInt(formDataWithDefaults.quantidadeAvaliacoes) || 2,
+              aulas: [],
+              diagnosticos: [],
+              avaliacoes: [],
+              isBuilt: true,
+              isGenerated: false, // Indica que foi criado com dados padrão
+              buildTimestamp: new Date().toISOString(),
+              lastModified: new Date().toISOString(),
+              errorMessage: `Erro na geração da IA: ${sequenciaError.message}. Usando estrutura padrão.`
+            };
+            
+            // Adicionar dados padrão
+            const quantidadeAulasNum = parseInt(formDataWithDefaults.quantidadeAulas) || 4;
+            const quantidadeDiagnosticosNum = parseInt(formDataWithDefaults.quantidadeDiagnosticos) || 1;
+            const quantidadeAvaliacoesNum = parseInt(formDataWithDefaults.quantidadeAvaliacoes) || 2;
+            
+            // Criar dados básicos usando os métodos da classe
+            for (let i = 1; i <= quantidadeAulasNum; i++) {
+              builtData.aulas.push({
+                id: `aula-${i}`,
+                numero: i,
+                titulo: `${formDataWithDefaults.tituloTemaAssunto} - Aula ${i}`,
+                objetivoEspecifico: `Desenvolver conhecimentos sobre ${formDataWithDefaults.tituloTemaAssunto} - Etapa ${i}`,
+                resumoContexto: `Contextualização e desenvolvimento dos conceitos da aula ${i}`,
+                tempoEstimado: "50 min",
+                etapas: {
+                  introducao: { tempo: "10 min", descricao: "Introdução aos conceitos" },
+                  desenvolvimento: { tempo: "30 min", descricao: "Desenvolvimento dos conteúdos" },
+                  fechamento: { tempo: "10 min", descricao: "Síntese e conclusão" }
+                },
+                recursos: ["Quadro", "Material didático", "Projetor"],
+                atividadesPraticas: {
+                  tipo: "Exercícios práticos",
+                  descricao: "Atividades para consolidação",
+                  tempo: "15 min"
+                }
+              });
+            }
+            
+            for (let i = 1; i <= quantidadeDiagnosticosNum; i++) {
+              builtData.diagnosticos.push({
+                id: `diagnostico-${i}`,
+                numero: i,
+                titulo: `Diagnóstico ${i} - ${formDataWithDefaults.tituloTemaAssunto}`,
+                objetivoAvaliativo: "Verificar compreensão dos conceitos",
+                tipo: "Quiz Diagnóstico",
+                tempoEstimado: "20 min",
+                questoes: "5 questões",
+                formato: "Múltipla escolha",
+                criteriosCorrecao: {
+                  excelente: "4-5 acertos",
+                  bom: "3 acertos",
+                  precisaMelhorar: "Menos de 3 acertos"
+                }
+              });
+            }
+            
+            for (let i = 1; i <= quantidadeAvaliacoesNum; i++) {
+              builtData.avaliacoes.push({
+                id: `avaliacao-${i}`,
+                numero: i,
+                titulo: `Avaliação ${i} - ${formDataWithDefaults.tituloTemaAssunto}`,
+                objetivoAvaliativo: "Avaliar aprendizado adquirido",
+                tipo: "Prova Escrita",
+                tempoEstimado: "45 min",
+                questoes: "10 questões",
+                valorTotal: "10,0 pontos",
+                composicao: {
+                  multipplaEscolha: { quantidade: 6, pontos: "6,0 pts" },
+                  discursivas: { quantidade: 4, pontos: "4,0 pts" }
+                },
+                criteriosCorrecao: "Critérios baseados na BNCC",
+                gabarito: "Gabarito disponível"
+              });
+            }
+            
+            console.log('🔄 Sequência Didática criada com dados padrão devido a erro na IA');
+          }
           break;
 
         case 'plano-aula':
