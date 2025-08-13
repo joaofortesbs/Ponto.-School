@@ -104,7 +104,7 @@ export function useConstructionActivities(approvedActivities: any[], toast: (opt
       console.log('📊 [BUILD_ALL] Atividades a serem construídas:', approvedActivities);
 
       // Importar o serviço de construção automática
-      const { autoBuildActivities } = await import('../auto/autoBuildActivities');
+      const { autoBuildActivities } = await import('./auto/autoBuildActivities');
 
       for (let i = 0; i < approvedActivities.length; i++) {
         const activity = approvedActivities[i];
