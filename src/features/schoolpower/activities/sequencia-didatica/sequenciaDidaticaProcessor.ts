@@ -94,39 +94,58 @@ export function processSequenciaDidaticaData(activityData: any): SequenciaDidati
     });
   }
 
-  console.log('📚 Dados processados da Sequência Didática:', result);
-  return result activityData);
-
+  // Processar campos diretos se não tiver customFields
   const customFields = activityData.customFields || {};
   
-  return {
-    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || 
-                      customFields['tituloTemaAssunto'] || 
-                      activityData.title || '',
-    anoSerie: customFields['Ano / Série'] || 
-              customFields['anoSerie'] || 
-              activityData.schoolYear || '',
-    disciplina: customFields['Disciplina'] || 
-                customFields['disciplina'] || 
-                activityData.subject || '',
-    bnccCompetencias: customFields['BNCC / Competências'] || 
-                      customFields['bnccCompetencias'] || 
-                      activityData.competencies || '',
-    publicoAlvo: customFields['Público-alvo'] || 
-                 customFields['publicoAlvo'] || 
-                 activityData.context || '',
-    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || 
-                           customFields['objetivosAprendizagem'] || 
-                           activityData.objectives || '',
-    quantidadeAulas: customFields['Quantidade de Aulas'] || 
-                     customFields['quantidadeAulas'] || '4',
-    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || 
-                            customFields['quantidadeDiagnosticos'] || '1',
-    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || 
-                          customFields['quantidadeAvaliacoes'] || '1',
-    cronograma: customFields['Cronograma'] || 
-                customFields['cronograma'] || ''
-  };
+  // Mapeamento alternativo usando campos diretos
+  result.tituloTemaAssunto = customFields['Título do Tema / Assunto'] || 
+                            customFields['tituloTemaAssunto'] || 
+                            activityData.title || 
+                            result.tituloTemaAssunto;
+                            
+  result.anoSerie = customFields['Ano / Série'] || 
+                    customFields['anoSerie'] || 
+                    activityData.schoolYear || 
+                    result.anoSerie;
+                    
+  result.disciplina = customFields['Disciplina'] || 
+                      customFields['disciplina'] || 
+                      activityData.subject || 
+                      result.disciplina;
+                      
+  result.bnccCompetencias = customFields['BNCC / Competências'] || 
+                           customFields['bnccCompetencias'] || 
+                           activityData.competencies || 
+                           result.bnccCompetencias;
+                           
+  result.publicoAlvo = customFields['Público-alvo'] || 
+                       customFields['publicoAlvo'] || 
+                       activityData.context || 
+                       result.publicoAlvo;
+                       
+  result.objetivosAprendizagem = customFields['Objetivos de Aprendizagem'] || 
+                                customFields['objetivosAprendizagem'] || 
+                                activityData.objectives || 
+                                result.objetivosAprendizagem;
+                                
+  result.quantidadeAulas = customFields['Quantidade de Aulas'] || 
+                          customFields['quantidadeAulas'] || 
+                          result.quantidadeAulas;
+                          
+  result.quantidadeDiagnosticos = customFields['Quantidade de Diagnósticos'] || 
+                                 customFields['quantidadeDiagnosticos'] || 
+                                 result.quantidadeDiagnosticos;
+                                 
+  result.quantidadeAvaliacoes = customFields['Quantidade de Avaliações'] || 
+                               customFields['quantidadeAvaliacoes'] || 
+                               result.quantidadeAvaliacoes;
+                               
+  result.cronograma = customFields['Cronograma'] || 
+                     customFields['cronograma'] || 
+                     result.cronograma;
+
+  console.log('📚 Dados processados da Sequência Didática:', result);
+  return result;
 }
 
 /**

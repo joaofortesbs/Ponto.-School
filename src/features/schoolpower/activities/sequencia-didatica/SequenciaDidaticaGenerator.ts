@@ -271,70 +271,110 @@ Você deve gerar uma Sequência Didática COMPLETA e ESTRUTURADA seguindo estas 
     return this.gerarSequenciaCompleta(dadosCompletos);
   }
 
-  static async generateSequenciaDidatica(data: any): Promise<any> {
-    console.log('🚀 Gerando Sequência Didática com dados:', data);
+  static async generateSequenciaDidatica(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+    console.log('🎯 Gerando Sequência Didática com dados:', formData);
 
     try {
-      // Dados básicos da sequência
-      const sequenciaData = {
-        titulo: data.tituloTemaAssunto || 'Sequência Didática',
-        anoSerie: data.anoSerie || 'Não especificado',
-        disciplina: data.disciplina || 'Não especificado',
-        publicoAlvo: data.publicoAlvo || 'Estudantes',
-        objetivos: data.objetivosAprendizagem || 'Objetivos a serem definidos',
-        competencias: data.bnccCompetencias || 'Competências da BNCC',
-        quantidadeAulas: parseInt(data.quantidadeAulas) || 1,
-        quantidadeDiagnosticos: parseInt(data.quantidadeDiagnosticos) || 1,
-        quantidadeAvaliacoes: parseInt(data.quantidadeAvaliacoes) || 1,
-        cronograma: data.cronograma || 'Cronograma a ser definido',
+      const sequenciaData: SequenciaDidaticaCompleta = {
+        metadados: formData,
         aulas: [],
         diagnosticos: [],
-        avaliacoes: []
+        avaliacoes: [],
+        encadeamento: {
+          progressaoDidatica: '',
+          conexoesEntrAulas: []
+        },
+        cronogramaSugerido: {
+          duracao: '',
+          distribuicao: '',
+          observacoes: ''
+        },
+        generatedAt: new Date().toISOString(),
+        versao: '1.0'
       };
 
       // Gerar aulas
-      for (let i = 0; i < sequenciaData.quantidadeAulas; i++) {
+      const quantidadeAulas = parseInt(formData.quantidadeAulas) || 1;
+      for (let i = 0; i < quantidadeAulas; i++) {
         sequenciaData.aulas.push({
-          numero: i + 1,
-          titulo: `Aula ${i + 1}`,
-          objetivos: `Objetivos específicos da aula ${i + 1}`,
-          duracao: '50 minutos',
-          atividades: ['Atividade introdutória', 'Desenvolvimento', 'Encerramento'],
-          materiais: ['Material didático', 'Quadro', 'Recursos digitais'],
-          metodologia: 'Metodologia ativa'
+          id: `aula_${i + 1}`,
+          titulo: `Aula ${i + 1}: ${formData.tituloTemaAssunto}`,
+          objetivoEspecifico: `Objetivo específico da aula ${i + 1}`,
+          resumoContexto: `Contexto e resumo da aula ${i + 1} sobre ${formData.tituloTemaAssunto}`,
+          passoAPasso: {
+            introducao: `Introdução da aula ${i + 1}`,
+            desenvolvimento: `Desenvolvimento da aula ${i + 1}`,
+            fechamento: `Fechamento da aula ${i + 1}`
+          },
+          recursos: ['Material didático', 'Quadro', 'Recursos digitais'],
+          atividadePratica: `Atividade prática da aula ${i + 1}`,
+          tempoEstimado: '50 minutos',
+          ordem: i + 1
         });
       }
 
       // Gerar diagnósticos
-      for (let i = 0; i < sequenciaData.quantidadeDiagnosticos; i++) {
+      const quantidadeDiagnosticos = parseInt(formData.quantidadeDiagnosticos) || 0;
+      for (let i = 0; i < quantidadeDiagnosticos; i++) {
         sequenciaData.diagnosticos.push({
-          numero: i + 1,
+          id: `diagnostico_${i + 1}`,
           titulo: `Diagnóstico ${i + 1}`,
-          descricao: `Avaliação diagnóstica ${i + 1}`,
-          tipo: 'Diagnóstica',
-          instrumentos: ['Observação', 'Questionário', 'Atividade prática']
+          tipo: 'diagnostico',
+          objetivos: [`Avaliar conhecimentos prévios sobre ${formData.tituloTemaAssunto}`],
+          questoes: [],
+          criteriosAvaliacao: 'Critérios de avaliação diagnóstica',
+          tempoEstimado: '30 minutos',
+          posicaoSequencia: i + 1
         });
       }
 
       // Gerar avaliações
-      for (let i = 0; i < sequenciaData.quantidadeAvaliacoes; i++) {
+      const quantidadeAvaliacoes = parseInt(formData.quantidadeAvaliacoes) || 0;
+      for (let i = 0; i < quantidadeAvaliacoes; i++) {
         sequenciaData.avaliacoes.push({
-          numero: i + 1,
+          id: `avaliacao_${i + 1}`,
           titulo: `Avaliação ${i + 1}`,
-          descricao: `Avaliação formativa/somativa ${i + 1}`,
-          tipo: i === sequenciaData.quantidadeAvaliacoes - 1 ? 'Somativa' : 'Formativa',
-          instrumentos: ['Prova', 'Trabalho', 'Apresentação']
+          tipo: 'avaliacao',
+          objetivos: [`Avaliar aprendizagem sobre ${formData.tituloTemaAssunto}`],
+          questoes: [],
+          criteriosAvaliacao: 'Critérios de avaliação formativa/somativa',
+          tempoEstimado: '45 minutos',
+          posicaoSequencia: i + 1
         });
       }
+
+      // Definir encadeamento e cronograma
+      sequenciaData.encadeamento = {
+        progressaoDidatica: `Progressão didática para ${formData.tituloTemaAssunto}`,
+        conexoesEntrAulas: sequenciaData.aulas.map(aula => `Conexão: ${aula.titulo}`)
+      };
+
+      sequenciaData.cronogramaSugerido = {
+        duracao: `${quantidadeAulas} aulas`,
+        distribuicao: 'Distribuição semanal sugerida',
+        observacoes: formData.cronograma || 'Observações gerais do cronograma'
+      };
 
       console.log('✅ Sequência Didática gerada:', sequenciaData);
       return sequenciaData;
 
     } catch (error) {
       console.error('❌ Erro ao gerar Sequência Didática:', error);
-      throw error;
+      throw new Error(`Erro na geração: ${error.message}`);
     }
+  }
+
+  async regenerateWithAI(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+    // Implementação futura com IA
+    console.log('🤖 Regeneração com IA em desenvolvimento...');
+    return this.generateBasicSequence(formData);
+  }
+
+  private async generateBasicSequence(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaCompleta> {
+    // Implementação básica sem IA por enquanto
+    return SequenciaDidaticaGenerator.generateSequenciaDidatica(formData);
   }
 }
 
-export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator;
+// Exportar instância singleton
+export const sequenciaDidaticaGenerator = SequenciaDidaticaGenerator.getInstance();
