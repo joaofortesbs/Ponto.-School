@@ -945,7 +945,7 @@ const EditActivityModal = ({
   };
 
   // Manter a função handleSave original e adicionar a lógica específica para sequencia-didatica
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!activity) return;
 
     try {
