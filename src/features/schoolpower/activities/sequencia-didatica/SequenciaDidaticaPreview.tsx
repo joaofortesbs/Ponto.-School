@@ -1,691 +1,148 @@
-import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Calendar, 
-  BarChart3, 
-  CheckSquare, 
-  Clock,
-  BookOpen, // Added for the initial empty state icon
-  LayoutGrid, // Added for view mode selector
-  List, // Added for view mode selector
-  RefreshCw, // Added for regenerate button
-  ChevronLeft, // Added for calendar navigation
-  ChevronRight // Added for calendar navigation
-} from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Added for calendar navigation and regenerate button
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // Added for view mode selector
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; // Added for calendar
 
-// Importar os novos componentes
-// Assuming these components are correctly placed in './components'
-import { 
-  SequenciaDidaticaHeader,
-  AulaCard,
-  DiagnosticoCard,
-  AvaliacaoCard
-} from './components';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Target, BookOpen, Users, Calendar, FileText, BarChart3 } from 'lucide-react';
 
 interface SequenciaDidaticaPreviewProps {
-  data: any;
-  activityData?: any;
-  isBuilt?: boolean;
+  data: {
+    tituloTemaAssunto?: string;
+    anoSerie?: string;
+    disciplina?: string;
+    bnccCompetencias?: string;
+    publicoAlvo?: string;
+    objetivosAprendizagem?: string;
+    quantidadeAulas?: string;
+    quantidadeDiagnosticos?: string;
+    quantidadeAvaliacoes?: string;
+    cronograma?: string;
+  };
 }
 
-const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ 
-  data, 
-  activityData,
-  isBuilt = false 
-}) => {
-  console.log('📚 SequenciaDidaticaPreview - Dados recebidos:', { data, activityData, isBuilt });
-
-  // Estados para edição (commented out as per the new structure)
-  // const [isEditingObjectives, setIsEditingObjectives] = useState(false);
-  // const [isEditingQuantities, setIsEditingQuantities] = useState(false);
-  // const [tempObjectives, setTempObjectives] = useState('');
-  // const [tempQuantities, setTempQuantities] = useState({
-  //   aulas: 4,
-  //   diagnosticos: 2,
-  //   avaliacoes: 2
-  // });
-
-  // Estados para visualização
-  const [viewMode, setViewMode] = useState('cards');
-
-  // Estado para calendário
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
-  // Processar dados da sequência
-  const sequenciaData = data || activityData || {};
-
-  // Verificar se há dados válidos
-  const hasValidData = sequenciaData && (
-    sequenciaData.tituloTemaAssunto || 
-    sequenciaData.title || 
-    sequenciaData.aulas?.length > 0 ||
-    Object.keys(sequenciaData).length > 5 ||
-    isBuilt || // Se foi construído, considera válido
-    sequenciaData.conteudo_gerado_ia?.length > 0 ||
-    sequenciaData.customFields?.['Título do Tema / Assunto'] ||
-    sequenciaData.customFields?.['Objetivos de Aprendizagem']
-  );
-
-  console.log('🔍 Verificação de dados válidos:', {
-    hasValidData,
-    sequenciaDataKeys: Object.keys(sequenciaData),
-    hasAulas: !!sequenciaData.aulas,
-    aulaCount: sequenciaData.aulas?.length
-  });
-
-  // Extrair valores dos campos customizados
-  const customFields = sequenciaData.customFields || {};
-
-  // Tentar extrair dados de diferentes fontes
-  const tituloAtividade = sequenciaData.metadados?.tituloTemaAssunto ||
-                         sequenciaData.tituloTemaAssunto || 
-                         sequenciaData.title || 
-                         sequenciaData.customFields?.['Título do Tema / Assunto'] || 
-                         'Sequência Didática';
-
-  const disciplina = sequenciaData.metadados?.disciplina ||
-                    sequenciaData.disciplina || 
-                    sequenciaData.customFields?.['Disciplina'] || 
-                    'Não especificado';
-
-  const anoSerie = sequenciaData.metadados?.anoSerie ||
-                  sequenciaData.anoSerie || 
-                  sequenciaData.customFields?.['Ano / Série'] || 
-                  'Não especificado';
-
-  // Extrair dados específicos da sequência gerada
-  const aulas = sequenciaData.aulas || [];
-  const diagnosticos = sequenciaData.diagnosticos || [];
-  const avaliacoes = sequenciaData.avaliacoes || [];
-  const encadeamento = sequenciaData.encadeamento || {};
-  const cronograma = sequenciaData.cronogramaSugerido || {};
-
-  const quantidadeAulas = parseInt(
-    customFields['Quantidade de Aulas'] || 
-    sequenciaData.quantidadeAulas ||
-    aulas.length
-  ) || 4;
-
-  const quantidadeDiagnosticos = parseInt(
-    customFields['Quantidade de Diagnósticos'] || 
-    sequenciaData.quantidadeDiagnosticos ||
-    diagnosticos.length
-  ) || 2;
-
-  const quantidadeAvaliacoes = parseInt(
-    customFields['Quantidade de Avaliações'] || 
-    sequenciaData.quantidadeAvaliacoes ||
-    avaliacoes.length
-  ) || 2;
-
-  const handleRegenerateSequence = () => {
-    console.log('🔄 Regenerando sequência didática...');
-    // Implementar lógica de regeneração
-  };
-
-  const handleFieldUpdate = (field: string, value: string | number) => {
-    console.log(`📝 Atualizando campo ${field} com valor:`, value);
-    // Aqui você pode implementar a lógica para salvar os dados atualizados
-    // Por exemplo, salvar no localStorage ou enviar para uma API
-
-    // Salvar no localStorage temporariamente
-    const storageKey = `sequencia_didatica_${data?.id || 'preview'}`;
-    const currentData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    const updatedData = { ...currentData, [field]: value };
-    localStorage.setItem(storageKey, JSON.stringify(updatedData));
-
-    // Aqui você poderia também atualizar o estado local se necessário
-    // ou disparar um callback para o componente pai
-  };
-
-  const handleViewModeChange = (mode: string) => {
-    setViewMode(mode);
-    console.log('👁️ Modo de visualização alterado para:', mode);
-  };
-
-  // Função para gerar calendário
-  const generateCalendar = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(firstDay.getDate() - firstDay.getDay());
-
-    const days = [];
-    const currentDateObj = new Date(startDate);
-
-    // Gerar dias que terão aulas (simulação baseada nas aulas da sequência)
-    const aulaDays = [];
-    const today = new Date();
-    for (let i = 0; i < quantidadeAulas; i++) {
-      const aulaDate = new Date(today);
-      aulaDate.setDate(today.getDate() + (i * 3)); // Aulas a cada 3 dias
-      if (aulaDate.getMonth() === month && aulaDate.getFullYear() === year) {
-        aulaDays.push(aulaDate.getDate());
-      }
-    }
-
-    for (let i = 0; i < 42; i++) {
-      const isCurrentMonth = currentDateObj.getMonth() === month;
-      const isToday = currentDateObj.toDateString() === new Date().toDateString();
-      const hasAula = isCurrentMonth && aulaDays.includes(currentDateObj.getDate());
-
-      days.push({
-        date: new Date(currentDateObj),
-        day: currentDateObj.getDate(),
-        isCurrentMonth,
-        isToday,
-        hasAula
-      });
-
-      currentDateObj.setDate(currentDateObj.getDate() + 1);
-    }
-
-    return days;
-  };
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(prev => {
-      const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
-      return newDate;
-    });
-  };
-
-  // Função para obter dados reais das aulas ou dados mock
-  const getMockAulaData = (index: number) => {
-    // Tentar obter dados reais da sequência gerada
-    if (aulas && aulas[index - 1]) {
-      const aulaReal = aulas[index - 1];
-      return {
-        aulaIndex: index,
-        titulo: aulaReal.titulo || `Aula ${index}`,
-        objetivoEspecifico: aulaReal.objetivo_especifico || aulaReal.objetivoEspecifico || "Objetivo a ser definido",
-        resumo: aulaReal.conteudo_programatico || aulaReal.resumo || "Conteúdo da aula",
-        etapas: aulaReal.etapas || [
-          {
-            tipo: "Introdução",
-            tempo: "10 min",
-            descricao: aulaReal.metodologia?.split('.')[0] || "Apresentação do conteúdo",
-            cor: "green"
-          },
-          {
-            tipo: "Desenvolvimento",
-            tempo: "30 min", 
-            descricao: aulaReal.atividades_praticas || aulaReal.atividadesPraticas || "Atividades práticas",
-            cor: "orange"
-          },
-          {
-            tipo: "Fechamento",
-            tempo: "10 min",
-            descricao: aulaReal.avaliacao_aula || aulaReal.avaliacaoAula || "Síntese e avaliação",
-            cor: "purple"
-          }
-        ],
-        recursos: aulaReal.recursos_necessarios || aulaReal.recursos || ["Material básico"],
-        atividadePratica: aulaReal.atividades_praticas || aulaReal.atividadesPraticas || "Atividades da aula",
-        tempo: aulaReal.duracao || "50 min"
-      };
-    }
-
-    // Fallback para dados mock se não há dados reais
-    return {
-      aulaIndex: index,
-      titulo: "Introdução às Funções do 1º Grau",
-      objetivoEspecifico: "Compreender o conceito de função linear e sua representação gráfica.",
-      resumo: "Contextualização sobre situações cotidianas que envolvem relações lineares.",
-      etapas: [
-        {
-          tipo: "Introdução",
-          tempo: "10 min",
-          descricao: "Apresentação do conceito através de exemplos práticos",
-          cor: "green"
-        },
-        {
-          tipo: "Desenvolvimento",
-          tempo: "30 min", 
-          descricao: "Construção de gráficos e análise de propriedades",
-          cor: "orange"
-        },
-        {
-          tipo: "Fechamento",
-          tempo: "10 min",
-          descricao: "Síntese dos conceitos e resolução de dúvidas",
-          cor: "purple"
-        }
-      ],
-      recursos: ["Quadro", "GeoGebra", "Material impresso"],
-      atividadePratica: "Lista de exercícios sobre identificação e construção de gráficos lineares",
-      tempo: "50 min"
-    };
-  };
-
-  const getMockDiagnosticoData = (index: number) => {
-    // Tentar obter dados reais dos diagnósticos gerados
-    if (diagnosticos && diagnosticos[index - 1]) {
-      const diagReal = diagnosticos[index - 1];
-      return {
-        diagIndex: index,
-        titulo: diagReal.titulo || `Diagnóstico ${index}`,
-        objetivoAvaliativo: diagReal.objetivo || "Objetivo diagnóstico",
-        tipoAvaliacao: diagReal.tipo || "Avaliação",
-        quantidadeQuestoes: diagReal.quantidade_questoes || 8,
-        formato: diagReal.formato || "Misto",
-        criteriosCorrecao: diagReal.criterios_analise ? [
-          { faixa: "Excelente", resultado: diagReal.criterios_analise.split('.')[0] || "Resultado excelente", cor: "text-green-600" },
-          { faixa: "Bom", resultado: "Resultado satisfatório", cor: "text-yellow-600" },
-          { faixa: "Precisa melhorar", resultado: "Necessita reforço", cor: "text-red-600" }
-        ] : [
-          { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
-          { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
-          { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
-        ],
-        tempo: diagReal.tempo_aplicacao || "20 min"
-      };
-    }
-
-    // Fallback para dados mock
-    return {
-      diagIndex: index,
-      titulo: "Avaliação Diagnóstica - Conhecimentos Prévios",
-      objetivoAvaliativo: "Identificar conhecimentos prévios sobre álgebra básica e coordenadas cartesianas.",
-      tipoAvaliacao: "Quiz Interativo",
-      quantidadeQuestoes: 8,
-      formato: "Múltipla escolha",
-      criteriosCorrecao: [
-        { faixa: "Excelente (8-7 acertos)", resultado: "Pronto para avançar", cor: "text-green-600" },
-        { faixa: "Bom (6-5 acertos)", resultado: "Revisão leve", cor: "text-yellow-600" },
-        { faixa: "Precisa melhorar (<5)", resultado: "Revisão necessária", cor: "text-red-600" }
-      ],
-      tempo: "20 min"
-    };
-  };
-
-  const getMockAvaliacaoData = (index: number) => {
-    // Tentar obter dados reais das avaliações geradas
-    if (avaliacoes && avaliacoes[index - 1]) {
-      const avalReal = avaliacoes[index - 1];
-      return {
-        avalIndex: index,
-        titulo: avalReal.titulo || `Avaliação ${index}`,
-        objetivoAvaliativo: avalReal.objetivos_avaliados || avalReal.objetivo || "Objetivo avaliativo",
-        tipoAvaliacao: avalReal.tipo || "Prova",
-        quantidadeQuestoes: avalReal.quantidade_questoes || 12,
-        valorTotal: avalReal.valor_pontos || "10,0 pontos",
-        composicao: avalReal.composicao || [
-          { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
-          { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
-        ],
-        gabarito: avalReal.criterios_correcao || "Critérios de correção conforme orientações",
-        tempo: avalReal.tempo_realizacao || "45 min"
-      };
-    }
-
-    // Fallback para dados mock
-    return {
-      avalIndex: index,
-      titulo: "Prova Somativa - Funções Lineares",
-      objetivoAvaliativo: "Avaliar a compreensão dos conceitos de função linear e capacidade de resolução de problemas.",
-      tipoAvaliacao: "Prova Escrita",
-      quantidadeQuestoes: 12,
-      valorTotal: "10,0 pontos",
-      composicao: [
-        { tipo: "Múltipla escolha", quantidade: 8, pontos: "6,0 pts" },
-        { tipo: "Discursivas", quantidade: 4, pontos: "4,0 pts" }
-      ],
-      gabarito: "Disponível após aplicação com critérios detalhados de correção",
-      tempo: "45 min"
-    };
-  };
-
-  const monthNames = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
-
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-
-  if (!hasValidData) {
-    // Se estamos no modo de visualização (isBuilt), mostrar dados básicos mesmo sem conteúdo
-    if (isBuilt) {
-      console.log('📄 Sequência didática no modo visualização sem dados completos, mostrando estrutura básica');
-    } else {
-      return (
-        <div className="p-8 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <BookOpen className="text-gray-400" size={48} /> {/* Changed icon to BookOpen for empty state */}
-            <h3 className="text-lg font-medium text-gray-600">
-              Nenhum conteúdo gerado ainda
-            </h3>
-            <p className="text-sm text-gray-500 max-w-md">
-              Configure os campos necessários e gere a sequência didática para visualizar o conteúdo nesta seção.
-            </p>
-          </div>
-        </div>
-      );
-    }
-  }
-
+export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ data }) => {
   return (
-    <div className="space-y-6 p-6 overflow-x-auto">
-      {/* Cabeçalho Flutuante */}
-      <SequenciaDidaticaHeader
-        tituloTemaAssunto={tituloAtividade} // Utiliza o título extraído
-        objetivosAprendizagem={sequenciaData.metadados?.objetivosAprendizagem || sequenciaData.objetivosAprendizagem || customFields['Objetivos de Aprendizagem'] || 'Objetivos a serem definidos'} // Atualizado para usar metadados
-        quantidadeAulas={quantidadeAulas}
-        quantidadeDiagnosticos={quantidadeDiagnosticos}
-        quantidadeAvaliacoes={quantidadeAvaliacoes}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        onRegenerateSequence={handleRegenerateSequence}
-        currentDate={currentDate}
-        onNavigateMonth={navigateMonth}
-        calendarDays={generateCalendar()}
-        isCalendarOpen={isCalendarOpen}
-        setIsCalendarOpen={setIsCalendarOpen}
-        monthNames={monthNames}
-        weekDays={weekDays}
-        onFieldUpdate={handleFieldUpdate}
-      />
-
-      {/* Área de Conteúdo Principal */}
-      <div className="space-y-6">
-        {viewMode === 'cards' && (
-          <div className="flex gap-6 pb-4 min-w-max overflow-x-auto">
-            <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-w-max">
-            {/* Cards de Aulas */}
-            {[...Array(quantidadeAulas)].map((_, i) => (
-              <AulaCard
-                key={`aula-${i + 1}`}
-                {...getMockAulaData(i + 1)}
-                onFieldUpdate={(field, value) => handleFieldUpdate(`aula_${i + 1}_${field}`, value)}
-              />
-            ))}
-
-            {/* Cards de Diagnósticos */}
-            {[...Array(quantidadeDiagnosticos)].map((_, i) => (
-              <DiagnosticoCard
-                key={`diagnostico-${i + 1}`}
-                {...getMockDiagnosticoData(i + 1)}
-              />
-            ))}
-
-            {/* Cards de Avaliações */}
-            {[...Array(quantidadeAvaliacoes)].map((_, i) => (
-              <AvaliacaoCard
-                key={`avaliacao-${i + 1}`}
-                {...getMockAvaliacaoData(i + 1)}
-              />
-            ))}
-            </div>
+    <div className="space-y-6">
+      {/* Cabeçalho */}
+      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <BookOpen className="h-5 w-5" />
+            {data.tituloTemaAssunto || 'Sequência Didática'}
+          </CardTitle>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {data.disciplina && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                {data.disciplina}
+              </Badge>
+            )}
+            {data.anoSerie && (
+              <Badge variant="outline" className="border-blue-300 text-blue-700">
+                {data.anoSerie}
+              </Badge>
+            )}
           </div>
+        </CardHeader>
+      </Card>
+
+      {/* Informações Gerais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {data.publicoAlvo && (
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-4 w-4 text-green-600" />
+                <span className="font-medium text-sm">Público-alvo</span>
+              </div>
+              <p className="text-sm text-gray-600">{data.publicoAlvo}</p>
+            </CardContent>
+          </Card>
         )}
 
-        {viewMode === 'timeline' && (
-          <div className="space-y-8 overflow-x-auto pb-4">
-            {/* Timeline de Sequência Didática */}
-            <div className="relative min-w-[800px]">
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-green-500 to-purple-500"></div>
-
-              {/* Aulas na Timeline */}
-              {[...Array(quantidadeAulas)].map((_, aulaIndex) => (
-                <div key={`timeline-aula-${aulaIndex + 1}`} className="relative flex items-start space-x-4 pb-8">
-                  <div className="flex-shrink-0 w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    A{aulaIndex + 1}
-                  </div>
-                  <Card className="flex-1 ml-4">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="text-blue-500" size={16} />
-                          <span className="font-semibold text-blue-700">Aula {aulaIndex + 1}</span>
-                          <Badge variant="secondary">{getMockAulaData(aulaIndex + 1).tempo}</Badge>
-                        </div>
-                        <span className="text-sm text-gray-500">Semana {aulaIndex + 1}</span>
-                      </div>
-                      <h3 className="text-xl font-bold mb-4">{getMockAulaData(aulaIndex + 1).titulo}</h3>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-2">Objetivo Específico</h4>
-                            <p className="text-sm text-gray-600">{getMockAulaData(aulaIndex + 1).objetivoEspecifico}</p>
-                          </div>
-
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-2">Recursos Necessários</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {getMockAulaData(aulaIndex + 1).recursos.map((recurso: string, idx: number) => (
-                                <Badge key={idx} variant="outline">{recurso}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-3">Estrutura da Aula</h4>
-                            <div className="space-y-3">
-                              {getMockAulaData(aulaIndex + 1).etapas.map((etapa: any, idx: number) => (
-                                <div key={idx} className="flex items-start gap-3">
-                                  <div className={`w-3 h-3 rounded-full bg-${etapa.cor}-500 mt-1 flex-shrink-0`}></div>
-                                  <div>
-                                    <span className={`text-sm font-medium text-${etapa.cor}-700`}>{etapa.tipo} ({etapa.tempo})</span>
-                                    <p className="text-xs text-gray-600">{etapa.descricao}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <h4 className="font-semibold text-gray-700 mb-2">Atividade Prática</h4>
-                        <p className="text-sm text-gray-600">{getMockAulaData(aulaIndex + 1).atividadePratica}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-
-              {/* Diagnósticos na Timeline */}
-              {[...Array(quantidadeDiagnosticos)].map((_, diagIndex) => (
-                <div key={`timeline-diag-${diagIndex + 1}`} className="relative flex items-start space-x-4 pb-8">
-                  <div className="flex-shrink-0 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    D{diagIndex + 1}
-                  </div>
-                  <Card className="flex-1 ml-4">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <BarChart3 className="text-green-500" size={16} />
-                          <span className="font-semibold text-green-700">Diagnóstico {diagIndex + 1}</span>
-                          <Badge variant="secondary">{getMockDiagnosticoData(diagIndex + 1).tempo}</Badge>
-                        </div>
-                        <Badge variant="outline" className="bg-green-50 text-green-700">{getMockDiagnosticoData(diagIndex + 1).tipoAvaliacao}</Badge>
-                      </div>
-                      <h3 className="text-xl font-bold mb-4">{getMockDiagnosticoData(diagIndex + 1).titulo}</h3>
-
-                      <div className="grid md:grid-cols-3 gap-6">
-                        <div>
-                          <h4 className="font-semibold text-gray-700 mb-2">Objetivo</h4>
-                          <p className="text-sm text-gray-600">{getMockDiagnosticoData(diagIndex + 1).objetivoAvaliativo}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-700 mb-2">Formato</h4>
-                          <div className="space-y-1">
-                            <p className="text-sm"><strong>{getMockDiagnosticoData(diagIndex + 1).quantidadeQuestoes} questões</strong> {getMockDiagnosticoData(diagIndex + 1).formato}</p>
-                            <p className="text-sm">Plataforma digital interativa</p>
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-700 mb-2">Critérios</h4>
-                          <div className="space-y-1 text-xs">
-                            {getMockDiagnosticoData(diagIndex + 1).criteriosCorrecao.map((criterio: any, idx: number) => (
-                              <div key={idx}><span className={criterio.cor}>●</span> {criterio.faixa}: {criterio.resultado}</div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-
-              {/* Avaliações na Timeline */}
-              {[...Array(quantidadeAvaliacoes)].map((_, avalIndex) => (
-                <div key={`timeline-aval-${avalIndex + 1}`} className="relative flex items-start space-x-4 pb-8">
-                  <div className="flex-shrink-0 w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                    P{avalIndex + 1}
-                  </div>
-                  <Card className="flex-1 ml-4">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <CheckSquare className="text-purple-500" size={16} />
-                          <span className="font-semibold text-purple-700">Avaliação {avalIndex + 1}</span>
-                          <Badge variant="secondary">{getMockAvaliacaoData(avalIndex + 1).tempo}</Badge>
-                        </div>
-                        <Badge variant="outline" className="bg-purple-50 text-purple-700">{getMockAvaliacaoData(avalIndex + 1).tipoAvaliacao}</Badge>
-                      </div>
-                      <h3 className="text-xl font-bold mb-4">{getMockAvaliacaoData(avalIndex + 1).titulo}</h3>
-
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-2">Objetivo Avaliativo</h4>
-                            <p className="text-sm text-gray-600">{getMockAvaliacaoData(avalIndex + 1).objetivoAvaliativo}</p>
-                          </div>
-
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-2">Composição</h4>
-                            <div className="space-y-2">
-                              {getMockAvaliacaoData(avalIndex + 1).composicao.map((comp: any, idx: number) => (
-                                <div key={idx} className="flex justify-between text-sm">
-                                  <span>{comp.quantidade} {comp.tipo}</span>
-                                  <span className="font-medium">{comp.pontos}</span>
-                                </div>
-                              ))}
-                              <hr className="my-2" />
-                              <div className="flex justify-between text-sm font-bold">
-                                <span>Total</span>
-                                <span>{getMockAvaliacaoData(avalIndex + 1).valorTotal}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-2">Critérios de Correção</h4>
-                            <div className="space-y-2 text-sm">
-                              <div>
-                                <span className="font-medium">Questões Objetivas:</span>
-                                <p className="text-gray-600">0,75 pontos cada (tudo ou nada)</p>
-                              </div>
-                              <div>
-                                <span className="font-medium">Questões Discursivas:</span>
-                                <p className="text-gray-600">Avaliação por etapas de resolução</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h4 className="font-semibold text-gray-700 mb-2">Gabarito</h4>
-                            <p className="text-sm text-gray-600">{getMockAvaliacaoData(avalIndex + 1).gabarito}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {viewMode === 'grade' && (
-          <div className="space-y-6 overflow-x-auto pb-4">
-            {/* Grade de Cards - 4 por linha */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {/* Cards de Aulas */}
-              {[...Array(quantidadeAulas)].map((_, i) => (
-                <AulaCard
-                  key={`grade-aula-${i + 1}`}
-                  {...getMockAulaData(i + 1)}
-                />
-              ))}
-
-              {/* Cards de Diagnósticos */}
-              {[...Array(quantidadeDiagnosticos)].map((_, i) => (
-                <DiagnosticoCard
-                  key={`grade-diagnostico-${i + 1}`}
-                  {...getMockDiagnosticoData(i + 1)}
-                />
-              ))}
-
-              {/* Cards de Avaliações */}
-              {[...Array(quantidadeAvaliacoes)].map((_, i) => (
-                <AvaliacaoCard
-                  key={`grade-avaliacao-${i + 1}`}
-                  {...getMockAvaliacaoData(i + 1)}
-                />
-              ))}
-            </div>
-
-            {/* Resumo Estatístico */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <Calendar className="text-blue-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-blue-600">{quantidadeAulas}</h3>
-                  <p className="text-sm text-gray-600">Aulas Planejadas</p>
-                  <p className="text-xs text-gray-500">200 min totais</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <BarChart3 className="text-green-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-green-600">{quantidadeDiagnosticos}</h3>
-                  <p className="text-sm text-gray-600">Diagnósticos</p>
-                  <p className="text-xs text-gray-500">40 min totais</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <CheckSquare className="text-purple-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-purple-600">{quantidadeAvaliacoes}</h3>
-                  <p className="text-sm text-gray-600">Avaliações</p>
-                  <p className="text-xs text-gray-500">90 min totais</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4 text-center">
-                  <Clock className="text-orange-500 mx-auto mb-2" size={24} />
-                  <h3 className="font-bold text-2xl text-orange-600">330</h3>
-                  <p className="text-sm text-gray-600">Minutos Totais</p>
-                  <p className="text-xs text-gray-500">≈ 5,5 horas</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+        {data.bnccCompetencias && (
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4 text-purple-600" />
+                <span className="font-medium text-sm">BNCC / Competências</span>
+              </div>
+              <p className="text-sm text-gray-600">{data.bnccCompetencias}</p>
+            </CardContent>
+          </Card>
         )}
       </div>
 
-      {/* Informações de Geração */}
-      <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
-        Sequência didática gerada em {new Date().toLocaleDateString('pt-BR')} • Modo de visualização: {viewMode}
+      {/* Objetivos de Aprendizagem */}
+      {data.objetivosAprendizagem && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Target className="h-4 w-4 text-orange-600" />
+              Objetivos de Aprendizagem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-gray-600 whitespace-pre-line">
+              {data.objetivosAprendizagem}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quantidades */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {data.quantidadeAulas && (
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <Clock className="h-6 w-6 text-blue-600" />
+                <span className="text-2xl font-bold text-blue-600">{data.quantidadeAulas}</span>
+                <span className="text-sm text-gray-600">Aulas</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {data.quantidadeDiagnosticos && (
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+                <span className="text-2xl font-bold text-green-600">{data.quantidadeDiagnosticos}</span>
+                <span className="text-sm text-gray-600">Diagnósticos</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {data.quantidadeAvaliacoes && (
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <FileText className="h-6 w-6 text-purple-600" />
+                <span className="text-2xl font-bold text-purple-600">{data.quantidadeAvaliacoes}</span>
+                <span className="text-sm text-gray-600">Avaliações</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Cronograma */}
+      {data.cronograma && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-indigo-600" />
+              Cronograma
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-gray-600 whitespace-pre-line">
+              {data.cronograma}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

@@ -51,8 +51,8 @@ export const activityRegistry: ActivityRegistryType = {
     preview: lazy(() => import("./default/ActivityPreview")),
   },
   "sequencia-didatica": {
-    editor: lazy(() => import("./sequencia-didatica/EditActivity")),
-    preview: lazy(() => import("./sequencia-didatica/SequenciaDidaticaPreview")),
+    editor: lazy(() => import("./sequencia-didatica/EditActivity")), // Importação específica para Sequência Didática
+    preview: lazy(() => import("./sequencia-didatica/SequenciaDidaticaPreview")), // Importação específica para Sequência Didática
   },
   "texto-apoio": {
     editor: lazy(() => import("./default/EditActivity")),

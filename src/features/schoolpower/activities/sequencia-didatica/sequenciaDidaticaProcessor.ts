@@ -1,3 +1,17 @@
+import { ActivityFormData } from '../../construction/types/ActivityTypes';
+
+export interface SequenciaDidaticaCustomFields {
+  [key: string]: string;
+}
+
+export interface SequenciaDidaticaActivity {
+  id: string;
+  title: string;
+  description: string;
+  customFields: SequenciaDidaticaCustomFields;
+  personalizedTitle?: string;
+  personalizedDescription?: string;
+}
 
 export interface SequenciaDidaticaData {
   tituloTemaAssunto: string;
@@ -14,88 +28,59 @@ export interface SequenciaDidaticaData {
 
 export const sequenciaDidaticaFieldMapping = {
   'Título do Tema / Assunto': 'tituloTemaAssunto',
+  'tituloTemaAssunto': 'tituloTemaAssunto',
   'Ano / Série': 'anoSerie',
+  'anoSerie': 'anoSerie',
   'Disciplina': 'disciplina',
+  'disciplina': 'disciplina',
   'BNCC / Competências': 'bnccCompetencias',
+  'bnccCompetencias': 'bnccCompetencias',
   'Público-alvo': 'publicoAlvo',
+  'publicoAlvo': 'publicoAlvo',
   'Objetivos de Aprendizagem': 'objetivosAprendizagem',
+  'objetivosAprendizagem': 'objetivosAprendizagem',
   'Quantidade de Aulas': 'quantidadeAulas',
+  'quantidadeAulas': 'quantidadeAulas',
   'Quantidade de Diagnósticos': 'quantidadeDiagnosticos',
+  'quantidadeDiagnosticos': 'quantidadeDiagnosticos',
   'Quantidade de Avaliações': 'quantidadeAvaliacoes',
-  'Cronograma': 'cronograma'
+  'quantidadeAvaliacoes': 'quantidadeAvaliacoes',
+  'Cronograma': 'cronograma',
+  'cronograma': 'cronograma'
 };
 
-export function processSequenciaDidaticaData(formData: any, customFields: any = {}): SequenciaDidaticaData {
-  console.log('📊 Processando dados da Sequência Didática:', { formData, customFields });
+/**
+ * Processa dados de uma atividade de Sequência Didática do Action Plan
+ * para o formato do formulário do modal
+ */
+export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaData {
+  console.log('📚 Processando dados da Sequência Didática:', activityData);
+
+  const customFields = activityData.customFields || {};
 
   return {
-    tituloTemaAssunto: formData.tituloTemaAssunto || 
-                      customFields['Título do Tema / Assunto'] || 
-                      formData.title || '',
-    anoSerie: formData.anoSerie || 
-              customFields['Ano / Série'] || 
-              formData.schoolYear || '',
-    disciplina: formData.disciplina || 
-                customFields['Disciplina'] || 
-                formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || 
-                     customFields['BNCC / Competências'] || 
-                     formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || 
-                customFields['Público-alvo'] || 
-                formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || 
-                          customFields['Objetivos de Aprendizagem'] || 
-                          formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || 
-                    customFields['Quantidade de Aulas'] || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || 
-                           customFields['Quantidade de Diagnósticos'] || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || 
-                         customFields['Quantidade de Avaliações'] || '2',
-    cronograma: formData.cronograma || 
-                customFields['Cronograma'] || 
-                formData.timeLimit || ''
+    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+    anoSerie: customFields['Ano / Série'] || '',
+    disciplina: customFields['Disciplina'] || '',
+    bnccCompetencias: customFields['BNCC / Competências'] || '',
+    publicoAlvo: customFields['Público-alvo'] || '',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+    cronograma: customFields['Cronograma'] || ''
   };
 }
 
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): string[] {
-  const errors: string[] = [];
-
-  if (!data.tituloTemaAssunto?.trim()) {
-    errors.push('Título do Tema / Assunto é obrigatório');
-  }
-
-  if (!data.disciplina?.trim()) {
-    errors.push('Disciplina é obrigatória');
-  }
-
-  if (!data.anoSerie?.trim()) {
-    errors.push('Ano / Série é obrigatório');
-  }
-
-  if (!data.publicoAlvo?.trim()) {
-    errors.push('Público-alvo é obrigatório');
-  }
-
-  if (!data.objetivosAprendizagem?.trim()) {
-    errors.push('Objetivos de Aprendizagem são obrigatórios');
-  }
-
-  const quantidadeAulas = parseInt(data.quantidadeAulas);
-  if (isNaN(quantidadeAulas) || quantidadeAulas < 1) {
-    errors.push('Quantidade de Aulas deve ser um número maior que 0');
-  }
-
-  const quantidadeDiagnosticos = parseInt(data.quantidadeDiagnosticos);
-  if (isNaN(quantidadeDiagnosticos) || quantidadeDiagnosticos < 0) {
-    errors.push('Quantidade de Diagnósticos deve ser um número válido');
-  }
-
-  const quantidadeAvaliacoes = parseInt(data.quantidadeAvaliacoes);
-  if (isNaN(quantidadeAvaliacoes) || quantidadeAvaliacoes < 0) {
-    errors.push('Quantidade de Avaliações deve ser um número válido');
-  }
-
-  return errors;
+export interface SequenciaDidaticaFields {
+  'Título do Tema / Assunto': string;
+  'Ano / Série': string;
+  'Disciplina': string;
+  'BNCC / Competências': string;
+  'Público-alvo': string;
+  'Objetivos de Aprendizagem': string;
+  'Quantidade de Aulas': string;
+  'Quantidade de Diagnósticos': string;
+  'Quantidade de Avaliações': string;
+  'Cronograma': string;
 }

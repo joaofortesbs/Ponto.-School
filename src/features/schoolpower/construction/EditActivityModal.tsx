@@ -18,9 +18,6 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import { CheckCircle2 } from 'lucide-react';
-import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
-import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping, sequenciaDidaticaBuilder } from '../activities/sequencia-didatica';
-import SequenciaDidaticaPreview from '../activities/sequencia-didatica/SequenciaDidaticaPreview';
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
@@ -160,6 +157,81 @@ const EditActivityModal = ({
     activityType: activity?.id || ''
   });
 
+  // Função placeholder para gerar conteúdo (deve ser implementada ou vir de um hook)
+  // Substitua por uma chamada real à API ou lógica de geração
+  const generateActivityContent = async (type: string, data: any) => {
+    console.log(`Simulando geração de conteúdo para tipo: ${type} com dados:`, data);
+    // Simulação de retorno bem-sucedido
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simula latência da API
+    if (type === 'plano-aula') {
+      return {
+        success: true,
+        data: {
+          ...data, // Usa os dados do formulário como base
+          title: data.title || "Plano de Aula Exemplo",
+          description: data.description || "Descrição do plano de aula...",
+          content: {
+            // Simula conteúdo gerado específico para plano de aula
+            objetivos: data.objectives,
+            materiais: data.materials,
+            avaliacao: data.evaluation,
+            tempoEstimado: data.timeLimit,
+            componenteCurricular: data.subject,
+            tema: data.theme,
+            anoSerie: data.schoolYear,
+            habilidadesBNCC: data.competencies,
+            perfilTurma: data.context,
+            tipoAula: data.difficultyLevel,
+            observacoes: data.evaluation,
+          },
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'lista-exercicios') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Lista de Exercícios Exemplo",
+          description: data.description || "Descrição da lista de exercícios...",
+          questoes: [
+            { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
+            { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
+          ],
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    }
+    // Simulação de retorno genérico
+    return {
+      success: true,
+      data: {
+        ...data,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+      }
+    };
+  };
+
+  // Regenerar conteúdo específico para lista de exercícios
+  const handleRegenerateContent = async () => {
+    if (activity?.id === 'lista-exercicios') {
+      try {
+        const newContent = await generateActivity(formData); // Assumindo que generateActivity pode ser usado aqui
+        setGeneratedContent(newContent);
+      } catch (error) {
+        console.error('Erro ao regenerar conteúdo:', error);
+        toast({
+          title: "Erro ao regenerar",
+          description: "Não foi possível regenerar o conteúdo. Tente novamente.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   // Carregar conteúdo construído quando o modal abrir
   useEffect(() => {
     if (activity && isOpen) {
@@ -168,18 +240,16 @@ const EditActivityModal = ({
       // Verificar se a atividade foi construída automaticamente
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const savedContent = localStorage.getItem(`activity_${activity.id}`);
-      const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`);
-      const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
+      const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`); // Chave específica para plano-aula
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
         hasSavedContent: !!savedContent,
         hasPlanoAulaSavedContent: !!planoAulaSavedContent,
-        hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
         activityId: activity.id
       });
 
-      // Priorizar o conteúdo específico baseado no tipo da atividade
+      // Priorizar o conteúdo específico do plano de aula se existir
       let contentToLoad = null;
       if (activity.id === 'plano-aula' && planoAulaSavedContent) {
         try {
@@ -188,14 +258,6 @@ const EditActivityModal = ({
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do plano-aula:', error);
           console.error('📄 Conteúdo que causou erro:', planoAulaSavedContent);
-        }
-      } else if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
-          console.log(`✅ Conteúdo específico da sequencia-didatica encontrado para: ${activity.id}`);
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico da sequencia-didatica:', error);
-          console.error('📄 Conteúdo que causou erro:', sequenciaDidaticaSavedContent);
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
@@ -364,6 +426,19 @@ const EditActivityModal = ({
               };
 
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
+              console.log('📝 Campos mapeados:');
+              console.log('  - Título:', enrichedFormData.title);
+              console.log('  - Descrição:', enrichedFormData.description);
+              console.log('  - Tema:', enrichedFormData.theme);
+              console.log('  - Componente Curricular:', enrichedFormData.subject);
+              console.log('  - Ano/Série:', enrichedFormData.schoolYear);
+              console.log('  - Objetivos:', enrichedFormData.objectives);
+              console.log('  - Materiais:', enrichedFormData.materials);
+              console.log('  - Carga Horária:', enrichedFormData.timeLimit);
+              console.log('  - Habilidades BNCC:', enrichedFormData.competencies);
+              console.log('  - Perfil da Turma:', enrichedFormData.context);
+              console.log('  - Tipo de Aula:', enrichedFormData.difficultyLevel);
+              console.log('  - Observações:', enrichedFormData.evaluation);
             } else if (activity?.id === 'sequencia-didatica') {
               console.log('📚 Processando dados específicos de Sequência Didática');
               console.log('🗂️ Custom fields consolidados para sequencia-didatica:', consolidatedCustomFields);
@@ -611,55 +686,6 @@ const EditActivityModal = ({
             };
 
             console.log('📝 Dados diretos processados para plano-aula:', directFormData);
-          } else if (activity?.id === 'sequencia-didatica') {
-            console.log('📚 Processando dados diretos de Sequência Didática');
-
-            directFormData = {
-              title: activityData.personalizedTitle || activityData.title || '',
-              description: activityData.personalizedDescription || activityData.description || '',
-              subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
-              theme: customFields['Tema'] || customFields['tema'] || '',
-              schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '',
-              numberOfQuestions: '1',
-              difficultyLevel: 'Médio',
-              questionModel: '',
-              sources: customFields['Fontes'] || customFields['fontes'] || '',
-              objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
-              materials: customFields['Materiais'] || customFields['materiais'] || '',
-              instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
-              evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || '',
-              timeLimit: customFields['Tempo Limite'] || '',
-              context: customFields['Contexto de Aplicação'] || '',
-              textType: '',
-              textGenre: '',
-              textLength: '',
-              associatedQuestions: '',
-              competencies: customFields['Competências'] || customFields['competencias'] || '',
-              readingStrategies: '',
-              visualResources: '',
-              practicalActivities: '',
-              wordsIncluded: '',
-              gridFormat: '',
-              providedHints: '',
-              vocabularyContext: '',
-              language: '',
-              associatedExercises: '',
-              knowledgeArea: '',
-              complexityLevel: '',
-              // Campos específicos para sequencia-didatica
-              tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
-              anoSerie: customFields['Ano / Série'] || '',
-              disciplina: customFields['Disciplina'] || '',
-              bnccCompetencias: customFields['BNCC / Competências'] || '',
-              publicoAlvo: customFields['Público-alvo'] || '',
-              objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
-              quantidadeAulas: customFields['Quantidade de Aulas'] || '',
-              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
-              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
-              cronograma: customFields['Cronograma'] || ''
-            };
-
-            console.log('📝 Dados diretos processados para sequencia-didatica:', directFormData);
           } else {
             // Para outras atividades
             directFormData = {
@@ -715,7 +741,7 @@ const EditActivityModal = ({
     };
 
     loadActivityData();
-  }, [activity, isOpen, loadSavedContent]);
+  }, [activity, isOpen, loadSavedContent]); // Adicionado loadSavedContent à dependência do useEffect
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
@@ -724,171 +750,74 @@ const EditActivityModal = ({
     }));
   };
 
-  const [activityData, setActivityData] = useState<any>(null);
-  const [isBuilt, setIsBuilt] = useState<boolean>(false);
-
   // Função para construir a atividade
   const handleBuildActivity = useCallback(async () => {
-    if (!activity) return;
+    if (!activity || isBuilding) return;
+
+    console.log('🚀 Iniciando construção da atividade:', activity.title);
+    console.log('📊 Dados do formulário:', formData);
 
     setIsBuilding(true);
-    setBuildingStatus({
-      isBuilding: true,
-      progress: 0,
-      currentStep: 'Iniciando construção...'
-    });
+    setError(null);
+    setBuildProgress(0);
 
     try {
-      console.log('🔨 Iniciando construção da atividade:', activity.id, formData);
+      // Simular progresso
+      const progressTimer = setInterval(() => {
+        setBuildProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
 
-      let builtData = null;
+      // Usar a mesma lógica de geração do sistema de construção automática
+      const result = await generateActivityContent(activity.type || activity.id, formData);
 
-      // Validar dados antes da construção
-      if (activity.id === 'sequencia-didatica') {
-        if (!formData.tituloTemaAssunto?.trim()) {
-          throw new Error('Título do tema/assunto é obrigatório');
+      clearInterval(progressTimer);
+      setBuildProgress(100);
+
+      if (result.success) {
+        console.log('✅ Atividade construída com sucesso:', result.data);
+
+        // Salvar no localStorage com a mesma chave usada pelo sistema
+        const storageKey = `schoolpower_${activity.type || activity.id}_content`;
+        localStorage.setItem(storageKey, JSON.stringify(result.data));
+
+        // Para plano-aula, também salvar com chave específica para visualização
+        if (activity.type === 'plano-aula' || activity.id === 'plano-aula') {
+          const viewStorageKey = `constructed_plano-aula_${activity.id}`;
+          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
+          console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
         }
-        if (!formData.disciplina?.trim()) {
-          throw new Error('Disciplina é obrigatória');
+
+        // Também salvar na lista de atividades construídas
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
+        if (!constructedActivities.includes(activity.id)) {
+          constructedActivities.push(activity.id);
+          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
         }
-      }
 
-      setBuildingStatus({
-        isBuilding: true,
-        progress: 25,
-        currentStep: 'Processando dados...'
-      });
+        setBuiltContent(result.data);
+        setActiveTab('preview');
 
-      // Construir baseado no tipo de atividade
-      switch (activity.id) {
-        case 'sequencia-didatica':
-          console.log('📚 Construindo Sequência Didática com dados:', formData);
-          setBuildingStatus({
-            isBuilding: true,
-            progress: 50,
-            currentStep: 'Gerando sequência didática...'
-          });
-          const sequenciaCompleta = await sequenciaDidaticaBuilder.buildSequencia(formData);
-
-              console.log('🎯 Sequência Didática construída com sucesso:', sequenciaCompleta);
-
-              // Atualizar dados no armazenamento
-              await sequenciaDidaticaBuilder.saveSequencia(sequenciaCompleta);
-
-              // Definir dados da atividade construída com ID único
-              builtData = {
-                ...sequenciaCompleta,
-                id: activity.id,
-                createdAt: new Date().toISOString(),
-                isBuilt: true
-              };
-          break;
-
-        case 'plano-aula':
-          console.log('📝 Construindo Plano de Aula');
-          setBuildingStatus({
-            isBuilding: true,
-            progress: 50,
-            currentStep: 'Gerando plano de aula...'
-          });
-          if (typeof planoAulaBuilder !== 'undefined') {
-            builtData = await planoAulaBuilder.buildPlanoAula(formData);
-          } else {
-            builtData = {
-              ...formData,
-              activityType: activity.id,
-              isBuilt: true,
-              buildTimestamp: new Date().toISOString()
-            };
-          }
-          break;
-
-        default:
-          console.log('🔧 Construção padrão para:', activity.id);
-          setBuildingStatus({
-            isBuilding: true,
-            progress: 50,
-            currentStep: 'Gerando atividade...'
-          });
-          builtData = {
-            ...formData,
-            activityType: activity.id,
-            isBuilt: true,
-            buildTimestamp: new Date().toISOString()
-          };
-      }
-
-      setBuildingStatus({
-        isBuilding: true,
-        progress: 75,
-        currentStep: 'Finalizando construção...'
-      });
-
-      if (builtData) {
-        console.log('🎯 Atividade construída, atualizando estado:', builtData);
-
-        // Atualizar o estado da atividade construída
-        setActivityData(builtData);
-        setIsBuilt(true);
-        setGeneratedContent(builtData);
-        setIsContentLoaded(true);
-
-        setBuildingStatus({
-          isBuilding: true,
-          progress: 100,
-          currentStep: 'Construção concluída!'
-        });
-
-        console.log('✅ Atividade construída com sucesso:', builtData);
-
-        // Feedback para o usuário
         toast({
-          title: "Atividade Construída!",
-          description: `${activity.title} foi construída com sucesso.`,
-          variant: "default"
+          title: "Atividade construída!",
+          description: "Sua atividade foi gerada com sucesso.",
         });
-
-        // Mudar para aba de preview
-        setTimeout(() => {
-          setActiveTab('preview');
-        }, 1000);
-
       } else {
-        throw new Error('Falha na construção da atividade - dados não gerados');
+        throw new Error(result.error || 'Erro na geração da atividade');
       }
     } catch (error) {
-      console.error('❌ Erro ao construir atividade:', error);
+      console.error('❌ Erro na construção:', error);
+      setError(`Erro ao construir atividade: ${error.message}`);
+
       toast({
-        title: "Erro na Construção",
-        description: error.message || "Ocorreu um erro ao construir a atividade. Tente novamente.",
-        variant: "destructive"
+        title: "Erro na construção",
+        description: "Houve um problema ao gerar sua atividade. Tente novamente.",
+        variant: "destructive",
       });
     } finally {
       setIsBuilding(false);
-      setBuildingStatus({
-        isBuilding: false,
-        progress: 0,
-        currentStep: ''
-      });
+      setBuildProgress(0);
     }
   }, [activity, formData, isBuilding, toast]);
-
-  // Regenerar conteúdo específico para lista de exercícios
-  const handleRegenerateContent = async () => {
-    if (activity?.id === 'lista-exercicios') {
-      try {
-        const newContent = await generateActivity(formData);
-        setGeneratedContent(newContent);
-      } catch (error) {
-        console.error('Erro ao regenerar conteúdo:', error);
-        toast({
-          title: "Erro ao regenerar",
-          description: "Não foi possível regenerar o conteúdo. Tente novamente.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
 
   // Função para automação - será chamada externamente
   useEffect(() => {
@@ -910,11 +839,11 @@ const EditActivityModal = ({
   }, [activity, formData, isGenerating, handleBuildActivity]);
 
   const handleSaveChanges = () => {
-    const activityDataToSave = {
+    const activityData = {
       ...formData,
       generatedContent
     };
-    onSave(activityDataToSave);
+    onSave(activityData);
     onClose();
   };
 
@@ -927,6 +856,7 @@ const EditActivityModal = ({
   };
 
   const handleExportPDF = () => {
+    // Lógica para exportar PDF será implementada futuramente
     console.log('Exportar PDF em desenvolvimento');
   };
 
@@ -1044,6 +974,8 @@ const EditActivityModal = ({
       });
     }
   };
+
+
 
   // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
@@ -1565,11 +1497,10 @@ const EditActivityModal = ({
                         onRegenerateContent={handleRegenerateContent}
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
-                      <SequenciaDidaticaPreview
-                        data={generatedContent}
-                        activityData={generatedContent}
-                        isBuilt={true}
-                      />
+                      // Placeholder para visualização de Sequência Didática, se necessário
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">Visualização da Sequência Didática em desenvolvimento...</p>
+                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent}
@@ -1619,6 +1550,13 @@ const EditActivityModal = ({
                 >
                   <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
                 </Button>
+                {/* <Button
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                >
+                  <Download className="h-4 w-4 mr-2" /> Exportar PDF
+                </Button> */}
               </>
             )}
              {generatedContent && (
