@@ -17,6 +17,7 @@ import { useGenerateActivity } from './hooks/useGenerateActivity';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
+import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // Função para processar dados da lista de exercícios
@@ -1497,10 +1498,9 @@ const EditActivityModal = ({
                         onRegenerateContent={handleRegenerateContent}
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
-                      // Placeholder para visualização de Sequência Didática, se necessário
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-gray-500">Visualização da Sequência Didática em desenvolvimento...</p>
-                      </div>
+                      <SequenciaDidaticaPreview
+                        data={generatedContent || formData}
+                      />
                     ) : (
                       <ActivityPreview
                         content={generatedContent}

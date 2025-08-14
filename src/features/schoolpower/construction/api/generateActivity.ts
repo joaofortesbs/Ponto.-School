@@ -1,5 +1,7 @@
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
+import { sequenciaDidaticaGenerator, SequenciaDidaticaGeneratedContent } from '../activities/sequencia-didatica/SequenciaDidaticaGenerator';
+import { SequenciaDidaticaPromptData } from '../prompts/sequenciaDidaticaPrompt';
 
 export const generateActivityAPI = async (payload: ActivityGenerationPayload): Promise<GeneratedActivity> => {
   // Simular delay da API
@@ -18,6 +20,8 @@ export const generateActivityAPI = async (payload: ActivityGenerationPayload): P
         activityType = 'jogo';
       } else if (payload.activityId.includes('video') || payload.title.toLowerCase().includes('vídeo')) {
         activityType = 'video';
+      } else if (payload.activityId.includes('sequencia') || payload.title.toLowerCase().includes('sequência')) {
+        activityType = 'sequencia-didatica';
       } else {
         activityType = 'lista-exercicios'; // padrão
       }
@@ -215,7 +219,13 @@ export const generateActivityContent = async (
       const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
       prompt = buildListaExerciciosPrompt(contextData);
       console.log('📝 Prompt gerado para lista de exercícios:', prompt.substring(0, 500) + '...');
-    } else {
+    } else if (activityType === 'sequencia-didatica') {
+      // Importar o prompt específico para Sequência Didática
+      const { buildSequenciaDidaticaPrompt } = await import('../../prompts/sequenciaDidaticaPrompt');
+      prompt = buildSequenciaDidaticaPrompt(contextData as SequenciaDidaticaPromptData);
+      console.log('📝 Prompt gerado para sequência didática:', prompt.substring(0, 500) + '...');
+    }
+    else {
       // Prompt genérico para outros tipos de atividade
       prompt = `
 Crie o conteúdo educacional para uma atividade do tipo "${activityType}" com base no seguinte contexto:
@@ -330,6 +340,31 @@ Responda APENAS com o JSON, sem texto adicional.`;
           parsedResult.disciplina = parsedResult.disciplina || contextData.disciplina || contextData.subject || 'Disciplina';
           parsedResult.tema = parsedResult.tema || contextData.tema || contextData.theme || 'Tema';
           parsedResult.numeroQuestoes = parsedResult.questoes.length;
+        } else if (activityType === 'sequencia-didatica') {
+          // Validação específica para Sequência Didática
+          if (!parsedResult.aulas || !Array.isArray(parsedResult.aulas)) {
+            console.error('❌ Estrutura de aulas inválida para Sequência Didática');
+            throw new Error('Campo aulas não encontrado ou não é um array');
+          }
+
+          const aulasValidas = parsedResult.aulas.every((aula: any, index: number) => {
+            const isValid = aula.titulo && aula.tipo && aula.objetivo && aula.resumo;
+            if (!isValid) {
+              console.error(`❌ Aula ${index + 1} inválida na Sequência Didática:`, aula);
+            }
+            return isValid;
+          });
+
+          if (!aulasValidas) {
+            throw new Error('Algumas aulas geradas pela IA para a Sequência Didática são inválidas');
+          }
+
+          console.log(`📚 ${parsedResult.aulas.length} aulas válidas geradas pela IA para Sequência Didática`);
+          parsedResult.isGeneratedByAI = true;
+          parsedResult.generatedAt = new Date().toISOString();
+          parsedResult.titulo = parsedResult.titulo || contextData.titulo || contextData.title || 'Sequência Didática';
+          parsedResult.disciplina = parsedResult.disciplina || contextData.disciplina || contextData.subject || 'Disciplina';
+          parsedResult.tema = parsedResult.tema || contextData.tema || contextData.theme || 'Tema';
         }
 
         return parsedResult;
@@ -356,6 +391,12 @@ Responda APENAS com o JSON, sem texto adicional.`;
                 secondAttempt.generatedAt = new Date().toISOString();
                 return secondAttempt;
               }
+            } else if (activityType === 'sequencia-didatica') {
+              if (secondAttempt.aulas && Array.isArray(secondAttempt.aulas) && secondAttempt.aulas.length > 0) {
+                secondAttempt.isGeneratedByAI = true;
+                secondAttempt.generatedAt = new Date().toISOString();
+                return secondAttempt;
+              }
             }
 
             return secondAttempt;
@@ -377,6 +418,69 @@ Responda APENAS com o JSON, sem texto adicional.`;
     throw error;
   }
 };
+
+// Função auxiliar para gerar o conteúdo da atividade de Sequência Didática
+async function generateSequenciaDidaticaContent(contextData: SequenciaDidaticaPromptData): Promise<SequenciaDidaticaGeneratedContent> {
+  console.log('🧬 Iniciando geração de Sequência Didática com Gemini...');
+  const geminiClient = new GeminiClient();
+
+  const prompt = await sequenciaDidaticaGenerator.buildPrompt(contextData);
+
+  console.log('📝 Prompt para Sequência Didática:', prompt.substring(0, 500) + '...');
+
+  const response = await geminiClient.generate({
+    prompt,
+    temperature: 0.8,
+    maxTokens: 4000,
+    topP: 0.9,
+    topK: 40
+  });
+
+  if (response.success) {
+    console.log('✅ Resposta recebida do Gemini para Sequência Didática');
+    let cleanedResponse = response.result.trim();
+
+    // Limpeza específica para a resposta de Sequência Didática
+    cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+    const jsonStart = cleanedResponse.indexOf('{');
+    const jsonEnd = cleanedResponse.lastIndexOf('}');
+
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+    }
+
+    try {
+      const parsedData = JSON.parse(cleanedResponse) as SequenciaDidaticaGeneratedContent;
+
+      // Validação básica
+      if (!parsedData.aulas || !Array.isArray(parsedData.aulas) || parsedData.aulas.length === 0) {
+        throw new Error('Estrutura de aulas inválida ou vazia na resposta da IA.');
+      }
+
+      parsedData.aulas.forEach((aula: any, index: number) => {
+        if (!aula.titulo || !aula.tipo || !aula.objetivo || !aula.resumo) {
+          console.warn(`Aula ${index + 1} na Sequência Didática está incompleta:`, aula);
+        }
+      });
+
+      parsedData.isGeneratedByAI = true;
+      parsedData.generatedAt = new Date().toISOString();
+
+      console.log('✅ Sequência Didática gerada com sucesso!');
+      return parsedData;
+
+    } catch (parseError) {
+      console.error('❌ Erro ao parsear a resposta da Sequência Didática:', parseError);
+      console.error('Conteúdo para parse:', cleanedResponse);
+      throw new Error('Falha ao processar a resposta da IA para Sequência Didática.');
+    }
+
+  } else {
+    console.error('❌ Erro na API Gemini para Sequência Didática:', response.error);
+    throw new Error(response.error || 'Falha na geração da Sequência Didática.');
+  }
+}
+
 
 export async function generateActivity(formData: any): Promise<{ success: boolean; content?: string; error?: string }> {
   console.log('🎯 generateActivity: Iniciando geração com formData:', formData);
@@ -437,8 +541,8 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
         numeroQuestoes: parseInt(formData.numberOfQuestions) || 10,
         nivelDificuldade: formData.difficultyLevel || 'Médio',
         modeloQuestoes: formData.questionModel || 'Múltipla escolha',
-        fontes: Array.isArray(formData.sources) ? formData.sources : 
-               formData.sources ? formData.sources.split(',').map(s => s.trim()) : 
+        fontes: Array.isArray(formData.sources) ? formData.sources :
+               formData.sources ? formData.sources.split(',').map(s => s.trim()) :
                ['Livro didático de ' + (formData.subject || 'Disciplina') + ' do ' + (formData.schoolYear || 'ano'),
                 'Vídeos explicativos sobre ' + (formData.theme || 'o tema') + ' (Khan Academy, YouTube)',
                 'Sites educativos sobre ' + (formData.subject?.toLowerCase() || 'a disciplina') + ' (Brasil Escola, Mundo Educação)'],
@@ -458,7 +562,7 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
           tempo: formData.timeLimit || '50 minutos',
           metodologia: formData.difficultyLevel || 'Metodologia Ativa',
           recursos: materiaisList,
-          sugestoes_ia: ['Plano de aula personalizado', 'Adaptável ao perfil da turma']
+          sugestao_ia: ['Plano de aula personalizado', 'Adaptável ao perfil da turma']
         },
         objetivos: objetivosList.map((obj, index) => ({
           descricao: obj,
@@ -523,6 +627,22 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
         }
       };
       break;
+    case 'sequencia-didatica':
+      // Lógica para gerar sequência didática
+      const sequenciaDidaticaContext: SequenciaDidaticaPromptData = {
+        tituloTemaAssunto: formData.title || formData.theme || 'Assunto Geral',
+        anoSerie: formData.schoolYear || 'Ensino Fundamental',
+        disciplina: formData.subject || 'Matemática',
+        bnccCompetencias: formData.competencies || 'Competências Gerais da BNCC',
+        publicoAlvo: formData.targetAudience || 'Alunos do Ensino Fundamental',
+        objetivosAprendizagem: Array.isArray(formData.learningObjectives) ? formData.learningObjectives.join('. ') : formData.learningObjectives || 'Compreender o tema abordado.',
+        quantidadeAulas: formData.numberOfLessons || '3',
+        quantidadeDiagnosticos: formData.numberOfDiagnosticLessons || '1',
+        quantidadeAvaliacoes: formData.numberOfAssessmentLessons || '1',
+        cronograma: formData.schedule || 'Semanal'
+      };
+      generatedContent = await generateSequenciaDidaticaContent(sequenciaDidaticaContext);
+      break;
     default:
       // Lógica padrão para outros tipos de atividade (ou se não especificado)
       generatedContent = {
@@ -572,7 +692,8 @@ async function generateSimpleActivityContent(activityData: any): Promise<string>
       delete displayData.metodologia;
       delete displayData.desenvolvimento;
       delete displayData.visao_geral;
-
+      delete displayData.isGeneratedByAI;
+      delete displayData.generatedAt;
 
       return JSON.stringify(displayData, null, 2);
     } catch (error) {
