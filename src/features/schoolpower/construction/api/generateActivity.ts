@@ -1,6 +1,6 @@
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
-import { sequenciaDidaticaGenerator, SequenciaDidaticaGeneratedContent } from '../activities/sequencia-didatica/SequenciaDidaticaGenerator';
+import { sequenciaDidaticaGenerator, SequenciaDidaticaGeneratedContent } from '../../activities/sequencia-didatica/SequenciaDidaticaGenerator';
 import { SequenciaDidaticaPromptData } from '../prompts/sequenciaDidaticaPrompt';
 
 export const generateActivityAPI = async (payload: ActivityGenerationPayload): Promise<GeneratedActivity> => {
