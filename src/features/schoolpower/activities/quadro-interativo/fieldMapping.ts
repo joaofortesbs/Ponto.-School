@@ -131,7 +131,22 @@ export const reverseQuadroInterativoFieldMapping: Record<keyof QuadroInterativoF
 // Função utilitária para encontrar o campo correto baseado no valor
 export function findFieldByValue(value: string, targetField: keyof QuadroInterativoFields): boolean {
   const possibleKeys = reverseQuadroInterativoFieldMapping[targetField] || [];
-  return possibleKeys.some(key => quadroInterativoFieldMapping[key] === targetField);
+  const found = possibleKeys.some(key => quadroInterativoFieldMapping[key] === targetField);
+  console.log(`🔍 Buscando campo: ${value} -> ${targetField}, encontrado: ${found}`);
+  return found;
+}
+
+// Função para debugar mapeamentos disponíveis
+export function debugFieldMappings(customFields: Record<string, any>): void {
+  console.log('🗺️ DEBUG - Mapeamentos disponíveis:');
+  Object.keys(customFields).forEach(key => {
+    const mappedField = quadroInterativoFieldMapping[key];
+    if (mappedField) {
+      console.log(`  ✅ ${key} -> ${mappedField} = "${customFields[key]}"`);
+    } else {
+      console.log(`  ❌ ${key} -> SEM MAPEAMENTO = "${customFields[key]}"`);
+    }
+  });
 }
 
 // Função para validar se um campo é válido para Quadro Interativo
