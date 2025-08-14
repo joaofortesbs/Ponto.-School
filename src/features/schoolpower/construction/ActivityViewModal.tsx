@@ -37,11 +37,12 @@ const ErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   if (hasError) {
     return (
-      <div className="flex flex-col items-center justify-center p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-        <X className="w-6 h-6 mb-2" />
-        <p className="text-sm font-medium">Ocorreu um erro ao renderizar esta atividade.</p>
-        <p className="text-xs mt-1">{error?.message}</p>
-      </div>
+      <Alert variant="destructive">
+        <X className="h-4 w-4" />
+        <AlertDescription>
+          Ocorreu um erro ao renderizar esta atividade: {error?.message}
+        </AlertDescription>
+      </Alert>
     );
   }
 
