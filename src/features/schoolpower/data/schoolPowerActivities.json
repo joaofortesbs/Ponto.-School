@@ -47,7 +47,6 @@
   { "id": "fichamento-obra-literaria", "name": "Fichamento de Obra Literária", "description": "Organiza fichamentos completos de obras literárias.", "tags": ["literatura", "fichamento"], "apiType": "gemini", "enabled": true },
   { "id": "resposta-email", "name": "Resposta de E-mail", "description": "Gera respostas formais para e-mails escolares.", "tags": ["comunicação", "resposta"], "apiType": "gemini", "enabled": true },
   { "id": "corretor-questoes", "name": "Corretor de Questões", "description": "Corrige questões abertas com justificativas.", "tags": ["correção", "questões"], "apiType": "gemini", "enabled": true },
-  { "id": "atividades-ia", "name": "Atividades com IA", "description": "Cria atividades didáticas usando inteligência artificial.", "tags": ["IA", "inovação"], "apiType": "gemini", "enabled": true },
   { "id": "questoes-site", "name": "Questões sobre um Site", "description": "Gera questões baseadas em conteúdo de sites.", "tags": ["web", "questões"], "apiType": "gemini", "enabled": true },
   { "id": "corretor-provas-papel", "name": "Corretor de Provas em Papel", "description": "Corrige automaticamente provas escaneadas.", "tags": ["correção", "automática"], "apiType": "gemini", "enabled": true },
   { "id": "acessibilidade-texto", "name": "Acessibilidade de um Texto", "description": "Adapta textos para necessidades específicas.", "tags": ["acessibilidade", "adaptação"], "apiType": "gemini", "enabled": true },
@@ -81,5 +80,6 @@
   { "id": "gerador-tracejados", "name": "Gerador de Formatos Tracejados", "description": "Gera atividades de caligrafia e letras tracejadas.", "tags": ["caligrafia", "tracejado"], "apiType": "gemini", "enabled": true },
   { "id": "chatbot-bncc", "name": "Chatbot com a BNCC", "description": "Responde perguntas sobre a BNCC em formato de chat.", "tags": ["BNCC", "chatbot"], "apiType": "gemini", "enabled": true },
   { "id": "apresentacao-slides", "name": "Crie apresentações inteiras com Slides", "description": "Construa apresentações completas em formato de Slides.", "tags": ["Apresentações", "Slides"], "apiType": "gemini", "enabled": true },
+  { "id": "quadro-interativo", "name": "Quadro de Aula Interativo", "description": "Cria um formato de 1 à 3 quadros interativos para apresentar na aula, pegando anotações e mostrando atividades", "tags": ["IA", "interação"], "apiType": "gemini", "enabled": true },
   { "id": "gerar-questoes", "name": "Gerador de questões personalizadas completas e super didaticas", "description": "Gere questões que testam perfeitamente o seu público, de uma maneira engajada e única.", "tags": ["Questões", "Gerador"], "apiType": "gemini", "enabled": true }
 ]
