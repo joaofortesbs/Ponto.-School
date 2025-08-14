@@ -103,31 +103,6 @@ export class AutoBuildService {
               activity.customFields?.['contexto'] || 
               '',
 
-      // Campos específicos do Quadro Interativo
-      quadroInterativoDisciplina: activity.customFields?.['Disciplina / Área de conhecimento'] || 
-                                 activity.customFields?.['disciplina'] || 
-                                 '',
-      
-      quadroInterativoAnoSerie: activity.customFields?.['Ano / Série'] || 
-                               activity.customFields?.['anoSerie'] || 
-                               '',
-      
-      quadroInterativoTema: activity.customFields?.['Tema ou Assunto da aula'] || 
-                           activity.customFields?.['tema'] || 
-                           '',
-      
-      quadroInterativoObjetivo: activity.customFields?.['Objetivo de aprendizagem da aula'] || 
-                               activity.customFields?.['objetivo'] || 
-                               '',
-      
-      quadroInterativoNivelDificuldade: activity.customFields?.['Nível de Dificuldade'] || 
-                                       activity.customFields?.['nivelDificuldade'] || 
-                                       '',
-      
-      quadroInterativoAtividadeMostrada: activity.customFields?.['Atividade mostrada'] || 
-                                        activity.customFields?.['atividadeMostrada'] || 
-                                        '',
-
       // Campos específicos para diferentes tipos de atividade (COMPLETOS)
       textType: activity.customFields?.['Tipo de Texto'] || 
                activity.customFields?.['tipoTexto'] || 
