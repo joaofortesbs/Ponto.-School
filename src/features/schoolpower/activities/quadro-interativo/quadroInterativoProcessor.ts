@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { QuadroInterativoFields, quadroInterativoFieldMapping } from './fieldMapping';
 
@@ -29,100 +28,18 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     description: activity.personalizedDescription || activity.description
   };
 
-  console.log('🔍 Custom fields do Quadro Interativo:', customFields);
-  console.log('🎯 Dados consolidados:', consolidatedData);
-
-  const processedData: ActivityFormData = {
+  // Inicializar dados base
+  const formData: ActivityFormData = {
     title: consolidatedData.title || '',
     description: consolidatedData.description || '',
-    
-    // Campos específicos do Quadro Interativo mapeados corretamente
-    subject: customFields['Disciplina / Área de conhecimento'] ||
-             customFields['disciplina'] ||
-             customFields['Disciplina'] ||
-             'Matemática',
-             
-    schoolYear: customFields['Ano / Série'] ||
-                customFields['anoSerie'] ||
-                customFields['Ano de Escolaridade'] ||
-                'Ex: 6º Ano, 7º Ano, 8º Ano',
-                
-    theme: customFields['Tema ou Assunto da aula'] ||
-           customFields['tema'] ||
-           customFields['Tema'] ||
-           consolidatedData.title ||
-           'Ex: Substantivos e Verbos, Frações, Sistema Solar',
-           
-    objectives: customFields['Objetivo de aprendizagem da aula'] ||
-                customFields['objetivos'] ||
-                customFields['Objetivos'] ||
-                consolidatedData.description ||
-                '',
-                
-    difficultyLevel: customFields['Nível de Dificuldade'] ||
-                     customFields['nivelDificuldade'] ||
-                     customFields['dificuldade'] ||
-                     'Ex: Básico, Intermediário, Avançado',
-                     
-    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
-                                     customFields['atividadeMostrada'] ||
-                                     customFields['quadroInterativoCampoEspecifico'] ||
-                                     customFields['Campo Específico do Quadro Interativo'] ||
-                                     'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
-
-    // Campos padrão herdados
-    numberOfQuestions: '1',
-    questionModel: '',
-    sources: '',
-    materials: '',
-    instructions: '',
-    evaluation: '',
-    timeLimit: '',
-    context: '',
-    textType: '',
-    textGenre: '',
-    textLength: '',
-    associatedQuestions: '',
-    competencies: '',
-    readingStrategies: '',
-    visualResources: '',
-    practicalActivities: '',
-    wordsIncluded: '',
-    gridFormat: '',
-    providedHints: '',
-    vocabularyContext: '',
-    language: '',
-    associatedExercises: '',
-    knowledgeArea: '',
-    complexityLevel: '',
-    tituloTemaAssunto: '',
-    anoSerie: '',
-    disciplina: '',
-    bnccCompetencias: '',
-    publicoAlvo: '',
-    objetivosAprendizagem: '',
-    quantidadeAulas: '',
-    quantidadeDiagnosticos: '',
-    quantidadeAvaliacoes: '',
-    cronograma: ''
-  };
-
-  console.log('✅ Dados processados do Quadro Interativo:', processedData);
-  return processedData; {};
-
-  // Inicializar dados do formulário com valores padrão
-  const formData: ActivityFormData = {
-    title: activity.personalizedTitle || activity.title || '',
-    description: activity.personalizedDescription || activity.description || '',
     subject: '',
     theme: '',
     schoolYear: '',
-    objectives: '',
-    difficultyLevel: '',
-    quadroInterativoCampoEspecifico: '',
     numberOfQuestions: '1',
+    difficultyLevel: '',
     questionModel: '',
     sources: '',
+    objectives: '',
     materials: '',
     instructions: '',
     evaluation: '',
@@ -153,10 +70,11 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     quantidadeAulas: '',
     quantidadeDiagnosticos: '',
     quantidadeAvaliacoes: '',
-    cronograma: ''
+    cronograma: '',
+    quadroInterativoCampoEspecifico: ''
   };
 
-  // Mapear campos específicos do Quadro Interativo com múltiplas variações
+  // Mapeamento específico e abrangente para Quadro Interativo
   const fieldMappings: Record<string, keyof ActivityFormData> = {
     // Disciplina / Área de conhecimento
     'Disciplina / Área de conhecimento': 'subject',
@@ -164,81 +82,84 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     'Área de conhecimento': 'subject',
     'Componente Curricular': 'subject',
     'Matéria': 'subject',
-    
+    'disciplina': 'subject',
+
     // Ano / Série
     'Ano / Série': 'schoolYear',
     'Ano': 'schoolYear',
     'Série': 'schoolYear',
     'Ano de Escolaridade': 'schoolYear',
     'Público-Alvo': 'schoolYear',
-    
+    'anoSerie': 'schoolYear',
+    'anoEscolaridade': 'schoolYear',
+
     // Tema ou Assunto da aula
     'Tema ou Assunto da aula': 'theme',
     'Tema': 'theme',
     'Assunto': 'theme',
     'Tópico': 'theme',
     'Tema Central': 'theme',
-    
+    'tema': 'theme',
+
     // Objetivo de aprendizagem da aula
     'Objetivo de aprendizagem da aula': 'objectives',
     'Objetivo': 'objectives',
     'Objetivos': 'objectives',
     'Objetivo Principal': 'objectives',
     'Objetivos de Aprendizagem': 'objectives',
-    
+    'objetivos': 'objectives',
+
     // Nível de Dificuldade
     'Nível de Dificuldade': 'difficultyLevel',
     'Dificuldade': 'difficultyLevel',
     'Nível': 'difficultyLevel',
     'Complexidade': 'difficultyLevel',
-    
+    'nivelDificuldade': 'difficultyLevel',
+    'dificuldade': 'difficultyLevel',
+
     // Atividade mostrada
     'Atividade mostrada': 'quadroInterativoCampoEspecifico',
     'Atividade': 'quadroInterativoCampoEspecifico',
     'Atividades': 'quadroInterativoCampoEspecifico',
     'Tipo de Atividade': 'quadroInterativoCampoEspecifico',
     'Interatividade': 'quadroInterativoCampoEspecifico',
-    'Recursos Interativos': 'quadroInterativoCampoEspecifico'
-  };
+    'Campo Específico': 'quadroInterativoCampoEspecifico',
+    'quadroInterativoCampoEspecifico': 'quadroInterativoCampoEspecifico',
+    'atividadeMostrada': 'quadroInterativoCampoEspecifico',
 
-  // Aplicar mapeamentos com log detalhado
-  Object.entries(fieldMappings).forEach(([customFieldKey, formFieldKey]) => {
-    const value = customFields[customFieldKey];
-    if (value && value.trim() && formFieldKey in formData) {
-      (formData as any)[formFieldKey] = value;
-      console.log(`✅ Mapeado: ${customFieldKey} -> ${formFieldKey} = ${value}`);
-    }
-  });
-
-  // Mapear campos adicionais que podem existir
-  const additionalMappings: Record<string, keyof ActivityFormData> = {
+    // Campos adicionais
     'Materiais': 'materials',
-    'Recursos': 'materials',
     'Materiais Necessários': 'materials',
+    'Recursos': 'materials',
+    'materials': 'materials',
+
     'Instruções': 'instructions',
     'Metodologia': 'instructions',
-    'Como Fazer': 'instructions',
+    'instructions': 'instructions',
+
     'Avaliação': 'evaluation',
-    'Critérios': 'evaluation',
     'Critérios de Avaliação': 'evaluation',
-    'Tempo': 'timeLimit',
-    'Duração': 'timeLimit',
+    'evaluation': 'evaluation',
+
     'Tempo Estimado': 'timeLimit',
+    'Duração': 'timeLimit',
+    'timeLimit': 'timeLimit',
+
     'Contexto': 'context',
     'Aplicação': 'context',
-    'Onde Usar': 'context'
+    'context': 'context'
   };
 
-  // Aplicar mapeamentos adicionais
-  Object.entries(additionalMappings).forEach(([customFieldKey, formFieldKey]) => {
-    const value = customFields[customFieldKey];
-    if (value && value.trim() && formFieldKey in formData) {
-      (formData as any)[formFieldKey] = value;
-      console.log(`✅ Mapeamento adicional: ${customFieldKey} -> ${formFieldKey} = ${value}`);
+  // Aplicar mapeamentos dos custom fields
+  Object.entries(customFields).forEach(([customFieldKey, value]) => {
+    const formFieldKey = fieldMappings[customFieldKey];
+    if (formFieldKey && typeof value === 'string' && value.trim()) {
+      formData[formFieldKey] = value.trim();
+      console.log(`🔗 Mapeado: ${customFieldKey} -> ${formFieldKey} = ${value}`);
     }
   });
 
-  // Mapear usando o sistema de fieldMapping existente
+  // Mapear usando o sistema de fieldMapping existente para compatibilidade
   Object.entries(customFields).forEach(([key, value]) => {
     const mappedField = quadroInterativoFieldMapping[key];
     if (mappedField && typeof value === 'string' && value.trim()) {
@@ -248,8 +169,10 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
           console.log(`📋 Recursos mapeados: ${value}`);
           break;
         case 'objetivo':
-          formData.objectives = value;
-          console.log(`🎯 Objetivo mapeado: ${value}`);
+          if (!formData.objectives) {
+            formData.objectives = value;
+            console.log(`🎯 Objetivo mapeado: ${value}`);
+          }
           break;
         case 'avaliacao':
           formData.evaluation = value;
@@ -260,12 +183,16 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
           console.log(`📝 Conteúdo mapeado: ${value}`);
           break;
         case 'interatividade':
-          formData.quadroInterativoCampoEspecifico = value;
-          console.log(`🎮 Interatividade mapeada: ${value}`);
+          if (!formData.quadroInterativoCampoEspecifico) {
+            formData.quadroInterativoCampoEspecifico = value;
+            console.log(`🎮 Interatividade mapeada: ${value}`);
+          }
           break;
         case 'design':
-          formData.difficultyLevel = value;
-          console.log(`🎨 Design mapeado: ${value}`);
+          if (!formData.difficultyLevel) {
+            formData.difficultyLevel = value;
+            console.log(`🎨 Design mapeado: ${value}`);
+          }
           break;
       }
     }
@@ -277,9 +204,24 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     console.log('🔧 Disciplina padrão aplicada: Matemática');
   }
 
+  if (!formData.schoolYear) {
+    formData.schoolYear = '6º Ano';
+    console.log('🔧 Ano padrão aplicado: 6º Ano');
+  }
+
+  if (!formData.theme) {
+    formData.theme = formData.title || 'Tema da Aula';
+    console.log('🔧 Tema padrão aplicado');
+  }
+
+  if (!formData.objectives) {
+    formData.objectives = formData.description || 'Objetivos de aprendizagem a serem definidos';
+    console.log('🔧 Objetivo padrão aplicado');
+  }
+
   if (!formData.difficultyLevel) {
-    formData.difficultyLevel = 'Médio';
-    console.log('🔧 Nível de dificuldade padrão aplicado: Médio');
+    formData.difficultyLevel = 'Intermediário';
+    console.log('🔧 Nível de dificuldade padrão aplicado: Intermediário');
   }
 
   if (!formData.quadroInterativoCampoEspecifico) {
@@ -287,8 +229,7 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     console.log('🔧 Atividade padrão aplicada');
   }
 
-  console.log('📝 Dados processados do Quadro Interativo:', formData);
-
+  console.log('✅ Dados processados do Quadro Interativo:', formData);
   return formData;
 }
 

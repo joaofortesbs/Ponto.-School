@@ -20,7 +20,79 @@ export const quadroInterativoCustomFields = {
 
 // Função para obter campos customizados do Quadro Interativo
 export function getQuadroInterativoCustomFields(): Record<string, any> {
-  return quadroInterativoCustomFields;': 'text'
+  return quadroInterativoCustomFields;
+}
+
+// Função para validar campos do Quadro Interativo
+export function validateQuadroInterativoFields(fields: Record<string, any>): boolean {
+  const requiredFields = [
+    'Disciplina / Área de conhecimento',
+    'Ano / Série',
+    'Tema ou Assunto da aula',
+    'Objetivo de aprendizagem da aula',
+    'Nível de Dificuldade',
+    'Atividade mostrada'
+  ];
+  
+  return requiredFields.every(field => 
+    fields[field] && typeof fields[field] === 'string' && fields[field].trim().length > 0
+  );
+}
+
+// Função para normalizar campos do Quadro Interativo
+export function normalizeQuadroInterativoFields(fields: Record<string, any>): Record<string, any> {
+  const normalized: Record<string, any> = {};
+  
+  // Mapeamento de aliases para campos padrão
+  const fieldAliases: Record<string, string> = {
+    'disciplina': 'Disciplina / Área de conhecimento',
+    'Disciplina': 'Disciplina / Área de conhecimento',
+    'Componente Curricular': 'Disciplina / Área de conhecimento',
+    'Matéria': 'Disciplina / Área de conhecimento',
+    
+    'anoSerie': 'Ano / Série',
+    'Ano de Escolaridade': 'Ano / Série',
+    'Público-Alvo': 'Ano / Série',
+    'Ano': 'Ano / Série',
+    'Série': 'Ano / Série',
+    
+    'tema': 'Tema ou Assunto da aula',
+    'Tema': 'Tema ou Assunto da aula',
+    'Assunto': 'Tema ou Assunto da aula',
+    'Tópico': 'Tema ou Assunto da aula',
+    'Tema Central': 'Tema ou Assunto da aula',
+    
+    'objetivos': 'Objetivo de aprendizagem da aula',
+    'Objetivos': 'Objetivo de aprendizagem da aula',
+    'Objetivo': 'Objetivo de aprendizagem da aula',
+    'Objetivo Principal': 'Objetivo de aprendizagem da aula',
+    'Objetivos de Aprendizagem': 'Objetivo de aprendizagem da aula',
+    
+    'nivelDificuldade': 'Nível de Dificuldade',
+    'dificuldade': 'Nível de Dificuldade',
+    'Dificuldade': 'Nível de Dificuldade',
+    'Nível': 'Nível de Dificuldade',
+    'Complexidade': 'Nível de Dificuldade',
+    
+    'atividadeMostrada': 'Atividade mostrada',
+    'quadroInterativoCampoEspecifico': 'Atividade mostrada',
+    'Campo Específico do Quadro Interativo': 'Atividade mostrada',
+    'Atividade': 'Atividade mostrada',
+    'Atividades': 'Atividade mostrada',
+    'Tipo de Atividade': 'Atividade mostrada',
+    'Interatividade': 'Atividade mostrada',
+    'Campo Específico': 'Atividade mostrada'
+  };
+  
+  // Normalizar campos usando aliases
+  Object.entries(fields).forEach(([key, value]) => {
+    const standardKey = fieldAliases[key] || key;
+    if (value && typeof value === 'string' && value.trim()) {
+      normalized[standardKey] = value.trim();
+    }
+  });
+  
+  return normalized;s;': 'text'
 };
 
 export const activityCustomFields: Record<string, string[]> = {

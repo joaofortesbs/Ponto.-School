@@ -1,4 +1,5 @@
 import { ConstructionActivity } from '../types';
+import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
 
 export interface AutoBuildProgress {
   current: number;
@@ -438,3 +439,25 @@ export class AutoBuildService {
 }
 
 export const autoBuildService = AutoBuildService.getInstance();
+
+/**
+ * Obter processador de atividade baseado no tipo
+ */
+function getActivityProcessor(activityId: string): ((activity: any) => any) | null {
+  const processors: Record<string, (activity: any) => any> = {
+    'sequencia-didatica': (activity) => {
+      const { processSequenciaDidaticaData } = require('../../activities/sequencia-didatica');
+      return processSequenciaDidaticaData(activity);
+    },
+    'plano-aula': (activity) => {
+      const { processPlanoAulaData } = require('../../activities/plano-aula');
+      return processPlanoAulaData(activity);
+    },
+    'quadro-interativo': (activity) => {
+      const { prepareQuadroInterativoDataForModal } = require('../../activities/quadro-interativo');
+      return prepareQuadroInterativoDataForModal(activity);
+    }
+  };
+
+  return processors[activityId] || null;
+}
