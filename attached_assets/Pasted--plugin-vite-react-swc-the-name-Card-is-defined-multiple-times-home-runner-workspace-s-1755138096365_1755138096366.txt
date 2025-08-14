@@ -1,0 +1,666 @@
+[plugin:vite:react-swc] × the name `Card` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·          ──┬─
+    ·            ╰── previous definition of `Card` here
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { Target, FileText, Award } from 'lucide-react';
+  6 │ 
+  7 │ interface AvaliacaoCardProps {
+  8 │   avaliacao: {
+  9 │     id: string;
+ 10 │     tipo: 'Avaliacao';
+ 11 │     titulo: string;
+ 12 │     objetivo: string;
+ 13 │     resumo: string;
+ 14 │     criteriosAvaliacao?: string[];
+ 15 │     instrumentos?: string[];
+ 16 │     valorPontuacao?: string;
+ 17 │   };
+ 18 │ }
+ 19 │ 
+ 20 │ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+ 21 │   return (
+ 22 │     <Card className="border-purple-200 bg-purple-50 h-full hover:shadow-md transition-shadow duration-200">
+ 23 │       <CardHeader className="pb-3">
+ 24 │         <div className="flex items-center justify-between mb-2">
+ 25 │           <Badge className="bg-purple-100 text-purple-800">
+ 26 │             <div className="flex items-center gap-1">
+ 27 │               <FileText className="h-4 w-4" />
+ 28 │               Avaliação
+ 29 │             </div>
+ 30 │           </Badge>
+ 31 │           {avaliacao.valorPontuacao && (
+ 32 │             <span className="text-xs text-gray-500 flex items-center gap-1">
+ 33 │               <Award className="h-3 w-3" />
+ 34 │               {avaliacao.valorPontuacao}
+ 35 │             </span>
+ 36 │           )}
+ 37 │         </div>
+ 38 │         <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
+ 39 │           {avaliacao.titulo}
+ 40 │         </CardTitle>
+ 41 │       </CardHeader>
+ 42 │       <CardContent className="pt-0">
+ 43 │         <div className="space-y-3">
+ 44 │           <div>
+ 45 │             <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+ 46 │               <Target className="h-3 w-3" />
+ 47 │               Objetivo
+ 48 │             </h4>
+ 49 │             <p className="text-xs text-gray-700 line-clamp-2">
+ 50 │               {avaliacao.objetivo}
+ 51 │             </p>
+ 52 │           </div>
+ 53 │           
+ 54 │           <div>
+ 55 │             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
+ 56 │             <p className="text-xs text-gray-600 line-clamp-3">
+ 57 │               {avaliacao.resumo}
+ 58 │             </p>
+ 59 │           </div>
+ 60 │ 
+ 61 │           {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
+ 62 │             <div>
+ 63 │               <h4 className="text-xs font-medium text-gray-600 mb-1">Critérios</h4>
+ 64 │               <div className="flex flex-wrap gap-1">
+ 65 │                 {avaliacao.criteriosAvaliacao.slice(0, 2).map((criterio, index) => (
+ 66 │                   <Badge key={index} variant="outline" className="text-xs">
+ 67 │                     {criterio}
+ 68 │                   </Badge>
+ 69 │                 ))}
+ 70 │                 {avaliacao.criteriosAvaliacao.length > 2 && (
+ 71 │                   <Badge variant="outline" className="text-xs">
+ 72 │                     +{avaliacao.criteriosAvaliacao.length - 2}
+ 73 │                   </Badge>
+ 74 │                 )}
+ 75 │               </div>
+ 76 │             </div>
+ 77 │           )}
+ 78 │         </div>
+ 79 │       </CardContent>
+ 80 │     </Card>
+ 81 │   );
+ 82 │ };
+ 83 │ 
+ 84 │ export default AvaliacaoCard;
+ 85 │ import React from 'react';
+ 86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·          ──┬─
+    ·            ╰── `Card` redefined here
+ 87 │ import { FileText, Star, Scale } from 'lucide-react';
+ 88 │ 
+ 89 │ interface AvaliacaoCardProps {
+    ╰────
+
+  × the name `CardContent` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                ─────┬─────
+    ·                     ╰── previous definition of `CardContent` here
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { Target, FileText, Award } from 'lucide-react';
+  6 │ 
+  7 │ interface AvaliacaoCardProps {
+  8 │   avaliacao: {
+  9 │     id: string;
+ 10 │     tipo: 'Avaliacao';
+ 11 │     titulo: string;
+ 12 │     objetivo: string;
+ 13 │     resumo: string;
+ 14 │     criteriosAvaliacao?: string[];
+ 15 │     instrumentos?: string[];
+ 16 │     valorPontuacao?: string;
+ 17 │   };
+ 18 │ }
+ 19 │ 
+ 20 │ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+ 21 │   return (
+ 22 │     <Card className="border-purple-200 bg-purple-50 h-full hover:shadow-md transition-shadow duration-200">
+ 23 │       <CardHeader className="pb-3">
+ 24 │         <div className="flex items-center justify-between mb-2">
+ 25 │           <Badge className="bg-purple-100 text-purple-800">
+ 26 │             <div className="flex items-center gap-1">
+ 27 │               <FileText className="h-4 w-4" />
+ 28 │               Avaliação
+ 29 │             </div>
+ 30 │           </Badge>
+ 31 │           {avaliacao.valorPontuacao && (
+ 32 │             <span className="text-xs text-gray-500 flex items-center gap-1">
+ 33 │               <Award className="h-3 w-3" />
+ 34 │               {avaliacao.valorPontuacao}
+ 35 │             </span>
+ 36 │           )}
+ 37 │         </div>
+ 38 │         <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
+ 39 │           {avaliacao.titulo}
+ 40 │         </CardTitle>
+ 41 │       </CardHeader>
+ 42 │       <CardContent className="pt-0">
+ 43 │         <div className="space-y-3">
+ 44 │           <div>
+ 45 │             <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+ 46 │               <Target className="h-3 w-3" />
+ 47 │               Objetivo
+ 48 │             </h4>
+ 49 │             <p className="text-xs text-gray-700 line-clamp-2">
+ 50 │               {avaliacao.objetivo}
+ 51 │             </p>
+ 52 │           </div>
+ 53 │           
+ 54 │           <div>
+ 55 │             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
+ 56 │             <p className="text-xs text-gray-600 line-clamp-3">
+ 57 │               {avaliacao.resumo}
+ 58 │             </p>
+ 59 │           </div>
+ 60 │ 
+ 61 │           {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
+ 62 │             <div>
+ 63 │               <h4 className="text-xs font-medium text-gray-600 mb-1">Critérios</h4>
+ 64 │               <div className="flex flex-wrap gap-1">
+ 65 │                 {avaliacao.criteriosAvaliacao.slice(0, 2).map((criterio, index) => (
+ 66 │                   <Badge key={index} variant="outline" className="text-xs">
+ 67 │                     {criterio}
+ 68 │                   </Badge>
+ 69 │                 ))}
+ 70 │                 {avaliacao.criteriosAvaliacao.length > 2 && (
+ 71 │                   <Badge variant="outline" className="text-xs">
+ 72 │                     +{avaliacao.criteriosAvaliacao.length - 2}
+ 73 │                   </Badge>
+ 74 │                 )}
+ 75 │               </div>
+ 76 │             </div>
+ 77 │           )}
+ 78 │         </div>
+ 79 │       </CardContent>
+ 80 │     </Card>
+ 81 │   );
+ 82 │ };
+ 83 │ 
+ 84 │ export default AvaliacaoCard;
+ 85 │ import React from 'react';
+ 86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                ─────┬─────
+    ·                     ╰── `CardContent` redefined here
+ 87 │ import { FileText, Star, Scale } from 'lucide-react';
+ 88 │ 
+ 89 │ interface AvaliacaoCardProps {
+    ╰────
+
+  × the name `CardHeader` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                             ─────┬────
+    ·                                  ╰── previous definition of `CardHeader` here
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { Target, FileText, Award } from 'lucide-react';
+  6 │ 
+  7 │ interface AvaliacaoCardProps {
+  8 │   avaliacao: {
+  9 │     id: string;
+ 10 │     tipo: 'Avaliacao';
+ 11 │     titulo: string;
+ 12 │     objetivo: string;
+ 13 │     resumo: string;
+ 14 │     criteriosAvaliacao?: string[];
+ 15 │     instrumentos?: string[];
+ 16 │     valorPontuacao?: string;
+ 17 │   };
+ 18 │ }
+ 19 │ 
+ 20 │ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+ 21 │   return (
+ 22 │     <Card className="border-purple-200 bg-purple-50 h-full hover:shadow-md transition-shadow duration-200">
+ 23 │       <CardHeader className="pb-3">
+ 24 │         <div className="flex items-center justify-between mb-2">
+ 25 │           <Badge className="bg-purple-100 text-purple-800">
+ 26 │             <div className="flex items-center gap-1">
+ 27 │               <FileText className="h-4 w-4" />
+ 28 │               Avaliação
+ 29 │             </div>
+ 30 │           </Badge>
+ 31 │           {avaliacao.valorPontuacao && (
+ 32 │             <span className="text-xs text-gray-500 flex items-center gap-1">
+ 33 │               <Award className="h-3 w-3" />
+ 34 │               {avaliacao.valorPontuacao}
+ 35 │             </span>
+ 36 │           )}
+ 37 │         </div>
+ 38 │         <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
+ 39 │           {avaliacao.titulo}
+ 40 │         </CardTitle>
+ 41 │       </CardHeader>
+ 42 │       <CardContent className="pt-0">
+ 43 │         <div className="space-y-3">
+ 44 │           <div>
+ 45 │             <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+ 46 │               <Target className="h-3 w-3" />
+ 47 │               Objetivo
+ 48 │             </h4>
+ 49 │             <p className="text-xs text-gray-700 line-clamp-2">
+ 50 │               {avaliacao.objetivo}
+ 51 │             </p>
+ 52 │           </div>
+ 53 │           
+ 54 │           <div>
+ 55 │             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
+ 56 │             <p className="text-xs text-gray-600 line-clamp-3">
+ 57 │               {avaliacao.resumo}
+ 58 │             </p>
+ 59 │           </div>
+ 60 │ 
+ 61 │           {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
+ 62 │             <div>
+ 63 │               <h4 className="text-xs font-medium text-gray-600 mb-1">Critérios</h4>
+ 64 │               <div className="flex flex-wrap gap-1">
+ 65 │                 {avaliacao.criteriosAvaliacao.slice(0, 2).map((criterio, index) => (
+ 66 │                   <Badge key={index} variant="outline" className="text-xs">
+ 67 │                     {criterio}
+ 68 │                   </Badge>
+ 69 │                 ))}
+ 70 │                 {avaliacao.criteriosAvaliacao.length > 2 && (
+ 71 │                   <Badge variant="outline" className="text-xs">
+ 72 │                     +{avaliacao.criteriosAvaliacao.length - 2}
+ 73 │                   </Badge>
+ 74 │                 )}
+ 75 │               </div>
+ 76 │             </div>
+ 77 │           )}
+ 78 │         </div>
+ 79 │       </CardContent>
+ 80 │     </Card>
+ 81 │   );
+ 82 │ };
+ 83 │ 
+ 84 │ export default AvaliacaoCard;
+ 85 │ import React from 'react';
+ 86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                             ─────┬────
+    ·                                  ╰── `CardHeader` redefined here
+ 87 │ import { FileText, Star, Scale } from 'lucide-react';
+ 88 │ 
+ 89 │ interface AvaliacaoCardProps {
+    ╰────
+
+  × the name `CardTitle` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                                         ────┬────
+    ·                                             ╰── previous definition of `CardTitle` here
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { Target, FileText, Award } from 'lucide-react';
+  6 │ 
+  7 │ interface AvaliacaoCardProps {
+  8 │   avaliacao: {
+  9 │     id: string;
+ 10 │     tipo: 'Avaliacao';
+ 11 │     titulo: string;
+ 12 │     objetivo: string;
+ 13 │     resumo: string;
+ 14 │     criteriosAvaliacao?: string[];
+ 15 │     instrumentos?: string[];
+ 16 │     valorPontuacao?: string;
+ 17 │   };
+ 18 │ }
+ 19 │ 
+ 20 │ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+ 21 │   return (
+ 22 │     <Card className="border-purple-200 bg-purple-50 h-full hover:shadow-md transition-shadow duration-200">
+ 23 │       <CardHeader className="pb-3">
+ 24 │         <div className="flex items-center justify-between mb-2">
+ 25 │           <Badge className="bg-purple-100 text-purple-800">
+ 26 │             <div className="flex items-center gap-1">
+ 27 │               <FileText className="h-4 w-4" />
+ 28 │               Avaliação
+ 29 │             </div>
+ 30 │           </Badge>
+ 31 │           {avaliacao.valorPontuacao && (
+ 32 │             <span className="text-xs text-gray-500 flex items-center gap-1">
+ 33 │               <Award className="h-3 w-3" />
+ 34 │               {avaliacao.valorPontuacao}
+ 35 │             </span>
+ 36 │           )}
+ 37 │         </div>
+ 38 │         <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
+ 39 │           {avaliacao.titulo}
+ 40 │         </CardTitle>
+ 41 │       </CardHeader>
+ 42 │       <CardContent className="pt-0">
+ 43 │         <div className="space-y-3">
+ 44 │           <div>
+ 45 │             <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+ 46 │               <Target className="h-3 w-3" />
+ 47 │               Objetivo
+ 48 │             </h4>
+ 49 │             <p className="text-xs text-gray-700 line-clamp-2">
+ 50 │               {avaliacao.objetivo}
+ 51 │             </p>
+ 52 │           </div>
+ 53 │           
+ 54 │           <div>
+ 55 │             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
+ 56 │             <p className="text-xs text-gray-600 line-clamp-3">
+ 57 │               {avaliacao.resumo}
+ 58 │             </p>
+ 59 │           </div>
+ 60 │ 
+ 61 │           {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
+ 62 │             <div>
+ 63 │               <h4 className="text-xs font-medium text-gray-600 mb-1">Critérios</h4>
+ 64 │               <div className="flex flex-wrap gap-1">
+ 65 │                 {avaliacao.criteriosAvaliacao.slice(0, 2).map((criterio, index) => (
+ 66 │                   <Badge key={index} variant="outline" className="text-xs">
+ 67 │                     {criterio}
+ 68 │                   </Badge>
+ 69 │                 ))}
+ 70 │                 {avaliacao.criteriosAvaliacao.length > 2 && (
+ 71 │                   <Badge variant="outline" className="text-xs">
+ 72 │                     +{avaliacao.criteriosAvaliacao.length - 2}
+ 73 │                   </Badge>
+ 74 │                 )}
+ 75 │               </div>
+ 76 │             </div>
+ 77 │           )}
+ 78 │         </div>
+ 79 │       </CardContent>
+ 80 │     </Card>
+ 81 │   );
+ 82 │ };
+ 83 │ 
+ 84 │ export default AvaliacaoCard;
+ 85 │ import React from 'react';
+ 86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                                         ────┬────
+    ·                                             ╰── `CardTitle` redefined here
+ 87 │ import { FileText, Star, Scale } from 'lucide-react';
+ 88 │ 
+ 89 │ interface AvaliacaoCardProps {
+    ╰────
+
+  × the name `FileText` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:2:1]
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { Target, FileText, Award } from 'lucide-react';
+    ·                  ────┬───
+    ·                      ╰── previous definition of `FileText` here
+  6 │ 
+  7 │ interface AvaliacaoCardProps {
+  8 │   avaliacao: {
+  9 │     id: string;
+ 10 │     tipo: 'Avaliacao';
+ 11 │     titulo: string;
+ 12 │     objetivo: string;
+ 13 │     resumo: string;
+ 14 │     criteriosAvaliacao?: string[];
+ 15 │     instrumentos?: string[];
+ 16 │     valorPontuacao?: string;
+ 17 │   };
+ 18 │ }
+ 19 │ 
+ 20 │ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+ 21 │   return (
+ 22 │     <Card className="border-purple-200 bg-purple-50 h-full hover:shadow-md transition-shadow duration-200">
+ 23 │       <CardHeader className="pb-3">
+ 24 │         <div className="flex items-center justify-between mb-2">
+ 25 │           <Badge className="bg-purple-100 text-purple-800">
+ 26 │             <div className="flex items-center gap-1">
+ 27 │               <FileText className="h-4 w-4" />
+ 28 │               Avaliação
+ 29 │             </div>
+ 30 │           </Badge>
+ 31 │           {avaliacao.valorPontuacao && (
+ 32 │             <span className="text-xs text-gray-500 flex items-center gap-1">
+ 33 │               <Award className="h-3 w-3" />
+ 34 │               {avaliacao.valorPontuacao}
+ 35 │             </span>
+ 36 │           )}
+ 37 │         </div>
+ 38 │         <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
+ 39 │           {avaliacao.titulo}
+ 40 │         </CardTitle>
+ 41 │       </CardHeader>
+ 42 │       <CardContent className="pt-0">
+ 43 │         <div className="space-y-3">
+ 44 │           <div>
+ 45 │             <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+ 46 │               <Target className="h-3 w-3" />
+ 47 │               Objetivo
+ 48 │             </h4>
+ 49 │             <p className="text-xs text-gray-700 line-clamp-2">
+ 50 │               {avaliacao.objetivo}
+ 51 │             </p>
+ 52 │           </div>
+ 53 │           
+ 54 │           <div>
+ 55 │             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
+ 56 │             <p className="text-xs text-gray-600 line-clamp-3">
+ 57 │               {avaliacao.resumo}
+ 58 │             </p>
+ 59 │           </div>
+ 60 │ 
+ 61 │           {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
+ 62 │             <div>
+ 63 │               <h4 className="text-xs font-medium text-gray-600 mb-1">Critérios</h4>
+ 64 │               <div className="flex flex-wrap gap-1">
+ 65 │                 {avaliacao.criteriosAvaliacao.slice(0, 2).map((criterio, index) => (
+ 66 │                   <Badge key={index} variant="outline" className="text-xs">
+ 67 │                     {criterio}
+ 68 │                   </Badge>
+ 69 │                 ))}
+ 70 │                 {avaliacao.criteriosAvaliacao.length > 2 && (
+ 71 │                   <Badge variant="outline" className="text-xs">
+ 72 │                     +{avaliacao.criteriosAvaliacao.length - 2}
+ 73 │                   </Badge>
+ 74 │                 )}
+ 75 │               </div>
+ 76 │             </div>
+ 77 │           )}
+ 78 │         </div>
+ 79 │       </CardContent>
+ 80 │     </Card>
+ 81 │   );
+ 82 │ };
+ 83 │ 
+ 84 │ export default AvaliacaoCard;
+ 85 │ import React from 'react';
+ 86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+ 87 │ import { FileText, Star, Scale } from 'lucide-react';
+    ·          ────┬───
+    ·              ╰── `FileText` redefined here
+ 88 │ 
+ 89 │ interface AvaliacaoCardProps {
+ 90 │   avaliacao: {
+    ╰────
+
+  × the name `AvaliacaoCard` is defined multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:17:1]
+  17 │   };
+  18 │ }
+  19 │ 
+  20 │ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+     ·       ──────┬──────
+     ·             ╰── previous definition of `AvaliacaoCard` here
+  21 │   return (
+  22 │     <Card className="border-purple-200 bg-purple-50 h-full hover:shadow-md transition-shadow duration-200">
+  23 │       <CardHeader className="pb-3">
+  24 │         <div className="flex items-center justify-between mb-2">
+  25 │           <Badge className="bg-purple-100 text-purple-800">
+  26 │             <div className="flex items-center gap-1">
+  27 │               <FileText className="h-4 w-4" />
+  28 │               Avaliação
+  29 │             </div>
+  30 │           </Badge>
+  31 │           {avaliacao.valorPontuacao && (
+  32 │             <span className="text-xs text-gray-500 flex items-center gap-1">
+  33 │               <Award className="h-3 w-3" />
+  34 │               {avaliacao.valorPontuacao}
+  35 │             </span>
+  36 │           )}
+  37 │         </div>
+  38 │         <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
+  39 │           {avaliacao.titulo}
+  40 │         </CardTitle>
+  41 │       </CardHeader>
+  42 │       <CardContent className="pt-0">
+  43 │         <div className="space-y-3">
+  44 │           <div>
+  45 │             <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+  46 │               <Target className="h-3 w-3" />
+  47 │               Objetivo
+  48 │             </h4>
+  49 │             <p className="text-xs text-gray-700 line-clamp-2">
+  50 │               {avaliacao.objetivo}
+  51 │             </p>
+  52 │           </div>
+  53 │           
+  54 │           <div>
+  55 │             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
+  56 │             <p className="text-xs text-gray-600 line-clamp-3">
+  57 │               {avaliacao.resumo}
+  58 │             </p>
+  59 │           </div>
+  60 │ 
+  61 │           {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
+  62 │             <div>
+  63 │               <h4 className="text-xs font-medium text-gray-600 mb-1">Critérios</h4>
+  64 │               <div className="flex flex-wrap gap-1">
+  65 │                 {avaliacao.criteriosAvaliacao.slice(0, 2).map((criterio, index) => (
+  66 │                   <Badge key={index} variant="outline" className="text-xs">
+  67 │                     {criterio}
+  68 │                   </Badge>
+  69 │                 ))}
+  70 │                 {avaliacao.criteriosAvaliacao.length > 2 && (
+  71 │                   <Badge variant="outline" className="text-xs">
+  72 │                     +{avaliacao.criteriosAvaliacao.length - 2}
+  73 │                   </Badge>
+  74 │                 )}
+  75 │               </div>
+  76 │             </div>
+  77 │           )}
+  78 │         </div>
+  79 │       </CardContent>
+  80 │     </Card>
+  81 │   );
+  82 │ };
+  83 │ 
+  84 │ export default AvaliacaoCard;
+  85 │ import React from 'react';
+  86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  87 │ import { FileText, Star, Scale } from 'lucide-react';
+  88 │ 
+  89 │ interface AvaliacaoCardProps {
+  90 │   avaliacao: {
+  91 │     id: string;
+  92 │     numero: number;
+  93 │     titulo: string;
+  94 │     tipo: string;
+  95 │     instrumentos: string[];
+  96 │     criterios: string;
+  97 │     peso: string;
+  98 │   };
+  99 │ }
+ 100 │ 
+ 101 │ export const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+     ·              ──────┬──────
+     ·                    ╰── `AvaliacaoCard` redefined here
+ 102 │   return (
+ 103 │     <Card className="h-full hover:shadow-md transition-shadow border-purple-200">
+ 104 │       <CardHeader className="pb-3">
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:81:1]
+  81 │   );
+  82 │ };
+  83 │ 
+  84 │ export default AvaliacaoCard;
+     · ──────────────┬──────────────
+     ·               ╰── previous exported here
+  85 │ import React from 'react';
+  86 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  87 │ import { FileText, Star, Scale } from 'lucide-react';
+  88 │ 
+  89 │ interface AvaliacaoCardProps {
+  90 │   avaliacao: {
+  91 │     id: string;
+  92 │     numero: number;
+  93 │     titulo: string;
+  94 │     tipo: string;
+  95 │     instrumentos: string[];
+  96 │     criterios: string;
+  97 │     peso: string;
+  98 │   };
+  99 │ }
+ 100 │ 
+ 101 │ export const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
+ 102 │   return (
+ 103 │     <Card className="h-full hover:shadow-md transition-shadow border-purple-200">
+ 104 │       <CardHeader className="pb-3">
+ 105 │         <CardTitle className="text-lg flex items-center gap-2">
+ 106 │           <FileText className="h-5 w-5 text-purple-600" />
+ 107 │           {avaliacao.titulo}
+ 108 │         </CardTitle>
+ 109 │       </CardHeader>
+ 110 │       <CardContent className="space-y-3">
+ 111 │         <div className="flex items-center gap-2 text-sm">
+ 112 │           <Star className="h-4 w-4 text-purple-600" />
+ 113 │           <span className="font-medium">Tipo:</span>
+ 114 │           <span className={`px-2 py-1 rounded text-xs ${
+ 115 │             avaliacao.tipo === 'Formativa' 
+ 116 │               ? 'bg-blue-100 text-blue-800' 
+ 117 │               : 'bg-purple-100 text-purple-800'
+ 118 │           }`}>
+ 119 │             {avaliacao.tipo}
+ 120 │           </span>
+ 121 │         </div>
+ 122 │         
+ 123 │         <div className="flex items-center gap-2 text-sm text-gray-600">
+ 124 │           <Scale className="h-4 w-4" />
+ 125 │           <span className="font-medium">Peso:</span>
+ 126 │           <span>{avaliacao.peso}</span>
+ 127 │         </div>
+ 128 │ 
+ 129 │         <div>
+ 130 │           <h4 className="font-medium text-sm text-gray-700 mb-1">Instrumentos:</h4>
+ 131 │           <div className="flex flex-wrap gap-1">
+ 132 │             {avaliacao.instrumentos.map((instrumento, index) => (
+ 133 │               <span key={index} className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+ 134 │                 {instrumento}
+ 135 │               </span>
+ 136 │             ))}
+ 137 │           </div>
+ 138 │         </div>
+ 139 │ 
+ 140 │         <div>
+ 141 │           <h4 className="font-medium text-sm text-gray-700 mb-1">Critérios:</h4>
+ 142 │           <p className="text-sm text-gray-600">{avaliacao.criterios}</p>
+ 143 │         </div>
+ 144 │       </CardContent>
+ 145 │     </Card>
+ 146 │   );
+ 147 │ };
+ 148 │ 
+ 149 │ export default AvaliacaoCard;
+     · ──────────────┬──────────────
+     ·               ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/AvaliacaoCard.tsx:1:1
+1  |  
+2  |  import React from 'react';
+   |  ^
+3  |  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+4  |  import { Badge } from '@/components/ui/badge';
