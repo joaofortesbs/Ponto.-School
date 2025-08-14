@@ -1,4 +1,3 @@
-
 export { default as ChatInput } from './ChatInput';
 export { default as TopHeader } from './TopHeader';
 export { default as ProfileSelector } from './ProfileSelector';
