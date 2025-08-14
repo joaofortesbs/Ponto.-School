@@ -839,12 +839,48 @@ const EditActivityModal = ({
     };
   }, [activity, formData, isGenerating, handleBuildActivity]);
 
-  const handleSaveChanges = () => {
-    const activityData = {
+  const handleSave = () => {
+    console.log('💾 Salvando atividade:', formData);
+
+    const savedData = {
       ...formData,
-      generatedContent
+      builtAt: new Date().toISOString(),
+      isBuilt: true
     };
-    onSave(activityData);
+
+    // Para Sequência Didática, garantir que todos os campos estão salvos
+    if (activity?.id === 'sequencia-didatica') {
+      savedData.originalData = {
+        ...savedData.originalData,
+        ...formData,
+        customFields: {
+          ...savedData.originalData?.customFields,
+          tituloTemaAssunto: formData.tituloTemaAssunto,
+          anoSerie: formData.anoSerie,
+          disciplina: formData.disciplina,
+          bnccCompetencias: formData.bnccCompetencias,
+          publicoAlvo: formData.publicoAlvo,
+          objetivosAprendizagem: formData.objetivosAprendizagem,
+          quantidadeAulas: formData.quantidadeAulas,
+          quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
+          quantidadeAvaliacoes: formData.quantidadeAvaliacoes,
+          cronograma: formData.cronograma
+        }
+      };
+
+      console.log('💾 Dados específicos da Sequência Didática salvos:', savedData.originalData);
+    }
+
+    if (onSave) {
+      onSave(savedData);
+    }
+
+    toast({
+      title: "✅ Atividade Salva",
+      description: `${activity?.title} foi salva com sucesso!`,
+      duration: 3000,
+    });
+
     onClose();
   };
 
@@ -908,7 +944,8 @@ const EditActivityModal = ({
     };
   };
 
-  const handleSave = async () => {
+  // Manter a função handleSave original e adicionar a lógica específica para sequencia-didatica
+  const handleSaveChanges = () => {
     if (!activity) return;
 
     try {
@@ -1569,7 +1606,7 @@ const EditActivityModal = ({
               </Button>
             )}
             <Button
-              onClick={handleSave}
+              onClick={handleSaveChanges}
               className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
             >
               <Save className="h-4 w-4 mr-2" />

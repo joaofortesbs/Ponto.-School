@@ -28,6 +28,33 @@ interface ActivityViewModalProps {
   onClose: () => void;
 }
 
+// ErrorBoundary component to catch rendering errors
+const ErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  if (hasError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        <X className="w-6 h-6 mb-2" />
+        <p className="text-sm font-medium">Ocorreu um erro ao renderizar esta atividade.</p>
+        <p className="text-xs mt-1">{error?.message}</p>
+      </div>
+    );
+  }
+
+  return React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child as React.ReactElement<any>, {
+        // You can add error handling props here if the child component supports them
+        // For example, if PreviewComponent had an onError prop
+      });
+    }
+    return child;
+  });
+};
+
+
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
@@ -124,7 +151,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
       }
     };
 
@@ -213,6 +240,27 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       default:
         return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
+  };
+
+  // Placeholder for PreviewComponent, as it's not defined in the provided code.
+  // Replace with the actual component if it exists.
+  const PreviewComponent = ({ formData, activityData, isViewModal }: { formData: any, activityData: any, isViewModal?: boolean }) => {
+    console.log('PreviewComponent called with:', { formData, activityData, isViewModal });
+    // This is a placeholder. You need to implement the actual preview logic here.
+    // Based on the problem description, this component should render the SequenciaDidatica activity.
+    // For now, let's display a message indicating it's being rendered.
+    return (
+      <div className="p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+        <h3 className="font-semibold">Sequência Didática Preview</h3>
+        <p className="text-sm">
+          Renderizando a pré-visualização da Sequência Didática.
+          {isViewModal && <span className="font-bold"> (Modo Visualização Modal)</span>}
+        </p>
+        <pre className="mt-2 text-xs overflow-auto">
+          {JSON.stringify(formData, null, 2)}
+        </pre>
+      </div>
+    );
   };
 
   const renderActivityPreview = () => {
@@ -401,6 +449,18 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             data={previewData}
             activityData={activity}
           />
+        );
+      
+      // Assuming 'sequencia-didatica' is the type that needs PreviewComponent
+      case 'sequencia-didatica':
+        return (
+          <ErrorBoundary>
+            <PreviewComponent 
+              formData={previewData} // Pass previewData as formData
+              activityData={activity}
+              isViewModal={true}
+            />
+          </ErrorBoundary>
         );
 
       default:
