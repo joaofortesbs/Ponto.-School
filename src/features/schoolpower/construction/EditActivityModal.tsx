@@ -1090,7 +1090,7 @@ const EditActivityModal = ({
     };
 
     loadActivityData();
-  }, [activity, isOpen, loadSavedContent]); // Adicionado loadSavedContent à dependência do useEffect
+  }, [activity, isOpen]); // Removido loadSavedContent da dependência, pois não é usado diretamente aqui
 
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
@@ -1339,44 +1339,50 @@ const EditActivityModal = ({
     const preenchidoPorIA = activity.preenchidoAutomaticamente === true ||
                            Object.keys(customFields).length > 0;
 
-    // Verificar se todos os campos obrigatórios estão preenchidos
-    const todosCamposPreenchidos = activity?.id === 'lista-exercicios'
-      ? formData.title.trim() &&
-        formData.description.trim() &&
-        formData.subject.trim() &&
-        formData.theme.trim() &&
-        formData.schoolYear.trim() &&
-        formData.numberOfQuestions.trim() &&
-        formData.difficultyLevel.trim() &&
-        formData.questionModel.trim()
-      : activity?.id === 'plano-aula'
-      ? formData.title.trim() &&
-        formData.description.trim() &&
-        formData.theme.trim() &&
-        formData.schoolYear.trim() &&
-        formData.subject.trim() &&
-        formData.objectives.trim() &&
-        formData.materials.trim()
-      : activity?.id === 'sequencia-didatica'
-      ? formData.tituloTemaAssunto?.trim() &&
-        formData.anoSerie?.trim() &&
-        formData.disciplina?.trim() &&
-        formData.publicoAlvo?.trim() &&
-        formData.objetivosAprendizagem?.trim() &&
-        formData.quantidadeAulas?.trim() &&
-        formData.quantidadeDiagnosticos?.trim() &&
-        formData.quantidadeAvaliacoes?.trim()
-      : activity?.id === 'quadro-interativo'
-      ? formData.title.trim() &&
-        formData.description.trim() &&
-        formData.quadroInterativoCampoEspecifico?.trim() // Campo específico para quadro interativo
-      : formData.title.trim() &&
-        formData.description.trim() &&
-        formData.objectives.trim();
+    // Definir a lógica de validação do formulário fora do JSX
+    const isFormValidForBuild = (() => {
+      const activityType = activity?.id || '';
+      if (activityType === 'lista-exercicios') {
+        return formData.title.trim() &&
+               formData.description.trim() &&
+               formData.subject.trim() &&
+               formData.theme.trim() &&
+               formData.schoolYear.trim() &&
+               formData.numberOfQuestions.trim() &&
+               formData.difficultyLevel.trim() &&
+               formData.questionModel.trim();
+      } else if (activityType === 'plano-aula') {
+        return formData.title.trim() &&
+               formData.description.trim() &&
+               formData.theme.trim() &&
+               formData.schoolYear.trim() &&
+               formData.subject.trim() &&
+               formData.objectives.trim() &&
+               formData.materials.trim();
+      } else if (activityType === 'sequencia-didatica') {
+        return formData.tituloTemaAssunto?.trim() &&
+               formData.anoSerie?.trim() &&
+               formData.disciplina?.trim() &&
+               formData.publicoAlvo?.trim() &&
+               formData.objetivosAprendizagem?.trim() &&
+               formData.quantidadeAulas?.trim() &&
+               formData.quantidadeDiagnosticos?.trim() &&
+               formData.quantidadeAvaliacoes?.trim();
+      } else if (activityType === 'quadro-interativo') {
+        // Campos obrigatórios específicos para Quadro Interativo
+        return formData.title.trim() &&
+               formData.description.trim() &&
+               formData.quadroInterativoCampoEspecifico?.trim();
+      } else {
+        return formData.title.trim() &&
+               formData.description.trim() &&
+               formData.objectives.trim();
+      }
+    })();
 
     // Agente automático: Acionar "Construir Atividade" quando preenchido pela IA
-    if (todosCamposPreenchidos && preenchidoPorIA && !activity.isBuilt) {
-      console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA');
+    if (isFormValidForBuild && preenchidoPorIA && !activity.isBuilt) {
+      console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
       console.log('🎯 Acionando construção automática da atividade...');
 
       // Aguardar pequeno delay para garantir sincronização
@@ -1387,7 +1393,7 @@ const EditActivityModal = ({
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, handleBuildActivity]);
+  }, [formData, activity, isOpen, handleBuildActivity]); // Adicionado isFormValidForBuild às dependências
 
   if (!isOpen) return null;
 
@@ -1498,23 +1504,46 @@ const EditActivityModal = ({
                       {/* Renderização condicional dos componentes de edição */}
                       {(() => {
                         const activityType = activity?.id || '';
-                        // Define campos obrigatórios para validação de construção automática
-                        const requiredFieldsFilled = (() => {
+
+                        // Lógica de validação do formulário
+                        const isFormValidForBuild = (() => {
                           if (activityType === 'lista-exercicios') {
-                            return formData.title && formData.description && formData.subject && formData.theme && formData.schoolYear && formData.numberOfQuestions && formData.difficultyLevel && formData.questionModel;
+                            return formData.title.trim() &&
+                                   formData.description.trim() &&
+                                   formData.subject.trim() &&
+                                   formData.theme.trim() &&
+                                   formData.schoolYear.trim() &&
+                                   formData.numberOfQuestions.trim() &&
+                                   formData.difficultyLevel.trim() &&
+                                   formData.questionModel.trim();
                           } else if (activityType === 'plano-aula') {
-                            return formData.title && formData.description && formData.theme && formData.schoolYear && formData.subject && formData.objectives && formData.materials;
+                            return formData.title.trim() &&
+                                   formData.description.trim() &&
+                                   formData.theme.trim() &&
+                                   formData.schoolYear.trim() &&
+                                   formData.subject.trim() &&
+                                   formData.objectives.trim() &&
+                                   formData.materials.trim();
                           } else if (activityType === 'sequencia-didatica') {
-                            return formData.tituloTemaAssunto && formData.anoSerie && formData.disciplina && formData.publicoAlvo && formData.objetivosAprendizagem && formData.quantidadeAulas && formData.quantidadeDiagnosticos && formData.quantidadeAvaliacoes;
+                            return formData.tituloTemaAssunto?.trim() &&
+                                   formData.anoSerie?.trim() &&
+                                   formData.disciplina?.trim() &&
+                                   formData.publicoAlvo?.trim() &&
+                                   formData.objetivosAprendizagem?.trim() &&
+                                   formData.quantidadeAulas?.trim() &&
+                                   formData.quantidadeDiagnosticos?.trim() &&
+                                   formData.quantidadeAvaliacoes?.trim();
                           } else if (activityType === 'quadro-interativo') {
                             // Campos obrigatórios específicos para Quadro Interativo
-                            return formData.title && formData.description && formData.quadroInterativoCampoEspecifico;
+                            return formData.title.trim() &&
+                                   formData.description.trim() &&
+                                   formData.quadroInterativoCampoEspecifico?.trim();
                           } else {
-                            return formData.title && formData.description && formData.objectives;
+                            return formData.title.trim() &&
+                                   formData.description.trim() &&
+                                   formData.objectives.trim();
                           }
                         })();
-                        // Define a validade do formulário com base nos campos obrigatórios
-                        const isFormValidForBuild = requiredFieldsFilled;
 
                         return (
                           <>
@@ -1738,18 +1767,6 @@ const EditActivityModal = ({
                                     onChange={(e) => handleInputChange('materials', e.target.value)}
                                     placeholder="Materiais necessários..."
                                     rows={2}
-                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="instructions">Instruções</Label>
-                                  <Textarea
-                                    id="instructions"
-                                    value={formData.instructions}
-                                    onChange={(e) => handleInputChange('instructions', e.target.value)}
-                                    placeholder="Instruções para aplicação..."
-                                    rows={3}
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
                                 </div>
