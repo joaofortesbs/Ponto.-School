@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card as UICard, CardContent as UICardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -1604,8 +1604,8 @@ const EditActivityModal = ({
             {activeTab === 'editar' && (
             <div className="flex gap-6 h-full">
               <div className="flex flex-col space-y-4 overflow-y-auto flex-1 pr-2">
-                <Card>
-                  <CardContent className="p-4">
+                <UICard>
+                  <UICardContent className="pt-6">
                     <h3 className="font-semibold text-lg mb-4 flex items-center">
                       <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
                       Informações da Atividade
@@ -1892,8 +1892,8 @@ const EditActivityModal = ({
                         );
                       })()}
                     </div>
-                  </CardContent>
-                </Card>
+                  </UICardContent>
+                </UICard>
 
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">

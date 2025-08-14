@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { UICard as Card, UICardContent as CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Wand2, Play } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -65,10 +64,10 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
     try {
       const generationData = prepareGenerationData();
       const generatedQuadros = await QuadroContentGenerator.generateQuadrosContent(generationData);
-      
+
       setQuadros(generatedQuadros);
       setHasGenerated(true);
-      
+
       if (onContentGenerated) {
         onContentGenerated(generatedQuadros);
       }
@@ -114,7 +113,7 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
     try {
       const generationData = prepareGenerationData();
       const quadroToRegenerate = quadros.find(q => q.id === quadroId);
-      
+
       if (!quadroToRegenerate) {
         throw new Error('Quadro não encontrado');
       }
@@ -154,7 +153,7 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
 
   const handleDeleteQuadro = (quadroId: string) => {
     console.log('🗑️ Excluindo quadro:', quadroId);
-    
+
     const updatedQuadros = quadros.filter(q => q.id !== quadroId);
     setQuadros(updatedQuadros);
 
@@ -186,7 +185,7 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
                 Visualize como organizar o conteúdo no quadro durante a aula
               </p>
             </div>
-            
+
             <div className="flex space-x-2">
               {!hasGenerated && (
                 <Button
@@ -207,7 +206,7 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
                   )}
                 </Button>
               )}
-              
+
               {hasGenerated && (
                 <Button
                   onClick={handleGenerateQuadros}
@@ -254,7 +253,7 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
             <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">
               Conteúdo dos Quadros
             </h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {quadros.map((quadro, index) => (
                 <div key={quadro.id} className="space-y-2">
@@ -266,11 +265,11 @@ const QuadroInterativoBuilder: React.FC<QuadroInterativoBuilderProps> = ({
                       {quadro.title}
                     </h5>
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs text-gray-600 dark:text-gray-400 max-h-24 overflow-y-auto">
                     {quadro.content}
                   </div>
-                  
+
                   {isRegenerating === quadro.id && (
                     <div className="flex items-center space-x-1 text-xs text-blue-600">
                       <Loader2 className="w-3 h-3 animate-spin" />
