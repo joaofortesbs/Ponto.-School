@@ -17,8 +17,6 @@ import { useGenerateActivity } from './hooks/useGenerateActivity';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
-import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
-import { SequenciaDidaticaGenerator } from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaGenerator';
 import { CheckCircle2 } from 'lucide-react';
 
 // Função para processar dados da lista de exercícios
@@ -163,28 +161,8 @@ const EditActivityModal = ({
   // Substitua por uma chamada real à API ou lógica de geração
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Simulando geração de conteúdo para tipo: ${type} com dados:`, data);
-    
-    // Tratamento específico para Sequência Didática
-    if (type === 'sequencia-didatica') {
-      console.log('📚 Usando SequenciaDidaticaGenerator');
-      try {
-        const result = await SequenciaDidaticaGenerator.generate(data);
-        return {
-          success: true,
-          data: result
-        };
-      } catch (error) {
-        console.error('❌ Erro na geração da Sequência Didática:', error);
-        return {
-          success: false,
-          error: error.message
-        };
-      }
-    }
-
-    // Simulação de retorno bem-sucedido para outras atividades
+    // Simulação de retorno bem-sucedido
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simula latência da API
-    
     if (type === 'plano-aula') {
       return {
         success: true,
@@ -1519,11 +1497,10 @@ const EditActivityModal = ({
                         onRegenerateContent={handleRegenerateContent}
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
-                      <SequenciaDidaticaPreview
-                        data={generatedContent}
-                        activityData={activity}
-                        isGenerating={isBuilding}
-                      />
+                      // Placeholder para visualização de Sequência Didática, se necessário
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">Visualização da Sequência Didática em desenvolvimento...</p>
+                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent}

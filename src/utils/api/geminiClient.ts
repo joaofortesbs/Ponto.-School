@@ -1,142 +1,110 @@
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
 
-const API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
-
-if (!API_KEY) {
-  console.error('❌ API Key do Gemini não encontrada');
-  throw new Error('API Key do Gemini é obrigatória');
-}
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-
-interface GenerationConfig {
+export interface GeminiRequest {
+  prompt: string;
   temperature?: number;
-  topK?: number;
+  maxTokens?: number;
   topP?: number;
-  maxOutputTokens?: number;
+  topK?: number;
 }
 
-class GeminiClient {
-  private model: any;
-  private defaultConfig: GenerationConfig;
+export interface GeminiResponse {
+  success: boolean;
+  result: string;
+  estimatedTokens: number;
+  estimatedPowerCost: number;
+  executionTime: number;
+  error?: string;
+}
+
+export class GeminiClient {
+  private apiKey: string;
+  private baseUrl: string;
 
   constructor() {
-    try {
-      this.model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        },
-      });
-      
-      this.defaultConfig = {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      };
-      
-      console.log('✅ Gemini Client inicializado com sucesso');
-    } catch (error) {
-      console.error('❌ Erro ao inicializar Gemini Client:', error);
-      throw error;
-    }
+    this.apiKey = API_KEYS.GEMINI;
+    this.baseUrl = API_URLS.GEMINI;
   }
 
-  async generateContent(prompt: string, config?: GenerationConfig): Promise<any> {
+  /**
+   * Faz requisição para a API Gemini
+   */
+  async generate(request: GeminiRequest): Promise<GeminiResponse> {
+    const startTime = Date.now();
+    
     try {
-      console.log('🚀 Enviando prompt para Gemini:', prompt.substring(0, 200) + '...');
-      
-      if (!prompt || prompt.trim().length === 0) {
-        throw new Error('Prompt não pode estar vazio');
+      if (!this.apiKey) {
+        throw new Error('Chave da API Gemini não configurada');
       }
 
-      const finalConfig = { ...this.defaultConfig, ...config };
-      
-      // Configurar o modelo com as configurações específicas
-      const modelWithConfig = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        generationConfig: finalConfig,
+      const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: request.prompt }]
+          }],
+          generationConfig: {
+            temperature: request.temperature || 0.7,
+            topP: request.topP || 0.8,
+            topK: request.topK || 40,
+            maxOutputTokens: request.maxTokens || 2048,
+          }
+        }),
+        signal: AbortSignal.timeout(API_CONFIG.timeout)
       });
 
-      const result = await modelWithConfig.generateContent(prompt);
-      
-      if (!result || !result.response) {
-        throw new Error('Resposta vazia da API Gemini');
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
       }
 
-      const response = result.response;
-      const text = response.text();
-      
-      if (!text || text.trim().length === 0) {
-        throw new Error('Texto de resposta vazio');
+      const data = await response.json();
+      const executionTime = Date.now() - startTime;
+
+      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+        throw new Error('Resposta inválida da API Gemini');
       }
 
-      console.log('✅ Resposta recebida do Gemini:', text.substring(0, 200) + '...');
+      const responseText = data.candidates[0].content.parts[0].text;
+      const estimatedTokens = this.estimateTokens(request.prompt + responseText);
+      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GEMINI;
+
+      return {
+        success: true,
+        result: responseText,
+        estimatedTokens,
+        estimatedPowerCost,
+        executionTime,
+      };
+
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
       
       return {
-        text: () => text,
-        response: response
+        success: false,
+        result: '',
+        estimatedTokens: 0,
+        estimatedPowerCost: 0,
+        executionTime,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
       };
-
-    } catch (error: any) {
-      console.error('❌ Erro ao gerar conteúdo com Gemini:', error);
-      
-      // Tratamento específico para diferentes tipos de erro
-      if (error.message?.includes('API_KEY')) {
-        throw new Error('Erro de autenticação com a API Gemini');
-      } else if (error.message?.includes('QUOTA')) {
-        throw new Error('Limite de uso da API Gemini excedido');
-      } else if (error.message?.includes('SAFETY')) {
-        throw new Error('Conteúdo bloqueado por filtros de segurança');
-      } else {
-        throw new Error(`Erro na API Gemini: ${error.message || 'Erro desconhecido'}`);
-      }
     }
   }
 
-  async generateWithRetry(prompt: string, maxRetries: number = 3, config?: GenerationConfig): Promise<any> {
-    let lastError: Error;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`🔄 Tentativa ${attempt}/${maxRetries} de geração`);
-        const result = await this.generateContent(prompt, config);
-        return result;
-      } catch (error: any) {
-        lastError = error;
-        console.warn(`⚠️ Tentativa ${attempt} falhou:`, error.message);
-        
-        if (attempt < maxRetries) {
-          // Aguardar antes da próxima tentativa (backoff exponencial)
-          const delay = Math.pow(2, attempt) * 1000;
-          console.log(`⏳ Aguardando ${delay}ms antes da próxima tentativa...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    }
-    
-    throw lastError!;
+  /**
+   * Estimativa básica de tokens (aproximadamente 4 caracteres por token)
+   */
+  private estimateTokens(text: string): number {
+    return Math.ceil(text.length / 4);
   }
 
-  // Método para verificar se a API está funcionando
-  async healthCheck(): Promise<boolean> {
-    try {
-      const result = await this.generateContent('Teste de conectividade. Responda apenas "OK".');
-      return !!result && !!result.text;
-    } catch (error) {
-      console.error('❌ Health check falhou:', error);
-      return false;
-    }
+  /**
+   * Atualiza a chave da API
+   */
+  updateApiKey(newKey: string): void {
+    this.apiKey = newKey;
   }
 }
-
-// Instância singleton
-export const geminiClient = new GeminiClient();
-
-// Export para compatibilidade
-export default geminiClient;

@@ -1,180 +1,150 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Target, BookOpen, FileText, Brain } from 'lucide-react';
-import { SequenciaDidaticaResult, SequenciaDidaticaAula } from './SequenciaDidaticaBuilder';
-import { AulaCard } from './components/AulaCard';
-import { DiagnosticoCard } from './components/DiagnosticoCard';
-import { AvaliacaoCard } from './components/AvaliacaoCard';
-import { SequenciaDidaticaHeader } from './components/SequenciaDidaticaHeader';
+import { Clock, Target, BookOpen, Users, Calendar, FileText, BarChart3 } from 'lucide-react';
 
 interface SequenciaDidaticaPreviewProps {
-  data?: SequenciaDidaticaResult | null;
-  isLoading?: boolean;
-  onSave?: () => void;
-  onEdit?: () => void;
+  data: {
+    tituloTemaAssunto?: string;
+    anoSerie?: string;
+    disciplina?: string;
+    bnccCompetencias?: string;
+    publicoAlvo?: string;
+    objetivosAprendizagem?: string;
+    quantidadeAulas?: string;
+    quantidadeDiagnosticos?: string;
+    quantidadeAvaliacoes?: string;
+    cronograma?: string;
+  };
 }
 
-export function SequenciaDidaticaPreview({ 
-  data, 
-  isLoading = false, 
-  onSave, 
-  onEdit 
-}: SequenciaDidaticaPreviewProps) {
-  const [displayData, setDisplayData] = useState<SequenciaDidaticaResult | null>(null);
-
-  useEffect(() => {
-    console.log('🎯 SequenciaDidaticaPreview: Dados recebidos:', data);
-
-    if (data) {
-      setDisplayData(data);
-    } else {
-      // Tentar carregar dados do localStorage como fallback
-      try {
-        const keys = Object.keys(localStorage).filter(key => 
-          key.startsWith('sequencia_didatica_')
-        );
-
-        if (keys.length > 0) {
-          const latestKey = keys.sort().pop();
-          const storedData = localStorage.getItem(latestKey!);
-          if (storedData) {
-            const parsedData = JSON.parse(storedData);
-            console.log('📂 Dados carregados do localStorage:', parsedData);
-            setDisplayData(parsedData);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Erro ao carregar dados do localStorage:', error);
-      }
-    }
-  }, [data]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-gray-600 dark:text-gray-300">
-              Gerando sequência didática...
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!displayData || !displayData.aulas || displayData.aulas.length === 0) {
-    return (
-      <div className="space-y-6">
-        <Card className="border-orange-200 dark:border-orange-800">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
-              <BookOpen className="w-8 h-8 text-orange-600 dark:text-orange-400" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Nenhuma sequência didática encontrada
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-              Configure os dados nos campos acima e clique em "Gerar Sequência" para criar sua sequência didática personalizada.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const renderCard = (aula: SequenciaDidaticaAula, index: number) => {
-    const baseProps = {
-      key: aula.id,
-      aula,
-      index,
-      onEdit: () => onEdit?.(),
-    };
-
-    switch (aula.tipo) {
-      case 'Diagnostico':
-        return <DiagnosticoCard {...baseProps} />;
-      case 'Avaliacao':
-        return <AvaliacaoCard {...baseProps} />;
-      default:
-        return <AulaCard {...baseProps} />;
-    }
-  };
-
-  const organizeAulasByRows = (aulas: SequenciaDidaticaAula[]) => {
-    const rows: SequenciaDidaticaAula[][] = [];
-    for (let i = 0; i < aulas.length; i += 3) {
-      rows.push(aulas.slice(i, i + 3));
-    }
-    return rows;
-  };
-
-  const aulasSorted = [...displayData.aulas].sort((a, b) => a.ordem - b.ordem);
-  const aulasRows = organizeAulasByRows(aulasSorted);
-
+export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ data }) => {
   return (
     <div className="space-y-6">
-      {/* Header com informações gerais */}
-      <SequenciaDidaticaHeader 
-        metadados={displayData.metadados}
-        totalAulas={displayData.aulas.length}
-      />
+      {/* Cabeçalho */}
+      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <BookOpen className="h-5 w-5" />
+            {data.tituloTemaAssunto || 'Sequência Didática'}
+          </CardTitle>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {data.disciplina && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                {data.disciplina}
+              </Badge>
+            )}
+            {data.anoSerie && (
+              <Badge variant="outline" className="border-blue-300 text-blue-700">
+                {data.anoSerie}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+      </Card>
 
-      {/* Grid de aulas organizadas */}
-      <div className="space-y-4">
-        {aulasRows.map((row, rowIndex) => (
-          <motion.div
-            key={rowIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: rowIndex * 0.1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {row.map((aula, index) => renderCard(aula, rowIndex * 3 + index))}
-          </motion.div>
-        ))}
+      {/* Informações Gerais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {data.publicoAlvo && (
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-4 w-4 text-green-600" />
+                <span className="font-medium text-sm">Público-alvo</span>
+              </div>
+              <p className="text-sm text-gray-600">{data.publicoAlvo}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {data.bnccCompetencias && (
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-4 w-4 text-purple-600" />
+                <span className="font-medium text-sm">BNCC / Competências</span>
+              </div>
+              <p className="text-sm text-gray-600">{data.bnccCompetencias}</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      {/* Footer com ações */}
-      {(onSave || onEdit) && (
-        <Card className="border-gray-200 dark:border-gray-700">
-          <CardContent className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Sequência didática gerada com sucesso
-              </span>
+      {/* Objetivos de Aprendizagem */}
+      {data.objetivosAprendizagem && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Target className="h-4 w-4 text-orange-600" />
+              Objetivos de Aprendizagem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-gray-600 whitespace-pre-line">
+              {data.objetivosAprendizagem}
             </div>
-            <div className="flex items-center gap-3">
-              {onEdit && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={onEdit}
-                  className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-900/20"
-                >
-                  Editar
-                </Button>
-              )}
-              {onSave && (
-                <Button 
-                  size="sm"
-                  onClick={onSave}
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
-                >
-                  Salvar Sequência
-                </Button>
-              )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quantidades */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {data.quantidadeAulas && (
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <Clock className="h-6 w-6 text-blue-600" />
+                <span className="text-2xl font-bold text-blue-600">{data.quantidadeAulas}</span>
+                <span className="text-sm text-gray-600">Aulas</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {data.quantidadeDiagnosticos && (
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+                <span className="text-2xl font-bold text-green-600">{data.quantidadeDiagnosticos}</span>
+                <span className="text-sm text-gray-600">Diagnósticos</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {data.quantidadeAvaliacoes && (
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <FileText className="h-6 w-6 text-purple-600" />
+                <span className="text-2xl font-bold text-purple-600">{data.quantidadeAvaliacoes}</span>
+                <span className="text-sm text-gray-600">Avaliações</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Cronograma */}
+      {data.cronograma && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-indigo-600" />
+              Cronograma
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm text-gray-600 whitespace-pre-line">
+              {data.cronograma}
             </div>
           </CardContent>
         </Card>
       )}
     </div>
   );
-}
+};
 
 export default SequenciaDidaticaPreview;

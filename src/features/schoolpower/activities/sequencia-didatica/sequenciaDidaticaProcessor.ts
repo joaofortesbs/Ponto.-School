@@ -13,8 +13,7 @@ export interface SequenciaDidaticaActivity {
   personalizedDescription?: string;
 }
 
-// Processador de dados para Sequência Didática
-export interface SequenciaDidaticaFormData {
+export interface SequenciaDidaticaData {
   tituloTemaAssunto: string;
   anoSerie: string;
   disciplina: string;
@@ -29,32 +28,46 @@ export interface SequenciaDidaticaFormData {
 
 export const sequenciaDidaticaFieldMapping = {
   'Título do Tema / Assunto': 'tituloTemaAssunto',
+  'tituloTemaAssunto': 'tituloTemaAssunto',
   'Ano / Série': 'anoSerie',
+  'anoSerie': 'anoSerie',
   'Disciplina': 'disciplina',
+  'disciplina': 'disciplina',
   'BNCC / Competências': 'bnccCompetencias',
+  'bnccCompetencias': 'bnccCompetencias',
   'Público-alvo': 'publicoAlvo',
+  'publicoAlvo': 'publicoAlvo',
   'Objetivos de Aprendizagem': 'objetivosAprendizagem',
+  'objetivosAprendizagem': 'objetivosAprendizagem',
   'Quantidade de Aulas': 'quantidadeAulas',
+  'quantidadeAulas': 'quantidadeAulas',
   'Quantidade de Diagnósticos': 'quantidadeDiagnosticos',
+  'quantidadeDiagnosticos': 'quantidadeDiagnosticos',
   'Quantidade de Avaliações': 'quantidadeAvaliacoes',
-  'Cronograma': 'cronograma'
+  'quantidadeAvaliacoes': 'quantidadeAvaliacoes',
+  'Cronograma': 'cronograma',
+  'cronograma': 'cronograma'
 };
 
-export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaFormData {
-  console.log('🔄 Processando dados da Sequência Didática:', activityData);
+/**
+ * Processa dados de uma atividade de Sequência Didática do Action Plan
+ * para o formato do formulário do modal
+ */
+export function processSequenciaDidaticaData(activityData: any): SequenciaDidaticaData {
+  console.log('📚 Processando dados da Sequência Didática:', activityData);
 
   const customFields = activityData.customFields || {};
 
   return {
-    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || activityData.title || '',
-    anoSerie: customFields['Ano / Série'] || activityData.schoolYear || '',
-    disciplina: customFields['Disciplina'] || activityData.subject || '',
+    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+    anoSerie: customFields['Ano / Série'] || '',
+    disciplina: customFields['Disciplina'] || '',
     bnccCompetencias: customFields['BNCC / Competências'] || '',
-    publicoAlvo: customFields['Público-alvo'] || activityData.targetAudience || '',
-    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || activityData.objectives || '',
-    quantidadeAulas: customFields['Quantidade de Aulas'] || '3',
-    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '1',
-    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '1',
+    publicoAlvo: customFields['Público-alvo'] || '',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
     cronograma: customFields['Cronograma'] || ''
   };
 }
