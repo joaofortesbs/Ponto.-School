@@ -1,66 +1,81 @@
 
-import SequenciaDidaticaBuilder, { SequenciaDidaticaData, SequenciaDidaticaResult } from './SequenciaDidaticaBuilder';
+import SequenciaDidaticaBuilder, { 
+  SequenciaDidaticaData, 
+  SequenciaDidaticaResult,
+  SequenciaDidaticaAula 
+} from './SequenciaDidaticaBuilder';
 
 export class SequenciaDidaticaGenerator {
-  static async generate(formData: any): Promise<SequenciaDidaticaResult> {
-    console.log('🎯 SequenciaDidaticaGenerator: Iniciando geração com dados:', formData);
-
-    // Mapear dados do formulário para o formato esperado
-    const sequenciaData: SequenciaDidaticaData = {
-      tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-      anoSerie: formData.anoSerie || formData.schoolYear || '',
-      disciplina: formData.disciplina || formData.subject || '',
-      bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-      publicoAlvo: formData.publicoAlvo || formData.context || '',
-      objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-      quantidadeAulas: formData.quantidadeAulas || '3',
-      quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-      quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
-      cronograma: formData.cronograma || ''
-    };
-
-    console.log('📋 Dados mapeados para geração:', sequenciaData);
-
+  static async generate(formData: SequenciaDidaticaData): Promise<SequenciaDidaticaResult> {
     try {
-      const result = await SequenciaDidaticaBuilder.generateSequenciaDidatica(sequenciaData);
+      console.log('🎯 SequenciaDidaticaGenerator: Iniciando geração com dados:', formData);
       
-      // Salvar no localStorage para visualização
-      const storageKey = `sequencia_didatica_content_${Date.now()}`;
+      // Validar dados obrigatórios
+      if (!formData.tituloTemaAssunto || !formData.disciplina || !formData.anoSerie) {
+        throw new Error('Dados obrigatórios ausentes para geração da sequência didática');
+      }
+
+      // Usar o builder para gerar a sequência
+      const result = await SequenciaDidaticaBuilder.generateSequenciaDidatica(formData);
+      
+      console.log('✅ SequenciaDidaticaGenerator: Sequência gerada com sucesso');
+      
+      // Salvar no localStorage para acesso posterior
+      const storageKey = `sequencia_didatica_generated_${Date.now()}`;
       localStorage.setItem(storageKey, JSON.stringify(result));
       
-      console.log('✅ Sequência Didática gerada e salva:', result);
       return result;
       
     } catch (error) {
-      console.error('❌ Erro na geração da Sequência Didática:', error);
+      console.error('❌ SequenciaDidaticaGenerator: Erro na geração:', error);
       throw error;
     }
   }
 
   static async loadFromStorage(activityId: string): Promise<SequenciaDidaticaResult | null> {
     try {
+      // Tentar carregar dados salvos
       const keys = Object.keys(localStorage).filter(key => 
-        key.startsWith('sequencia_didatica_content_') || 
-        key === `activity_${activityId}` ||
-        key === `constructed_sequencia-didatica_${activityId}`
+        key.startsWith('sequencia_didatica_') && key.includes(activityId)
       );
-
-      for (const key of keys) {
-        const data = localStorage.getItem(key);
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (parsed.aulas) {
-            return parsed;
-          }
-        }
+      
+      if (keys.length > 0) {
+        const data = localStorage.getItem(keys[0]);
+        return data ? JSON.parse(data) : null;
       }
-
+      
       return null;
     } catch (error) {
-      console.error('❌ Erro ao carregar Sequência Didática do storage:', error);
+      console.error('❌ Erro ao carregar sequência do storage:', error);
       return null;
     }
   }
-}
 
-export default SequenciaDidaticaGenerator;
+  static validateResult(result: SequenciaDidaticaResult): boolean {
+    try {
+      if (!result || !result.aulas || !Array.isArray(result.aulas)) {
+        return false;
+      }
+
+      if (!result.metadados) {
+        return false;
+      }
+
+      // Validar cada aula
+      for (const aula of result.aulas) {
+        if (!aula.id || !aula.tipo || !aula.titulo || !aula.objetivo || !aula.resumo) {
+          return false;
+        }
+        
+        if (!['Aula', 'Diagnostico', 'Avaliacao'].includes(aula.tipo)) {
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Erro na validação da sequência:', error);
+      return false;
+    }
+  }
+}

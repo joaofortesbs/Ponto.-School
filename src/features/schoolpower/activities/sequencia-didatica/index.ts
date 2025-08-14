@@ -4,7 +4,7 @@ export { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from './s
 
 // Exportar o builder para uso externo
 export { default as SequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
-export { SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
-
-// Exportar tipos
 export type { SequenciaDidaticaAula, SequenciaDidaticaData, SequenciaDidaticaResult } from './SequenciaDidaticaBuilder';
+
+// Exportar o generator
+export { SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
