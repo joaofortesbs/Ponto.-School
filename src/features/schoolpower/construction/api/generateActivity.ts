@@ -419,65 +419,20 @@ Responda APENAS com o JSON, sem texto adicional.`;
   }
 };
 
-// Função auxiliar para gerar o conteúdo da atividade de Sequência Didática
+// Função auxiliar para gerar o conteúdo da atividade de Sequência Didática usando IA
 async function generateSequenciaDidaticaContent(contextData: SequenciaDidaticaPromptData): Promise<SequenciaDidaticaGeneratedContent> {
   console.log('🧬 Iniciando geração de Sequência Didática com Gemini...');
-  const geminiClient = new GeminiClient();
-
-  const prompt = await sequenciaDidaticaGenerator.buildPrompt(contextData);
-
-  console.log('📝 Prompt para Sequência Didática:', prompt.substring(0, 500) + '...');
-
-  const response = await geminiClient.generate({
-    prompt,
-    temperature: 0.8,
-    maxTokens: 4000,
-    topP: 0.9,
-    topK: 40
-  });
-
-  if (response.success) {
-    console.log('✅ Resposta recebida do Gemini para Sequência Didática');
-    let cleanedResponse = response.result.trim();
-
-    // Limpeza específica para a resposta de Sequência Didática
-    cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-    const jsonStart = cleanedResponse.indexOf('{');
-    const jsonEnd = cleanedResponse.lastIndexOf('}');
-
-    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-      cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-    }
-
-    try {
-      const parsedData = JSON.parse(cleanedResponse) as SequenciaDidaticaGeneratedContent;
-
-      // Validação básica
-      if (!parsedData.aulas || !Array.isArray(parsedData.aulas) || parsedData.aulas.length === 0) {
-        throw new Error('Estrutura de aulas inválida ou vazia na resposta da IA.');
-      }
-
-      parsedData.aulas.forEach((aula: any, index: number) => {
-        if (!aula.titulo || !aula.tipo || !aula.objetivo || !aula.resumo) {
-          console.warn(`Aula ${index + 1} na Sequência Didática está incompleta:`, aula);
-        }
-      });
-
-      parsedData.isGeneratedByAI = true;
-      parsedData.generatedAt = new Date().toISOString();
-
-      console.log('✅ Sequência Didática gerada com sucesso!');
-      return parsedData;
-
-    } catch (parseError) {
-      console.error('❌ Erro ao parsear a resposta da Sequência Didática:', parseError);
-      console.error('Conteúdo para parse:', cleanedResponse);
-      throw new Error('Falha ao processar a resposta da IA para Sequência Didática.');
-    }
-
-  } else {
-    console.error('❌ Erro na API Gemini para Sequência Didática:', response.error);
-    throw new Error(response.error || 'Falha na geração da Sequência Didática.');
+  
+  try {
+    // Usar o gerador oficial de Sequência Didática
+    const generatedContent = await sequenciaDidaticaGenerator.generateSequenciaDidatica(contextData);
+    
+    console.log('✅ Sequência Didática gerada com sucesso pela IA!');
+    return generatedContent;
+    
+  } catch (error) {
+    console.error('❌ Erro ao gerar Sequência Didática via IA:', error);
+    throw new Error('Falha na geração da Sequência Didática via IA: ' + error.message);
   }
 }
 
@@ -486,6 +441,23 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
   console.log('🎯 generateActivity: Iniciando geração com formData:', formData);
 
   let generatedContent: any;
+
+  // Validação específica para Sequência Didática
+  if (formData.typeId === 'sequencia-didatica') {
+    console.log('🎯 Detectada solicitação de Sequência Didática');
+    
+    // Verificar campos obrigatórios
+    const requiredFields = ['title', 'subject', 'schoolYear'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('❌ Campos obrigatórios ausentes para Sequência Didática:', missingFields);
+      return {
+        success: false,
+        error: `Campos obrigatórios ausentes: ${missingFields.join(', ')}`
+      };
+    }
+  }
 
   // Lógica para determinar o tipo de atividade e gerar conteúdo específico
   switch (formData.typeId) {
@@ -628,7 +600,7 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
       };
       break;
     case 'sequencia-didatica':
-      // Lógica para gerar sequência didática
+      // Lógica para gerar sequência didática usando IA do Gemini
       const sequenciaDidaticaContext: SequenciaDidaticaPromptData = {
         tituloTemaAssunto: formData.title || formData.theme || 'Assunto Geral',
         anoSerie: formData.schoolYear || 'Ensino Fundamental',
@@ -641,7 +613,15 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
         quantidadeAvaliacoes: formData.numberOfAssessmentLessons || '1',
         cronograma: formData.schedule || 'Semanal'
       };
-      generatedContent = await generateSequenciaDidaticaContent(sequenciaDidaticaContext);
+      
+      try {
+        console.log('🎯 Gerando Sequência Didática via IA do Gemini...');
+        generatedContent = await sequenciaDidaticaGenerator.generateSequenciaDidatica(sequenciaDidaticaContext);
+        console.log('✅ Sequência Didática gerada com sucesso pela IA');
+      } catch (error) {
+        console.error('❌ Erro ao gerar Sequência Didática via IA:', error);
+        throw new Error('Falha na geração da Sequência Didática via IA');
+      }
       break;
     default:
       // Lógica padrão para outros tipos de atividade (ou se não especificado)

@@ -89,7 +89,7 @@ export class SequenciaDidaticaGenerator {
       console.log('📊 Estimativa de tokens:', response.estimatedTokens);
 
       // Processar resposta da IA
-      const generatedContent = this.parseGeminiResponse(response.content);
+      const generatedContent = this.parseGeminiResponse(response.result || response.content);
 
       // Validar conteúdo gerado
       this.validateGeneratedContent(generatedContent, promptData);

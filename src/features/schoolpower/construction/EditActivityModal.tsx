@@ -204,6 +204,40 @@ const EditActivityModal = ({
           isGeneratedByAI: true,
         }
       };
+    } else if (type === 'sequencia-didatica') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.tituloTemaAssunto || "Sequência Didática Exemplo",
+          description: data.objetivosAprendizagem || "Descrição da sequência didática...",
+          content: {
+            tituloTemaAssunto: data.tituloTemaAssunto,
+            anoSerie: data.anoSerie,
+            disciplina: data.disciplina,
+            bnccCompetencias: data.bnccCompetencias,
+            publicoAlvo: data.publicoAlvo,
+            objetivosAprendizagem: data.objetivosAprendizagem,
+            quantidadeAulas: data.quantidadeAulas,
+            quantidadeDiagnosticos: data.quantidadeDiagnosticos,
+            quantidadeAvaliacoes: data.quantidadeAvaliacoes,
+            cronograma: data.cronograma,
+            // Adicionar campos que podem ter sido preenchidos no formData geral
+            subject: data.subject,
+            theme: data.theme,
+            schoolYear: data.schoolYear,
+            competencies: data.competencies,
+            objectives: data.objectives,
+            materials: data.materials,
+            instructions: data.instructions,
+            evaluation: data.evaluation,
+            timeLimit: data.timeLimit,
+            context: data.context,
+          },
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
     }
     // Simulação de retorno genérico
     return {
@@ -242,17 +276,27 @@ const EditActivityModal = ({
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const savedContent = localStorage.getItem(`activity_${activity.id}`);
       const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`); // Chave específica para plano-aula
+      const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`); // Chave específica para sequencia-didatica
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
         hasSavedContent: !!savedContent,
         hasPlanoAulaSavedContent: !!planoAulaSavedContent,
+        hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
         activityId: activity.id
       });
 
-      // Priorizar o conteúdo específico do plano de aula se existir
+      // Priorizar o conteúdo específico mais recente
       let contentToLoad = null;
-      if (activity.id === 'plano-aula' && planoAulaSavedContent) {
+      if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
+        try {
+          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
+          console.log(`✅ Conteúdo específico da Sequência Didática encontrado para: ${activity.id}`);
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico da Sequência Didática:', error);
+          console.error('📄 Conteúdo que causou erro:', sequenciaDidaticaSavedContent);
+        }
+      } else if (activity.id === 'plano-aula' && planoAulaSavedContent) {
         try {
           contentToLoad = JSON.parse(planoAulaSavedContent);
           console.log(`✅ Conteúdo específico do plano-aula encontrado para: ${activity.id}`);
@@ -959,6 +1003,22 @@ const EditActivityModal = ({
       if (onUpdateActivity) {
         await onUpdateActivity(updatedActivity);
       }
+
+      // Salvar no localStorage
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updatedActivity));
+      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields));
+
+      // Para Sequência Didática, salvar também como atividade construída
+      if (activity.categoryId === 'sequencia-didatica' || activity.type === 'sequencia-didatica') {
+        const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
+        localStorage.setItem(constructedKey, JSON.stringify(updatedActivity));
+        console.log('📚 Sequência Didática salva como atividade construída');
+      }
+
+      console.log('💾 Dados salvos no localStorage:', {
+        activity: updatedActivity,
+        fields: customFields
+      });
 
       toast({
         title: "Atividade atualizada",
