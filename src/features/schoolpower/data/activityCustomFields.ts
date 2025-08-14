@@ -1,3 +1,7 @@
+import { sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
+import { planoAulaFieldMapping } from '../activities/plano-aula/fieldMapping';
+import { quadroInterativoFieldMapping } from '../activities/quadro-interativo/fieldMapping';
+
 export const activityCustomFields: Record<string, string[]> = {
   "lista-exercicios": [
     "tema",
@@ -184,7 +188,7 @@ export function getCustomFieldsForActivity(activityId: string): Record<string, a
   if (activityId === 'lista-exercicios') {
     return getListaExerciciosCustomFields();
   }
-  
+
   // Campos específicos para sequência didática
   if (activityId === 'sequencia-didatica') {
     return getSequenciaDidaticaCustomFields();

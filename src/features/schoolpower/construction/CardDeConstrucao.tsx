@@ -52,6 +52,7 @@ import { getCustomFieldsForActivity, hasCustomFields } from '../data/activityCus
 import { EditActivityModal } from './EditActivityModal';
 import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
 import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
+import { processQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -688,7 +689,7 @@ export function CardDeConstrucao({
       // Preparar dados automáticos para preenchimento do modal com mapeamento completo
           const autoDataKey = `auto_activity_data_${activity.id}`;
 
-      // Processamento específico para Sequência Didática
+      // Processamento específico para diferentes tipos de atividades
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
         autoFormData = processSequenciaDidaticaData({
@@ -699,6 +700,15 @@ export function CardDeConstrucao({
         });
         
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
+      } else if (activity.id === 'quadro-interativo') {
+        autoFormData = processQuadroInterativoData({
+          id: activity.id,
+          title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+          description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+          customFields: customFields
+        });
+        
+        console.log('🔧 Dados processados para Quadro Interativo:', autoFormData);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {

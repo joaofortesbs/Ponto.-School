@@ -1,4 +1,7 @@
 import { lazy, LazyExoticComponent, FC } from 'react';
+import { processSequenciaDidaticaData } from './sequencia-didatica';
+import { PlanoAulaProcessor } from './plano-aula/planoAulaProcessor';
+import { processQuadroInterativoData } from './quadro-interativo/quadroInterativoProcessor';
 
 export interface ActivityComponentSet {
   editor: LazyExoticComponent<FC<any>>;
@@ -74,6 +77,17 @@ export const activityRegistry: ActivityRegistryType = {
     editor: lazy(() => import("./default/EditActivity")),
     preview: lazy(() => import("./default/ActivityPreview")),
   },
+  // Adicionar quadro-interativo à atividade
+  "quadro-interativo": {
+    editor: lazy(() => import("./quadro-interativo/EditActivity")),
+    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview")),
+  },
+};
+
+export const activityProcessors = {
+  'sequencia-didatica': processSequenciaDidaticaData,
+  'plano-aula': PlanoAulaProcessor,
+  'quadro-interativo': processQuadroInterativoData
 };
 
 // Função para verificar se uma atividade existe no registro

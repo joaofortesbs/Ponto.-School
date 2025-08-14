@@ -168,7 +168,16 @@ IMPORTANT:
 - Field data must be specific, realistic, and contextualized
 - DO NOT include explanations before or after the JSON
 - DO NOT use markdown or formatting
-- Return ONLY the valid JSON array`;
+- Return ONLY the valid JSON array
+
+        IMPORTANTE: Para atividades do tipo "quadro-interativo", use OBRIGATORIAMENTE estes campos específicos:
+        - "Disciplina / Área de conhecimento"
+        - "Ano / Série"
+        - "Tema ou Assunto da aula"
+        - "Objetivo de aprendizagem da aula"
+        - "Nível de Dificuldade"
+        - "Atividade mostrada" (deve conter apenas atividades válidas do School Power disponíveis)
+`;
 
   return prompt;
 }

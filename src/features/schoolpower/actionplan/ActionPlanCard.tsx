@@ -288,6 +288,95 @@ const renderSequenciaDidaticaFields = (customFields: Record<string, string>) => 
   );
 };
 
+// Componente para renderizar os campos específicos do Quadro Interativo
+const QuadroInterativoFieldsRenderer = ({ customFields }: { customFields: Record<string, string> }) => {
+  console.log('🔳 [ActionPlanCard] Renderizando campos quadro-interativo:', customFields);
+
+  // Helper function para garantir que valores sejam strings e tratar campos ausentes
+  const safeString = (value: any, defaultValue = ''): string => {
+    if (value === null || value === undefined) return defaultValue;
+    if (typeof value === 'object') {
+      // Tentar extrair propriedades comuns se for um objeto complexo
+      if (value.name) return String(value.name);
+      if (value.title) return String(value.title);
+      if (value.description) return String(value.description);
+      return JSON.stringify(value); // Fallback para stringify se não reconhecer
+    }
+    return String(value);
+  };
+
+  // Campos requeridos para o Quadro Interativo
+  const disciplina = safeString(customFields['Disciplina / Área de conhecimento'] || customFields['disciplina'] || '');
+  const anoSerie = safeString(customFields['Ano / Série'] || customFields['anoSerie'] || '');
+  const temaAssunto = safeString(customFields['Tema ou Assunto da aula'] || customFields['temaAssunto'] || '');
+  const objetivoAprendizagem = safeString(customFields['Objetivo de aprendizagem da aula'] || customFields['objetivoAprendizagem'] || '');
+  const nivelDificuldade = safeString(customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || '');
+  const atividadeMostrada = safeString(customFields['Atividade mostrada'] || customFields['atividadeMostrada'] || '');
+
+  return (
+    <div className="space-y-3 p-4 border border-indigo-200 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-900/50 rounded-lg">
+      {/* Título principal da atividade */}
+      {temaAssunto && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-1">Tema ou Assunto da Aula</div>
+          <div className="text-sm font-medium text-indigo-900 dark:text-indigo-100 bg-indigo-100 dark:bg-indigo-800 px-3 py-2 rounded-lg border border-indigo-300 dark:border-indigo-600">{temaAssunto}</div>
+        </div>
+      )}
+
+      {/* Campos em formato de grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {disciplina && (
+          <div>
+            <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-1">Disciplina / Área</div>
+            <div className="text-sm text-indigo-800 dark:text-indigo-200 bg-indigo-200 dark:bg-indigo-700 px-2 py-1 rounded">{disciplina}</div>
+          </div>
+        )}
+        {anoSerie && (
+          <div>
+            <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-1">Ano / Série</div>
+            <div className="text-sm text-indigo-800 dark:text-indigo-200 bg-indigo-200 dark:bg-indigo-700 px-2 py-1 rounded">{anoSerie}</div>
+          </div>
+        )}
+      </div>
+
+      {objetivoAprendizagem && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-1">Objetivo de Aprendizagem</div>
+          <div className="text-sm text-indigo-800 dark:text-indigo-200 bg-indigo-200 dark:bg-indigo-700 px-2 py-1 rounded">{objetivoAprendizagem}</div>
+        </div>
+      )}
+
+      {nivelDificuldade && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-1">Nível de Dificuldade</div>
+          <Badge variant="solid" className="text-xs px-3 py-1 bg-indigo-500 text-white">{nivelDificuldade}</Badge>
+        </div>
+      )}
+
+      {atividadeMostrada && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-1">Atividade Sugerida</div>
+          <div className="text-sm text-indigo-800 dark:text-indigo-200 bg-indigo-200 dark:bg-indigo-700 px-2 py-1 rounded">{atividadeMostrada}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Função padrão para renderizar campos customizados não especificados
+const renderDefaultFields = (customFields: Record<string, string>) => {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {Object.entries(customFields).map(([key, value]) => (
+        <Badge key={key} variant="outline" className="text-xs px-2 py-1">
+          {key}: {String(value).substring(0, 30)}{String(value).length > 30 ? '...' : ''}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+
+
 interface ActionPlanCardProps {
   actionPlan: ActionPlanItem[];
   onApprove: (approvedItems: ActionPlanItem[]) => void;
@@ -617,21 +706,13 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
                     {/* Custom fields como badges - específico para cada tipo de atividade */}
                     {item.customFields && Object.keys(item.customFields).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
+                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
                         {item.id === 'plano-aula' ? (
                           renderPlanoAulaFields(item.customFields)
-                        ) : item.id === 'sequencia-didatica' ? (
-                          renderSequenciaDidaticaFields(item.customFields)
+                        ) : item.id === 'quadro-interativo' ? (
+                          <QuadroInterativoFieldsRenderer customFields={item.customFields} />
                         ) : (
-                          Object.entries(item.customFields).map(([key, value]) => (
-                            <Badge
-                              key={key}
-                              variant="outline"
-                              className="text-xs px-2 py-1"
-                            >
-                              {key}: {String(value).substring(0, 30)}{String(value).length > 30 ? '...' : ''}
-                            </Badge>
-                          ))
+                          renderDefaultFields(item.customFields)
                         )}
                       </div>
                     )}
