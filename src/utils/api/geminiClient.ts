@@ -1,4 +1,3 @@
-
 import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
 
 export interface GeminiRequest {
@@ -22,9 +21,21 @@ export class GeminiClient {
   private apiKey: string;
   private baseUrl: string;
 
-  constructor() {
+  // Adiciona um campo estático para a instância única
+  private static instance: GeminiClient;
+
+  // Torna o construtor privado para forçar o uso do Singleton
+  private constructor() {
     this.apiKey = API_KEYS.GEMINI;
     this.baseUrl = API_URLS.GEMINI;
+  }
+
+  // Método estático para obter a instância única
+  public static getInstance(): GeminiClient {
+    if (!GeminiClient.instance) {
+      GeminiClient.instance = new GeminiClient();
+    }
+    return GeminiClient.instance;
   }
 
   /**
@@ -32,7 +43,7 @@ export class GeminiClient {
    */
   async generate(request: GeminiRequest): Promise<GeminiResponse> {
     const startTime = Date.now();
-    
+
     try {
       if (!this.apiKey) {
         throw new Error('Chave da API Gemini não configurada');
@@ -82,7 +93,7 @@ export class GeminiClient {
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      
+
       return {
         success: false,
         result: '',
@@ -108,3 +119,6 @@ export class GeminiClient {
     this.apiKey = newKey;
   }
 }
+
+export const geminiClient = GeminiClient.getInstance();
+export default GeminiClient;
