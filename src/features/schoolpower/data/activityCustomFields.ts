@@ -15,7 +15,8 @@ export const quadroInterativoCustomFields = {
   'Critérios de Avaliação': 'text',
   'Tempo Estimado': 'string',
   'Contexto de Aplicação': 'text',
-  'quadroInterativoCampoEspecifico': 'string'
+  'quadroInterativoCampoEspecifico': 'text', // Agora aceita JSON dos quadros
+  'Dados dos Quadros': 'text' // Campo adicional para armazenar dados dos quadros
 };
 
 // Função para obter campos customizados do Quadro Interativo

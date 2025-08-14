@@ -163,20 +163,61 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           </Card>
         </div>
 
-        {/* Atividade Interativa */}
+        {/* Quadros de Sala de Aula */}
         <Card className="shadow-md border-l-4 border-l-blue-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <PlayCircle className="h-5 w-5 text-blue-600" />
-              Atividade no Quadro Interativo
+              Quadros de Sala de Aula
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
-                {previewData.activityShown}
-              </p>
-            </div>
+            {(() => {
+              try {
+                const quadrosData = previewData.quadroInterativoCampoEspecifico 
+                  ? JSON.parse(previewData.quadroInterativoCampoEspecifico)
+                  : null;
+
+                if (quadrosData && Array.isArray(quadrosData) && quadrosData.length > 0) {
+                  return (
+                    <div className="space-y-4">
+                      {quadrosData.map((quadro: any, index: number) => (
+                        <div key={quadro.id || index} className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`w-3 h-3 rounded-full ${quadro.type === 'texto' ? 'bg-blue-500' : 'bg-green-500'}`}></div>
+                            <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
+                              {quadro.title || `Quadro ${index + 1}`}
+                            </h4>
+                            <Badge variant="outline" className="text-xs">
+                              {quadro.type === 'texto' ? 'Conteúdo' : 'Atividade'}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            {quadro.content || 'Conteúdo não disponível'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                        {previewData.activityShown || 'Quadros serão gerados automaticamente com base nos dados da atividade'}
+                      </p>
+                    </div>
+                  );
+                }
+              } catch (error) {
+                return (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                      {previewData.activityShown || 'Erro ao carregar quadros. Regenere o conteúdo.'}
+                    </p>
+                  </div>
+                );
+              }
+            })()}
           </CardContent>
         </Card>
 
