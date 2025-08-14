@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, CheckCircle2 } from 'lucide-react';
+import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,7 +10,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from "@/hooks/use-toast";
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
@@ -19,6 +18,7 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+import { CheckCircle2 } from 'lucide-react';
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
@@ -839,48 +839,12 @@ const EditActivityModal = ({
     };
   }, [activity, formData, isGenerating, handleBuildActivity]);
 
-  const handleSave = () => {
-    console.log('💾 Salvando atividade:', formData);
-
-    const savedData = {
+  const handleSaveChanges = () => {
+    const activityData = {
       ...formData,
-      builtAt: new Date().toISOString(),
-      isBuilt: true
+      generatedContent
     };
-
-    // Para Sequência Didática, garantir que todos os campos estão salvos
-    if (activity?.id === 'sequencia-didatica') {
-      savedData.originalData = {
-        ...savedData.originalData,
-        ...formData,
-        customFields: {
-          ...savedData.originalData?.customFields,
-          tituloTemaAssunto: formData.tituloTemaAssunto,
-          anoSerie: formData.anoSerie,
-          disciplina: formData.disciplina,
-          bnccCompetencias: formData.bnccCompetencias,
-          publicoAlvo: formData.publicoAlvo,
-          objetivosAprendizagem: formData.objetivosAprendizagem,
-          quantidadeAulas: formData.quantidadeAulas,
-          quantidadeDiagnosticos: formData.quantidadeDiagnosticos,
-          quantidadeAvaliacoes: formData.quantidadeAvaliacoes,
-          cronograma: formData.cronograma
-        }
-      };
-
-      console.log('💾 Dados específicos da Sequência Didática salvos:', savedData.originalData);
-    }
-
-    if (onSave) {
-      onSave(savedData);
-    }
-
-    toast({
-      title: "✅ Atividade Salva",
-      description: `${activity?.title} foi salva com sucesso!`,
-      duration: 3000,
-    });
-
+    onSave(activityData);
     onClose();
   };
 
@@ -944,8 +908,7 @@ const EditActivityModal = ({
     };
   };
 
-  // Manter a função handleSave original e adicionar a lógica específica para sequencia-didatica
-  const handleSaveChanges = async () => {
+  const handleSave = async () => {
     if (!activity) return;
 
     try {
@@ -1490,9 +1453,9 @@ const EditActivityModal = ({
                 </Card>
 
                 {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+                  </div>
                 )}
 
                 <Button
@@ -1606,7 +1569,7 @@ const EditActivityModal = ({
               </Button>
             )}
             <Button
-              onClick={handleSaveChanges}
+              onClick={handleSave}
               className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
             >
               <Save className="h-4 w-4 mr-2" />

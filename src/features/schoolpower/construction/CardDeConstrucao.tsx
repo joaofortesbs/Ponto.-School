@@ -691,28 +691,14 @@ export function CardDeConstrucao({
       // Processamento específico para Sequência Didática
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
-        const sequenciaData = {
+        autoFormData = processSequenciaDidaticaData({
           id: activity.id,
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
           customFields: customFields
-        };
-        
-        autoFormData = processSequenciaDidaticaData(sequenciaData);
-        
-        // Adicionar dados extras para garantir compatibilidade
-        autoFormData = {
-          ...autoFormData,
-          title: sequenciaData.title,
-          description: sequenciaData.description,
-          originalData: {
-            ...sequenciaData,
-            ...autoFormData
-          }
-        };
+        });
         
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
-        console.log('🔧 Custom Fields disponíveis:', customFields);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {
