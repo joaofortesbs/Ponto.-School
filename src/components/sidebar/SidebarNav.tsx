@@ -1039,7 +1039,52 @@ export function SidebarNav({
         }
 
         .menu-item:hover:not(.active) .icon-container i {
-          color: #FF6B00 !important;
+color: #FF6B00 !important;
+        }
+
+        .icon-glow {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 20px;
+          height: 20px;
+          background: radial-gradient(circle, rgba(255, 107, 0, 0.5), transparent);
+          border-radius: 50%;
+          transform: translate(-50%, -50%) scale(0);
+          transition: transform 0.3s ease;
+        }
+
+        .icon-container.active .icon-glow {
+          transform: translate(-50%, -50%) scale(2.5);
+        }
+
+        .item-text {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-height: 36px !important;
+          justify-content: center !important;
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+
+        .item-title {
+          font-size: 15px !important;
+          font-weight: 600;
+          color: #1a202c;
+          transition: color 0.3s ease;
+          line-height: 1.4 !important;
+          margin: 0 !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          display: block !important;
+          width: 100% !important;
+        }
+
+        .dark .item-title {
+          color: white !important;
         }
 
         .menu-item.active .item-title {
