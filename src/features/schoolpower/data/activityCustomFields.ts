@@ -2,6 +2,21 @@ import { sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica'
 import { planoAulaFieldMapping } from '../activities/plano-aula/fieldMapping';
 import { quadroInterativoFieldMapping } from '../activities/quadro-interativo/fieldMapping';
 
+// Campos específicos para Quadro Interativo
+export const quadroInterativoCustomFields = {
+  'Disciplina / Área de conhecimento': 'string',
+  'Ano / Série': 'string', 
+  'Tema ou Assunto da aula': 'string',
+  'Objetivo de aprendizagem da aula': 'text',
+  'Nível de Dificuldade': 'string',
+  'Atividade mostrada': 'string',
+  'Materiais Necessários': 'text',
+  'Instruções': 'text',
+  'Critérios de Avaliação': 'text',
+  'Tempo Estimado': 'string',
+  'Contexto de Aplicação': 'text'
+};
+
 export const activityCustomFields: Record<string, string[]> = {
   "lista-exercicios": [
     "tema",

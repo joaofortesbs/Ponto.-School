@@ -1,4 +1,3 @@
-
 import { ConstructionActivity } from '../types';
 
 export interface AutoBuildProgress {
@@ -45,29 +44,29 @@ export class AutoBuildService {
       // Campos básicos obrigatórios
       title: activity.title || '',
       description: activity.description || '',
-      
+
       // Campos padrão com fallbacks EXATOS do modal
       subject: activity.customFields?.['Disciplina'] || 
                activity.customFields?.['disciplina'] || 
                'Português',
-      
+
       theme: activity.customFields?.['Tema'] || 
              activity.customFields?.['tema'] || 
              'Conteúdo Geral',
-      
+
       schoolYear: activity.customFields?.['Ano de Escolaridade'] || 
                   activity.customFields?.['anoEscolaridade'] || 
                   '6º ano',
-      
+
       numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || 
                         activity.customFields?.['quantidadeQuestoes'] || 
                         activity.customFields?.['numeroQuestoes'] || 
                         '10',
-      
+
       difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
                       activity.customFields?.['nivelDificuldade'] || 
                       'Médio',
-      
+
       questionModel: activity.customFields?.['Modelo de Questões'] || 
                     activity.customFields?.['modeloQuestoes'] || 
                     'Múltipla escolha',
@@ -76,28 +75,28 @@ export class AutoBuildService {
       sources: activity.customFields?.['Fontes'] || 
                activity.customFields?.['fontes'] || 
                '',
-      
+
       objectives: activity.customFields?.['Objetivos'] || 
                   activity.customFields?.['objetivos'] || 
                   '',
-      
+
       materials: activity.customFields?.['Materiais'] || 
                 activity.customFields?.['materiais'] || 
                 '',
-      
+
       instructions: activity.customFields?.['Instruções'] || 
                    activity.customFields?.['instrucoes'] || 
                    '',
-      
+
       evaluation: activity.customFields?.['Critérios de Correção'] || 
                  activity.customFields?.['criteriosAvaliacao'] || 
                  activity.customFields?.['criteriosCorrecao'] || 
                  '',
-      
+
       timeLimit: activity.customFields?.['Tempo Limite'] || 
                 activity.customFields?.['tempoLimite'] || 
                 '',
-      
+
       context: activity.customFields?.['Contexto de Aplicação'] || 
               activity.customFields?.['contextoAplicacao'] || 
               activity.customFields?.['contexto'] || 
@@ -107,66 +106,71 @@ export class AutoBuildService {
       textType: activity.customFields?.['Tipo de Texto'] || 
                activity.customFields?.['tipoTexto'] || 
                '',
-      
+
       textGenre: activity.customFields?.['Gênero Textual'] || 
                 activity.customFields?.['generoTextual'] || 
                 '',
-      
+
       textLength: activity.customFields?.['Extensão do Texto'] || 
                  activity.customFields?.['extensaoTexto'] || 
                  '',
-      
+
       associatedQuestions: activity.customFields?.['Questões Associadas'] || 
                           activity.customFields?.['questoesAssociadas'] || 
                           '',
-      
+
       competencies: activity.customFields?.['Competências'] || 
                    activity.customFields?.['competencias'] || 
                    '',
-      
+
       readingStrategies: activity.customFields?.['Estratégias de Leitura'] || 
                         activity.customFields?.['estrategiasLeitura'] || 
                         '',
-      
+
       visualResources: activity.customFields?.['Recursos Visuais'] || 
                       activity.customFields?.['recursosVisuais'] || 
                       '',
-      
+
       practicalActivities: activity.customFields?.['Atividades Práticas'] || 
                           activity.customFields?.['atividadesPraticas'] || 
                           '',
-      
+
       wordsIncluded: activity.customFields?.['Palavras Incluídas'] || 
                     activity.customFields?.['palavrasIncluidas'] || 
                     '',
-      
+
       gridFormat: activity.customFields?.['Formato da Grade'] || 
                  activity.customFields?.['formatoGrade'] || 
                  '',
-      
+
       providedHints: activity.customFields?.['Dicas Fornecidas'] || 
                     activity.customFields?.['dicasFornecidas'] || 
                     '',
-      
+
       vocabularyContext: activity.customFields?.['Contexto do Vocabulário'] || 
                         activity.customFields?.['contextoVocabulario'] || 
                         '',
-      
+
       language: activity.customFields?.['Idioma'] || 
                activity.customFields?.['idioma'] || 
                'Português',
-      
+
       associatedExercises: activity.customFields?.['Exercícios Associados'] || 
                           activity.customFields?.['exerciciosAssociados'] || 
                           '',
-      
+
       knowledgeArea: activity.customFields?.['Área do Conhecimento'] || 
                     activity.customFields?.['areaConhecimento'] || 
                     '',
-      
+
       complexityLevel: activity.customFields?.['Nível de Complexidade'] || 
                       activity.customFields?.['nivelComplexidade'] || 
-                      ''
+                      '',
+
+      // Campo específico para Quadro Interativo
+      quadroInterativoCampoEspecifico: activity.customFields?.['Campo Específico do Quadro Interativo'] ||
+                                       activity.customFields?.['campoEspecificoQuadroInterativo'] ||
+                                       ''
     };
 
     console.log('📝 FormData preparado IDENTICO ao EditActivityModal:', formData);
@@ -211,6 +215,8 @@ export class AutoBuildService {
       exerciciosAssociados: formData.associatedExercises || '',
       areaConhecimento: formData.knowledgeArea || '',
       nivelComplexidade: formData.complexityLevel || '',
+      quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico || '',
+
 
       // Dados alternativos em inglês para compatibilidade (EXATOS do hook)
       title: formData.title,
@@ -242,7 +248,8 @@ export class AutoBuildService {
       language: formData.language,
       associatedExercises: formData.associatedExercises,
       knowledgeArea: formData.knowledgeArea,
-      complexityLevel: formData.complexityLevel
+      complexityLevel: formData.complexityLevel,
+      quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico || ''
     };
 
     console.log('📊 ContextData preparado EXATAMENTE como useGenerateActivity hook:', contextData);
@@ -316,11 +323,11 @@ export class AutoBuildService {
 
     } catch (error) {
       console.error(`❌ Erro na construção com lógica do modal para ${activity.title}:`, error);
-      
+
       // Marcar atividade com erro
       activity.status = 'error';
       activity.progress = 0;
-      
+
       throw error;
     }
   }
@@ -397,7 +404,7 @@ export class AutoBuildService {
         console.error(`❌ Erro ao construir atividade ${activity.title}:`, error);
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
         errors.push(`Erro em "${activity.title}": ${errorMessage}`);
-        
+
         processedCount++;
         this.updateProgress({
           current: processedCount,

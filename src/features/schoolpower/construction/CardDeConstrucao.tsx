@@ -701,14 +701,19 @@ export function CardDeConstrucao({
         
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
       } else if (activity.id === 'quadro-interativo') {
-        autoFormData = processQuadroInterativoData({
+        const quadroInterativoActivity = {
           id: activity.id,
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
-          customFields: customFields
-        });
+          customFields: customFields,
+          personalizedTitle: actionPlanActivity?.personalizedTitle || activity.personalizedTitle,
+          personalizedDescription: actionPlanActivity?.personalizedDescription || activity.personalizedDescription
+        };
+        
+        autoFormData = processQuadroInterativoData(quadroInterativoActivity);
         
         console.log('🔧 Dados processados para Quadro Interativo:', autoFormData);
+        console.log('🎯 Custom fields para Quadro Interativo:', customFields);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {
