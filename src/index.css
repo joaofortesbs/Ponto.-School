@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;600&family=Kalam:wght@400;700&display=swap');
 @import "./styles/animations.css";
 @import "./styles/hide-scrollbar.css";
@@ -1166,7 +1167,7 @@ svg.neural-connections {
 .dark .icon-nav-button:hover {
   background-color: rgba(15, 25, 35, 0.95) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-}
+}```text
 /* Estilos para ícones específicos */
 .calendar-icon {
   color: #FF6B00 !important;

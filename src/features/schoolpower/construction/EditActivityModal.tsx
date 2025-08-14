@@ -18,9 +18,6 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import { CheckCircle2 } from 'lucide-react';
-import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
-import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping, sequenciaDidaticaBuilder } from '../activities/sequencia-didatica';
-import SequenciaDidaticaPreview from '../activities/sequencia-didatica/SequenciaDidaticaPreview';
 
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
@@ -206,16 +203,6 @@ const EditActivityModal = ({
           isGeneratedByAI: true,
         }
       };
-    } else if (type === 'sequencia-didatica') {
-      const processedData = processSequenciaDidaticaData(data);
-      return {
-        success: true,
-        data: {
-          ...processedData,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
     }
     // Simulação de retorno genérico
     return {
@@ -253,18 +240,16 @@ const EditActivityModal = ({
       // Verificar se a atividade foi construída automaticamente
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const savedContent = localStorage.getItem(`activity_${activity.id}`);
-      const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`);
-      const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
+      const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`); // Chave específica para plano-aula
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
         hasSavedContent: !!savedContent,
         hasPlanoAulaSavedContent: !!planoAulaSavedContent,
-        hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
         activityId: activity.id
       });
 
-      // Priorizar o conteúdo específico baseado no tipo da atividade
+      // Priorizar o conteúdo específico do plano de aula se existir
       let contentToLoad = null;
       if (activity.id === 'plano-aula' && planoAulaSavedContent) {
         try {
@@ -273,14 +258,6 @@ const EditActivityModal = ({
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do plano-aula:', error);
           console.error('📄 Conteúdo que causou erro:', planoAulaSavedContent);
-        }
-      } else if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
-          console.log(`✅ Conteúdo específico da sequencia-didatica encontrado para: ${activity.id}`);
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico da sequencia-didatica:', error);
-          console.error('📄 Conteúdo que causou erro:', sequenciaDidaticaSavedContent);
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
@@ -790,16 +767,8 @@ const EditActivityModal = ({
         setBuildProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      let result;
-
-      // Lógica específica para sequencia-didatica
-      if (activity.id === 'sequencia-didatica') {
-        console.log('🏗️ Construindo Sequência Didática...');
-        result = await sequenciaDidaticaBuilder.construirSequenciaDidatica(formData);
-      } else {
-        // Usar a lógica padrão para outras atividades
-        result = await generateActivityContent(activity.type || activity.id, formData);
-      }
+      // Usar a mesma lógica de geração do sistema de construção automática
+      const result = await generateActivityContent(activity.type || activity.id, formData);
 
       clearInterval(progressTimer);
       setBuildProgress(100);
@@ -818,13 +787,6 @@ const EditActivityModal = ({
           console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
         }
 
-        // Para sequencia-didatica, salvar com chave específica
-        if (activity.id === 'sequencia-didatica') {
-          const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;
-          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-          console.log('💾 Dados da sequência didática salvos para visualização:', viewStorageKey);
-        }
-
         // Também salvar na lista de atividades construídas
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
         if (!constructedActivities.includes(activity.id)) {
@@ -833,7 +795,6 @@ const EditActivityModal = ({
         }
 
         setBuiltContent(result.data);
-        setGeneratedContent(result.data);
         setActiveTab('preview');
 
         toast({
@@ -1536,10 +1497,10 @@ const EditActivityModal = ({
                         onRegenerateContent={handleRegenerateContent}
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
-                      <SequenciaDidaticaPreview
-                        data={generatedContent}
-                        activityData={activity}
-                      />
+                      // Placeholder para visualização de Sequência Didática, se necessário
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">Visualização da Sequência Didática em desenvolvimento...</p>
+                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent}

@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface SequenciaDidaticaCustomFields {
@@ -58,94 +57,30 @@ export function processSequenciaDidaticaData(activityData: any): SequenciaDidati
   console.log('📚 Processando dados da Sequência Didática:', activityData);
 
   const customFields = activityData.customFields || {};
-  
+
   return {
-    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || 
-                      customFields['tituloTemaAssunto'] || 
-                      activityData.title || '',
-    anoSerie: customFields['Ano / Série'] || 
-              customFields['anoSerie'] || 
-              activityData.schoolYear || '',
-    disciplina: customFields['Disciplina'] || 
-                customFields['disciplina'] || 
-                activityData.subject || '',
-    bnccCompetencias: customFields['BNCC / Competências'] || 
-                      customFields['bnccCompetencias'] || 
-                      activityData.competencies || '',
-    publicoAlvo: customFields['Público-alvo'] || 
-                 customFields['publicoAlvo'] || 
-                 activityData.context || '',
-    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || 
-                           customFields['objetivosAprendizagem'] || 
-                           activityData.objectives || '',
-    quantidadeAulas: customFields['Quantidade de Aulas'] || 
-                     customFields['quantidadeAulas'] || '4',
-    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || 
-                            customFields['quantidadeDiagnosticos'] || '1',
-    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || 
-                          customFields['quantidadeAvaliacoes'] || '1',
-    cronograma: customFields['Cronograma'] || 
-                customFields['cronograma'] || ''
+    tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+    anoSerie: customFields['Ano / Série'] || '',
+    disciplina: customFields['Disciplina'] || '',
+    bnccCompetencias: customFields['BNCC / Competências'] || '',
+    publicoAlvo: customFields['Público-alvo'] || '',
+    objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+    quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+    quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+    quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+    cronograma: customFields['Cronograma'] || ''
   };
 }
 
-/**
- * Converte dados do formulário para o formato esperado pela API
- */
-export function formDataToSequenciaDidatica(formData: ActivityFormData): SequenciaDidaticaData {
-  return {
-    tituloTemaAssunto: formData.tituloTemaAssunto || formData.title || '',
-    anoSerie: formData.anoSerie || formData.schoolYear || '',
-    disciplina: formData.disciplina || formData.subject || '',
-    bnccCompetencias: formData.bnccCompetencias || formData.competencies || '',
-    publicoAlvo: formData.publicoAlvo || formData.context || '',
-    objetivosAprendizagem: formData.objetivosAprendizagem || formData.objectives || '',
-    quantidadeAulas: formData.quantidadeAulas || '4',
-    quantidadeDiagnosticos: formData.quantidadeDiagnosticos || '1',
-    quantidadeAvaliacoes: formData.quantidadeAvaliacoes || '1',
-    cronograma: formData.cronograma || ''
-  };
-}
-
-/**
- * Valida se os dados da Sequência Didática estão completos
- */
-export function validateSequenciaDidaticaData(data: SequenciaDidaticaData): { 
-  isValid: boolean; 
-  errors: string[] 
-} {
-  const errors: string[] = [];
-
-  if (!data.tituloTemaAssunto?.trim()) {
-    errors.push('Título do tema/assunto é obrigatório');
-  }
-
-  if (!data.disciplina?.trim()) {
-    errors.push('Disciplina é obrigatória');
-  }
-
-  if (!data.anoSerie?.trim()) {
-    errors.push('Ano/série é obrigatório');
-  }
-
-  if (!data.objetivosAprendizagem?.trim()) {
-    errors.push('Objetivos de aprendizagem são obrigatórios');
-  }
-
-  if (!data.quantidadeAulas || parseInt(data.quantidadeAulas) < 1) {
-    errors.push('Quantidade de aulas deve ser pelo menos 1');
-  }
-
-  if (data.quantidadeDiagnosticos && parseInt(data.quantidadeDiagnosticos) < 0) {
-    errors.push('Quantidade de diagnósticos não pode ser negativa');
-  }
-
-  if (data.quantidadeAvaliacoes && parseInt(data.quantidadeAvaliacoes) < 0) {
-    errors.push('Quantidade de avaliações não pode ser negativa');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+export interface SequenciaDidaticaFields {
+  'Título do Tema / Assunto': string;
+  'Ano / Série': string;
+  'Disciplina': string;
+  'BNCC / Competências': string;
+  'Público-alvo': string;
+  'Objetivos de Aprendizagem': string;
+  'Quantidade de Aulas': string;
+  'Quantidade de Diagnósticos': string;
+  'Quantidade de Avaliações': string;
+  'Cronograma': string;
 }
