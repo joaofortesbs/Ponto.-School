@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Card as UICard, CardContent as UICardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,7 +19,6 @@ import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercic
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import { CheckCircle2 } from 'lucide-react';
-import QuadroInterativoBuilder from '../activities/quadro-interativo/QuadroInterativoBuilder';
 
 // --- Componentes de Edição Específicos ---
 
@@ -72,83 +71,85 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
   </>
 );
 
-// Componente de edição específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => {
-  const [quadrosContent, setQuadrosContent] = useState<any[]>([]);
-
-  const handleQuadrosGenerated = (quadros: any[]) => {
-    setQuadrosContent(quadros);
-    // Salvar o conteúdo dos quadros no formData
-    const quadrosData = quadros.map(q => ({
-      id: q.id,
-      title: q.title,
-      content: q.content,
-      type: q.type
-    }));
-    onFieldChange('quadroInterativoCampoEspecifico', JSON.stringify(quadrosData));
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Campos básicos */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="subject">Disciplina / Área de conhecimento *</Label>
-          <Input
-            id="subject"
-            value={formData.subject || ''}
-            onChange={(e) => onFieldChange('subject', e.target.value)}
-            placeholder="Ex: Matemática, Português, Ciências"
-            required
-            className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
-        <div>
-          <Label htmlFor="schoolYear">Ano / Série *</Label>
-          <Input
-            id="schoolYear"
-            value={formData.schoolYear || ''}
-            onChange={(e) => onFieldChange('schoolYear', e.target.value)}
-            placeholder="Ex: 6º Ano, 7º Ano, 8º Ano"
-            required
-            className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
+// Componente específico para Quadro Interativo
+const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="subject">Disciplina / Área de conhecimento *</Label>
+        <Input
+          id="subject"
+          value={formData.subject || ''}
+          onChange={(e) => onFieldChange('subject', e.target.value)}
+          placeholder="Ex: Matemática, Português, Ciências"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="theme">Tema ou Assunto da aula *</Label>
-          <Input
-            id="theme"
-            value={formData.theme || ''}
-            onChange={(e) => onFieldChange('theme', e.target.value)}
-            placeholder="Ex: Equações do 1º grau, Sistema digestivo"
-            required
-            className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
-        <div>
-          <Label htmlFor="difficultyLevel">Nível de Dificuldade</Label>
-          <Input
-            id="difficultyLevel"
-            value={formData.difficultyLevel || ''}
-            onChange={(e) => onFieldChange('difficultyLevel', e.target.value)}
-            placeholder="Ex: Básico, Intermediário, Avançado"
-            className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-          />
-        </div>
+      <div>
+        <Label htmlFor="schoolYear">Ano / Série *</Label>
+        <Input
+          id="schoolYear"
+          value={formData.schoolYear || ''}
+          onChange={(e) => onFieldChange('schoolYear', e.target.value)}
+          placeholder="Ex: 6º Ano, 7º Ano, 8º Ano"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
+    </div>
 
-      {/* Componente principal de construção de quadros */}
-      <QuadroInterativoBuilder
-        formData={formData}
-        onContentGenerated={handleQuadrosGenerated}
-        isVisible={true}
+    <div>
+      <Label htmlFor="theme">Tema ou Assunto da aula *</Label>
+      <Input
+        id="theme"
+        value={formData.theme || ''}
+        onChange={(e) => onFieldChange('theme', e.target.value)}
+        placeholder="Ex: Substantivos e Verbos, Frações, Sistema Solar"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
       />
     </div>
-  );
-};
+
+    <div>
+      <Label htmlFor="objectives">Objetivo de aprendizagem da aula *</Label>
+      <Textarea
+        id="objectives"
+        value={formData.objectives || ''}
+        onChange={(e) => onFieldChange('objectives', e.target.value)}
+        placeholder="Descreva os objetivos específicos que os alunos devem alcançar com esta atividade de quadro interativo..."
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
+        <Input
+          id="difficultyLevel"
+          value={formData.difficultyLevel || ''}
+          onChange={(e) => onFieldChange('difficultyLevel', e.target.value)}
+          placeholder="Ex: Básico, Intermediário, Avançado"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="quadroInterativoCampoEspecifico">Atividade mostrada *</Label>
+        <Input
+          id="quadroInterativoCampoEspecifico"
+          value={formData.quadroInterativoCampoEspecifico || ''}
+          onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
+          placeholder="Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+    </div>
+  </div>
+);
 
 // Componente específico para Sequência Didática
 const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
@@ -1604,8 +1605,8 @@ const EditActivityModal = ({
             {activeTab === 'editar' && (
             <div className="flex gap-6 h-full">
               <div className="flex flex-col space-y-4 overflow-y-auto flex-1 pr-2">
-                <UICard>
-                  <UICardContent className="pt-6">
+                <Card>
+                  <CardContent className="p-4">
                     <h3 className="font-semibold text-lg mb-4 flex items-center">
                       <FileText className="h-5 w-5 mr-2 text-[#FF6B00]" />
                       Informações da Atividade
@@ -1892,8 +1893,8 @@ const EditActivityModal = ({
                         );
                       })()}
                     </div>
-                  </UICardContent>
-                </UICard>
+                  </CardContent>
+                </Card>
 
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">

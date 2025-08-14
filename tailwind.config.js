@@ -46,7 +46,7 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
         "brand-primary": "#FF6B00",
-        "brand-secondary": "#0D0D0F",
+        "brand-secondary": "#0D00F5",
         "brand-black": "#0A2540",
         "brand-muted": "#64748B",
         "brand-card": "#F8FAFC",
@@ -78,5 +78,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("tailwindcss-nested")],
+  plugins: [require("tailwindcss-animate")],
 };

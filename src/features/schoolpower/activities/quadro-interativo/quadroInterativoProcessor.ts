@@ -308,7 +308,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
   const formData = {
     title: consolidatedData.title,
     description: consolidatedData.description,
-
+    
     // Disciplina / Área de conhecimento - com múltiplos aliases
     subject: customFields['Disciplina / Área de conhecimento'] ||
              customFields['disciplina'] ||
@@ -317,7 +317,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
              customFields['Matéria'] ||
              customFields['Area de Conhecimento'] ||
              'Matemática', // Valor padrão
-
+    
     // Ano / Série - com múltiplos aliases
     schoolYear: customFields['Ano / Série'] ||
                 customFields['anoSerie'] ||
@@ -327,7 +327,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                 customFields['Série'] ||
                 customFields['ano'] ||
                 '6º Ano', // Valor padrão
-
+    
     // Tema ou Assunto da aula - com múltiplos aliases
     theme: customFields['Tema ou Assunto da aula'] ||
            customFields['tema'] ||
@@ -338,7 +338,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
            customFields['assunto'] ||
            consolidatedData.title ||
            'Tema da Aula', // Valor padrão
-
+    
     // Objetivo de aprendizagem da aula - com múltiplos aliases
     objectives: customFields['Objetivo de aprendizagem da aula'] ||
                 customFields['objetivos'] ||
@@ -349,7 +349,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                 customFields['objetivo'] ||
                 consolidatedData.description ||
                 'Objetivos de aprendizagem da aula', // Valor padrão
-
+    
     // Nível de Dificuldade - com múltiplos aliases
     difficultyLevel: customFields['Nível de Dificuldade'] ||
                      customFields['nivelDificuldade'] ||
@@ -359,7 +359,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                      customFields['Complexidade'] ||
                      customFields['nivel'] ||
                      'Intermediário', // Valor padrão
-
+    
     // Atividade mostrada - com múltiplos aliases
     quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
                                      customFields['atividadeMostrada'] ||
