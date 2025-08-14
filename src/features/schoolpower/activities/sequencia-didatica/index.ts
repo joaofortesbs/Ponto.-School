@@ -1,10 +1,14 @@
 
-export { default as SequenciaDidaticaPreview } from './SequenciaDidaticaPreview';
-export { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from './sequenciaDidaticaProcessor';
-
-// Exportar o builder para uso externo
 export { default as SequenciaDidaticaBuilder } from './SequenciaDidaticaBuilder';
-export type { SequenciaDidaticaAula, SequenciaDidaticaData, SequenciaDidaticaResult } from './SequenciaDidaticaBuilder';
-
-// Exportar o generator
 export { SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
+export { default as SequenciaDidaticaPreview } from './SequenciaDidaticaPreview';
+export { AulaCard } from './components/AulaCard';
+export { DiagnosticoCard } from './components/DiagnosticoCard';
+export { AvaliacaoCard } from './components/AvaliacaoCard';
+export { SequenciaDidaticaHeader } from './components/SequenciaDidaticaHeader';
+
+export type {
+  SequenciaDidaticaData,
+  SequenciaDidaticaResult,
+  SequenciaDidaticaAula
+} from './SequenciaDidaticaBuilder';

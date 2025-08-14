@@ -40,6 +40,9 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Log do estado atual
+  console.log('🔄 useSchoolPowerFlow - Estado atual:', { flowState, isLoading, flowData });
+
   // Salva dados no localStorage de forma sincronizada
   const saveData = useCallback((data: SchoolPowerFlowData) => {
     try {

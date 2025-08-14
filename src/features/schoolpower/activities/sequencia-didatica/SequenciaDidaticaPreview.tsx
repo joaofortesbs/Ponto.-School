@@ -1,295 +1,180 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Target, BookOpen, Users, Calendar, FileText, BarChart3, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Clock, Target, BookOpen, FileText, Brain } from 'lucide-react';
+import { SequenciaDidaticaResult, SequenciaDidaticaAula } from './SequenciaDidaticaBuilder';
 import { AulaCard } from './components/AulaCard';
 import { DiagnosticoCard } from './components/DiagnosticoCard';
 import { AvaliacaoCard } from './components/AvaliacaoCard';
 import { SequenciaDidaticaHeader } from './components/SequenciaDidaticaHeader';
-import { SequenciaDidaticaGenerator } from './SequenciaDidaticaGenerator';
-import type { SequenciaDidaticaResult, SequenciaDidaticaAula } from './SequenciaDidaticaBuilder';
 
 interface SequenciaDidaticaPreviewProps {
-  data: {
-    tituloTemaAssunto?: string;
-    anoSerie?: string;
-    disciplina?: string;
-    bnccCompetencias?: string;
-    publicoAlvo?: string;
-    objetivosAprendizagem?: string;
-    quantidadeAulas?: string;
-    quantidadeDiagnosticos?: string;
-    quantidadeAvaliacoes?: string;
-    cronograma?: string;
-    // Dados gerados pela IA
-    aulas?: SequenciaDidaticaAula[];
-    metadados?: any;
-  };
-  activityData?: any;
-  isGenerating?: boolean;
+  data?: SequenciaDidaticaResult | null;
+  isLoading?: boolean;
+  onSave?: () => void;
+  onEdit?: () => void;
 }
 
-export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ 
+export function SequenciaDidaticaPreview({ 
   data, 
-  activityData,
-  isGenerating = false 
-}) => {
-  const [sequenciaResult, setSequenciaResult] = useState<SequenciaDidaticaResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Verificar se já temos dados gerados
-  const hasGeneratedData = data?.aulas && Array.isArray(data.aulas) && data.aulas.length > 0;
+  isLoading = false, 
+  onSave, 
+  onEdit 
+}: SequenciaDidaticaPreviewProps) {
+  const [displayData, setDisplayData] = useState<SequenciaDidaticaResult | null>(null);
 
   useEffect(() => {
-    const loadOrGenerateSequencia = async () => {
-      try {
-        // Se já temos dados gerados, usar eles
-        if (hasGeneratedData) {
-          console.log('📚 Usando dados já gerados:', data);
-          setSequenciaResult({
-            aulas: data.aulas!,
-            metadados: data.metadados || {
-              totalAulas: parseInt(data.quantidadeAulas || '3'),
-              totalDiagnosticos: parseInt(data.quantidadeDiagnosticos || '1'),
-              totalAvaliacoes: parseInt(data.quantidadeAvaliacoes || '1'),
-              disciplina: data.disciplina || '',
-              anoSerie: data.anoSerie || ''
-            }
-          });
-          return;
-        }
+    console.log('🎯 SequenciaDidaticaPreview: Dados recebidos:', data);
 
-        // Tentar carregar do localStorage
-        if (activityData?.id) {
-          const stored = await SequenciaDidaticaGenerator.loadFromStorage(activityData.id);
-          if (stored) {
-            console.log('📚 Carregado do localStorage:', stored);
-            setSequenciaResult(stored);
-            return;
+    if (data) {
+      setDisplayData(data);
+    } else {
+      // Tentar carregar dados do localStorage como fallback
+      try {
+        const keys = Object.keys(localStorage).filter(key => 
+          key.startsWith('sequencia_didatica_')
+        );
+
+        if (keys.length > 0) {
+          const latestKey = keys.sort().pop();
+          const storedData = localStorage.getItem(latestKey!);
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            console.log('📂 Dados carregados do localStorage:', parsedData);
+            setDisplayData(parsedData);
           }
         }
-
-        // Se não temos dados suficientes para gerar, mostrar preview básico
-        if (!data.tituloTemaAssunto || !data.quantidadeAulas) {
-          console.log('📚 Dados insuficientes para gerar sequência');
-          return;
-        }
-
       } catch (error) {
-        console.error('❌ Erro ao carregar sequência:', error);
-        setError('Erro ao carregar sequência didática');
+        console.error('❌ Erro ao carregar dados do localStorage:', error);
       }
-    };
-
-    loadOrGenerateSequencia();
-  }, [data, activityData, hasGeneratedData]);
-
-  const renderAulaCard = (aula: SequenciaDidaticaAula) => {
-    switch (aula.tipo) {
-      case 'Diagnostico':
-        return <DiagnosticoCard key={aula.id} diagnostico={aula} />;
-      case 'Avaliacao':
-        return <AvaliacaoCard key={aula.id} avaliacao={aula} />;
-      default:
-        return <AulaCard key={aula.id} aula={aula} />;
     }
-  };
+  }, [data]);
 
-  // Loading state
-  if (loading || isGenerating) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
-        <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
-              <span className="text-orange-700 font-medium">Gerando Sequência Didática...</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="text-center text-red-700">
-              <FileText className="h-12 w-12 mx-auto mb-2 text-red-400" />
-              <p className="font-medium">{error}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Se temos sequência gerada, mostrar os cards
-  if (sequenciaResult?.aulas && sequenciaResult.aulas.length > 0) {
-    return (
-      <div className="space-y-6">
-        <SequenciaDidaticaHeader data={sequenciaResult} formData={data} />
-        
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Plano de Atividades ({sequenciaResult.aulas.length} atividades)
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sequenciaResult.aulas
-              .sort((a, b) => a.ordem - b.ordem)
-              .map(aula => renderAulaCard(aula))
-            }
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-gray-600 dark:text-gray-300">
+              Gerando sequência didática...
+            </span>
           </div>
         </div>
       </div>
     );
   }
 
-  // Preview básico com dados do formulário
+  if (!displayData || !displayData.aulas || displayData.aulas.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-orange-200 dark:border-orange-800">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-4">
+              <BookOpen className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              Nenhuma sequência didática encontrada
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
+              Configure os dados nos campos acima e clique em "Gerar Sequência" para criar sua sequência didática personalizada.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const renderCard = (aula: SequenciaDidaticaAula, index: number) => {
+    const baseProps = {
+      key: aula.id,
+      aula,
+      index,
+      onEdit: () => onEdit?.(),
+    };
+
+    switch (aula.tipo) {
+      case 'Diagnostico':
+        return <DiagnosticoCard {...baseProps} />;
+      case 'Avaliacao':
+        return <AvaliacaoCard {...baseProps} />;
+      default:
+        return <AulaCard {...baseProps} />;
+    }
+  };
+
+  const organizeAulasByRows = (aulas: SequenciaDidaticaAula[]) => {
+    const rows: SequenciaDidaticaAula[][] = [];
+    for (let i = 0; i < aulas.length; i += 3) {
+      rows.push(aulas.slice(i, i + 3));
+    }
+    return rows;
+  };
+
+  const aulasSorted = [...displayData.aulas].sort((a, b) => a.ordem - b.ordem);
+  const aulasRows = organizeAulasByRows(aulasSorted);
+
   return (
     <div className="space-y-6">
-      {/* Cabeçalho */}
-      <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-red-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-orange-800">
-            <BookOpen className="h-5 w-5" />
-            {data.tituloTemaAssunto || 'Sequência Didática'}
-          </CardTitle>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {data.disciplina && (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                {data.disciplina}
-              </Badge>
-            )}
-            {data.anoSerie && (
-              <Badge variant="outline" className="border-orange-300 text-orange-700">
-                {data.anoSerie}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-      </Card>
+      {/* Header com informações gerais */}
+      <SequenciaDidaticaHeader 
+        metadados={displayData.metadados}
+        totalAulas={displayData.aulas.length}
+      />
 
-      {/* Informações Gerais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {data.publicoAlvo && (
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-green-600" />
-                <span className="font-medium text-sm">Público-alvo</span>
-              </div>
-              <p className="text-sm text-gray-600">{data.publicoAlvo}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {data.bnccCompetencias && (
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-purple-600" />
-                <span className="font-medium text-sm">BNCC / Competências</span>
-              </div>
-              <p className="text-sm text-gray-600">{data.bnccCompetencias}</p>
-            </CardContent>
-          </Card>
-        )}
+      {/* Grid de aulas organizadas */}
+      <div className="space-y-4">
+        {aulasRows.map((row, rowIndex) => (
+          <motion.div
+            key={rowIndex}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: rowIndex * 0.1 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          >
+            {row.map((aula, index) => renderCard(aula, rowIndex * 3 + index))}
+          </motion.div>
+        ))}
       </div>
 
-      {/* Objetivos de Aprendizagem */}
-      {data.objetivosAprendizagem && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Target className="h-4 w-4 text-orange-600" />
-              Objetivos de Aprendizagem
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-600 whitespace-pre-line">
-              {data.objetivosAprendizagem}
+      {/* Footer com ações */}
+      {(onSave || onEdit) && (
+        <Card className="border-gray-200 dark:border-gray-700">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                Sequência didática gerada com sucesso
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Quantidades */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {data.quantidadeAulas && (
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <Clock className="h-6 w-6 text-blue-600" />
-                <span className="text-2xl font-bold text-blue-600">{data.quantidadeAulas}</span>
-                <span className="text-sm text-gray-600">Aulas</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {data.quantidadeDiagnosticos && (
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <BarChart3 className="h-6 w-6 text-green-600" />
-                <span className="text-2xl font-bold text-green-600">{data.quantidadeDiagnosticos}</span>
-                <span className="text-sm text-gray-600">Diagnósticos</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {data.quantidadeAvaliacoes && (
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <FileText className="h-6 w-6 text-purple-600" />
-                <span className="text-2xl font-bold text-purple-600">{data.quantidadeAvaliacoes}</span>
-                <span className="text-sm text-gray-600">Avaliações</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Cronograma */}
-      {data.cronograma && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-indigo-600" />
-              Cronograma
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-gray-600 whitespace-pre-line">
-              {data.cronograma}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Mensagem para gerar sequência */}
-      {data.tituloTemaAssunto && data.quantidadeAulas && (
-        <Card className="border-dashed border-2 border-gray-300">
-          <CardContent className="pt-6">
-            <div className="text-center text-gray-500">
-              <BookOpen className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-              <p className="font-medium mb-1">Sequência Didática Pronta para Gerar</p>
-              <p className="text-sm">Clique em "Construir Atividade" para gerar os cards das aulas</p>
+            <div className="flex items-center gap-3">
+              {onEdit && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={onEdit}
+                  className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-800 dark:text-orange-300 dark:hover:bg-orange-900/20"
+                >
+                  Editar
+                </Button>
+              )}
+              {onSave && (
+                <Button 
+                  size="sm"
+                  onClick={onSave}
+                  className="bg-orange-600 hover:bg-orange-700 text-white"
+                >
+                  Salvar Sequência
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
     </div>
   );
-};
+}
 
 export default SequenciaDidaticaPreview;
