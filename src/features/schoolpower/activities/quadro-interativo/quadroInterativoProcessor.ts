@@ -1,6 +1,6 @@
 
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
-import { QuadroInterativoFields, quadroInterativoFieldMapping, debugFieldMappings } from './fieldMapping';
+import { QuadroInterativoFields, quadroInterativoFieldMapping } from './fieldMapping';
 
 export interface QuadroInterativoCustomFields {
   [key: string]: string;
@@ -24,7 +24,7 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
 
   const customFields = activity.customFields || {};
 
-  // Inicializar dados do formulário com dados da atividade
+  // Inicializar dados do formulário com valores padrão
   const formData: ActivityFormData = {
     title: activity.personalizedTitle || activity.title || '',
     description: activity.personalizedDescription || activity.description || '',
@@ -70,61 +70,44 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     cronograma: ''
   };
 
-  // PRIORIDADE 1: Mapear campos diretos exatos primeiro
-  console.log('🔍 Campos disponíveis no customFields:', Object.keys(customFields));
-  debugFieldMappings(customFields);
-  
-  // Mapeamento direto prioritário - campos exatos
-  const directMappings: Array<[string, keyof ActivityFormData]> = [
-    ['Disciplina / Área de conhecimento', 'subject'],
-    ['Ano / Série', 'schoolYear'],
-    ['Tema ou Assunto da aula', 'theme'],
-    ['Objetivo de aprendizagem da aula', 'objectives'],
-    ['Nível de Dificuldade', 'difficultyLevel'],
-    ['Atividade mostrada', 'quadroInterativoCampoEspecifico']
-  ];
-
-  // Aplicar mapeamento direto PRIMEIRO
-  directMappings.forEach(([customFieldKey, formFieldKey]) => {
-    const value = customFields[customFieldKey];
-    if (value && typeof value === 'string' && value.trim()) {
-      (formData as any)[formFieldKey] = value.trim();
-      console.log(`✅ DIRETO: ${customFieldKey} -> ${formFieldKey} = "${value}"`);
-    }
-  });
-
-  // Mapear campos específicos do Quadro Interativo com múltiplas variações (como fallback)
+  // Mapear campos específicos do Quadro Interativo com múltiplas variações
   const fieldMappings: Record<string, keyof ActivityFormData> = {
     // Disciplina / Área de conhecimento
+    'Disciplina / Área de conhecimento': 'subject',
     'Disciplina': 'subject',
     'Área de conhecimento': 'subject',
     'Componente Curricular': 'subject',
     'Matéria': 'subject',
     
     // Ano / Série
+    'Ano / Série': 'schoolYear',
     'Ano': 'schoolYear',
     'Série': 'schoolYear',
     'Ano de Escolaridade': 'schoolYear',
     'Público-Alvo': 'schoolYear',
     
     // Tema ou Assunto da aula
+    'Tema ou Assunto da aula': 'theme',
     'Tema': 'theme',
     'Assunto': 'theme',
     'Tópico': 'theme',
     'Tema Central': 'theme',
     
     // Objetivo de aprendizagem da aula
+    'Objetivo de aprendizagem da aula': 'objectives',
     'Objetivo': 'objectives',
     'Objetivos': 'objectives',
     'Objetivo Principal': 'objectives',
     'Objetivos de Aprendizagem': 'objectives',
     
     // Nível de Dificuldade
+    'Nível de Dificuldade': 'difficultyLevel',
     'Dificuldade': 'difficultyLevel',
     'Nível': 'difficultyLevel',
     'Complexidade': 'difficultyLevel',
     
     // Atividade mostrada
+    'Atividade mostrada': 'quadroInterativoCampoEspecifico',
     'Atividade': 'quadroInterativoCampoEspecifico',
     'Atividades': 'quadroInterativoCampoEspecifico',
     'Tipo de Atividade': 'quadroInterativoCampoEspecifico',
@@ -132,13 +115,12 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     'Recursos Interativos': 'quadroInterativoCampoEspecifico'
   };
 
-  // Aplicar mapeamentos fallback apenas se o campo ainda está vazio
+  // Aplicar mapeamentos com log detalhado
   Object.entries(fieldMappings).forEach(([customFieldKey, formFieldKey]) => {
     const value = customFields[customFieldKey];
-    const currentValue = (formData as any)[formFieldKey];
-    if (value && value.trim() && formFieldKey in formData && !currentValue) {
-      (formData as any)[formFieldKey] = value.trim();
-      console.log(`✅ FALLBACK: ${customFieldKey} -> ${formFieldKey} = "${value}"`);
+    if (value && value.trim() && formFieldKey in formData) {
+      (formData as any)[formFieldKey] = value;
+      console.log(`✅ Mapeado: ${customFieldKey} -> ${formFieldKey} = ${value}`);
     }
   });
 
@@ -203,14 +185,21 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     }
   });
 
-  // Log final dos dados processados
-  console.log('📊 RESUMO FINAL - Dados mapeados:');
-  console.log('  📚 Disciplina:', formData.subject || '[VAZIO]');
-  console.log('  🎓 Ano/Série:', formData.schoolYear || '[VAZIO]');
-  console.log('  📖 Tema:', formData.theme || '[VAZIO]');
-  console.log('  🎯 Objetivos:', formData.objectives || '[VAZIO]');
-  console.log('  📊 Dificuldade:', formData.difficultyLevel || '[VAZIO]');
-  console.log('  🎮 Atividade:', formData.quadroInterativoCampoEspecifico || '[VAZIO]');
+  // Garantir que campos essenciais tenham valores padrão se estiverem vazios
+  if (!formData.subject) {
+    formData.subject = 'Matemática';
+    console.log('🔧 Disciplina padrão aplicada: Matemática');
+  }
+
+  if (!formData.difficultyLevel) {
+    formData.difficultyLevel = 'Médio';
+    console.log('🔧 Nível de dificuldade padrão aplicado: Médio');
+  }
+
+  if (!formData.quadroInterativoCampoEspecifico) {
+    formData.quadroInterativoCampoEspecifico = 'Atividade interativa no quadro';
+    console.log('🔧 Atividade padrão aplicada');
+  }
 
   console.log('📝 Dados processados do Quadro Interativo:', formData);
 
