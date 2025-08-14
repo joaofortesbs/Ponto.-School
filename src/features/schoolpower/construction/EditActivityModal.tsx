@@ -20,6 +20,210 @@ import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/Plano
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import { CheckCircle2 } from 'lucide-react';
 
+// --- Componentes de Edição Específicos (Assumindo que estes existem) ---
+
+// Componente genérico para campos comuns
+const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <>
+    <div>
+      <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
+      <Textarea
+        id="objectives"
+        value={formData.objectives}
+        onChange={(e) => onFieldChange('objectives', e.target.value)}
+        placeholder="Descreva os objetivos que os alunos devem alcançar..."
+        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
+      <Textarea
+        id="materials"
+        value={formData.materials}
+        onChange={(e) => onFieldChange('materials', e.target.value)}
+        placeholder="Liste os materiais necessários (um por linha)..."
+        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
+      <Textarea
+        id="instructions"
+        value={formData.instructions}
+        onChange={(e) => onFieldChange('instructions', e.target.value)}
+        placeholder="Descreva como a atividade deve ser executada..."
+        className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
+      <Textarea
+        id="evaluation"
+        value={formData.evaluation}
+        onChange={(e) => onFieldChange('evaluation', e.target.value)}
+        placeholder="Como a atividade será avaliada..."
+        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+  </>
+);
+
+// Componente específico para Quadro Interativo (APENAS CAMPOS ADICIONAIS SE NECESSÁRIO)
+const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    {/* Adicionar campos específicos para Quadro Interativo aqui se houver */}
+    {/* Exemplo: */}
+    <div>
+      <Label htmlFor="quadroInterativoCampoEspecifico">Exemplo de Campo Quadro Interativo</Label>
+      <Input
+        id="quadroInterativoCampoEspecifico"
+        value={formData.quadroInterativoCampoEspecifico || ''}
+        onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
+        placeholder="Configuração específica para quadro interativo"
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+    {/* Adicione mais campos conforme necessário */}
+  </div>
+);
+
+// Componente específico para Sequência Didática
+const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="tituloTemaAssunto">Título do Tema / Assunto *</Label>
+        <Input
+          id="tituloTemaAssunto"
+          value={formData.tituloTemaAssunto || ''}
+          onChange={(e) => onFieldChange('tituloTemaAssunto', e.target.value)}
+          placeholder="Ex: Substantivos Próprios e Verbos"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="anoSerie">Ano / Série *</Label>
+        <Input
+          id="anoSerie"
+          value={formData.anoSerie || ''}
+          onChange={(e) => onFieldChange('anoSerie', e.target.value)}
+          placeholder="Ex: 6º Ano do Ensino Fundamental"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="disciplina">Disciplina *</Label>
+        <Input
+          id="disciplina"
+          value={formData.disciplina || ''}
+          onChange={(e) => onFieldChange('disciplina', e.target.value)}
+          placeholder="Ex: Língua Portuguesa"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="bnccCompetencias">BNCC / Competências</Label>
+        <Input
+          id="bnccCompetencias"
+          value={formData.bnccCompetencias || ''}
+          onChange={(e) => onFieldChange('bnccCompetencias', e.target.value)}
+          placeholder="Ex: EF06LP01, EF06LP02"
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+    </div>
+
+    <div>
+      <Label htmlFor="publicoAlvo">Público-alvo *</Label>
+      <Textarea
+        id="publicoAlvo"
+        value={formData.publicoAlvo || ''}
+        onChange={(e) => onFieldChange('publicoAlvo', e.target.value)}
+        placeholder="Descrição detalhada do público-alvo..."
+        rows={2}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="objetivosAprendizagem">Objetivos de Aprendizagem *</Label>
+      <Textarea
+        id="objetivosAprendizagem"
+        value={formData.objetivosAprendizagem || ''}
+        onChange={(e) => onFieldChange('objetivosAprendizagem', e.target.value)}
+        placeholder="Objetivos específicos que os alunos devem alcançar..."
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div className="grid grid-cols-3 gap-4">
+      <div>
+        <Label htmlFor="quantidadeAulas">Quantidade de Aulas *</Label>
+        <Input
+          id="quantidadeAulas"
+          type="number"
+          value={formData.quantidadeAulas || ''}
+          onChange={(e) => onFieldChange('quantidadeAulas', e.target.value)}
+          placeholder="Ex: 4"
+          min="1"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="quantidadeDiagnosticos">Quantidade de Diagnósticos *</Label>
+        <Input
+          id="quantidadeDiagnosticos"
+          type="number"
+          value={formData.quantidadeDiagnosticos || ''}
+          onChange={(e) => onFieldChange('quantidadeDiagnosticos', e.target.value)}
+          placeholder="Ex: 1"
+          min="0"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="quantidadeAvaliacoes">Quantidade de Avaliações *</Label>
+        <Input
+          id="quantidadeAvaliacoes"
+          type="number"
+          value={formData.quantidadeAvaliacoes || ''}
+          onChange={(e) => onFieldChange('quantidadeAvaliacoes', e.target.value)}
+          placeholder="Ex: 2"
+          min="0"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+    </div>
+
+    <div>
+      <Label htmlFor="cronograma">Cronograma</Label>
+      <Textarea
+        id="cronograma"
+        value={formData.cronograma || ''}
+        onChange={(e) => onFieldChange('cronograma', e.target.value)}
+        placeholder="Cronograma resumido da sequência didática..."
+        rows={3}
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+  </div>
+);
+
 // Função para processar dados da lista de exercícios
 const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
   return {
@@ -59,6 +263,7 @@ const getActivityIcon = (activityId: string) => {
   if (activityId.includes('redacao')) return PenTool;
   if (activityId.includes('matematica')) return Calculator;
   if (activityId.includes('ciencias')) return Beaker;
+  if (activityId.includes('quadro-interativo')) return Settings; // Ícone para Quadro Interativo
   return GraduationCap; // ícone padrão
 };
 
@@ -124,7 +329,9 @@ const EditActivityModal = ({
     quantidadeAulas: '',
     quantidadeDiagnosticos: '',
     quantidadeAvaliacoes: '',
-    cronograma: ''
+    cronograma: '',
+    // Campos específicos para quadro-interativo
+    quadroInterativoCampoEspecifico: activity?.customFields?.quadroInterativoCampoEspecifico || '',
   });
 
   // Estado para conteúdo gerado
@@ -234,6 +441,19 @@ const EditActivityModal = ({
             timeLimit: data.timeLimit,
             context: data.context,
           },
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'quadro-interativo') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Quadro Interativo Exemplo",
+          description: data.description || "Descrição do quadro interativo...",
+          // Aqui você pode adicionar campos específicos gerados para quadro interativo
+          // Exemplo: quadroInterativoConfig: { ... }
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
@@ -467,7 +687,9 @@ const EditActivityModal = ({
                 quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || '',
                 quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || '',
                 quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || '',
-                cronograma: consolidatedCustomFields['Cronograma'] || ''
+                cronograma: consolidatedCustomFields['Cronograma'] || '',
+                // Campos específicos para quadro-interativo
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || '',
               };
 
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
@@ -512,9 +734,31 @@ const EditActivityModal = ({
                 materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || activity?.materials || '',
                 context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
                 evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+                 // Campos específicos para quadro-interativo
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
 
               console.log('✅ Dados da Sequência Didática processados:', enrichedFormData);
+
+            } else if (activity?.id === 'quadro-interativo') {
+              console.log('🖼️ Processando dados específicos de Quadro Interativo');
+              console.log('🗂️ Custom fields consolidados para quadro-interativo:', consolidatedCustomFields);
+
+              enrichedFormData = {
+                ...formData, // Começa com os dados base do formulário
+                title: consolidatedData.title || autoFormData.title || activity.title || '',
+                description: consolidatedData.description || autoFormData.description || activity.description || '',
+                // Mapeamento de campos específicos para Quadro Interativo
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
+                // Sobrescrever campos genéricos se necessário, baseado nos customFields do Quadro Interativo
+                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || activity?.customFields?.disciplina || 'Matemática',
+                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity?.theme || '',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || activity?.schoolYear || '',
+                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || '',
+                // Adicionar outros mapeamentos relevantes aqui
+              };
+
+              console.log('🖼️ Dados do Quadro Interativo processados:', enrichedFormData);
 
             } else {
               // Mapear todos os campos personalizados para os campos do formulário com prioridade correta
@@ -561,7 +805,9 @@ const EditActivityModal = ({
                 quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
                 quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
                 quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
-                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || ''
+                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
+                 // Campos específicos para quadro-interativo
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
             }
 
@@ -636,7 +882,9 @@ const EditActivityModal = ({
               quantidadeAulas: '',
               quantidadeDiagnosticos: '',
               quantidadeAvaliacoes: '',
-              cronograma: ''
+              cronograma: '',
+              // Campos específicos para quadro-interativo
+              quadroInterativoCampoEspecifico: '',
             };
 
             setFormData(fallbackData);
@@ -727,10 +975,64 @@ const EditActivityModal = ({
               quantidadeAulas: customFields['Quantidade de Aulas'] || '',
               quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
               quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
-              cronograma: customFields['Cronograma'] || ''
+              cronograma: customFields['Cronograma'] || '',
+               // Campos específicos para quadro-interativo
+              quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
             };
 
             console.log('📝 Dados diretos processados para plano-aula:', directFormData);
+          } else if (activity?.id === 'sequencia-didatica') {
+            console.log('📚 Processando dados diretos de Sequência Didática');
+
+            directFormData = {
+              ...formData, // Começa com os dados base do formulário
+              title: activityData.title || '',
+              description: activityData.description || '',
+              // Mapeamento dos campos específicos da Sequência Didática
+              tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+              anoSerie: customFields['Ano / Série'] || '',
+              disciplina: customFields['Disciplina'] || '',
+              bnccCompetencias: customFields['BNCC / Competências'] || '',
+              publicoAlvo: customFields['Público-alvo'] || '',
+              objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+              quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+              cronograma: customFields['Cronograma'] || '',
+              // Mapeamento dos campos gerais que podem ser sobrescritos
+              subject: customFields['Disciplina'] || 'Português',
+              theme: customFields['Tema'] || '',
+              schoolYear: customFields['Ano de Escolaridade'] || '',
+              competencies: customFields['Competências'] || '',
+              objectives: customFields['Objetivos'] || '',
+              materials: customFields['Materiais'] || '',
+              context: customFields['Contexto de Aplicação'] || '',
+              evaluation: customFields['Critérios de Avaliação'] || '',
+               // Campos específicos para quadro-interativo
+              quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
+            };
+
+            console.log('✅ Dados da Sequência Didática processados:', directFormData);
+
+          } else if (activity?.id === 'quadro-interativo') {
+            console.log('🖼️ Processando dados diretos de Quadro Interativo');
+
+            directFormData = {
+              ...formData, // Começa com os dados base do formulário
+              title: activityData.title || '',
+              description: activityData.description || '',
+              // Mapeamento de campos específicos para Quadro Interativo
+              quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
+              // Sobrescrever campos genéricos se necessário
+              subject: customFields['Disciplina'] || 'Matemática',
+              theme: customFields['Tema'] || '',
+              schoolYear: customFields['Ano de Escolaridade'] || '',
+              objectives: customFields['Objetivos'] || '',
+              // Adicionar outros mapeamentos relevantes aqui
+            };
+
+            console.log('🖼️ Dados do Quadro Interativo processados:', directFormData);
+
           } else {
             // Para outras atividades
             directFormData = {
@@ -775,7 +1077,9 @@ const EditActivityModal = ({
               quantidadeAulas: customFields['Quantidade de Aulas'] || '',
               quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
               quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
-              cronograma: customFields['Cronograma'] || ''
+              cronograma: customFields['Cronograma'] || '',
+               // Campos específicos para quadro-interativo
+              quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
             };
           }
 
@@ -913,41 +1217,10 @@ const EditActivityModal = ({
     });
   };
 
-  const handleExportPDF = () => {
-    // Lógica para exportar PDF será implementada futuramente
-    console.log('Exportar PDF em desenvolvimento');
-  };
-
-  // Verificar se campos obrigatórios estão preenchidos
-  const isFormValid = activity?.id === 'lista-exercicios'
-    ? formData.title.trim() &&
-      formData.description.trim() &&
-      formData.subject.trim() &&
-      formData.theme.trim() &&
-      formData.schoolYear.trim() &&
-      formData.numberOfQuestions.trim() &&
-      formData.difficultyLevel.trim() &&
-      formData.questionModel.trim()
-    : activity?.id === 'plano-aula'
-    ? formData.title.trim() &&
-      formData.description.trim() &&
-      formData.theme.trim() &&
-      formData.schoolYear.trim() &&
-      formData.subject.trim() &&
-      formData.objectives.trim() &&
-      formData.materials.trim()
-    : activity?.id === 'sequencia-didatica'
-    ? formData.tituloTemaAssunto?.trim() &&
-      formData.anoSerie?.trim() &&
-      formData.disciplina?.trim() &&
-      formData.publicoAlvo?.trim() &&
-      formData.objetivosAprendizagem?.trim() &&
-      formData.quantidadeAulas?.trim() &&
-      formData.quantidadeDiagnosticos?.trim() &&
-      formData.quantidadeAvaliacoes?.trim()
-    : formData.title.trim() &&
-      formData.description.trim() &&
-      formData.objectives.trim();
+  // Lógica para exportar PDF será implementada futuramente
+  // const handleExportPDF = () => {
+  //   console.log('Exportar PDF em desenvolvimento');
+  // };
 
   // Converter formData em formato para ActivityPreview
   const getActivityPreviewData = () => {
@@ -955,13 +1228,13 @@ const EditActivityModal = ({
       title: formData.title,
       description: formData.description,
       difficulty: formData.difficultyLevel,
-      timeLimit: '45 minutos',
+      timeLimit: '45 minutos', // Valor fixo ou dinâmico conforme necessário
       instructions: formData.instructions,
       materials: formData.materials ? formData.materials.split('\n').filter(m => m.trim()) : [],
       objective: formData.objectives,
       targetAudience: formData.schoolYear,
       rubric: formData.evaluation,
-      questions: []
+      questions: [] // Preencher com base no generatedContent se aplicável
     };
   };
 
@@ -1008,6 +1281,10 @@ const EditActivityModal = ({
             'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
             'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
             'Cronograma': formData.cronograma
+          }),
+          // Mapeamento condicional para quadro-interativo
+          ...(activity?.id === 'quadro-interativo' && {
+            'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
           })
         }
       };
@@ -1019,7 +1296,7 @@ const EditActivityModal = ({
 
       // Salvar no localStorage
       localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updatedActivity));
-      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields));
+      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields)); // Preservando o salvamento anterior
 
       // Para Sequência Didática, salvar também como atividade construída
       if (activity.categoryId === 'sequencia-didatica' || activity.type === 'sequencia-didatica') {
@@ -1089,6 +1366,10 @@ const EditActivityModal = ({
         formData.quantidadeAulas?.trim() &&
         formData.quantidadeDiagnosticos?.trim() &&
         formData.quantidadeAvaliacoes?.trim()
+      : activity?.id === 'quadro-interativo'
+      ? formData.title.trim() &&
+        formData.description.trim() &&
+        formData.quadroInterativoCampoEspecifico?.trim() // Campo específico para quadro interativo
       : formData.title.trim() &&
         formData.description.trim() &&
         formData.objectives.trim();
@@ -1214,301 +1495,292 @@ const EditActivityModal = ({
                         />
                       </div>
 
-                      {/* Campos específicos para Sequência Didática */}
-                      {activity?.id === 'sequencia-didatica' && (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="tituloTemaAssunto">Título do Tema / Assunto *</Label>
-                              <Input
-                                id="tituloTemaAssunto"
-                                value={formData.tituloTemaAssunto || ''}
-                                onChange={(e) => handleInputChange('tituloTemaAssunto', e.target.value)}
-                                placeholder="Ex: Substantivos Próprios e Verbos"
-                                required
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="anoSerie">Ano / Série *</Label>
-                              <Input
-                                id="anoSerie"
-                                value={formData.anoSerie || ''}
-                                onChange={(e) => handleInputChange('anoSerie', e.target.value)}
-                                placeholder="Ex: 6º Ano do Ensino Fundamental"
-                                required
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
+                      {/* Renderização condicional dos componentes de edição */}
+                      {(() => {
+                        const activityType = activity?.id || '';
+                        // Define campos obrigatórios para validação de construção automática
+                        const requiredFieldsFilled = (() => {
+                          if (activityType === 'lista-exercicios') {
+                            return formData.title && formData.description && formData.subject && formData.theme && formData.schoolYear && formData.numberOfQuestions && formData.difficultyLevel && formData.questionModel;
+                          } else if (activityType === 'plano-aula') {
+                            return formData.title && formData.description && formData.theme && formData.schoolYear && formData.subject && formData.objectives && formData.materials;
+                          } else if (activityType === 'sequencia-didatica') {
+                            return formData.tituloTemaAssunto && formData.anoSerie && formData.disciplina && formData.publicoAlvo && formData.objetivosAprendizagem && formData.quantidadeAulas && formData.quantidadeDiagnosticos && formData.quantidadeAvaliacoes;
+                          } else if (activityType === 'quadro-interativo') {
+                            // Campos obrigatórios específicos para Quadro Interativo
+                            return formData.title && formData.description && formData.quadroInterativoCampoEspecifico;
+                          } else {
+                            return formData.title && formData.description && formData.objectives;
+                          }
+                        })();
+                        // Define a validade do formulário com base nos campos obrigatórios
+                        const isFormValidForBuild = requiredFieldsFilled;
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="disciplina">Disciplina *</Label>
-                              <Input
-                                id="disciplina"
-                                value={formData.disciplina || ''}
-                                onChange={(e) => handleInputChange('disciplina', e.target.value)}
-                                placeholder="Ex: Língua Portuguesa"
-                                required
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="bnccCompetencias">BNCC / Competências</Label>
-                              <Input
-                                id="bnccCompetencias"
-                                value={formData.bnccCompetencias || ''}
-                                onChange={(e) => handleInputChange('bnccCompetencias', e.target.value)}
-                                placeholder="Ex: EF06LP01, EF06LP02"
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
+                        return (
+                          <>
+                            {/* Campos Genéricos */}
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo') && (
+                              <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
+                            )}
 
-                          <div>
-                            <Label htmlFor="publicoAlvo">Público-alvo *</Label>
-                            <Textarea
-                              id="publicoAlvo"
-                              value={formData.publicoAlvo || ''}
-                              onChange={(e) => handleInputChange('publicoAlvo', e.target.value)}
-                              placeholder="Descrição detalhada do público-alvo..."
-                              rows={2}
-                              required
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                            {/* Campos Específicos Sequência Didática */}
+                            {activityType === 'sequencia-didatica' && (
+                              <SequenciaDidaticaEditActivity formData={formData} onFieldChange={handleInputChange} />
+                            )}
 
-                          <div>
-                            <Label htmlFor="objetivosAprendizagem">Objetivos de Aprendizagem *</Label>
-                            <Textarea
-                              id="objetivosAprendizagem"
-                              value={formData.objetivosAprendizagem || ''}
-                              onChange={(e) => handleInputChange('objetivosAprendizagem', e.target.value)}
-                              placeholder="Objetivos específicos que os alunos devem alcançar..."
-                              rows={3}
-                              required
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                            {/* Campos Específicos Plano de Aula */}
+                            {activityType === 'plano-aula' && (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="subject">Componente Curricular *</Label>
+                                    <Input
+                                      id="subject"
+                                      value={formData.subject || ''}
+                                      onChange={(e) => handleInputChange('subject', e.target.value)}
+                                      placeholder="Ex: Matemática"
+                                      required
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="theme">Tema ou Tópico Central *</Label>
+                                    <Input
+                                      id="theme"
+                                      value={formData.theme || ''}
+                                      onChange={(e) => handleInputChange('theme', e.target.value)}
+                                      placeholder="Ex: Equações de 1º Grau"
+                                      required
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                </div>
 
-                          <div className="grid grid-cols-3 gap-4">
-                            <div>
-                              <Label htmlFor="quantidadeAulas">Quantidade de Aulas *</Label>
-                              <Input
-                                id="quantidadeAulas"
-                                type="number"
-                                value={formData.quantidadeAulas || ''}
-                                onChange={(e) => handleInputChange('quantidadeAulas', e.target.value)}
-                                placeholder="Ex: 4"
-                                min="1"
-                                required
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="quantidadeDiagnosticos">Quantidade de Diagnósticos *</Label>
-                              <Input
-                                id="quantidadeDiagnosticos"
-                                type="number"
-                                value={formData.quantidadeDiagnosticos || ''}
-                                onChange={(e) => handleInputChange('quantidadeDiagnosticos', e.target.value)}
-                                placeholder="Ex: 1"
-                                min="0"
-                                required
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="quantidadeAvaliacoes">Quantidade de Avaliações *</Label>
-                              <Input
-                                id="quantidadeAvaliacoes"
-                                type="number"
-                                value={formData.quantidadeAvaliacoes || ''}
-                                onChange={(e) => handleInputChange('quantidadeAvaliacoes', e.target.value)}
-                                placeholder="Ex: 2"
-                                min="0"
-                                required
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="schoolYear">Ano/Série Escolar *</Label>
+                                    <Input
+                                      id="schoolYear"
+                                      value={formData.schoolYear || ''}
+                                      onChange={(e) => handleInputChange('schoolYear', e.target.value)}
+                                      placeholder="Ex: 9º Ano Fundamental"
+                                      required
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="competencies">Habilidades BNCC</Label>
+                                    <Input
+                                      id="competencies"
+                                      value={formData.competencies || ''}
+                                      onChange={(e) => handleInputChange('competencies', e.target.value)}
+                                      placeholder="Ex: EF09MA10, EF09MA11"
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                </div>
 
-                          <div>
-                            <Label htmlFor="cronograma">Cronograma</Label>
-                            <Textarea
-                              id="cronograma"
-                              value={formData.cronograma || ''}
-                              onChange={(e) => handleInputChange('cronograma', e.target.value)}
-                              placeholder="Cronograma resumido da sequência didática..."
-                              rows={3}
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
-                        </div>
-                      )}
+                                <div>
+                                  <Label htmlFor="objectives">Objetivo Geral *</Label>
+                                  <Textarea
+                                    id="objectives"
+                                    value={formData.objectives || ''}
+                                    onChange={(e) => handleInputChange('objectives', e.target.value)}
+                                    placeholder="Objetivo principal do plano de aula..."
+                                    rows={3}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                      {/* Campos específicos para Lista de Exercícios */}
-                      {activity?.id === 'lista-exercicios' && (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="numberOfQuestions">Número de Questões</Label>
-                              <Input
-                                id="numberOfQuestions"
-                                value={formData.numberOfQuestions}
-                                onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
-                                placeholder="Ex: 10"
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="difficultyLevel">Nível de Dificuldade</Label>
-                              <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
-                                <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500">
-                                  <SelectValue placeholder="Selecione a dificuldade" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Fácil">Fácil</SelectItem>
-                                  <SelectItem value="Médio">Médio</SelectItem>
-                                  <SelectItem value="Difícil">Difícil</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
+                                <div>
+                                  <Label htmlFor="materials">Materiais/Recursos *</Label>
+                                  <Textarea
+                                    id="materials"
+                                    value={formData.materials || ''}
+                                    onChange={(e) => handleInputChange('materials', e.target.value)}
+                                    placeholder="Lista de materiais necessários (um por linha)..."
+                                    rows={3}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                          <div>
-                            <Label htmlFor="questionModel">Modelo de Questões</Label>
-                            <Input
-                              id="questionModel"
-                              value={formData.questionModel}
-                              onChange={(e) => handleInputChange('questionModel', e.target.value)}
-                              placeholder="Ex: Múltipla escolha, discursivas..."
-                              className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                                <div>
+                                  <Label htmlFor="context">Perfil da Turma / Contexto *</Label>
+                                  <Textarea
+                                    id="context"
+                                    value={formData.context || ''}
+                                    onChange={(e) => handleInputChange('context', e.target.value)}
+                                    placeholder="Descrição do perfil da turma e contexto da aula..."
+                                    rows={2}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                          <div>
-                            <Label htmlFor="sources">Fontes</Label>
-                            <Textarea
-                              id="sources"
-                              value={formData.sources}
-                              onChange={(e) => handleInputChange('sources', e.target.value)}
-                              placeholder="Fontes utilizadas para criar as questões..."
-                              rows={3}
-                              className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="timeLimit">Carga Horária / Tempo Estimado</Label>
+                                    <Input
+                                      id="timeLimit"
+                                      value={formData.timeLimit || ''}
+                                      onChange={(e) => handleInputChange('timeLimit', e.target.value)}
+                                      placeholder="Ex: 2 aulas de 50 minutos"
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="difficultyLevel">Tipo de Aula / Metodologia</Label>
+                                    <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500">
+                                        <SelectValue placeholder="Selecione o tipo de aula" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Expositiva">Aula Expositiva</SelectItem>
+                                        <SelectItem value="Debate">Debate</SelectItem>
+                                        <SelectItem value="Estudo de Caso">Estudo de Caso</SelectItem>
+                                        <SelectItem value="Resolução de Problemas">Resolução de Problemas</SelectItem>
+                                        <SelectItem value="Outro">Outro</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
 
-                          <div>
-                            <Label htmlFor="objectives">Objetivos</Label>
-                            <Textarea
-                              id="objectives"
-                              value={formData.objectives}
-                              onChange={(e) => handleInputChange('objectives', e.target.value)}
-                              placeholder="Objetivos da lista de exercícios..."
-                              rows={3}
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                                <div>
+                                  <Label htmlFor="evaluation">Observações do Professor / Avaliação</Label>
+                                  <Textarea
+                                    id="evaluation"
+                                    value={formData.evaluation || ''}
+                                    onChange={(e) => handleInputChange('evaluation', e.target.value)}
+                                    placeholder="Observações relevantes para a aula ou critérios de avaliação..."
+                                    rows={2}
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
 
-                          <div>
-                            <Label htmlFor="materials">Materiais</Label>
-                            <Textarea
-                              id="materials"
-                              value={formData.materials}
-                              onChange={(e) => handleInputChange('materials', e.target.value)}
-                              placeholder="Materiais necessários..."
-                              rows={2}
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                            {/* Campos Específicos Quadro Interativo */}
+                            {activityType === 'quadro-interativo' && (
+                              <QuadroInterativoEditActivity formData={formData} onFieldChange={handleInputChange} />
+                            )}
 
-                          <div>
-                            <Label htmlFor="instructions">Instruções</Label>
-                            <Textarea
-                              id="instructions"
-                              value={formData.instructions}
-                              onChange={(e) => handleInputChange('instructions', e.target.value)}
-                              placeholder="Instruções para aplicação..."
-                              rows={3}
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                            {/* Campos Específicos Lista de Exercícios */}
+                            {activityType === 'lista-exercicios' && (
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="numberOfQuestions">Número de Questões</Label>
+                                    <Input
+                                      id="numberOfQuestions"
+                                      value={formData.numberOfQuestions}
+                                      onChange={(e) => handleInputChange('numberOfQuestions', e.target.value)}
+                                      placeholder="Ex: 10"
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="difficultyLevel">Nível de Dificuldade</Label>
+                                    <Select value={formData.difficultyLevel} onValueChange={(value) => handleInputChange('difficultyLevel', value)}>
+                                      <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500">
+                                        <SelectValue placeholder="Selecione a dificuldade" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="Fácil">Fácil</SelectItem>
+                                        <SelectItem value="Médio">Médio</SelectItem>
+                                        <SelectItem value="Difícil">Difícil</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
 
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="timeLimit">Tempo Limite</Label>
-                              <Input
-                                id="timeLimit"
-                                value={formData.timeLimit}
-                                onChange={(e) => handleInputChange('timeLimit', e.target.value)}
-                                placeholder="Ex: 60 minutos"
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="context">Contexto de Aplicação</Label>
-                              <Input
-                                id="context"
-                                value={formData.context}
-                                onChange={(e) => handleInputChange('context', e.target.value)}
-                                placeholder="Ex: Prova final, atividade em sala..."
-                                className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                                <div>
+                                  <Label htmlFor="questionModel">Modelo de Questões</Label>
+                                  <Input
+                                    id="questionModel"
+                                    value={formData.questionModel}
+                                    onChange={(e) => handleInputChange('questionModel', e.target.value)}
+                                    placeholder="Ex: Múltipla escolha, discursivas..."
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                      {/* Campos genéricos para outras atividades */}
-                      {activity?.id !== 'lista-exercicios' && activity?.id !== 'plano-aula' && activity?.id !== 'sequencia-didatica' && (
-                        <>
-                          <div>
-                            <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
-                            <Textarea
-                              id="objectives"
-                              value={formData.objectives}
-                              onChange={(e) => handleInputChange('objectives', e.target.value)}
-                              placeholder="Descreva os objetivos que os alunos devem alcançar..."
-                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                                <div>
+                                  <Label htmlFor="sources">Fontes</Label>
+                                  <Textarea
+                                    id="sources"
+                                    value={formData.sources}
+                                    onChange={(e) => handleInputChange('sources', e.target.value)}
+                                    placeholder="Fontes utilizadas para criar as questões..."
+                                    rows={3}
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                          <div>
-                            <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
-                            <Textarea
-                              id="materials"
-                              value={formData.materials}
-                              onChange={(e) => handleInputChange('materials', e.target.value)}
-                              placeholder="Liste os materiais necessários (um por linha)..."
-                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                                <div>
+                                  <Label htmlFor="objectives">Objetivos</Label>
+                                  <Textarea
+                                    id="objectives"
+                                    value={formData.objectives}
+                                    onChange={(e) => handleInputChange('objectives', e.target.value)}
+                                    placeholder="Objetivos da lista de exercícios..."
+                                    rows={3}
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                          <div>
-                            <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
-                            <Textarea
-                              id="instructions"
-                              value={formData.instructions}
-                              onChange={(e) => handleInputChange('instructions', e.target.value)}
-                              placeholder="Descreva como a atividade deve ser executada..."
-                              className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
+                                <div>
+                                  <Label htmlFor="materials">Materiais</Label>
+                                  <Textarea
+                                    id="materials"
+                                    value={formData.materials}
+                                    onChange={(e) => handleInputChange('materials', e.target.value)}
+                                    placeholder="Materiais necessários..."
+                                    rows={2}
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
 
-                          <div>
-                            <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
-                            <Textarea
-                              id="evaluation"
-                              value={formData.evaluation}
-                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                              placeholder="Como a atividade será avaliada..."
-                              className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
-                        </>
-                      )}
+                                <div>
+                                  <Label htmlFor="instructions">Instruções</Label>
+                                  <Textarea
+                                    id="instructions"
+                                    value={formData.instructions}
+                                    onChange={(e) => handleInputChange('instructions', e.target.value)}
+                                    placeholder="Instruções para aplicação..."
+                                    rows={3}
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="timeLimit">Tempo Limite</Label>
+                                    <Input
+                                      id="timeLimit"
+                                      value={formData.timeLimit}
+                                      onChange={(e) => handleInputChange('timeLimit', e.target.value)}
+                                      placeholder="Ex: 60 minutos"
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="context">Contexto de Aplicação</Label>
+                                    <Input
+                                      id="context"
+                                      value={formData.context}
+                                      onChange={(e) => handleInputChange('context', e.target.value)}
+                                      placeholder="Ex: Prova final, atividade em sala..."
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
@@ -1523,10 +1795,11 @@ const EditActivityModal = ({
                   id="build-activity-button"
                   data-testid="build-activity-button"
                   onClick={handleBuildActivity}
-                  disabled={buildingStatus.isBuilding || !isFormValid}
+                  // Desabilita o botão se estiver construindo ou se os campos obrigatórios não estiverem preenchidos
+                  disabled={isBuilding || !isFormValidForBuild}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {buildingStatus.isBuilding ? (
+                  {isBuilding ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                       {buildingStatus.currentStep || 'Gerando Atividade...'}
@@ -1562,9 +1835,17 @@ const EditActivityModal = ({
                       <SequenciaDidaticaPreview
                         data={generatedContent || formData}
                       />
+                    ) : activity?.id === 'quadro-interativo' ? (
+                      // Pré-visualização específica para Quadro Interativo, se existir
+                      // Exemplo: <QuadroInterativoPreview data={generatedContent || formData} />
+                      // Se não houver preview específico, usa o padrão:
+                      <ActivityPreview
+                        content={generatedContent || formData}
+                        activityData={activity}
+                      />
                     ) : (
                       <ActivityPreview
-                        content={generatedContent}
+                        content={generatedContent || formData}
                         activityData={activity}
                       />
                     )
@@ -1611,6 +1892,7 @@ const EditActivityModal = ({
                 >
                   <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
                 </Button>
+                {/* Botão de exportar PDF comentado */}
                 {/* <Button
                   variant="outline"
                   onClick={handleExportPDF}

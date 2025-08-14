@@ -177,6 +177,19 @@ export const activityCustomFields: Record<string, string[]> = {
     "exemplosPraticos",
     "situacoesReais",
     "analiseContextual"
+  ],
+  "quadro-interativo": [
+    "recursos",
+    "conteudo", 
+    "interatividade",
+    "design",
+    "objetivo",
+    "avaliacao",
+    "title",
+    "description",
+    "materials",
+    "instructions",
+    "evaluationCriteria"
   ]
 };
 

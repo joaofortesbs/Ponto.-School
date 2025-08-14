@@ -1,4 +1,3 @@
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { QuadroInterativoFields, quadroInterativoFieldMapping } from './fieldMapping';
 
@@ -63,6 +62,46 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     if (value && value.trim() && formFieldKey in formData) {
       (formData as any)[formFieldKey] = value;
       console.log(`✅ Mapeado: ${customFieldKey} -> ${formFieldKey} = ${value}`);
+    }
+  });
+
+  // Mapear campos customizados para campos do formulário
+  Object.entries(customFields).forEach(([key, value]) => {
+    const mappedField = quadroInterativoFieldMapping[key];
+    if (mappedField && typeof value === 'string') {
+      switch (mappedField) {
+        case 'recursos':
+          formData.materials = value;
+          break;
+        case 'objetivo':
+          formData.objective = value;
+          break;
+        case 'avaliacao':
+          formData.evaluationCriteria = value;
+          break;
+        case 'conteudo':
+          formData.instructions = value;
+          break;
+        case 'interatividade':
+          formData.activityShown = value;
+          break;
+        case 'design':
+          formData.difficultyLevel = value;
+          break;
+        // Campos diretos do modal de edição
+        case 'title':
+          formData.title = value;
+          break;
+        case 'description':
+          formData.description = value;
+          break;
+        case 'materials':
+          formData.materials = value;
+          break;
+        case 'instructions':
+          formData.instructions = value;
+          break;
+      }
     }
   });
 

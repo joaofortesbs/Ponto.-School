@@ -1,29 +1,31 @@
-
 export interface QuadroInterativoFields {
-  disciplina: string;
-  anoSerie: string;
-  tema: string;
+  recursos: string;
+  conteudo: string;
+  interatividade: string;
+  design: string;
   objetivo: string;
-  nivelDificuldade: string;
-  atividadeMostrada: string;
+  avaliacao: string;
+  // Campos adicionais para o modal de edição
+  title: string;
+  description: string;
+  objective: string;
+  materials: string;
+  instructions: string;
+  evaluationCriteria: string;
 }
 
-export const quadroInterativoFieldMapping = {
-  'Disciplina / Área de conhecimento': 'disciplina',
-  'Disciplina': 'disciplina',
-  'Área de conhecimento': 'disciplina',
-  'Ano / Série': 'anoSerie',
-  'Ano': 'anoSerie',
-  'Série': 'anoSerie',
-  'Tema ou Assunto da aula': 'tema',
-  'Tema': 'tema',
-  'Assunto': 'tema',
-  'Objetivo de aprendizagem da aula': 'objetivo',
+export const quadroInterativoFieldMapping: Record<string, keyof QuadroInterativoFields> = {
+  'Recursos': 'recursos',
+  'Conteúdo': 'conteudo',
+  'Interatividade': 'interatividade',
+  'Design': 'design',
   'Objetivo': 'objetivo',
-  'Objetivos': 'objetivo',
-  'Nível de Dificuldade': 'nivelDificuldade',
-  'Dificuldade': 'nivelDificuldade',
-  'Atividade mostrada': 'atividadeMostrada',
-  'Atividade': 'atividadeMostrada',
-  'Atividades': 'atividadeMostrada'
+  'Avaliação': 'avaliacao',
+  // Mapeamento para campos do modal de edição
+  'title': 'title',
+  'description': 'description',
+  'objective': 'objective',
+  'materials': 'materials',
+  'instructions': 'instructions',
+  'evaluationCriteria': 'evaluationCriteria'
 };
