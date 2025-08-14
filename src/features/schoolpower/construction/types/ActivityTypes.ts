@@ -52,6 +52,14 @@ export interface ActivityFormData {
   quantidadeDiagnosticos?: string;
   quantidadeAvaliacoes?: string;
   cronograma?: string;
+
+  // Campos específicos do Quadro Interativo
+  quadroInterativoDisciplina?: string;
+  quadroInterativoAnoSerie?: string;
+  quadroInterativoTema?: string;
+  quadroInterativoObjetivo?: string;
+  quadroInterativoNivelDificuldade?: string;
+  quadroInterativoAtividadeMostrada?: string;
 }
 
 export interface GeneratedActivity {

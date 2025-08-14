@@ -47,14 +47,14 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     'Tema ou Assunto da aula': 'theme',
     'Tema': 'theme',
     'Assunto': 'theme',
-    'Objetivo de aprendizagem da aula': 'objective',
-    'Objetivo': 'objective',
-    'Objetivos': 'objective',
+    'Objetivo de aprendizagem da aula': 'objectives',
+    'Objetivo': 'objectives',
+    'Objetivos': 'objectives',
     'Nível de Dificuldade': 'difficultyLevel',
     'Dificuldade': 'difficultyLevel',
-    'Atividade mostrada': 'activityShown',
-    'Atividade': 'activityShown',
-    'Atividades': 'activityShown'
+    'Atividade mostrada': 'practicalActivities',
+    'Atividade': 'practicalActivities',
+    'Atividades': 'practicalActivities'
   };
 
   // Aplicar mapeamentos com log detalhado
