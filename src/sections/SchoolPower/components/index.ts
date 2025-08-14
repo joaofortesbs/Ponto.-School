@@ -1,4 +1,3 @@
-
 // Exportação dos componentes do School Power
 export { default as TopHeader } from './TopHeader';
 export { default as ProfileSelector } from './ProfileSelector';
