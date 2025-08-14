@@ -9,6 +9,7 @@ import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
+import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -282,11 +283,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       if (activityType === 'sequencia-didatica') {
         console.log('📚 ActivityViewModal: Processando Sequência Didática');
 
-        // Verificar múltiplas fontes de dados
+        // Verificar múltiplas fontes de dados em ordem de prioridade
         const sequenciaCacheKeys = [
           `constructed_sequencia-didatica_${activity.id}`,
           `schoolpower_sequencia-didatica_content`,
-          `activity_${activity.id}`
+          `activity_${activity.id}`,
+          `activity_fields_${activity.id}`
         ];
 
         let sequenciaContent = null;
@@ -295,9 +297,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           if (data) {
             try {
               const parsedData = JSON.parse(data);
-              if (parsedData.sequenciaDidatica || parsedData.aulas || parsedData.diagnosticos || parsedData.avaliacoes) {
+              // Verificar se tem estrutura válida de sequência didática
+              if (parsedData.sequenciaDidatica || 
+                  parsedData.aulas || 
+                  parsedData.diagnosticos || 
+                  parsedData.avaliacoes ||
+                  parsedData.data?.sequenciaDidatica ||
+                  parsedData.success) {
                 sequenciaContent = parsedData;
-                console.log(`✅ Dados da Sequência Didática encontrados em ${key}`);
+                console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
                 break;
               }
             } catch (error) {
@@ -307,18 +315,64 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
 
         if (sequenciaContent) {
+          // Processar dados de acordo com a estrutura encontrada
+          let processedData = sequenciaContent;
+          
+          // Se os dados estão dentro de 'data' (resultado da API)
+          if (sequenciaContent.data) {
+            processedData = sequenciaContent.data;
+          }
+          
+          // Se tem sucesso e dados estruturados
+          if (sequenciaContent.success && sequenciaContent.data) {
+            processedData = sequenciaContent.data;
+          }
+
           // Mesclar dados da sequência didática com dados existentes
           previewData = {
             ...previewData,
-            ...sequenciaContent,
+            ...processedData,
             id: activity.id,
             type: activityType,
-            title: sequenciaContent.sequenciaDidatica?.titulo || previewData.title,
-            description: sequenciaContent.sequenciaDidatica?.descricaoGeral || previewData.description
+            title: processedData.sequenciaDidatica?.titulo || 
+                   processedData.titulo || 
+                   processedData.title || 
+                   previewData.title,
+            description: processedData.sequenciaDidatica?.descricaoGeral || 
+                        processedData.descricaoGeral || 
+                        processedData.description || 
+                        previewData.description,
+            // Garantir estrutura completa para visualização
+            sequenciaDidatica: processedData.sequenciaDidatica || processedData,
+            metadados: processedData.metadados || {
+              totalAulas: processedData.aulas?.length || 0,
+              totalDiagnosticos: processedData.diagnosticos?.length || 0,
+              totalAvaliacoes: processedData.avaliacoes?.length || 0,
+              isGeneratedByAI: true,
+              generatedAt: processedData.generatedAt || new Date().toISOString()
+            }
           };
-          console.log('📚 Dados da Sequência Didática mesclados com sucesso');
+          console.log('📚 Dados da Sequência Didática processados para visualização:', previewData);
         } else {
           console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
+          // Criar estrutura básica a partir dos dados do formulário
+          previewData = {
+            ...previewData,
+            sequenciaDidatica: {
+              titulo: previewData.title || 'Sequência Didática',
+              descricaoGeral: previewData.description || 'Descrição da sequência didática',
+              aulas: [],
+              diagnosticos: [],
+              avaliacoes: []
+            },
+            metadados: {
+              totalAulas: 0,
+              totalDiagnosticos: 0,
+              totalAvaliacoes: 0,
+              isGeneratedByAI: false,
+              generatedAt: new Date().toISOString()
+            }
+          };
         }
       }
 
@@ -338,6 +392,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('📚 Renderizando PlanoAulaPreview com dados:', previewData);
         return (
           <PlanoAulaPreview
+            data={previewData}
+            activityData={activity}
+          />
+        );
+
+      case 'sequencia-didatica':
+        console.log('📚 Renderizando SequenciaDidaticaPreview com dados:', previewData);
+        return (
+          <SequenciaDidaticaPreview
             data={previewData}
             activityData={activity}
           />

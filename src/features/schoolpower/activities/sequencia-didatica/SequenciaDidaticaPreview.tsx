@@ -19,6 +19,8 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
   // Função para recuperar dados reais da IA do Gemini
   const getSequenciaDidaticaData = () => {
     console.log('🔍 Buscando dados da Sequência Didática...');
+    console.log('📊 Data recebida:', data);
+    console.log('📊 ActivityData recebida:', activityData);
 
     // 1. Prioridade: dados passados como prop que já vieram da IA
     if (data && data.sequenciaDidatica) {
@@ -26,7 +28,13 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
       return data;
     }
 
-    // 2. Verificar dados da IA no formato direto
+    // 2. Verificar se data já tem estrutura de sequência didática completa
+    if (data && data.metadados && (data.aulas || data.diagnosticos || data.avaliacoes)) {
+      console.log('✅ Data já tem estrutura completa de sequência didática');
+      return data;
+    }
+
+    // 3. Verificar dados da IA no formato direto
     if (data && (data.aulas || data.diagnosticos || data.avaliacoes)) {
       console.log('✅ Convertendo dados diretos da IA');
       return {
@@ -36,6 +44,29 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           totalDiagnosticos: data.diagnosticos?.length || 0,
           totalAvaliacoes: data.avaliacoes?.length || 0,
           isGeneratedByAI: true,
+          generatedAt: new Date().toISOString()
+        }
+      };
+    }
+
+    // 4. Verificar se data tem campos de formulário da sequência didática
+    if (data && (data.tituloTemaAssunto || data.quantidadeAulas || data.disciplina)) {
+      console.log('✅ Usando dados de formulário para estrutura básica');
+      return {
+        sequenciaDidatica: {
+          titulo: data.tituloTemaAssunto || data.title || 'Sequência Didática',
+          disciplina: data.disciplina || data.subject || 'Disciplina',
+          anoSerie: data.anoSerie || data.schoolYear || 'Ano/Série',
+          descricaoGeral: data.objetivosAprendizagem || data.description || 'Objetivos de aprendizagem',
+          aulas: [],
+          diagnosticos: [],
+          avaliacoes: []
+        },
+        metadados: {
+          totalAulas: parseInt(data.quantidadeAulas) || 0,
+          totalDiagnosticos: parseInt(data.quantidadeDiagnosticos) || 0,
+          totalAvaliacoes: parseInt(data.quantidadeAvaliacoes) || 0,
+          isGeneratedByAI: false,
           generatedAt: new Date().toISOString()
         }
       };

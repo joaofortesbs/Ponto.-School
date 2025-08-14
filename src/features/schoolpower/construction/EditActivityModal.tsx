@@ -1436,18 +1436,6 @@ const EditActivityModal = ({
                             />
                           </div>
 
-                          <div>
-                            <Label htmlFor="evaluation">Critérios de Avaliação</Label>
-                            <Textarea
-                              id="evaluation"
-                              value={formData.evaluation}
-                              onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                              placeholder="Como avaliar as respostas..."
-                              rows={3}
-                              className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                            />
-                          </div>
-
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <Label htmlFor="timeLimit">Tempo Limite</Label>
