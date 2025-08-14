@@ -290,3 +290,152 @@ export function extractQuadroInterativoData(activity: any): QuadroInterativoCust
 
   return extractedData;
 }
+
+/**
+ * Prepara dados específicos do Quadro Interativo para preenchimento do modal EditActivityModal
+ */
+export function prepareQuadroInterativoDataForModal(activity: any): any {
+  console.log('🖼️ Preparando dados específicos do Quadro Interativo para modal:', activity);
+
+  const customFields = activity.customFields || {};
+  const consolidatedData = {
+    ...activity,
+    title: activity.personalizedTitle || activity.title || '',
+    description: activity.personalizedDescription || activity.description || ''
+  };
+
+  // Mapeamento completo e específico para Quadro Interativo
+  const formData = {
+    title: consolidatedData.title,
+    description: consolidatedData.description,
+    
+    // Disciplina / Área de conhecimento - com múltiplos aliases
+    subject: customFields['Disciplina / Área de conhecimento'] ||
+             customFields['disciplina'] ||
+             customFields['Disciplina'] ||
+             customFields['Componente Curricular'] ||
+             customFields['Matéria'] ||
+             customFields['Area de Conhecimento'] ||
+             'Matemática', // Valor padrão
+    
+    // Ano / Série - com múltiplos aliases
+    schoolYear: customFields['Ano / Série'] ||
+                customFields['anoSerie'] ||
+                customFields['Ano de Escolaridade'] ||
+                customFields['Público-Alvo'] ||
+                customFields['Ano'] ||
+                customFields['Série'] ||
+                customFields['ano'] ||
+                '6º Ano', // Valor padrão
+    
+    // Tema ou Assunto da aula - com múltiplos aliases
+    theme: customFields['Tema ou Assunto da aula'] ||
+           customFields['tema'] ||
+           customFields['Tema'] ||
+           customFields['Assunto'] ||
+           customFields['Tópico'] ||
+           customFields['Tema Central'] ||
+           customFields['assunto'] ||
+           consolidatedData.title ||
+           'Tema da Aula', // Valor padrão
+    
+    // Objetivo de aprendizagem da aula - com múltiplos aliases
+    objectives: customFields['Objetivo de aprendizagem da aula'] ||
+                customFields['objetivos'] ||
+                customFields['Objetivos'] ||
+                customFields['Objetivo'] ||
+                customFields['Objetivo Principal'] ||
+                customFields['Objetivos de Aprendizagem'] ||
+                customFields['objetivo'] ||
+                consolidatedData.description ||
+                'Objetivos de aprendizagem da aula', // Valor padrão
+    
+    // Nível de Dificuldade - com múltiplos aliases
+    difficultyLevel: customFields['Nível de Dificuldade'] ||
+                     customFields['nivelDificuldade'] ||
+                     customFields['dificuldade'] ||
+                     customFields['Dificuldade'] ||
+                     customFields['Nível'] ||
+                     customFields['Complexidade'] ||
+                     customFields['nivel'] ||
+                     'Intermediário', // Valor padrão
+    
+    // Atividade mostrada - com múltiplos aliases
+    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
+                                     customFields['atividadeMostrada'] ||
+                                     customFields['quadroInterativoCampoEspecifico'] ||
+                                     customFields['Campo Específico do Quadro Interativo'] ||
+                                     customFields['Atividade'] ||
+                                     customFields['Atividades'] ||
+                                     customFields['Tipo de Atividade'] ||
+                                     customFields['Interatividade'] ||
+                                     customFields['Campo Específico'] ||
+                                     customFields['atividade'] ||
+                                     'Atividade interativa no quadro', // Valor padrão
+
+    // Campos adicionais
+    materials: customFields['Materiais'] ||
+               customFields['Materiais Necessários'] ||
+               customFields['Recursos'] ||
+               customFields['materials'] ||
+               '',
+
+    instructions: customFields['Instruções'] ||
+                  customFields['Metodologia'] ||
+                  customFields['instructions'] ||
+                  customFields['instrucoes'] ||
+                  '',
+
+    evaluation: customFields['Avaliação'] ||
+                customFields['Critérios de Avaliação'] ||
+                customFields['evaluation'] ||
+                customFields['avaliacao'] ||
+                '',
+
+    timeLimit: customFields['Tempo Estimado'] ||
+               customFields['Duração'] ||
+               customFields['timeLimit'] ||
+               customFields['tempo'] ||
+               '',
+
+    context: customFields['Contexto'] ||
+             customFields['Aplicação'] ||
+             customFields['context'] ||
+             customFields['contexto'] ||
+             '',
+
+    // Outros campos obrigatórios com valores padrão
+    numberOfQuestions: '1',
+    questionModel: '',
+    sources: '',
+    textType: '',
+    textGenre: '',
+    textLength: '',
+    associatedQuestions: '',
+    competencies: '',
+    readingStrategies: '',
+    visualResources: '',
+    practicalActivities: '',
+    wordsIncluded: '',
+    gridFormat: '',
+    providedHints: '',
+    vocabularyContext: '',
+    language: 'Português',
+    associatedExercises: '',
+    knowledgeArea: '',
+    complexityLevel: '',
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    bnccCompetencias: '',
+    publicoAlvo: '',
+    objetivosAprendizagem: '',
+    quantidadeAulas: '',
+    quantidadeDiagnosticos: '',
+    quantidadeAvaliacoes: '',
+    cronograma: ''
+  };
+
+  console.log('✅ Dados do Quadro Interativo preparados para modal:', formData);
+  return formData;
+}

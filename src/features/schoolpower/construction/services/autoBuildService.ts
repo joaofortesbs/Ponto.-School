@@ -174,7 +174,12 @@ export class AutoBuildService {
                                        activity.customFields?.['quadroInterativoCampoEspecifico'] ||
                                        activity.customFields?.['Campo Específico do Quadro Interativo'] ||
                                        activity.customFields?.['campoEspecificoQuadroInterativo'] ||
-                                       ''
+                                       activity.customFields?.['Atividade'] ||
+                                       activity.customFields?.['Atividades'] ||
+                                       activity.customFields?.['Tipo de Atividade'] ||
+                                       activity.customFields?.['Interatividade'] ||
+                                       activity.customFields?.['Campo Específico'] ||
+                                       'Atividade interativa no quadro'
     };
 
     console.log('📝 FormData preparado IDENTICO ao EditActivityModal:', formData);

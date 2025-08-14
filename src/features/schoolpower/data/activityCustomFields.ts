@@ -92,8 +92,8 @@ export function normalizeQuadroInterativoFields(fields: Record<string, any>): Re
     }
   });
   
-  return normalized;s;': 'text'
-};
+  return normalized;
+}
 
 export const activityCustomFields: Record<string, string[]> = {
   "lista-exercicios": [
