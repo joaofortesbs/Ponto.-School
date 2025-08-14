@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,10 +30,20 @@ interface ActivityViewModalProps {
   onClose: () => void;
 }
 
-// ErrorBoundary component to catch rendering errors
-const ErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Componente ErrorBoundary simplificado para capturar erros de renderização
+const ActivityErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hasError, setHasError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  React.useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      setHasError(true);
+      setError(new Error(event.message));
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   if (hasError) {
     return (
@@ -46,15 +56,7 @@ const ErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     );
   }
 
-  return React.Children.map(children, (child) => {
-    if (React.isValidElement(child)) {
-      return React.cloneElement(child as React.ReactElement<any>, {
-        // You can add error handling props here if the child component supports them
-        // For example, if PreviewComponent had an onError prop
-      });
-    }
-    return child;
-  });
+  return <>{children}</>;
 };
 
 
@@ -516,11 +518,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       case 'sequencia-didatica':
         return (
-          <ErrorBoundary>
+          <ActivityErrorBoundary>
             <SequenciaDidaticaPreview
               data={previewData}
             />
-          </ErrorBoundary>
+          </ActivityErrorBoundary>
         );
 
       default:
