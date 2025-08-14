@@ -75,15 +75,81 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
 // Componente específico para Quadro Interativo
 const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="subject">Disciplina / Área de conhecimento *</Label>
+        <Input
+          id="subject"
+          value={formData.subject || ''}
+          onChange={(e) => onFieldChange('subject', e.target.value)}
+          placeholder="Ex: Matemática, Português, Ciências"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="schoolYear">Ano / Série *</Label>
+        <Input
+          id="schoolYear"
+          value={formData.schoolYear || ''}
+          onChange={(e) => onFieldChange('schoolYear', e.target.value)}
+          placeholder="Ex: 6º Ano, 7º Ano, 8º Ano"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+    </div>
+
     <div>
-      <Label htmlFor="quadroInterativoCampoEspecifico">Campo Específico Quadro Interativo</Label>
+      <Label htmlFor="theme">Tema ou Assunto da aula *</Label>
       <Input
-        id="quadroInterativoCampoEspecifico"
-        value={formData.quadroInterativoCampoEspecifico || ''}
-        onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
-        placeholder="Configuração específica para quadro interativo"
+        id="theme"
+        value={formData.theme || ''}
+        onChange={(e) => onFieldChange('theme', e.target.value)}
+        placeholder="Ex: Substantivos e Verbos, Frações, Sistema Solar"
+        required
         className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
       />
+    </div>
+
+    <div>
+      <Label htmlFor="objectives">Objetivo de aprendizagem da aula *</Label>
+      <Textarea
+        id="objectives"
+        value={formData.objectives || ''}
+        onChange={(e) => onFieldChange('objectives', e.target.value)}
+        placeholder="Descreva os objetivos específicos que os alunos devem alcançar com esta atividade de quadro interativo..."
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
+        <Select value={formData.difficultyLevel || ''} onValueChange={(value) => onFieldChange('difficultyLevel', value)}>
+          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500">
+            <SelectValue placeholder="Selecione o nível" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Básico">Básico</SelectItem>
+            <SelectItem value="Intermediário">Intermediário</SelectItem>
+            <SelectItem value="Avançado">Avançado</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="quadroInterativoCampoEspecifico">Atividade mostrada *</Label>
+        <Input
+          id="quadroInterativoCampoEspecifico"
+          value={formData.quadroInterativoCampoEspecifico || ''}
+          onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
+          placeholder="Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
     </div>
   </div>
 );
@@ -389,10 +455,12 @@ const EditActivityModal = ({
     } else if (activityType === 'quadro-interativo') {
       return formData.title.trim() &&
              formData.description.trim() &&
-             formData.objectives.trim() &&
-             formData.materials.trim() &&
-             formData.instructions.trim() &&
-             formData.evaluation.trim();
+             formData.subject?.trim() &&
+             formData.schoolYear?.trim() &&
+             formData.theme?.trim() &&
+             formData.objectives?.trim() &&
+             formData.difficultyLevel?.trim() &&
+             formData.quadroInterativoCampoEspecifico?.trim();
     } else {
       return formData.title.trim() &&
              formData.description.trim() &&
@@ -1524,10 +1592,7 @@ const EditActivityModal = ({
 
                             {/* Campos Específicos Quadro Interativo */}
                             {activityType === 'quadro-interativo' && (
-                              <>
-                                <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
-                                <QuadroInterativoEditActivity formData={formData} onFieldChange={handleInputChange} />
-                              </>
+                              <QuadroInterativoEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
                             {/* Campos Específicos Lista de Exercícios */}
