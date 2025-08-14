@@ -167,8 +167,11 @@ export class AutoBuildService {
                       activity.customFields?.['nivelComplexidade'] || 
                       '',
 
-      // Campo específico para Quadro Interativo
-      quadroInterativoCampoEspecifico: activity.customFields?.['Campo Específico do Quadro Interativo'] ||
+      // Campo específico para Quadro Interativo - mapeamento completo
+      quadroInterativoCampoEspecifico: activity.customFields?.['Atividade mostrada'] ||
+                                       activity.customFields?.['atividadeMostrada'] ||
+                                       activity.customFields?.['quadroInterativoCampoEspecifico'] ||
+                                       activity.customFields?.['Campo Específico do Quadro Interativo'] ||
                                        activity.customFields?.['campoEspecificoQuadroInterativo'] ||
                                        ''
     };

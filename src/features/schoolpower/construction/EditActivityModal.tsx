@@ -785,11 +785,86 @@ const EditActivityModal = ({
                 ...formData,
                 title: consolidatedData.title || autoFormData.title || activity.title || '',
                 description: consolidatedData.description || autoFormData.description || activity.description || '',
-                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
-                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || activity?.customFields?.disciplina || 'Matemática',
-                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity?.theme || '',
-                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || activity?.schoolYear || '',
-                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || '',
+                
+                // Campos específicos do Quadro Interativo com mapeamento completo
+                subject: consolidatedCustomFields['Disciplina / Área de conhecimento'] ||
+                         consolidatedCustomFields['disciplina'] ||
+                         consolidatedCustomFields['Disciplina'] ||
+                         autoFormData.subject ||
+                         activity?.customFields?.disciplina ||
+                         'Matemática',
+                         
+                schoolYear: consolidatedCustomFields['Ano / Série'] ||
+                           consolidatedCustomFields['anoSerie'] ||
+                           consolidatedCustomFields['Ano de Escolaridade'] ||
+                           autoFormData.schoolYear ||
+                           activity?.schoolYear ||
+                           'Ex: 6º Ano, 7º Ano, 8º Ano',
+                           
+                theme: consolidatedCustomFields['Tema ou Assunto da aula'] ||
+                       consolidatedCustomFields['tema'] ||
+                       consolidatedCustomFields['Tema'] ||
+                       autoFormData.theme ||
+                       activity?.theme ||
+                       consolidatedData.title ||
+                       'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+                       
+                objectives: consolidatedCustomFields['Objetivo de aprendizagem da aula'] ||
+                           consolidatedCustomFields['objetivos'] ||
+                           consolidatedCustomFields['Objetivos'] ||
+                           autoFormData.objectives ||
+                           activity?.objectives ||
+                           consolidatedData.description ||
+                           '',
+                           
+                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] ||
+                                consolidatedCustomFields['nivelDificuldade'] ||
+                                consolidatedCustomFields['dificuldade'] ||
+                                autoFormData.difficultyLevel ||
+                                'Ex: Básico, Intermediário, Avançado',
+                                
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['Atividade mostrada'] ||
+                                                consolidatedCustomFields['atividadeMostrada'] ||
+                                                consolidatedCustomFields['quadroInterativoCampoEspecifico'] ||
+                                                consolidatedCustomFields['Campo Específico do Quadro Interativo'] ||
+                                                autoFormData.quadroInterativoCampoEspecifico ||
+                                                'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+
+                // Campos herdados mantidos
+                numberOfQuestions: '1',
+                questionModel: '',
+                sources: '',
+                materials: '',
+                instructions: '',
+                evaluation: '',
+                timeLimit: '',
+                context: '',
+                textType: '',
+                textGenre: '',
+                textLength: '',
+                associatedQuestions: '',
+                competencies: '',
+                readingStrategies: '',
+                visualResources: '',
+                practicalActivities: '',
+                wordsIncluded: '',
+                gridFormat: '',
+                providedHints: '',
+                vocabularyContext: '',
+                language: '',
+                associatedExercises: '',
+                knowledgeArea: '',
+                complexityLevel: '',
+                tituloTemaAssunto: '',
+                anoSerie: '',
+                disciplina: '',
+                bnccCompetencias: '',
+                publicoAlvo: '',
+                objetivosAprendizagem: '',
+                quantidadeAulas: '',
+                quantidadeDiagnosticos: '',
+                quantidadeAvaliacoes: '',
+                cronograma: ''
               };
 
               console.log('🖼️ Dados do Quadro Interativo processados:', enrichedFormData);

@@ -14,7 +14,13 @@ export const quadroInterativoCustomFields = {
   'Instruções': 'text',
   'Critérios de Avaliação': 'text',
   'Tempo Estimado': 'string',
-  'Contexto de Aplicação': 'text'
+  'Contexto de Aplicação': 'text',
+  'quadroInterativoCampoEspecifico': 'string'
+};
+
+// Função para obter campos customizados do Quadro Interativo
+export function getQuadroInterativoCustomFields(): Record<string, any> {
+  return quadroInterativoCustomFields;': 'text'
 };
 
 export const activityCustomFields: Record<string, string[]> = {

@@ -23,6 +23,92 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
   console.log('📱 Processando dados do Quadro Interativo:', activity);
 
   const customFields = activity.customFields || {};
+  const consolidatedData = {
+    ...activity,
+    title: activity.personalizedTitle || activity.title,
+    description: activity.personalizedDescription || activity.description
+  };
+
+  console.log('🔍 Custom fields do Quadro Interativo:', customFields);
+  console.log('🎯 Dados consolidados:', consolidatedData);
+
+  const processedData: ActivityFormData = {
+    title: consolidatedData.title || '',
+    description: consolidatedData.description || '',
+    
+    // Campos específicos do Quadro Interativo mapeados corretamente
+    subject: customFields['Disciplina / Área de conhecimento'] ||
+             customFields['disciplina'] ||
+             customFields['Disciplina'] ||
+             'Matemática',
+             
+    schoolYear: customFields['Ano / Série'] ||
+                customFields['anoSerie'] ||
+                customFields['Ano de Escolaridade'] ||
+                'Ex: 6º Ano, 7º Ano, 8º Ano',
+                
+    theme: customFields['Tema ou Assunto da aula'] ||
+           customFields['tema'] ||
+           customFields['Tema'] ||
+           consolidatedData.title ||
+           'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+           
+    objectives: customFields['Objetivo de aprendizagem da aula'] ||
+                customFields['objetivos'] ||
+                customFields['Objetivos'] ||
+                consolidatedData.description ||
+                '',
+                
+    difficultyLevel: customFields['Nível de Dificuldade'] ||
+                     customFields['nivelDificuldade'] ||
+                     customFields['dificuldade'] ||
+                     'Ex: Básico, Intermediário, Avançado',
+                     
+    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
+                                     customFields['atividadeMostrada'] ||
+                                     customFields['quadroInterativoCampoEspecifico'] ||
+                                     customFields['Campo Específico do Quadro Interativo'] ||
+                                     'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+
+    // Campos padrão herdados
+    numberOfQuestions: '1',
+    questionModel: '',
+    sources: '',
+    materials: '',
+    instructions: '',
+    evaluation: '',
+    timeLimit: '',
+    context: '',
+    textType: '',
+    textGenre: '',
+    textLength: '',
+    associatedQuestions: '',
+    competencies: '',
+    readingStrategies: '',
+    visualResources: '',
+    practicalActivities: '',
+    wordsIncluded: '',
+    gridFormat: '',
+    providedHints: '',
+    vocabularyContext: '',
+    language: '',
+    associatedExercises: '',
+    knowledgeArea: '',
+    complexityLevel: '',
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    bnccCompetencias: '',
+    publicoAlvo: '',
+    objetivosAprendizagem: '',
+    quantidadeAulas: '',
+    quantidadeDiagnosticos: '',
+    quantidadeAvaliacoes: '',
+    cronograma: ''
+  };
+
+  console.log('✅ Dados processados do Quadro Interativo:', processedData);
+  return processedData; {};
 
   // Inicializar dados do formulário com valores padrão
   const formData: ActivityFormData = {
