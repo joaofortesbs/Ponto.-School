@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
@@ -9,17 +9,18 @@ import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
+import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 
-// Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
-// This is a placeholder, replace with actual implementation if needed.
+// Helper function to get activity icon
 const getActivityIcon = (activityId: string) => {
-  // Example: return an icon component based on activityId
-  return ({ className }: { className: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c0-1.707.833-3.123 2.12-4.119C15.387 2.507 17.017 2 19 2s3.613.507 4.88-1.881C24.833 1.707 24 3.123 24 5v10a2 2 0 01-2 2H2a2 2 0 01-2-2V5c0-1.877.847-3.293 2.12-4.119C4.167 0.507 5.993 0 8 0s3.833.507 5.12 1.881C14.833 1.707 14 3.123 14 5v10z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v16M8 20h8" />
-    </svg>
-  );
+  if (activityId.includes('lista-exercicios')) return BookOpen;
+  if (activityId.includes('prova')) return FileText;
+  if (activityId.includes('jogo')) return GraduationCap;
+  if (activityId.includes('apresentacao')) return BookOpen;
+  if (activityId.includes('redacao')) return FileText;
+  if (activityId.includes('plano-aula')) return BookOpen;
+  if (activityId.includes('sequencia-didatica')) return BookOpen;
+  return GraduationCap; // ícone padrão
 };
 
 
@@ -243,23 +244,83 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
-  // Placeholder for PreviewComponent, as it's not defined in the provided code.
-  // Replace with the actual component if it exists.
+  // Componente para pré-visualização de Sequência Didática
   const PreviewComponent = ({ formData, activityData, isViewModal }: { formData: any, activityData: any, isViewModal?: boolean }) => {
     console.log('PreviewComponent called with:', { formData, activityData, isViewModal });
-    // This is a placeholder. You need to implement the actual preview logic here.
-    // Based on the problem description, this component should render the SequenciaDidatica activity.
-    // For now, let's display a message indicating it's being rendered.
+    
     return (
-      <div className="p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-        <h3 className="font-semibold">Sequência Didática Preview</h3>
-        <p className="text-sm">
-          Renderizando a pré-visualização da Sequência Didática.
-          {isViewModal && <span className="font-bold"> (Modo Visualização Modal)</span>}
-        </p>
-        <pre className="mt-2 text-xs overflow-auto">
-          {JSON.stringify(formData, null, 2)}
-        </pre>
+      <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-900">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            {formData?.tituloTemaAssunto || formData?.title || 'Sequência Didática'}
+          </h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Disciplina</h3>
+              <p className="text-blue-700 dark:text-blue-300">{formData?.disciplina || 'Não especificado'}</p>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+              <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2">Ano/Série</h3>
+              <p className="text-green-700 dark:text-green-300">{formData?.anoSerie || 'Não especificado'}</p>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+              <h3 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">Total de Aulas</h3>
+              <p className="text-purple-700 dark:text-purple-300">{formData?.quantidadeAulas || 'Não especificado'}</p>
+            </div>
+          </div>
+
+          {formData?.publicoAlvo && (
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Público-alvo</h3>
+              <p className="text-gray-700 dark:text-gray-300">{formData.publicoAlvo}</p>
+            </div>
+          )}
+
+          {formData?.objetivosAprendizagem && (
+            <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <h3 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">Objetivos de Aprendizagem</h3>
+              <p className="text-orange-700 dark:text-orange-300">{formData.objetivosAprendizagem}</p>
+            </div>
+          )}
+
+          {formData?.bnccCompetencias && (
+            <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+              <h3 className="font-semibold text-indigo-800 dark:text-indigo-200 mb-2">Competências BNCC</h3>
+              <p className="text-indigo-700 dark:text-indigo-300">{formData.bnccCompetencias}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {formData?.quantidadeDiagnosticos && (
+              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Diagnósticos</h3>
+                <p className="text-yellow-700 dark:text-yellow-300">{formData.quantidadeDiagnosticos} atividade(s) diagnóstica(s)</p>
+              </div>
+            )}
+            {formData?.quantidadeAvaliacoes && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">Avaliações</h3>
+                <p className="text-red-700 dark:text-red-300">{formData.quantidadeAvaliacoes} atividade(s) avaliativa(s)</p>
+              </div>
+            )}
+          </div>
+
+          {formData?.cronograma && (
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Cronograma</h3>
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{formData.cronograma}</p>
+            </div>
+          )}
+
+          {isViewModal && (
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <p className="text-blue-800 dark:text-blue-200 text-sm font-medium">
+                📋 Modo Visualização: Esta sequência didática está sendo exibida no modal de visualização
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -452,14 +513,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
 
-      // Assuming 'sequencia-didatica' is the type that needs PreviewComponent
       case 'sequencia-didatica':
         return (
           <ErrorBoundary>
-            <PreviewComponent 
-              formData={previewData} // Pass previewData as formData
-              activityData={activity}
-              isViewModal={true}
+            <SequenciaDidaticaPreview
+              data={previewData}
             />
           </ErrorBoundary>
         );
