@@ -128,16 +128,14 @@ const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: A
     <div className="grid grid-cols-2 gap-4">
       <div>
         <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
-        <Select value={formData.difficultyLevel || ''} onValueChange={(value) => onFieldChange('difficultyLevel', value)}>
-          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500">
-            <SelectValue placeholder="Selecione o nível" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Básico">Básico</SelectItem>
-            <SelectItem value="Intermediário">Intermediário</SelectItem>
-            <SelectItem value="Avançado">Avançado</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          id="difficultyLevel"
+          value={formData.difficultyLevel || ''}
+          onChange={(e) => onFieldChange('difficultyLevel', e.target.value)}
+          placeholder="Ex: Básico, Intermediário, Avançado"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
       <div>
         <Label htmlFor="quadroInterativoCampoEspecifico">Atividade mostrada *</Label>
