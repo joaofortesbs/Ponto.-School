@@ -812,43 +812,56 @@ const EditActivityModal = ({
         setBuildProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      // Usar a mesma lógica de geração do sistema de construção automática
-      const result = await generateActivityContent(activity.type || activity.id, formData);
+      // Determinar tipo da atividade
+      const activityType = activity.type || activity.id || activity.categoryId;
+      console.log('🎯 Tipo de atividade determinado:', activityType);
+
+      // Usar a API de geração de atividades
+      const result = await generateActivityContent(activityType, formData);
 
       clearInterval(progressTimer);
       setBuildProgress(100);
 
-      if (result.success) {
-        console.log('✅ Atividade construída com sucesso:', result.data);
+      console.log('✅ Atividade construída com sucesso:', result);
 
-        // Salvar no localStorage com a mesma chave usada pelo sistema
-        const storageKey = `schoolpower_${activity.type || activity.id}_content`;
-        localStorage.setItem(storageKey, JSON.stringify(result.data));
+      // Salvar no localStorage com chaves específicas
+      const storageKey = `schoolpower_${activityType}_content`;
+      localStorage.setItem(storageKey, JSON.stringify(result));
 
-        // Para plano-aula, também salvar com chave específica para visualização
-        if (activity.type === 'plano-aula' || activity.id === 'plano-aula') {
-          const viewStorageKey = `constructed_plano-aula_${activity.id}`;
-          localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
-          console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
-        }
-
-        // Também salvar na lista de atividades construídas
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
-        if (!constructedActivities.includes(activity.id)) {
-          constructedActivities.push(activity.id);
-          localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-        }
-
-        setBuiltContent(result.data);
-        setActiveTab('preview');
-
-        toast({
-          title: "Atividade construída!",
-          description: "Sua atividade foi gerada com sucesso.",
-        });
-      } else {
-        throw new Error(result.error || 'Erro na geração da atividade');
+      // Para sequencia-didatica, salvar com chave específica
+      if (activityType === 'sequencia-didatica') {
+        const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result));
+        console.log('💾 Dados da sequência didática salvos para visualização:', viewStorageKey);
       }
+
+      // Para plano-aula, também salvar com chave específica para visualização
+      if (activityType === 'plano-aula') {
+        const viewStorageKey = `constructed_plano-aula_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result));
+        console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
+      }
+
+      // Também salvar na lista de atividades construídas
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity.id] = {
+        generatedContent: result,
+        timestamp: new Date().toISOString(),
+        activityType: activityType
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+      // Atualizar estados
+      setGeneratedContent(result);
+      setBuiltContent(result);
+      setIsContentLoaded(true);
+      setActiveTab('preview');
+
+      toast({
+        title: "Atividade construída!",
+        description: "Sua atividade foi gerada com sucesso pela IA do Gemini.",
+      });
+
     } catch (error) {
       console.error('❌ Erro na construção:', error);
       setError(`Erro ao construir atividade: ${error.message}`);

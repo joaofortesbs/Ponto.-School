@@ -45,10 +45,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
 
     const cacheKeys = [
-      `constructed_plano-aula_${activityId}`,
+      `constructed_plano-aula_${activity.id}`, // Use activity.id for specificity
       `schoolpower_plano-aula_content`,
-      `activity_${activityId}`,
-      `activity_fields_${activityId}`
+      `activity_${activity.id}`,
+      `activity_fields_${activity.id}`
     ];
 
     for (const key of cacheKeys) {
@@ -125,7 +125,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       ...storedData,
       customFields: {
         ...activity.customFields,
-        ...JSON.parse(localStorage.getItem(`activity_fields_${activity.id}`) || '{}')
+        ...JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}')
       }
     };
 
@@ -242,146 +242,85 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     };
 
     // Para lista de exercícios, aplicar filtros de exclusão
-    if (activityType === 'lista-exercicios') {
-      try {
-        const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
-        if (deletedQuestionsJson) {
-          const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
-          console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
-
-          // Filtrar questões excluídas em todas as possíveis localizações
-          if (previewData.questoes && Array.isArray(previewData.questoes)) {
-            previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
-          }
-
-          if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
-            previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
-          }
-
-          if (previewData.questions && Array.isArray(previewData.questions)) {
-            previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
-          }
-
-          if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
-            previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
-          }
-
-          // Adicionar os IDs excluídos aos dados para referência
-          previewData.deletedQuestionIds = deletedQuestionIds;
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
-      }
-    }
-
-    // Tratamento específico para Plano de Aula - buscar em múltiplas fontes
-    if (activityType === 'plano-aula') {
-      console.log('📚 ActivityViewModal: Processando Plano de Aula');
-
-      // Prioridade 1: Cache específico do plano-aula construído
-      const constructedPlanoKey = `constructed_plano-aula_${activity.id}`;
-      const constructedPlanoContent = localStorage.getItem(constructedPlanoKey);
-
-      // Prioridade 2: Cache geral do plano-aula
-      const generalCacheKey = `schoolpower_plano-aula_content`;
-      const generalCachedContent = localStorage.getItem(generalCacheKey);
-
-      // Prioridade 3: Cache da atividade específica
-      const activityCacheKey = `activity_${activity.id}`;
-      const activityCachedContent = localStorage.getItem(activityCacheKey);
-
-      console.log('🔍 ActivityViewModal: Verificando caches de plano-aula:', {
-        constructedExists: !!constructedPlanoContent,
-        generalExists: !!generalCachedContent,
-        activityExists: !!activityCachedContent
-      });
-
-      let planoContent = null;
-
-      // Tentar carregar o conteúdo construído específico primeiro
-      if (constructedPlanoContent) {
+      if (activityType === 'lista-exercicios') {
         try {
-          planoContent = JSON.parse(constructedPlanoContent);
-          console.log('✅ Conteúdo específico do plano-aula carregado:', planoContent);
-        } catch (error) {
-          console.error('❌ Erro ao carregar conteúdo específico do plano-aula:', error);
-        }
-      }
+          const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+          if (deletedQuestionsJson) {
+            const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+            console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
 
-      // Se não encontrou, tentar o cache geral
-      if (!planoContent && generalCachedContent) {
-        try {
-          planoContent = JSON.parse(generalCachedContent);
-          console.log('✅ Conteúdo geral do plano-aula carregado:', planoContent);
-        } catch (error) {
-          console.error('❌ Erro ao carregar conteúdo geral do plano-aula:', error);
-        }
-      }
+            // Filtrar questões excluídas em todas as possíveis localizações
+            if (previewData.questoes && Array.isArray(previewData.questoes)) {
+              previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+              console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
+            }
 
-      // Se não encontrou, tentar o cache da atividade
-      if (!planoContent && activityCachedContent) {
-        try {
-          const activityContent = JSON.parse(activityCachedContent);
-          if (activityContent && typeof activityContent === 'object') {
-            planoContent = activityContent;
-            console.log('✅ Conteúdo da atividade do plano-aula carregado:', planoContent);
+            if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
+              previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+              console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
+            }
+
+            if (previewData.questions && Array.isArray(previewData.questions)) {
+              previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+              console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
+            }
+
+            if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
+              previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+              console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
+            }
+
+            // Adicionar os IDs excluídos aos dados para referência
+            previewData.deletedQuestionIds = deletedQuestionIds;
           }
         } catch (error) {
-          console.error('❌ Erro ao carregar conteúdo da atividade do plano-aula:', error);
+          console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
         }
       }
 
-      // Se encontrou conteúdo, mesclar com os dados existentes
-      if (planoContent) {
-        console.log('🔀 Mesclando conteúdo do plano-aula com dados existentes');
-        previewData = { 
-          ...previewData, 
-          ...planoContent,
-          // Garantir que os dados essenciais sejam preservados
-          id: activity.id,
-          type: activityType,
-          title: planoContent.titulo || planoContent.title || previewData.title,
-          description: planoContent.descricao || planoContent.description || previewData.description
-        };
-      } else {
-        console.log('⚠️ Nenhum conteúdo de plano-aula encontrado nos caches');
+      // Para Sequência Didática, carregar dados específicos da IA
+      if (activityType === 'sequencia-didatica') {
+        console.log('📚 ActivityViewModal: Processando Sequência Didática');
 
-        // Como fallback, criar uma estrutura completa baseada nos dados da atividade
-        const customFields = activity.customFields || {};
+        // Verificar múltiplas fontes de dados
+        const sequenciaCacheKeys = [
+          `constructed_sequencia-didatica_${activity.id}`,
+          `schoolpower_sequencia-didatica_content`,
+          `activity_${activity.id}`
+        ];
 
-        previewData = {
-          ...previewData,
-          titulo: activity.title || activity.personalizedTitle || 'Plano de Aula',
-          descricao: activity.description || activity.personalizedDescription || 'Descrição do plano de aula',
-          disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
-          tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Aula',
-          serie: customFields['Ano/Série Escolar'] || customFields['serie'] || '9º Ano',
-          tempo: customFields['Carga Horária'] || customFields['tempo'] || '50 minutos',
-          metodologia: customFields['Tipo de Aula'] || customFields['metodologia'] || 'Aula Expositiva',
-          recursos: customFields['Materiais/Recursos'] ? [customFields['Materiais/Recursos']] : ['Quadro', 'Livro didático'],
-          objetivos: customFields['Objetivo Geral'] || customFields['objetivos'] || 'Compreender o conteúdo proposto',
-          materiais: customFields['Materiais/Recursos'] || customFields['materiais'] || 'Material didático',
-          observacoes: customFields['Observações do Professor'] || customFields['observacoes'] || 'Observações do professor',
-          competencias: customFields['Habilidades BNCC'] || customFields['competencias'] || 'Competências da BNCC',
-          contexto: customFields['Perfil da Turma'] || customFields['contexto'] || 'Turma regular',
-          // Adicionar estrutura completa do plano
-          visao_geral: {
-            disciplina: customFields['Componente Curricular'] || customFields['disciplina'] || 'Matemática',
-            tema: customFields['Tema ou Tópico Central'] || customFields['tema'] || 'Tema da Aula',
-            serie: customFields['Ano/Série Escolar'] || customFields['serie'] || '9º Ano',
-            tempo: customFields['Carga Horária'] || customFields['tempo'] || '50 minutos',
-            metodologia: customFields['Tipo de Aula'] || customFields['metodologia'] || 'Aula Expositiva',
-            recursos: customFields['Materiais/Recursos'] ? [customFields['Materiais/Recursos']] : ['Quadro', 'Livro didático'],
-            sugestoes_ia: ['Plano de aula baseado nas informações fornecidas']
+        let sequenciaContent = null;
+        for (const key of sequenciaCacheKeys) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            try {
+              const parsedData = JSON.parse(data);
+              if (parsedData.sequenciaDidatica || parsedData.aulas || parsedData.diagnosticos || parsedData.avaliacoes) {
+                sequenciaContent = parsedData;
+                console.log(`✅ Dados da Sequência Didática encontrados em ${key}`);
+                break;
+              }
+            } catch (error) {
+              console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
+            }
           }
-        };
-        console.log('🔄 Usando dados de fallback completos para plano-aula:', previewData);
+        }
+
+        if (sequenciaContent) {
+          // Mesclar dados da sequência didática com dados existentes
+          previewData = {
+            ...previewData,
+            ...sequenciaContent,
+            id: activity.id,
+            type: activityType,
+            title: sequenciaContent.sequenciaDidatica?.titulo || previewData.title,
+            description: sequenciaContent.sequenciaDidatica?.descricaoGeral || previewData.description
+          };
+          console.log('📚 Dados da Sequência Didática mesclados com sucesso');
+        } else {
+          console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
+        }
       }
-    }
 
     console.log('📊 ActivityViewModal: Dados finais para preview:', previewData);
 

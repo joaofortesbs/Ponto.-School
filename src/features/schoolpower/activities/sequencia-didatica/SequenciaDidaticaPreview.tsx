@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BookOpen, Target, BarChart3, FileText } from 'lucide-react';
+import { BookOpen, Target, BarChart3, FileText, Clock, Users, CheckCircle } from 'lucide-react';
 import AulaCard from './components/AulaCard';
 import DiagnosticoCard from './components/DiagnosticoCard';
 import AvaliacaoCard from './components/AvaliacaoCard';
@@ -15,32 +16,17 @@ interface SequenciaDidaticaPreviewProps {
 export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> = ({ data, activityData }) => {
   console.log('🎯 SequenciaDidaticaPreview: Dados recebidos:', { data, activityData });
 
-  // Tentar recuperar dados reais da IA
+  // Função para recuperar dados reais da IA do Gemini
   const getSequenciaDidaticaData = () => {
-    // 1. Prioridade: dados passados como prop
+    console.log('🔍 Buscando dados da Sequência Didática...');
+
+    // 1. Prioridade: dados passados como prop que já vieram da IA
     if (data && data.sequenciaDidatica) {
-      console.log('✅ Usando dados da prop principal');
+      console.log('✅ Usando dados da prop principal (gerados pela IA)');
       return data;
     }
 
-    // 2. Tentar buscar no localStorage por dados construídos
-    const activityId = activityData?.id || data?.id;
-    if (activityId) {
-      const storedData = localStorage.getItem(`constructed_sequencia-didatica_${activityId}`);
-      if (storedData) {
-        try {
-          const parsedData = JSON.parse(storedData);
-          if (parsedData.sequenciaDidatica) {
-            console.log('✅ Usando dados construídos do localStorage');
-            return parsedData;
-          }
-        } catch (error) {
-          console.warn('⚠️ Erro ao parsear dados do localStorage:', error);
-        }
-      }
-    }
-
-    // 3. Verificar se há dados da IA em diferentes formatos
+    // 2. Verificar dados da IA no formato direto
     if (data && (data.aulas || data.diagnosticos || data.avaliacoes)) {
       console.log('✅ Convertendo dados diretos da IA');
       return {
@@ -55,112 +41,105 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
       };
     }
 
-    // 4. Fallback: dados fictícios apenas se não houver nada
-    console.warn('⚠️ Nenhum dado real encontrado, usando dados fictícios');
+    // 3. Buscar no localStorage por dados construídos da IA
+    const activityId = activityData?.id || data?.id;
+    if (activityId) {
+      const storageKeys = [
+        `constructed_sequencia-didatica_${activityId}`,
+        `schoolpower_sequencia-didatica_content`,
+        `activity_${activityId}`
+      ];
+
+      for (const key of storageKeys) {
+        const storedData = localStorage.getItem(key);
+        if (storedData) {
+          try {
+            const parsedData = JSON.parse(storedData);
+            console.log(`✅ Dados encontrados em ${key}:`, parsedData);
+            
+            // Verificar se é estrutura de sequência didática válida
+            if (parsedData.sequenciaDidatica || parsedData.aulas || parsedData.diagnosticos || parsedData.avaliacoes) {
+              return parsedData.sequenciaDidatica ? parsedData : {
+                sequenciaDidatica: parsedData,
+                metadados: parsedData.metadados || {
+                  totalAulas: parsedData.aulas?.length || 0,
+                  totalDiagnosticos: parsedData.diagnosticos?.length || 0,
+                  totalAvaliacoes: parsedData.avaliacoes?.length || 0,
+                  isGeneratedByAI: true,
+                  generatedAt: new Date().toISOString()
+                }
+              };
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
+          }
+        }
+      }
+    }
+
+    // 4. Verificar se há dados de formulário para mostrar como placeholder
+    if (data && (data.tituloTemaAssunto || data.quantidadeAulas)) {
+      console.log('📋 Usando dados do formulário como placeholder');
+      return {
+        sequenciaDidatica: {
+          titulo: data.tituloTemaAssunto || data.titulo || 'Sequência Didática',
+          disciplina: data.disciplina || 'Disciplina',
+          anoSerie: data.anoSerie || 'Ano/Série',
+          descricaoGeral: data.objetivosAprendizagem || 'Objetivos de aprendizagem',
+          aulas: [],
+          diagnosticos: [],
+          avaliacoes: []
+        },
+        metadados: {
+          totalAulas: parseInt(data.quantidadeAulas) || 0,
+          totalDiagnosticos: parseInt(data.quantidadeDiagnosticos) || 0,
+          totalAvaliacoes: parseInt(data.quantidadeAvaliacoes) || 0,
+          isGeneratedByAI: false,
+          generatedAt: new Date().toISOString()
+        }
+      };
+    }
+
+    console.log('⚠️ Nenhum dado encontrado');
     return null;
   };
 
   const sequenciaData = getSequenciaDidaticaData();
 
-  // Se não há dados reais, mostrar mensagem de carregamento
+  // Se não há dados, mostrar mensagem de carregamento/construção
   if (!sequenciaData) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mb-4"></div>
-        <p className="text-orange-700 dark:text-orange-300 text-center">
-          Gerando Sequência Didática com IA...
+        <p className="text-orange-700 dark:text-orange-300 text-center font-medium">
+          Pronto para gerar Sequência Didática
         </p>
         <p className="text-sm text-orange-600 dark:text-orange-400 text-center mt-2">
-          Aguarde enquanto o Gemini cria sua sequência personalizada
+          Clique em "Construir Atividade" para gerar com IA do Gemini
         </p>
       </div>
     );
   }
 
-  // Dados fictícios apenas como fallback extremo - REMOVER quando integração estiver completa
-  const dadosFicticios = {
-    sequenciaDidatica: {
-      titulo: "Sequência Didática de Exemplo",
-      disciplina: "Matemática",
-      anoSerie: "Ensino Fundamental I",
-      cargaHoraria: "8 horas",
-      descricaoGeral: "Esta é uma sequência didática de exemplo para introduzir conceitos básicos de matemática.",
-      aulas: [
-        {
-          id: "aula-1",
-          tipo: "Aula",
-          titulo: "Introdução aos Números",
-          objetivo: "Apresentar os números de 0 a 10 e suas representações.",
-          resumo: "Nesta aula, os alunos aprenderão a contar e reconhecer os números.",
-          duracaoEstimada: "1 hora",
-          materiaisNecessarios: ["Cartões com números", "Material dourado"],
-          metodologia: "Contagem em grupo, atividades com material dourado.",
-          avaliacaoFormativa: "Observação da participação e das respostas dos alunos."
-        },
-        {
-          id: "aula-2",
-          tipo: "Aula",
-          titulo: "Adição Simples",
-          objetivo: "Introduzir o conceito de adição com números pequenos.",
-          resumo: "Os alunos praticarão a adição usando objetos concretos.",
-          duracaoEstimada: "1 hora e 30 minutos",
-          materiaisNecessarios: ["Blocos de construção", "Fichas coloridas"],
-          metodologia: "Jogos de adição, resolução de problemas simples.",
-          avaliacaoFormativa: "Correção dos exercícios em grupo."
-        }
-      ],
-      diagnosticos: [
-        {
-          id: "diag-1",
-          tipo: "Diagnostico",
-          titulo: "Avaliação Inicial de Matemática",
-          objetivo: "Verificar o conhecimento prévio dos alunos sobre números e operações básicas.",
-          resumo: "Um teste rápido para avaliar o nível de aprendizado.",
-          instrumentos: ["Questionário online", "Observação direta"],
-          momentoAplicacao: "Início da unidade"
-        }
-      ],
-      avaliacoes: [
-        {
-          id: "aval-1",
-          tipo: "Avaliacao",
-          titulo: "Avaliação de Adição",
-          objetivo: "Avaliar a compreensão dos alunos sobre operações de adição.",
-          resumo: "Prova escrita com exercícios de adição.",
-          criteriosAvaliacao: ["Correção dos cálculos", "Compreensão dos problemas"],
-          instrumentos: ["Prova escrita"],
-          valorPontuacao: "10 pontos"
-        }
-      ]
-    },
-    metadados: {
-      totalAulas: 2,
-      totalDiagnosticos: 1,
-      totalAvaliacoes: 1,
-      competenciasBNCC: "Pensamento computacional, Álgebra, Geometria.",
-      objetivosGerais: "Desenvolver o raciocínio lógico-matemático e a capacidade de resolver problemas.",
-      generatedAt: "2023-10-27T10:00:00Z",
-      isGeneratedByAI: true
-    }
-  };
+  const { sequenciaDidatica, metadados } = sequenciaData;
 
-  // Usar dados reais da IA
-  const sequenciaDidatica = sequenciaData?.sequenciaDidatica || sequenciaData || dadosFicticios;
+  // Verificar se tem conteúdo gerado pela IA
+  const hasGeneratedContent = sequenciaDidatica && (
+    (sequenciaDidatica.aulas && sequenciaDidatica.aulas.length > 0) ||
+    (sequenciaDidatica.diagnosticos && sequenciaDidatica.diagnosticos.length > 0) ||
+    (sequenciaDidatica.avaliacoes && sequenciaDidatica.avaliacoes.length > 0)
+  );
 
-  // Verificar se temos dados da IA gerados
-  const hasGeneratedContent = sequenciaDidatica && (sequenciaDidatica.aulas?.length > 0 || sequenciaDidatica.diagnosticos?.length > 0 || sequenciaDidatica.avaliacoes?.length > 0);
-
+  // Se há conteúdo gerado pela IA, mostrar a estrutura completa
   if (hasGeneratedContent) {
-    const metadados = sequenciaData?.metadados || dadosFicticios.metadados;
-
     // Combinar todos os itens em uma lista ordenada
     const todosItens = [
-      ...(sequenciaDidatica.aulas || []),
-      ...(sequenciaDidatica.diagnosticos || []),
-      ...(sequenciaDidatica.avaliacoes || [])
+      ...(sequenciaDidatica.aulas || []).map(item => ({ ...item, tipo: 'Aula' })),
+      ...(sequenciaDidatica.diagnosticos || []).map(item => ({ ...item, tipo: 'Diagnostico' })),
+      ...(sequenciaDidatica.avaliacoes || []).map(item => ({ ...item, tipo: 'Avaliacao' }))
     ].sort((a, b) => {
       // Ordenar por ID para manter uma ordem consistente
-      return a.id.localeCompare(b.id);
+      return (a.id || '').localeCompare(b.id || '');
     });
 
     return (
@@ -171,7 +150,53 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           metadados={metadados}
         />
 
-        {/* Grade de Cards */}
+        {/* Badge de IA Generated */}
+        {metadados?.isGeneratedByAI && (
+          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+              Sequência Didática gerada pela IA do Gemini
+            </span>
+            <span className="text-xs text-green-600 dark:text-green-400">
+              {new Date(metadados.generatedAt).toLocaleString('pt-BR')}
+            </span>
+          </div>
+        )}
+
+        {/* Estatísticas Rápidas */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+                <span className="text-2xl font-bold text-blue-600">{metadados?.totalAulas || 0}</span>
+                <span className="text-sm text-gray-600">Aulas</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+                <span className="text-2xl font-bold text-green-600">{metadados?.totalDiagnosticos || 0}</span>
+                <span className="text-sm text-gray-600">Diagnósticos</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center gap-2">
+                <FileText className="h-6 w-6 text-purple-600" />
+                <span className="text-2xl font-bold text-purple-600">{metadados?.totalAvaliacoes || 0}</span>
+                <span className="text-sm text-gray-600">Avaliações</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Grade de Cards da Sequência */}
         {todosItens.length > 0 ? (
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -179,14 +204,16 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
               Estrutura da Sequência Didática
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {todosItens.map((item) => {
+              {todosItens.map((item, index) => {
+                const itemKey = item.id || `item-${index}`;
+                
                 switch (item.tipo) {
                   case 'Aula':
-                    return <AulaCard key={item.id} aula={item} />;
+                    return <AulaCard key={itemKey} aula={item} />;
                   case 'Diagnostico':
-                    return <DiagnosticoCard key={item.id} diagnostico={item} />;
+                    return <DiagnosticoCard key={itemKey} diagnostico={item} />;
                   case 'Avaliacao':
-                    return <AvaliacaoCard key={item.id} avaliacao={item} />;
+                    return <AvaliacaoCard key={itemKey} avaliacao={item} />;
                   default:
                     return null;
                 }
@@ -197,7 +224,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           <Alert>
             <BookOpen className="h-4 w-4" />
             <AlertDescription>
-              Nenhum conteúdo foi gerado ainda. Clique em "Construir Atividade" para gerar a sequência didática.
+              A estrutura da sequência didática foi criada, mas ainda não há conteúdo detalhado.
             </AlertDescription>
           </Alert>
         )}
@@ -206,7 +233,10 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {metadados?.competenciasBNCC && (
           <Card>
             <CardContent className="pt-4">
-              <h4 className="font-medium text-sm text-gray-700 mb-2">Competências BNCC</h4>
+              <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Competências BNCC
+              </h4>
               <p className="text-sm text-gray-600">{metadados.competenciasBNCC}</p>
             </CardContent>
           </Card>
@@ -215,7 +245,10 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {metadados?.objetivosGerais && (
           <Card>
             <CardContent className="pt-4">
-              <h4 className="font-medium text-sm text-gray-700 mb-2">Objetivos Gerais</h4>
+              <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Objetivos Gerais
+              </h4>
               <p className="text-sm text-gray-600">{metadados.objetivosGerais}</p>
             </CardContent>
           </Card>
@@ -224,68 +257,64 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
     );
   }
 
-  // Fallback para exibição dos dados básicos (modo de compatibilidade)
-  // Estes dados são do objeto `data` original, que podem ser mais antigos ou não gerados por IA
+  // Fallback: mostrar informações básicas (quando só há dados do formulário)
   return (
     <div className="space-y-6 p-4">
       {/* Cabeçalho básico */}
       <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
         <CardContent className="pt-4">
           <h2 className="text-lg font-semibold text-blue-800 mb-2">
-            {data?.tituloTemaAssunto || sequenciaDidatica?.titulo || 'Sequência Didática'}
+            {sequenciaDidatica?.titulo || 'Sequência Didática'}
           </h2>
           <div className="flex flex-wrap gap-2 mb-4">
-            {data?.disciplina && (
+            {sequenciaDidatica?.disciplina && (
               <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                {data.disciplina}
+                {sequenciaDidatica.disciplina}
               </span>
             )}
-            {data?.anoSerie && (
+            {sequenciaDidatica?.anoSerie && (
               <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">
-                {data.anoSerie}
+                {sequenciaDidatica.anoSerie}
               </span>
             )}
           </div>
+          {sequenciaDidatica?.descricaoGeral && (
+            <p className="text-sm text-blue-700">{sequenciaDidatica.descricaoGeral}</p>
+          )}
         </CardContent>
       </Card>
 
-      {/* Informações básicas */}
+      {/* Estatísticas planejadas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {data?.quantidadeAulas && (
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-                <span className="text-2xl font-bold text-blue-600">{data.quantidadeAulas}</span>
-                <span className="text-sm text-gray-600">Aulas</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="text-center">
+          <CardContent className="pt-4">
+            <div className="flex flex-col items-center gap-2">
+              <BookOpen className="h-6 w-6 text-blue-600" />
+              <span className="text-2xl font-bold text-blue-600">{metadados?.totalAulas || 0}</span>
+              <span className="text-sm text-gray-600">Aulas</span>
+            </div>
+          </CardContent>
+        </Card>
 
-        {data?.quantidadeDiagnosticos && (
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <BarChart3 className="h-6 w-6 text-green-600" />
-                <span className="text-2xl font-bold text-green-600">{data.quantidadeDiagnosticos}</span>
-                <span className="text-sm text-gray-600">Diagnósticos</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="text-center">
+          <CardContent className="pt-4">
+            <div className="flex flex-col items-center gap-2">
+              <BarChart3 className="h-6 w-6 text-green-600" />
+              <span className="text-2xl font-bold text-green-600">{metadados?.totalDiagnosticos || 0}</span>
+              <span className="text-sm text-gray-600">Diagnósticos</span>
+            </div>
+          </CardContent>
+        </Card>
 
-        {data?.quantidadeAvaliacoes && (
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <FileText className="h-6 w-6 text-purple-600" />
-                <span className="text-2xl font-bold text-purple-600">{data.quantidadeAvaliacoes}</span>
-                <span className="text-sm text-gray-600">Avaliações</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="text-center">
+          <CardContent className="pt-4">
+            <div className="flex flex-col items-center gap-2">
+              <FileText className="h-6 w-6 text-purple-600" />
+              <span className="text-2xl font-bold text-purple-600">{metadados?.totalAvaliacoes || 0}</span>
+              <span className="text-sm text-gray-600">Avaliações</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Aviso para construir a atividade */}
@@ -295,34 +324,6 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           Para visualizar a estrutura detalhada com as aulas, diagnósticos e avaliações, clique em "Construir Atividade" na aba de edição.
         </AlertDescription>
       </Alert>
-
-      {/* Campos de texto se disponíveis */}
-      {data?.objetivosAprendizagem && (
-        <Card>
-          <CardContent className="pt-4">
-            <h4 className="font-medium text-sm text-gray-700 mb-2">Objetivos de Aprendizagem</h4>
-            <p className="text-sm text-gray-600">{data.objetivosAprendizagem}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {data?.publicoAlvo && (
-        <Card>
-          <CardContent className="pt-4">
-            <h4 className="font-medium text-sm text-gray-700 mb-2">Público-alvo</h4>
-            <p className="text-sm text-gray-600">{data.publicoAlvo}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {data?.cronograma && (
-        <Card>
-          <CardContent className="pt-4">
-            <h4 className="font-medium text-sm text-gray-700 mb-2">Cronograma</h4>
-            <p className="text-sm text-gray-600 whitespace-pre-line">{data.cronograma}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
