@@ -1,0 +1,715 @@
+[plugin:vite:react-swc] × the name `Card` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·          ──┬─
+    ·            ╰── previous definition of `Card` here
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { BookOpen, Clock, Users, Target } from 'lucide-react';
+  6 │ 
+  7 │ interface SequenciaDidaticaHeaderProps {
+  8 │   sequencia: {
+  9 │     titulo: string;
+ 10 │     disciplina: string;
+ 11 │     anoSerie: string;
+ 12 │     cargaHoraria?: string;
+ 13 │     descricaoGeral?: string;
+ 14 │   };
+ 15 │   metadados: {
+ 16 │     totalAulas: number;
+ 17 │     totalDiagnosticos: number;
+ 18 │     totalAvaliacoes: number;
+ 19 │   };
+ 20 │ }
+ 21 │ 
+ 22 │ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+ 23 │   sequencia, 
+ 24 │   metadados 
+ 25 │ }) => {
+ 26 │   return (
+ 27 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 mb-6">
+ 28 │       <CardHeader>
+ 29 │         <CardTitle className="flex items-center gap-2 text-indigo-800">
+ 30 │           <BookOpen className="h-5 w-5" />
+ 31 │           {sequencia.titulo}
+ 32 │         </CardTitle>
+ 33 │         <div className="flex flex-wrap gap-2 mt-2">
+ 34 │           <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+ 35 │             {sequencia.disciplina}
+ 36 │           </Badge>
+ 37 │           <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 38 │             {sequencia.anoSerie}
+ 39 │           </Badge>
+ 40 │           {sequencia.cargaHoraria && (
+ 41 │             <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 42 │               <Clock className="h-3 w-3 mr-1" />
+ 43 │               {sequencia.cargaHoraria}
+ 44 │             </Badge>
+ 45 │           )}
+ 46 │         </div>
+ 47 │       </CardHeader>
+ 48 │       <CardContent>
+ 49 │         {sequencia.descricaoGeral && (
+ 50 │           <p className="text-sm text-gray-700 mb-4">
+ 51 │             {sequencia.descricaoGeral}
+ 52 │           </p>
+ 53 │         )}
+ 54 │         
+ 55 │         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ 56 │           <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
+ 57 │             <BookOpen className="h-5 w-5 text-blue-600" />
+ 58 │             <div>
+ 59 │               <span className="text-sm font-medium text-blue-800">Aulas</span>
+ 60 │               <div className="text-lg font-bold text-blue-600">{metadados.totalAulas}</div>
+ 61 │             </div>
+ 62 │           </div>
+ 63 │           
+ 64 │           <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
+ 65 │             <Target className="h-5 w-5 text-green-600" />
+ 66 │             <div>
+ 67 │               <span className="text-sm font-medium text-green-800">Diagnósticos</span>
+ 68 │               <div className="text-lg font-bold text-green-600">{metadados.totalDiagnosticos}</div>
+ 69 │             </div>
+ 70 │           </div>
+ 71 │           
+ 72 │           <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
+ 73 │             <Users className="h-5 w-5 text-purple-600" />
+ 74 │             <div>
+ 75 │               <span className="text-sm font-medium text-purple-800">Avaliações</span>
+ 76 │               <div className="text-lg font-bold text-purple-600">{metadados.totalAvaliacoes}</div>
+ 77 │             </div>
+ 78 │           </div>
+ 79 │         </div>
+ 80 │       </CardContent>
+ 81 │     </Card>
+ 82 │   );
+ 83 │ };
+ 84 │ 
+ 85 │ export default SequenciaDidaticaHeader;
+ 86 │ import React from 'react';
+ 87 │ import { Card, CardContent } from '@/components/ui/card';
+    ·          ──┬─
+    ·            ╰── `Card` redefined here
+ 88 │ import { Badge } from '@/components/ui/badge';
+ 89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+    ╰────
+
+  × the name `CardContent` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    ·                ─────┬─────
+    ·                     ╰── previous definition of `CardContent` here
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { BookOpen, Clock, Users, Target } from 'lucide-react';
+  6 │ 
+  7 │ interface SequenciaDidaticaHeaderProps {
+  8 │   sequencia: {
+  9 │     titulo: string;
+ 10 │     disciplina: string;
+ 11 │     anoSerie: string;
+ 12 │     cargaHoraria?: string;
+ 13 │     descricaoGeral?: string;
+ 14 │   };
+ 15 │   metadados: {
+ 16 │     totalAulas: number;
+ 17 │     totalDiagnosticos: number;
+ 18 │     totalAvaliacoes: number;
+ 19 │   };
+ 20 │ }
+ 21 │ 
+ 22 │ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+ 23 │   sequencia, 
+ 24 │   metadados 
+ 25 │ }) => {
+ 26 │   return (
+ 27 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 mb-6">
+ 28 │       <CardHeader>
+ 29 │         <CardTitle className="flex items-center gap-2 text-indigo-800">
+ 30 │           <BookOpen className="h-5 w-5" />
+ 31 │           {sequencia.titulo}
+ 32 │         </CardTitle>
+ 33 │         <div className="flex flex-wrap gap-2 mt-2">
+ 34 │           <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+ 35 │             {sequencia.disciplina}
+ 36 │           </Badge>
+ 37 │           <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 38 │             {sequencia.anoSerie}
+ 39 │           </Badge>
+ 40 │           {sequencia.cargaHoraria && (
+ 41 │             <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 42 │               <Clock className="h-3 w-3 mr-1" />
+ 43 │               {sequencia.cargaHoraria}
+ 44 │             </Badge>
+ 45 │           )}
+ 46 │         </div>
+ 47 │       </CardHeader>
+ 48 │       <CardContent>
+ 49 │         {sequencia.descricaoGeral && (
+ 50 │           <p className="text-sm text-gray-700 mb-4">
+ 51 │             {sequencia.descricaoGeral}
+ 52 │           </p>
+ 53 │         )}
+ 54 │         
+ 55 │         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ 56 │           <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
+ 57 │             <BookOpen className="h-5 w-5 text-blue-600" />
+ 58 │             <div>
+ 59 │               <span className="text-sm font-medium text-blue-800">Aulas</span>
+ 60 │               <div className="text-lg font-bold text-blue-600">{metadados.totalAulas}</div>
+ 61 │             </div>
+ 62 │           </div>
+ 63 │           
+ 64 │           <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
+ 65 │             <Target className="h-5 w-5 text-green-600" />
+ 66 │             <div>
+ 67 │               <span className="text-sm font-medium text-green-800">Diagnósticos</span>
+ 68 │               <div className="text-lg font-bold text-green-600">{metadados.totalDiagnosticos}</div>
+ 69 │             </div>
+ 70 │           </div>
+ 71 │           
+ 72 │           <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
+ 73 │             <Users className="h-5 w-5 text-purple-600" />
+ 74 │             <div>
+ 75 │               <span className="text-sm font-medium text-purple-800">Avaliações</span>
+ 76 │               <div className="text-lg font-bold text-purple-600">{metadados.totalAvaliacoes}</div>
+ 77 │             </div>
+ 78 │           </div>
+ 79 │         </div>
+ 80 │       </CardContent>
+ 81 │     </Card>
+ 82 │   );
+ 83 │ };
+ 84 │ 
+ 85 │ export default SequenciaDidaticaHeader;
+ 86 │ import React from 'react';
+ 87 │ import { Card, CardContent } from '@/components/ui/card';
+    ·                ─────┬─────
+    ·                     ╰── `CardContent` redefined here
+ 88 │ import { Badge } from '@/components/ui/badge';
+ 89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+    ╰────
+
+  × the name `Badge` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  4 │ import { Badge } from '@/components/ui/badge';
+    ·          ──┬──
+    ·            ╰── previous definition of `Badge` here
+  5 │ import { BookOpen, Clock, Users, Target } from 'lucide-react';
+  6 │ 
+  7 │ interface SequenciaDidaticaHeaderProps {
+  8 │   sequencia: {
+  9 │     titulo: string;
+ 10 │     disciplina: string;
+ 11 │     anoSerie: string;
+ 12 │     cargaHoraria?: string;
+ 13 │     descricaoGeral?: string;
+ 14 │   };
+ 15 │   metadados: {
+ 16 │     totalAulas: number;
+ 17 │     totalDiagnosticos: number;
+ 18 │     totalAvaliacoes: number;
+ 19 │   };
+ 20 │ }
+ 21 │ 
+ 22 │ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+ 23 │   sequencia, 
+ 24 │   metadados 
+ 25 │ }) => {
+ 26 │   return (
+ 27 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 mb-6">
+ 28 │       <CardHeader>
+ 29 │         <CardTitle className="flex items-center gap-2 text-indigo-800">
+ 30 │           <BookOpen className="h-5 w-5" />
+ 31 │           {sequencia.titulo}
+ 32 │         </CardTitle>
+ 33 │         <div className="flex flex-wrap gap-2 mt-2">
+ 34 │           <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+ 35 │             {sequencia.disciplina}
+ 36 │           </Badge>
+ 37 │           <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 38 │             {sequencia.anoSerie}
+ 39 │           </Badge>
+ 40 │           {sequencia.cargaHoraria && (
+ 41 │             <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 42 │               <Clock className="h-3 w-3 mr-1" />
+ 43 │               {sequencia.cargaHoraria}
+ 44 │             </Badge>
+ 45 │           )}
+ 46 │         </div>
+ 47 │       </CardHeader>
+ 48 │       <CardContent>
+ 49 │         {sequencia.descricaoGeral && (
+ 50 │           <p className="text-sm text-gray-700 mb-4">
+ 51 │             {sequencia.descricaoGeral}
+ 52 │           </p>
+ 53 │         )}
+ 54 │         
+ 55 │         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ 56 │           <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
+ 57 │             <BookOpen className="h-5 w-5 text-blue-600" />
+ 58 │             <div>
+ 59 │               <span className="text-sm font-medium text-blue-800">Aulas</span>
+ 60 │               <div className="text-lg font-bold text-blue-600">{metadados.totalAulas}</div>
+ 61 │             </div>
+ 62 │           </div>
+ 63 │           
+ 64 │           <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
+ 65 │             <Target className="h-5 w-5 text-green-600" />
+ 66 │             <div>
+ 67 │               <span className="text-sm font-medium text-green-800">Diagnósticos</span>
+ 68 │               <div className="text-lg font-bold text-green-600">{metadados.totalDiagnosticos}</div>
+ 69 │             </div>
+ 70 │           </div>
+ 71 │           
+ 72 │           <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
+ 73 │             <Users className="h-5 w-5 text-purple-600" />
+ 74 │             <div>
+ 75 │               <span className="text-sm font-medium text-purple-800">Avaliações</span>
+ 76 │               <div className="text-lg font-bold text-purple-600">{metadados.totalAvaliacoes}</div>
+ 77 │             </div>
+ 78 │           </div>
+ 79 │         </div>
+ 80 │       </CardContent>
+ 81 │     </Card>
+ 82 │   );
+ 83 │ };
+ 84 │ 
+ 85 │ export default SequenciaDidaticaHeader;
+ 86 │ import React from 'react';
+ 87 │ import { Card, CardContent } from '@/components/ui/card';
+ 88 │ import { Badge } from '@/components/ui/badge';
+    ·          ──┬──
+    ·            ╰── `Badge` redefined here
+ 89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+ 90 │ 
+ 91 │ interface SequenciaDidaticaHeaderProps {
+    ╰────
+
+  × the name `BookOpen` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:2:1]
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { BookOpen, Clock, Users, Target } from 'lucide-react';
+    ·          ────┬───
+    ·              ╰── previous definition of `BookOpen` here
+  6 │ 
+  7 │ interface SequenciaDidaticaHeaderProps {
+  8 │   sequencia: {
+  9 │     titulo: string;
+ 10 │     disciplina: string;
+ 11 │     anoSerie: string;
+ 12 │     cargaHoraria?: string;
+ 13 │     descricaoGeral?: string;
+ 14 │   };
+ 15 │   metadados: {
+ 16 │     totalAulas: number;
+ 17 │     totalDiagnosticos: number;
+ 18 │     totalAvaliacoes: number;
+ 19 │   };
+ 20 │ }
+ 21 │ 
+ 22 │ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+ 23 │   sequencia, 
+ 24 │   metadados 
+ 25 │ }) => {
+ 26 │   return (
+ 27 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 mb-6">
+ 28 │       <CardHeader>
+ 29 │         <CardTitle className="flex items-center gap-2 text-indigo-800">
+ 30 │           <BookOpen className="h-5 w-5" />
+ 31 │           {sequencia.titulo}
+ 32 │         </CardTitle>
+ 33 │         <div className="flex flex-wrap gap-2 mt-2">
+ 34 │           <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+ 35 │             {sequencia.disciplina}
+ 36 │           </Badge>
+ 37 │           <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 38 │             {sequencia.anoSerie}
+ 39 │           </Badge>
+ 40 │           {sequencia.cargaHoraria && (
+ 41 │             <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 42 │               <Clock className="h-3 w-3 mr-1" />
+ 43 │               {sequencia.cargaHoraria}
+ 44 │             </Badge>
+ 45 │           )}
+ 46 │         </div>
+ 47 │       </CardHeader>
+ 48 │       <CardContent>
+ 49 │         {sequencia.descricaoGeral && (
+ 50 │           <p className="text-sm text-gray-700 mb-4">
+ 51 │             {sequencia.descricaoGeral}
+ 52 │           </p>
+ 53 │         )}
+ 54 │         
+ 55 │         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ 56 │           <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
+ 57 │             <BookOpen className="h-5 w-5 text-blue-600" />
+ 58 │             <div>
+ 59 │               <span className="text-sm font-medium text-blue-800">Aulas</span>
+ 60 │               <div className="text-lg font-bold text-blue-600">{metadados.totalAulas}</div>
+ 61 │             </div>
+ 62 │           </div>
+ 63 │           
+ 64 │           <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
+ 65 │             <Target className="h-5 w-5 text-green-600" />
+ 66 │             <div>
+ 67 │               <span className="text-sm font-medium text-green-800">Diagnósticos</span>
+ 68 │               <div className="text-lg font-bold text-green-600">{metadados.totalDiagnosticos}</div>
+ 69 │             </div>
+ 70 │           </div>
+ 71 │           
+ 72 │           <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
+ 73 │             <Users className="h-5 w-5 text-purple-600" />
+ 74 │             <div>
+ 75 │               <span className="text-sm font-medium text-purple-800">Avaliações</span>
+ 76 │               <div className="text-lg font-bold text-purple-600">{metadados.totalAvaliacoes}</div>
+ 77 │             </div>
+ 78 │           </div>
+ 79 │         </div>
+ 80 │       </CardContent>
+ 81 │     </Card>
+ 82 │   );
+ 83 │ };
+ 84 │ 
+ 85 │ export default SequenciaDidaticaHeader;
+ 86 │ import React from 'react';
+ 87 │ import { Card, CardContent } from '@/components/ui/card';
+ 88 │ import { Badge } from '@/components/ui/badge';
+ 89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+    ·          ────┬───
+    ·              ╰── `BookOpen` redefined here
+ 90 │ 
+ 91 │ interface SequenciaDidaticaHeaderProps {
+ 92 │   sequencia: {
+    ╰────
+
+  × the name `Users` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:2:1]
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+  4 │ import { Badge } from '@/components/ui/badge';
+  5 │ import { BookOpen, Clock, Users, Target } from 'lucide-react';
+    ·                           ──┬──
+    ·                             ╰── previous definition of `Users` here
+  6 │ 
+  7 │ interface SequenciaDidaticaHeaderProps {
+  8 │   sequencia: {
+  9 │     titulo: string;
+ 10 │     disciplina: string;
+ 11 │     anoSerie: string;
+ 12 │     cargaHoraria?: string;
+ 13 │     descricaoGeral?: string;
+ 14 │   };
+ 15 │   metadados: {
+ 16 │     totalAulas: number;
+ 17 │     totalDiagnosticos: number;
+ 18 │     totalAvaliacoes: number;
+ 19 │   };
+ 20 │ }
+ 21 │ 
+ 22 │ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+ 23 │   sequencia, 
+ 24 │   metadados 
+ 25 │ }) => {
+ 26 │   return (
+ 27 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 mb-6">
+ 28 │       <CardHeader>
+ 29 │         <CardTitle className="flex items-center gap-2 text-indigo-800">
+ 30 │           <BookOpen className="h-5 w-5" />
+ 31 │           {sequencia.titulo}
+ 32 │         </CardTitle>
+ 33 │         <div className="flex flex-wrap gap-2 mt-2">
+ 34 │           <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+ 35 │             {sequencia.disciplina}
+ 36 │           </Badge>
+ 37 │           <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 38 │             {sequencia.anoSerie}
+ 39 │           </Badge>
+ 40 │           {sequencia.cargaHoraria && (
+ 41 │             <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+ 42 │               <Clock className="h-3 w-3 mr-1" />
+ 43 │               {sequencia.cargaHoraria}
+ 44 │             </Badge>
+ 45 │           )}
+ 46 │         </div>
+ 47 │       </CardHeader>
+ 48 │       <CardContent>
+ 49 │         {sequencia.descricaoGeral && (
+ 50 │           <p className="text-sm text-gray-700 mb-4">
+ 51 │             {sequencia.descricaoGeral}
+ 52 │           </p>
+ 53 │         )}
+ 54 │         
+ 55 │         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ 56 │           <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
+ 57 │             <BookOpen className="h-5 w-5 text-blue-600" />
+ 58 │             <div>
+ 59 │               <span className="text-sm font-medium text-blue-800">Aulas</span>
+ 60 │               <div className="text-lg font-bold text-blue-600">{metadados.totalAulas}</div>
+ 61 │             </div>
+ 62 │           </div>
+ 63 │           
+ 64 │           <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
+ 65 │             <Target className="h-5 w-5 text-green-600" />
+ 66 │             <div>
+ 67 │               <span className="text-sm font-medium text-green-800">Diagnósticos</span>
+ 68 │               <div className="text-lg font-bold text-green-600">{metadados.totalDiagnosticos}</div>
+ 69 │             </div>
+ 70 │           </div>
+ 71 │           
+ 72 │           <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
+ 73 │             <Users className="h-5 w-5 text-purple-600" />
+ 74 │             <div>
+ 75 │               <span className="text-sm font-medium text-purple-800">Avaliações</span>
+ 76 │               <div className="text-lg font-bold text-purple-600">{metadados.totalAvaliacoes}</div>
+ 77 │             </div>
+ 78 │           </div>
+ 79 │         </div>
+ 80 │       </CardContent>
+ 81 │     </Card>
+ 82 │   );
+ 83 │ };
+ 84 │ 
+ 85 │ export default SequenciaDidaticaHeader;
+ 86 │ import React from 'react';
+ 87 │ import { Card, CardContent } from '@/components/ui/card';
+ 88 │ import { Badge } from '@/components/ui/badge';
+ 89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+    ·                                             ──┬──
+    ·                                               ╰── `Users` redefined here
+ 90 │ 
+ 91 │ interface SequenciaDidaticaHeaderProps {
+ 92 │   sequencia: {
+    ╰────
+
+  × the name `SequenciaDidaticaHeader` is defined multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:19:1]
+  19 │   };
+  20 │ }
+  21 │ 
+  22 │ const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+     ·       ───────────┬───────────
+     ·                  ╰── previous definition of `SequenciaDidaticaHeader` here
+  23 │   sequencia, 
+  24 │   metadados 
+  25 │ }) => {
+  26 │   return (
+  27 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 mb-6">
+  28 │       <CardHeader>
+  29 │         <CardTitle className="flex items-center gap-2 text-indigo-800">
+  30 │           <BookOpen className="h-5 w-5" />
+  31 │           {sequencia.titulo}
+  32 │         </CardTitle>
+  33 │         <div className="flex flex-wrap gap-2 mt-2">
+  34 │           <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+  35 │             {sequencia.disciplina}
+  36 │           </Badge>
+  37 │           <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+  38 │             {sequencia.anoSerie}
+  39 │           </Badge>
+  40 │           {sequencia.cargaHoraria && (
+  41 │             <Badge variant="outline" className="border-indigo-300 text-indigo-700">
+  42 │               <Clock className="h-3 w-3 mr-1" />
+  43 │               {sequencia.cargaHoraria}
+  44 │             </Badge>
+  45 │           )}
+  46 │         </div>
+  47 │       </CardHeader>
+  48 │       <CardContent>
+  49 │         {sequencia.descricaoGeral && (
+  50 │           <p className="text-sm text-gray-700 mb-4">
+  51 │             {sequencia.descricaoGeral}
+  52 │           </p>
+  53 │         )}
+  54 │         
+  55 │         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  56 │           <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
+  57 │             <BookOpen className="h-5 w-5 text-blue-600" />
+  58 │             <div>
+  59 │               <span className="text-sm font-medium text-blue-800">Aulas</span>
+  60 │               <div className="text-lg font-bold text-blue-600">{metadados.totalAulas}</div>
+  61 │             </div>
+  62 │           </div>
+  63 │           
+  64 │           <div className="flex items-center gap-2 p-3 bg-green-100 rounded-lg">
+  65 │             <Target className="h-5 w-5 text-green-600" />
+  66 │             <div>
+  67 │               <span className="text-sm font-medium text-green-800">Diagnósticos</span>
+  68 │               <div className="text-lg font-bold text-green-600">{metadados.totalDiagnosticos}</div>
+  69 │             </div>
+  70 │           </div>
+  71 │           
+  72 │           <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
+  73 │             <Users className="h-5 w-5 text-purple-600" />
+  74 │             <div>
+  75 │               <span className="text-sm font-medium text-purple-800">Avaliações</span>
+  76 │               <div className="text-lg font-bold text-purple-600">{metadados.totalAvaliacoes}</div>
+  77 │             </div>
+  78 │           </div>
+  79 │         </div>
+  80 │       </CardContent>
+  81 │     </Card>
+  82 │   );
+  83 │ };
+  84 │ 
+  85 │ export default SequenciaDidaticaHeader;
+  86 │ import React from 'react';
+  87 │ import { Card, CardContent } from '@/components/ui/card';
+  88 │ import { Badge } from '@/components/ui/badge';
+  89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+  90 │ 
+  91 │ interface SequenciaDidaticaHeaderProps {
+  92 │   sequencia: {
+  93 │     titulo: string;
+  94 │     disciplina: string;
+  95 │     anoSerie: string;
+  96 │     descricaoGeral: string;
+  97 │     publicoAlvo?: string;
+  98 │     competenciasBNCC?: string;
+  99 │   };
+ 100 │   metadados: {
+ 101 │     totalAulas: number;
+ 102 │     totalDiagnosticos: number;
+ 103 │     totalAvaliacoes: number;
+ 104 │     isGeneratedByAI?: boolean;
+ 105 │     duracao?: string;
+ 106 │   };
+ 107 │ }
+ 108 │ 
+ 109 │ export const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+     ·              ───────────┬───────────
+     ·                         ╰── `SequenciaDidaticaHeader` redefined here
+ 110 │   sequencia, 
+ 111 │   metadados 
+ 112 │ }) => {
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:82:1]
+  82 │   );
+  83 │ };
+  84 │ 
+  85 │ export default SequenciaDidaticaHeader;
+     · ───────────────────┬───────────────────
+     ·                    ╰── previous exported here
+  86 │ import React from 'react';
+  87 │ import { Card, CardContent } from '@/components/ui/card';
+  88 │ import { Badge } from '@/components/ui/badge';
+  89 │ import { BookOpen, GraduationCap, Calendar, Users } from 'lucide-react';
+  90 │ 
+  91 │ interface SequenciaDidaticaHeaderProps {
+  92 │   sequencia: {
+  93 │     titulo: string;
+  94 │     disciplina: string;
+  95 │     anoSerie: string;
+  96 │     descricaoGeral: string;
+  97 │     publicoAlvo?: string;
+  98 │     competenciasBNCC?: string;
+  99 │   };
+ 100 │   metadados: {
+ 101 │     totalAulas: number;
+ 102 │     totalDiagnosticos: number;
+ 103 │     totalAvaliacoes: number;
+ 104 │     isGeneratedByAI?: boolean;
+ 105 │     duracao?: string;
+ 106 │   };
+ 107 │ }
+ 108 │ 
+ 109 │ export const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = ({ 
+ 110 │   sequencia, 
+ 111 │   metadados 
+ 112 │ }) => {
+ 113 │   return (
+ 114 │     <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">
+ 115 │       <CardContent className="pt-6">
+ 116 │         <div className="space-y-4">
+ 117 │           {/* Título Principal */}
+ 118 │           <div className="text-center">
+ 119 │             <h1 className="text-2xl font-bold text-indigo-800 mb-2">
+ 120 │               {sequencia.titulo}
+ 121 │             </h1>
+ 122 │             <p className="text-indigo-600 max-w-3xl mx-auto">
+ 123 │               {sequencia.descricaoGeral}
+ 124 │             </p>
+ 125 │           </div>
+ 126 │ 
+ 127 │           {/* Informações Principais */}
+ 128 │           <div className="flex flex-wrap justify-center gap-4">
+ 129 │             <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+ 130 │               <BookOpen className="h-5 w-5 text-indigo-600" />
+ 131 │               <span className="font-medium text-indigo-800">{sequencia.disciplina}</span>
+ 132 │             </div>
+ 133 │             
+ 134 │             <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+ 135 │               <GraduationCap className="h-5 w-5 text-indigo-600" />
+ 136 │               <span className="font-medium text-indigo-800">{sequencia.anoSerie}</span>
+ 137 │             </div>
+ 138 │             
+ 139 │             {metadados.duracao && (
+ 140 │               <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+ 141 │                 <Calendar className="h-5 w-5 text-indigo-600" />
+ 142 │                 <span className="font-medium text-indigo-800">{metadados.duracao}</span>
+ 143 │               </div>
+ 144 │             )}
+ 145 │             
+ 146 │             {sequencia.publicoAlvo && (
+ 147 │               <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+ 148 │                 <Users className="h-5 w-5 text-indigo-600" />
+ 149 │                 <span className="font-medium text-indigo-800">{sequencia.publicoAlvo}</span>
+ 150 │               </div>
+ 151 │             )}
+ 152 │           </div>
+ 153 │ 
+ 154 │           {/* Badges de Resumo */}
+ 155 │           <div className="flex flex-wrap justify-center gap-2">
+ 156 │             <Badge variant="secondary" className="bg-indigo-100 text-indigo-800">
+ 157 │               {metadados.totalAulas} Aulas
+ 158 │             </Badge>
+ 159 │             <Badge variant="secondary" className="bg-green-100 text-green-800">
+ 160 │               {metadados.totalDiagnosticos} Diagnósticos
+ 161 │             </Badge>
+ 162 │             <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+ 163 │               {metadados.totalAvaliacoes} Avaliações
+ 164 │             </Badge>
+ 165 │             {metadados.isGeneratedByAI && (
+ 166 │               <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+ 167 │                 ✨ Gerado por IA
+ 168 │               </Badge>
+ 169 │             )}
+ 170 │           </div>
+ 171 │ 
+ 172 │           {/* Competências BNCC */}
+ 173 │           {sequencia.competenciasBNCC && (
+ 174 │             <div className="text-center">
+ 175 │               <h3 className="font-semibold text-indigo-700 mb-2">Competências BNCC:</h3>
+ 176 │               <p className="text-sm text-indigo-600 bg-white px-4 py-2 rounded-lg inline-block">
+ 177 │                 {sequencia.competenciasBNCC}
+ 178 │               </p>
+ 179 │             </div>
+ 180 │           )}
+ 181 │         </div>
+ 182 │       </CardContent>
+ 183 │     </Card>
+ 184 │   );
+ 185 │ };
+ 186 │ 
+ 187 │ export default SequenciaDidaticaHeader;
+     · ───────────────────┬───────────────────
+     ·                    ╰── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+/home/runner/workspace/src/features/schoolpower/activities/sequencia-didatica/components/SequenciaDidaticaHeader.tsx:1:1
+1  |  
+2  |  import React from 'react';
+   |  ^
+3  |  import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+4  |  import { Badge } from '@/components/ui/badge';
