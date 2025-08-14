@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +89,7 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
               {aula.objetivo}
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
             <p className="text-xs text-gray-600 line-clamp-3">
@@ -115,75 +114,6 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
               </div>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default AulaCard;
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Target, BookOpen } from 'lucide-react';
-
-interface AulaCardProps {
-  aula: {
-    id: string;
-    numero: number;
-    titulo: string;
-    objetivos: string[];
-    duracao: string;
-    metodologia: string;
-    recursos: string[];
-    desenvolvimento: string;
-    avaliacao: string;
-  };
-}
-
-export const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
-  return (
-    <Card className="h-full hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-blue-600" />
-          {aula.titulo}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Clock className="h-4 w-4" />
-          <span>{aula.duracao}</span>
-        </div>
-        
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1 flex items-center gap-1">
-            <Target className="h-4 w-4" />
-            Objetivos:
-          </h4>
-          <ul className="text-sm text-gray-600 space-y-1">
-            {aula.objetivos.map((objetivo, index) => (
-              <li key={index} className="flex items-start gap-1">
-                <span className="text-blue-500 mt-1">•</span>
-                <span>{objetivo}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1">Metodologia:</h4>
-          <p className="text-sm text-gray-600">{aula.metodologia}</p>
-        </div>
-
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-1">Recursos:</h4>
-          <div className="flex flex-wrap gap-1">
-            {aula.recursos.map((recurso, index) => (
-              <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                {recurso}
-              </span>
-            ))}
-          </div>
         </div>
       </CardContent>
     </Card>
