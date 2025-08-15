@@ -747,7 +747,7 @@ const EditActivityModal = ({
                 objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || '',
                 materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || activity?.materials || '',
                 context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
-                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || auto FormData.evaluation || '',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
 
