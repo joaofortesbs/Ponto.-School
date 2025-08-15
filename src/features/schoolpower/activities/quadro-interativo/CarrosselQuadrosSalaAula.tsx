@@ -67,32 +67,36 @@ export const CarrosselQuadrosSalaAula: React.FC<CarrosselQuadrosSalaAulaProps> =
     const diff = index - currentIndex;
     
     if (diff === 0) {
-      // Card central
+      // Card central com animação de entrada
       return {
-        transform: `perspective(1000px) translateY(0px) translateZ(50px) scale(1.2)`,
+        transform: `perspective(1000px) translateY(0px) translateZ(50px) scale(1.2) rotateY(0deg)`,
         opacity: 1,
-        zIndex: 10
+        zIndex: 10,
+        filter: 'brightness(1.1) saturate(1.2)'
       };
     } else if (diff === 1 || (diff === -(slides.length - 1))) {
-      // Card superior
+      // Card superior com rotação suave
       return {
-        transform: `perspective(1000px) translateY(-200px) translateZ(-20px) rotateX(15deg) scale(0.7)`,
-        opacity: 0.6,
-        zIndex: 5
+        transform: `perspective(1000px) translateY(-200px) translateZ(-20px) rotateX(15deg) rotateY(-5deg) scale(0.7)`,
+        opacity: 0.5,
+        zIndex: 5,
+        filter: 'brightness(0.8) saturate(0.8)'
       };
     } else if (diff === -1 || (diff === slides.length - 1)) {
-      // Card inferior
+      // Card inferior com rotação suave
       return {
-        transform: `perspective(1000px) translateY(200px) translateZ(-20px) rotateX(-15deg) scale(0.7)`,
-        opacity: 0.6,
-        zIndex: 5
+        transform: `perspective(1000px) translateY(200px) translateZ(-20px) rotateX(-15deg) rotateY(5deg) scale(0.7)`,
+        opacity: 0.5,
+        zIndex: 5,
+        filter: 'brightness(0.8) saturate(0.8)'
       };
     } else {
-      // Cards ocultos
+      // Cards ocultos com transição suave
       return {
-        transform: `perspective(1000px) translateY(${diff > 0 ? -400 : 400}px) translateZ(-50px) scale(0.5)`,
+        transform: `perspective(1000px) translateY(${diff > 0 ? -400 : 400}px) translateZ(-50px) rotateX(${diff > 0 ? 30 : -30}deg) scale(0.3)`,
         opacity: 0,
-        zIndex: 1
+        zIndex: 1,
+        filter: 'brightness(0.5) blur(2px)'
       };
     }
   };
@@ -151,16 +155,27 @@ export const CarrosselQuadrosSalaAula: React.FC<CarrosselQuadrosSalaAulaProps> =
               key={slide.id}
               onClick={() => handleMiniCardClick(index)}
               className={`
-                w-16 h-12 rounded-lg cursor-pointer transition-all duration-300 border-2 hover:scale-105
+                w-16 h-12 rounded-lg cursor-pointer transition-all duration-500 border-2 hover:scale-110 transform
                 ${index === currentIndex 
-                  ? 'border-blue-500 bg-blue-100 shadow-lg shadow-blue-200' 
-                  : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow-md'
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-100 to-blue-200 shadow-lg shadow-blue-300/50 scale-105' 
+                  : 'border-gray-300 bg-gradient-to-br from-white to-gray-50 hover:border-blue-300 hover:shadow-md hover:bg-gradient-to-br hover:from-blue-50 hover:to-white'
                 }
               `}
-              title={`Slide ${index + 1}: ${slide.title}`}
+              title={`Quadro ${index + 1}`}
             >
-              <div className="w-full h-full rounded-md bg-gradient-to-br from-white to-gray-100 flex items-center justify-center">
-                <span className="text-xs font-medium text-gray-600">{index + 1}</span>
+              <div className={`
+                w-full h-full rounded-md flex items-center justify-center relative overflow-hidden
+                ${index === currentIndex ? 'animate-pulse' : ''}
+              `}>
+                {index === currentIndex && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-pulse"></div>
+                )}
+                <span className={`
+                  text-xs font-bold z-10 relative
+                  ${index === currentIndex ? 'text-blue-700' : 'text-gray-600'}
+                `}>
+                  {index + 1}
+                </span>
               </div>
             </div>
           ))}
@@ -177,92 +192,55 @@ export const CarrosselQuadrosSalaAula: React.FC<CarrosselQuadrosSalaAulaProps> =
                 <div
                   key={slide.id}
                   className={`
-                    absolute inset-0 w-80 h-48 rounded-xl transition-all duration-700 ease-out group cursor-pointer
+                    absolute inset-0 w-80 h-48 rounded-xl transition-all duration-1000 ease-in-out group cursor-pointer transform-gpu
                     ${isCenter 
-                      ? 'bg-gradient-to-br from-blue-50 to-white border-2 border-blue-400 shadow-2xl shadow-blue-200' 
-                      : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-lg hover:shadow-xl'
+                      ? 'bg-gradient-to-br from-blue-50 via-white to-blue-50 border-2 border-blue-400 shadow-2xl shadow-blue-300/60' 
+                      : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-lg hover:shadow-2xl hover:border-blue-200'
                     }
                   `}
-                  style={style}
+                  style={{
+                    ...style,
+                    transition: 'all 1000ms cubic-bezier(0.4, 0, 0.2, 1), filter 1000ms ease-out'
+                  }}
                   onClick={() => handleMainCardClick(index)}
-                  title={slide.title}
+                  title={`Quadro Interativo ${index + 1}`}
                 >
-                  {/* Conteúdo do card */}
-                  <div className="w-full h-full p-6 flex flex-col justify-between relative overflow-hidden">
+                  {/* Card completamente limpo */}
+                  <div className="w-full h-full relative overflow-hidden">
                     
                     {/* Gradiente de fundo sutil */}
                     <div className={`
-                      absolute inset-0 rounded-xl 
+                      absolute inset-0 rounded-xl transition-all duration-700 ease-out
                       ${isCenter 
-                        ? 'bg-gradient-to-br from-blue-500/5 to-transparent' 
+                        ? 'bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-transparent animate-pulse' 
                         : 'bg-gradient-to-br from-gray-500/5 to-transparent'
                       }
                     `}></div>
 
-                    {/* Número do slide */}
-                    <div className="relative z-10 flex justify-between items-start">
-                      <span className={`
-                        text-xs font-bold px-2 py-1 rounded-full
-                        ${isCenter 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 text-gray-600'
-                        }
-                      `}>
-                        {index + 1}
-                      </span>
-                      {isCenter && (
-                        <div className="text-xs text-blue-600 font-medium">
-                          ATIVO
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Área de conteúdo visual */}
-                    <div className="relative z-10 flex-1 mt-2 mb-4">
-                      <div className={`
-                        w-full h-full rounded-lg shadow-inner flex items-center justify-center
-                        ${isCenter 
-                          ? 'bg-gradient-to-br from-blue-100 to-blue-200' 
-                          : 'bg-gradient-to-br from-gray-100 to-gray-200'
-                        }
-                      `}>
-                        <div className="text-center">
-                          <div className={`
-                            w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center
-                            ${isCenter 
-                              ? 'bg-blue-500 text-white' 
-                              : 'bg-gray-400 text-white'
-                            }
-                          `}>
-                            📊
-                          </div>
-                          <div className="text-xs text-gray-600 font-medium">
-                            Slide {index + 1}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Indicador de interatividade */}
-                    <div className="relative z-10 text-center">
-                      <div className={`
-                        text-xs px-2 py-1 rounded-full inline-block
-                        ${isCenter 
-                          ? 'bg-blue-500/20 text-blue-700' 
-                          : 'bg-gray-200 text-gray-600'
-                        }
-                      `}>
-                        Clique para visualizar
-                      </div>
-                    </div>
+                    {/* Efeito de brilho para o card ativo */}
+                    {isCenter && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-blue-400/20 to-transparent animate-pulse"></div>
+                    )}
 
                     {/* Botões de ação (apenas no card central) */}
                     {isCenter && renderActionButtons(slide.id)}
 
                     {/* Efeito de hover para cards não centrais */}
                     {!isCenter && (
-                      <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
-                        <span className="text-blue-600 font-medium text-sm">Clique para centralizar</span>
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/15 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-xl flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                          <div className="w-0 h-0 border-l-4 border-l-blue-600 border-t-2 border-t-transparent border-b-2 border-b-transparent ml-1"></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Animação de partículas para card ativo */}
+                    {isCenter && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-4 left-4 w-2 h-2 bg-blue-400/60 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                        <div className="absolute top-8 right-6 w-1 h-1 bg-blue-300/40 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+                        <div className="absolute bottom-6 left-8 w-1.5 h-1.5 bg-blue-500/50 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
+                        <div className="absolute bottom-4 right-4 w-1 h-1 bg-blue-400/30 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }}></div>
                       </div>
                     )}
                   </div>
