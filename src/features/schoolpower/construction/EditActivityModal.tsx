@@ -823,66 +823,67 @@ const EditActivityModal = ({
             } else if (activity?.id === 'quadro-interativo') {
               console.log('🖼️ Processando dados específicos de Quadro Interativo');
 
-              // Importar o processador específico do Quadro Interativo
-              const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+              try {
+                // Importar o processador específico do Quadro Interativo
+                const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
-              // Preparar dados consolidados para o processador
-              const activityForProcessor = {
-                ...activity,
-                ...consolidatedData,
-                customFields: {
-                  ...activity.customFields,
-                  ...consolidatedCustomFields,
-                  ...autoCustomFields
-                }
-              };
+                // Preparar dados consolidados para o processador
+                const activityForProcessor = {
+                  ...activity,
+                  ...consolidatedData,
+                  customFields: {
+                    ...activity.customFields,
+                    ...consolidatedCustomFields,
+                    ...autoCustomFields
+                  }
+                };
 
-              console.log('📋 Dados para processador do Quadro Interativo:', activityForProcessor);
+                console.log('📋 Dados para processador do Quadro Interativo:', activityForProcessor);
 
-              // Usar o processador específico para preparar os dados
-              const processedQuadroData = prepareQuadroInterativoDataForModal(activityForProcessor);
+                // Usar o processador específico para preparar os dados
+                const processedQuadroData = prepareQuadroInterativoDataForModal(activityForProcessor);
 
-              // Aplicar dados automáticos por cima se existirem
-              enrichedFormData = {
-                ...processedQuadroData,
+                // Aplicar dados automáticos por cima se existirem
+                enrichedFormData = {
+                  ...processedQuadroData,
 
-                // Sobrescrever com dados automáticos se existirem e forem válidos
-                ...(autoFormData.title && { title: autoFormData.title }),
-                ...(autoFormData.description && { description: autoFormData.description }),
-                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
-                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
-                ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
-                ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
-                ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
-                ...(autoFormData.materials && { materials: autoFormData.materials }),
-                ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
-                ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
-                ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
-                ...(autoFormData.context && { context: autoFormData.context })
-              };
+                  // Sobrescrever com dados automáticos se existirem e forem válidos
+                  ...(autoFormData.title && { title: autoFormData.title }),
+                  ...(autoFormData.description && { description: autoFormData.description }),
+                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
+                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
+                  ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
+                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
+                  ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
+                  ...(autoFormData.materials && { materials: autoFormData.materials }),
+                  ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
+                  ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
+                  ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
+                  ...(autoFormData.context && { context: autoFormData.context })
+                };
 
-              console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
+                console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-            } catch (error) {
-              console.error('❌ Erro ao processar dados do Quadro Interativo:', error);
+              } catch (error) {
+                console.error('❌ Erro ao processar dados do Quadro Interativo:', error);
 
-              // Fallback para dados básicos do Quadro Interativo
-              enrichedFormData = {
-                ...formData,
-                title: consolidatedData.title || autoFormData.title || activity.title || '',
-                description: consolidatedData.description || autoFormData.description || activity.description || '',
-                subject: consolidatedCustomFields['Disciplina / Área de conhecimento'] || 'Matemática',
-                schoolYear: consolidatedCustomFields['Ano / Série'] || '6º Ano',
-                theme: consolidatedCustomFields['Tema ou Assunto da aula'] || activity.title || 'Tema da Aula',
-                objectives: consolidatedCustomFields['Objetivo de aprendizagem da aula'] || activity.description || 'Objetivos de aprendizagem',
-                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || 'Intermediário',
-                quadroInterativoCampoEspecifico: consolidatedCustomFields['Atividade mostrada'] || 'Atividade interativa no quadro'
-              };
+                // Fallback para dados básicos do Quadro Interativo
+                enrichedFormData = {
+                  ...formData,
+                  title: consolidatedData.title || autoFormData.title || activity.title || '',
+                  description: consolidatedData.description || autoFormData.description || activity.description || '',
+                  subject: consolidatedCustomFields['Disciplina / Área de conhecimento'] || 'Matemática',
+                  schoolYear: consolidatedCustomFields['Ano / Série'] || '6º Ano',
+                  theme: consolidatedCustomFields['Tema ou Assunto da aula'] || activity.title || 'Tema da Aula',
+                  objectives: consolidatedCustomFields['Objetivo de aprendizagem da aula'] || activity.description || 'Objetivos de aprendizagem',
+                  difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || 'Intermediário',
+                  quadroInterativoCampoEspecifico: consolidatedCustomFields['Atividade mostrada'] || 'Atividade interativa no quadro'
+                };
 
-              console.log('🔧 Usando dados fallback para Quadro Interativo:', enrichedFormData);
-            }
-          } else {
+                console.log('🔧 Usando dados fallback para Quadro Interativo:', enrichedFormData);
+              }
+            } else {
             enrichedFormData = {
               title: consolidatedData.title || autoFormData.title || '',
               description: consolidatedData.description || autoFormData.description || '',
