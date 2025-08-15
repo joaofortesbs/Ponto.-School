@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Play } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { CarrosselQuadrosSalaAula } from './CarrosselQuadrosSalaAula';
 import QuadroInterativoGenerator from './QuadroInterativoGenerator';
 
@@ -15,18 +16,37 @@ export function QuadroInterativoPreview({ activityData }: QuadroInterativoPrevie
 
   useEffect(() => {
     const generateContent = async () => {
-      if (activityData) {
-        setIsLoading(true);
-        try {
+      setIsLoading(true);
+      try {
+        console.log('🖼️ Iniciando geração de conteúdo para Quadro Interativo...');
+        
+        if (activityData) {
           const generatedContent = await QuadroInterativoGenerator.generateContent(activityData);
+          console.log('✅ Conteúdo gerado com sucesso:', generatedContent);
           setContent(generatedContent);
-        } catch (error) {
-          console.error('Erro ao gerar conteúdo:', error);
-          setContent({
-            card1: { titulo: "Introdução", conteudo: "Conteúdo introdutório" },
-            card2: { titulo: "Conceitos", conteudo: "Conceitos principais" }
-          });
+        } else {
+          // Conteúdo padrão quando não há dados
+          const defaultContent = {
+            card1: { 
+              titulo: "Introdução", 
+              conteudo: "Conteúdo introdutório sobre o tema da aula. Este card apresenta os conceitos fundamentais que serão explorados." 
+            },
+            card2: { 
+              titulo: "Conceitos", 
+              conteudo: "Principais conceitos e informações importantes. Aqui você encontrará as informações essenciais para o aprendizado." 
+            }
+          };
+          console.log('📋 Usando conteúdo padrão:', defaultContent);
+          setContent(defaultContent);
         }
+      } catch (error) {
+        console.error('❌ Erro ao gerar conteúdo:', error);
+        // Fallback para conteúdo básico
+        setContent({
+          card1: { titulo: "Introdução", conteudo: "Conteúdo introdutório" },
+          card2: { titulo: "Conceitos", conteudo: "Conceitos principais" }
+        });
+      } finally {
         setIsLoading(false);
       }
     };

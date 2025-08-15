@@ -1296,10 +1296,19 @@ const EditActivityModal = ({
         setBuildProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const activityType = activity.type || activity.id || activity.categoryId;
+      const activityType = activity?.type || activity.id || activity.categoryId;
       console.log('🎯 Tipo de atividade determinado:', activityType);
 
-      const result = await generateActivityContent(activityType, formData);
+      let result;
+
+      if (activityType === 'quadro-interativo') {
+        // Para quadro interativo, vamos gerar o conteúdo específico
+        const QuadroInterativoGenerator = (await import('@/features/schoolpower/activities/quadro-interativo/QuadroInterativoGenerator')).default;
+        result = await QuadroInterativoGenerator.generateContent(formData);
+        console.log('🖼️ Conteúdo do Quadro Interativo gerado:', result);
+      } else {
+        result = await generateActivityContent(activityType, formData);
+      }
 
       clearInterval(progressTimer);
       setBuildProgress(100);

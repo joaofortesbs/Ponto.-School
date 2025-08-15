@@ -353,6 +353,34 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             }
           };
           console.log('📚 Dados da Sequência Didática processados para visualização:', previewData);
+        } else if (activityType === 'quadro-interativo') {
+          console.log('🖼️ Processando dados específicos do Quadro Interativo');
+          
+          // Buscar dados do localStorage para quadro-interativo
+          const quadroContent = localStorage.getItem(`schoolpower_quadro-interativo_content`);
+          let processedData = {};
+          
+          if (quadroContent) {
+            try {
+              const parsedContent = JSON.parse(quadroContent);
+              processedData = parsedContent;
+              console.log('🖼️ Dados do Quadro Interativo encontrados:', processedData);
+            } catch (error) {
+              console.error('❌ Erro ao parsear dados do Quadro Interativo:', error);
+            }
+          }
+
+          // Mesclar dados do quadro interativo com dados existentes
+          previewData = {
+            ...previewData,
+            ...processedData,
+            id: activity.id,
+            type: activityType,
+            title: processedData.title || previewData.title,
+            description: processedData.description || previewData.description,
+            quadroInterativoContent: processedData
+          };
+          console.log('🖼️ Dados do Quadro Interativo processados para visualização:', previewData);
         } else {
           console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
           // Criar estrutura básica a partir dos dados do formulário
