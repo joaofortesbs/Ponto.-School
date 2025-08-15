@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Copy, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -75,30 +74,8 @@ export function QuadroInterativoPreview({ data }: QuadroInterativoPreviewProps) 
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Header com informações da atividade */}
-      <div className="bg-blue-500 text-white p-6 rounded-t-lg">
-        <h2 className="text-2xl font-bold mb-2">
-          Quadro Interativo: {data.theme || 'Teorema de Pitágoras'}
-        </h2>
-        <p className="text-blue-100 mb-4">
-          Apresentação interativa do {data.theme || 'Teorema de Pitágoras'}, explorando suas aplicações práticas e demonstrações visuais.
-        </p>
-        
-        <div className="flex gap-4 text-sm">
-          <span className="bg-blue-400 px-3 py-1 rounded-full flex items-center gap-1">
-            🎯 Atividade Gerada
-          </span>
-          <span className="bg-blue-400 px-3 py-1 rounded-full flex items-center gap-1">
-            ⏱️ 45 minutos
-          </span>
-          <span className="bg-blue-400 px-3 py-1 rounded-full flex items-center gap-1">
-            📊 Nível Médio
-          </span>
-        </div>
-      </div>
-
-      {/* Carrossel 3D */}
-      <div className="flex-1 bg-white">
+      {/* Carrossel 3D - Agora ocupa toda a altura */}
+      <div className="flex-1 bg-gray-50">
         <CarrosselQuadrosSalaAula
           slides={slides}
           onEdit={handleEditSlide}
@@ -107,12 +84,12 @@ export function QuadroInterativoPreview({ data }: QuadroInterativoPreviewProps) 
         />
       </div>
 
-      {/* Footer com ações */}
-      <div className="bg-gray-900 p-4 rounded-b-lg flex justify-between items-center">
+      {/* Footer com ações - mantido para funcionalidades importantes */}
+      <div className="bg-gray-900 p-4 flex justify-between items-center">
         <div className="text-white text-sm">
-          <span className="font-semibold">Conteúdo da Atividade</span>
+          <span className="font-semibold">Quadro Interativo: {data.theme || 'Teorema de Pitágoras'}</span>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             onClick={handleCopyContent}
