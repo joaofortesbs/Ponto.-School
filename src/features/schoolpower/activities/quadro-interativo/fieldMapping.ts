@@ -194,3 +194,43 @@ function getFieldValue(customFields: any, possibleKeys: string[]): string {
   }
   return '';
 }
+export const quadroInterativoFieldMapping = {
+  'Disciplina / Área de conhecimento': {
+    type: 'text',
+    label: 'Disciplina / Área de conhecimento',
+    placeholder: 'Ex: Língua Portuguesa',
+    required: true
+  },
+  'Ano / Série': {
+    type: 'text',
+    label: 'Ano / Série',
+    placeholder: 'Ex: 3º Bimestre',
+    required: true
+  },
+  'Tema ou Assunto da aula': {
+    type: 'text',
+    label: 'Tema ou Assunto da aula',
+    placeholder: 'Ex: Substantivos Próprios e Verbos',
+    required: true
+  },
+  'Objetivo de aprendizagem da aula': {
+    type: 'textarea',
+    label: 'Objetivo de aprendizagem da aula',
+    placeholder: 'Descreva os objetivos de aprendizagem',
+    required: true
+  },
+  'Nível de Dificuldade': {
+    type: 'select',
+    label: 'Nível de Dificuldade',
+    options: ['Fácil', 'Médio', 'Difícil'],
+    required: false
+  },
+  'Atividade mostrada': {
+    type: 'text',
+    label: 'Atividade mostrada',
+    placeholder: 'Ex: lista-exercicios',
+    required: false
+  }
+};
+
+export default quadroInterativoFieldMapping;

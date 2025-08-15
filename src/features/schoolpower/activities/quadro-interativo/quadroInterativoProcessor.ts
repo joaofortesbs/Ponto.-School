@@ -439,3 +439,135 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
   console.log('✅ Dados do Quadro Interativo preparados para modal:', formData);
   return formData;
 }
+import { GeminiClient } from '@/utils/api/geminiClient';
+
+interface QuadroInterativoFormData {
+  disciplina: string;
+  anoSerie: string;
+  tema: string;
+  objetivo: string;
+  nivelDificuldade: string;
+  atividadeMostrada: string;
+}
+
+interface QuadroInterativoResult {
+  success: boolean;
+  titulo: string;
+  conteudo: string;
+  error?: string;
+}
+
+export async function generateQuadroInterativoContent(
+  formData: QuadroInterativoFormData
+): Promise<QuadroInterativoResult> {
+  console.log('🎯 Iniciando geração de conteúdo do Quadro Interativo...');
+  console.log('📋 Dados recebidos:', formData);
+
+  try {
+    const geminiClient = new GeminiClient();
+
+    const prompt = buildQuadroInterativoPrompt(formData);
+    console.log('📝 Prompt construído:', prompt);
+
+    const response = await geminiClient.generate({
+      prompt,
+      temperature: 0.7,
+      maxTokens: 2048,
+    });
+
+    if (!response.success) {
+      throw new Error(response.error || 'Erro na API Gemini');
+    }
+
+    console.log('📤 Resposta da IA recebida:', response.result);
+
+    const parsedContent = parseGeminiResponse(response.result);
+    
+    if (!parsedContent.titulo || !parsedContent.conteudo) {
+      throw new Error('Resposta da IA não contém título ou conteúdo válidos');
+    }
+
+    console.log('✅ Conteúdo processado com sucesso:', parsedContent);
+
+    return {
+      success: true,
+      titulo: parsedContent.titulo,
+      conteudo: parsedContent.conteudo
+    };
+
+  } catch (error) {
+    console.error('❌ Erro na geração do conteúdo:', error);
+    
+    return {
+      success: false,
+      titulo: '',
+      conteudo: '',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    };
+  }
+}
+
+function buildQuadroInterativoPrompt(formData: QuadroInterativoFormData): string {
+  return `Você é uma IA especializada em criar conteúdo educacional para quadros interativos.
+
+Crie um conteúdo educacional completo baseado nas seguintes informações:
+
+**Informações da Aula:**
+- Disciplina: ${formData.disciplina}
+- Ano/Série: ${formData.anoSerie}
+- Tema: ${formData.tema}
+- Objetivo de Aprendizagem: ${formData.objetivo}
+- Nível de Dificuldade: ${formData.nivelDificuldade}
+- Atividade Relacionada: ${formData.atividadeMostrada}
+
+**Instruções:**
+1. Crie um TÍTULO envolvente e educativo para o quadro interativo
+2. Desenvolva um CONTEÚDO didático, organizado e fácil de entender
+3. O conteúdo deve ser adequado ao nível de dificuldade especificado
+4. Inclua exemplos práticos relacionados ao tema
+5. Use uma linguagem clara e apropriada para a série/ano informado
+6. O conteúdo deve servir como apoio visual para a aula
+
+**Formato de Resposta:**
+Retorne APENAS um JSON no seguinte formato:
+{
+  "titulo": "Título do quadro interativo",
+  "conteudo": "Conteúdo educacional completo do quadro interativo"
+}
+
+Seja didático, criativo e certifique-se de que o conteúdo seja útil para os alunos compreenderem o tema proposto.`;
+}
+
+function parseGeminiResponse(response: string): { titulo: string; conteudo: string } {
+  try {
+    // Remove possíveis caracteres de formatação
+    const cleanResponse = response.trim().replace(/```json\n?/g, '').replace(/```\n?/g, '');
+    
+    console.log('🔍 Resposta limpa para parsing:', cleanResponse);
+    
+    const parsed = JSON.parse(cleanResponse);
+    
+    return {
+      titulo: parsed.titulo || '',
+      conteudo: parsed.conteudo || ''
+    };
+  } catch (error) {
+    console.error('❌ Erro ao fazer parse da resposta:', error);
+    console.log('📄 Resposta original:', response);
+    
+    // Fallback: tentar extrair título e conteúdo manualmente
+    const lines = response.split('\n').filter(line => line.trim());
+    
+    if (lines.length >= 2) {
+      return {
+        titulo: lines[0].replace(/^[^a-zA-Z]*/, '').trim(),
+        conteudo: lines.slice(1).join('\n').trim()
+      };
+    }
+    
+    return {
+      titulo: 'Quadro Interativo',
+      conteudo: response
+    };
+  }
+}

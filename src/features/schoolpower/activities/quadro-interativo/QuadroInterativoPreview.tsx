@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,6 +55,36 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     }
   };
 
+  // Verifica se há conteúdo gerado pela IA
+  const hasGeneratedContent = activityData?.generatedContent?.titulo && activityData?.generatedContent?.conteudo;
+  const customFields = activityData?.customFields || {};
+
+  if (!hasGeneratedContent) {
+    return (
+      <div className="h-full overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                Quadro Interativo - Pré-visualização
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">
+                  Nenhum conteúdo gerado ainda.
+                </p>
+                <p className="text-sm text-gray-400">
+                  Use a seção "Editar" para configurar e gerar o conteúdo do quadro interativo.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -69,7 +98,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                 </div>
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {previewData.title}
+                    {activityData.generatedContent.titulo}
                   </CardTitle>
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
                     Atividade de Quadro Interativo
@@ -78,14 +107,14 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
               </div>
               <Badge 
                 variant="secondary" 
-                className={`px-3 py-1 ${getDifficultyColor(previewData.difficultyLevel)}`}
+                className={`px-3 py-1 ${getDifficultyColor(customFields['Nível de Dificuldade'] || previewData.difficultyLevel)}`}
               >
-                {previewData.difficultyLevel}
+                {customFields['Nível de Dificuldade'] || previewData.difficultyLevel}
               </Badge>
             </div>
-            {previewData.description && (
+            {activityData.generatedContent.descricao && (
               <p className="text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">
-                {previewData.description}
+                {activityData.generatedContent.descricao}
               </p>
             )}
           </CardHeader>
@@ -106,7 +135,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                   Disciplina
                 </p>
                 <p className="text-gray-900 dark:text-white font-medium">
-                  {previewData.subject}
+                  {customFields['Disciplina / Área de conhecimento'] || previewData.subject}
                 </p>
               </div>
               <div className="space-y-2">
@@ -114,7 +143,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                   Ano/Série
                 </p>
                 <p className="text-gray-900 dark:text-white font-medium">
-                  {previewData.schoolYear}
+                  {customFields['Ano / Série'] || previewData.schoolYear}
                 </p>
               </div>
               <div className="space-y-2">
@@ -124,7 +153,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-400" />
                   <p className="text-gray-900 dark:text-white font-medium">
-                    {previewData.timeLimit}
+                    {customFields['Tempo de Duração'] || previewData.timeLimit}
                   </p>
                 </div>
               </div>
@@ -143,7 +172,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {previewData.theme}
+                {customFields['Tema ou Assunto da aula'] || previewData.theme}
               </p>
             </CardContent>
           </Card>
@@ -157,25 +186,30 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {previewData.objectives}
+                {customFields['Objetivos de Aprendizagem'] || previewData.objectives}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Atividade Interativa */}
-        <Card className="shadow-md border-l-4 border-l-blue-500">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <PlayCircle className="h-5 w-5 text-blue-600" />
+        {/* Atividade Interativa (Conteúdo Gerado pela IA) */}
+        <Card className="shadow-md border-2 border-blue-500">
+          <CardHeader className="bg-blue-50 dark:bg-blue-900/20">
+            <CardTitle className="flex items-center gap-2 text-lg text-blue-600 font-bold">
+              <PlayCircle className="h-5 w-5" />
               Atividade no Quadro Interativo
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
-                {previewData.activityShown}
-              </p>
+            <div className="bg-white p-4 rounded-lg">
+              <div className="prose max-w-none">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">
+                  {activityData.generatedContent.titulo}
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                  {activityData.generatedContent.conteudo}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -191,7 +225,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {previewData.materials.split('\n').filter(m => m.trim()).map((material, index) => (
+                {customFields['Materiais'] && customFields['Materiais'].split('\n').filter(m => m.trim()).map((material, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
                     <p className="text-gray-700 dark:text-gray-300">
@@ -199,7 +233,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                     </p>
                   </div>
                 ))}
-                {!previewData.materials.trim() && (
+                {(!customFields['Materiais'] || !customFields['Materiais'].trim()) && (
                   <p className="text-gray-500 dark:text-gray-400 italic">
                     Materiais não especificados
                   </p>
@@ -217,7 +251,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {previewData.instructions}
+                {customFields['Instruções'] || previewData.instructions}
               </p>
             </CardContent>
           </Card>
@@ -231,7 +265,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {previewData.evaluation}
+                {customFields['Critérios de Avaliação'] || previewData.evaluation}
               </p>
             </CardContent>
           </Card>
@@ -242,7 +276,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {previewData.context}
+                {customFields['Contexto de Aplicação'] || previewData.context}
               </p>
             </CardContent>
           </Card>
@@ -263,6 +297,17 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </div>
           </CardContent>
         </Card>
+
+        {/* Informações de Construção */}
+        {activityData?.builtAt && (
+          <Card className="mt-6">
+            <CardContent className="pt-4">
+              <p className="text-xs text-gray-500">
+                Construído em: {new Date(activityData.builtAt).toLocaleString('pt-BR')}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
