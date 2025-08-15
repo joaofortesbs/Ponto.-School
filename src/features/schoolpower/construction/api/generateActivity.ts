@@ -203,37 +203,38 @@ export const generateActivityContent = async (
 
     // Para Quadro Interativo, usar gerador específico
     if (activityType === 'quadro-interativo') {
-      console.log('🎯 Usando QuadroInterativoGenerator');
-      console.log('📋 Context data para quadro interativo:', contextData);
+      console.log('🖼️ Processando Quadro Interativo com IA');
 
-      // Garantir que todos os campos necessários estão mapeados
-      const mappedData = {
-        ...contextData,
-        subject: contextData.subject || contextData['Disciplina / Área de conhecimento'],
-        schoolYear: contextData.schoolYear || contextData['Ano / Série'],
-        theme: contextData.theme || contextData['Tema ou Assunto da aula'],
-        objectives: contextData.objectives || contextData['Objetivo de aprendizagem da aula'],
-        difficultyLevel: contextData.difficultyLevel || contextData['Nível de Dificuldade'],
-        quadroInterativoCampoEspecifico: contextData['Atividade mostrada'] || contextData.quadroInterativoCampoEspecifico
-      };
+      try {
+        const { default: QuadroInterativoGenerator } = await import('../../activities/quadro-interativo/QuadroInterativoGenerator');
 
-      console.log('🔄 Dados mapeados para geração:', mappedData);
+        const quadroData = {
+          title: contextData.title || contextData.tituloTemaAssunto || 'Quadro Interativo',
+          description: contextData.description || contextData.objetivosAprendizagem || 'Atividade para quadro interativo',
+          subject: contextData.subject || contextData.disciplina || 'Matemática',
+          schoolYear: contextData.schoolYear || contextData.anoSerie || '6º Ano',
+          theme: contextData.theme || contextData.tema || 'Tema da aula',
+          objectives: contextData.objectives || contextData.objetivos || 'Objetivos de aprendizagem',
+          difficultyLevel: contextData.difficultyLevel || 'Intermediário',
+          quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro',
+          materials: contextData.materials || '',
+          instructions: contextData.instructions || '',
+          evaluation: contextData.evaluation || '',
+          timeLimit: contextData.timeLimit || '',
+          context: contextData.context || ''
+        };
 
-      const QuadroInterativoGenerator = (await import('../../activities/quadro-interativo/QuadroInterativoGenerator')).default;
-      const result = await QuadroInterativoGenerator.generateContent(mappedData);
+        console.log('📋 Dados preparados para Quadro Interativo:', quadroData);
 
-      console.log('✅ Resultado do QuadroInterativoGenerator:', result);
+        const quadroGerado = await QuadroInterativoGenerator.generateContent(quadroData);
+        console.log('✅ Quadro Interativo gerado com sucesso:', quadroGerado);
 
-      // Adicionar metadados
-      const enhancedResult = {
-        ...result,
-        isGeneratedByAI: true,
-        generatedAt: new Date().toISOString(),
-        activityType,
-        sourceData: mappedData
-      };
+        return quadroGerado;
 
-      return enhancedResult;
+      } catch (error) {
+        console.error('❌ Erro ao gerar Quadro Interativo:', error);
+        throw error;
+      }
     }
 
     // Para lista de exercícios, usar prompt específico
