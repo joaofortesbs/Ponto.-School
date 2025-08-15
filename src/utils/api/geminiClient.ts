@@ -1,110 +1,92 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { API_KEYS, API_URLS, API_CONFIG, TOKEN_COSTS } from '@/config/apiKeys';
+// Configuração da API Key do Gemini com múltiplas opções
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 
+                import.meta.env.GEMINI_API_KEY || 
+                'AIzaSyDvKXBqzB6AtggaTGTJ_qOwShEGsDVME1I';
 
-export interface GeminiRequest {
-  prompt: string;
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  topK?: number;
+if (!API_KEY || API_KEY === 'sua_chave_aqui') {
+  console.warn('⚠️ API Key do Gemini não configurada adequadamente');
 }
 
-export interface GeminiResponse {
-  success: boolean;
-  result: string;
-  estimatedTokens: number;
-  estimatedPowerCost: number;
-  executionTime: number;
-  error?: string;
-}
+const genAI = new GoogleGenerativeAI(API_KEY);
 
-export class GeminiClient {
-  private apiKey: string;
-  private baseUrl: string;
-
-  constructor() {
-    this.apiKey = API_KEYS.GEMINI;
-    this.baseUrl = API_URLS.GEMINI;
-  }
-
-  /**
-   * Faz requisição para a API Gemini
-   */
-  async generate(request: GeminiRequest): Promise<GeminiResponse> {
-    const startTime = Date.now();
-    
+export const geminiClient = {
+  async generateContent(prompt: string, options = {}) {
     try {
-      if (!this.apiKey) {
-        throw new Error('Chave da API Gemini não configurada');
-      }
+      console.log('🤖 Enviando prompt personalizado para Gemini...');
+      console.log('📝 Tamanho do prompt:', prompt.length, 'caracteres');
 
-      const response = await fetch(`${this.baseUrl}?key=${this.apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: request.prompt }]
-          }],
-          generationConfig: {
-            temperature: request.temperature || 0.7,
-            topP: request.topP || 0.8,
-            topK: request.topK || 40,
-            maxOutputTokens: request.maxTokens || 2048,
-          }
-        }),
-        signal: AbortSignal.timeout(API_CONFIG.timeout)
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-pro',
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 8192,
+          ...options
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+      const result = await model.generateContent([
+        {
+          text: `${prompt}\n\nIMPORTANTE: Retorne um conteúdo estruturado, detalhado e personalizado baseado exatamente nos dados fornecidos. Use formato JSON quando possível para melhor organização.`
+        }
+      ]);
+
+      const response = await result.response;
+      const text = response.text();
+
+      if (!text || text.trim().length === 0) {
+        throw new Error('Resposta vazia do Gemini');
       }
 
-      const data = await response.json();
-      const executionTime = Date.now() - startTime;
+      console.log('✅ Resposta recebida do Gemini:', text.length, 'caracteres');
+      console.log('📊 Preview da resposta:', text.substring(0, 200) + '...');
 
-      if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-        throw new Error('Resposta inválida da API Gemini');
-      }
-
-      const responseText = data.candidates[0].content.parts[0].text;
-      const estimatedTokens = this.estimateTokens(request.prompt + responseText);
-      const estimatedPowerCost = estimatedTokens * TOKEN_COSTS.GEMINI;
-
-      return {
-        success: true,
-        result: responseText,
-        estimatedTokens,
-        estimatedPowerCost,
-        executionTime,
-      };
+      return { text: text.trim() };
 
     } catch (error) {
-      const executionTime = Date.now() - startTime;
-      
-      return {
-        success: false,
-        result: '',
-        estimatedTokens: 0,
-        estimatedPowerCost: 0,
-        executionTime,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-      };
+      console.error('❌ Erro detalhado ao chamar Gemini:', {
+        message: error.message,
+        status: error.status,
+        code: error.code
+      });
+
+      // Melhor tratamento de erros
+      if (error.message?.includes('API_KEY')) {
+        throw new Error('Chave da API do Gemini inválida ou não configurada');
+      } else if (error.message?.includes('quota')) {
+        throw new Error('Cota da API do Gemini excedida');
+      } else if (error.message?.includes('network')) {
+        throw new Error('Erro de conexão com a API do Gemini');
+      }
+
+      throw new Error(`Erro ao gerar conteúdo: ${error.message}`);
+    }
+  },
+
+  async generateStructuredContent(prompt: string, schema?: any) {
+    try {
+      const response = await this.generateContent(prompt);
+
+      // Tentar extrair JSON da resposta
+      const text = response.text;
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch (parseError) {
+          console.warn('⚠️ Não foi possível parsear JSON, retornando texto');
+        }
+      }
+
+      return { generatedText: text };
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar conteúdo estruturado:', error);
+      throw error;
     }
   }
-
-  /**
-   * Estimativa básica de tokens (aproximadamente 4 caracteres por token)
-   */
-  private estimateTokens(text: string): number {
-    return Math.ceil(text.length / 4);
-  }
-
-  /**
-   * Atualiza a chave da API
-   */
-  updateApiKey(newKey: string): void {
-    this.apiKey = newKey;
-  }
-}
+};

@@ -393,6 +393,7 @@ const EditActivityModal = ({
   // Estado para conteúdo gerado
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   // Estado para controle de construção da atividade
   const [buildingStatus, setBuildingStatus] = useState({
@@ -413,7 +414,7 @@ const EditActivityModal = ({
   const {
     generateActivity,
     loadSavedContent,
-    clearContent,
+    clearContent: clearGeneratedContent,
     isGenerating,
   } = useGenerateActivity({
     activityId: activity?.id || '',
@@ -1273,6 +1274,31 @@ const EditActivityModal = ({
     loadActivityData();
   }, [activity, isOpen]);
 
+  // Função para copiar conteúdo
+  const handleCopyContent = () => {
+    if (generatedContent) {
+      const content = JSON.stringify(generatedContent, null, 2);
+      navigator.clipboard.writeText(content);
+      toast({
+        title: "Conteúdo copiado!",
+        description: "O conteúdo foi copiado para a área de transferência.",
+      });
+    }
+  };
+
+  // Função para limpar conteúdo
+  const clearContent = () => {
+    setGeneratedContent(null);
+    setIsContentLoaded(false);
+    setHasGenerated(false);
+    setActiveTab('editar');
+
+    toast({
+      title: "Conteúdo limpo",
+      description: "O conteúdo gerado foi removido.",
+    });
+  };
+
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -1299,43 +1325,32 @@ const EditActivityModal = ({
       const activityType = activity?.type || activity.id || activity.categoryId;
       console.log('🎯 Tipo de atividade determinado:', activityType);
 
-      let result;
-
+      // Usar SEMPRE a API real do Gemini para gerar conteúdo
+      console.log('🎯 Gerando conteúdo com API do Gemini para:', activityType);
+      console.log('📋 Dados completos do formulário:', formData);
+      
+      // Importar e usar a função de geração atualizada
+      const { generateActivityContent } = await import('./api/generateActivity');
+      
+      result = await generateActivityContent(activityType, formData);
+      console.log('✅ Conteúdo gerado pela IA:', result);
+      
+      // Marcar que houve geração
+      setHasGenerated(true);
+      
+      // Salvar conteúdo específico por tipo de atividade
       if (activityType === 'quadro-interativo') {
-        // Para quadro interativo, usar o gerador específico
-        console.log('🖼️ Gerando Quadro Interativo com dados:', formData);
-        
-        const QuadroInterativoGenerator = (await import('@/features/schoolpower/activities/quadro-interativo/QuadroInterativoGenerator')).default;
-        
-        // Preparar dados no formato correto para o gerador
-        const quadroData = {
-          title: formData.title || 'Quadro Interativo',
-          description: formData.description || 'Descrição do quadro interativo',
-          subject: formData.subject || 'Matemática',
-          schoolYear: formData.schoolYear || '6º Ano',
-          theme: formData.theme || 'Tema da aula',
-          objectives: formData.objectives || 'Objetivos de aprendizagem',
-          difficultyLevel: formData.difficultyLevel || 'Intermediário',
-          quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico || 'Atividade interativa',
-          materials: formData.materials || '',
-          instructions: formData.instructions || '',
-          evaluation: formData.evaluation || '',
-          timeLimit: formData.timeLimit || '',
-          context: formData.context || ''
-        };
-
-        console.log('📋 Dados preparados para o gerador:', quadroData);
-        
-        result = await QuadroInterativoGenerator.generateContent(quadroData);
-        console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
-        
-        // Salvar no localStorage com chave específica
         const quadroStorageKey = `constructed_quadro-interativo_${activity.id}`;
         localStorage.setItem(quadroStorageKey, JSON.stringify(result));
         console.log('💾 Quadro Interativo salvo no localStorage:', quadroStorageKey);
-        
-      } else {
-        result = await generateActivityContent(activityType, formData);
+      } else if (activityType === 'plano-aula') {
+        const planoStorageKey = `constructed_plano-aula_${activity.id}`;
+        localStorage.setItem(planoStorageKey, JSON.stringify(result));
+        console.log('💾 Plano de Aula salvo no localStorage:', planoStorageKey);
+      } else if (activityType === 'sequencia-didatica') {
+        const sequenciaStorageKey = `constructed_sequencia-didatica_${activity.id}`;
+        localStorage.setItem(sequenciaStorageKey, JSON.stringify(result));
+        console.log('💾 Sequência Didática salva no localStorage:', sequenciaStorageKey);
       }
 
       clearInterval(progressTimer);
@@ -1416,14 +1431,6 @@ const EditActivityModal = ({
     };
     onSave(activityData);
     onClose();
-  };
-
-  const handleCopyContent = () => {
-    navigator.clipboard.writeText(JSON.stringify(generatedContent, null, 2));
-    toast({
-      title: "Conteúdo copiado!",
-      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
-    });
   };
 
   const getActivityPreviewData = () => {
@@ -2041,7 +2048,7 @@ const EditActivityModal = ({
              {generatedContent && (
               <Button
                 variant="outline"
-                onClick={clearContent}
+                onClick={() => clearContent()}
                 className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               >
                 Limpar Conteúdo

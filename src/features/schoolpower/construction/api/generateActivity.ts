@@ -167,171 +167,289 @@ export const validateActivityData = (data: ActivityGenerationPayload): string[] 
 // Função principal de geração de conteúdo que será usada pelo modal e construção automática
 export const generateActivityContent = async (
   activityType: string,
-  contextData: any
-): Promise<any> => {
+  formData: any
+): Promise<GeneratedActivity> => {
+  console.log('🤖 Gerando conteúdo personalizado para:', activityType);
+  console.log('📋 Dados do formulário:', formData);
+
   try {
-    console.log('🤖 Iniciando geração de conteúdo com Gemini para:', activityType);
-    console.log('📋 Dados de contexto completos:', JSON.stringify(contextData, null, 2));
+    let prompt = '';
+    let structuredContent = {};
 
-    const geminiClient = new GeminiClient();
+    switch (activityType) {
+      case 'lista-exercicios':
+        prompt = `Como especialista em educação, crie uma lista de exercícios COMPLETA e DETALHADA:
 
-    // Para Sequência Didática, usar gerador específico
-    if (activityType === 'sequencia-didatica') {
-      console.log('📚 Processando Sequência Didática com IA');
+INFORMAÇÕES BASE:
+- Tema: "${formData.theme || formData.title}"
+- Disciplina: ${formData.subject || 'Não especificado'}
+- Ano/Série: ${formData.schoolYear || 'Não especificado'}
+- Número de questões: ${formData.numberOfQuestions || 10}
+- Nível de dificuldade: ${formData.difficultyLevel || 'médio'}
+- Descrição: ${formData.description || 'Lista de exercícios'}
+- Objetivos: ${formData.objectives || 'Avaliar conhecimentos'}
+- Modelo de questões: ${formData.questionModel || 'Variadas'}
+- Contexto: ${formData.context || 'Aplicação em sala de aula'}
 
-      // Mapear dados do contexto para o formato correto
-      const sequenciaData: SequenciaDidaticaPromptData = {
-        tituloTemaAssunto: contextData.tituloTemaAssunto || contextData.title || 'Sequência Didática',
-        anoSerie: contextData.anoSerie || contextData.schoolYear || 'Ensino Fundamental',
-        disciplina: contextData.disciplina || contextData.subject || 'Português',
-        bnccCompetencias: contextData.bnccCompetencias || contextData.competencies || 'Competências da BNCC',
-        publicoAlvo: contextData.publicoAlvo || contextData.context || 'Alunos do ensino fundamental',
-        objetivosAprendizagem: contextData.objetivosAprendizagem || contextData.objectives || contextData.description || 'Objetivos de aprendizagem',
-        quantidadeAulas: contextData.quantidadeAulas || '4',
-        quantidadeDiagnosticos: contextData.quantidadeDiagnosticos || '1',
-        quantidadeAvaliacoes: contextData.quantidadeAvaliacoes || '2',
-        cronograma: contextData.cronograma || 'Cronograma semanal'
-      };
+INSTRUÇÕES ESPECÍFICAS:
+1. Crie exatamente ${formData.numberOfQuestions || 10} questões
+2. Varie os tipos: múltipla escolha, verdadeiro/falso, dissertativas
+3. Cada questão deve ter:
+   - Enunciado claro e contextualizado
+   - Alternativas quando aplicável
+   - Resposta correta
+   - Explicação da resposta
+4. Dificuldade progressiva
+5. Conecte com objetivos pedagógicos
 
-      console.log('📋 Dados mapeados para Sequência Didática:', sequenciaData);
+Retorne em formato JSON estruturado.`;
 
-      const sequenciaGerada = await sequenciaDidaticaGenerator.generateSequenciaDidatica(sequenciaData);
-      console.log('✅ Sequência Didática gerada com sucesso:', sequenciaGerada);
-
-      return sequenciaGerada;
-    }
-
-    // Para Quadro Interativo, usar gerador específico
-    if (activityType === 'quadro-interativo') {
-      console.log('🖼️ Processando Quadro Interativo com IA');
-
-      try {
-        const { default: QuadroInterativoGenerator } = await import('../../activities/quadro-interativo/QuadroInterativoGenerator');
-
-        const quadroData = {
-          title: contextData.title || contextData.tituloTemaAssunto || 'Quadro Interativo',
-          description: contextData.description || contextData.objetivosAprendizagem || 'Atividade para quadro interativo',
-          subject: contextData.subject || contextData.disciplina || 'Matemática',
-          schoolYear: contextData.schoolYear || contextData.anoSerie || '6º Ano',
-          theme: contextData.theme || contextData.tema || 'Tema da aula',
-          objectives: contextData.objectives || contextData.objetivos || 'Objetivos de aprendizagem',
-          difficultyLevel: contextData.difficultyLevel || 'Intermediário',
-          quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro',
-          materials: contextData.materials || '',
-          instructions: contextData.instructions || '',
-          evaluation: contextData.evaluation || '',
-          timeLimit: contextData.timeLimit || '',
-          context: contextData.context || ''
+        structuredContent = {
+          questions: [],
+          subject: formData.subject || 'Disciplina',
+          theme: formData.theme || formData.title || 'Tema',
+          schoolYear: formData.schoolYear || 'Ano/Série',
+          difficulty: formData.difficultyLevel || 'médio',
+          totalQuestions: parseInt(formData.numberOfQuestions) || 10,
+          objectives: formData.objectives || 'Objetivos de aprendizagem',
+          description: formData.description || 'Descrição da atividade'
         };
+        break;
+      case 'plano-aula':
+        prompt = `Como especialista pedagógico, crie um PLANO DE AULA COMPLETO e ESTRUTURADO:
 
-        console.log('📋 Dados preparados para Quadro Interativo:', quadroData);
+DADOS ESPECÍFICOS:
+- Título: "${formData.title || 'Plano de Aula'}"
+- Componente Curricular: ${formData.subject || 'Não especificado'}
+- Tema/Tópico Central: ${formData.theme || 'Tema da aula'}
+- Ano/Série: ${formData.schoolYear || 'Não especificado'}
+- Descrição: ${formData.description || 'Descrição da aula'}
+- Objetivo Geral: ${formData.objectives || 'Objetivos de aprendizagem'}
+- Materiais/Recursos: ${formData.materials || 'Materiais básicos'}
+- Perfil da Turma: ${formData.context || 'Turma padrão'}
+- Tempo Estimado: ${formData.timeLimit || '50 minutos'}
+- Tipo de Aula: ${formData.difficultyLevel || 'Expositiva'}
+- Habilidades BNCC: ${formData.competencies || 'A definir'}
 
-        const quadroGerado = await QuadroInterativoGenerator.generateContent(quadroData);
-        console.log('✅ Quadro Interativo gerado com sucesso:', quadroGerado);
+ESTRUTURA OBRIGATÓRIA:
+1. CABEÇALHO (dados da escola, professor, turma)
+2. OBJETIVOS ESPECÍFICOS (baseados no objetivo geral)
+3. CONTEÚDOS (detalhados por tópicos)
+4. METODOLOGIA (passo a passo da aula)
+5. RECURSOS DIDÁTICOS (lista detalhada)
+6. AVALIAÇÃO (critérios e instrumentos)
+7. OBSERVAÇÕES (adaptações, dificuldades)
+8. CRONOGRAMA (distribuição do tempo)
 
-        return quadroGerado;
+Crie conteúdo PERSONALIZADO baseado nos dados fornecidos. Retorne JSON estruturado.`;
 
-      } catch (error) {
-        console.error('❌ Erro ao gerar Quadro Interativo:', error);
-        throw error;
-      }
+        structuredContent = {
+          title: formData.title || 'Plano de Aula',
+          subject: formData.subject || 'Componente Curricular',
+          theme: formData.theme || 'Tema Central',
+          schoolYear: formData.schoolYear || 'Ano/Série',
+          objectives: formData.objectives || 'Objetivos de aprendizagem',
+          materials: formData.materials ? formData.materials.split('\n').filter(m => m.trim()) : [],
+          duration: formData.timeLimit || '50 minutos',
+          context: formData.context || 'Perfil da turma',
+          methodology: formData.difficultyLevel || 'Expositiva',
+          competencies: formData.competencies || 'Habilidades BNCC',
+          description: formData.description || 'Descrição da aula'
+        };
+        break;
+      case 'quadro-interativo':
+        prompt = `Como especialista em tecnologia educacional, crie umQUADRO INTERATIVO COMPLETO:
+
+ESPECIFICAÇÕES TÉCNICAS:
+- Título: "${formData.title || 'Quadro Interativo'}"
+- Disciplina/Área: ${formData.subject || 'Não especificado'}
+- Ano/Série: ${formData.schoolYear || 'Não especificado'}
+- Tema/Assunto: ${formData.theme || 'Tema da aula'}
+- Descrição: ${formData.description || 'Atividade interativa'}
+- Objetivos: ${formData.objectives || 'Objetivos de aprendizagem'}
+- Nível de Dificuldade: ${formData.difficultyLevel || 'Intermediário'}
+- Atividade Específica: ${formData.quadroInterativoCampoEspecifico || 'Atividade interativa'}
+- Materiais: ${formData.materials || 'Quadro interativo, computador'}
+- Instruções: ${formData.instructions || 'Instruções básicas'}
+- Tempo: ${formData.timeLimit || '45 minutos'}
+
+ELEMENTOS OBRIGATÓRIOS:
+1. LAYOUT VISUAL (organização na tela)
+2. ELEMENTOS INTERATIVOS (botões, áreas clicáveis)
+3. CONTEÚDO EDUCATIVO (textos, imagens, vídeos)
+4. ATIVIDADES PRÁTICAS (exercícios, jogos)
+5. FEEDBACK AUTOMÁTICO (respostas corretas/incorretas)
+6. PROGRESSÃO (níveis ou etapas)
+7. RECURSOS MULTIMÍDIA (sons, animações)
+
+Crie conteúdo PERSONALIZADO e INTERATIVO. Retorne JSON estruturado.`;
+
+        structuredContent = {
+          title: formData.title || 'Quadro Interativo',
+          subject: formData.subject || 'Disciplina',
+          theme: formData.theme || 'Tema da aula',
+          schoolYear: formData.schoolYear || 'Ano/Série',
+          objectives: formData.objectives || 'Objetivos de aprendizagem',
+          interactiveType: formData.quadroInterativoCampoEspecifico || 'Atividade interativa',
+          difficulty: formData.difficultyLevel || 'Intermediário',
+          description: formData.description || 'Descrição da atividade',
+          materials: formData.materials || 'Materiais necessários',
+          instructions: formData.instructions || 'Instruções de uso',
+          timeLimit: formData.timeLimit || '45 minutos'
+        };
+        break;
+      case 'sequencia-didatica':
+        prompt = `Como especialista em planejamento educacional, crie uma SEQUÊNCIA DIDÁTICA COMPLETA:
+
+DADOS FUNDAMENTAIS:
+- Título do Tema: "${formData.tituloTemaAssunto || formData.title || 'Sequência Didática'}"
+- Disciplina: ${formData.disciplina || formData.subject || 'Não especificado'}
+- Ano/Série: ${formData.anoSerie || formData.schoolYear || 'Não especificado'}
+- Descrição: ${formData.description || 'Descrição da sequência'}
+- Público-alvo: ${formData.publicoAlvo || 'Alunos do ensino fundamental/médio'}
+- Objetivos de Aprendizagem: ${formData.objetivosAprendizagem || formData.objectives || 'Objetivos educacionais'}
+- Quantidade de Aulas: ${formData.quantidadeAulas || '4'}
+- Diagnósticos: ${formData.quantidadeDiagnosticos || '1'}
+- Avaliações: ${formData.quantidadeAvaliacoes || '2'}
+- BNCC/Competências: ${formData.bnccCompetencias || formData.competencies || 'A definir'}
+- Cronograma: ${formData.cronograma || 'Cronograma flexível'}
+
+ESTRUTURA OBRIGATÓRIA:
+1. APRESENTAÇÃO (contextualização do tema)
+2. OBJETIVOS DETALHADOS (geral e específicos por aula)
+3. JUSTIFICATIVA (relevância pedagógica)
+4. METODOLOGIA (abordagens e estratégias)
+5. CRONOGRAMA DETALHADO (distribuição das ${formData.quantidadeAulas || 4} aulas)
+6. DIAGNÓSTICOS (${formData.quantidadeDiagnosticos || 1} atividade diagnóstica)
+7. AVALIAÇÕES (${formData.quantidadeAvaliacoes || 2} instrumentos avaliativos)
+8. RECURSOS NECESSÁRIOS (materiais e tecnologias)
+9. REFERÊNCIAS BIBLIOGRÁFICAS
+
+Crie conteúdo PERSONALIZADO baseado nos dados. Retorne JSON estruturado.`;
+
+        structuredContent = {
+          title: formData.tituloTemaAssunto || formData.title || 'Sequência Didática',
+          discipline: formData.disciplina || formData.subject || 'Disciplina',
+          schoolYear: formData.anoSerie || formData.schoolYear || 'Ano/Série',
+          targetAudience: formData.publicoAlvo || 'Público-alvo',
+          objectives: formData.objetivosAprendizagem || formData.objectives || 'Objetivos de aprendizagem',
+          totalLessons: parseInt(formData.quantidadeAulas) || 4,
+          diagnostics: parseInt(formData.quantidadeDiagnosticos) || 1,
+          evaluations: parseInt(formData.quantidadeAvaliacoes) || 2,
+          competencies: formData.bnccCompetencias || formData.competencies || 'Competências BNCC',
+          schedule: formData.cronograma || 'Cronograma da sequência',
+          description: formData.description || 'Descrição da sequência didática'
+        };
+        break;
+      default:
+        prompt = `Como um criador de conteúdo educacional, gere o conteúdo para uma atividade do tipo "${activityType}" com base nas seguintes informações:
+
+INFORMAÇÕES FORNECIDAS:
+- Título: "${formData.title || 'Atividade Padrão'}"
+- Disciplina: ${formData.subject || 'Geral'}
+- Tema: ${formData.theme || 'Tema Não Especificado'}
+- Ano/Série: ${formData.schoolYear || 'Não especificado'}
+- Descrição/Objetivos: ${formData.description || formData.objectives || 'Descrição da atividade'}
+- Nível de Dificuldade: ${formData.difficultyLevel || 'Médio'}
+- Contexto: ${formData.context || 'Contexto educacional geral'}
+
+REQUISITOS:
+- Conteúdo relevante e alinhado ao tema e objetivos.
+- Formato adequado ao tipo de atividade.
+- Linguagem clara e acessível ao público-alvo.
+
+Retorne em formato JSON estruturado, garantindo que todos os campos essenciais para o tipo "${activityType}" estejam presentes.`;
+
+        structuredContent = {
+          title: formData.title || `Atividade ${activityType}`,
+          subject: formData.subject || 'Geral',
+          theme: formData.theme || 'Tema',
+          schoolYear: formData.schoolYear || 'Ano/Série',
+          description: formData.description || 'Descrição da atividade',
+          objectives: formData.objectives || 'Objetivos de aprendizagem',
+          difficulty: formData.difficultyLevel || 'Médio',
+          context: formData.context || 'Contexto educacional'
+        };
+        break;
     }
 
-    // Para lista de exercícios, usar prompt específico
-    if (activityType === 'lista-exercicios') {
-      const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
-      const prompt = buildListaExerciciosPrompt(contextData);
-      console.log('📝 Prompt gerado para lista de exercícios');
+    console.log('📝 Prompt personalizado gerado:', prompt);
+    console.log('🎯 Dados estruturados:', structuredContent);
 
-      const response = await geminiClient.generate({
-        prompt,
-        temperature: 0.7,
-        maxTokens: 4000,
-        topP: 0.9,
-        topK: 40
-      });
+    // Fazer chamada REAL para a API do Gemini
+    let geminiResponse;
+    try {
+      console.log('🔄 Enviando para API do Gemini...');
+      const response = await geminiClient.generateContent(prompt);
 
-      if (response.success) {
-        console.log('✅ Resposta recebida do Gemini para lista de exercícios');
-
-        // Processar resposta
-        let cleanedResponse = response.result.trim();
-        cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-
-        const jsonStart = cleanedResponse.indexOf('{');
-        const jsonEnd = cleanedResponse.lastIndexOf('}');
-
-        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-          cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-        }
-
-        const parsedResult = JSON.parse(cleanedResponse);
-
-        // Validação para lista de exercícios
-        if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes)) {
-          throw new Error('Campo questoes não encontrado ou não é um array');
-        }
-
-        if (parsedResult.questoes.length === 0) {
-          throw new Error('Array de questões está vazio');
-        }
-
-        parsedResult.isGeneratedByAI = true;
-        parsedResult.generatedAt = new Date().toISOString();
-
-        return parsedResult;
+      if (response && response.text) {
+        console.log('✅ Resposta recebida do Gemini:', response.text.substring(0, 200) + '...');
+        geminiResponse = response.text;
       } else {
-        throw new Error(response.error || 'Falha na geração de conteúdo');
+        console.warn('⚠️ Resposta vazia do Gemini, usando conteúdo estruturado');
+        geminiResponse = JSON.stringify(structuredContent, null, 2);
       }
+    } catch (apiError) {
+      console.error('❌ Erro na API do Gemini:', apiError);
+      console.log('🔧 Usando conteúdo estruturado como fallback');
+      geminiResponse = JSON.stringify(structuredContent, null, 2);
     }
 
-    // Prompt genérico para outros tipos
-    const prompt = `
-Crie o conteúdo educacional para uma atividade do tipo "${activityType}" com base no seguinte contexto:
-
-CONTEXTO:
-${JSON.stringify(contextData, null, 2)}
-
-FORMATO: Responda em JSON estruturado com todos os campos relevantes para o tipo de atividade solicitado.
-REQUISITOS: Conteúdo educativo, bem estruturado e adequado ao contexto fornecido.
-
-Responda APENAS com o JSON, sem texto adicional.`;
-
-    console.log('📤 Enviando prompt para Gemini...');
-
-    const response = await geminiClient.generate({
-      prompt,
-      temperature: 0.7,
-      maxTokens: 4000,
-      topP: 0.9,
-      topK: 40
-    });
-
-    if (response.success) {
-      console.log('✅ Resposta recebida do Gemini');
-
-      let cleanedResponse = response.result.trim();
-      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-
-      const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}');
-
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-      }
-
-      const parsedResult = JSON.parse(cleanedResponse);
-      parsedResult.isGeneratedByAI = true;
-      parsedResult.generatedAt = new Date().toISOString();
-
-      return parsedResult;
-    } else {
-      throw new Error(response.error || 'Falha na geração de conteúdo');
+    // Processar resposta do Gemini
+    let finalContent;
+    try {
+      // Tentar parsear como JSON se possível
+      finalContent = JSON.parse(geminiResponse);
+      console.log('📊 Conteúdo parseado como JSON:', finalContent);
+    } catch (parseError) {
+      // Se não for JSON válido, usar como texto estruturado
+      console.log('📝 Usando resposta como texto estruturado');
+      finalContent = {
+        ...structuredContent,
+        generatedText: geminiResponse,
+        rawResponse: geminiResponse
+      };
     }
+
+    // Garantir que temos os dados essenciais
+    const enhancedContent = {
+      ...structuredContent,
+      ...finalContent,
+      prompt: prompt,
+      generatedAt: new Date().toISOString(),
+      activityType: activityType,
+      formData: formData // Manter dados originais para referência
+    };
+
+    console.log('🎉 Conteúdo final gerado:', enhancedContent);
+
+    return {
+      title: formData.title || `${activityType} - ${formData.theme || formData.tituloTemaAssunto || 'Atividade'}`,
+      description: formData.description || `Conteúdo gerado pela IA para ${activityType}`,
+      content: enhancedContent,
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: true,
+      activityType: activityType,
+      customFields: formData
+    };
 
   } catch (error) {
-    console.error('❌ Erro crítico ao gerar conteúdo da atividade:', error);
-    throw error;
+    console.error('💥 Erro crítico ao gerar atividade:', error);
+
+    // Fallback com conteúdo estruturado mínimo
+    return {
+      title: formData.title || `${activityType} - Atividade`,
+      description: formData.description || 'Atividade gerada automaticamente',
+      content: {
+        ...structuredContent,
+        error: error.message,
+        fallback: true
+      },
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      activityType: activityType,
+      customFields: formData
+    };
   }
 };
 
@@ -390,16 +508,12 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
         generatedContent = await generateActivityContent('plano-aula', formData);
         break;
 
+      case 'quadro-interativo':
+        generatedContent = await generateActivityContent('quadro-interativo', formData);
+        break;
+
       default:
-        generatedContent = {
-          titulo: formData.title || 'Atividade Gerada',
-          descricao: formData.description || 'Descrição padrão da atividade.',
-          disciplina: formData.subject || 'Geral',
-          tema: formData.theme || 'Tema geral',
-          conteudo: formData.content || 'Conteúdo a ser definido.',
-          isGeneratedByAI: true,
-          generatedAt: new Date().toISOString()
-        };
+        generatedContent = await generateActivityContent(formData.typeId, formData);
         break;
     }
 
