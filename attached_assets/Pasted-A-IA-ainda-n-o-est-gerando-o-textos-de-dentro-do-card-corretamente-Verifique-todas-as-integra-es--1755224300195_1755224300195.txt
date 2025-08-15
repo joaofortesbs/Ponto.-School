@@ -1,0 +1,15 @@
+A IA ainda não está gerando o textos de dentro do card corretamente! Verifique todas as integrações, toda as conexões, todoas as sicronizações, todas as coletas e salvamento de dados, toda a configuração e sistema! E faça que os textos de dentro do card sejam completamente gerados pela a IA do Gemini, de maneira personalizada, de acordo com os dados preenchidos dentro da interface de Editar de dentro do modal de Editar Materiais!!!!!!!
+
+Reflita sobre cada alteração que você vai ter que fazer, para não cometer erros ou bugs, e se inspire em sistemas já funcionais para conseguir construir tudo da maneira correta!
+
+Separe e organize tudo perfeitamente para que o conteúdo seja gerado da maneira correta, analise todos os arquivos e pense em todos os cenários e possibilidades!!!!!!!
+
+Faça as seguintes alterações, da maneira correta, sem cometer ou deixar nenhum erro ou bugs dentro da plataforma, e sem prejudicar nenhuma funcionalidade de dentro da plataforma! Seja extremamente cuidadoso e super analista! Revise e analise tudo para não fazer nada errado! Reflita sobre cada modificação e analise como você vai fazer cada alteração dentro da plataforma! Não se esqueça de fazer nada que eu te pedi! Faça que a plataforma seja renderizada corretamente depois de todas as alterações!!!!!!!
+
+Garanta que nenhuma funcionalidade existente e já funcional vai ser prejudicada negativamente!
+
+Analise todas as alternativas e age como se você fosse o seu melhor modelo, na versão mais poderosa, e mais estratégica! Analise todas as possibilidades, e altere os arquivos com a absoluta precisão!!!!!!!
+
+Seja ultramente criativo nas suas alterações e super analista e especialista em configuração de todo o sistema!!!!!!! Reflita o porque os campos ainda não estão sendo preenchidos corretamente! Porque isso ainda está acontecendo??????? Como vamos solucionar de forma definitiva e deixar todo o sistema funcional???????
+
+Faça testes no final e garanta que a a API do Gemini está funcionando perfeitamente e corretamente configurada nos lugares certos da maneira certa!!!!!!!
