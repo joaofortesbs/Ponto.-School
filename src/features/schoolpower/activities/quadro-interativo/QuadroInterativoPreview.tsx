@@ -1,10 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { CarrosselQuadrosSalaAula } from './CarrosselQuadrosSalaAula';
-import QuadroInterativoGenerator from './QuadroInterativoGenerator';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Monitor, Target, Play, FileText, Package, CheckCircle, Zap } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
   activityData?: any;
@@ -19,7 +17,7 @@ export function QuadroInterativoPreview({ activityData }: QuadroInterativoPrevie
       setIsLoading(true);
       try {
         console.log('🖼️ Iniciando geração de conteúdo para Quadro Interativo...');
-        
+
         if (activityData) {
           const generatedContent = await QuadroInterativoGenerator.generateContent(activityData);
           console.log('✅ Conteúdo gerado com sucesso:', generatedContent);
@@ -27,13 +25,13 @@ export function QuadroInterativoPreview({ activityData }: QuadroInterativoPrevie
         } else {
           // Conteúdo padrão quando não há dados
           const defaultContent = {
-            card1: { 
-              titulo: "Introdução", 
-              conteudo: "Conteúdo introdutório sobre o tema da aula. Este card apresenta os conceitos fundamentais que serão explorados." 
+            card1: {
+              titulo: "Introdução",
+              conteudo: "Conteúdo introdutório sobre o tema da aula. Este card apresenta os conceitos fundamentais que serão explorados."
             },
-            card2: { 
-              titulo: "Conceitos", 
-              conteudo: "Principais conceitos e informações importantes. Aqui você encontrará as informações essenciais para o aprendizado." 
+            card2: {
+              titulo: "Conceitos",
+              conteudo: "Principais conceitos e informações importantes. Aqui você encontrará as informações essenciais para o aprendizado."
             }
           };
           console.log('📋 Usando conteúdo padrão:', defaultContent);

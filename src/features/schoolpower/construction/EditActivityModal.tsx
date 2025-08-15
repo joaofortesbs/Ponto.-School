@@ -1302,10 +1302,38 @@ const EditActivityModal = ({
       let result;
 
       if (activityType === 'quadro-interativo') {
-        // Para quadro interativo, vamos gerar o conteúdo específico
+        // Para quadro interativo, usar o gerador específico
+        console.log('🖼️ Gerando Quadro Interativo com dados:', formData);
+        
         const QuadroInterativoGenerator = (await import('@/features/schoolpower/activities/quadro-interativo/QuadroInterativoGenerator')).default;
-        result = await QuadroInterativoGenerator.generateContent(formData);
-        console.log('🖼️ Conteúdo do Quadro Interativo gerado:', result);
+        
+        // Preparar dados no formato correto para o gerador
+        const quadroData = {
+          title: formData.title || 'Quadro Interativo',
+          description: formData.description || 'Descrição do quadro interativo',
+          subject: formData.subject || 'Matemática',
+          schoolYear: formData.schoolYear || '6º Ano',
+          theme: formData.theme || 'Tema da aula',
+          objectives: formData.objectives || 'Objetivos de aprendizagem',
+          difficultyLevel: formData.difficultyLevel || 'Intermediário',
+          quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico || 'Atividade interativa',
+          materials: formData.materials || '',
+          instructions: formData.instructions || '',
+          evaluation: formData.evaluation || '',
+          timeLimit: formData.timeLimit || '',
+          context: formData.context || ''
+        };
+
+        console.log('📋 Dados preparados para o gerador:', quadroData);
+        
+        result = await QuadroInterativoGenerator.generateContent(quadroData);
+        console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
+        
+        // Salvar no localStorage com chave específica
+        const quadroStorageKey = `constructed_quadro-interativo_${activity.id}`;
+        localStorage.setItem(quadroStorageKey, JSON.stringify(result));
+        console.log('💾 Quadro Interativo salvo no localStorage:', quadroStorageKey);
+        
       } else {
         result = await generateActivityContent(activityType, formData);
       }

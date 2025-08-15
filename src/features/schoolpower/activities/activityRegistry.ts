@@ -82,7 +82,7 @@ export const activityRegistry: ActivityRegistryType = {
   // Adicionar quadro-interativo à atividade
   "quadro-interativo": {
     editor: lazy(() => import("./default/EditActivity")),
-    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview").then(module => ({ default: module.QuadroInterativoPreview })))Preview,
+    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview").then(module => ({ default: module.QuadroInterativoPreview }))),
   },
 };
 
