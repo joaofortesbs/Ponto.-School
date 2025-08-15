@@ -219,7 +219,7 @@ export const generateActivityContent = async (
 
       console.log('🔄 Dados mapeados para geração:', mappedData);
 
-      const QuadroInterativoGenerator = (await import('../../../activities/quadro-interativo/QuadroInterativoGenerator')).default;
+      const QuadroInterativoGenerator = (await import('../../activities/quadro-interativo/QuadroInterativoGenerator')).default;
       const result = await QuadroInterativoGenerator.generateContent(mappedData);
 
       console.log('✅ Resultado do QuadroInterativoGenerator:', result);
