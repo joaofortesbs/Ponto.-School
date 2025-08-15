@@ -1165,7 +1165,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customCustomFields['nivelDificuldade'] ||
+                              customFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1332,7 +1332,7 @@ const EditActivityModal = ({
       // Importar e usar a função de geração atualizada
       const { generateActivityContent } = await import('./api/generateActivity');
       
-      result = await generateActivityContent(activityType, formData);
+      const result = await generateActivityContent(activityType, formData);
       console.log('✅ Conteúdo gerado pela IA:', result);
       
       // Marcar que houve geração
@@ -1395,6 +1395,7 @@ const EditActivityModal = ({
       console.error('❌ Erro na construção:', error);
       setError(`Erro ao construir atividade: ${error.message}`);
 
+      clearInterval(progressTimer);
       toast({
         title: "Erro na construção",
         description: "Houve um problema ao gerar sua atividade. Tente novamente.",

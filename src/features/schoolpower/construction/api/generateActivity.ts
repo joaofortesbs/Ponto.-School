@@ -380,6 +380,7 @@ Retorne em formato JSON estruturado, garantindo que todos os campos essenciais p
     let geminiResponse;
     try {
       console.log('🔄 Enviando para API do Gemini...');
+      const { geminiClient } = await import('../../../utils/api/geminiClient');
       const response = await geminiClient.generateContent(prompt);
 
       if (response && response.text) {
