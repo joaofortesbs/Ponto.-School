@@ -1,13 +1,12 @@
-import React from 'react';
-import { Copy, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
 import CarrosselQuadrosSalaAula from './CarrosselQuadrosSalaAula';
+import QuadroInterativoGenerator, { QuadroInterativoData, QuadroInterativoGeneratedContent } from './QuadroInterativoGenerator';
 
 interface QuadroInterativoPreviewProps {
-  data: any;
+  activityData: any;
 }
 
-interface QuadroSlide {
+interface GeneratedCard {
   id: number;
   title: string;
   content: string;
@@ -15,104 +14,136 @@ interface QuadroSlide {
   audio: string;
 }
 
-export function QuadroInterativoPreview({ data }: QuadroInterativoPreviewProps) {
-  const handleCopyContent = () => {
-    const jsonContent = JSON.stringify(generateQuadroContent(data), null, 2);
-    navigator.clipboard.writeText(jsonContent);
-  };
+export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
+  activityData 
+}) => {
+  const [slides, setSlides] = useState<GeneratedCard[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
-  const handleClearContent = () => {
-    // Implementar lógica de limpar conteúdo
-    console.log('Limpar conteúdo');
-  };
+  useEffect(() => {
+    if (activityData) {
+      generateQuadroInterativoContent();
+    }
+  }, [activityData]);
 
-  const generateQuadroContent = (formData: any) => {
-    return {
-      slides: [
+  const generateQuadroInterativoContent = async () => {
+    if (!activityData) return;
+
+    console.log('🖼️ Iniciando geração de conteúdo para Quadro Interativo:', activityData);
+    setIsGenerating(true);
+    setGenerationError(null);
+
+    try {
+      const generator = new QuadroInterativoGenerator();
+
+      // Preparar dados para a IA
+      const quadroData: QuadroInterativoData = {
+        title: activityData.title || '',
+        description: activityData.description || '',
+        subject: activityData.subject || '',
+        schoolYear: activityData.schoolYear || '',
+        theme: activityData.theme || '',
+        objectives: activityData.objectives || '',
+        difficultyLevel: activityData.difficultyLevel || '',
+        quadroInterativoCampoEspecifico: activityData.quadroInterativoCampoEspecifico || '',
+        materials: activityData.materials || '',
+        instructions: activityData.instructions || '',
+        evaluation: activityData.evaluation || '',
+        timeLimit: activityData.timeLimit || '',
+        context: activityData.context || ''
+      };
+
+      // Validar dados antes de enviar para a IA
+      if (!QuadroInterativoGenerator.validateData(quadroData)) {
+        console.warn('⚠️ Dados insuficientes para geração, usando conteúdo padrão');
+        setFallbackSlides();
+        return;
+      }
+
+      // Gerar conteúdo com IA
+      console.log('🤖 Solicitando geração de conteúdo para a IA...');
+      const generatedContent: QuadroInterativoGeneratedContent = await generator.generateQuadroInterativoContent(quadroData);
+
+      console.log('✅ Conteúdo gerado pela IA:', generatedContent);
+
+      // Converter conteúdo gerado em slides
+      const newSlides: GeneratedCard[] = [
         {
           id: 1,
-          title: `Introdução: ${formData.theme || 'Teorema de Pitágoras'}`,
-          content: `O ${formData.theme || 'Teorema de Pitágoras'} é uma relação matemática fundamental entre os lados de um triângulo retângulo. Ele afirma que o quadrado da hipotenusa (o lado oposto ao ângulo reto) é igual à soma dos quadrados dos catetos (os outros dois lados).`,
-          visual: `Imagem de um triângulo retângulo com os lados a, b e c (hipotenusa) claramente identificados.`,
-          audio: `Narração explicando a definição do ${formData.theme || 'Teorema de Pitágoras'} com ênfase nos termos 'hipotenusa', 'cateto' e 'ângulo reto'.`
+          title: generatedContent.card1.title,
+          content: generatedContent.card1.content,
+          visual: `Elementos visuais para: ${generatedContent.card1.title}`,
+          audio: `Narração: ${generatedContent.card1.title}`
         },
         {
           id: 2,
-          title: `Fórmula Matemática`,
-          content: `A fórmula do ${formData.theme || 'Teorema de Pitágoras'} é expressa como a² + b² = c², onde 'a' e 'b' são os catetos e 'c' é a hipotenusa. Esta fórmula é fundamental para resolver problemas envolvendo triângulos retângulos.`,
-          visual: `Representação visual da fórmula a² + b² = c² com quadrados coloridos representando as áreas.`,
-          audio: `Explicação detalhada da fórmula com exemplos numéricos simples.`
-        },
-        {
-          id: 3,
-          title: `Aplicações Práticas`,
-          content: `O ${formData.theme || 'Teorema de Pitágoras'} tem diversas aplicações práticas em arquitetura, engenharia, navegação e design. É usado para calcular distâncias, verificar se ângulos são retos e resolver problemas de construção.`,
-          visual: `Exemplos visuais de aplicações do teorema na construção civil e no dia a dia.`,
-          audio: `Narração sobre as aplicações práticas com exemplos do cotidiano.`
+          title: generatedContent.card2.title,
+          content: generatedContent.card2.content,
+          visual: `Elementos visuais para: ${generatedContent.card2.title}`,
+          audio: `Narração: ${generatedContent.card2.title}`
         }
-      ]
-    };
+      ];
+
+      setSlides(newSlides);
+      console.log('🎯 Slides atualizados com conteúdo gerado pela IA');
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar conteúdo do Quadro Interativo:', error);
+      setGenerationError('Erro ao gerar conteúdo. Usando conteúdo padrão.');
+      setFallbackSlides();
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const quadroContent = generateQuadroContent(data);
-  const slides: QuadroSlide[] = quadroContent.slides;
+  const setFallbackSlides = () => {
+    const fallbackSlides: GeneratedCard[] = [
+      {
+        id: 1,
+        title: activityData?.title || "Quadro Interativo",
+        content: activityData?.description || "Descrição da atividade de quadro interativo",
+        visual: "Elementos visuais baseados no tema",
+        audio: "Narração personalizada"
+      },
+      {
+        id: 2,
+        title: "Objetivos de Aprendizagem",
+        content: activityData?.objectives || "Objetivos da atividade definidos pelo professor",
+        visual: "Visualização dos objetivos",
+        audio: "Explicação dos objetivos"
+      }
+    ];
 
-  const handleEditSlide = (slideId: number) => {
-    console.log('Editar slide:', slideId);
-    // Implementar lógica de edição
+    setSlides(fallbackSlides);
   };
 
-  const handleRegenerateSlide = (slideId: number) => {
-    console.log('Regenerar slide:', slideId);
-    // Implementar lógica de regeneração
-  };
+  if (isGenerating) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Gerando conteúdo do Quadro Interativo...</p>
+          <p className="text-gray-500 text-sm">A IA está analisando os dados e criando o conteúdo</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleDeleteSlide = (slideId: number) => {
-    console.log('Excluir slide:', slideId);
-    // Implementar lógica de exclusão
-  };
+  if (generationError) {
+    return (
+      <div className="w-full h-full">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <p className="text-yellow-800 text-sm">⚠️ {generationError}</p>
+        </div>
+        <CarrosselQuadrosSalaAula slides={slides} />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full flex flex-col">
-      {/* Carrossel 3D - Agora ocupa toda a altura */}
-      <div className="flex-1 bg-gray-50">
-        <CarrosselQuadrosSalaAula
-          slides={slides}
-          onEdit={handleEditSlide}
-          onRegenerate={handleRegenerateSlide}
-          onDelete={handleDeleteSlide}
-        />
-      </div>
-
-      {/* Footer com ações - mantido para funcionalidades importantes */}
-      <div className="bg-gray-900 p-4 flex justify-between items-center">
-        <div className="text-white text-sm">
-          <span className="font-semibold">Quadro Interativo: {data.theme || 'Teorema de Pitágoras'}</span>
-        </div>
-
-        <div className="flex gap-2">
-          <Button
-            onClick={handleCopyContent}
-            variant="outline"
-            size="sm"
-            className="bg-blue-600 text-white border-blue-500 hover:bg-blue-700"
-          >
-            <Copy className="w-4 h-4 mr-2" />
-            Copiar Conteúdo
-          </Button>
-          <Button
-            onClick={handleClearContent}
-            variant="outline"
-            size="sm"
-            className="bg-transparent text-white border-gray-600 hover:bg-gray-800"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Limpar Conteúdo
-          </Button>
-        </div>
-      </div>
+    <div className="w-full h-full">
+      <CarrosselQuadrosSalaAula slides={slides} />
     </div>
   );
-}
-
-export default QuadroInterativoPreview;
+};

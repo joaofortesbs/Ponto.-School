@@ -1,7 +1,7 @@
 import { lazy, LazyExoticComponent, FC } from 'react';
 import { processSequenciaDidaticaData } from './sequencia-didatica';
 import { PlanoAulaProcessor } from './plano-aula/planoAulaProcessor';
-import { processQuadroInterativoData } from './quadro-interativo/quadroInterativoProcessor';
+import { processQuadroInterativoData, QuadroInterativoGenerator } from './quadro-interativo/quadroInterativoProcessor';
 
 export interface ActivityComponentSet {
   editor: LazyExoticComponent<FC<any>>;
