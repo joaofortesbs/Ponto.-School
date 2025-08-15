@@ -609,74 +609,6 @@ const EditActivityModal = ({
 
   // Carregar conteúdo construído quando o modal abrir
   useEffect(() => {
-    if (activity && isOpen) {
-      console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id}`);
-
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const savedContent = localStorage.getItem(`activity_${activity.id}`);
-      const planoAulaSavedContent = localStorage.getItem(`constructed_plano-aula_${activity.id}`);
-      const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
-      const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
-      const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
-
-      console.log(`🔎 Estado do localStorage:`, {
-        constructedActivities: Object.keys(constructedActivities),
-        hasSavedContent: !!savedContent,
-        hasPlanoAulaSavedContent: !!planoAulaSavedContent,
-        hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
-        hasQuadroInterativoSavedContent: !!quadroInterativoSavedContent,
-        hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
-        activityId: activity.id
-      });
-
-      let contentToLoad = null;
-      if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
-          console.log(`✅ Conteúdo específico da Sequência Didática encontrado para: ${activity.id}`);
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico da Sequência Didática:', error);
-        }
-      } else if (activity.id === 'plano-aula' && planoAulaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(planoAulaSavedContent);
-          console.log(`✅ Conteúdo específico do plano-aula encontrado para: ${activity.id}`);
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico do plano-aula:', error);
-        }
-      } else if (activity.id === 'quadro-interativo' && (quadroInterativoSavedContent || quadroInterativoSpecificData)) {
-        try {
-          // Priorizar conteúdo construído específico
-          if (quadroInterativoSavedContent) {
-            contentToLoad = JSON.parse(quadroInterativoSavedContent);
-            console.log(`✅ Conteúdo específico do quadro-interativo encontrado para: ${activity.id}`);
-          } else if (quadroInterativoSpecificData) {
-            contentToLoad = JSON.parse(quadroInterativoSpecificData);
-            console.log(`✅ Dados específicos do quadro-interativo encontrados para: ${activity.id}`);
-          }
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico do Quadro Interativo:', error);
-        }
-      } else if (constructedActivities[activity.id]?.generatedContent) {
-        console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
-        contentToLoad = constructedActivities[activity.id].generatedContent;
-      } else if (savedContent) {
-        console.log(`✅ Conteúdo salvo encontrado para: ${activity.id}`);
-        try {
-          contentToLoad = JSON.parse(savedContent);
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo salvo:', error);
-          contentToLoad = null;
-        }
-      }
-
-      setGeneratedContent(contentToLoad);
-      setIsContentLoaded(!!contentToLoad);
-      setHasGenerated(!!contentToLoad); // Define hasGenerated baseado no conteúdo carregado
-    }
-  }, [activity, isOpen]);
-
-  useEffect(() => {
     const loadActivityData = async () => {
       if (activity && isOpen) {
         console.log('🔄 Modal aberto, carregando dados para atividade:', activity.id);
@@ -815,7 +747,7 @@ const EditActivityModal = ({
                 objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || '',
                 materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || activity?.materials || '',
                 context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
-                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || auto FormData.evaluation || '',
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
 
