@@ -418,7 +418,7 @@ const EditActivityModal = ({
   const {
     generateActivity,
     loadSavedContent,
-    clearContent,
+    clearContent: clearGeneratedContent, // Renomeado para evitar conflito
     isGenerating: isHookGenerating, // Renomeado para evitar conflito
   } = useGenerateActivity({
     activityId: activity?.id || '',
@@ -1487,6 +1487,53 @@ const EditActivityModal = ({
       return () => clearTimeout(timer);
     }
   }, [formData, activity, isOpen, handleBuildActivity, isFormValidForBuild]);
+
+  // Função para copiar conteúdo
+  const handleCopyContent = () => {
+    if (generatedContent) {
+      const content = JSON.stringify(generatedContent, null, 2);
+      navigator.clipboard.writeText(content);
+      toast({
+        title: "Conteúdo copiado!",
+        description: "O conteúdo foi copiado para a área de transferência.",
+      });
+    }
+  };
+
+  // Função para limpar conteúdo
+  const clearContent = () => {
+    setGeneratedContent(null);
+    setIsContentLoaded(false);
+    setHasGenerated(false);
+    setActiveTab('editar');
+
+    toast({
+      title: "Conteúdo limpo",
+      description: "O conteúdo gerado foi removido.",
+    });
+  };
+
+  // Função para salvar alterações
+  const handleSave = () => {
+    const activityData = {
+      ...activity,
+      ...formData,
+      generatedContent: generatedContent,
+      lastModified: new Date().toISOString()
+    };
+
+    if (onSave) {
+      onSave(activityData);
+    }
+
+    toast({
+      title: "Alterações salvas!",
+      description: "As alterações foram salvas com sucesso.",
+    });
+
+    onClose();
+  };
+
 
   if (!isOpen || !activity) return null; // Garante que o modal só renderize se aberto e com atividade
 
