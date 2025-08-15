@@ -10,6 +10,7 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -414,12 +415,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
         
-      // Para quadro-interativo, usar o preview específico
-        if (activityType === 'quadro-interativo') {
-          console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
-          const { QuadroInterativoPreview } = await import('../activities/quadro-interativo');
-          return <QuadroInterativoPreview data={previewData} activityData={activity} />;
-        }
+      case 'quadro-interativo':
+        console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
+        return (
+          <QuadroInterativoPreview
+            data={previewData}
+            activityData={activity}
+          />
+        );
 
       default:
         return (
