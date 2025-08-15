@@ -25,37 +25,74 @@ export function QuadroInterativoPreview({ data, activityData }: QuadroInterativo
 
         let contentToGenerate = data || activityData;
 
-        if (contentToGenerate) {
+        // Verificar se já existe conteúdo gerado
+        if (contentToGenerate?.generatedContent && 
+            contentToGenerate.generatedContent.card1 && 
+            contentToGenerate.generatedContent.card2) {
+          console.log('✅ Usando conteúdo já gerado:', contentToGenerate.generatedContent);
+          setContent(contentToGenerate.generatedContent);
+          setIsLoading(false);
+          return;
+        }
+
+        // Verificar se há dados suficientes para geração
+        const hasRequiredData = contentToGenerate && (
+          contentToGenerate.subject || 
+          contentToGenerate['Disciplina / Área de conhecimento'] ||
+          contentToGenerate.theme || 
+          contentToGenerate['Tema ou Assunto da aula']
+        );
+
+        if (hasRequiredData) {
           console.log('📊 Gerando conteúdo com dados:', contentToGenerate);
-          const generatedContent = await QuadroInterativoGenerator.generateContent(contentToGenerate);
+          
+          // Mapear dados corretamente
+          const mappedData = {
+            ...contentToGenerate,
+            subject: contentToGenerate.subject || contentToGenerate['Disciplina / Área de conhecimento'],
+            schoolYear: contentToGenerate.schoolYear || contentToGenerate['Ano / Série'],
+            theme: contentToGenerate.theme || contentToGenerate['Tema ou Assunto da aula'],
+            objectives: contentToGenerate.objectives || contentToGenerate['Objetivo de aprendizagem da aula'],
+            difficultyLevel: contentToGenerate.difficultyLevel || contentToGenerate['Nível de Dificuldade'],
+            quadroInterativoCampoEspecifico: contentToGenerate['Atividade mostrada'] || contentToGenerate.quadroInterativoCampoEspecifico
+          };
+          
+          console.log('🔄 Dados mapeados para geração:', mappedData);
+          
+          const generatedContent = await QuadroInterativoGenerator.generateContent(mappedData);
           console.log('✅ Conteúdo gerado com sucesso:', generatedContent);
           setContent(generatedContent);
         } else {
-          // Conteúdo padrão quando não há dados
+          // Conteúdo padrão quando não há dados suficientes
+          const tema = contentToGenerate?.theme || contentToGenerate?.['Tema ou Assunto da aula'] || 'Conteúdo Educacional';
+          const disciplina = contentToGenerate?.subject || contentToGenerate?.['Disciplina / Área de conhecimento'] || 'Disciplina';
+          
           const defaultContent = {
             card1: {
-              titulo: "Introdução",
-              conteudo: "Conteúdo introdutório sobre o tema da aula. Este card apresenta os conceitos fundamentais que serão explorados."
+              titulo: `Introdução: ${tema}`,
+              conteudo: `Bem-vindos ao estudo de ${tema} em ${disciplina}. Este conteúdo apresenta os conceitos fundamentais de forma clara e envolvente, proporcionando uma base sólida para o aprendizado.`
             },
             card2: {
-              titulo: "Conceitos",
-              conteudo: "Principais conceitos e informações importantes. Aqui você encontrará as informações essenciais para o aprendizado."
+              titulo: `Desenvolvimento: ${tema}`,
+              conteudo: `Vamos aprofundar o conhecimento sobre ${tema}. Aqui você encontrará informações essenciais, exemplos práticos e aplicações que conectam a teoria com a realidade.`
             }
           };
-          console.log('📋 Usando conteúdo padrão:', defaultContent);
+          console.log('📋 Usando conteúdo padrão personalizado:', defaultContent);
           setContent(defaultContent);
         }
       } catch (error) {
         console.error('❌ Erro ao gerar conteúdo:', error);
-        // Fallback para conteúdo básico
+        
+        // Fallback inteligente baseado nos dados disponíveis
+        const tema = (data || activityData)?.theme || (data || activityData)?.[`Tema ou Assunto da aula`] || 'Tema da Aula';
         const fallbackContent = {
           card1: { 
-            titulo: "Introdução", 
-            conteudo: "Conteúdo introdutório sobre o tema da aula." 
+            titulo: `Introdução: ${tema}`, 
+            conteudo: `Conteúdo introdutório sobre ${tema}. Este material foi preparado para facilitar o aprendizado e a compreensão dos conceitos fundamentais.` 
           },
           card2: { 
-            titulo: "Conceitos", 
-            conteudo: "Principais conceitos e informações importantes." 
+            titulo: `Desenvolvimento: ${tema}`, 
+            conteudo: `Desenvolvimento do conteúdo sobre ${tema}. Aqui você encontrará informações detalhadas e aplicações práticas dos conceitos estudados.` 
           }
         };
         setContent(fallbackContent);

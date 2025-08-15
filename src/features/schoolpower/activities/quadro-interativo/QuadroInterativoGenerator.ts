@@ -1,141 +1,66 @@
 
-import { GeminiClient } from '../../../../utils/api/geminiClient';
-import { API_KEYS } from '../../../../config/apiKeys';
+import { GeminiClient } from '@/utils/api/geminiClient';
 
-export interface QuadroInterativoData {
-  title: string;
-  description: string;
-  subject: string;
-  schoolYear: string;
-  theme: string;
-  objectives: string;
-  difficultyLevel: string;
-  quadroInterativoCampoEspecifico: string;
-  materials?: string;
-  instructions?: string;
-  evaluation?: string;
-  timeLimit?: string;
-  context?: string;
+interface QuadroInterativoData {
+  subject?: string;
+  schoolYear?: string;
+  theme?: string;
+  objectives?: string;
+  difficultyLevel?: string;
+  quadroInterativoCampoEspecifico?: string;
+  [key: string]: any;
 }
 
-export interface QuadroInterativoContent {
-  titulo: string;
-  descricao: string;
-  disciplina: string;
-  anoSerie: string;
-  tema: string;
-  objetivos: string;
-  nivelDificuldade: string;
-  atividadeMostrada: string;
-  materiaisNecessarios: string[];
-  instrucoesProfessor: string;
-  criteriosAvaliacao: string;
-  tempoEstimado: string;
-  contextoAplicacao: string;
-  quadrosInterativos: Array<{
-    id: number;
+interface GeneratedContent {
+  card1: {
     titulo: string;
-    descricao: string;
-    tipo: string;
-    conteudo: any;
-  }>;
-  isGeneratedByAI: boolean;
-  generatedAt: string;
+    conteudo: string;
+  };
+  card2: {
+    titulo: string;
+    conteudo: string;
+  };
 }
 
 class QuadroInterativoGenerator {
-  private geminiClient: GeminiClient;
-
-  constructor() {
-    this.geminiClient = new GeminiClient();
-  }
-
-  /**
-   * Gera prompt especializado para Quadro Interativo
-   */
-  private buildQuadroInterativoPrompt(data: QuadroInterativoData): string {
-    return `Você é uma IA especializada em criar atividades educacionais para quadros interativos em sala de aula.
-
-Com base nos seguintes dados, crie um quadro interativo completo e dinâmico:
-
-DADOS DA ATIVIDADE:
-- Título: ${data.title}
-- Descrição: ${data.description}
-- Disciplina: ${data.subject}
-- Ano/Série: ${data.schoolYear}
-- Tema: ${data.theme}
-- Objetivos: ${data.objectives}
-- Nível de Dificuldade: ${data.difficultyLevel}
-- Atividade Mostrada: ${data.quadroInterativoCampoEspecifico}
-- Materiais: ${data.materials || 'A definir'}
-- Instruções: ${data.instructions || 'A definir'}
-- Avaliação: ${data.evaluation || 'A definir'}
-- Tempo Estimado: ${data.timeLimit || 'A definir'}
-- Contexto: ${data.context || 'Sala de aula'}
-
-REQUISITOS:
-1. Crie 3-5 quadros interativos diferentes relacionados ao tema
-2. Cada quadro deve ter atividades práticas e envolventes
-3. Inclua diferentes tipos de interação (arrastar e soltar, clique, digitação, etc.)
-4. Adapte o conteúdo para o nível de dificuldade especificado
-5. Forneça instruções claras para o professor
-6. Inclua critérios de avaliação específicos
-
-FORMATO DE RESPOSTA (JSON):
-{
-  "titulo": "string",
-  "descricao": "string", 
-  "disciplina": "string",
-  "anoSerie": "string",
-  "tema": "string",
-  "objetivos": "string",
-  "nivelDificuldade": "string",
-  "atividadeMostrada": "string",
-  "materiaisNecessarios": ["material1", "material2", "material3"],
-  "instrucoesProfessor": "string detalhada",
-  "criteriosAvaliacao": "string detalhada",
-  "tempoEstimado": "string",
-  "contextoAplicacao": "string",
-  "quadrosInterativos": [
-    {
-      "id": 1,
-      "titulo": "string",
-      "descricao": "string",
-      "tipo": "arrastar-soltar|quiz|desenho|digitacao|clique",
-      "conteudo": {
-        "elementos": ["elemento1", "elemento2"],
-        "instrucao": "string",
-        "feedback": "string"
-      }
-    }
-  ]
-}
-
-Responda APENAS com o JSON, sem texto adicional.`;
-  }
-
-  /**
-   * Gera conteúdo do Quadro Interativo usando a API Gemini
-   */
-  async generateContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
+  static async generateContent(data: QuadroInterativoData): Promise<GeneratedContent> {
     try {
-      console.log('🎯 Iniciando geração de Quadro Interativo com Gemini');
-      console.log('📋 Dados recebidos:', data);
+      console.log('🎯 QuadroInterativoGenerator - Iniciando geração com dados:', data);
 
-      // Validar dados obrigatórios
-      if (!data.title || !data.subject || !data.theme || !data.objectives) {
-        throw new Error('Dados obrigatórios ausentes para gerar Quadro Interativo');
-      }
+      const geminiClient = new GeminiClient();
 
-      // Construir prompt especializado
-      const prompt = this.buildQuadroInterativoPrompt(data);
-      console.log('📝 Prompt construído para Gemini');
+      // Extrair dados dos campos personalizados
+      const disciplina = data.subject || data['Disciplina / Área de conhecimento'] || '';
+      const anoSerie = data.schoolYear || data['Ano / Série'] || '';
+      const tema = data.theme || data['Tema ou Assunto da aula'] || '';
+      const objetivo = data.objectives || data['Objetivo de aprendizagem da aula'] || '';
+      const dificuldade = data.difficultyLevel || data['Nível de Dificuldade'] || '';
+      const atividade = data.quadroInterativoCampoEspecifico || data['Atividade mostrada'] || '';
 
-      // Chamar API Gemini
-      const response = await this.geminiClient.generate({
+      console.log('📋 Dados extraídos:', {
+        disciplina,
+        anoSerie,
+        tema,
+        objetivo,
+        dificuldade,
+        atividade
+      });
+
+      const prompt = this.buildPrompt({
+        disciplina,
+        anoSerie,
+        tema,
+        objetivo,
+        dificuldade,
+        atividade
+      });
+
+      console.log('📝 Prompt construído:', prompt.substring(0, 300) + '...');
+
+      const response = await geminiClient.generate({
         prompt,
         temperature: 0.7,
-        maxTokens: 4000,
+        maxTokens: 2000,
         topP: 0.9,
         topK: 40
       });
@@ -144,104 +69,171 @@ Responda APENAS com o JSON, sem texto adicional.`;
         throw new Error(`Erro na API Gemini: ${response.error}`);
       }
 
-      console.log('✅ Resposta recebida do Gemini');
+      console.log('✅ Resposta recebida do Gemini:', response.result.substring(0, 200) + '...');
 
-      // Processar resposta
-      let cleanedResponse = response.result.trim();
-      
-      // Remover markdown se presente
-      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-
-      // Encontrar o JSON na resposta
-      const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}');
-
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-      }
-
-      const generatedContent: QuadroInterativoContent = JSON.parse(cleanedResponse);
-
-      // Adicionar metadados
-      generatedContent.isGeneratedByAI = true;
-      generatedContent.generatedAt = new Date().toISOString();
-
-      // Validar estrutura do conteúdo gerado
-      if (!generatedContent.quadrosInterativos || !Array.isArray(generatedContent.quadrosInterativos)) {
-        throw new Error('Estrutura de quadros interativos inválida');
-      }
-
-      console.log('🎉 Quadro Interativo gerado com sucesso:', generatedContent);
+      const generatedContent = this.parseResponse(response.result);
+      console.log('🎯 Conteúdo parseado:', generatedContent);
 
       return generatedContent;
 
     } catch (error) {
-      console.error('❌ Erro ao gerar Quadro Interativo:', error);
+      console.error('❌ Erro no QuadroInterativoGenerator:', error);
       
-      // Retornar conteúdo de fallback em caso de erro
-      return this.generateFallbackContent(data);
+      // Fallback com conteúdo baseado nos dados fornecidos
+      return this.createFallbackContent(data);
     }
   }
 
-  /**
-   * Gera conteúdo de fallback caso a API falhe
-   */
-  private generateFallbackContent(data: QuadroInterativoData): QuadroInterativoContent {
-    console.log('🔧 Gerando conteúdo de fallback para Quadro Interativo');
+  private static buildPrompt(dados: {
+    disciplina: string;
+    anoSerie: string;
+    tema: string;
+    objetivo: string;
+    dificuldade: string;
+    atividade: string;
+  }): string {
+    return `
+Você é um especialista em educação e deve criar conteúdo educacional para um Quadro Interativo com 2 cards.
 
-    return {
-      titulo: data.title,
-      descricao: data.description,
-      disciplina: data.subject,
-      anoSerie: data.schoolYear,
-      tema: data.theme,
-      objetivos: data.objectives,
-      nivelDificuldade: data.difficultyLevel,
-      atividadeMostrada: data.quadroInterativoCampoEspecifico,
-      materiaisNecessarios: [
-        'Quadro interativo digital',
-        'Projetor ou tela',
-        'Computador ou tablet',
-        'Materiais complementares conforme atividade'
-      ],
-      instrucoesProfessor: `Instruções para ${data.title}:\n\n1. Prepare o quadro interativo\n2. Explique os objetivos aos alunos\n3. Demonstre a atividade\n4. Permita participação ativa\n5. Avalie o progresso`,
-      criteriosAvaliacao: `Critérios de avaliação para ${data.theme}:\n\n- Participação ativa\n- Compreensão do conteúdo\n- Colaboração em grupo\n- Cumprimento dos objetivos`,
-      tempoEstimado: data.timeLimit || '45 minutos',
-      contextoAplicacao: data.context || 'Sala de aula com quadro interativo',
-      quadrosInterativos: [
-        {
-          id: 1,
-          titulo: `Quadro Principal - ${data.theme}`,
-          descricao: `Atividade interativa sobre ${data.theme} para ${data.schoolYear}`,
-          tipo: 'quiz',
-          conteudo: {
-            elementos: ['Elemento 1', 'Elemento 2', 'Elemento 3'],
-            instrucao: `Interaja com os elementos do quadro para aprender sobre ${data.theme}`,
-            feedback: 'Muito bem! Continue explorando o conteúdo.'
-          }
-        }
-      ],
-      isGeneratedByAI: true,
-      generatedAt: new Date().toISOString()
-    };
-  }
+CONTEXTO EDUCACIONAL:
+- Disciplina: ${dados.disciplina}
+- Ano/Série: ${dados.anoSerie}
+- Tema da Aula: ${dados.tema}
+- Objetivo: ${dados.objetivo}
+- Nível de Dificuldade: ${dados.dificuldade}
+- Atividade Relacionada: ${dados.atividade}
 
-  /**
-   * Valida se a API Gemini está disponível
-   */
-  async validateGeminiConnection(): Promise<boolean> {
-    try {
-      const hasApiKey = !!API_KEYS.GEMINI;
-      console.log('🔑 Verificação da API Gemini:', hasApiKey ? 'Chave presente' : 'Chave ausente');
-      
-      return hasApiKey;
-    } catch (error) {
-      console.error('❌ Erro ao validar conexão Gemini:', error);
-      return false;
-    }
+INSTRUÇÕES PARA CRIAÇÃO DOS CARDS:
+
+CARD 1 - "Introdução":
+- Título: Relacionado ao tema principal
+- Conteúdo: Introdução clara e envolvente sobre o tema, adequada para o ano/série
+- Deve despertar o interesse e curiosidade dos alunos
+- Inclua conceitos fundamentais de forma didática
+
+CARD 2 - "Desenvolvimento":
+- Título: Focado no desenvolvimento do conteúdo
+- Conteúdo: Aprofundamento do tema com exemplos práticos
+- Deve conectar teoria e prática
+- Inclua aplicações reais do conhecimento
+
+REQUISITOS:
+- Linguagem adequada para o ano/série especificado
+- Conteúdo educativo e engajador
+- Textos entre 80-150 palavras por card
+- Relacionado diretamente com a disciplina e tema
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "card1": {
+    "titulo": "Título do Card 1",
+    "conteudo": "Conteúdo educativo do card 1..."
+  },
+  "card2": {
+    "titulo": "Título do Card 2",
+    "conteudo": "Conteúdo educativo do card 2..."
   }
 }
 
-// Exportar instância única
-const quadroInterativoGenerator = new QuadroInterativoGenerator();
-export default quadroInterativoGenerator;
+Responda APENAS com o JSON válido, sem comentários adicionais.`;
+  }
+
+  private static parseResponse(response: string): GeneratedContent {
+    try {
+      // Limpar resposta
+      let cleanResponse = response.trim();
+      
+      // Remover markdown code blocks se existirem
+      cleanResponse = cleanResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+      
+      // Extrair JSON da resposta
+      const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanResponse = jsonMatch[0];
+      }
+
+      console.log('🔍 Tentando parsear:', cleanResponse.substring(0, 200) + '...');
+
+      const parsed = JSON.parse(cleanResponse);
+
+      // Validar estrutura
+      if (parsed.card1 && parsed.card2 && 
+          parsed.card1.titulo && parsed.card1.conteudo &&
+          parsed.card2.titulo && parsed.card2.conteudo) {
+        return parsed;
+      } else {
+        throw new Error('Estrutura JSON inválida');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao parsear resposta:', error);
+      console.log('📝 Resposta original:', response);
+      
+      // Tentar extrair conteúdo de forma mais flexível
+      return this.extractContentFlexibly(response);
+    }
+  }
+
+  private static extractContentFlexibly(response: string): GeneratedContent {
+    // Implementar extração mais flexível
+    const defaultContent = {
+      card1: {
+        titulo: "Introdução ao Tema",
+        conteudo: "Conteúdo introdutório gerado automaticamente com base nas informações fornecidas."
+      },
+      card2: {
+        titulo: "Desenvolvimento",
+        conteudo: "Desenvolvimento do conteúdo educacional personalizado para a atividade."
+      }
+    };
+
+    // Tentar extrair títulos e conteúdos usando regex
+    const tituloPattern = /(?:título?|title)[\s"':]*([^"\n]+)/gi;
+    const conteudoPattern = /(?:conteúdo?|content)[\s"':]*([^"]+)/gi;
+
+    const titulos = [];
+    const conteudos = [];
+    
+    let match;
+    while ((match = tituloPattern.exec(response)) !== null) {
+      titulos.push(match[1].trim());
+    }
+    
+    while ((match = conteudoPattern.exec(response)) !== null) {
+      conteudos.push(match[1].trim());
+    }
+
+    if (titulos.length >= 2 && conteudos.length >= 2) {
+      return {
+        card1: {
+          titulo: titulos[0],
+          conteudo: conteudos[0]
+        },
+        card2: {
+          titulo: titulos[1],
+          conteudo: conteudos[1]
+        }
+      };
+    }
+
+    return defaultContent;
+  }
+
+  private static createFallbackContent(data: QuadroInterativoData): GeneratedContent {
+    const tema = data.theme || data['Tema ou Assunto da aula'] || 'Tema da Aula';
+    const disciplina = data.subject || data['Disciplina / Área de conhecimento'] || 'Disciplina';
+
+    return {
+      card1: {
+        titulo: `Introdução: ${tema}`,
+        conteudo: `Bem-vindos ao estudo de ${tema} em ${disciplina}. Este conteúdo foi desenvolvido especialmente para proporcionar uma experiência de aprendizagem envolvente e significativa. Vamos explorar os conceitos fundamentais e suas aplicações práticas.`
+      },
+      card2: {
+        titulo: `Desenvolvimento: ${tema}`,
+        conteudo: `Agora vamos aprofundar nosso conhecimento sobre ${tema}. É importante compreender como estes conceitos se conectam com situações reais e como podemos aplicá-los em nosso dia a dia. Vamos descobrir juntos as possibilidades de aprendizagem.`
+      }
+    };
+  }
+}
+
+export default QuadroInterativoGenerator;
