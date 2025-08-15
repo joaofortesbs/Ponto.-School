@@ -1,3 +1,4 @@
+
 export interface QuadroInterativoFields {
   recursos: string;
   conteudo: string;
@@ -157,12 +158,25 @@ export function validateRequiredFields(data: Partial<QuadroInterativoFields>): b
 
 // Atualizar mapeamento de campos do Quadro Interativo para corresponder exatamente aos nomes dos campos
 export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFields, string[]> = {
+  recursos: ['Recursos', 'Materiais', 'Materiais Necessários'],
+  conteudo: ['Conteúdo', 'Instruções', 'Metodologia'],
+  interatividade: ['Interatividade', 'Atividade mostrada', 'Recursos Interativos'],
+  design: ['Design', 'Nível de Dificuldade', 'Complexidade'],
+  objetivo: ['Objetivo', 'Objetivos', 'Objetivo de aprendizagem da aula'],
+  avaliacao: ['Avaliação', 'Critérios', 'Critérios de Avaliação'],
+  title: ['title', 'Título'],
+  description: ['description', 'Descrição'],
   subject: ['Disciplina / Área de conhecimento', 'disciplina', 'Disciplina'],
   schoolYear: ['Ano / Série', 'anoSerie', 'Ano de Escolaridade'],
   theme: ['Tema ou Assunto da aula', 'tema', 'Tema'],
   objectives: ['Objetivo de aprendizagem da aula', 'objetivos', 'Objetivos'],
   difficultyLevel: ['Nível de Dificuldade', 'nivelDificuldade', 'dificuldade'],
-  quadroInterativoCampoEspecifico: ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico do Quadro Interativo']
+  quadroInterativoCampoEspecifico: ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico do Quadro Interativo'],
+  materials: ['Materiais', 'Recursos'],
+  instructions: ['Instruções', 'Metodologia'],
+  evaluation: ['Avaliação', 'Critérios de Avaliação'],
+  timeLimit: ['Tempo', 'Duração'],
+  context: ['Contexto', 'Aplicação']
 };
 
 // Função para mapear dados do Action Plan para campos do formulário
@@ -178,11 +192,11 @@ export function mapQuadroInterativoFields(actionPlanData: any): any {
     objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || '',
     difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Ex: Básico, Intermediário, Avançado',
     quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
-    materials: getFieldValue(customFields, ['Materiais', 'Recursos']), // Exemplo de mapeamento para materials
-    instructions: getFieldValue(customFields, ['Instruções', 'Metodologia']), // Exemplo de mapeamento para instructions
-    evaluation: getFieldValue(customFields, ['Avaliação', 'Critérios de Avaliação']), // Exemplo de mapeamento para evaluation
-    timeLimit: getFieldValue(customFields, ['Tempo', 'Duração']), // Exemplo de mapeamento para timeLimit
-    context: getFieldValue(customFields, ['Contexto', 'Aplicação']) // Exemplo de mapeamento para context
+    materials: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.materials) || '',
+    instructions: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.instructions) || '',
+    evaluation: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.evaluation) || '',
+    timeLimit: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.timeLimit) || '',
+    context: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.context) || ''
   };
 }
 
@@ -194,7 +208,9 @@ function getFieldValue(customFields: any, possibleKeys: string[]): string {
   }
   return '';
 }
-export const quadroInterativoFieldMapping = {
+
+// Configuração de campos para o formulário de edição (renomeado para evitar conflito)
+export const quadroInterativoFormFieldsConfig = {
   'Disciplina / Área de conhecimento': {
     type: 'text',
     label: 'Disciplina / Área de conhecimento',
@@ -233,4 +249,4 @@ export const quadroInterativoFieldMapping = {
   }
 };
 
-export default quadroInterativoFieldMapping;
+export default quadroInterativoFormFieldsConfig;
