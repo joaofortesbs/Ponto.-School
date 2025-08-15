@@ -18,7 +18,6 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
-import { QuadroInterativoPreview } from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -393,7 +392,6 @@ const EditActivityModal = ({
   // Estado para conteúdo gerado
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
-  const [hasGenerated, setHasGenerated] = useState(false);
 
   // Estado para controle de construção da atividade
   const [buildingStatus, setBuildingStatus] = useState({
@@ -414,7 +412,7 @@ const EditActivityModal = ({
   const {
     generateActivity,
     loadSavedContent,
-    clearContent: clearGeneratedContent,
+    clearContent,
     isGenerating,
   } = useGenerateActivity({
     activityId: activity?.id || '',
@@ -1165,7 +1163,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customFields['nivelDificuldade'] ||
+                              customCustomFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1274,31 +1272,6 @@ const EditActivityModal = ({
     loadActivityData();
   }, [activity, isOpen]);
 
-  // Função para copiar conteúdo
-  const handleCopyContent = () => {
-    if (generatedContent) {
-      const content = JSON.stringify(generatedContent, null, 2);
-      navigator.clipboard.writeText(content);
-      toast({
-        title: "Conteúdo copiado!",
-        description: "O conteúdo foi copiado para a área de transferência.",
-      });
-    }
-  };
-
-  // Função para limpar conteúdo
-  const clearContent = () => {
-    setGeneratedContent(null);
-    setIsContentLoaded(false);
-    setHasGenerated(false);
-    setActiveTab('editar');
-
-    toast({
-      title: "Conteúdo limpo",
-      description: "O conteúdo gerado foi removido.",
-    });
-  };
-
   const handleInputChange = (field: keyof ActivityFormData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -1322,36 +1295,10 @@ const EditActivityModal = ({
         setBuildProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const activityType = activity?.type || activity.id || activity.categoryId;
+      const activityType = activity.type || activity.id || activity.categoryId;
       console.log('🎯 Tipo de atividade determinado:', activityType);
 
-      // Usar SEMPRE a API real do Gemini para gerar conteúdo
-      console.log('🎯 Gerando conteúdo com API do Gemini para:', activityType);
-      console.log('📋 Dados completos do formulário:', formData);
-      
-      // Importar e usar a função de geração atualizada
-      const { generateActivityContent } = await import('./api/generateActivity');
-      
       const result = await generateActivityContent(activityType, formData);
-      console.log('✅ Conteúdo gerado pela IA:', result);
-      
-      // Marcar que houve geração
-      setHasGenerated(true);
-      
-      // Salvar conteúdo específico por tipo de atividade
-      if (activityType === 'quadro-interativo') {
-        const quadroStorageKey = `constructed_quadro-interativo_${activity.id}`;
-        localStorage.setItem(quadroStorageKey, JSON.stringify(result));
-        console.log('💾 Quadro Interativo salvo no localStorage:', quadroStorageKey);
-      } else if (activityType === 'plano-aula') {
-        const planoStorageKey = `constructed_plano-aula_${activity.id}`;
-        localStorage.setItem(planoStorageKey, JSON.stringify(result));
-        console.log('💾 Plano de Aula salvo no localStorage:', planoStorageKey);
-      } else if (activityType === 'sequencia-didatica') {
-        const sequenciaStorageKey = `constructed_sequencia-didatica_${activity.id}`;
-        localStorage.setItem(sequenciaStorageKey, JSON.stringify(result));
-        console.log('💾 Sequência Didática salva no localStorage:', sequenciaStorageKey);
-      }
 
       clearInterval(progressTimer);
       setBuildProgress(100);
@@ -1395,7 +1342,6 @@ const EditActivityModal = ({
       console.error('❌ Erro na construção:', error);
       setError(`Erro ao construir atividade: ${error.message}`);
 
-      clearInterval(progressTimer);
       toast({
         title: "Erro na construção",
         description: "Houve um problema ao gerar sua atividade. Tente novamente.",
@@ -1432,6 +1378,14 @@ const EditActivityModal = ({
     };
     onSave(activityData);
     onClose();
+  };
+
+  const handleCopyContent = () => {
+    navigator.clipboard.writeText(JSON.stringify(generatedContent, null, 2));
+    toast({
+      title: "Conteúdo copiado!",
+      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
+    });
   };
 
   const getActivityPreviewData = () => {
@@ -1992,8 +1946,9 @@ const EditActivityModal = ({
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <QuadroInterativoPreview
-                        data={generatedContent || formData}
+                      <ActivityPreview
+                        content={generatedContent || formData}
+                        activityData={activity}
                       />
                     ) : (
                       <ActivityPreview
@@ -2049,7 +2004,7 @@ const EditActivityModal = ({
              {generatedContent && (
               <Button
                 variant="outline"
-                onClick={() => clearContent()}
+                onClick={clearContent}
                 className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               >
                 Limpar Conteúdo

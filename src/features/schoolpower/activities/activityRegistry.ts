@@ -2,8 +2,6 @@ import { lazy, LazyExoticComponent, FC } from 'react';
 import { processSequenciaDidaticaData } from './sequencia-didatica';
 import { PlanoAulaProcessor } from './plano-aula/planoAulaProcessor';
 import { processQuadroInterativoData } from './quadro-interativo/quadroInterativoProcessor';
-import { QuadroInterativoPreview } from './quadro-interativo/QuadroInterativoPreview';
-import QuadroInterativoGenerator from './quadro-interativo/QuadroInterativoGenerator';
 
 export interface ActivityComponentSet {
   editor: LazyExoticComponent<FC<any>>;
@@ -81,8 +79,8 @@ export const activityRegistry: ActivityRegistryType = {
   },
   // Adicionar quadro-interativo à atividade
   "quadro-interativo": {
-    editor: lazy(() => import("./default/EditActivity")),
-    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview").then(module => ({ default: module.QuadroInterativoPreview }))),
+    editor: lazy(() => import("./quadro-interativo/EditActivity")),
+    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreviewview")),
   },
 };
 

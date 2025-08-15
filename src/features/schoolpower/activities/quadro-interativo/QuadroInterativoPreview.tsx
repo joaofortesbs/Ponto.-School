@@ -1,239 +1,271 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Monitor, Target, Play, FileText, Package, CheckCircle, Zap } from 'lucide-react';
-import { CarrosselQuadrosSalaAula } from './CarrosselQuadrosSalaAula';
-import QuadroInterativoGenerator from './QuadroInterativoGenerator';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Monitor, 
+  Target, 
+  BookOpen, 
+  Clock, 
+  Users, 
+  CheckCircle,
+  PlayCircle,
+  Settings
+} from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
-  data?: any;
+  data: any;
   activityData?: any;
 }
 
-export function QuadroInterativoPreview({ data, activityData }: QuadroInterativoPreviewProps) {
-  const [content, setContent] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
+  data, 
+  activityData 
+}) => {
+  // Extrair dados do formulário ou conteúdo gerado
+  const previewData = {
+    title: data.title || data.personalizedTitle || 'Quadro Interativo',
+    description: data.description || data.personalizedDescription || '',
+    subject: data.subject || 'Disciplina',
+    schoolYear: data.schoolYear || 'Ano/Série',
+    theme: data.theme || 'Tema da Aula',
+    objectives: data.objectives || 'Objetivos de Aprendizagem',
+    difficultyLevel: data.difficultyLevel || 'Médio',
+    activityShown: data.quadroInterativoCampoEspecifico || 'Atividade Interativa',
+    materials: data.materials || 'Materiais não especificados',
+    timeLimit: data.timeLimit || '45 minutos',
+    instructions: data.instructions || 'Instruções a serem definidas',
+    evaluation: data.evaluation || 'Critérios de avaliação a serem definidos',
+    context: data.context || 'Contexto de aplicação geral'
+  };
 
-  useEffect(() => {
-    const generateContent = async () => {
-      setIsLoading(true);
-      try {
-        console.log('🖼️ Iniciando geração de conteúdo para Quadro Interativo...');
-        console.log('📋 Dados recebidos:', { data, activityData });
-
-        let contentToGenerate = data || activityData;
-
-        if (contentToGenerate) {
-          console.log('📊 Gerando conteúdo com dados:', contentToGenerate);
-          const generatedContent = await QuadroInterativoGenerator.generateContent(contentToGenerate);
-          console.log('✅ Conteúdo gerado com sucesso:', generatedContent);
-          setContent(generatedContent);
-        } else {
-          // Conteúdo padrão quando não há dados
-          const defaultContent = {
-            card1: {
-              titulo: "Introdução",
-              conteudo: "Conteúdo introdutório sobre o tema da aula. Este card apresenta os conceitos fundamentais que serão explorados."
-            },
-            card2: {
-              titulo: "Conceitos",
-              conteudo: "Principais conceitos e informações importantes. Aqui você encontrará as informações essenciais para o aprendizado."
-            }
-          };
-          console.log('📋 Usando conteúdo padrão:', defaultContent);
-          setContent(defaultContent);
-        }
-      } catch (error) {
-        console.error('❌ Erro ao gerar conteúdo:', error);
-        // Fallback para conteúdo básico
-        const fallbackContent = {
-          card1: { 
-            titulo: "Introdução", 
-            conteudo: "Conteúdo introdutório sobre o tema da aula." 
-          },
-          card2: { 
-            titulo: "Conceitos", 
-            conteudo: "Principais conceitos e informações importantes." 
-          }
-        };
-        setContent(fallbackContent);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    generateContent();
-  }, [data, activityData]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Gerando conteúdo...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!content) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <div className="text-center">
-          <Monitor className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-            Nenhum conteúdo disponível
-          </h4>
-          <p className="text-gray-500 dark:text-gray-500">
-            Configure os dados na aba "Editar" e gere o conteúdo
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const getDifficultyColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'básico':
+      case 'fácil':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'intermediário':
+      case 'médio':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'avançado':
+      case 'difícil':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default:
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+    }
+  };
 
   return (
-    <div className="w-full h-full overflow-auto">
-      <ScrollArea className="h-full">
-        <div className="p-6 space-y-6">
-          {/* Header da Atividade */}
-          <div className="text-center space-y-2">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Monitor className="h-6 w-6 text-orange-500" />
-              <Badge variant="secondary" className="text-orange-700 bg-orange-100">
-                Quadro Interativo
+    <div className="h-full overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <Card className="border-l-4 border-l-purple-500 shadow-lg">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                  <Monitor className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {previewData.title}
+                  </CardTitle>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    Atividade de Quadro Interativo
+                  </p>
+                </div>
+              </div>
+              <Badge 
+                variant="secondary" 
+                className={`px-3 py-1 ${getDifficultyColor(previewData.difficultyLevel)}`}
+              >
+                {previewData.difficultyLevel}
               </Badge>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {data?.title || activityData?.title || 'Quadro Interativo'}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              {data?.description || activityData?.description || 'Visualização interativa do conteúdo educacional'}
-            </p>
-          </div>
+            {previewData.description && (
+              <p className="text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">
+                {previewData.description}
+              </p>
+            )}
+          </CardHeader>
+        </Card>
 
-          {/* Carrossel de Quadros */}
-          <div className="relative bg-gradient-to-br from-orange-50 to-blue-50 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6">
-            <CarrosselQuadrosSalaAula contentData={content} />
-          </div>
-
-          {/* Informações da Atividade */}
-          {(data || activityData) && (
-            <Card className="border-orange-200 dark:border-orange-800">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
-                  <Target className="h-5 w-5" />
-                  Informações da Atividade
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(data?.subject || activityData?.subject) && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Disciplina:</label>
-                      <p className="text-gray-900 dark:text-gray-100">{data?.subject || activityData?.subject}</p>
-                    </div>
-                  )}
-                  {(data?.schoolYear || activityData?.schoolYear) && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Ano/Série:</label>
-                      <p className="text-gray-900 dark:text-gray-100">{data?.schoolYear || activityData?.schoolYear}</p>
-                    </div>
-                  )}
-                  {(data?.theme || activityData?.theme) && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Tema:</label>
-                      <p className="text-gray-900 dark:text-gray-100">{data?.theme || activityData?.theme}</p>
-                    </div>
-                  )}
-                  {(data?.difficultyLevel || activityData?.difficultyLevel) && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Nível de Dificuldade:</label>
-                      <Badge variant="outline" className="ml-2">
-                        {data?.difficultyLevel || activityData?.difficultyLevel}
-                      </Badge>
-                    </div>
-                  )}
+        {/* Informações Básicas */}
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <BookOpen className="h-5 w-5 text-blue-600" />
+              Informações da Atividade
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Disciplina
+                </p>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {previewData.subject}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Ano/Série
+                </p>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {previewData.schoolYear}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Tempo Estimado
+                </p>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {previewData.timeLimit}
+                  </p>
                 </div>
-                
-                {(data?.objectives || activityData?.objectives) && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Objetivos:</label>
-                    <p className="text-gray-900 dark:text-gray-100 mt-1">
-                      {data?.objectives || activityData?.objectives}
-                    </p>
-                  </div>
-                )}
-
-                {(data?.quadroInterativoCampoEspecifico || activityData?.quadroInterativoCampoEspecifico) && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Atividade Mostrada:</label>
-                    <p className="text-gray-900 dark:text-gray-100 mt-1">
-                      {data?.quadroInterativoCampoEspecifico || activityData?.quadroInterativoCampoEspecifico}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Estatísticas do Quadro */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4 text-center bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                {Object.keys(content || {}).length}
               </div>
-              <p className="text-sm text-orange-700 dark:text-orange-300">Cards Interativos</p>
-            </Card>
-            
-            <Card className="p-4 text-center bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-                <Play className="h-6 w-6 mx-auto" />
-              </div>
-              <p className="text-sm text-blue-700 dark:text-blue-300">Navegação Interativa</p>
-            </Card>
-            
-            <Card className="p-4 text-center bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">100%</div>
-              <p className="text-sm text-green-700 dark:text-green-300">Responsivo</p>
-            </Card>
-          </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Recursos Adicionais */}
-          <Card>
+        {/* Tema e Objetivos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="shadow-md">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-yellow-500" />
-                Recursos do Quadro Interativo
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Target className="h-5 w-5 text-green-600" />
+                Tema da Aula
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">Navegação por cards</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">Conteúdo personalizado</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">Interface responsiva</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-sm">Fácil visualização</span>
-                </div>
-              </div>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {previewData.theme}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+                Objetivos de Aprendizagem
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {previewData.objectives}
+              </p>
             </CardContent>
           </Card>
         </div>
-      </ScrollArea>
+
+        {/* Atividade Interativa */}
+        <Card className="shadow-md border-l-4 border-l-blue-500">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <PlayCircle className="h-5 w-5 text-blue-600" />
+              Atividade no Quadro Interativo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                {previewData.activityShown}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Materiais e Instruções */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Settings className="h-5 w-5 text-orange-600" />
+                Materiais Necessários
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {previewData.materials.split('\n').filter(m => m.trim()).map((material, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {material.trim()}
+                    </p>
+                  </div>
+                ))}
+                {!previewData.materials.trim() && (
+                  <p className="text-gray-500 dark:text-gray-400 italic">
+                    Materiais não especificados
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5 text-purple-600" />
+                Instruções
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {previewData.instructions}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Avaliação e Contexto */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Critérios de Avaliação</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {previewData.evaluation}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Contexto de Aplicação</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {previewData.context}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Footer */}
+        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center text-center">
+              <div className="space-y-2">
+                <p className="text-purple-700 dark:text-purple-300 font-medium">
+                  Atividade de Quadro Interativo gerada com IA
+                </p>
+                <p className="text-purple-600 dark:text-purple-400 text-sm">
+                  Use o quadro digital para engajar os alunos de forma interativa
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
-}
+};
 
 export default QuadroInterativoPreview;
