@@ -1,17 +1,8 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Monitor, 
-  Target, 
-  BookOpen, 
-  Clock, 
-  Users, 
-  CheckCircle,
-  PlayCircle,
-  Settings
-} from 'lucide-react';
+import { Monitor, Clock, Users, Target, BookOpen, CheckCircle, User, Calendar } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
   data: any;
@@ -22,64 +13,101 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   data, 
   activityData 
 }) => {
-  // Extrair dados do formulário ou conteúdo gerado
-  const previewData = {
-    title: data.title || data.personalizedTitle || 'Quadro Interativo',
-    description: data.description || data.personalizedDescription || '',
-    subject: data.subject || 'Disciplina',
-    schoolYear: data.schoolYear || 'Ano/Série',
-    theme: data.theme || 'Tema da Aula',
-    objectives: data.objectives || 'Objetivos de Aprendizagem',
-    difficultyLevel: data.difficultyLevel || 'Médio',
-    activityShown: data.quadroInterativoCampoEspecifico || 'Atividade Interativa',
-    materials: data.materials || 'Materiais não especificados',
-    timeLimit: data.timeLimit || '45 minutos',
-    instructions: data.instructions || 'Instruções a serem definidas',
-    evaluation: data.evaluation || 'Critérios de avaliação a serem definidos',
-    context: data.context || 'Contexto de aplicação geral'
+  console.log('🖼️ QuadroInterativoPreview - data:', data);
+  console.log('🖼️ QuadroInterativoPreview - activityData:', activityData);
+
+  // Buscar conteúdo gerado no localStorage
+  const constructedDataJson = localStorage.getItem(`activity_content_${activityData?.id || 'quadro-interativo'}`);
+  let generatedContent = null;
+  
+  if (constructedDataJson) {
+    try {
+      const constructedData = JSON.parse(constructedDataJson);
+      generatedContent = constructedData;
+      console.log('🖼️ Conteúdo construído encontrado:', generatedContent);
+    } catch (error) {
+      console.error('Erro ao parse do conteúdo construído:', error);
+    }
+  }
+
+  // Extrair dados dos campos customizados
+  const customFields = activityData?.customFields || data?.customFields || {};
+  
+  // Dados básicos da atividade
+  const activityInfo = {
+    title: generatedContent?.titulo || data?.title || activityData?.title || 'Quadro Interativo',
+    description: generatedContent?.descricao || data?.description || activityData?.description || '',
+    subject: customFields['Disciplina / Área de conhecimento'] || customFields['Disciplina'] || 'Disciplina',
+    schoolYear: customFields['Ano / Série'] || customFields['Ano'] || 'Ano/Série',
+    theme: customFields['Tema ou Assunto da aula'] || customFields['Tema'] || 'Tema da Aula',
+    objectives: customFields['Objetivo de aprendizagem da aula'] || customFields['Objetivos'] || 'Objetivos de Aprendizagem',
+    difficultyLevel: customFields['Nível de Dificuldade'] || 'Médio',
+    activity: customFields['Atividade mostrada'] || 'Atividade Interativa'
   };
 
   const getDifficultyColor = (level: string) => {
-    switch (level.toLowerCase()) {
-      case 'básico':
+    switch (level?.toLowerCase()) {
       case 'fácil':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'intermediário':
+      case 'básico':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
       case 'médio':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'avançado':
+      case 'intermediário':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
       case 'difícil':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'avançado':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
       default:
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
     }
   };
 
-  // Verifica se há conteúdo gerado pela IA
-  const hasGeneratedContent = activityData?.generatedContent?.titulo && activityData?.generatedContent?.conteudo;
-  const customFields = activityData?.customFields || {};
-
-  if (!hasGeneratedContent) {
+  // Se não há conteúdo gerado, mostrar estado de carregamento
+  if (!generatedContent) {
     return (
       <div className="h-full overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto space-y-6">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                Quadro Interativo - Pré-visualização
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">
-                  Nenhum conteúdo gerado ainda.
-                </p>
-                <p className="text-sm text-gray-400">
-                  Use a seção "Editar" para configurar e gerar o conteúdo do quadro interativo.
-                </p>
+          <Card className="border-l-4 border-l-purple-500 shadow-lg">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                    <Monitor className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {activityInfo.title}
+                    </CardTitle>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                      Atividade de Quadro Interativo
+                    </p>
+                  </div>
+                </div>
+                <Badge 
+                  variant="secondary" 
+                  className={`px-3 py-1 ${getDifficultyColor(activityInfo.difficultyLevel)}`}
+                >
+                  {activityInfo.difficultyLevel}
+                </Badge>
               </div>
-            </CardContent>
+              {activityInfo.description && (
+                <p className="text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">
+                  {activityInfo.description}
+                </p>
+              )}
+            </CardHeader>
           </Card>
+
+          <div className="text-center p-8">
+            <div className="animate-pulse">
+              <Monitor className="h-16 w-16 text-purple-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Processando Conteúdo
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                O conteúdo do Quadro Interativo está sendo gerado...
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -98,7 +126,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                 </div>
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {activityData.generatedContent.titulo}
+                    {generatedContent.titulo || activityInfo.title}
                   </CardTitle>
                   <p className="text-gray-600 dark:text-gray-400 text-sm">
                     Atividade de Quadro Interativo
@@ -107,180 +135,141 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
               </div>
               <Badge 
                 variant="secondary" 
-                className={`px-3 py-1 ${getDifficultyColor(customFields['Nível de Dificuldade'] || previewData.difficultyLevel)}`}
+                className={`px-3 py-1 ${getDifficultyColor(activityInfo.difficultyLevel)}`}
               >
-                {customFields['Nível de Dificuldade'] || previewData.difficultyLevel}
+                {activityInfo.difficultyLevel}
               </Badge>
             </div>
-            {activityData.generatedContent.descricao && (
+            {generatedContent.descricao && (
               <p className="text-gray-700 dark:text-gray-300 mt-3 leading-relaxed">
-                {activityData.generatedContent.descricao}
+                {generatedContent.descricao}
               </p>
             )}
           </CardHeader>
         </Card>
 
-        {/* Informações Básicas */}
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <BookOpen className="h-5 w-5 text-blue-600" />
-              Informações da Atividade
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Disciplina
-                </p>
-                <p className="text-gray-900 dark:text-white font-medium">
-                  {customFields['Disciplina / Área de conhecimento'] || previewData.subject}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Ano/Série
-                </p>
-                <p className="text-gray-900 dark:text-white font-medium">
-                  {customFields['Ano / Série'] || previewData.schoolYear}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Tempo Estimado
-                </p>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-400" />
-                  <p className="text-gray-900 dark:text-white font-medium">
-                    {customFields['Tempo de Duração'] || previewData.timeLimit}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tema e Objetivos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Target className="h-5 w-5 text-green-600" />
-                Tema da Aula
+        {/* Informações da Atividade */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-blue-500" />
+                Informações Básicas
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {customFields['Tema ou Assunto da aula'] || previewData.theme}
-              </p>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Disciplina</p>
+                <p className="text-gray-900 dark:text-white">{activityInfo.subject}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Ano/Série</p>
+                <p className="text-gray-900 dark:text-white">{activityInfo.schoolYear}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tema</p>
+                <p className="text-gray-900 dark:text-white">{activityInfo.theme}</p>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                Objetivos de Aprendizagem
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Target className="h-5 w-5 text-green-500" />
+                Detalhes da Atividade
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {customFields['Objetivos de Aprendizagem'] || previewData.objectives}
-              </p>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tipo de Atividade</p>
+                <p className="text-gray-900 dark:text-white">{activityInfo.activity}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Duração Estimada</p>
+                <p className="text-gray-900 dark:text-white flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  45 minutos
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Público-alvo</p>
+                <p className="text-gray-900 dark:text-white flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  Estudantes do {activityInfo.schoolYear}
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Atividade Interativa (Conteúdo Gerado pela IA) */}
-        <Card className="shadow-md border-2 border-blue-500">
-          <CardHeader className="bg-blue-50 dark:bg-blue-900/20">
-            <CardTitle className="flex items-center gap-2 text-lg text-blue-600 font-bold">
-              <PlayCircle className="h-5 w-5" />
-              Atividade no Quadro Interativo
+        {/* Objetivos de Aprendizagem */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-amber-500" />
+              Objetivos de Aprendizagem
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-white p-4 rounded-lg">
-              <div className="prose max-w-none">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">
-                  {activityData.generatedContent.titulo}
-                </h3>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
-                  {activityData.generatedContent.conteudo}
-                </p>
-              </div>
-            </div>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {activityInfo.objectives}
+            </p>
           </CardContent>
         </Card>
 
-        {/* Materiais e Instruções */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="shadow-md">
+        {/* Conteúdo Principal */}
+        {generatedContent.conteudo && (
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Settings className="h-5 w-5 text-orange-600" />
-                Materiais Necessários
+              <CardTitle className="flex items-center gap-2">
+                <Monitor className="h-5 w-5 text-purple-500" />
+                Conteúdo da Atividade
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {customFields['Materiais'] && customFields['Materiais'].split('\n').filter(m => m.trim()).map((material, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {material.trim()}
-                    </p>
-                  </div>
-                ))}
-                {(!customFields['Materiais'] || !customFields['Materiais'].trim()) && (
-                  <p className="text-gray-500 dark:text-gray-400 italic">
-                    Materiais não especificados
-                  </p>
-                )}
+              <div className="prose dark:prose-invert max-w-none">
+                <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {generatedContent.conteudo}
+                </div>
               </div>
             </CardContent>
           </Card>
+        )}
 
-          <Card className="shadow-md">
+        {/* Recursos e Materiais */}
+        {generatedContent.recursos && (
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Users className="h-5 w-5 text-purple-600" />
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                Recursos Necessários
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
+                {generatedContent.recursos}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Instruções */}
+        {generatedContent.instrucoes && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-blue-500" />
                 Instruções
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {customFields['Instruções'] || previewData.instructions}
-              </p>
+              <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
+                {generatedContent.instrucoes}
+              </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Avaliação e Contexto */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg">Critérios de Avaliação</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {customFields['Critérios de Avaliação'] || previewData.evaluation}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg">Contexto de Aplicação</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                {customFields['Contexto de Aplicação'] || previewData.context}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        )}
 
         {/* Footer */}
         <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-purple-200 dark:border-purple-800">
@@ -302,9 +291,16 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
         {activityData?.builtAt && (
           <Card className="mt-6">
             <CardContent className="pt-4">
-              <p className="text-xs text-gray-500">
-                Construído em: {new Date(activityData.builtAt).toLocaleString('pt-BR')}
-              </p>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span>Construído em: {new Date(activityData.builtAt).toLocaleString('pt-BR')}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Atualizado: {new Date().toLocaleString('pt-BR')}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}

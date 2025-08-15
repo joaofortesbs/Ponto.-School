@@ -166,7 +166,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const questionsForSidebar = getQuestionsForSidebar();
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
-  const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+  
+  // Determinar tipo da atividade CORRETAMENTE
+    const activityType = activity.type || 
+                        activity.originalData?.type || 
+                        activity.id?.includes('quadro-interativo') ? 'quadro-interativo' :
+                        activity.id?.includes('lista') ? 'lista-exercicios' :
+                        activity.id?.includes('sequencia') ? 'sequencia-didatica' :
+                        activity.id?.includes('plano') ? 'plano-aula' :
+                        'default';
 
   // Função para obter o título da atividade
   const getActivityTitle = () => {
@@ -317,12 +325,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (sequenciaContent) {
           // Processar dados de acordo com a estrutura encontrada
           let processedData = sequenciaContent;
-          
+
           // Se os dados estão dentro de 'data' (resultado da API)
           if (sequenciaContent.data) {
             processedData = sequenciaContent.data;
           }
-          
+
           // Se tem sucesso e dados estruturados
           if (sequenciaContent.success && sequenciaContent.data) {
             processedData = sequenciaContent.data;
@@ -405,6 +413,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityData={activity}
           />
         );
+        
+      // Para quadro-interativo, usar o preview específico
+        if (activityType === 'quadro-interativo') {
+          console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
+          const { QuadroInterativoPreview } = await import('../activities/quadro-interativo');
+          return <QuadroInterativoPreview data={previewData} activityData={activity} />;
+        }
 
       default:
         return (
@@ -494,7 +509,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     {activity?.originalData?.tema && (
                       <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2v5a2 2 0 002 2h6a2 2 0 002-2v-5h2a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-6M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
                         </svg>
                         {activity.originalData.tema}
                       </Badge>
