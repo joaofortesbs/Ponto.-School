@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 
 interface ContentData {
@@ -72,7 +72,7 @@ export function CarrosselQuadrosSalaAula({ contentData }: CarrosselQuadrosSalaAu
   };
 
   return (
-    <div 
+    <div
       className="relative w-full h-[500px] flex items-center justify-center"
       style={{ perspective: '1000px' }}
     >
