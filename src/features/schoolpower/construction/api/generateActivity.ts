@@ -272,10 +272,15 @@ Responda APENAS com o JSON, sem texto adicional.`;
       if (response.success) {
         console.log('✅ Resposta recebida do Gemini para quadro interativo');
 
-        // Processar resposta específica para quadro interativo
+        // Processamento específico para quadro interativo
         let cleanedResponse = response.result.trim();
-        cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        console.log('📥 Resposta bruta da IA:', cleanedResponse);
 
+        // Remover marcadores de código se existirem
+        cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+        cleanedResponse = cleanedResponse.replace(/```\s*/g, '');
+
+        // Encontrar JSON válido na resposta
         const jsonStart = cleanedResponse.indexOf('{');
         const jsonEnd = cleanedResponse.lastIndexOf('}');
 
@@ -283,18 +288,71 @@ Responda APENAS com o JSON, sem texto adicional.`;
           cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
         }
 
-        const parsedResult = JSON.parse(cleanedResponse);
+        console.log('🔄 Resposta limpa:', cleanedResponse);
 
-        // Validação específica para quadro interativo
-        if (!parsedResult.conteudo && !parsedResult.titulo) {
-          throw new Error('Conteúdo do quadro interativo não encontrado');
+        let parsedResult;
+        try {
+          parsedResult = JSON.parse(cleanedResponse);
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear JSON:', parseError);
+
+          // Fallback: criar estrutura básica com o texto da resposta
+          parsedResult = {
+            titulo: contextData.theme || 'Quadro Interativo',
+            subtitulo: contextData.objectives || 'Conteúdo educacional',
+            content: cleanedResponse,
+            text: cleanedResponse,
+            conteudo: {
+              introducao: cleanedResponse.substring(0, 200) + '...',
+              conceitosPrincipais: [
+                {
+                  titulo: contextData.theme || 'Conceito Principal',
+                  explicacao: 'Conteúdo será desenvolvido com base na resposta da IA.',
+                  exemplo: 'Exemplos práticos serão apresentados.'
+                }
+              ],
+              exemplosPraticos: [
+                'Exemplo baseado no conteúdo gerado',
+                'Aplicação prática dos conceitos'
+              ],
+              atividadesPraticas: [
+                {
+                  titulo: 'Atividade Interativa',
+                  instrucoes: 'Instruções baseadas no conteúdo gerado',
+                  objetivo: contextData.objectives || 'Fixar aprendizado'
+                }
+              ],
+              resumo: 'Resumo dos conceitos principais abordados.',
+              proximosPassos: 'Continue explorando o tema.'
+            },
+            recursos: ['Quadro interativo', 'Conteúdo da IA'],
+            objetivosAprendizagem: [contextData.objectives || 'Compreender o tema']
+          };
         }
 
+        // Validação e enriquecimento dos dados
+        if (!parsedResult.titulo) {
+          parsedResult.titulo = contextData.theme || 'Quadro Interativo';
+        }
+
+        if (!parsedResult.subtitulo) {
+          parsedResult.subtitulo = contextData.objectives || 'Conteúdo educacional';
+        }
+
+        // Adicionar metadados
         parsedResult.isGeneratedByAI = true;
         parsedResult.generatedAt = new Date().toISOString();
         parsedResult.type = 'quadro-interativo';
+        parsedResult.customFields = {
+          'Disciplina / Área de conhecimento': contextData.subject || 'Multidisciplinar',
+          'Ano / Série': contextData.schoolYear || 'Ensino Fundamental',
+          'Tema ou Assunto da aula': contextData.theme || 'Tema',
+          'Objetivo de aprendizagem da aula': contextData.objectives || 'Objetivo',
+          'Nível de Dificuldade': contextData.difficultyLevel || 'Médio',
+          'Atividade mostrada': contextData.quadroInterativoCampoEspecifico || 'Atividade'
+        };
 
-        console.log('✅ Quadro Interativo gerado com sucesso:', parsedResult);
+        console.log('✅ Quadro Interativo processado com sucesso:', parsedResult);
 
         return parsedResult;
       } else {

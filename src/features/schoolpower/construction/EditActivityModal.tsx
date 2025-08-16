@@ -325,33 +325,58 @@ const processExerciseListData = (formData: ActivityFormData, generatedContent: a
   const processQuadroInterativoData = (formData: any, content: any) => {
     console.log('🖼️ Processando dados do Quadro Interativo para preview:', { formData, content });
 
-    // Se há conteúdo gerado pela IA, usar ele
-    if (content && content.titulo) {
+    // Mapear corretamente os campos do formulário
+    const mappedFields = {
+      'Disciplina / Área de conhecimento': formData.subject || formData['Disciplina / Área de conhecimento'] || 'Multidisciplinar',
+      'Ano / Série': formData.schoolYear || formData['Ano / Série'] || 'Ensino Fundamental',
+      'Tema ou Assunto da aula': formData.theme || formData['Tema ou Assunto da aula'] || 'Tema',
+      'Objetivo de aprendizagem da aula': formData.objectives || formData['Objetivo de aprendizagem da aula'] || 'Objetivo',
+      'Nível de Dificuldade': formData.difficultyLevel || formData['Nível de Dificuldade'] || 'Médio',
+      'Atividade mostrada': formData.quadroInterativoCampoEspecifico || formData['Atividade mostrada'] || 'Atividade'
+    };
+
+    console.log('🔄 Campos mapeados:', mappedFields);
+
+    // Se há conteúdo gerado pela IA, processar corretamente
+    if (content) {
+      console.log('✅ Conteúdo da IA encontrado:', content);
+      
+      // Se o conteúdo é uma string, tentar parsear
+      let parsedContent = content;
+      if (typeof content === 'string') {
+        try {
+          parsedContent = JSON.parse(content);
+        } catch (e) {
+          console.log('⚠️ Conteúdo não é JSON válido, tratando como texto');
+          parsedContent = {
+            titulo: mappedFields['Tema ou Assunto da aula'],
+            text: content,
+            content: content
+          };
+        }
+      }
+
       return {
-        ...content,
+        ...parsedContent,
+        titulo: parsedContent.titulo || mappedFields['Tema ou Assunto da aula'],
+        subtitulo: parsedContent.subtitulo || mappedFields['Objetivo de aprendizagem da aula'],
         type: 'quadro-interativo',
-        customFields: {
-          'Disciplina / Área de conhecimento': formData['Disciplina / Área de conhecimento'] || 'Multidisciplinar',
-          'Ano / Série': formData['Ano / Série'] || 'Ensino Fundamental',
-          'Tema ou Assunto da aula': formData['Tema ou Assunto da aula'] || 'Tema',
-          'Objetivo de aprendizagem da aula': formData['Objetivo de aprendizagem da aula'] || 'Objetivo',
-          'Nível de Dificuldade': formData['Nível de Dificuldade'] || 'Médio',
-          'Atividade mostrada': formData['Atividade mostrada'] || 'Atividade'
-        },
-        isGeneratedByAI: true
+        customFields: mappedFields,
+        isGeneratedByAI: true,
+        generatedAt: new Date().toISOString()
       };
     }
 
     // Se não há conteúdo, criar estrutura básica com os dados do formulário
-    return {
-      titulo: formData['Tema ou Assunto da aula'] || 'Quadro Interativo',
-      subtitulo: formData['Objetivo de aprendizagem da aula'] || 'Objetivo de aprendizagem',
+    const basicStructure = {
+      titulo: mappedFields['Tema ou Assunto da aula'] || 'Quadro Interativo',
+      subtitulo: mappedFields['Objetivo de aprendizagem da aula'] || 'Objetivo de aprendizagem',
       conteudo: {
-        introducao: `Bem-vindos ao estudo sobre ${formData['Tema ou Assunto da aula'] || 'o tema'}. Este quadro interativo foi desenvolvido para facilitar a compreensão dos conceitos principais.`,
+        introducao: `Bem-vindos ao estudo sobre ${mappedFields['Tema ou Assunto da aula'] || 'o tema'}. Este quadro interativo foi desenvolvido para facilitar a compreensão dos conceitos principais.`,
         conceitosPrincipais: [
           {
-            titulo: formData['Tema ou Assunto da aula'] || 'Conceito Principal',
-            explicacao: `Exploraremos os fundamentos de ${formData['Tema ou Assunto da aula'] || 'este tema'} de forma didática e interativa.`,
+            titulo: mappedFields['Tema ou Assunto da aula'] || 'Conceito Principal',
+            explicacao: `Exploraremos os fundamentos de ${mappedFields['Tema ou Assunto da aula'] || 'este tema'} de forma didática e interativa.`,
             exemplo: 'Exemplo prático será apresentado durante a atividade.'
           }
         ],
@@ -363,29 +388,25 @@ const processExerciseListData = (formData: ActivityFormData, generatedContent: a
           {
             titulo: 'Atividade Prática',
             instrucoes: 'Siga as instruções apresentadas no quadro para realizar a atividade.',
-            objetivo: formData['Objetivo de aprendizagem da aula'] || 'Fixar o aprendizado'
+            objetivo: mappedFields['Objetivo de aprendizagem da aula'] || 'Fixar o aprendizado'
           }
         ],
-        resumo: `Resumo dos principais pontos abordados sobre ${formData['Tema ou Assunto da aula'] || 'o tema'}.`,
+        resumo: `Resumo dos principais pontos abordados sobre ${mappedFields['Tema ou Assunto da aula'] || 'o tema'}.`,
         proximosPassos: 'Continue explorando o tema com as próximas atividades.'
       },
       recursos: ['Quadro interativo', 'Material de apoio', 'Exemplos práticos'],
       objetivosAprendizagem: [
-        formData['Objetivo de aprendizagem da aula'] || 'Compreender o tema',
+        mappedFields['Objetivo de aprendizagem da aula'] || 'Compreender o tema',
         'Aplicar os conceitos na prática',
         'Desenvolver habilidades específicas'
       ],
-      customFields: {
-        'Disciplina / Área de conhecimento': formData['Disciplina / Área de conhecimento'] || 'Multidisciplinar',
-        'Ano / Série': formData['Ano / Série'] || 'Ensino Fundamental',
-        'Tema ou Assunto da aula': formData['Tema ou Assunto da aula'] || 'Tema',
-        'Objetivo de aprendizagem da aula': formData['Objetivo de aprendizagem da aula'] || 'Objetivo',
-        'Nível de Dificuldade': formData['Nível de Dificuldade'] || 'Médio',
-        'Atividade mostrada': formData['Atividade mostrada'] || 'Atividade'
-      },
+      customFields: mappedFields,
       type: 'quadro-interativo',
       isGeneratedByAI: !!content
     };
+
+    console.log('🔧 Estrutura básica criada:', basicStructure);
+    return basicStructure;
   };
 
 
@@ -2039,10 +2060,15 @@ const EditActivityModal = ({
                         data={processSequenciaDidaticaData(formData, generatedContent)}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <ActivityPreview
-                        content={processQuadroInterativoData(formData, generatedContent)}
-                        activityData={activity}
-                      />
+                      (() => {
+                        const { QuadroInterativoPreview } = require('@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview');
+                        return (
+                          <QuadroInterativoPreview
+                            data={processQuadroInterativoData(formData, generatedContent)}
+                            activityData={activity}
+                          />
+                        );
+                      })()
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
