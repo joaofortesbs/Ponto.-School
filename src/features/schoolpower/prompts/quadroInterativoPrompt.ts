@@ -1,39 +1,46 @@
-export const quadroInterativoPrompt = `
-Crie um conteúdo educacional interativo para quadro digital com as seguintes informações:
 
-**Dados da Atividade:**
+export const quadroInterativoPrompt = `
+Você é um especialista em educação e criação de quadros interativos educacionais.
+
+Crie um quadro interativo completo e envolvente baseado nas seguintes informações:
+
+**Dados fornecidos:**
 - Disciplina: {disciplina}
-- Ano/Série: {anoSerie}
+- Ano/Série: {anoSerie}  
 - Tema: {tema}
 - Objetivo: {objetivo}
 - Nível de Dificuldade: {nivelDificuldade}
-- Atividade Específica: {atividadeMostrada}
+- Atividade Mostrada: {atividadeMostrada}
 
-**Instruções:**
-1. Crie um conteúdo educacional estruturado e interativo
-2. O conteúdo deve ser adequado para apresentação em quadro digital
-3. Inclua explicações claras e didáticas
-4. Adapte a linguagem para o nível de escolaridade informado
-5. Torne o conteúdo envolvente e participativo
+**Instruções para criação:**
+1. Desenvolva um conteúdo interativo e visual apropriado para o ano/série
+2. Use linguagem clara e adequada à faixa etária
+3. Inclua elementos práticos e exemplos contextualizados
+4. Organize o conteúdo de forma didática e atrativa
+5. Adapte a complexidade ao nível de dificuldade especificado
+6. Integre a atividade mostrada de forma natural no conteúdo
 
-**Estrutura do Conteúdo (OBRIGATÓRIA):**
-- **Introdução**: Apresentação do tema de forma cativante (obrigatório)
-- **Conceitos Principais**: Explicação dos conceitos fundamentais (obrigatório)
-- **Exemplos Práticos**: Exemplos reais e contextualizados (obrigatório)
+**Estrutura do conteúdo:**
+- Introdução envolvente ao tema
+- Conceitos principais com explicações claras
+- Exemplos práticos e aplicações reais
+- Atividades interativas para participação dos alunos
+- Resumo dos pontos-chave
+- Próximos passos no aprendizado
 
-**IMPORTANTE:** 
-- NÃO inclua seções de "Atividades Práticas" ou "Próximos Passos"
-- Foque apenas nos três tópicos principais: Introdução, Conceitos Principais e Exemplos Práticos
-- O conteúdo deve ser completo e autocontido dentro dessas três seções
-
-**Formato de Resposta:**
-Retorne um JSON com a seguinte estrutura:
+**FORMATO DE RESPOSTA OBRIGATÓRIO:**
+Retorne APENAS um JSON válido no seguinte formato:
 {
-  "titulo": "Título da atividade",
-  "conteudo": "Conteúdo completo formatado em markdown com apenas os 3 tópicos especificados"
+  "titulo": "Título educativo e atrativo para o quadro interativo",
+  "conteudo": "Conteúdo educacional completo, estruturado em parágrafos claros e didáticos, adequado para apresentação em quadro interativo"
 }
 
-O conteúdo deve ser prático, educativo e adequado para uso em sala de aula.`;
+IMPORTANTE: 
+- Retorne APENAS o JSON, sem texto adicional
+- O conteúdo deve ser em texto corrido, bem estruturado
+- Use linguagem apropriada para {anoSerie}
+- Integre elementos da atividade "{atividadeMostrada}"
+`;
 
 // Função para processar o template do prompt
 export function buildQuadroInterativoPrompt(data: {
