@@ -423,8 +423,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                             localStorage.getItem('constructed_quadro-interativo_content') ||
                             localStorage.getItem('quadro_interativo_data_generated') ||
                             localStorage.getItem(`schoolpower_quadro-interativo_content`) ||
-                            localStorage.getItem(`activity_${activity.id}_content`);y.id}`) ||
-                            localStorage.getItem(`schoolpower_quadro-interativo_content`) ||
                             localStorage.getItem(`activity_${activity.id}_content`);
 
         let quadroData = previewData;
