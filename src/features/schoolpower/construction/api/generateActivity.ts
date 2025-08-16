@@ -158,27 +158,75 @@ export const generateActivityContent = async (
 
     // Para Quadro Interativo, usar gerador específico
     if (activityType === 'quadro-interativo') {
-      const { generateQuadroInterativoContent } = await import('../../activities/quadro-interativo/quadroInterativoProcessor');
-      
-      console.log('🎯 Gerando conteúdo específico para Quadro Interativo');
-      
-      const quadroContent = await generateQuadroInterativoContent({
-        subject: contextData.subject || 'Matemática',
-        schoolYear: contextData.schoolYear || '6º Ano',
-        theme: contextData.theme || 'Tema da Aula',
-        objectives: contextData.objectives || 'Objetivos de aprendizagem',
-        difficultyLevel: contextData.difficultyLevel || 'Intermediário',
-        quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico || 'Atividade interativa',
-        materials: contextData.materials,
-        instructions: contextData.instructions,
-        evaluation: contextData.evaluation,
-        timeLimit: contextData.timeLimit,
-        context: contextData.context
-      });
-      
-      console.log('✅ Quadro Interativo gerado com sucesso:', quadroContent);
-      return quadroContent;
+      try {
+        const { generateQuadroInterativoContent } = await import('../../activities/quadro-interativo/quadroInterativoProcessor');
+
+        console.log('🎯 Gerando conteúdo específico para Quadro Interativo');
+        console.log('📋 Dados de contexto recebidos:', contextData);
+
+        // Validar dados obrigatórios
+        const requiredFields = ['subject', 'schoolYear', 'theme', 'objectives', 'difficultyLevel', 'quadroInterativoCampoEspecifico'];
+        const missingFields = requiredFields.filter(field => !contextData[field] || contextData[field].trim() === '');
+
+        if (missingFields.length > 0) {
+          console.warn('⚠️ Campos obrigatórios ausentes para Quadro Interativo:', missingFields);
+          // Preencher com valores padrão
+          contextData.subject = contextData.subject || 'Matemática';
+          contextData.schoolYear = contextData.schoolYear || '6º Ano';
+          contextData.theme = contextData.theme || 'Tema da Aula';
+          contextData.objectives = contextData.objectives || 'Objetivos de aprendizagem';
+          contextData.difficultyLevel = contextData.difficultyLevel || 'Intermediário';
+          contextData.quadroInterativoCampoEspecifico = contextData.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro';
+        }
+
+        const quadroContent = await generateQuadroInterativoContent({
+          subject: contextData.subject,
+          schoolYear: contextData.schoolYear,
+          theme: contextData.theme,
+          objectives: contextData.objectives,
+          difficultyLevel: contextData.difficultyLevel,
+          quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico,
+          materials: contextData.materials || '',
+          instructions: contextData.instructions || '',
+          evaluation: contextData.evaluation || '',
+          timeLimit: contextData.timeLimit || '',
+          context: contextData.context || ''
+        });
+
+        console.log('✅ Quadro Interativo gerado com sucesso:', quadroContent);
+        return {
+          ...quadroContent,
+          isGeneratedByAI: true,
+          generatedAt: new Date().toISOString(),
+          activityType: 'quadro-interativo'
+        };
+      } catch (error) {
+        console.error('❌ Erro na geração do Quadro Interativo:', error);
+        // Retornar estrutura básica em caso de erro
+        return {
+          title: contextData.title || 'Quadro Interativo',
+          description: contextData.description || 'Atividade de quadro interativo gerada automaticamente',
+          personalizedTitle: `${contextData.theme || 'Tema'} - Quadro Interativo`,
+          personalizedDescription: `Atividade interativa sobre ${contextData.theme || 'o tema proposto'} para ${contextData.schoolYear || '6º Ano'}`,
+          subject: contextData.subject || 'Matemática',
+          schoolYear: contextData.schoolYear || '6º Ano',
+          theme: contextData.theme || 'Tema da Aula',
+          objectives: contextData.objectives || 'Objetivos de aprendizagem',
+          difficultyLevel: contextData.difficultyLevel || 'Intermediário',
+          quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro',
+          materials: contextData.materials || '',
+          instructions: contextData.instructions || '',
+          evaluation: contextData.evaluation || '',
+          timeLimit: contextData.timeLimit || '',
+          context: contextData.context || '',
+          isGeneratedByAI: false,
+          generatedAt: new Date().toISOString(),
+          activityType: 'quadro-interativo',
+          error: error.message
+        };
+      }
     }
+
 
     // Para lista de exercícios, usar prompt específico
     if (activityType === 'lista-exercicios') {
@@ -398,3 +446,59 @@ ${activityData.descricao || activityData.description || 'Sem descrição'}
     return activityData;
   }
 }
+```json\s*/g, '').replace(/```\s*$/g, '');
+
+        const jsonStart = cleanedResponse.indexOf('{');
+        const jsonEnd = cleanedResponse.lastIndexOf('}');
+
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+        }
+
+        const parsedResult = JSON.parse(cleanedResponse);
+
+        // Validação para lista de exercícios
+        if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes)) {
+          throw new Error('Campo questoes não encontrado ou não é um array');
+        }
+
+        if (parsedResult.questoes.length === 0) {
+          throw new Error('Array de questões está vazio');
+        }
+
+        parsedResult.isGeneratedByAI = true;
+        parsedResult.generatedAt = new Date().toISOString();
+
+        return parsedResult;
+      } else {
+        throw new Error(response.error || 'Falha na geração de conteúdo');
+      }
+    }
+
+    // Prompt genérico para outros tipos
+    const prompt = `
+Crie o conteúdo educacional para uma atividade do tipo "${activityType}" com base no seguinte contexto:
+
+CONTEXTO:
+${JSON.stringify(contextData, null, 2)}
+
+FORMATO: Responda em JSON estruturado com todos os campos relevantes para o tipo de atividade solicitado.
+REQUISITOS: Conteúdo educativo, bem estruturado e adequado ao contexto fornecido.
+
+Responda APENAS com o JSON, sem texto adicional.`;
+
+    console.log('📤 Enviando prompt para Gemini...');
+
+    const response = await geminiClient.generate({
+      prompt,
+      temperature: 0.7,
+      maxTokens: 4000,
+      topP: 0.9,
+      topK: 40
+    });
+
+    if (response.success) {
+      console.log('✅ Resposta recebida do Gemini');
+
+      let cleanedResponse = response.result.trim();
+      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/
