@@ -1,0 +1,276 @@
+[plugin:vite:react-swc] × Return statement is not allowed here
+     ╭─[/home/runner/workspace/src/features/schoolpower/construction/ActivityViewModal.tsx:599:1]
+ 599 │         }
+ 600 │       };
+ 601 │     
+ 602 │ ╭─▶   return (
+ 603 │ │       <AnimatePresence>
+ 604 │ │         <motion.div
+ 605 │ │           initial={{ opacity: 0 }}
+ 606 │ │           animate={{ opacity: 1 }}
+ 607 │ │           exit={{ opacity: 0 }}
+ 608 │ │           className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4"
+ 609 │ │           onClick={onClose}
+ 610 │ │         >
+ 611 │ │           <motion.div
+ 612 │ │             className={`${activityType === 'plano-aula' ? 'max-w-7xl' : 'max-w-6xl'} w-full max-h-[90vh] ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-xl overflow-hidden flex flex-col`}
+ 613 │ │             initial={{ scale: 0.9, opacity: 0 }}
+ 614 │ │             animate={{ scale: 1, opacity: 1 }}
+ 615 │ │             exit={{ scale: 0.9, opacity: 0 }}
+ 616 │ │             onClick={(e) => e.stopPropagation()}
+ 617 │ │           >
+ 618 │ │             {/* Apply orange background to header when it's a Plano de Aula */}
+ 619 │ │             <style jsx>{`
+ 620 │ │               .modal-header {
+ 621 │ │                 background: ${activityType === 'plano-aula'
+ 622 │ │                   ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
+ 623 │ │                   : 'transparent'
+ 624 │ │                 };
+ 625 │ │               }
+ 626 │ │             `}</style>
+ 627 │ │   
+ 628 │ │             {/* Header with Close button */}
+ 629 │ │             {isExerciseList && (
+ 630 │ │               <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
+ 631 │ │                 <div className="flex items-center justify-between">
+ 632 │ │                   <div className="flex items-center gap-3 flex-1">
+ 633 │ │                     <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+ 634 │ │                       {isInQuestionView && selectedQuestionIndex !== null ? (
+ 635 │ │                         <span className="text-white font-bold text-sm">
+ 636 │ │                           {selectedQuestionIndex + 1}
+ 637 │ │                         </span>
+ 638 │ │                       ) : (
+ 639 │ │                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 640 │ │                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+ 641 │ │                         </svg>
+ 642 │ │                       )}
+ 643 │ │                     </div>
+ 644 │ │                     <div className="flex-1">
+ 645 │ │                       {isInQuestionView && selectedQuestionIndex !== null ? (
+ 646 │ │                         <>
+ 647 │ │                           <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
+ 648 │ │                             Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
+ 649 │ │                           </h2>
+ 650 │ │                           <p className="text-orange-700 dark:text-orange-300 text-sm">
+ 651 │ │                             {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
+ 652 │ │                           </p>
+ 653 │ │                         </>
+ 654 │ │                       ) : (
+ 655 │ │                         <>
+ 656 │ │                           <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
+ 657 │ │                             {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
+ 658 │ │                           </h2>
+ 659 │ │                           <p className="text-orange-700 dark:text-orange-300 text-sm">
+ 660 │ │                             {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
+ 661 │ │                           </p>
+ 662 │ │                         </>
+ 663 │ │                       )}
+ 664 │ │                     </div>
+ 665 │ │   
+ 666 │ │                     {/* Tags and Info */}
+ 667 │ │                     <div className="flex flex-wrap gap-2">
+ 668 │ │                       {activity?.originalData?.disciplina && (
+ 669 │ │                         <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+ 670 │ │                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 671 │ │                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+ 672 │ │                           </svg>
+ 673 │ │                           {activity.originalData.disciplina}
+ 674 │ │                         </Badge>
+ 675 │ │                       )}
+ 676 │ │                       {activity?.originalData?.tema && (
+ 677 │ │                         <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+ 678 │ │                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 679 │ │                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2v5a2 2 0 002 2h6a2 2 0 002-2v-5h2a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-6M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
+ 680 │ │                           </svg>
+ 681 │ │                           {activity.originalData.tema}
+ 682 │ │                         </Badge>
+ 683 │ │                       )}
+ 684 │ │                       {questionsForSidebar.length > 0 && (
+ 685 │ │                         <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
+ 686 │ │                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 687 │ │                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+ 688 │ │                           </svg>
+ 689 │ │                           {questionsForSidebar.length} questões
+ 690 │ │                         </Badge>
+ 691 │ │                       )}
+ 692 │ │   
+ 693 │ │                     </div>
+ 694 │ │                   </div>
+ 695 │ │   
+ 696 │ │                   {/* Close button - positioned in the extreme right */}
+ 697 │ │                   <button
+ 698 │ │                     onClick={onClose}
+ 699 │ │                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+ 700 │ │                   >
+ 701 │ │                     <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+ 702 │ │                   </button>
+ 703 │ │                 </div>
+ 704 │ │               </div>
+ 705 │ │             )}
+ 706 │ │   
+ 707 │ │             {/* Non-Exercise List Header */}
+ 708 │ │             {!isExerciseList && (
+ 709 │ │               <div className="modal-header flex items-center justify-between p-6 border-b">
+ 710 │ │                 <div className="flex items-center gap-3 flex-1">
+ 711 │ │                   <div className={`p-2 rounded-lg ${
+ 712 │ │                     activityType === 'plano-aula'
+ 713 │ │                       ? 'bg-orange-100'
+ 714 │ │                       : isLightMode ? 'bg-blue-100' : 'bg-blue-900/30'
+ 715 │ │                   }`}>
+ 716 │ │                     <BookOpen className={`h-6 w-6 ${
+ 717 │ │                       activityType === 'plano-aula'
+ 718 │ │                         ? 'text-orange-600'
+ 719 │ │                         : isLightMode ? 'text-blue-600' : 'text-blue-400'
+ 720 │ │                     }`} />
+ 721 │ │                   </div>
+ 722 │ │                   <div className="flex-1">
+ 723 │ │                     <h2 className={`text-xl font-semibold ${
+ 724 │ │                       activityType === 'plano-aula' ? 'text-white' : ''
+ 725 │ │                     }`}>
+ 726 │ │                       {getActivityTitle()}
+ 727 │ │                     </h2>
+ 728 │ │                     {activityType === 'plano-aula' ? (
+ 729 │ │                       <div className="flex items-center gap-4 mt-1">
+ 730 │ │                         {(() => {
+ 731 │ │                           const headerInfo = getPlanoAulaHeaderInfo();
+ 732 │ │                           return headerInfo ? (
+ 733 │ │                             <>
+ 734 │ │                               <div className="flex items-center gap-1 text-white/90 text-sm">
+ 735 │ │                                 <BookOpen className="h-4 w-4" />
+ 736 │ │                                 <span>{headerInfo.disciplina} (Integrado com Português)</span>
+ 737 │ │                               </div>
+ 738 │ │                               <div className="flex items-center gap-1 text-white/90 text-sm">
+ 739 │ │                                 <GraduationCap className="h-4 w-4" />
+ 740 │ │                                 <span>{headerInfo.anoEscolar}</span>
+ 741 │ │                               </div>
+ 742 │ │                               <div className="flex items-center gap-1 text-white/90 text-sm">
+ 743 │ │                                 <Clock className="h-4 w-4" />
+ 744 │ │                                 <span>{headerInfo.duracao}</span>
+ 745 │ │                               </div>
+ 746 │ │                             </>
+ 747 │ │                           ) : null;
+ 748 │ │                         })()}
+ 749 │ │                       </div>
+ 750 │ │                     ) : (
+ 751 │ │                       <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+ 752 │ │                         {activity.description || activity.personalizedDescription || 'Visualizar atividade'}
+ 753 │ │                       </p>
+ 754 │ │                     )}
+ 755 │ │                   </div>
+ 756 │ │                 </div>
+ 757 │ │                 <div className="flex items-center gap-2">
+ 758 │ │                   {activityType === 'plano-aula' && (
+ 759 │ │                     <>
+ 760 │ │                       <Button
+ 761 │ │                         variant="outline"
+ 762 │ │                         size="sm"
+ 763 │ │                         className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+ 764 │ │                       >
+ 765 │ │                         <FileText className="h-4 w-4 mr-2" />
+ 766 │ │                         Exportar PDF
+ 767 │ │                       </Button>
+ 768 │ │                       <Button
+ 769 │ │                         variant="outline"
+ 770 │ │                         size="sm"
+ 771 │ │                         className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+ 772 │ │                       >
+ 773 │ │                         <BookOpen className="h-4 w-4 mr-2" />
+ 774 │ │                         Simular Aula
+ 775 │ │                       </Button>
+ 776 │ │                     </>
+ 777 │ │                   )}
+ 778 │ │                   <Button
+ 779 │ │                     variant="outline"
+ 780 │ │                     size="sm"
+ 781 │ │                     onClick={onClose}
+ 782 │ │                     className={`${
+ 783 │ │                       activityType === 'plano-aula'
+ 784 │ │                         ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+ 785 │ │                         : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
+ 786 │ │                     }`}
+ 787 │ │                   >
+ 788 │ │                     <X className="h-4 w-4" />
+ 789 │ │                   </Button>
+ 790 │ │                 </div>
+ 791 │ │               </div>
+ 792 │ │             )}
+ 793 │ │   
+ 794 │ │   
+ 795 │ │             {/* Content Layout */}
+ 796 │ │             <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
+ 797 │ │               {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
+ 798 │ │               {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
+ 799 │ │                 <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
+ 800 │ │                   <div className="p-4 space-y-4">
+ 801 │ │                     {/* Summary Card */}
+ 802 │ │                     <Card className="bg-white dark:bg-gray-700 shadow-sm">
+ 803 │ │                       <CardContent className="p-3">
+ 804 │ │                         <div className="text-sm">
+ 805 │ │                           <div className="flex justify-between items-center">
+ 806 │ │                             <span className="text-gray-600 dark:text-gray-300">Questões:</span>
+ 807 │ │                             <span className="font-semibold dark:text-white">{questionsForSidebar.length}</span>
+ 808 │ │                           </div>
+ 809 │ │                           <div className="flex justify-between items-center mt-1">
+ 810 │ │                             <span className="text-gray-600 dark:text-gray-300">Total de pontos:</span>
+ 811 │ │                             <span className="font-semibold dark:text-white">{questionsForSidebar.length}</span>
+ 812 │ │                           </div>
+ 813 │ │                         </div>
+ 814 │ │                       </CardContent>
+ 815 │ │                     </Card>
+ 816 │ │   
+ 817 │ │                     {/* Questions List */}
+ 818 │ │                     <div className="space-y-2">
+ 819 │ │                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Navegação</h4>
+ 820 │ │                       {questionsForSidebar.map((question, index) => (
+ 821 │ │                         <button
+ 822 │ │                           key={question.id}
+ 823 │ │                           onClick={() => scrollToQuestion(question.id, index)}
+ 824 │ │                           className={`w-full text-left p-2 text-xs rounded transition-colors ${
+ 825 │ │                             selectedQuestionId === question.id
+ 826 │ │                               ? 'bg-orange-50 dark:bg-orange-900 border border-orange-200 dark:border-orange-700 font-medium text-orange-800 dark:text-orange-200'
+ 827 │ │                               : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+ 828 │ │                           }`}
+ 829 │ │                         >
+ 830 │ │                           <div className="font-medium dark:text-white">Questão {index + 1}</div>
+ 831 │ │                           <div className="text-gray-500 dark:text-gray-400 truncate mt-1">
+ 832 │ │                             {question.enunciado?.substring(0, 40)}...
+ 833 │ │                           </div>
+ 834 │ │                         </button>
+ 835 │ │                       ))}
+ 836 │ │                     </div>
+ 837 │ │                   </div>
+ 838 │ │                 </div>
+ 839 │ │               )}
+ 840 │ │   
+ 841 │ │               {/* Main Content Area - Full Width */}
+ 842 │ │               <div className="flex-1 overflow-hidden">
+ 843 │ │                 <div className="p-6 overflow-y-auto max-h-[calc(95vh-120px)] bg-white dark:bg-gray-900" ref={contentRef}>
+ 844 │ │                   {renderActivityPreview()}
+ 845 │ │                 </div>
+ 846 │ │               </div>
+ 847 │ │             </div>
+ 848 │ │           </motion.div>
+ 849 │ │         </motion.div>
+ 850 │ │       </AnimatePresence>
+ 851 │ ╰─▶   );
+ 852 │     }
+ 853 │     
+ 854 │     // Default export for compatibility
+     ╰────
+
+  × Expression expected
+     ╭─[/home/runner/workspace/src/features/schoolpower/construction/ActivityViewModal.tsx:849:1]
+ 849 │       </motion.div>
+ 850 │     </AnimatePresence>
+ 851 │   );
+ 852 │ }
+     · ─
+ 853 │ 
+ 854 │ // Default export for compatibility
+ 855 │ export default ActivityViewModal;
+     ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/features/schoolpower/construction/ActivityViewModal.tsx:599:1
