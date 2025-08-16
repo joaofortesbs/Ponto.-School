@@ -1,4 +1,3 @@
-
 import { GeminiClient } from '@/utils/api/geminiClient';
 import { quadroInterativoPrompt } from '../../prompts/quadroInterativoPrompt';
 
@@ -38,7 +37,7 @@ function parseGeminiResponse(responseText: string): any {
 
     // Tentar parsear JSON
     const parsedContent = JSON.parse(cleanedText);
-    
+
     console.log('✅ Conteúdo parseado com sucesso:', parsedContent);
     return parsedContent;
 
@@ -74,24 +73,28 @@ export async function generateQuadroInterativoContent(
     console.log('📤 Resposta da IA recebida:', response.result);
 
     const parsedContent = parseGeminiResponse(response.result);
-    
+
     if (!parsedContent.titulo) {
       throw new Error('Resposta da IA não contém título válido');
     }
 
-    console.log('✅ Conteúdo processado com sucesso:', parsedContent);
+    console.log('✅ Conteúdo do Quadro Interativo gerado com sucesso:', parsedContent);
 
-    return {
-      success: true,
-      data: {
-        ...parsedContent,
-        conteudo: parsedContent, // Manter estrutura compatível
-        metadados: {
-          isGeneratedByAI: true,
-          generatedAt: new Date().toISOString()
-        }
-      }
-    };
+      const finalData = {
+        success: true,
+        titulo: parsedContent.titulo || '',
+        conteudo: parsedContent.conteudo || '',
+        generatedContent: {
+          titulo: parsedContent.titulo || '',
+          conteudo: parsedContent.conteudo || ''
+        },
+        timestamp: new Date().toISOString(),
+        isGenerated: true
+      };
+
+      console.log('💾 Dados finais formatados:', finalData);
+
+      return finalData;
 
   } catch (error) {
     console.error('❌ Erro na geração do conteúdo:', error);

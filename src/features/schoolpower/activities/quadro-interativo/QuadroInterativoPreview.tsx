@@ -1,7 +1,6 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { BookOpen } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
   data: any;
@@ -9,88 +8,81 @@ interface QuadroInterativoPreviewProps {
 }
 
 export default function QuadroInterativoPreview({ data, activityData }: QuadroInterativoPreviewProps) {
-  console.log('🖼️ QuadroInterativoPreview: Dados recebidos:', data);
-  console.log('🖼️ QuadroInterativoPreview: Activity data:', activityData);
+  console.log('🖼️ QuadroInterativoPreview recebendo dados:', { data, activityData });
 
-  // Extrair conteúdo dos dados - priorizar dados da IA
-  const content = data?.conteudo || data?.content || data;
-  const titulo = content?.titulo || data?.titulo || data?.title || 'Quadro Interativo';
+  // Extrair o conteúdo gerado da IA
+  const generatedContent = data?.generatedContent || activityData?.generatedContent || {};
+  const titulo = generatedContent.titulo || data?.titulo || '';
+  const conteudo = generatedContent.conteudo || data?.conteudo || '';
 
-  // Montar o texto completo com todo o conteúdo gerado pela IA
-  let textoCompleto = '';
+  console.log('🖼️ Conteúdo extraído:', { titulo, conteudo });
 
-  // Adicionar introdução se existir
-  if (content?.introducao) {
-    textoCompleto += content.introducao + '\n\n';
+  // Se não há conteúdo gerado, mostrar mensagem
+  if (!titulo && !conteudo) {
+    return (
+      <div className="p-8 text-center">
+        <div className="text-gray-500">
+          <h3 className="text-lg font-medium mb-2">Quadro Interativo</h3>
+          <p>O conteúdo ainda não foi gerado. Clique em "Gerar Conteúdo com IA" para criar o material.</p>
+        </div>
+      </div>
+    );
   }
-
-  // Adicionar conceitos principais
-  if (content?.conceitosPrincipais) {
-    textoCompleto += 'CONCEITOS PRINCIPAIS:\n' + content.conceitosPrincipais + '\n\n';
-  }
-
-  // Adicionar exemplos práticos
-  if (content?.exemplosPraticos) {
-    textoCompleto += 'EXEMPLOS PRÁTICOS:\n' + content.exemplosPraticos + '\n\n';
-  }
-
-  // Adicionar atividades práticas
-  if (content?.atividadesPraticas) {
-    textoCompleto += 'ATIVIDADES PRÁTICAS:\n' + content.atividadesPraticas + '\n\n';
-  }
-
-  // Adicionar resumo
-  if (content?.resumo) {
-    textoCompleto += 'RESUMO:\n' + content.resumo + '\n\n';
-  }
-
-  // Adicionar próximos passos
-  if (content?.proximosPassos) {
-    textoCompleto += 'PRÓXIMOS PASSOS:\n' + content.proximosPassos;
-  }
-
-  console.log('🖼️ QuadroInterativoPreview: Título extraído:', titulo);
-  console.log('🖼️ QuadroInterativoPreview: Texto completo:', textoCompleto);
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-lg">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="h-6 w-6" />
-          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-            Quadro Interativo
-          </Badge>
-        </div>
-        <h1 className="text-2xl font-bold">{titulo}</h1>
-      </div>
-
-      {/* Card Retangular Simples - ÚNICA SEÇÃO VISÍVEL */}
-      <Card className="border-2 border-purple-200 dark:border-purple-800">
-        <CardHeader className="bg-purple-50 dark:bg-purple-900/20">
-          <CardTitle className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
-            <BookOpen className="h-5 w-5" />
-            {titulo}
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      {/* Card principal com o conteúdo gerado */}
+      <Card className="shadow-lg border-2 border-gray-200">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+          <CardTitle className="text-xl font-bold text-gray-800">
+            {titulo || 'Quadro Interativo'}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          {textoCompleto ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
-                {textoCompleto}
-              </div>
+          <div className="prose max-w-none">
+            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+              {conteudo || 'Conteúdo não disponível'}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">Conteúdo será carregado quando gerado pela IA</p>
-              <p className="text-gray-400 text-sm mt-2">
-                O conteúdo do quadro interativo será exibido aqui quando gerado pela IA.
-              </p>
-            </div>
-          )}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Informações adicionais se disponíveis */}
+      {(data?.customFields || activityData?.customFields) && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle className="text-lg">Informações da Atividade</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(data?.customFields?.['Disciplina / Área de conhecimento'] || activityData?.customFields?.['Disciplina / Área de conhecimento']) && (
+              <div>
+                <span className="font-medium text-gray-600">Disciplina:</span>
+                <span className="ml-2 text-gray-800">
+                  {data?.customFields?.['Disciplina / Área de conhecimento'] || activityData?.customFields?.['Disciplina / Área de conhecimento']}
+                </span>
+              </div>
+            )}
+            
+            {(data?.customFields?.['Ano / Série'] || activityData?.customFields?.['Ano / Série']) && (
+              <div>
+                <span className="font-medium text-gray-600">Ano/Série:</span>
+                <span className="ml-2 text-gray-800">
+                  {data?.customFields?.['Ano / Série'] || activityData?.customFields?.['Ano / Série']}
+                </span>
+              </div>
+            )}
+
+            {(data?.customFields?.['Tema ou Assunto da aula'] || activityData?.customFields?.['Tema ou Assunto da aula']) && (
+              <div>
+                <span className="font-medium text-gray-600">Tema:</span>
+                <span className="ml-2 text-gray-800">
+                  {data?.customFields?.['Tema ou Assunto da aula'] || activityData?.customFields?.['Tema ou Assunto da aula']}
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
