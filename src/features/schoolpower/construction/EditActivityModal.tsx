@@ -20,6 +20,13 @@ import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/Plano
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import { CheckCircle2 } from 'lucide-react';
 
+// Lazy import do QuadroInterativoPreview
+const QuadroInterativoPreviewLazy = React.lazy(() => 
+  import('../activities/quadro-interativo/QuadroInterativoPreview').then(module => ({
+    default: module.QuadroInterativoPreview || module.default
+  }))
+);
+
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
@@ -2060,15 +2067,12 @@ const EditActivityModal = ({
                         data={processSequenciaDidaticaData(formData, generatedContent)}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      (() => {
-                        const { QuadroInterativoPreview } = require('@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview');
-                        return (
-                          <QuadroInterativoPreview
-                            data={processQuadroInterativoData(formData, generatedContent)}
-                            activityData={activity}
-                          />
-                        );
-                      })()
+                      <React.Suspense fallback={<div className="flex items-center justify-center p-8">Carregando preview...</div>}>
+                        <QuadroInterativoPreviewLazy 
+                          data={processQuadroInterativoData(formData, generatedContent)}
+                          activityData={activity}
+                        />
+                      </React.Suspense>
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
