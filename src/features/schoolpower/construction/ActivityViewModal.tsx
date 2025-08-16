@@ -415,20 +415,39 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
 
-      // Para quadro-interativo, usar o preview específico
-        if (activityType === 'quadro-interativo') {
-          console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
-          const QuadroInterativoPreview = React.lazy(() => 
-            import('../activities/quadro-interativo/QuadroInterativoPreview').then(module => ({
-              default: module.QuadroInterativoPreview || module.default
-            }))
-          );
-          return (
-            <React.Suspense fallback={<div className="flex items-center justify-center p-8">Carregando preview...</div>}>
-              <QuadroInterativoPreview data={previewData} activityData={activity} />
-            </React.Suspense>
-          );
+      case 'quadro-interativo':
+        console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
+        
+        // Verificar se existe conteúdo gerado pela IA
+        const quadroContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`) ||
+                            localStorage.getItem(`schoolpower_quadro-interativo_content`) ||
+                            localStorage.getItem(`activity_${activity.id}_content`);
+        
+        let quadroData = previewData;
+        if (quadroContent) {
+          try {
+            const parsedContent = JSON.parse(quadroContent);
+            console.log('✅ Conteúdo do Quadro Interativo encontrado:', parsedContent);
+            quadroData = {
+              ...previewData,
+              ...parsedContent,
+              isGeneratedByAI: true
+            };
+          } catch (error) {
+            console.warn('⚠️ Erro ao parsear conteúdo do Quadro Interativo:', error);
+          }
         }
+
+        const QuadroInterativoPreview = React.lazy(() => 
+          import('../activities/quadro-interativo/QuadroInterativoPreview').then(module => ({
+            default: module.QuadroInterativoPreview || module.default
+          }))
+        );
+        return (
+          <React.Suspense fallback={<div className="flex items-center justify-center p-8">Carregando preview...</div>}>
+            <QuadroInterativoPreview data={quadroData} activityData={activity} />
+          </React.Suspense>
+        );
 
       default:
         return (
