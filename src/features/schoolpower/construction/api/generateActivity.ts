@@ -26,6 +26,8 @@ export const generateActivityAPI = async (payload: ActivityGenerationPayload): P
         activityType = 'video';
       } else if (payload.activityId.includes('sequencia') || payload.title.toLowerCase().includes('sequência')) {
         activityType = 'sequencia-didatica';
+      } else if (payload.activityId.includes('quadro') || payload.title.toLowerCase().includes('quadro')) {
+        activityType = 'quadro-interativo';
       } else {
         activityType = 'lista-exercicios'; // padrão
       }
@@ -204,6 +206,102 @@ export const generateActivityContent = async (
       }
     }
 
+    // Para quadro-interativo, usar prompt específico
+    if (activityType === 'quadro-interativo') {
+      console.log('🎯 Gerando conteúdo para quadro-interativo com dados:', contextData);
+
+      const prompt = `
+Crie um conteúdo educacional completo para um Quadro Interativo baseado nos seguintes dados:
+
+CONTEXTO DA ATIVIDADE:
+${JSON.stringify(contextData, null, 2)}
+
+INSTRUÇÕES:
+- Crie um conteúdo visual e interativo sobre o tema especificado
+- O conteúdo deve ser adequado ao ano/série mencionado
+- Inclua explicações claras, exemplos práticos e elementos visuais
+- Organize o conteúdo de forma didática e envolvente
+- Inclua seções como: conceitos principais, exemplos, exercícios práticos
+
+FORMATO DE RESPOSTA (JSON):
+{
+  "titulo": "Título principal do quadro",
+  "subtitulo": "Subtítulo explicativo",
+  "conteudo": {
+    "introducao": "Introdução ao tema com contextualização",
+    "conceitosPrincipais": [
+      {
+        "titulo": "Nome do conceito",
+        "explicacao": "Explicação detalhada",
+        "exemplo": "Exemplo prático"
+      }
+    ],
+    "exemplosPraticos": [
+      "Lista de exemplos aplicados"
+    ],
+    "atividadesPraticas": [
+      {
+        "titulo": "Nome da atividade",
+        "instrucoes": "Como realizar",
+        "objetivo": "O que se espera alcançar"
+      }
+    ],
+    "resumo": "Resumo dos pontos principais",
+    "proximosPassos": "Sugestões para aprofundamento"
+  },
+  "recursos": [
+    "Lista de recursos visuais ou materiais necessários"
+  ],
+  "objetivosAprendizagem": [
+    "Lista dos objetivos de aprendizagem"
+  ]
+}
+
+Responda APENAS com o JSON, sem texto adicional.`;
+
+      console.log('📤 Enviando prompt para Gemini...');
+
+      const response = await geminiClient.generate({
+        prompt,
+        temperature: 0.7,
+        maxTokens: 4000,
+        topP: 0.9,
+        topK: 40
+      });
+
+      if (response.success) {
+        console.log('✅ Resposta recebida do Gemini para quadro interativo');
+
+        // Processar resposta específica para quadro interativo
+        let cleanedResponse = response.result.trim();
+        cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
+
+        const jsonStart = cleanedResponse.indexOf('{');
+        const jsonEnd = cleanedResponse.lastIndexOf('}');
+
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+        }
+
+        const parsedResult = JSON.parse(cleanedResponse);
+
+        // Validação específica para quadro interativo
+        if (!parsedResult.conteudo && !parsedResult.titulo) {
+          throw new Error('Conteúdo do quadro interativo não encontrado');
+        }
+
+        parsedResult.isGeneratedByAI = true;
+        parsedResult.generatedAt = new Date().toISOString();
+        parsedResult.type = 'quadro-interativo';
+
+        console.log('✅ Quadro Interativo gerado com sucesso:', parsedResult);
+
+        return parsedResult;
+      } else {
+        throw new Error(response.error || 'Falha na geração de conteúdo para quadro interativo');
+      }
+    }
+
     // Prompt genérico para outros tipos
     const prompt = `
 Crie o conteúdo educacional para uma atividade do tipo "${activityType}" com base no seguinte contexto:
@@ -307,6 +405,10 @@ export async function generateActivity(formData: any): Promise<{ success: boolea
 
       case 'plano-aula':
         generatedContent = await generateActivityContent('plano-aula', formData);
+        break;
+
+      case 'quadro-interativo':
+        generatedContent = await generateActivityContent('quadro-interativo', formData);
         break;
 
       default:
