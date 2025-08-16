@@ -397,6 +397,97 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
 
+      // For Quadro Interativo, load specific AI data and return ONLY the content, no cards
+      if (activityType === 'quadro-interativo') {
+        console.log('🖼️ ActivityViewModal: Processing Quadro Interativo');
+
+        // Check multiple data sources in order of priority
+        const quadroKeys = [
+          `constructed_quadro-interativo_${activity.id}`,
+          `activity_content_${activity.id}`,
+          `schoolpower_quadro-interativo_content`
+        ];
+
+        let quadroContent = null;
+        for (const key of quadroKeys) {
+          const content = localStorage.getItem(key);
+          if (content) {
+            try {
+              const parsed = JSON.parse(content);
+              if (parsed && (parsed.titulo || parsed.conteudo || parsed.data || parsed.introducao)) {
+                quadroContent = parsed.data || parsed;
+                console.log(`✅ Quadro Interativo data found in ${key}:`, parsed);
+                break;
+              }
+            } catch (error) {
+              console.warn(`⚠️ Error parsing data from ${key}:`, error);
+            }
+          }
+        }
+
+        if (quadroContent) {
+          // Process data according to the found structure
+          let processedData = quadroContent;
+
+          // If data is within 'data' (API result)
+          if (quadroContent.data) {
+            processedData = quadroContent.data;
+          }
+
+          // If it has success and structured data
+          if (quadroContent.success && quadroContent.data) {
+            processedData = quadroContent.data;
+          }
+
+          // Merge quadro data with existing data
+          previewData = {
+            ...previewData,
+            ...processedData,
+            id: activity.id,
+            type: activityType,
+            title: processedData.titulo || 
+                   processedData.title || 
+                   previewData.title,
+            description: processedData.descricao || 
+                        processedData.description || 
+                        previewData.description,
+            // Ensure complete structure for visualization
+            conteudo: processedData.conteudo || processedData,
+            introducao: processedData.introducao,
+            conceitosPrincipais: processedData.conceitosPrincipais,
+            exemplosPraticos: processedData.exemplosPraticos,
+            atividadesPraticas: processedData.atividadesPraticas,
+            resumo: processedData.resumo,
+            proximosPassos: processedData.proximosPassos,
+            metadados: processedData.metadados || {
+              isGeneratedByAI: true,
+              generatedAt: processedData.generatedAt || new Date().toISOString()
+            }
+          };
+          console.log('🖼️ Processed quadro interativo data for visualization:', previewData);
+        } else {
+          console.log('⚠️ No specific quadro interativo content found');
+          // Create basic structure from form data
+          previewData = {
+            ...previewData,
+            conteudo: {
+              titulo: previewData.title || 'Quadro Interativo',
+              descricao: previewData.description || 'Conteúdo do quadro interativo',
+              introducao: 'Conteúdo será carregado quando gerado pela IA',
+              conceitosPrincipais: [],
+              exemplosPraticos: [],
+              atividadesPraticas: [],
+              resumo: '',
+              proximosPassos: []
+            },
+            metadados: {
+              isGeneratedByAI: false,
+              generatedAt: new Date().toISOString()
+            }
+          };
+        }
+      }
+
     console.log('📊 ActivityViewModal: Final data for preview:', previewData);
 
     switch (activityType) {
@@ -429,35 +520,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       case 'quadro-interativo':
         console.log('🖼️ Rendering Quadro Interativo preview:', previewData);
-
-        // Fetch specific Quadro Interativo content
-        const quadroKeys = [
-          `constructed_quadro-interativo_${activity.id}`,
-          `activity_content_${activity.id}`,
-          `schoolpower_quadro-interativo_content`
-        ];
-
-        let quadroContent = null;
-        for (const key of quadroKeys) {
-          const content = localStorage.getItem(key);
-          if (content) {
-            try {
-              const parsed = JSON.parse(content);
-              if (parsed && (parsed.titulo || parsed.conteudo || parsed.data)) {
-                quadroContent = parsed.data || parsed;
-                break;
-              }
-            } catch (error) {
-              console.error('Error loading quadro content:', error);
-            }
-          }
-        }
-
-        const finalPreviewData = quadroContent ? { ...previewData, ...quadroContent } : previewData;
-
         return (
           <QuadroInterativoPreview
-            data={finalPreviewData}
+            data={previewData}
             activityData={activity}
           />
         );

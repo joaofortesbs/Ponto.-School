@@ -1,4 +1,3 @@
-
 export const quadroInterativoPrompt = `
 Você é um especialista em educação e criação de quadros interativos educacionais.
 
