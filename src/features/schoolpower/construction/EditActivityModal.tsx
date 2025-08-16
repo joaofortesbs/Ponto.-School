@@ -307,6 +307,88 @@ const processExerciseListData = (formData: ActivityFormData, generatedContent: a
   };
 };
 
+// Função para processar dados da Sequência Didática
+  const processSequenciaDidaticaData = (formData: any, content: any) => {
+    console.log('📚 Processando dados da Sequência Didática para preview:', { formData, content });
+
+    return {
+      ...content,
+      ...formData,
+      type: 'sequencia-didatica',
+      title: formData.titulo || formData.title || 'Sequência Didática',
+      description: formData.descricao || formData.description || 'Descrição da sequência didática',
+      customFields: formData
+    };
+  };
+
+  // Função para processar dados do Quadro Interativo
+  const processQuadroInterativoData = (formData: any, content: any) => {
+    console.log('🖼️ Processando dados do Quadro Interativo para preview:', { formData, content });
+
+    // Se há conteúdo gerado pela IA, usar ele
+    if (content && content.titulo) {
+      return {
+        ...content,
+        type: 'quadro-interativo',
+        customFields: {
+          'Disciplina / Área de conhecimento': formData['Disciplina / Área de conhecimento'] || 'Multidisciplinar',
+          'Ano / Série': formData['Ano / Série'] || 'Ensino Fundamental',
+          'Tema ou Assunto da aula': formData['Tema ou Assunto da aula'] || 'Tema',
+          'Objetivo de aprendizagem da aula': formData['Objetivo de aprendizagem da aula'] || 'Objetivo',
+          'Nível de Dificuldade': formData['Nível de Dificuldade'] || 'Médio',
+          'Atividade mostrada': formData['Atividade mostrada'] || 'Atividade'
+        },
+        isGeneratedByAI: true
+      };
+    }
+
+    // Se não há conteúdo, criar estrutura básica com os dados do formulário
+    return {
+      titulo: formData['Tema ou Assunto da aula'] || 'Quadro Interativo',
+      subtitulo: formData['Objetivo de aprendizagem da aula'] || 'Objetivo de aprendizagem',
+      conteudo: {
+        introducao: `Bem-vindos ao estudo sobre ${formData['Tema ou Assunto da aula'] || 'o tema'}. Este quadro interativo foi desenvolvido para facilitar a compreensão dos conceitos principais.`,
+        conceitosPrincipais: [
+          {
+            titulo: formData['Tema ou Assunto da aula'] || 'Conceito Principal',
+            explicacao: `Exploraremos os fundamentos de ${formData['Tema ou Assunto da aula'] || 'este tema'} de forma didática e interativa.`,
+            exemplo: 'Exemplo prático será apresentado durante a atividade.'
+          }
+        ],
+        exemplosPraticos: [
+          'Exemplo 1: Aplicação prática do conceito',
+          'Exemplo 2: Situação real de uso'
+        ],
+        atividadesPraticas: [
+          {
+            titulo: 'Atividade Prática',
+            instrucoes: 'Siga as instruções apresentadas no quadro para realizar a atividade.',
+            objetivo: formData['Objetivo de aprendizagem da aula'] || 'Fixar o aprendizado'
+          }
+        ],
+        resumo: `Resumo dos principais pontos abordados sobre ${formData['Tema ou Assunto da aula'] || 'o tema'}.`,
+        proximosPassos: 'Continue explorando o tema com as próximas atividades.'
+      },
+      recursos: ['Quadro interativo', 'Material de apoio', 'Exemplos práticos'],
+      objetivosAprendizagem: [
+        formData['Objetivo de aprendizagem da aula'] || 'Compreender o tema',
+        'Aplicar os conceitos na prática',
+        'Desenvolver habilidades específicas'
+      ],
+      customFields: {
+        'Disciplina / Área de conhecimento': formData['Disciplina / Área de conhecimento'] || 'Multidisciplinar',
+        'Ano / Série': formData['Ano / Série'] || 'Ensino Fundamental',
+        'Tema ou Assunto da aula': formData['Tema ou Assunto da aula'] || 'Tema',
+        'Objetivo de aprendizagem da aula': formData['Objetivo de aprendizagem da aula'] || 'Objetivo',
+        'Nível de Dificuldade': formData['Nível de Dificuldade'] || 'Médio',
+        'Atividade mostrada': formData['Atividade mostrada'] || 'Atividade'
+      },
+      type: 'quadro-interativo',
+      isGeneratedByAI: !!content
+    };
+  };
+
+
 interface EditActivityModalProps {
   isOpen: boolean;
   activity: ConstructionActivity | null;
@@ -1954,11 +2036,11 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
                       <SequenciaDidaticaPreview
-                        data={generatedContent || formData}
+                        data={processSequenciaDidaticaData(formData, generatedContent)}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
                       <ActivityPreview
-                        content={generatedContent || formData}
+                        content={processQuadroInterativoData(formData, generatedContent)}
                         activityData={activity}
                       />
                     ) : (

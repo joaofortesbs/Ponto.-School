@@ -50,15 +50,18 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
   useEffect(() => {
     console.log('🖼️ QuadroInterativoPreview - dados recebidos:', { data, activityData });
 
-    // Simular carregamento se os dados estão sendo processados
-    if (data && Object.keys(data).length > 0) {
+    // Verificar se há dados válidos para exibir
+    if (data && (data.titulo || data.conteudo || data.customFields)) {
+      console.log('✅ Dados válidos encontrados, exibindo preview');
       setContentData(data);
       setIsLoading(false);
     } else {
-      // Se não há dados, tentar gerar conteúdo
+      console.log('⚠️ Dados insuficientes, aguardando...');
+      // Aguardar um pouco menos e tentar exibir mesmo com dados limitados
       setTimeout(() => {
+        setContentData(data || {});
         setIsLoading(false);
-      }, 2000);
+      }, 1000);
     }
   }, [data, activityData]);
 
@@ -79,7 +82,8 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
     );
   }
 
-  if (!contentData || !contentData.titulo) {
+  // Se não há dados suficientes, mas temos campos customizados, criar preview básico
+  if (!contentData || (!contentData.titulo && !contentData.customFields)) {
     return (
       <div className="flex flex-col items-center justify-center p-8 min-h-[400px] bg-gradient-to-br from-red-50 to-orange-50 rounded-lg border-2 border-dashed border-red-200">
         <Monitor className="h-16 w-16 text-red-400 mb-4" />
@@ -95,6 +99,16 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
   const disciplina = contentData.customFields?.['Disciplina / Área de conhecimento'] || 'Multidisciplinar';
   const anoSerie = contentData.customFields?.['Ano / Série'] || 'Ensino Fundamental';
   const dificuldade = contentData.customFields?.['Nível de Dificuldade'] || 'Médio';
+  
+  // Garantir que sempre temos um título
+  const titulo = contentData.titulo || 
+                contentData.customFields?.['Tema ou Assunto da aula'] || 
+                'Quadro Interativo';
+  
+  // Garantir que sempre temos um subtítulo
+  const subtitulo = contentData.subtitulo || 
+                   contentData.customFields?.['Objetivo de aprendizagem da aula'] || 
+                   'Atividade interativa educacional';
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
@@ -108,10 +122,8 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
                 <Monitor className="h-8 w-8" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold">{contentData.titulo}</CardTitle>
-                {contentData.subtitulo && (
-                  <p className="text-purple-100 mt-1 text-sm">{contentData.subtitulo}</p>
-                )}
+                <CardTitle className="text-2xl font-bold">{titulo}</CardTitle>
+                <p className="text-purple-100 mt-1 text-sm">{subtitulo}</p>
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-1 text-white/90 text-sm">
                     <BookOpen className="h-4 w-4" />
@@ -154,21 +166,22 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
 
         {/* Aba Conteúdo */}
         <TabsContent value="conteudo" className="space-y-6">
-          {contentData.conteudo?.introducao && (
-            <Card className="border-l-4 border-l-blue-500">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-blue-700">
-                  <BookOpen className="h-5 w-5" />
-                  <span>Introdução</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">{contentData.conteudo.introducao}</p>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="border-l-4 border-l-blue-500">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-blue-700">
+                <BookOpen className="h-5 w-5" />
+                <span>Introdução</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+                {contentData.conteudo?.introducao || 
+                 `Bem-vindos ao estudo sobre ${contentData.customFields?.['Tema ou Assunto da aula'] || 'este tema'}. Este quadro interativo foi desenvolvido para facilitar a compreensão e aplicação dos conceitos apresentados de forma dinâmica e envolvente.`}
+              </p>
+            </CardContent>
+          </Card>
 
-          {contentData.conteudo?.exemplosPraticos && contentData.conteudo.exemplosPraticos.length > 0 && (
+          {((contentData.conteudo?.exemplosPraticos && contentData.conteudo.exemplosPraticos.length > 0) || true) && (
             <Card className="border-l-4 border-l-yellow-500">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-yellow-700">
@@ -178,7 +191,11 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-2">
-                  {contentData.conteudo.exemplosPraticos.map((exemplo, index) => (
+                  {(contentData.conteudo?.exemplosPraticos || [
+                    `Exemplo prático 1: Aplicação real de ${contentData.customFields?.['Tema ou Assunto da aula'] || 'conceitos'} no dia a dia`,
+                    `Exemplo prático 2: Exercício interativo para fixação do aprendizado`,
+                    `Exemplo prático 3: Situação problema baseada em contexto real`
+                  ]).map((exemplo, index) => (
                     <div key={index} className="flex items-start space-x-3 p-4 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
                       <div className="flex-shrink-0 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
                         {index + 1}
@@ -191,19 +208,20 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
             </Card>
           )}
 
-          {contentData.conteudo?.resumo && (
-            <Card className="border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2 text-green-700">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>Resumo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">{contentData.conteudo.resumo}</p>
-              </CardContent>
-            </Card>
-          )}
+          <Card className="border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-green-700">
+                <CheckCircle className="h-5 w-5" />
+                <span>Resumo</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                {contentData.conteudo?.resumo || 
+                 `Este quadro interativo sobre ${contentData.customFields?.['Tema ou Assunto da aula'] || 'o tema abordado'} apresenta os conceitos fundamentais de forma visual e prática, facilitando a compreensão e aplicação dos conhecimentos pelos estudantes.`}
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Aba Conceitos */}
