@@ -298,9 +298,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             try {
               const parsedData = JSON.parse(data);
               // Verificar se tem estrutura válida de sequência didática
-              if (parsedData.sequenciaDidatica ||
-                  parsedData.aulas ||
-                  parsedData.diagnosticos ||
+              if (parsedData.sequenciaDidatica || 
+                  parsedData.aulas || 
+                  parsedData.diagnosticos || 
                   parsedData.avaliacoes ||
                   parsedData.data?.sequenciaDidatica ||
                   parsedData.success) {
@@ -317,12 +317,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (sequenciaContent) {
           // Processar dados de acordo com a estrutura encontrada
           let processedData = sequenciaContent;
-
+          
           // Se os dados estão dentro de 'data' (resultado da API)
           if (sequenciaContent.data) {
             processedData = sequenciaContent.data;
           }
-
+          
           // Se tem sucesso e dados estruturados
           if (sequenciaContent.success && sequenciaContent.data) {
             processedData = sequenciaContent.data;
@@ -334,13 +334,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             ...processedData,
             id: activity.id,
             type: activityType,
-            title: processedData.sequenciaDidatica?.titulo ||
-                   processedData.titulo ||
-                   processedData.title ||
+            title: processedData.sequenciaDidatica?.titulo || 
+                   processedData.titulo || 
+                   processedData.title || 
                    previewData.title,
-            description: processedData.sequenciaDidatica?.descricaoGeral ||
-                        processedData.descricaoGeral ||
-                        processedData.description ||
+            description: processedData.sequenciaDidatica?.descricaoGeral || 
+                        processedData.descricaoGeral || 
+                        processedData.description || 
                         previewData.description,
             // Garantir estrutura completa para visualização
             sequenciaDidatica: processedData.sequenciaDidatica || processedData,

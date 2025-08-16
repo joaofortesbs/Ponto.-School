@@ -1,4 +1,3 @@
-
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
 import { sequenciaDidaticaGenerator } from '../../activities/sequencia-didatica/SequenciaDidaticaGenerator';
@@ -155,77 +154,6 @@ export const generateActivityContent = async (
       console.log('✅ Sequência Didática gerada com sucesso:', sequenciaGerada);
 
       return sequenciaGerada;
-    }
-
-    // Para Quadro Interativo, usar gerador específico
-    if (activityType === 'quadro-interativo') {
-      try {
-        const { generateQuadroInterativoContent } = await import('../../activities/quadro-interativo/quadroInterativoProcessor');
-
-        console.log('🎯 Gerando conteúdo específico para Quadro Interativo');
-        console.log('📋 Dados de contexto recebidos:', contextData);
-
-        // Validar dados obrigatórios
-        const requiredFields = ['subject', 'schoolYear', 'theme', 'objectives', 'difficultyLevel', 'quadroInterativoCampoEspecifico'];
-        const missingFields = requiredFields.filter(field => !contextData[field] || contextData[field].trim() === '');
-
-        if (missingFields.length > 0) {
-          console.warn('⚠️ Campos obrigatórios ausentes para Quadro Interativo:', missingFields);
-          // Preencher com valores padrão
-          contextData.subject = contextData.subject || 'Matemática';
-          contextData.schoolYear = contextData.schoolYear || '6º Ano';
-          contextData.theme = contextData.theme || 'Tema da Aula';
-          contextData.objectives = contextData.objectives || 'Objetivos de aprendizagem';
-          contextData.difficultyLevel = contextData.difficultyLevel || 'Intermediário';
-          contextData.quadroInterativoCampoEspecifico = contextData.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro';
-        }
-
-        const quadroContent = await generateQuadroInterativoContent({
-          subject: contextData.subject,
-          schoolYear: contextData.schoolYear,
-          theme: contextData.theme,
-          objectives: contextData.objectives,
-          difficultyLevel: contextData.difficultyLevel,
-          quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico,
-          materials: contextData.materials || '',
-          instructions: contextData.instructions || '',
-          evaluation: contextData.evaluation || '',
-          timeLimit: contextData.timeLimit || '',
-          context: contextData.context || ''
-        });
-
-        console.log('✅ Quadro Interativo gerado com sucesso:', quadroContent);
-        return {
-          ...quadroContent,
-          isGeneratedByAI: true,
-          generatedAt: new Date().toISOString(),
-          activityType: 'quadro-interativo'
-        };
-      } catch (error) {
-        console.error('❌ Erro na geração do Quadro Interativo:', error);
-        // Retornar estrutura básica em caso de erro
-        return {
-          title: contextData.title || 'Quadro Interativo',
-          description: contextData.description || 'Atividade de quadro interativo gerada automaticamente',
-          personalizedTitle: `${contextData.theme || 'Tema'} - Quadro Interativo`,
-          personalizedDescription: `Atividade interativa sobre ${contextData.theme || 'o tema proposto'} para ${contextData.schoolYear || '6º Ano'}`,
-          subject: contextData.subject || 'Matemática',
-          schoolYear: contextData.schoolYear || '6º Ano',
-          theme: contextData.theme || 'Tema da Aula',
-          objectives: contextData.objectives || 'Objetivos de aprendizagem',
-          difficultyLevel: contextData.difficultyLevel || 'Intermediário',
-          quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro',
-          materials: contextData.materials || '',
-          instructions: contextData.instructions || '',
-          evaluation: contextData.evaluation || '',
-          timeLimit: contextData.timeLimit || '',
-          context: contextData.context || '',
-          isGeneratedByAI: false,
-          generatedAt: new Date().toISOString(),
-          activityType: 'quadro-interativo',
-          error: error.message
-        };
-      }
     }
 
     // Para lista de exercícios, usar prompt específico

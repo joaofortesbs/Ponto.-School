@@ -1,8 +1,5 @@
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { QuadroInterativoFields, quadroInterativoFieldMapping } from './fieldMapping';
-import { API_KEYS, API_URLS } from '@/config/apiKeys';
-import { GeminiClient } from '@/utils/api/geminiClient';
-import { buildQuadroInterativoPrompt, validateQuadroInterativoResponse, QuadroInterativoFormData } from '../../prompts/quadroInterativoPrompt';
 
 export interface QuadroInterativoCustomFields {
   [key: string]: string;
@@ -311,7 +308,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
   const formData = {
     title: consolidatedData.title,
     description: consolidatedData.description,
-
+    
     // Disciplina / Área de conhecimento - com múltiplos aliases
     subject: customFields['Disciplina / Área de conhecimento'] ||
              customFields['disciplina'] ||
@@ -320,7 +317,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
              customFields['Matéria'] ||
              customFields['Area de Conhecimento'] ||
              'Matemática', // Valor padrão
-
+    
     // Ano / Série - com múltiplos aliases
     schoolYear: customFields['Ano / Série'] ||
                 customFields['anoSerie'] ||
@@ -330,7 +327,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                 customFields['Série'] ||
                 customFields['ano'] ||
                 '6º Ano', // Valor padrão
-
+    
     // Tema ou Assunto da aula - com múltiplos aliases
     theme: customFields['Tema ou Assunto da aula'] ||
            customFields['tema'] ||
@@ -341,7 +338,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
            customFields['assunto'] ||
            consolidatedData.title ||
            'Tema da Aula', // Valor padrão
-
+    
     // Objetivo de aprendizagem da aula - com múltiplos aliases
     objectives: customFields['Objetivo de aprendizagem da aula'] ||
                 customFields['objetivos'] ||
@@ -352,7 +349,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                 customFields['objetivo'] ||
                 consolidatedData.description ||
                 'Objetivos de aprendizagem da aula', // Valor padrão
-
+    
     // Nível de Dificuldade - com múltiplos aliases
     difficultyLevel: customFields['Nível de Dificuldade'] ||
                      customFields['nivelDificuldade'] ||
@@ -362,7 +359,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                      customFields['Complexidade'] ||
                      customFields['nivel'] ||
                      'Intermediário', // Valor padrão
-
+    
     // Atividade mostrada - com múltiplos aliases
     quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
                                      customFields['atividadeMostrada'] ||
@@ -442,58 +439,3 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
   console.log('✅ Dados do Quadro Interativo preparados para modal:', formData);
   return formData;
 }
-
-/**
- * Gera conteúdo de Quadro Interativo usando Gemini AI
- */
-export async function generateQuadroInterativoContent(formData: QuadroInterativoFormData): Promise<any> {
-  console.log('🎯 Iniciando geração de conteúdo para Quadro Interativo:', formData);
-
-  try {
-    const geminiClient = new GeminiClient();
-    const prompt = buildQuadroInterativoPrompt(formData);
-
-    console.log('📤 Enviando prompt para Gemini...');
-
-    const response = await geminiClient.generate({
-      prompt,
-      temperature: 0.7,
-      maxTokens: 2048,
-      topP: 0.9,
-      topK: 40
-    });
-
-    if (response.success) {
-      console.log('✅ Resposta recebida do Gemini para Quadro Interativo');
-
-      const generatedContent = validateQuadroInterativoResponse(response.result);
-
-      // Adicionar dados do formulário ao conteúdo gerado
-      const finalContent = {
-        ...generatedContent,
-        formData: formData,
-        subject: formData.subject,
-        schoolYear: formData.schoolYear,
-        theme: formData.theme,
-        objectives: formData.objectives,
-        difficultyLevel: formData.difficultyLevel,
-        quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico,
-        materials: formData.materials || '',
-        instructions: formData.instructions || '',
-        evaluation: formData.evaluation || '',
-        timeLimit: formData.timeLimit || '',
-        context: formData.context || ''
-      };
-
-      console.log('✅ Conteúdo do Quadro Interativo gerado com sucesso:', finalContent);
-      return finalContent;
-    } else {
-      throw new Error(response.error || 'Falha na geração de conteúdo');
-    }
-  } catch (error) {
-    console.error('❌ Erro na geração do Quadro Interativo:', error);
-    throw error;
-  }
-}
-
-export { prepareQuadroInterativoDataForModal };
