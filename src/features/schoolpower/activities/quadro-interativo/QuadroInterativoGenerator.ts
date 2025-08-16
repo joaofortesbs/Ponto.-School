@@ -1,66 +1,134 @@
 
-import { API_KEYS, API_URLS } from '@/config/apiKeys';
+import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
-const GEMINI_API_KEY = API_KEYS.GEMINI;
-const GEMINI_API_URL = API_URLS.GEMINI;
-
-interface QuadroInterativoParams {
-  titulo: string;
-  descricao: string;
-  materia: string;
-  tema: string;
-  anoEscolar: string;
-  numeroQuestoes: number;
-  nivelDificuldade: string;
-  modalidadeQuestao: string;
-  campoEspecifico: string;
-}
-
-interface QuadroInterativoContent {
+export interface QuadroInterativoGeneratedContent {
   title: string;
-  description: string;
-  subject: string;
-  theme: string;
-  schoolYear: string;
-  numberOfQuestions: number;
-  difficultyLevel: string;
-  questionModel: string;
-  slides: Array<{
-    title: string;
-    content: string;
-    interactiveElements?: string[];
-    questions?: Array<{
-      question: string;
-      options?: string[];
-      correctAnswer?: string;
-      explanation?: string;
-    }>;
-  }>;
-  resources: string[];
-  objectives: string[];
-  methodology: string;
-  evaluation: string;
+  content: string;
+  success: boolean;
+  error?: string;
 }
 
-export async function generateQuadroInterativoContent(params: QuadroInterativoParams): Promise<QuadroInterativoContent> {
-  console.log('🎯 Iniciando geração de Quadro Interativo:', params);
+/**
+ * Gerador específico para atividades de Quadro Interativo
+ * Analisa os dados dos campos e gera conteúdo usando a API Gemini
+ */
+export class QuadroInterativoGenerator {
+  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+  
+  /**
+   * Gera conteúdo para atividade de Quadro Interativo
+   */
+  static async generateContent(formData: ActivityFormData): Promise<QuadroInterativoGeneratedContent> {
+    try {
+      console.log('🎯 Iniciando geração de conteúdo do Quadro Interativo:', formData);
 
-  if (!GEMINI_API_KEY) {
-    console.error('❌ Chave da API Gemini não configurada');
-    throw new Error('Chave da API Gemini não configurada');
+      // Validar dados essenciais
+      if (!this.validateFormData(formData)) {
+        return {
+          title: 'Dados Insuficientes',
+          content: 'Por favor, preencha todos os campos obrigatórios para gerar a atividade.',
+          success: false,
+          error: 'Campos obrigatórios não preenchidos'
+        };
+      }
+
+      // Construir prompt para a API Gemini
+      const prompt = this.buildPrompt(formData);
+      console.log('📝 Prompt construído:', prompt);
+
+      // Chamar API Gemini
+      const generatedContent = await this.callGeminiAPI(prompt);
+      
+      if (generatedContent.success) {
+        console.log('✅ Conteúdo gerado com sucesso:', generatedContent);
+        return generatedContent;
+      } else {
+        throw new Error(generatedContent.error || 'Erro na geração de conteúdo');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro na geração de conteúdo do Quadro Interativo:', error);
+      
+      return {
+        title: 'Erro na Geração',
+        content: 'Ocorreu um erro ao gerar o conteúdo. Tente novamente.',
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido'
+      };
+    }
   }
 
-  const prompt = buildQuadroInterativoPrompt(params);
-  
-  try {
-    console.log('📡 Enviando requisição para Gemini API...');
-    
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+  /**
+   * Valida se os dados do formulário estão completos
+   */
+  private static validateFormData(formData: ActivityFormData): boolean {
+    const requiredFields = [
+      'title',
+      'description', 
+      'subject',
+      'schoolYear',
+      'theme',
+      'objectives'
+    ];
+
+    return requiredFields.every(field => {
+      const value = formData[field as keyof ActivityFormData];
+      return value && typeof value === 'string' && value.trim().length > 0;
+    });
+  }
+
+  /**
+   * Constrói prompt específico para Quadro Interativo
+   */
+  private static buildPrompt(formData: ActivityFormData): string {
+    return `
+Você é um especialista em educação digital e criação de atividades interativas para quadros digitais.
+
+Crie uma atividade de Quadro Interativo baseada nos seguintes dados:
+
+**Informações da Atividade:**
+- Título: ${formData.title}
+- Descrição: ${formData.description}
+- Disciplina: ${formData.subject}
+- Ano/Série: ${formData.schoolYear}
+- Tema: ${formData.theme}
+- Objetivos: ${formData.objectives}
+- Nível de Dificuldade: ${formData.difficultyLevel || 'Médio'}
+- Materiais: ${formData.materials || 'Não especificado'}
+- Instruções: ${formData.instructions || 'A definir'}
+- Avaliação: ${formData.evaluation || 'A definir'}
+- Contexto: ${formData.context || 'Geral'}
+
+**Instruções:**
+1. Crie um TÍTULO claro e atrativo para a atividade
+2. Crie um CONTEÚDO simples e direto que descreva a atividade interativa
+3. O conteúdo deve ser adequado para exibição em um quadro digital
+4. Foque na interatividade e engajamento dos alunos
+5. Mantenha a linguagem clara e apropriada para a faixa etária
+
+**Formato de Resposta:**
+Responda APENAS no seguinte formato JSON:
+{
+  "title": "Título da atividade",
+  "content": "Descrição detalhada da atividade interativa"
+}
+
+NÃO inclua explicações adicionais, apenas o JSON.
+    `.trim();
+  }
+
+  /**
+   * Chama a API Gemini para gerar conteúdo
+   */
+  private static async callGeminiAPI(prompt: string): Promise<QuadroInterativoGeneratedContent> {
+    try {
+      // Obter chave da API
+      const apiKey = this.getGeminiApiKey();
+      if (!apiKey) {
+        throw new Error('Chave da API Gemini não configurada');
+      }
+
+      const requestBody = {
         contents: [{
           parts: [{
             text: prompt
@@ -70,196 +138,137 @@ export async function generateQuadroInterativoContent(params: QuadroInterativoPa
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 1024,
         }
-      })
-    });
+      };
 
-    if (!response.ok) {
-      console.error('❌ Erro na resposta da API:', response.status, response.statusText);
-      throw new Error(`Erro na API: ${response.status}`);
-    }
+      console.log('🌐 Enviando requisição para API Gemini...');
 
-    const data = await response.json();
-    console.log('📦 Resposta recebida da API:', data);
+      const response = await fetch(`${this.GEMINI_API_URL}?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error('❌ Resposta da API inválida:', data);
-      throw new Error('Resposta da API inválida');
-    }
-
-    const generatedText = data.candidates[0].content.parts[0].text;
-    console.log('📝 Texto gerado:', generatedText);
-
-    const parsedContent = parseGeminiResponse(generatedText);
-    console.log('✅ Conteúdo parseado com sucesso:', parsedContent);
-
-    return parsedContent;
-  } catch (error) {
-    console.error('❌ Erro ao gerar conteúdo:', error);
-    throw error;
-  }
-}
-
-function buildQuadroInterativoPrompt(params: QuadroInterativoParams): string {
-  return `
-Você é um especialista em educação e tecnologia educacional. Crie um quadro interativo completo e detalhado com base nas seguintes especificações:
-
-**INFORMAÇÕES BÁSICAS:**
-- Título: ${params.titulo}
-- Descrição: ${params.descricao}
-- Matéria: ${params.materia}
-- Tema: ${params.tema}
-- Ano Escolar: ${params.anoEscolar}
-- Número de Questões: ${params.numeroQuestoes}
-- Nível de Dificuldade: ${params.nivelDificuldade}
-- Modalidade das Questões: ${params.modalidadeQuestao}
-- Campo Específico: ${params.campoEspecifico}
-
-**INSTRUÇÕES:**
-1. Crie uma apresentação interativa sobre o tema "${params.tema}" na matéria "${params.materia}"
-2. Desenvolva slides educativos adequados para ${params.anoEscolar}
-3. Inclua elementos interativos e atividades práticas
-4. Adapte o conteúdo ao nível de dificuldade "${params.nivelDificuldade}"
-5. Crie ${params.numeroQuestoes} questões no formato "${params.modalidadeQuestao}"
-
-**FORMATO DE RESPOSTA (JSON OBRIGATÓRIO):**
-{
-  "title": "${params.titulo}",
-  "description": "Descrição detalhada da apresentação interativa",
-  "subject": "${params.materia}",
-  "theme": "${params.tema}",
-  "schoolYear": "${params.anoEscolar}",
-  "numberOfQuestions": ${params.numeroQuestoes},
-  "difficultyLevel": "${params.nivelDificuldade}",
-  "questionModel": "${params.modalidadeQuestao}",
-  "slides": [
-    {
-      "title": "Título do Slide 1",
-      "content": "Conteúdo detalhado do slide com explicações e conceitos",
-      "interactiveElements": ["Lista de elementos interativos"],
-      "questions": [
-        {
-          "question": "Pergunta relacionada ao conteúdo",
-          "options": ["Opção A", "Opção B", "Opção C", "Opção D"],
-          "correctAnswer": "Opção correta",
-          "explanation": "Explicação da resposta"
-        }
-      ]
-    }
-  ],
-  "resources": ["Lista de recursos visuais e materiais necessários"],
-  "objectives": ["Lista de objetivos de aprendizagem"],
-  "methodology": "Metodologia pedagógica utilizada",
-  "evaluation": "Critérios e métodos de avaliação"
-}
-
-**REQUISITOS ESPECÍFICOS:**
-- Crie pelo menos 5 slides informativos
-- Cada slide deve ter conteúdo educativo relevante
-- Inclua questões interativas distribuídas pelos slides
-- Use linguagem adequada para ${params.anoEscolar}
-- Foque no campo específico: ${params.campoEspecifico}
-- Garanta que o nível de dificuldade seja "${params.nivelDificuldade}"
-
-Responda APENAS com o JSON válido, sem markdown ou formatação adicional.
-`;
-}
-
-function parseGeminiResponse(responseText: string): QuadroInterativoContent {
-  console.log('🔍 Processando resposta da Gemini...');
-  
-  try {
-    // Limpar a resposta removendo markdown e caracteres indesejados
-    let cleanedText = responseText.trim();
-    
-    // Remover blocos de código markdown se existirem
-    cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    
-    // Remover quebras de linha extras
-    cleanedText = cleanedText.trim();
-    
-    console.log('🧹 Texto limpo:', cleanedText);
-    
-    // Tentar fazer o parse do JSON
-    const parsedContent: QuadroInterativoContent = JSON.parse(cleanedText);
-    
-    // Validar estrutura mínima
-    if (!parsedContent.title || !parsedContent.description || !parsedContent.slides) {
-      throw new Error('Estrutura JSON inválida');
-    }
-    
-    console.log('✅ Conteúdo parseado com sucesso:', parsedContent);
-    return parsedContent;
-    
-  } catch (error) {
-    console.error('❌ Erro ao processar resposta:', error);
-    console.error('📝 Texto original:', responseText);
-    
-    // Retornar conteúdo padrão em caso de erro
-    return createFallbackContent(responseText);
-  }
-}
-
-function createFallbackContent(originalText: string): QuadroInterativoContent {
-  console.log('🔄 Criando conteúdo de fallback...');
-  
-  return {
-    title: "Quadro Interativo: Relevo e Formação de Montanhas",
-    description: "Apresentação interativa sobre os diferentes tipos de relevo e os processos de formação de montanhas, utilizando recursos visuais e atividades práticas.",
-    subject: "Geografia",
-    theme: "Relevo e Formação de Montanhas",
-    schoolYear: "6º ano",
-    numberOfQuestions: 10,
-    difficultyLevel: "Médio",
-    questionModel: "Múltipla escolha",
-    slides: [
-      {
-        title: "Introdução ao Relevo Terrestre",
-        content: "O relevo terrestre é formado por diferentes tipos de elevações e depressões na superfície da Terra. Vamos explorar como as montanhas se formam e os diferentes tipos de relevo existentes.",
-        interactiveElements: ["Mapa interativo", "Imagens 3D", "Animações"],
-        questions: [
-          {
-            question: "O que é relevo terrestre?",
-            options: [
-              "Apenas as montanhas da Terra",
-              "As diferentes elevações e depressões da superfície terrestre",
-              "Somente os oceanos",
-              "As nuvens no céu"
-            ],
-            correctAnswer: "As diferentes elevações e depressões da superfície terrestre",
-            explanation: "O relevo terrestre compreende todas as formas da superfície da Terra, incluindo montanhas, planícies, planaltos e depressões."
-          }
-        ]
-      },
-      {
-        title: "Tipos de Relevo",
-        content: "Existem quatro principais tipos de relevo: montanhas, planaltos, planícies e depressões. Cada um tem características específicas e se forma de maneiras diferentes.",
-        interactiveElements: ["Diagrama interativo", "Comparação visual"],
-        questions: [
-          {
-            question: "Quantos são os principais tipos de relevo?",
-            options: ["2", "3", "4", "5"],
-            correctAnswer: "4",
-            explanation: "Os quatro principais tipos de relevo são: montanhas, planaltos, planícies e depressões."
-          }
-        ]
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
       }
-    ],
-    resources: [
-      "Mapas topográficos",
-      "Imagens de satélite",
-      "Modelos 3D de montanhas",
-      "Vídeos educativos",
-      "Material para maquete"
-    ],
-    objectives: [
-      "Identificar os diferentes tipos de relevo",
-      "Compreender os processos de formação de montanhas",
-      "Reconhecer a importância do relevo para a vida humana",
-      "Desenvolver habilidades de observação e análise"
-    ],
-    methodology: "Metodologia ativa com uso de recursos visuais, atividades práticas e tecnologia educacional para facilitar o aprendizado interativo.",
-    evaluation: "Avaliação contínua através de questões interativas, participação nas atividades e projeto final de criação de maquete."
-  };
+
+      const data = await response.json();
+      console.log('📡 Resposta da API Gemini recebida:', data);
+
+      // Extrair e processar resposta
+      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!generatedText) {
+        throw new Error('Resposta vazia da API Gemini');
+      }
+
+      return this.parseGeminiResponse(generatedText);
+
+    } catch (error) {
+      console.error('❌ Erro na chamada da API Gemini:', error);
+      
+      return {
+        title: 'Erro na API',
+        content: 'Não foi possível gerar o conteúdo. Verifique a conexão.',
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro na API'
+      };
+    }
+  }
+
+  /**
+   * Processa a resposta da API Gemini
+   */
+  private static parseGeminiResponse(responseText: string): QuadroInterativoGeneratedContent {
+    try {
+      // Tentar extrair JSON da resposta
+      const cleanText = responseText.trim();
+      let jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        // Se não encontrar JSON, criar resposta estruturada
+        return {
+          title: 'Atividade de Quadro Interativo',
+          content: cleanText,
+          success: true
+        };
+      }
+
+      const jsonData = JSON.parse(jsonMatch[0]);
+      
+      return {
+        title: jsonData.title || 'Atividade de Quadro Interativo',
+        content: jsonData.content || jsonData.description || cleanText,
+        success: true
+      };
+
+    } catch (error) {
+      console.error('❌ Erro ao processar resposta:', error);
+      
+      // Fallback: usar o texto diretamente
+      return {
+        title: 'Atividade de Quadro Interativo',
+        content: responseText.trim(),
+        success: true
+      };
+    }
+  }
+
+  /**
+   * Obtém a chave da API Gemini
+   */
+  private static getGeminiApiKey(): string | null {
+    // Implementar múltiplas formas de obter a chave
+    return import.meta.env.VITE_GEMINI_API_KEY || 
+           import.meta.env.GEMINI_API_KEY ||
+           localStorage.getItem('gemini_api_key') ||
+           'AIzaSyBJ8XEk8LU5F7hxhNjhRKGq6jNcEU6F6js'; // Chave padrão de fallback
+  }
+
+  /**
+   * Salva conteúdo gerado localmente
+   */
+  static saveGeneratedContent(activityId: string, content: QuadroInterativoGeneratedContent): void {
+    try {
+      const storageKey = `quadro_interativo_${activityId}`;
+      const dataToSave = {
+        ...content,
+        timestamp: new Date().toISOString(),
+        activityId
+      };
+
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+      console.log('💾 Conteúdo salvo localmente:', storageKey);
+
+    } catch (error) {
+      console.error('❌ Erro ao salvar conteúdo:', error);
+    }
+  }
+
+  /**
+   * Recupera conteúdo salvo localmente
+   */
+  static getStoredContent(activityId: string): QuadroInterativoGeneratedContent | null {
+    try {
+      const storageKey = `quadro_interativo_${activityId}`;
+      const stored = localStorage.getItem(storageKey);
+      
+      if (stored) {
+        const data = JSON.parse(stored);
+        console.log('📂 Conteúdo recuperado:', data);
+        return data;
+      }
+
+      return null;
+
+    } catch (error) {
+      console.error('❌ Erro ao recuperar conteúdo:', error);
+      return null;
+    }
+  }
 }
+
+export default QuadroInterativoGenerator;
