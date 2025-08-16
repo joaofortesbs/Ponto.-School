@@ -18,6 +18,7 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -557,26 +558,61 @@ const EditActivityModal = ({
         }
       };
     } else if (type === 'quadro-interativo') {
-      // Simular geração de conteúdo específico para Quadro Interativo
-      const quadroContent = generateQuadroInterativoContent(data);
-      
-      return {
-        success: true,
-        data: {
-          ...data,
-          titulo: data.title || "Quadro Interativo Exemplo",
-          descricao: data.description || "Descrição do quadro interativo...",
-          conteudo: quadroContent,
+      // Usar o processador real para gerar conteúdo do Quadro Interativo
+      try {
+        const { generateQuadroInterativoContent } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+        
+        const quadroData = {
           disciplina: data.subject || 'Matemática',
           anoSerie: data.schoolYear || '6º Ano',
           tema: data.theme || 'Tema da Aula',
-          objetivos: data.objectives || 'Objetivos de aprendizagem',
+          objetivo: data.objectives || 'Objetivos de aprendizagem',
           nivelDificuldade: data.difficultyLevel || 'Intermediário',
-          atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
+          atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa'
+        };
+
+        const result = await generateQuadroInterativoContent(quadroData);
+        
+        if (result.success) {
+          return {
+            success: true,
+            data: {
+              ...data,
+              titulo: result.titulo,
+              conteudo: result.conteudo,
+              disciplina: quadroData.disciplina,
+              anoSerie: quadroData.anoSerie,
+              tema: quadroData.tema,
+              objetivos: quadroData.objetivo,
+              nivelDificuldade: quadroData.nivelDificuldade,
+              atividadeMostrada: quadroData.atividadeMostrada,
+              generatedAt: new Date().toISOString(),
+              isGeneratedByAI: true,
+            }
+          };
+        } else {
+          throw new Error(result.error || 'Erro na geração do conteúdo');
         }
-      };
+      } catch (error) {
+        console.error('Erro ao gerar conteúdo do Quadro Interativo:', error);
+        // Fallback para conteúdo de exemplo
+        return {
+          success: true,
+          data: {
+            ...data,
+            titulo: data.title || "Quadro Interativo",
+            conteudo: `Conteúdo educativo sobre ${data.theme || 'o tema da aula'} será gerado aqui pela IA do Gemini.`,
+            disciplina: data.subject || 'Matemática',
+            anoSerie: data.schoolYear || '6º Ano',
+            tema: data.theme || 'Tema da Aula',
+            objetivos: data.objectives || 'Objetivos de aprendizagem',
+            nivelDificuldade: data.difficultyLevel || 'Intermediário',
+            atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
+            generatedAt: new Date().toISOString(),
+            isGeneratedByAI: false,
+          }
+        };
+      }
     }
 
     // Função auxiliar para gerar conteúdo do Quadro Interativo
@@ -2013,8 +2049,8 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <ActivityPreview
-                        content={generatedContent || formData}
+                      <QuadroInterativoPreview
+                        data={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (

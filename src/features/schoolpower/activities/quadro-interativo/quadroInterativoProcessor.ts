@@ -510,7 +510,7 @@ export async function generateQuadroInterativoContent(
 function buildQuadroInterativoPrompt(formData: QuadroInterativoFormData): string {
   return `Você é uma IA especializada em criar conteúdo educacional para quadros interativos.
 
-Crie um conteúdo educacional completo baseado nas seguintes informações:
+Crie um conteúdo educacional simples e didático baseado nas seguintes informações:
 
 **Informações da Aula:**
 - Disciplina: ${formData.disciplina}
@@ -521,21 +521,22 @@ Crie um conteúdo educacional completo baseado nas seguintes informações:
 - Atividade Relacionada: ${formData.atividadeMostrada}
 
 **Instruções:**
-1. Crie um TÍTULO envolvente e educativo para o quadro interativo
-2. Desenvolva um CONTEÚDO didático, organizado e fácil de entender
-3. O conteúdo deve ser adequado ao nível de dificuldade especificado
-4. Inclua exemplos práticos relacionados ao tema
-5. Use uma linguagem clara e apropriada para a série/ano informado
-6. O conteúdo deve servir como apoio visual para a aula
+1. Crie um TÍTULO claro e educativo para o quadro interativo
+2. Desenvolva um CONTEÚDO didático em texto simples, bem estruturado e fácil de ler
+3. Use linguagem clara e apropriada para o ${formData.anoSerie}
+4. Inclua conceitos importantes, exemplos práticos e explicações simples
+5. Organize o conteúdo em parágrafos bem separados
+6. NÃO use formato de código, JSON ou markdown - apenas texto corrido educativo
+7. O conteúdo deve ser direto e útil para os alunos aprenderem o tema
 
 **Formato de Resposta:**
 Retorne APENAS um JSON no seguinte formato:
 {
-  "titulo": "Título do quadro interativo",
-  "conteudo": "Conteúdo educacional completo do quadro interativo"
+  "titulo": "Título claro do quadro interativo",
+  "conteudo": "Conteúdo educacional em texto simples, bem organizado em parágrafos, sem códigos ou formatação especial, apenas texto educativo direto"
 }
 
-Seja didático, criativo e certifique-se de que o conteúdo seja útil para os alunos compreenderem o tema proposto.`;
+O conteúdo deve ser um texto educativo corrido, bem explicativo e adequado para ser exibido em um quadro de aula.`;
 }
 
 function parseGeminiResponse(response: string): { titulo: string; conteudo: string } {
