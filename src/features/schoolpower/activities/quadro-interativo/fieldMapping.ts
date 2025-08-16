@@ -157,51 +157,33 @@ export function validateRequiredFields(data: Partial<QuadroInterativoFields>): b
 
 // Atualizar mapeamento de campos do Quadro Interativo para corresponder exatamente aos nomes dos campos
 export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFields, string[]> = {
-  recursos: ['Recursos', 'Materiais', 'Materiais Necessários'],
-  conteudo: ['Conteúdo', 'Instruções', 'Metodologia'],
-  interatividade: ['Interatividade', 'Atividade mostrada', 'Recursos Interativos'],
-  design: ['Design', 'Nível de Dificuldade', 'Complexidade'],
-  objetivo: ['Objetivo', 'Objetivos', 'Objetivo de aprendizagem da aula'],
-  avaliacao: ['Avaliação', 'Critérios', 'Critérios de Avaliação'],
-  title: ['title', 'Título'],
-  description: ['description', 'Descrição'],
   subject: ['Disciplina / Área de conhecimento', 'disciplina', 'Disciplina'],
   schoolYear: ['Ano / Série', 'anoSerie', 'Ano de Escolaridade'],
   theme: ['Tema ou Assunto da aula', 'tema', 'Tema'],
   objectives: ['Objetivo de aprendizagem da aula', 'objetivos', 'Objetivos'],
   difficultyLevel: ['Nível de Dificuldade', 'nivelDificuldade', 'dificuldade'],
-  quadroInterativoCampoEspecifico: ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico do Quadro Interativo'],
-  materials: ['Materiais', 'Recursos'],
-  instructions: ['Instruções', 'Metodologia'],
-  evaluation: ['Avaliação', 'Critérios de Avaliação'],
-  timeLimit: ['Tempo', 'Duração'],
-  context: ['Contexto', 'Aplicação']
+  quadroInterativoCampoEspecifico: ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico do Quadro Interativo']
 };
 
-// Função para transformar dados do plano de ação em campos do Quadro Interativo
-export function transformActionPlanToQuadroInterativoFields(actionPlanData: any): any {
+// Função para mapear dados do Action Plan para campos do formulário
+export function mapQuadroInterativoFields(actionPlanData: any): any {
   const customFields = actionPlanData.customFields || {};
 
-  console.log('🔄 Transformando dados para Quadro Interativo:', { actionPlanData, customFields });
-
-  const transformed = {
+  return {
     title: actionPlanData.personalizedTitle || actionPlanData.title || '',
     description: actionPlanData.personalizedDescription || actionPlanData.description || '',
     subject: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.subject) || 'Matemática',
-    schoolYear: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.schoolYear) || '6º Ano',
-    theme: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.theme) || actionPlanData.title || 'Tema da Aula',
-    objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || 'Objetivos de aprendizagem',
-    difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Intermediário',
-    quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Atividade interativa no quadro',
-    materials: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.materials) || 'Quadro digital, computador',
-    instructions: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.instructions) || '',
-    evaluation: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.evaluation) || '',
-    timeLimit: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.timeLimit) || '50 minutos',
-    context: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.context) || ''
+    schoolYear: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.schoolYear) || 'Ex: 6º Ano, 7º Ano, 8º Ano',
+    theme: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.theme) || actionPlanData.title || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+    objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || '',
+    difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Ex: Básico, Intermediário, Avançado',
+    quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+    materials: getFieldValue(customFields, ['Materiais', 'Recursos']), // Exemplo de mapeamento para materials
+    instructions: getFieldValue(customFields, ['Instruções', 'Metodologia']), // Exemplo de mapeamento para instructions
+    evaluation: getFieldValue(customFields, ['Avaliação', 'Critérios de Avaliação']), // Exemplo de mapeamento para evaluation
+    timeLimit: getFieldValue(customFields, ['Tempo', 'Duração']), // Exemplo de mapeamento para timeLimit
+    context: getFieldValue(customFields, ['Contexto', 'Aplicação']) // Exemplo de mapeamento para context
   };
-
-  console.log('✅ Dados transformados:', transformed);
-  return transformed;
 }
 
 function getFieldValue(customFields: any, possibleKeys: string[]): string {
@@ -212,45 +194,3 @@ function getFieldValue(customFields: any, possibleKeys: string[]): string {
   }
   return '';
 }
-
-// Configuração de campos para o formulário de edição (renomeado para evitar conflito)
-export const quadroInterativoFormFieldsConfig = {
-  'Disciplina / Área de conhecimento': {
-    type: 'text',
-    label: 'Disciplina / Área de conhecimento',
-    placeholder: 'Ex: Língua Portuguesa',
-    required: true
-  },
-  'Ano / Série': {
-    type: 'text',
-    label: 'Ano / Série',
-    placeholder: 'Ex: 3º Bimestre',
-    required: true
-  },
-  'Tema ou Assunto da aula': {
-    type: 'text',
-    label: 'Tema ou Assunto da aula',
-    placeholder: 'Ex: Substantivos Próprios e Verbos',
-    required: true
-  },
-  'Objetivo de aprendizagem da aula': {
-    type: 'textarea',
-    label: 'Objetivo de aprendizagem da aula',
-    placeholder: 'Descreva os objetivos de aprendizagem',
-    required: true
-  },
-  'Nível de Dificuldade': {
-    type: 'select',
-    label: 'Nível de Dificuldade',
-    options: ['Fácil', 'Médio', 'Difícil'],
-    required: false
-  },
-  'Atividade mostrada': {
-    type: 'text',
-    label: 'Atividade mostrada',
-    placeholder: 'Ex: lista-exercicios',
-    required: false
-  }
-};
-
-export default quadroInterativoFormFieldsConfig;

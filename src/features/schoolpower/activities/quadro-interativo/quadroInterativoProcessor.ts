@@ -275,7 +275,7 @@ export function extractQuadroInterativoData(activity: any): QuadroInterativoCust
   // Campos obrigatórios para Quadro Interativo
   const requiredFields = [
     'Disciplina / Área de conhecimento',
-    'Ano / Série',
+    'Ano / Série', 
     'Tema ou Assunto da aula',
     'Objetivo de aprendizagem da aula',
     'Nível de Dificuldade',
@@ -308,7 +308,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
   const formData = {
     title: consolidatedData.title,
     description: consolidatedData.description,
-
+    
     // Disciplina / Área de conhecimento - com múltiplos aliases
     subject: customFields['Disciplina / Área de conhecimento'] ||
              customFields['disciplina'] ||
@@ -317,7 +317,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
              customFields['Matéria'] ||
              customFields['Area de Conhecimento'] ||
              'Matemática', // Valor padrão
-
+    
     // Ano / Série - com múltiplos aliases
     schoolYear: customFields['Ano / Série'] ||
                 customFields['anoSerie'] ||
@@ -327,7 +327,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                 customFields['Série'] ||
                 customFields['ano'] ||
                 '6º Ano', // Valor padrão
-
+    
     // Tema ou Assunto da aula - com múltiplos aliases
     theme: customFields['Tema ou Assunto da aula'] ||
            customFields['tema'] ||
@@ -338,7 +338,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
            customFields['assunto'] ||
            consolidatedData.title ||
            'Tema da Aula', // Valor padrão
-
+    
     // Objetivo de aprendizagem da aula - com múltiplos aliases
     objectives: customFields['Objetivo de aprendizagem da aula'] ||
                 customFields['objetivos'] ||
@@ -349,7 +349,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                 customFields['objetivo'] ||
                 consolidatedData.description ||
                 'Objetivos de aprendizagem da aula', // Valor padrão
-
+    
     // Nível de Dificuldade - com múltiplos aliases
     difficultyLevel: customFields['Nível de Dificuldade'] ||
                      customFields['nivelDificuldade'] ||
@@ -359,7 +359,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
                      customFields['Complexidade'] ||
                      customFields['nivel'] ||
                      'Intermediário', // Valor padrão
-
+    
     // Atividade mostrada - com múltiplos aliases
     quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
                                      customFields['atividadeMostrada'] ||
@@ -438,180 +438,4 @@ export function prepareQuadroInterativoDataForModal(activity: any): any {
 
   console.log('✅ Dados do Quadro Interativo preparados para modal:', formData);
   return formData;
-}
-
-import { GeminiClient } from '@/utils/api/geminiClient';
-
-interface QuadroInterativoFormData {
-  disciplina: string;
-  anoSerie: string;
-  tema: string;
-  objetivo: string;
-  nivelDificuldade: string;
-  atividadeMostrada: string;
-}
-
-interface QuadroInterativoResult {
-  success: boolean;
-  titulo: string;
-  conteudo: string;
-  error?: string;
-}
-
-export async function generateQuadroInterativoContent(
-  formData: QuadroInterativoFormData
-): Promise<QuadroInterativoResult> {
-  console.log('🎯 Iniciando geração de conteúdo do Quadro Interativo...');
-  console.log('📋 Dados recebidos:', formData);
-
-  try {
-    const geminiClient = new GeminiClient();
-
-    const prompt = buildQuadroInterativoPrompt(formData);
-    console.log('📝 Prompt construído:', prompt);
-
-    const response = await geminiClient.generate({
-      prompt,
-      temperature: 0.7,
-      maxTokens: 2048,
-    });
-
-    if (!response.success) {
-      throw new Error(response.error || 'Erro na API Gemini');
-    }
-
-    console.log('📤 Resposta da IA recebida:', response.result);
-
-    const parsedContent = parseGeminiResponse(response.result);
-
-    if (!parsedContent.titulo || !parsedContent.conteudo) {
-      throw new Error('Resposta da IA não contém título ou conteúdo válidos');
-    }
-
-    console.log('✅ Conteúdo processado com sucesso:', parsedContent);
-
-    return {
-      success: true,
-      titulo: parsedContent.titulo,
-      conteudo: parsedContent.conteudo
-    };
-
-  } catch (error) {
-    console.error('❌ Erro na geração do conteúdo:', error);
-
-    return {
-      success: false,
-      titulo: '',
-      conteudo: '',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    };
-  }
-}
-
-function buildQuadroInterativoPrompt(formData: QuadroInterativoFormData): string {
-  return `Você é uma IA especializada em criar conteúdo educacional para quadros interativos.
-
-Crie um conteúdo educacional completo e didático baseado nas seguintes informações:
-
-**Informações da Aula:**
-- Disciplina: ${formData.disciplina}
-- Ano/Série: ${formData.anoSerie}
-- Tema: ${formData.tema}
-- Objetivo de Aprendizagem: ${formData.objetivo}
-- Nível de Dificuldade: ${formData.nivelDificuldade}
-- Atividade Relacionada: ${formData.atividadeMostrada}
-
-**Instruções:**
-1. Crie um TÍTULO claro e educativo para o quadro interativo
-2. Desenvolva um CONTEÚDO didático estruturado com:
-   - Introdução ao tema
-   - Conceitos principais explicados de forma clara
-   - Exemplos práticos e aplicações
-   - Atividades práticas para os alunos
-   - Resumo dos pontos importantes
-   - Próximos passos no aprendizado
-
-3. Use linguagem clara e apropriada para o ${formData.anoSerie}
-4. Estruture o conteúdo de forma organizada e didática
-5. Inclua elementos interativos relacionados a "${formData.atividadeMostrada}"
-6. Adapte a complexidade ao nível "${formData.nivelDificuldade}"
-
-**Formato de Resposta Obrigatório - Retorne APENAS um JSON válido:**
-{
-  "titulo": "Título claro e educativo do quadro interativo",
-  "conteudo": "Conteúdo educacional completo e estruturado em texto corrido, bem organizado em parágrafos claros e didáticos"
-}
-
-IMPORTANTE: Retorne APENAS o JSON, sem texto adicional antes ou depois.`;
-}
-
-function parseGeminiResponse(responseText: string): { titulo: string; conteudo: string } {
-  try {
-    // Limpar a resposta removendo possíveis caracteres extras
-    let cleanedResponse = responseText.trim();
-
-    // Remover possíveis blocos de código
-    cleanedResponse = cleanedResponse.replace(/```json\s*|\s*```/g, '');
-    cleanedResponse = cleanedResponse.replace(/```\s*|\s*```/g, '');
-
-    // Tentar fazer parse do JSON
-    const parsed = JSON.parse(cleanedResponse);
-
-    if (parsed.titulo && parsed.conteudo) {
-      return {
-        titulo: parsed.titulo,
-        conteudo: parsed.conteudo
-      };
-    }
-
-    throw new Error('JSON não contém campos obrigatórios');
-
-  } catch (error) {
-    console.warn('Erro ao fazer parse da resposta JSON:', error);
-
-    // Fallback: tentar extrair título e conteúdo do texto
-    const lines = responseText.split('\n').filter(line => line.trim());
-    const titulo = lines[0]?.replace(/^#+\s*/, '') || 'Quadro Interativo';
-    const conteudo = lines.slice(1).join('\n').trim() || responseText;
-
-    return { titulo, conteudo };
-  }
-}
-
-// Função auxiliar para validar dados de entrada
-export function validateQuadroInterativoData(data: Partial<QuadroInterativoFormData>): boolean {
-  const requiredFields: (keyof QuadroInterativoFormData)[] = [
-    'disciplina', 'anoSerie', 'tema', 'objetivo', 'nivelDificuldade', 'atividadeMostrada'
-  ];
-
-  return requiredFields.every(field =>
-    data[field] && typeof data[field] === 'string' && data[field]!.trim().length > 0
-  );
-}
-
-// Função para criar dados de fallback
-export function createFallbackQuadroInterativoContent(formData: Partial<QuadroInterativoFormData>): QuadroInterativoResult {
-  return {
-    success: true,
-    titulo: `${formData.tema || 'Quadro Interativo'} - ${formData.disciplina || 'Educação'}`,
-    conteudo: `
-**Introdução:**
-Bem-vindos à nossa aula sobre ${formData.tema || 'este importante tema'}! Hoje vamos explorar conceitos fundamentais de ${formData.disciplina || 'nossa disciplina'} de forma interativa e envolvente.
-
-**Objetivo de Aprendizagem:**
-${formData.objetivo || 'Desenvolver conhecimentos essenciais através de atividades práticas e participativas.'}
-
-**Desenvolvimento:**
-Durante esta aula, trabalharemos com ${formData.atividadeMostrada || 'atividades interativas'} que permitirão uma compreensão mais profunda do tema. O nível de dificuldade está adequado para ${formData.anoSerie || 'esta turma'}.
-
-**Atividades Práticas:**
-1. Participação ativa no quadro interativo
-2. Exercícios práticos em grupo
-3. Demonstrações visuais
-4. Discussões dirigidas
-
-**Conclusão:**
-Ao final desta aula, os alunos terão desenvolvido uma compreensão sólida sobre ${formData.tema || 'o tema abordado'} e estarão preparados para os próximos desafios de aprendizagem.
-    `
-  };
 }

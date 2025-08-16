@@ -18,13 +18,12 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
-import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
-const DefaultEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void}) => (
+const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <>
     <div>
       <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -73,7 +72,7 @@ const DefaultEditActivity = ({formData, onFieldChange}: {formData: ActivityFormD
 );
 
 // Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void}) => (
+const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -153,7 +152,7 @@ const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: Acti
 );
 
 // Componente específico para Sequência Didática
-const SequenciaDidaticaEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void}) => (
+const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -517,8 +516,8 @@ const EditActivityModal = ({
           title: data.title || "Lista de Exercícios Exemplo",
           description: data.description || "Descrição da lista de exercícios...",
           questoes: [
-            {id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha'},
-            {id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso'},
+            { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
+            { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
           ],
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
@@ -558,98 +557,16 @@ const EditActivityModal = ({
         }
       };
     } else if (type === 'quadro-interativo') {
-      // Usar o processador real para gerar conteúdo do Quadro Interativo
-      try {
-        const { generateQuadroInterativoContent } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
-        
-        const quadroData = {
-          disciplina: data.subject || 'Matemática',
-          anoSerie: data.schoolYear || '6º Ano',
-          tema: data.theme || 'Tema da Aula',
-          objetivo: data.objectives || 'Objetivos de aprendizagem',
-          nivelDificuldade: data.difficultyLevel || 'Intermediário',
-          atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa'
-        };
-
-        const result = await generateQuadroInterativoContent(quadroData);
-        
-        if (result.success) {
-          return {
-            success: true,
-            data: {
-              ...data,
-              titulo: result.titulo,
-              conteudo: result.conteudo,
-              disciplina: quadroData.disciplina,
-              anoSerie: quadroData.anoSerie,
-              tema: quadroData.tema,
-              objetivos: quadroData.objetivo,
-              nivelDificuldade: quadroData.nivelDificuldade,
-              atividadeMostrada: quadroData.atividadeMostrada,
-              generatedAt: new Date().toISOString(),
-              isGeneratedByAI: true,
-            }
-          };
-        } else {
-          throw new Error(result.error || 'Erro na geração do conteúdo');
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Quadro Interativo Exemplo",
+          description: data.description || "Descrição do quadro interativo...",
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
         }
-      } catch (error) {
-        console.error('Erro ao gerar conteúdo do Quadro Interativo:', error);
-        // Fallback para conteúdo de exemplo
-        return {
-          success: true,
-          data: {
-            ...data,
-            titulo: data.title || "Quadro Interativo",
-            conteudo: `Conteúdo educativo sobre ${data.theme || 'o tema da aula'} será gerado aqui pela IA do Gemini.`,
-            disciplina: data.subject || 'Matemática',
-            anoSerie: data.schoolYear || '6º Ano',
-            tema: data.theme || 'Tema da Aula',
-            objetivos: data.objectives || 'Objetivos de aprendizagem',
-            nivelDificuldade: data.difficultyLevel || 'Intermediário',
-            atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
-            generatedAt: new Date().toISOString(),
-            isGeneratedByAI: false,
-          }
-        };
-      }
-    }
-
-    // Função auxiliar para gerar conteúdo do Quadro Interativo
-    function generateQuadroInterativoContent(formData: any): string {
-      const disciplina = formData.subject || 'Matemática';
-      const tema = formData.theme || 'Tema da Aula';
-      const objetivo = formData.objectives || 'Objetivos de aprendizagem';
-      const atividade = formData.quadroInterativoCampoEspecifico || 'Atividade interativa';
-
-      return `**${tema}**
-
-📋 **Objetivos da Aula:**
-${objetivo}
-
-🎯 **Atividade Proposta:**
-${atividade}
-
-📚 **Desenvolvimento:**
-1. **Apresentação do Tema**: Introdução conceitual sobre ${tema}
-2. **Demonstração Prática**: Exemplos visuais e interativos
-3. **Participação dos Alunos**: Exercícios práticos no quadro
-4. **Consolidação**: Síntese dos conceitos aprendidos
-
-🔧 **Recursos Interativos:**
-- Quadro digital com elementos visuais
-- Participação ativa dos estudantes
-- Exercícios dinâmicos e práticos
-- Feedback imediato das respostas
-
-💡 **Dicas para o Professor:**
-- Incentive a participação de todos os alunos
-- Use cores e elementos visuais para destacar pontos importantes
-- Permita que os alunos manipulem o conteúdo no quadro
-- Faça perguntas direcionadas para verificar o entendimento
-
-✅ **Resultado Esperado:**
-Os alunos devem compreender ${tema} de forma prática e interativa, sendo capazes de aplicar os conceitos aprendidos em situações similares.`;
+      };
     }
 
     return {
@@ -896,7 +813,7 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
 
               try {
                 // Importar o processador específico do Quadro Interativo
-                const {prepareQuadroInterativoDataForModal} = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+                const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
                 // Preparar dados consolidados para o processador
                 const activityForProcessor = {
@@ -919,19 +836,19 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
                   ...processedQuadroData,
 
                   // Sobrescrever com dados automáticos se existirem e forem válidos
-                  ...(autoFormData.title && {title: autoFormData.title}),
-                  ...(autoFormData.description && {description: autoFormData.description}),
-                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && {subject: autoFormData.subject}),
-                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && {schoolYear: autoFormData.schoolYear}),
-                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && {theme: autoFormData.theme}),
-                  ...(autoFormData.objectives && {objectives: autoFormData.objectives}),
-                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && {difficultyLevel: autoFormData.difficultyLevel}),
-                  ...(autoFormData.quadroInterativoCampoEspecifico && {quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico}),
-                  ...(autoFormData.materials && {materials: autoFormData.materials}),
-                  ...(autoFormData.instructions && {instructions: autoFormData.instructions}),
-                  ...(autoFormData.evaluation && {evaluation: autoFormData.evaluation}),
-                  ...(autoFormData.timeLimit && {timeLimit: autoFormData.timeLimit}),
-                  ...(autoFormData.context && {context: autoFormData.context})
+                  ...(autoFormData.title && { title: autoFormData.title }),
+                  ...(autoFormData.description && { description: autoFormData.description }),
+                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
+                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
+                  ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
+                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
+                  ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
+                  ...(autoFormData.materials && { materials: autoFormData.materials }),
+                  ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
+                  ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
+                  ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
+                  ...(autoFormData.context && { context: autoFormData.context })
                 };
 
                 console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
@@ -1195,7 +1112,7 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
             console.log('🖼️ Processando dados diretos de Quadro Interativo');
 
             // Usar o processador específico para dados diretos também
-            const {prepareQuadroInterativoDataForModal} = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+            const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
             const processedDirectData = prepareQuadroInterativoDataForModal({
               ...activityData,
@@ -1388,17 +1305,8 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
 
       console.log('✅ Atividade construída com sucesso:', result);
 
-      // Salvar em múltiplas chaves para garantir compatibilidade
-      const storageKeys = [
-        `schoolpower_${activityType}_content`,
-        `constructed_${activityType}_${activity.id}`,
-        `activity_content_${activity.id}`,
-        `activity_${activity.id}`
-      ];
-
-      storageKeys.forEach(key => {
-        localStorage.setItem(key, JSON.stringify(result));
-      });
+      const storageKey = `schoolpower_${activityType}_content`;
+      localStorage.setItem(storageKey, JSON.stringify(result));
 
       if (activityType === 'sequencia-didatica') {
         const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;
@@ -1463,23 +1371,12 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
     };
   }, [activity, formData, isGenerating, handleBuildActivity]);
 
-  const handleSave = (updatedActivity: any) => {
-    console.log('💾 Salvando atividade editada:', updatedActivity);
-
-    // Garantir que a atividade mantém todas as propriedades necessárias
-    const activityToSave = {
-      ...activity,
-      ...updatedActivity,
-      customFields: updatedActivity.customFields || {},
-      generatedContent: updatedActivity.generatedContent || null,
-      isBuilt: updatedActivity.isBuilt || false,
-      builtAt: updatedActivity.builtAt || null
+  const handleSaveChanges = () => {
+    const activityData = {
+      ...formData,
+      generatedContent
     };
-
-    if (onSave) {
-      onSave(activityToSave);
-    }
-
+    onSave(activityData);
     onClose();
   };
 
@@ -1506,7 +1403,7 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
     };
   };
 
-  const handleSaveActivity = async () => {
+  const handleSave = async () => {
     if (!activity) return;
 
     try {
@@ -1639,17 +1536,17 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
   return (
     <AnimatePresence>
       <motion.div
-        initial={{opacity: 0}}
-        animate={{opacity: 1}}
-        exit={{opacity: 0}}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 dark:bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
-          initial={{opacity: 0, scale: 0.95}}
-          animate={{opacity: 1, scale: 1}}
-          exit={{opacity: 0, scale: 0.95}}
-          transition={{duration: 0.3}}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
           className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 max-w-7xl w-full mx-4"
           onClick={(e) => e.stopPropagation()}
         >
@@ -2049,8 +1946,8 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <QuadroInterativoPreview
-                        data={generatedContent || formData}
+                      <ActivityPreview
+                        content={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (
@@ -2114,7 +2011,7 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
               </Button>
             )}
             <Button
-              onClick={handleSaveActivity}
+              onClick={handleSave}
               className="px-6 bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold"
             >
               <Save className="h-4 w-4 mr-2" />

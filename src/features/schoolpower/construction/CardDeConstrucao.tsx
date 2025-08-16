@@ -81,10 +81,6 @@ export interface ActionPlanItem {
   customFields?: Record<string, string>;
   isManual?: boolean;
   isBuilt?: boolean;
-  builtAt?: Date | null;
-  generatedContent?: string | null;
-  originalData?: ActionPlanItem; // Para guardar dados originais quando necessário
-  actionPlanActivity?: ActionPlanItem; // Para guardar dados do plano de ação quando necessário
 }
 
 interface CardDeConstrucaoProps {
@@ -633,8 +629,8 @@ export function CardDeConstrucao({
   };
 
   const [selectedTrilhasCount, setSelectedTrilhasCount] = useState(0);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<ActionPlanItem | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<ActionPlanItem | null>(null);
 
   useEffect(() => {
     const trilhasActivityIds = [
@@ -687,29 +683,107 @@ export function CardDeConstrucao({
     console.log('🔧 Custom fields salvos:', customFields);
 
     // Update modal state
-    if (typeof setEditingActivity === 'function') {
-      setEditingActivity(activity);
+    if (typeof setSelectedActivity === 'function') {
+      setSelectedActivity(activity);
     }
-    if (typeof setIsEditModalOpen === 'function') {
-      setIsEditModalOpen(true);
+    if (typeof setShowEditModal === 'function') {
+      setShowEditModal(true);
     }
   };
 
   // Adicionar preenchimento automático dos campos do modal com dados da IA
-  const handleEditActivity = (activity: ActionPlanItem) => {
-    console.log('🔧 Editando atividade:', activity);
+  const handleEditActivity = (activity: any) => {
+    console.log('🔧 Editando atividade:', activity.id);
+    console.log('🔍 Dados completos da atividade:', activity);
 
-    // Garantir que customFields existe
-    const activityWithFields = {
-      ...activity,
-      customFields: activity.customFields || {},
-      generatedContent: activity.generatedContent || null,
-      isBuilt: activity.isBuilt || false,
-      builtAt: activity.builtAt || null
+    // Buscar dados da atividade no action plan se disponível
+    const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
+                               actionPlan?.find(item => item.id === activity.id);
+
+    // Também verificar nos dados originais da atividade
+    const originalData = activity.originalData || activity;
+
+    console.log('📊 Action plan activity encontrada:', actionPlanActivity);
+    console.log('📊 Dados originais da atividade:', originalData);
+
+    // Coletar todos os customFields disponíveis
+    const customFields = {
+      ...originalData?.customFields,
+      ...actionPlanActivity?.customFields
     };
 
-    setEditingActivity(activityWithFields);
-    setIsEditModalOpen(true);
+    console.log('🗂️ Custom fields consolidados:', customFields);
+
+    if (customFields && Object.keys(customFields).length > 0) {
+      console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
+
+      // Processamento específico para diferentes tipos de atividades
+      let autoFormData;
+      if (activity.id === 'sequencia-didatica') {
+        autoFormData = processSequenciaDidaticaData({
+          id: activity.id,
+          title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+          description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+          customFields: customFields
+        });
+
+        console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
+      } else if (activity.id === 'quadro-interativo') {
+        console.log('🖼️ Processando atividade Quadro Interativo do Action Plan');
+        const processedData = processQuadroInterativoData(activity);
+        console.log('📊 Dados processados para armazenamento:', processedData);
+        storeAutoData(activity, processedData, customFields, originalData, actionPlanActivity);
+      } else {
+        // Processamento padrão para outras atividades
+        autoFormData = {
+          title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+          description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+          subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
+          theme: customFields['Tema'] || customFields['tema'] || customFields['Tema das Palavras'] || customFields['Tema do Vocabulário'] || '',
+          schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['ano'] || '',
+          numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || customFields['Quantidade de Palavras'] || '10',
+          difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || customFields['dificuldade'] || 'Médio',
+          questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || customFields['Tipo de Avaliação'] || '',
+          sources: customFields['Fontes'] || customFields['fontes'] || customFields['Referencias'] || '',
+          objectives: customFields['Objetivos'] || customFields['objetivos'] || customFields['Competências Trabalhadas'] || '',
+          materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
+          instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
+          evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
+          // Campos adicionais específicos
+          timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
+          context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || customFields['contexto'] || '',
+          textType: customFields['Tipo de Texto'] || customFields['tipoTexto'] || '',
+          textGenre: customFields['Gênero Textual'] || customFields['generoTextual'] || '',
+          textLength: customFields['Extensão do Texto'] || customFields['extensaoTexto'] || '',
+          associatedQuestions: customFields['Questões Associadas'] || customFields['questoesAssociadas'] || '',
+          competencies: customFields['Competências Trabalhadas'] || customFields['competencias'] || '',
+          readingStrategies: customFields['Estratégias de Leitura'] || customFields['estrategiasLeitura'] || '',
+          visualResources: customFields['Recursos Visuais'] || customFields['recursosVisuais'] || '',
+          practicalActivities: customFields['Atividades Práticas'] || customFields['atividadesPraticas'] || '',
+          wordsIncluded: customFields['Palavras Incluídas'] || customFields['palavrasIncluidas'] || '',
+          gridFormat: customFields['Formato da Grade'] || customFields['formatoGrade'] || '',
+          providedHints: customFields['Dicas Fornecidas'] || customFields['dicasFornecidas'] || '',
+          vocabularyContext: customFields['Contexto de Uso'] || customFields['contextoUso'] || '',
+          language: customFields['Idioma'] || customFields['idioma'] || '',
+          associatedExercises: customFields['Exercícios Associados'] || customFields['exerciciosAssociados'] || '',
+          knowledgeArea: customFields['Área de Conhecimento'] || customFields['areaConhecimento'] || '',
+          complexityLevel: customFields['Nível de Complexidade'] || customFields['nivelComplexidade'] || ''
+        };
+      }
+
+      // Salvar dados automáticos no localStorage para o modal usar
+      // A lógica de salvar no localStorage e abrir o modal foi movida para a função storeAutoData
+      // A chamada para storeAutoData é feita dentro dos blocos if/else acima.
+    } else {
+      console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
+      // Se não houver custom fields, ainda assim abrir o modal se for o caso
+      if (typeof setSelectedActivity === 'function') {
+        setSelectedActivity(activity);
+      }
+      if (typeof setShowEditModal === 'function') {
+        setShowEditModal(true);
+      }
+    }
   };
 
   const handleUpdateActivity = async (updatedActivity: any) => {
@@ -1481,12 +1555,12 @@ export function CardDeConstrucao({
         </button>
       )}
       <EditActivityModal
-        isOpen={isEditModalOpen}
+        isOpen={showEditModal}
         onClose={() => {
-          setIsEditModalOpen(false);
-          setEditingActivity(null);
+          setShowEditModal(false);
+          setSelectedActivity(null);
         }}
-        activity={editingActivity}
+        activity={selectedActivity}
         onUpdateActivity={handleUpdateActivity}
       />
     </motion.div>
