@@ -1,3 +1,4 @@
+
 import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityTypes';
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
 import { sequenciaDidaticaGenerator } from '../../activities/sequencia-didatica/SequenciaDidaticaGenerator';
@@ -227,7 +228,6 @@ export const generateActivityContent = async (
       }
     }
 
-
     // Para lista de exercícios, usar prompt específico
     if (activityType === 'lista-exercicios') {
       const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
@@ -446,55 +446,3 @@ ${activityData.descricao || activityData.description || 'Sem descrição'}
     return activityData;
   }
 }
-
-        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-          cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
-        }
-
-        const parsedResult = JSON.parse(cleanedResponse);
-
-        // Validação para lista de exercícios
-        if (!parsedResult.questoes || !Array.isArray(parsedResult.questoes)) {
-          throw new Error('Campo questoes não encontrado ou não é um array');
-        }
-
-        if (parsedResult.questoes.length === 0) {
-          throw new Error('Array de questões está vazio');
-        }
-
-        parsedResult.isGeneratedByAI = true;
-        parsedResult.generatedAt = new Date().toISOString();
-
-        return parsedResult;
-      } else {
-        throw new Error(response.error || 'Falha na geração de conteúdo');
-      }
-    }
-
-    // Prompt genérico para outros tipos
-    const prompt = `
-Crie o conteúdo educacional para uma atividade do tipo "${activityType}" com base no seguinte contexto:
-
-CONTEXTO:
-${JSON.stringify(contextData, null, 2)}
-
-FORMATO: Responda em JSON estruturado com todos os campos relevantes para o tipo de atividade solicitado.
-REQUISITOS: Conteúdo educativo, bem estruturado e adequado ao contexto fornecido.
-
-Responda APENAS com o JSON, sem texto adicional.`;
-
-    console.log('📤 Enviando prompt para Gemini...');
-
-    const response = await geminiClient.generate({
-      prompt,
-      temperature: 0.7,
-      maxTokens: 4000,
-      topP: 0.9,
-      topK: 40
-    });
-
-    if (response.success) {
-      console.log('✅ Resposta recebida do Gemini');
-
-      let cleanedResponse = response.result.trim();
-      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/
