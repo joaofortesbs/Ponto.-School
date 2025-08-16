@@ -20,13 +20,6 @@ import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/Plano
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import { CheckCircle2 } from 'lucide-react';
 
-// Lazy import do QuadroInterativoPreview
-const QuadroInterativoPreviewLazy = React.lazy(() => 
-  import('../activities/quadro-interativo/QuadroInterativoPreview').then(module => ({
-    default: module.QuadroInterativoPreview || module.default
-  }))
-);
-
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
@@ -313,109 +306,6 @@ const processExerciseListData = (formData: ActivityFormData, generatedContent: a
     ...generatedContent
   };
 };
-
-// Função para processar dados da Sequência Didática
-  const processSequenciaDidaticaData = (formData: any, content: any) => {
-    console.log('📚 Processando dados da Sequência Didática para preview:', { formData, content });
-
-    return {
-      ...content,
-      ...formData,
-      type: 'sequencia-didatica',
-      title: formData.titulo || formData.title || 'Sequência Didática',
-      description: formData.descricao || formData.description || 'Descrição da sequência didática',
-      customFields: formData
-    };
-  };
-
-  // Função para processar dados do Quadro Interativo
-  const processQuadroInterativoData = (formData: any, content: any) => {
-    console.log('🖼️ Processando dados do Quadro Interativo para preview:', { formData, content });
-
-    // Mapear corretamente os campos do formulário
-    const mappedFields = {
-      'Disciplina / Área de conhecimento': formData.subject || formData['Disciplina / Área de conhecimento'] || 'Multidisciplinar',
-      'Ano / Série': formData.schoolYear || formData['Ano / Série'] || 'Ensino Fundamental',
-      'Tema ou Assunto da aula': formData.theme || formData['Tema ou Assunto da aula'] || 'Tema',
-      'Objetivo de aprendizagem da aula': formData.objectives || formData['Objetivo de aprendizagem da aula'] || 'Objetivo',
-      'Nível de Dificuldade': formData.difficultyLevel || formData['Nível de Dificuldade'] || 'Médio',
-      'Atividade mostrada': formData.quadroInterativoCampoEspecifico || formData['Atividade mostrada'] || 'Atividade'
-    };
-
-    console.log('🔄 Campos mapeados:', mappedFields);
-
-    // Se há conteúdo gerado pela IA, processar corretamente
-    if (content) {
-      console.log('✅ Conteúdo da IA encontrado:', content);
-      
-      // Se o conteúdo é uma string, tentar parsear
-      let parsedContent = content;
-      if (typeof content === 'string') {
-        try {
-          parsedContent = JSON.parse(content);
-        } catch (e) {
-          console.log('⚠️ Conteúdo não é JSON válido, tratando como texto');
-          parsedContent = {
-            titulo: mappedFields['Tema ou Assunto da aula'],
-            text: content,
-            content: content
-          };
-        }
-      }
-
-      return {
-        ...parsedContent,
-        titulo: parsedContent.titulo || mappedFields['Tema ou Assunto da aula'],
-        subtitulo: parsedContent.subtitulo || mappedFields['Objetivo de aprendizagem da aula'],
-        type: 'quadro-interativo',
-        customFields: mappedFields,
-        isGeneratedByAI: true,
-        generatedAt: new Date().toISOString()
-      };
-    }
-
-    // Se não há conteúdo, criar estrutura básica com os dados do formulário
-    const basicStructure = {
-      titulo: mappedFields['Tema ou Assunto da aula'] || 'Quadro Interativo',
-      subtitulo: mappedFields['Objetivo de aprendizagem da aula'] || 'Objetivo de aprendizagem',
-      conteudo: {
-        introducao: `Bem-vindos ao estudo sobre ${mappedFields['Tema ou Assunto da aula'] || 'o tema'}. Este quadro interativo foi desenvolvido para facilitar a compreensão dos conceitos principais.`,
-        conceitosPrincipais: [
-          {
-            titulo: mappedFields['Tema ou Assunto da aula'] || 'Conceito Principal',
-            explicacao: `Exploraremos os fundamentos de ${mappedFields['Tema ou Assunto da aula'] || 'este tema'} de forma didática e interativa.`,
-            exemplo: 'Exemplo prático será apresentado durante a atividade.'
-          }
-        ],
-        exemplosPraticos: [
-          'Exemplo 1: Aplicação prática do conceito',
-          'Exemplo 2: Situação real de uso'
-        ],
-        atividadesPraticas: [
-          {
-            titulo: 'Atividade Prática',
-            instrucoes: 'Siga as instruções apresentadas no quadro para realizar a atividade.',
-            objetivo: mappedFields['Objetivo de aprendizagem da aula'] || 'Fixar o aprendizado'
-          }
-        ],
-        resumo: `Resumo dos principais pontos abordados sobre ${mappedFields['Tema ou Assunto da aula'] || 'o tema'}.`,
-        proximosPassos: 'Continue explorando o tema com as próximas atividades.'
-      },
-      recursos: ['Quadro interativo', 'Material de apoio', 'Exemplos práticos'],
-      objetivosAprendizagem: [
-        mappedFields['Objetivo de aprendizagem da aula'] || 'Compreender o tema',
-        'Aplicar os conceitos na prática',
-        'Desenvolver habilidades específicas'
-      ],
-      customFields: mappedFields,
-      type: 'quadro-interativo',
-      isGeneratedByAI: !!content
-    };
-
-    console.log('🔧 Estrutura básica criada:', basicStructure);
-    return basicStructure;
-  };
-
 
 interface EditActivityModalProps {
   isOpen: boolean;
@@ -1408,27 +1298,13 @@ const EditActivityModal = ({
       const activityType = activity.type || activity.id || activity.categoryId;
       console.log('🎯 Tipo de atividade determinado:', activityType);
 
-      let result;
-      
-      // Para Quadro Interativo, usar a API real do Gemini
-      if (activityType === 'quadro-interativo') {
-        try {
-          result = await generateActivity(formData);
-          console.log('🖼️ Conteúdo do Quadro Interativo gerado pela API:', result);
-        } catch (apiError) {
-          console.warn('⚠️ Erro na API, usando fallback:', apiError);
-          result = await generateActivityContent(activityType, formData);
-        }
-      } else {
-        result = await generateActivityContent(activityType, formData);
-      }
+      const result = await generateActivityContent(activityType, formData);
 
       clearInterval(progressTimer);
       setBuildProgress(100);
 
       console.log('✅ Atividade construída com sucesso:', result);
 
-      // Salvar em múltiplas chaves para garantir compatibilidade
       const storageKey = `schoolpower_${activityType}_content`;
       localStorage.setItem(storageKey, JSON.stringify(result));
 
@@ -1442,14 +1318,6 @@ const EditActivityModal = ({
         const viewStorageKey = `constructed_plano-aula_${activity.id}`;
         localStorage.setItem(viewStorageKey, JSON.stringify(result));
         console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
-      }
-
-      if (activityType === 'quadro-interativo') {
-        const viewStorageKey = `constructed_quadro-interativo_${activity.id}`;
-        localStorage.setItem(viewStorageKey, JSON.stringify(result));
-        localStorage.setItem('constructed_quadro-interativo_content', JSON.stringify(result));
-        localStorage.setItem('quadro_interativo_data_generated', JSON.stringify(result));
-        console.log('💾 Dados do quadro interativo salvos para visualização:', viewStorageKey);
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -1483,7 +1351,7 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [activity, formData, isBuilding, toast, generateActivity]);
+  }, [activity, formData, isBuilding, toast]);
 
   // Função para automação - será chamada externamente
   useEffect(() => {
@@ -2086,15 +1954,13 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'sequencia-didatica' ? (
                       <SequenciaDidaticaPreview
-                        data={processSequenciaDidaticaData(formData, generatedContent)}
+                        data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <React.Suspense fallback={<div className="flex items-center justify-center p-8">Carregando preview...</div>}>
-                        <QuadroInterativoPreviewLazy 
-                          data={processQuadroInterativoData(formData, generatedContent)}
-                          activityData={activity}
-                        />
-                      </React.Suspense>
+                      <ActivityPreview
+                        content={generatedContent || formData}
+                        activityData={activity}
+                      />
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}

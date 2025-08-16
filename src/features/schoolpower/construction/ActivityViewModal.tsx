@@ -10,7 +10,7 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
-// Dynamically imported below for QuadroInterativoPreview
+import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -167,7 +167,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   const questionsForSidebar = getQuestionsForSidebar();
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
-
+  
   // Determinar tipo da atividade CORRETAMENTE
     const activityType = activity.type || 
                         activity.originalData?.type || 
@@ -414,41 +414,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityData={activity}
           />
         );
-
+        
       case 'quadro-interativo':
         console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
-
-        // Verificar se existe conteúdo gerado pela IA em múltiplas chaves
-        const quadroContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`) ||
-                            localStorage.getItem('constructed_quadro-interativo_content') ||
-                            localStorage.getItem('quadro_interativo_data_generated') ||
-                            localStorage.getItem(`schoolpower_quadro-interativo_content`) ||
-                            localStorage.getItem(`activity_${activity.id}_content`);
-
-        let quadroData = previewData;
-        if (quadroContent) {
-          try {
-            const parsedContent = JSON.parse(quadroContent);
-            console.log('✅ Conteúdo do Quadro Interativo encontrado:', parsedContent);
-            quadroData = {
-              ...previewData,
-              ...parsedContent,
-              isGeneratedByAI: true
-            };
-          } catch (error) {
-            console.warn('⚠️ Erro ao parsear conteúdo do Quadro Interativo:', error);
-          }
-        }
-
-        const QuadroInterativoPreview = React.lazy(() => 
-          import('../activities/quadro-interativo/QuadroInterativoPreview').then(module => ({
-            default: module.QuadroInterativoPreview || module.default
-          }))
-        );
         return (
-          <React.Suspense fallback={<div className="flex items-center justify-center p-8">Carregando preview...</div>}>
-            <QuadroInterativoPreview data={quadroData} activityData={activity} />
-          </React.Suspense>
+          <QuadroInterativoPreview
+            data={previewData}
+            activityData={activity}
+          />
         );
 
       default:
