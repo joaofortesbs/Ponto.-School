@@ -169,40 +169,10 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
                 <p className="text-orange-700">{processedData.atividadeMostrada}</p>
               </div>
             </div>
-
-            {/* Materiais */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200 mt-6">
-              <h4 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Materiais Necessários
-              </h4>
-              <p className="text-purple-700">{processedData.materiais}</p>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Informações da Atividade */}
-        <Card className="rounded-2xl border-2 border-gray-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl">
-            <CardTitle className="text-xl text-gray-800">Informações da Atividade</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{processedData.disciplina}</div>
-                <div className="text-sm text-gray-500">Disciplina</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{processedData.anoSerie}</div>
-                <div className="text-sm text-gray-500">Ano/Série</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{processedData.nivelDificuldade}</div>
-                <div className="text-sm text-gray-500">Nível</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
       </div>
     </div>
   );
