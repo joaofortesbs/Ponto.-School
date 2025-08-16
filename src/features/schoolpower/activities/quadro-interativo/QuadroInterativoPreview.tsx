@@ -163,20 +163,66 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           </Card>
         </div>
 
-        {/* Atividade Interativa */}
+        {/* Atividade Interativa Gerada pela IA */}
         <Card className="shadow-md border-l-4 border-l-blue-500">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <PlayCircle className="h-5 w-5 text-blue-600" />
               Atividade no Quadro Interativo
+              {data.isGeneratedByAI && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 text-xs">
+                  ✨ Gerado por IA
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
-                {previewData.activityShown}
-              </p>
-            </div>
+            {/* Card Flutuante para Conteúdo da IA */}
+            {data.titulo && data.conteudo ? (
+              <div className="relative">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-800 shadow-lg">
+                  {/* Título da Atividade */}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-2">
+                      {data.titulo}
+                    </h3>
+                    <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
+                  </div>
+                  
+                  {/* Conteúdo da Atividade */}
+                  <div className="prose prose-sm max-w-none">
+                    <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                      {data.conteudo}
+                    </div>
+                  </div>
+                  
+                  {/* Informações Adicionais */}
+                  {data.quadroInterativoCampoEspecifico && (
+                    <div className="mt-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                        <span className="font-semibold">Tipo de Interação:</span> {data.quadroInterativoCampoEspecifico}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Marca d'água IA */}
+                  {data.isGeneratedByAI && (
+                    <div className="mt-4 flex items-center justify-end">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                        Conteúdo gerado por IA Gemini
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed font-medium">
+                  {previewData.activityShown || 'Aguardando geração do conteúdo...'}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

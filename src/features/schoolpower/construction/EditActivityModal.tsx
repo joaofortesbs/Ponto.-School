@@ -1320,6 +1320,12 @@ const EditActivityModal = ({
         console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
       }
 
+      if (activityType === 'quadro-interativo') {
+        const viewStorageKey = `constructed_quadro-interativo_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result));
+        console.log('💾 Dados do quadro interativo salvos para visualização:', viewStorageKey);
+      }
+
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
         generatedContent: result,
@@ -1946,10 +1952,15 @@ const EditActivityModal = ({
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <ActivityPreview
-                        content={generatedContent || formData}
-                        activityData={activity}
-                      />
+                      (() => {
+                        const { default: QuadroInterativoPreview } = require('../../activities/quadro-interativo/QuadroInterativoPreview');
+                        return (
+                          <QuadroInterativoPreview
+                            data={generatedContent || formData}
+                            activityData={activity}
+                          />
+                        );
+                      })()
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}

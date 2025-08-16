@@ -156,6 +156,30 @@ export const generateActivityContent = async (
       return sequenciaGerada;
     }
 
+    // Para Quadro Interativo, usar gerador específico
+    if (activityType === 'quadro-interativo') {
+      const { generateQuadroInterativoContent } = await import('../../activities/quadro-interativo/quadroInterativoProcessor');
+      
+      console.log('🎯 Gerando conteúdo específico para Quadro Interativo');
+      
+      const quadroContent = await generateQuadroInterativoContent({
+        subject: contextData.subject || 'Matemática',
+        schoolYear: contextData.schoolYear || '6º Ano',
+        theme: contextData.theme || 'Tema da Aula',
+        objectives: contextData.objectives || 'Objetivos de aprendizagem',
+        difficultyLevel: contextData.difficultyLevel || 'Intermediário',
+        quadroInterativoCampoEspecifico: contextData.quadroInterativoCampoEspecifico || 'Atividade interativa',
+        materials: contextData.materials,
+        instructions: contextData.instructions,
+        evaluation: contextData.evaluation,
+        timeLimit: contextData.timeLimit,
+        context: contextData.context
+      });
+      
+      console.log('✅ Quadro Interativo gerado com sucesso:', quadroContent);
+      return quadroContent;
+    }
+
     // Para lista de exercícios, usar prompt específico
     if (activityType === 'lista-exercicios') {
       const { buildListaExerciciosPrompt } = await import('../../prompts/listaExerciciosPrompt');
