@@ -73,6 +73,30 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     }
   };
 
+  // Função para renderizar conteúdo de forma segura
+  const renderSafeContent = (content: any): React.ReactNode => {
+    if (!content) return null;
+
+    if (typeof content === 'string') {
+      return <p className="text-gray-700 dark:text-gray-300">{content}</p>;
+    }
+
+    if (Array.isArray(content)) {
+      return (
+        <ul className="list-disc pl-5 space-y-1">
+          {content.map((item, index) => (
+            <li key={index} className="text-gray-700 dark:text-gray-300">
+              {typeof item === 'string' ? item : String(item)}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    // Se for um objeto, converter para string
+    return <p className="text-gray-700 dark:text-gray-300">{String(content)}</p>;
+  };
+
   // Se não há conteúdo gerado, mostrar estado de carregamento
   if (!generatedContent) {
     return (
@@ -239,154 +263,71 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {generatedContent?.conteudo ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-inner border border-purple-200 dark:border-purple-700">
-                <div className="prose dark:prose-invert max-w-none">
-                  <div className="text-gray-800 dark:text-gray-200 leading-relaxed text-base">
-                    {generatedContent.conteudo}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-inner border border-purple-200 dark:border-purple-700">
+              <div className="prose dark:prose-invert max-w-none space-y-6">
+                {/* Aqui será exibido o conteúdo gerado pela IA */}
+                {generatedContent.introducao && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">Introdução</h3>
+                    {renderSafeContent(generatedContent.introducao)}
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-inner border border-purple-200 dark:border-purple-700 text-center">
-                <div className="animate-pulse">
-                  <Monitor className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    Processando Conteúdo
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    O conteúdo do Quadro Interativo está sendo gerado...
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                )}
 
-        {/* Conteúdo Gerado */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Quadro Interativo:
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {/* Aqui será exibido o conteúdo gerado pela IA */}
-              {generatedContent && typeof generatedContent === 'object' ? (
-                <div className="prose dark:prose-invert max-w-none space-y-6">
-                  {generatedContent.introducao && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                      <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">Introdução</h3>
-                      <p className="text-gray-700 dark:text-gray-300">{generatedContent.introducao}</p>
-                    </div>
-                  )}
+                {generatedContent.conceitosPrincipais && (
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">Conceitos Principais</h3>
+                    {renderSafeContent(generatedContent.conceitosPrincipais)}
+                  </div>
+                )}
 
-                  {generatedContent.conceitosPrincipais && (
-                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                      <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">Conceitos Principais</h3>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {typeof generatedContent.conceitosPrincipais === 'string' 
-                          ? <p>{generatedContent.conceitosPrincipais}</p>
-                          : Array.isArray(generatedContent.conceitosPrincipais)
-                          ? (
-                            <ul className="list-disc pl-5 space-y-1">
-                              {generatedContent.conceitosPrincipais.map((conceito: string, index: number) => (
-                                <li key={index}>{conceito}</li>
-                              ))}
-                            </ul>
-                          )
-                          : <p>{String(generatedContent.conceitosPrincipais)}</p>
-                        }
-                      </div>
-                    </div>
-                  )}
+                {generatedContent.exemplosPraticos && (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Exemplos Práticos</h3>
+                    {renderSafeContent(generatedContent.exemplosPraticos)}
+                  </div>
+                )}
 
-                  {generatedContent.exemplosPraticos && (
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                      <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Exemplos Práticos</h3>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {typeof generatedContent.exemplosPraticos === 'string' 
-                          ? <p>{generatedContent.exemplosPraticos}</p>
-                          : Array.isArray(generatedContent.exemplosPraticos)
-                          ? (
-                            <ul className="list-disc pl-5 space-y-1">
-                              {generatedContent.exemplosPraticos.map((exemplo: string, index: number) => (
-                                <li key={index}>{exemplo}</li>
-                              ))}
-                            </ul>
-                          )
-                          : <p>{String(generatedContent.exemplosPraticos)}</p>
-                        }
-                      </div>
-                    </div>
-                  )}
+                {generatedContent.atividadesPraticas && (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-2">Atividades Práticas</h3>
+                    {renderSafeContent(generatedContent.atividadesPraticas)}
+                  </div>
+                )}
 
-                  {generatedContent.atividadesPraticas && (
-                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                      <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-200 mb-2">Atividades Práticas</h3>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {typeof generatedContent.atividadesPraticas === 'string' 
-                          ? <p>{generatedContent.atividadesPraticas}</p>
-                          : Array.isArray(generatedContent.atividadesPraticas)
-                          ? (
-                            <ul className="list-disc pl-5 space-y-1">
-                              {generatedContent.atividadesPraticas.map((atividade: string, index: number) => (
-                                <li key={index}>{atividade}</li>
-                              ))}
-                            </ul>
-                          )
-                          : <p>{String(generatedContent.atividadesPraticas)}</p>
-                        }
-                      </div>
-                    </div>
-                  )}
-
-                  {generatedContent.resumo && (
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Resumo</h3>
-                      <p className="text-gray-700 dark:text-gray-300">{generatedContent.resumo}</p>
-                    </div>
-                  )}
-
-                  {generatedContent.proximosPassos && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
-                      <h3 className="text-lg font-semibold text-indigo-800 dark:text-indigo-200 mb-2">Próximos Passos</h3>
-                      <div className="text-gray-700 dark:text-gray-300">
-                        {typeof generatedContent.proximosPassos === 'string' 
-                          ? <p>{generatedContent.proximosPassos}</p>
-                          : Array.isArray(generatedContent.proximosPassos)
-                          ? (
-                            <ul className="list-disc pl-5 space-y-1">
-                              {generatedContent.proximosPassos.map((passo: string, index: number) => (
-                                <li key={index}>{passo}</li>
-                              ))}
-                            </ul>
-                          )
-                          : <p>{String(generatedContent.proximosPassos)}</p>
-                        }
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : generatedContent && typeof generatedContent === 'string' ? (
-                <div className="prose dark:prose-invert max-w-none">
+                {generatedContent.resumo && (
                   <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-700 dark:text-gray-300">{generatedContent}</p>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Resumo</h3>
+                    {renderSafeContent(generatedContent.resumo)}
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="text-gray-500 dark:text-gray-400">
-                    <Monitor className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium">Conteúdo não disponível</p>
-                    <p className="text-sm">
-                      O conteúdo do Quadro Interativo ainda não foi gerado.
-                    </p>
+                )}
+
+                {generatedContent.proximosPassos && (
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-indigo-800 dark:text-indigo-200 mb-2">Próximos Passos</h3>
+                    {renderSafeContent(generatedContent.proximosPassos)}
                   </div>
-                </div>
-              )}
+                )}
+
+                {/* Se não há seções específicas, mostrar o conteúdo geral */}
+                {!generatedContent.introducao && !generatedContent.conceitosPrincipais && generatedContent.conteudo && (
+                  <div className="text-gray-800 dark:text-gray-200 leading-relaxed text-base">
+                    {renderSafeContent(generatedContent.conteudo)}
+                  </div>
+                )}
+
+                {/* Se não há conteúdo específico, mostrar mensagem padrão */}
+                {!generatedContent.introducao && !generatedContent.conceitosPrincipais && !generatedContent.conteudo && (
+                  <div className="text-center py-8">
+                    <div className="text-gray-500 dark:text-gray-400">
+                      <Monitor className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg font-medium">Conteúdo em processamento</p>
+                      <p className="text-sm">
+                        O conteúdo do Quadro Interativo está sendo preparado.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -402,7 +343,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
-                {generatedContent.recursos}
+                {renderSafeContent(generatedContent.recursos)}
               </div>
             </CardContent>
           </Card>
@@ -419,7 +360,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
-                {generatedContent.instrucoes}
+                {renderSafeContent(generatedContent.instrucoes)}
               </div>
             </CardContent>
           </Card>
