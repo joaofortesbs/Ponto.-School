@@ -446,10 +446,6 @@ ${activityData.descricao || activityData.description || 'Sem descrição'}
     return activityData;
   }
 }
-```json\s*/g, '').replace(/```\s*$/g, '');
-
-        const jsonStart = cleanedResponse.indexOf('{');
-        const jsonEnd = cleanedResponse.lastIndexOf('}');
 
         if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
           cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
