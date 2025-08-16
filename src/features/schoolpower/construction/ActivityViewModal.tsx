@@ -476,10 +476,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         } else {
           console.log('⚠️ No specific quadro interativo content found');
           // Create basic structure from form data
-          previewDdata' (API result)
-          if (quadroContent.data) {
-            processedData = quadroContent.data;
-          }
+          previewData = {
+            ...previewData,
+            conteudo: {
+              titulo: previewData.title || 'Quadro Interativo',
+              descricao: previewData.description || 'Conteúdo do quadro interativo',
+              introducao: 'Conteúdo será carregado quando gerado pela IA',
+              conceitosPrincipais: [],
+              exemplosPraticos: [],
+              atividadesPraticas: [],
+              resumo: '',
+              proximosPassos: []
+            },
+            metadados: {
+              isGeneratedByAI: false,
+              generatedAt: new Date().toISOString()
+            }
+          };
+        }
 
           // If it has success and structured data
           if (quadroContent.success && quadroContent.data) {
