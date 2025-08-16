@@ -1,4 +1,3 @@
-
 export interface QuadroInterativoFields {
   recursos: string;
   conteudo: string;
@@ -179,25 +178,30 @@ export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFi
   context: ['Contexto', 'Aplicação']
 };
 
-// Função para mapear dados do Action Plan para campos do formulário
-export function mapQuadroInterativoFields(actionPlanData: any): any {
+// Função para transformar dados do plano de ação em campos do Quadro Interativo
+export function transformActionPlanToQuadroInterativoFields(actionPlanData: any): any {
   const customFields = actionPlanData.customFields || {};
 
-  return {
+  console.log('🔄 Transformando dados para Quadro Interativo:', { actionPlanData, customFields });
+
+  const transformed = {
     title: actionPlanData.personalizedTitle || actionPlanData.title || '',
     description: actionPlanData.personalizedDescription || actionPlanData.description || '',
     subject: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.subject) || 'Matemática',
-    schoolYear: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.schoolYear) || 'Ex: 6º Ano, 7º Ano, 8º Ano',
-    theme: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.theme) || actionPlanData.title || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
-    objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || '',
-    difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Ex: Básico, Intermediário, Avançado',
-    quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
-    materials: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.materials) || '',
+    schoolYear: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.schoolYear) || '6º Ano',
+    theme: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.theme) || actionPlanData.title || 'Tema da Aula',
+    objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || 'Objetivos de aprendizagem',
+    difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Intermediário',
+    quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Atividade interativa no quadro',
+    materials: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.materials) || 'Quadro digital, computador',
     instructions: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.instructions) || '',
     evaluation: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.evaluation) || '',
-    timeLimit: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.timeLimit) || '',
+    timeLimit: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.timeLimit) || '50 minutos',
     context: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.context) || ''
   };
+
+  console.log('✅ Dados transformados:', transformed);
+  return transformed;
 }
 
 function getFieldValue(customFields: any, possibleKeys: string[]): string {

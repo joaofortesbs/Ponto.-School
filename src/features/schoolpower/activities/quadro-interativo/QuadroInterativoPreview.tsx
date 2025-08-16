@@ -1,6 +1,8 @@
+
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { BookOpen, Target, Clock, Users, Lightbulb, CheckCircle } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
   data: any;
@@ -11,186 +13,197 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
   console.log('🖼️ QuadroInterativoPreview: Dados recebidos:', data);
   console.log('🖼️ QuadroInterativoPreview: Activity data:', activityData);
 
-  // Extrair título e conteúdo gerado pela IA
-  let titulo = 'Quadro Interativo';
-  let conteudo = '';
+  // Extrair dados estruturados
+  let processedData = {
+    titulo: 'Quadro Interativo',
+    disciplina: 'Matemática',
+    anoSerie: '6º Ano',
+    tema: 'Tema da Aula',
+    objetivos: 'Objetivos de aprendizagem',
+    nivelDificuldade: 'Intermediário',
+    atividadeMostrada: 'Atividade interativa',
+    conteudo: 'Conteúdo será gerado pela IA Gemini...',
+    duracao: '50 minutos',
+    materiais: 'Quadro digital, computador',
+  };
 
-  // Verificar se há dados gerados pela IA
+  // Processar dados recebidos
   if (data) {
-    // Tentar extrair título
-    titulo = data.titulo ||
-             data.title ||
-             data.data?.titulo ||
-             activityData?.title ||
-             activityData?.personalizedTitle ||
-             'Quadro Interativo';
+    // Se data é uma string JSON, fazer parse
+    if (typeof data === 'string') {
+      try {
+        const parsedData = JSON.parse(data);
+        processedData = { ...processedData, ...parsedData };
+      } catch (error) {
+        console.warn('Erro ao fazer parse dos dados:', error);
+      }
+    } else if (typeof data === 'object') {
+      // Extrair título
+      processedData.titulo = data.titulo || 
+                            data.title || 
+                            data.data?.titulo ||
+                            activityData?.title ||
+                            activityData?.personalizedTitle ||
+                            'Quadro Interativo';
 
-    // Tentar extrair conteúdo - garantir que seja sempre uma string
-    if (data.conteudo) {
-      if (typeof data.conteudo === 'string') {
-        conteudo = data.conteudo;
-      } else if (typeof data.conteudo === 'object') {
-        // Se conteudo for um objeto, converter para string JSON formatada ou extrair propriedades específicas
-        if (data.conteudo.titulo || data.conteudo.descricao || data.conteudo.introducao) {
+      // Extrair conteúdo - garantir que seja sempre uma string
+      if (data.conteudo) {
+        if (typeof data.conteudo === 'string') {
+          processedData.conteudo = data.conteudo;
+        } else if (typeof data.conteudo === 'object') {
+          // Se conteudo for um objeto, extrair propriedades específicas
           let conteudoFormatado = '';
-
+          
           if (data.conteudo.titulo) conteudoFormatado += `**${data.conteudo.titulo}**\n\n`;
           if (data.conteudo.descricao) conteudoFormatado += `${data.conteudo.descricao}\n\n`;
           if (data.conteudo.introducao) conteudoFormatado += `**Introdução:**\n${data.conteudo.introducao}\n\n`;
-
-          if (data.conteudo.conceitosPrincipais && Array.isArray(data.conteudo.conceitosPrincipais)) {
-            conteudoFormatado += `**Conceitos Principais:**\n`;
-            data.conteudo.conceitosPrincipais.forEach((conceito: string, index: number) => {
-              conteudoFormatado += `${index + 1}. ${conceito}\n`;
-            });
-            conteudoFormatado += `\n`;
-          }
-
-          if (data.conteudo.exemplosPraticos && Array.isArray(data.conteudo.exemplosPraticos)) {
-            conteudoFormatado += `**Exemplos Práticos:**\n`;
-            data.conteudo.exemplosPraticos.forEach((exemplo: string, index: number) => {
-              conteudoFormatado += `${index + 1}. ${exemplo}\n`;
-            });
-            conteudoFormatado += `\n`;
-          }
-
-          if (data.conteudo.atividadesPraticas && Array.isArray(data.conteudo.atividadesPraticas)) {
-            conteudoFormatado += `**Atividades Práticas:**\n`;
-            data.conteudo.atividadesPraticas.forEach((atividade: string, index: number) => {
-              conteudoFormatado += `${index + 1}. ${atividade}\n`;
-            });
-            conteudoFormatado += `\n`;
-          }
-
+          if (data.conteudo.conceitosPrincipais) conteudoFormatado += `**Conceitos Principais:**\n${data.conteudo.conceitosPrincipais}\n\n`;
+          if (data.conteudo.exemplosPraticos) conteudoFormatado += `**Exemplos Práticos:**\n${data.conteudo.exemplosPraticos}\n\n`;
+          if (data.conteudo.atividadesPraticas) conteudoFormatado += `**Atividades Práticas:**\n${data.conteudo.atividadesPraticas}\n\n`;
           if (data.conteudo.resumo) conteudoFormatado += `**Resumo:**\n${data.conteudo.resumo}\n\n`;
-
-          if (data.conteudo.proximosPassos && Array.isArray(data.conteudo.proximosPassos)) {
-            conteudoFormatado += `**Próximos Passos:**\n`;
-            data.conteudo.proximosPassos.forEach((passo: string, index: number) => {
-              conteudoFormatado += `${index + 1}. ${passo}\n`;
-            });
-          }
-
-          conteudo = conteudoFormatado;
-        } else {
-          conteudo = JSON.stringify(data.conteudo, null, 2);
+          if (data.conteudo.proximosPassos) conteudoFormatado += `**Próximos Passos:**\n${data.conteudo.proximosPassos}`;
+          
+          processedData.conteudo = conteudoFormatado || 'Conteúdo estruturado disponível';
         }
-      } else {
-        conteudo = String(data.conteudo);
+      } else if (data.data?.conteudo) {
+        processedData.conteudo = typeof data.data.conteudo === 'string' ? data.data.conteudo : 'Conteúdo processado pela IA';
       }
-    } else {
-      // Fallbacks para conteúdo
-      conteudo = data.data?.conteudo ||
-                 data.data?.descricao ||
-                 data.description ||
-                 data.descricao ||
-                 activityData?.description ||
-                 activityData?.personalizedDescription ||
-                 'Conteúdo do quadro interativo será exibido aqui.';
 
-      // Garantir que conteudo seja sempre string
-      if (typeof conteudo !== 'string') {
-        conteudo = String(conteudo);
-      }
+      // Extrair outros campos
+      processedData.disciplina = data.disciplina || data.subject || data.data?.disciplina || 'Matemática';
+      processedData.anoSerie = data.anoSerie || data.schoolYear || data.data?.anoSerie || '6º Ano';
+      processedData.tema = data.tema || data.theme || data.data?.tema || activityData?.title || 'Tema da Aula';
+      processedData.objetivos = data.objetivos || data.objectives || data.data?.objetivos || 'Objetivos de aprendizagem';
+      processedData.nivelDificuldade = data.nivelDificuldade || data.difficultyLevel || data.data?.nivelDificuldade || 'Intermediário';
+      processedData.atividadeMostrada = data.atividadeMostrada || data.quadroInterativoCampoEspecifico || data.data?.atividadeMostrada || 'Atividade interativa';
+      processedData.duracao = data.duracao || data.timeLimit || data.data?.duracao || '50 minutos';
+      processedData.materiais = data.materiais || data.materials || data.data?.materiais || 'Quadro digital, computador';
     }
-  } else {
-    // Dados padrão se não houver dados
-    titulo = activityData?.title || activityData?.personalizedTitle || 'Quadro Interativo';
-    conteudo = activityData?.description || activityData?.personalizedDescription || 'Conteúdo será exibido quando a atividade for gerada.';
   }
 
-  console.log('🖼️ QuadroInterativoPreview: Título processado:', titulo);
-  console.log('🖼️ QuadroInterativoPreview: Conteúdo processado:', conteudo);
-
   return (
-    <div className="space-y-6 p-6 bg-white dark:bg-gray-800 rounded-lg">
-      {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          {titulo}
-        </h2>
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 px-2 py-1 rounded-full">
-            Quadro Interativo
-          </span>
-        </div>
-      </div>
-
-      {/* Conteúdo Principal */}
-      <div className="prose prose-gray dark:prose-invert max-w-none">
-        <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Conteúdo Educacional
-          </h3>
-          <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
-            {conteudo}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-blue-200 mb-4">
+            <BookOpen className="w-5 h-5 text-blue-600" />
+            <span className="text-blue-600 font-medium">Quadro Interativo</span>
           </div>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">{processedData.titulo}</h1>
+          <p className="text-gray-600 text-lg">{processedData.disciplina} • {processedData.anoSerie}</p>
         </div>
-      </div>
 
-      {/* Informações Adicionais */}
-      {data && (data.customFields || data.subject || data.schoolYear) && (
-        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-            Informações da Atividade
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(data.subject || data.customFields?.['Disciplina / Área de conhecimento']) && (
-              <div>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Disciplina:</span>
-                <p className="text-gray-900 dark:text-white">
-                  {data.subject || data.customFields?.['Disciplina / Área de conhecimento']}
-                </p>
+        {/* Card Principal Destacado */}
+        <Card className="mb-8 border-4 border-blue-300 rounded-3xl shadow-2xl bg-gradient-to-br from-white to-blue-50/50 overflow-hidden transform hover:scale-[1.02] transition-all duration-300">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+            <CardTitle className="text-2xl text-white flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <Target className="w-6 h-6 text-white" />
               </div>
-            )}
-
-            {(data.schoolYear || data.customFields?.['Ano / Série']) && (
-              <div>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Ano/Série:</span>
-                <p className="text-gray-900 dark:text-white">
-                  {data.schoolYear || data.customFields?.['Ano / Série']}
-                </p>
-              </div>
-            )}
-
-            {(data.theme || data.customFields?.['Tema ou Assunto da aula']) && (
-              <div>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tema:</span>
-                <p className="text-gray-900 dark:text-white">
-                  {data.theme || data.customFields?.['Tema ou Assunto da aula']}
-                </p>
-              </div>
-            )}
-
-            {(data.objectives || data.customFields?.['Objetivo de aprendizagem da aula']) && (
-              <div>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Objetivo:</span>
-                <p className="text-gray-900 dark:text-white">
-                  {data.objectives || data.customFields?.['Objetivo de aprendizagem da aula']}
-                </p>
-              </div>
-            )}
-
-            {(data.difficultyLevel || data.customFields?.['Nível de Dificuldade']) && (
-              <div>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Dificuldade:</span>
-                <p className="text-gray-900 dark:text-white">
-                  {data.difficultyLevel || data.customFields?.['Nível de Dificuldade']}
-                </p>
-              </div>
-            )}
-
-            {(data.quadroInterativoCampoEspecifico || data.customFields?.['Atividade mostrada']) && (
-              <div>
-                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Atividade:</span>
-                <p className="text-gray-900 dark:text-white">
-                  {data.quadroInterativoCampoEspecifico || data.customFields?.['Atividade mostrada']}
-                </p>
-              </div>
-            )}
+              Conteúdo Educacional
+            </CardTitle>
+            <CardDescription className="text-blue-100 mt-2 text-lg">
+              Apresentação interativa do {processedData.tema}, explorando suas aplicações e demonstrações visuais.
+            </CardDescription>
           </div>
-        </div>
-      )}
+
+          <CardContent className="p-8">
+            {/* Badges de Informações */}
+            <div className="flex flex-wrap gap-3 mb-6">
+              <Badge variant="secondary" className="px-4 py-2 text-sm bg-blue-100 text-blue-800 rounded-full">
+                <Clock className="w-4 h-4 mr-2" />
+                {processedData.duracao}
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm bg-green-100 text-green-800 rounded-full">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {processedData.nivelDificuldade}
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm bg-purple-100 text-purple-800 rounded-full">
+                <Users className="w-4 h-4 mr-2" />
+                Turma Completa
+              </Badge>
+            </div>
+
+            {/* Conteúdo Principal */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-inner">
+              <div className="prose prose-lg max-w-none">
+                {processedData.conteudo.split('\n').map((paragrafo, index) => {
+                  if (!paragrafo.trim()) return null;
+                  
+                  if (paragrafo.startsWith('**') && paragrafo.endsWith('**')) {
+                    return (
+                      <h3 key={index} className="text-xl font-bold text-gray-800 mt-6 mb-3 flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-yellow-500" />
+                        {paragrafo.replace(/\*\*/g, '')}
+                      </h3>
+                    );
+                  }
+                  
+                  return (
+                    <p key={index} className="text-gray-700 leading-relaxed mb-4">
+                      {paragrafo}
+                    </p>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Seções Adicionais */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              {/* Objetivos */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+                <h4 className="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Objetivos de Aprendizagem
+                </h4>
+                <p className="text-green-700">{processedData.objetivos}</p>
+              </div>
+
+              {/* Atividade */}
+              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-6 border border-orange-200">
+                <h4 className="text-lg font-semibold text-orange-800 mb-3 flex items-center gap-2">
+                  <Lightbulb className="w-5 h-5" />
+                  Atividade Interativa
+                </h4>
+                <p className="text-orange-700">{processedData.atividadeMostrada}</p>
+              </div>
+            </div>
+
+            {/* Materiais */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200 mt-6">
+              <h4 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Materiais Necessários
+              </h4>
+              <p className="text-purple-700">{processedData.materiais}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Informações da Atividade */}
+        <Card className="rounded-2xl border-2 border-gray-200 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl">
+            <CardTitle className="text-xl text-gray-800">Informações da Atividade</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{processedData.disciplina}</div>
+                <div className="text-sm text-gray-500">Disciplina</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{processedData.anoSerie}</div>
+                <div className="text-sm text-gray-500">Ano/Série</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{processedData.nivelDificuldade}</div>
+                <div className="text-sm text-gray-500">Nível</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
