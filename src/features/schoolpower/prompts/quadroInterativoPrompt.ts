@@ -1,72 +1,49 @@
 
-export const buildQuadroInterativoPrompt = (contextData: any): string => {
-  const {
-    'Disciplina / Área de conhecimento': disciplina = 'Não especificado',
-    'Ano / Série': anoSerie = 'Não especificado',
-    'Tema ou Assunto da aula': tema = 'Não especificado',
-    'Objetivo de aprendizagem da aula': objetivo = 'Não especificado',
-    'Nível de Dificuldade': dificuldade = 'Médio',
-    'Atividade mostrada': atividadeMostrada = 'lista-exercicios'
-  } = contextData;
+export const quadroInterativoPrompt = `
+Você é um especialista em criação de conteúdo educacional para quadros interativos. 
 
-  return `
-Crie um conteúdo educacional completo e interativo para um Quadro Interativo baseado nos seguintes parâmetros:
+Baseado nas informações fornecidas, gere um conteúdo educacional estruturado em formato JSON.
 
-PARÂMETROS DA ATIVIDADE:
-- Disciplina: ${disciplina}
-- Ano/Série: ${anoSerie}
-- Tema: ${tema}
-- Objetivo: ${objetivo}
-- Dificuldade: ${dificuldade}
-- Tipo de atividade associada: ${atividadeMostrada}
+IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional antes ou depois.
 
-INSTRUÇÕES PARA CRIAÇÃO:
-1. Desenvolva um conteúdo visual e didático adequado ao nível especificado
-2. Organize o conteúdo de forma clara e progressiva
-3. Inclua elementos interativos e exemplos práticos
-4. Relacione o conteúdo com a atividade associada (${atividadeMostrada})
-5. Use linguagem apropriada para o ano/série especificado
-
-ESTRUTURA OBRIGATÓRIA DO JSON:
+Estrutura obrigatória do JSON:
 {
-  "titulo": "Título principal atrativo e claro",
-  "subtitulo": "Subtítulo que contextualiza o tema",
+  "titulo": "Título principal do quadro",
+  "subtitulo": "Subtítulo ou objetivo",
   "conteudo": {
-    "introducao": "Introdução envolvente ao tema (2-3 parágrafos)",
+    "introducao": "Introdução clara e envolvente do tema",
     "conceitosPrincipais": [
       {
-        "titulo": "Nome do conceito fundamental",
-        "explicacao": "Explicação clara e detalhada",
-        "exemplo": "Exemplo prático e relevante"
+        "titulo": "Nome do conceito",
+        "explicacao": "Explicação didática do conceito",
+        "exemplo": "Exemplo prático e aplicável"
       }
     ],
     "exemplosPraticos": [
-      "Exemplo 1 aplicado ao cotidiano",
-      "Exemplo 2 relacionado ao tema",
-      "Exemplo 3 com contexto específico"
+      "Exemplo 1: situação real de aplicação",
+      "Exemplo 2: exercício prático"
     ],
     "atividadesPraticas": [
       {
-        "titulo": "Nome da atividade prática",
-        "instrucoes": "Passo a passo de como realizar",
-        "objetivo": "O que o aluno deve aprender/alcançar"
+        "titulo": "Nome da atividade",
+        "instrucoes": "Como realizar a atividade",
+        "objetivo": "O que o aluno deve aprender"
       }
     ],
-    "resumo": "Síntese dos pontos principais abordados",
-    "proximosPassos": "Sugestões para aprofundamento do tema"
+    "resumo": "Resumo dos pontos principais",
+    "proximosPassos": "Sugestões para continuar aprendendo"
   },
-  "recursos": [
-    "Recurso visual 1",
-    "Material necessário 2",
-    "Ferramenta interativa 3"
-  ],
-  "objetivosAprendizagem": [
-    "Objetivo específico 1",
-    "Objetivo específico 2",
-    "Objetivo específico 3"
-  ]
+  "recursos": ["Recurso 1", "Recurso 2", "Recurso 3"],
+  "objetivosAprendizagem": ["Objetivo 1", "Objetivo 2", "Objetivo 3"]
 }
 
-IMPORTANTE: Responda APENAS com o JSON válido, sem texto adicional antes ou depois.
+Contexto da atividade:
+- Disciplina: {subject}
+- Série: {schoolYear}
+- Tema: {theme}
+- Objetivos: {objectives}
+- Nível: {difficultyLevel}
+- Atividade: {quadroInterativoCampoEspecifico}
+
+Crie conteúdo educacional rico, didático e adequado ao nível especificado.
 `;
-};

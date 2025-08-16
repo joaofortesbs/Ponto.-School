@@ -339,6 +339,45 @@ Responda APENAS com o JSON, sem texto adicional.`;
           parsedResult.subtitulo = contextData.objectives || 'Conteúdo educacional';
         }
 
+        // Garantir estrutura mínima de conteúdo
+        if (!parsedResult.conteudo) {
+          parsedResult.conteudo = {
+            introducao: `Bem-vindos ao estudo sobre ${contextData.theme || 'este tema'}. Este quadro interativo apresenta conceitos de forma visual e prática.`,
+            conceitosPrincipais: [
+              {
+                titulo: contextData.theme || 'Conceito Principal',
+                explicacao: `Exploraremos os fundamentos de ${contextData.theme || 'este tema'} de forma didática.`,
+                exemplo: 'Exemplo prático será apresentado durante a atividade.'
+              }
+            ],
+            exemplosPraticos: [
+              'Exemplo 1: Aplicação prática do conceito',
+              'Exemplo 2: Situação real de uso'
+            ],
+            atividadesPraticas: [
+              {
+                titulo: 'Atividade Prática',
+                instrucoes: 'Siga as instruções apresentadas no quadro',
+                objetivo: contextData.objectives || 'Fixar o aprendizado'
+              }
+            ],
+            resumo: `Resumo dos principais pontos sobre ${contextData.theme || 'o tema'}.`,
+            proximosPassos: 'Continue explorando com as próximas atividades.'
+          };
+        }
+
+        if (!parsedResult.recursos) {
+          parsedResult.recursos = ['Quadro interativo', 'Conteúdo da IA', 'Material de apoio'];
+        }
+
+        if (!parsedResult.objetivosAprendizagem) {
+          parsedResult.objetivosAprendizagem = [
+            contextData.objectives || 'Compreender o tema',
+            'Aplicar os conceitos na prática',
+            'Desenvolver habilidades específicas'
+          ];
+        }
+
         // Adicionar metadados
         parsedResult.isGeneratedByAI = true;
         parsedResult.generatedAt = new Date().toISOString();
@@ -353,6 +392,10 @@ Responda APENAS com o JSON, sem texto adicional.`;
         };
 
         console.log('✅ Quadro Interativo processado com sucesso:', parsedResult);
+
+        // Salvar conteúdo específico do Quadro Interativo
+        localStorage.setItem(`constructed_quadro-interativo_content`, JSON.stringify(parsedResult));
+        localStorage.setItem(`quadro_interativo_data_generated`, JSON.stringify(parsedResult));
 
         return parsedResult;
       } else {

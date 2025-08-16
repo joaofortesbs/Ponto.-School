@@ -68,6 +68,25 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
         return null;
       }
 
+      // Verificar se já temos conteúdo estruturado da IA
+      const savedQuadroContent = localStorage.getItem('constructed_quadro-interativo_content') ||
+                                localStorage.getItem('quadro_interativo_data_generated') ||
+                                localStorage.getItem(`constructed_quadro-interativo_${activityData?.id}`);
+      
+      if (savedQuadroContent) {
+        try {
+          const parsedSavedContent = JSON.parse(savedQuadroContent);
+          console.log('💾 Conteúdo salvo encontrado:', parsedSavedContent);
+          return {
+            ...parsedSavedContent,
+            customFields: data.customFields || parsedSavedContent.customFields,
+            isGeneratedByAI: true
+          };
+        } catch (e) {
+          console.warn('⚠️ Erro ao parsear conteúdo salvo:', e);
+        }
+      }
+
       // Se os dados já estão estruturados
       if (data.titulo || data.conteudo) {
         console.log('✅ Dados já estruturados encontrados');
@@ -81,6 +100,7 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
         
         // Tentar extrair JSON do conteúdo de texto
         try {
+          // Procurar por JSON válido no texto
           const jsonMatch = textContent.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsedContent = JSON.parse(jsonMatch[0]);
@@ -88,6 +108,7 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
             return {
               ...data,
               ...parsedContent,
+              customFields: data.customFields || {},
               isGeneratedByAI: true
             };
           }
@@ -100,11 +121,11 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
           titulo: data.title || data.customFields?.['Tema ou Assunto da aula'] || 'Quadro Interativo',
           subtitulo: data.customFields?.['Objetivo de aprendizagem da aula'] || 'Conteúdo educacional interativo',
           conteudo: {
-            introducao: textContent,
+            introducao: textContent.length > 200 ? textContent : `Bem-vindos ao estudo sobre ${data.customFields?.['Tema ou Assunto da aula'] || 'este tema'}. ${textContent}`,
             conceitosPrincipais: [
               {
                 titulo: data.customFields?.['Tema ou Assunto da aula'] || 'Conceito Principal',
-                explicacao: textContent.substring(0, 200) + '...',
+                explicacao: textContent.length > 100 ? textContent.substring(0, 300) + '...' : textContent,
                 exemplo: 'Exemplo prático será apresentado durante a atividade.'
               }
             ],
@@ -186,10 +207,31 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
     } else {
       console.log('⚠️ Aguardando dados válidos...');
       setTimeout(() => {
+        // Tentar novamente após um delay
         const retryData = processContentData();
-        setContentData(retryData || {});
+        if (retryData) {
+          setContentData(retryData);
+        } else {
+          // Criar estrutura mínima como fallback
+          setContentData({
+            titulo: 'Quadro Interativo',
+            subtitulo: 'Aguardando conteúdo...',
+            conteudo: {
+              introducao: 'O conteúdo está sendo preparado...',
+              conceitosPrincipais: [],
+              exemplosPraticos: [],
+              atividadesPraticas: [],
+              resumo: 'Conteúdo em preparação.',
+              proximosPassos: 'Aguarde o carregamento.'
+            },
+            recursos: [],
+            objetivosAprendizagem: [],
+            customFields: data?.customFields || {},
+            type: 'quadro-interativo'
+          });
+        }
         setIsLoading(false);
-      }, 1500);
+      }, 1000);
     }
   }, [data, activityData]);
 

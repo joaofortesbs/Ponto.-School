@@ -418,8 +418,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       case 'quadro-interativo':
         console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
 
-        // Verificar se existe conteúdo gerado pela IA
+        // Verificar se existe conteúdo gerado pela IA em múltiplas chaves
         const quadroContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`) ||
+                            localStorage.getItem('constructed_quadro-interativo_content') ||
+                            localStorage.getItem('quadro_interativo_data_generated') ||
+                            localStorage.getItem(`schoolpower_quadro-interativo_content`) ||
+                            localStorage.getItem(`activity_${activity.id}_content`);y.id}`) ||
                             localStorage.getItem(`schoolpower_quadro-interativo_content`) ||
                             localStorage.getItem(`activity_${activity.id}_content`);
 

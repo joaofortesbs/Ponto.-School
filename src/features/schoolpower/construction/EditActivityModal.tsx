@@ -1408,13 +1408,27 @@ const EditActivityModal = ({
       const activityType = activity.type || activity.id || activity.categoryId;
       console.log('🎯 Tipo de atividade determinado:', activityType);
 
-      const result = await generateActivityContent(activityType, formData);
+      let result;
+      
+      // Para Quadro Interativo, usar a API real do Gemini
+      if (activityType === 'quadro-interativo') {
+        try {
+          result = await generateActivity(formData);
+          console.log('🖼️ Conteúdo do Quadro Interativo gerado pela API:', result);
+        } catch (apiError) {
+          console.warn('⚠️ Erro na API, usando fallback:', apiError);
+          result = await generateActivityContent(activityType, formData);
+        }
+      } else {
+        result = await generateActivityContent(activityType, formData);
+      }
 
       clearInterval(progressTimer);
       setBuildProgress(100);
 
       console.log('✅ Atividade construída com sucesso:', result);
 
+      // Salvar em múltiplas chaves para garantir compatibilidade
       const storageKey = `schoolpower_${activityType}_content`;
       localStorage.setItem(storageKey, JSON.stringify(result));
 
@@ -1428,6 +1442,14 @@ const EditActivityModal = ({
         const viewStorageKey = `constructed_plano-aula_${activity.id}`;
         localStorage.setItem(viewStorageKey, JSON.stringify(result));
         console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
+      }
+
+      if (activityType === 'quadro-interativo') {
+        const viewStorageKey = `constructed_quadro-interativo_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result));
+        localStorage.setItem('constructed_quadro-interativo_content', JSON.stringify(result));
+        localStorage.setItem('quadro_interativo_data_generated', JSON.stringify(result));
+        console.log('💾 Dados do quadro interativo salvos para visualização:', viewStorageKey);
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -1461,7 +1483,7 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  }, [activity, formData, isBuilding, toast]);
+  }, [activity, formData, isBuilding, toast, generateActivity]);
 
   // Função para automação - será chamada externamente
   useEffect(() => {
