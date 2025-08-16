@@ -17,16 +17,29 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   console.log('🖼️ QuadroInterativoPreview - activityData:', activityData);
 
   // Buscar conteúdo gerado no localStorage
-  const constructedDataJson = localStorage.getItem(`activity_content_${activityData?.id || 'quadro-interativo'}`);
+  const possibleKeys = [
+    `constructed_quadro-interativo_${activityData?.id}`,
+    `activity_content_${activityData?.id}`,
+    `schoolpower_quadro-interativo_content`,
+    `quadro_interativo_data_generated`,
+    `activity_${activityData?.id}`
+  ];
+
   let generatedContent = null;
   
-  if (constructedDataJson) {
-    try {
-      const constructedData = JSON.parse(constructedDataJson);
-      generatedContent = constructedData;
-      console.log('🖼️ Conteúdo construído encontrado:', generatedContent);
-    } catch (error) {
-      console.error('Erro ao parse do conteúdo construído:', error);
+  for (const key of possibleKeys) {
+    const storedData = localStorage.getItem(key);
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        if (parsedData && (parsedData.titulo || parsedData.conteudo || parsedData.data)) {
+          generatedContent = parsedData.data || parsedData;
+          console.log('🖼️ Conteúdo construído encontrado em:', key, generatedContent);
+          break;
+        }
+      } catch (error) {
+        console.error('Erro ao parse do conteúdo construído:', error);
+      }
     }
   }
 
@@ -218,24 +231,38 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           </CardContent>
         </Card>
 
-        {/* Conteúdo Principal */}
-        {generatedContent.conteudo && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Monitor className="h-5 w-5 text-purple-500" />
-                Conteúdo da Atividade
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose dark:prose-invert max-w-none">
-                <div className="whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {generatedContent.conteudo}
+        {/* Quadro Interativo - Conteúdo Principal Gerado pela IA */}
+        <Card className="border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Monitor className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              Quadro Interativo:
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {generatedContent?.conteudo ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-inner border border-purple-200 dark:border-purple-700">
+                <div className="prose dark:prose-invert max-w-none">
+                  <div className="text-gray-800 dark:text-gray-200 leading-relaxed text-base">
+                    {generatedContent.conteudo}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-inner border border-purple-200 dark:border-purple-700 text-center">
+                <div className="animate-pulse">
+                  <Monitor className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Processando Conteúdo
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    O conteúdo do Quadro Interativo está sendo gerado...
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Recursos e Materiais */}
         {generatedContent.recursos && (

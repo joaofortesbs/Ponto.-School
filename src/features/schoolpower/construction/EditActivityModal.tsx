@@ -557,16 +557,63 @@ const EditActivityModal = ({
         }
       };
     } else if (type === 'quadro-interativo') {
+      // Simular geração de conteúdo específico para Quadro Interativo
+      const quadroContent = generateQuadroInterativoContent(data);
+      
       return {
         success: true,
         data: {
           ...data,
-          title: data.title || "Quadro Interativo Exemplo",
-          description: data.description || "Descrição do quadro interativo...",
+          titulo: data.title || "Quadro Interativo Exemplo",
+          descricao: data.description || "Descrição do quadro interativo...",
+          conteudo: quadroContent,
+          disciplina: data.subject || 'Matemática',
+          anoSerie: data.schoolYear || '6º Ano',
+          tema: data.theme || 'Tema da Aula',
+          objetivos: data.objectives || 'Objetivos de aprendizagem',
+          nivelDificuldade: data.difficultyLevel || 'Intermediário',
+          atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
       };
+    }
+
+    // Função auxiliar para gerar conteúdo do Quadro Interativo
+    function generateQuadroInterativoContent(formData: any): string {
+      const disciplina = formData.subject || 'Matemática';
+      const tema = formData.theme || 'Tema da Aula';
+      const objetivo = formData.objectives || 'Objetivos de aprendizagem';
+      const atividade = formData.quadroInterativoCampoEspecifico || 'Atividade interativa';
+
+      return `**${tema}**
+
+📋 **Objetivos da Aula:**
+${objetivo}
+
+🎯 **Atividade Proposta:**
+${atividade}
+
+📚 **Desenvolvimento:**
+1. **Apresentação do Tema**: Introdução conceitual sobre ${tema}
+2. **Demonstração Prática**: Exemplos visuais e interativos
+3. **Participação dos Alunos**: Exercícios práticos no quadro
+4. **Consolidação**: Síntese dos conceitos aprendidos
+
+🔧 **Recursos Interativos:**
+- Quadro digital com elementos visuais
+- Participação ativa dos estudantes
+- Exercícios dinâmicos e práticos
+- Feedback imediato das respostas
+
+💡 **Dicas para o Professor:**
+- Incentive a participação de todos os alunos
+- Use cores e elementos visuais para destacar pontos importantes
+- Permita que os alunos manipulem o conteúdo no quadro
+- Faça perguntas direcionadas para verificar o entendimento
+
+✅ **Resultado Esperado:**
+Os alunos devem compreender ${tema} de forma prática e interativa, sendo capazes de aplicar os conceitos aprendidos em situações similares.`;
     }
 
     return {
@@ -1305,8 +1352,17 @@ const EditActivityModal = ({
 
       console.log('✅ Atividade construída com sucesso:', result);
 
-      const storageKey = `schoolpower_${activityType}_content`;
-      localStorage.setItem(storageKey, JSON.stringify(result));
+      // Salvar em múltiplas chaves para garantir compatibilidade
+      const storageKeys = [
+        `schoolpower_${activityType}_content`,
+        `constructed_${activityType}_${activity.id}`,
+        `activity_content_${activity.id}`,
+        `activity_${activity.id}`
+      ];
+
+      storageKeys.forEach(key => {
+        localStorage.setItem(key, JSON.stringify(result));
+      });
 
       if (activityType === 'sequencia-didatica') {
         const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;

@@ -417,9 +417,35 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         
       case 'quadro-interativo':
         console.log('🖼️ Renderizando preview do Quadro Interativo:', previewData);
+        
+        // Buscar conteúdo específico do Quadro Interativo
+        const quadroKeys = [
+          `constructed_quadro-interativo_${activity.id}`,
+          `activity_content_${activity.id}`,
+          `schoolpower_quadro-interativo_content`
+        ];
+        
+        let quadroContent = null;
+        for (const key of quadroKeys) {
+          const content = localStorage.getItem(key);
+          if (content) {
+            try {
+              const parsed = JSON.parse(content);
+              if (parsed && (parsed.titulo || parsed.conteudo || parsed.data)) {
+                quadroContent = parsed.data || parsed;
+                break;
+              }
+            } catch (error) {
+              console.error('Erro ao carregar conteúdo do quadro:', error);
+            }
+          }
+        }
+        
+        const finalPreviewData = quadroContent ? { ...previewData, ...quadroContent } : previewData;
+        
         return (
           <QuadroInterativoPreview
-            data={previewData}
+            data={finalPreviewData}
             activityData={activity}
           />
         );
