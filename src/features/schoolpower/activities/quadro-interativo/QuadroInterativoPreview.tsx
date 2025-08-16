@@ -9,6 +9,21 @@ interface QuadroInterativoPreviewProps {
   activityData?: any;
 }
 
+// Função para filtrar tópicos indesejados do conteúdo
+function filterUnwantedTopics(content: string): string {
+  if (!content || typeof content !== 'string') return content;
+  
+  // Remove seções específicas que não queremos exibir
+  let filteredContent = content
+    .replace(/\*\*Atividades Práticas:\*\*[\s\S]*?(?=\*\*|$)/gi, '')
+    .replace(/\*\*Próximos Passos:\*\*[\s\S]*?(?=\*\*|$)/gi, '')
+    .replace(/\*\*Atividades Práticas:\*\*[\s\S]*$/gi, '')
+    .replace(/\*\*Próximos Passos:\*\*[\s\S]*$/gi, '')
+    .trim();
+  
+  return filteredContent;
+}
+
 export default function QuadroInterativoPreview({ data, activityData }: QuadroInterativoPreviewProps) {
   console.log('🖼️ QuadroInterativoPreview: Dados recebidos:', data);
   console.log('🖼️ QuadroInterativoPreview: Activity data:', activityData);
@@ -49,9 +64,10 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
       // Extrair conteúdo - garantir que seja sempre uma string
       if (data.conteudo) {
         if (typeof data.conteudo === 'string') {
-          processedData.conteudo = data.conteudo;
+          // Filtrar conteúdo para remover tópicos indesejados
+          processedData.conteudo = filterUnwantedTopics(data.conteudo);
         } else if (typeof data.conteudo === 'object') {
-          // Se conteudo for um objeto, extrair propriedades específicas
+          // Se conteudo for um objeto, extrair apenas propriedades específicas (sem atividades práticas e próximos passos)
           let conteudoFormatado = '';
           
           if (data.conteudo.titulo) conteudoFormatado += `**${data.conteudo.titulo}**\n\n`;
@@ -59,14 +75,13 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
           if (data.conteudo.introducao) conteudoFormatado += `**Introdução:**\n${data.conteudo.introducao}\n\n`;
           if (data.conteudo.conceitosPrincipais) conteudoFormatado += `**Conceitos Principais:**\n${data.conteudo.conceitosPrincipais}\n\n`;
           if (data.conteudo.exemplosPraticos) conteudoFormatado += `**Exemplos Práticos:**\n${data.conteudo.exemplosPraticos}\n\n`;
-          if (data.conteudo.atividadesPraticas) conteudoFormatado += `**Atividades Práticas:**\n${data.conteudo.atividadesPraticas}\n\n`;
-          if (data.conteudo.resumo) conteudoFormatado += `**Resumo:**\n${data.conteudo.resumo}\n\n`;
-          if (data.conteudo.proximosPassos) conteudoFormatado += `**Próximos Passos:**\n${data.conteudo.proximosPassos}`;
+          if (data.conteudo.resumo) conteudoFormatado += `**Resumo:**\n${data.conteudo.resumo}`;
           
           processedData.conteudo = conteudoFormatado || 'Conteúdo estruturado disponível';
         }
       } else if (data.data?.conteudo) {
-        processedData.conteudo = typeof data.data.conteudo === 'string' ? data.data.conteudo : 'Conteúdo processado pela IA';
+        const rawContent = typeof data.data.conteudo === 'string' ? data.data.conteudo : 'Conteúdo processado pela IA';
+        processedData.conteudo = filterUnwantedTopics(rawContent);
       }
 
       // Extrair outros campos
@@ -131,11 +146,22 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
                 {processedData.conteudo.split('\n').map((paragrafo, index) => {
                   if (!paragrafo.trim()) return null;
                   
+                  // Filtrar tópicos indesejados durante a renderização também
+                  if (paragrafo.includes('Atividades Práticas') || paragrafo.includes('Próximos Passos')) {
+                    return null;
+                  }
+                  
                   if (paragrafo.startsWith('**') && paragrafo.endsWith('**')) {
+                    const titulo = paragrafo.replace(/\*\*/g, '');
+                    // Não renderizar se for um dos tópicos removidos
+                    if (titulo.includes('Atividades Práticas') || titulo.includes('Próximos Passos')) {
+                      return null;
+                    }
+                    
                     return (
                       <h3 key={index} className="text-xl font-bold text-gray-800 mt-6 mb-3 flex items-center gap-2">
                         <Lightbulb className="w-5 h-5 text-yellow-500" />
-                        {paragrafo.replace(/\*\*/g, '')}
+                        {titulo}
                       </h3>
                     );
                   }
