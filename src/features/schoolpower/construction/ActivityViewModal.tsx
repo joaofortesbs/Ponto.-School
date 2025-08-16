@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Info, Target, Award } from "lucide-react"; // Import Eye component
@@ -23,7 +24,6 @@ const getActivityIcon = (activityId: string) => {
     </svg>
   );
 };
-
 
 interface ActivityViewModalProps {
   isOpen: boolean;
@@ -181,13 +181,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
 
   // Determine activity type CORRECTLY
-    const activityType = activity.type || 
-                        activity.originalData?.type || 
-                        activity.id?.includes('quadro-interativo') ? 'quadro-interativo' :
-                        activity.id?.includes('lista') ? 'lista-exercicios' :
-                        activity.id?.includes('sequencia') ? 'sequencia-didatica' :
-                        activity.id?.includes('plano') ? 'plano-aula' :
-                        'default';
+  const activityType = activity.type || 
+                      activity.originalData?.type || 
+                      activity.id?.includes('quadro-interativo') ? 'quadro-interativo' :
+                      activity.id?.includes('lista') ? 'lista-exercicios' :
+                      activity.id?.includes('sequencia') ? 'sequencia-didatica' :
+                      activity.id?.includes('plano') ? 'plano-aula' :
+                      'default';
 
   // Function to get the activity title
   const getActivityTitle = () => {
@@ -264,290 +264,237 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     };
 
     // For exercise lists, apply exclusion filters
-      if (activityType === 'lista-exercicios') {
-        try {
-          const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
-          if (deletedQuestionsJson) {
-            const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
-            console.log(`🔍 ActivityViewModal: Applying exclusion filter. Excluded IDs:`, deletedQuestionIds);
+    if (activityType === 'lista-exercicios') {
+      try {
+        const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+        if (deletedQuestionsJson) {
+          const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+          console.log(`🔍 ActivityViewModal: Applying exclusion filter. Excluded IDs:`, deletedQuestionIds);
 
-            // Filter out excluded questions in all possible locations
-            if (previewData.questoes && Array.isArray(previewData.questoes)) {
-              previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Filtered questions in root: ${previewData.questoes.length} remaining`);
-            }
-
-            if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
-              previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Filtered questions in content: ${previewData.content.questoes.length} remaining`);
-            }
-
-            if (previewData.questions && Array.isArray(previewData.questions)) {
-              previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Filtered questions: ${previewData.questions.length} remaining`);
-            }
-
-            if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
-              previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Filtered content questions: ${previewData.content.questions.length} remaining`);
-            }
-
-            // Add excluded IDs to the data for reference
-            previewData.deletedQuestionIds = deletedQuestionIds;
+          // Filter out excluded questions in all possible locations
+          if (previewData.questoes && Array.isArray(previewData.questoes)) {
+            previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Filtered questions in root: ${previewData.questoes.length} remaining`);
           }
-        } catch (error) {
-          console.warn('⚠️ Error applying exclusions filter in ActivityViewModal:', error);
+
+          if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
+            previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Filtered questions in content: ${previewData.content.questoes.length} remaining`);
+          }
+
+          if (previewData.questions && Array.isArray(previewData.questions)) {
+            previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Filtered questions: ${previewData.questions.length} remaining`);
+          }
+
+          if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
+            previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Filtered content questions: ${previewData.content.questions.length} remaining`);
+          }
+
+          // Add excluded IDs to the data for reference
+          previewData.deletedQuestionIds = deletedQuestionIds;
+        }
+      } catch (error) {
+        console.warn('⚠️ Error applying exclusions filter in ActivityViewModal:', error);
+      }
+    }
+
+    // For Sequência Didática, load specific AI data
+    if (activityType === 'sequencia-didatica') {
+      console.log('📚 ActivityViewModal: Processing Sequência Didática');
+
+      // Check multiple data sources in order of priority
+      const sequenciaCacheKeys = [
+        `constructed_sequencia-didatica_${activity.id}`,
+        `schoolpower_sequencia-didatica_content`,
+        `activity_${activity.id}`,
+        `activity_fields_${activity.id}`
+      ];
+
+      let sequenciaContent = null;
+      for (const key of sequenciaCacheKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsedData = JSON.parse(data);
+            // Check if it has a valid structure for didactic sequence
+            if (parsedData.sequenciaDidatica || 
+                parsedData.aulas || 
+                parsedData.diagnosticos || 
+                parsedData.avaliacoes ||
+                parsedData.data?.sequenciaDidatica ||
+                parsedData.success) {
+              sequenciaContent = parsedData;
+              console.log(`✅ Didactic Sequence data found in ${key}:`, parsedData);
+              break;
+            }
+          } catch (error) {
+            console.warn(`⚠️ Error parsing data from ${key}:`, error);
+          }
         }
       }
 
-      // For Sequência Didática, load specific AI data
-      if (activityType === 'sequencia-didatica') {
-        console.log('📚 ActivityViewModal: Processing Sequência Didática');
+      if (sequenciaContent) {
+        // Process data according to the found structure
+        let processedData = sequenciaContent;
 
-        // Check multiple data sources in order of priority
-        const sequenciaCacheKeys = [
-          `constructed_sequencia-didatica_${activity.id}`,
-          `schoolpower_sequencia-didatica_content`,
-          `activity_${activity.id}`,
-          `activity_fields_${activity.id}`
-        ];
-
-        let sequenciaContent = null;
-        for (const key of sequenciaCacheKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            try {
-              const parsedData = JSON.parse(data);
-              // Check if it has a valid structure for didactic sequence
-              if (parsedData.sequenciaDidatica || 
-                  parsedData.aulas || 
-                  parsedData.diagnosticos || 
-                  parsedData.avaliacoes ||
-                  parsedData.data?.sequenciaDidatica ||
-                  parsedData.success) {
-                sequenciaContent = parsedData;
-                console.log(`✅ Didactic Sequence data found in ${key}:`, parsedData);
-                break;
-              }
-            } catch (error) {
-              console.warn(`⚠️ Error parsing data from ${key}:`, error);
-            }
-          }
+        // If data is within 'data' (API result)
+        if (sequenciaContent.data) {
+          processedData = sequenciaContent.data;
         }
 
-        if (sequenciaContent) {
-          // Process data according to the found structure
-          let processedData = sequenciaContent;
+        // If it has success and structured data
+        if (sequenciaContent.success && sequenciaContent.data) {
+          processedData = sequenciaContent.data;
+        }
 
-          // If data is within 'data' (API result)
-          if (sequenciaContent.data) {
-            processedData = sequenciaContent.data;
+        // Merge didactic sequence data with existing data
+        previewData = {
+          ...previewData,
+          ...processedData,
+          id: activity.id,
+          type: activityType,
+          title: processedData.sequenciaDidatica?.titulo || 
+                 processedData.titulo || 
+                 processedData.title || 
+                 previewData.title,
+          description: processedData.sequenciaDidatica?.descricaoGeral || 
+                      processedData.descricaoGeral || 
+                      processedData.description || 
+                      previewData.description,
+          // Ensure complete structure for visualization
+          sequenciaDidatica: processedData.sequenciaDidatica || processedData,
+          metadados: processedData.metadados || {
+            totalAulas: processedData.aulas?.length || 0,
+            totalDiagnosticos: processedData.diagnosticos?.length || 0,
+            totalAvaliacoes: processedData.avaliacoes?.length || 0,
+            isGeneratedByAI: true,
+            generatedAt: processedData.generatedAt || new Date().toISOString()
           }
-
-          // If it has success and structured data
-          if (sequenciaContent.success && sequenciaContent.data) {
-            processedData = sequenciaContent.data;
+        };
+        console.log('📚 Processed didactic sequence data for visualization:', previewData);
+      } else {
+        console.log('⚠️ No specific didactic sequence content found');
+        // Create basic structure from form data
+        previewData = {
+          ...previewData,
+          sequenciaDidatica: {
+            titulo: previewData.title || 'Sequência Didática',
+            descricaoGeral: previewData.description || 'Descrição da sequência didática',
+            aulas: [],
+            diagnosticos: [],
+            avaliacoes: []
+          },
+          metadados: {
+            totalAulas: 0,
+            totalDiagnosticos: 0,
+            totalAvaliacoes: 0,
+            isGeneratedByAI: false,
+            generatedAt: new Date().toISOString()
           }
+        };
+      }
+    }
 
-          // Merge didactic sequence data with existing data
-          previewData = {
-            ...previewData,
-            ...processedData,
-            id: activity.id,
-            type: activityType,
-            title: processedData.sequenciaDidatica?.titulo || 
-                   processedData.titulo || 
-                   processedData.title || 
-                   previewData.title,
-            description: processedData.sequenciaDidatica?.descricaoGeral || 
-                        processedData.descricaoGeral || 
-                        processedData.description || 
-                        previewData.description,
-            // Ensure complete structure for visualization
-            sequenciaDidatica: processedData.sequenciaDidatica || processedData,
-            metadados: processedData.metadados || {
-              totalAulas: processedData.aulas?.length || 0,
-              totalDiagnosticos: processedData.diagnosticos?.length || 0,
-              totalAvaliacoes: processedData.avaliacoes?.length || 0,
-              isGeneratedByAI: true,
-              generatedAt: processedData.generatedAt || new Date().toISOString()
+    // For Quadro Interativo, load specific AI data and return ONLY the content, no cards
+    if (activityType === 'quadro-interativo') {
+      console.log('🖼️ ActivityViewModal: Processing Quadro Interativo');
+
+      // Check multiple data sources in order of priority
+      const quadroKeys = [
+        `constructed_quadro-interativo_${activity.id}`,
+        `activity_content_${activity.id}`,
+        `schoolpower_quadro-interativo_content`
+      ];
+
+      let quadroContent = null;
+      for (const key of quadroKeys) {
+        const content = localStorage.getItem(key);
+        if (content) {
+          try {
+            const parsed = JSON.parse(content);
+            if (parsed && (parsed.titulo || parsed.conteudo || parsed.data || parsed.introducao)) {
+              quadroContent = parsed.data || parsed;
+              console.log(`✅ Quadro Interativo data found in ${key}:`, parsed);
+              break;
             }
-          };
-          console.log('📚 Processed didactic sequence data for visualization:', previewData);
-        } else {
-          console.log('⚠️ No specific didactic sequence content found');
-          // Create basic structure from form data
-          previewData = {
-            ...previewData,
-            sequenciaDidatica: {
-              titulo: previewData.title || 'Sequência Didática',
-              descricaoGeral: previewData.description || 'Descrição da sequência didática',
-              aulas: [],
-              diagnosticos: [],
-              avaliacoes: []
-            },
-            metadados: {
-              totalAulas: 0,
-              totalDiagnosticos: 0,
-              totalAvaliacoes: 0,
-              isGeneratedByAI: false,
-              generatedAt: new Date().toISOString()
-            }
-          };
+          } catch (error) {
+            console.warn(`⚠️ Error parsing data from ${key}:`, error);
+          }
         }
       }
 
-      // For Quadro Interativo, load specific AI data and return ONLY the content, no cards
-      if (activityType === 'quadro-interativo') {
-        console.log('🖼️ ActivityViewModal: Processing Quadro Interativo');
+      if (quadroContent) {
+        // Process data according to the found structure
+        let processedData = quadroContent;
 
-        // Check multiple data sources in order of priority
-        const quadroKeys = [
-          `constructed_quadro-interativo_${activity.id}`,
-          `activity_content_${activity.id}`,
-          `schoolpower_quadro-interativo_content`
-        ];
+        // Se os dados estão dentro de uma propriedade 'data'
+        if (quadroContent.data && typeof quadroContent.data === 'object') {
+          processedData = quadroContent.data;
+        }
 
-        let quadroContent = null;
-        for (const key of quadroKeys) {
-          const content = localStorage.getItem(key);
-          if (content) {
-            try {
-              const parsed = JSON.parse(content);
-              if (parsed && (parsed.titulo || parsed.conteudo || parsed.data || parsed.introducao)) {
-                quadroContent = parsed.data || parsed;
-                console.log(`✅ Quadro Interativo data found in ${key}:`, parsed);
-                break;
-              }
-            } catch (error) {
-              console.warn(`⚠️ Error parsing data from ${key}:`, error);
-            }
+        // Verificar se é um objeto com estrutura de seções
+        if (processedData && typeof processedData === 'object') {
+          // Se tem estrutura de seções (introducao, conceitosPrincipais, etc.)
+          if (processedData.introducao || processedData.conceitosPrincipais || 
+              processedData.exemplosPraticos || processedData.atividadesPraticas || 
+              processedData.resumo || processedData.proximosPassos) {
+            
+            // Manter a estrutura de seções para o preview processar
+            previewData = {
+              ...previewData,
+              ...processedData,
+              id: activity.id,
+              type: activityType,
+              title: processedData.titulo || 
+                     processedData.title || 
+                     previewData.title,
+              description: processedData.descricao || 
+                          processedData.description || 
+                          previewData.description
+            };
+          } else {
+            // Estrutura tradicional com titulo e conteudo
+            previewData = {
+              ...previewData,
+              titulo: processedData.titulo || processedData.title || previewData.title,
+              conteudo: processedData.conteudo || processedData.content || '',
+              id: activity.id,
+              type: activityType,
+              title: processedData.titulo || 
+                     processedData.title || 
+                     previewData.title,
+              description: processedData.descricao || 
+                          processedData.description || 
+                          previewData.description
+            };
           }
         }
 
-        if (quadroContent) {
-          // Process data according to the found structure
-          let processedData = quadroContent;
-
-          // Se os dados estão dentro de uma propriedade 'data'
-          if (quadroContent.data && typeof quadroContent.data === 'object') {
-            processedData = quadroContent.data;
+        console.log('🖼️ Processed quadro interativo data for visualization:', previewData);
+      } else {
+        console.log('⚠️ No specific quadro interativo content found');
+        // Create basic structure from form data
+        previewData = {
+          ...previewData,
+          conteudo: {
+            titulo: previewData.title || 'Quadro Interativo',
+            descricao: previewData.description || 'Conteúdo do quadro interativo',
+            introducao: 'Conteúdo será carregado quando gerado pela IA',
+            conceitosPrincipais: [],
+            exemplosPraticos: [],
+            atividadesPraticas: [],
+            resumo: '',
+            proximosPassos: []
+          },
+          metadados: {
+            isGeneratedByAI: false,
+            generatedAt: new Date().toISOString()
           }
-
-          // Verificar se é um objeto com estrutura de seções
-          if (processedData && typeof processedData === 'object') {
-            // Se tem estrutura de seções (introducao, conceitosPrincipais, etc.)
-            if (processedData.introducao || processedData.conceitosPrincipais || 
-                processedData.exemplosPraticos || processedData.atividadesPraticas || 
-                processedData.resumo || processedData.proximosPassos) {
-              
-              // Manter a estrutura de seções para o preview processar
-              previewData = {
-                ...previewData,
-                ...processedData,
-                id: activity.id,
-                type: activityType,
-                title: processedData.titulo || 
-                       processedData.title || 
-                       previewData.title,
-                description: processedData.descricao || 
-                            processedData.description || 
-                            previewData.description
-              };
-            } else {
-              // Estrutura tradicional com titulo e conteudo
-              previewData = {
-                ...previewData,
-                titulo: processedData.titulo || processedData.title || previewData.title,
-                conteudo: processedData.conteudo || processedData.content || '',
-                id: activity.id,
-                type: activityType,
-                title: processedData.titulo || 
-                       processedData.title || 
-                       previewData.title,
-                description: processedData.descricao || 
-                            processedData.description || 
-                            previewData.description
-              };
-            }
-          }
-
-          console.log('🖼️ Processed quadro interativo data for visualization:', previewData);
-        } else {
-          console.log('⚠️ No specific quadro interativo content found');
-          // Create basic structure from form data
-          previewData = {
-            ...previewData,
-            conteudo: {
-              titulo: previewData.title || 'Quadro Interativo',
-              descricao: previewData.description || 'Conteúdo do quadro interativo',
-              introducao: 'Conteúdo será carregado quando gerado pela IA',
-              conceitosPrincipais: [],
-              exemplosPraticos: [],
-              atividadesPraticas: [],
-              resumo: '',
-              proximosPassos: []
-            },
-            metadados: {
-              isGeneratedByAI: false,
-              generatedAt: new Date().toISOString()
-            }
-          };
-        }
-
-          // If it has success and structured data
-          if (quadroContent.success && quadroContent.data) {
-            processedData = quadroContent.data;
-          }
-
-          // Merge quadro data with existing data
-          previewData = {
-            ...previewData,
-            ...processedData,
-            id: activity.id,
-            type: activityType,
-            title: processedData.titulo || 
-                   processedData.title || 
-                   previewData.title,
-            description: processedData.descricao || 
-                        processedData.description || 
-                        previewData.description,
-            // Ensure complete structure for visualization
-            conteudo: processedData.conteudo || processedData,
-            introducao: processedData.introducao,
-            conceitosPrincipais: processedData.conceitosPrincipais,
-            exemplosPraticos: processedData.exemplosPraticos,
-            atividadesPraticas: processedData.atividadesPraticas,
-            resumo: processedData.resumo,
-            proximosPassos: processedData.proximosPassos,
-            metadados: processedData.metadados || {
-              isGeneratedByAI: true,
-              generatedAt: processedData.generatedAt || new Date().toISOString()
-            }
-          };
-          console.log('🖼️ Processed quadro interativo data for visualization:', previewData);
-        } else {
-          console.log('⚠️ No specific quadro interativo content found');
-          // Create basic structure from form data
-          previewData = {
-            ...previewData,
-            conteudo: {
-              titulo: previewData.title || 'Quadro Interativo',
-              descricao: previewData.description || 'Conteúdo do quadro interativo',
-              introducao: 'Conteúdo será carregado quando gerado pela IA',
-              conceitosPrincipais: [],
-              exemplosPraticos: [],
-              atividadesPraticas: [],
-              resumo: '',
-              proximosPassos: []
-            },
-            metadados: {
-              isGeneratedByAI: false,
-              generatedAt: new Date().toISOString()
-            }
-          };
-        }
+        };
       }
+    }
 
     console.log('📊 ActivityViewModal: Final data for preview:', previewData);
 
@@ -689,7 +636,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                         {questionsForSidebar.length} questões
                       </Badge>
                     )}
-
                   </div>
                 </div>
 
@@ -790,7 +736,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               </div>
             </div>
           )}
-
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
