@@ -18,7 +18,6 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
-import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -560,7 +559,7 @@ const EditActivityModal = ({
     } else if (type === 'quadro-interativo') {
       // Simular geração de conteúdo específico para Quadro Interativo
       const quadroContent = generateQuadroInterativoContent(data);
-
+      
       return {
         success: true,
         data: {
@@ -2014,8 +2013,8 @@ Os alunos devem compreender ${tema} de forma prática e interativa, sendo capaze
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <QuadroInterativoPreview
-                        data={generatedContent || formData}
+                      <ActivityPreview
+                        content={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (

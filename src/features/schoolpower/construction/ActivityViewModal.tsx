@@ -520,45 +520,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       case 'quadro-interativo':
         console.log('🖼️ Rendering Quadro Interativo preview:', previewData);
-        
-        // Carregar dados específicos do Quadro Interativo
-        let quadroData = previewData;
-        
-        // Verificar se há dados gerados salvos
-        const quadroStorageKeys = [
-          `constructed_quadro-interativo_${activity.id}`,
-          `schoolpower_quadro-interativo_content`,
-          `activity_content_${activity.id}`,
-          `activity_${activity.id}`
-        ];
-        
-        for (const key of quadroStorageKeys) {
-          const storedQuadroData = localStorage.getItem(key);
-          if (storedQuadroData) {
-            try {
-              const parsedData = JSON.parse(storedQuadroData);
-              console.log(`🖼️ Dados do Quadro Interativo encontrados em ${key}:`, parsedData);
-              
-              // Mesclar dados com prioridade para os dados salvos
-              quadroData = {
-                ...quadroData,
-                ...parsedData,
-                generatedContent: parsedData.generatedContent || parsedData,
-                titulo: parsedData.titulo,
-                conteudo: parsedData.conteudo
-              };
-              break;
-            } catch (error) {
-              console.warn(`⚠️ Erro ao parsear dados do Quadro Interativo de ${key}:`, error);
-            }
-          }
-        }
-        
-        console.log('🖼️ Dados finais para Quadro Interativo:', quadroData);
-        
         return (
           <QuadroInterativoPreview
-            data={quadroData}
+            data={previewData}
             activityData={activity}
           />
         );

@@ -81,7 +81,6 @@ export const activityRegistry: ActivityRegistryType = {
   "quadro-interativo": {
     editor: lazy(() => import("./quadro-interativo/EditActivity")),
     preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview")),
-  },view")),
   },
 };
 
