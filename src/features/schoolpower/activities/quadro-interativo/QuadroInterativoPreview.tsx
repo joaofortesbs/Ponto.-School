@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,27 +46,45 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
                             'Quadro Interativo';
 
       // Extrair conteúdo - garantir que seja sempre uma string
-      if (data.conteudo) {
-        if (typeof data.conteudo === 'string') {
-          processedData.conteudo = data.conteudo;
-        } else if (typeof data.conteudo === 'object') {
-          // Se conteudo for um objeto, extrair propriedades específicas
-          let conteudoFormatado = '';
-          
-          if (data.conteudo.titulo) conteudoFormatado += `**${data.conteudo.titulo}**\n\n`;
-          if (data.conteudo.descricao) conteudoFormatado += `${data.conteudo.descricao}\n\n`;
-          if (data.conteudo.introducao) conteudoFormatado += `**Introdução:**\n${data.conteudo.introducao}\n\n`;
-          if (data.conteudo.conceitosPrincipais) conteudoFormatado += `**Conceitos Principais:**\n${data.conteudo.conceitosPrincipais}\n\n`;
-          if (data.conteudo.exemplosPraticos) conteudoFormatado += `**Exemplos Práticos:**\n${data.conteudo.exemplosPraticos}\n\n`;
-          if (data.conteudo.atividadesPraticas) conteudoFormatado += `**Atividades Práticas:**\n${data.conteudo.atividadesPraticas}\n\n`;
-          if (data.conteudo.resumo) conteudoFormatado += `**Resumo:**\n${data.conteudo.resumo}\n\n`;
-          if (data.conteudo.proximosPassos) conteudoFormatado += `**Próximos Passos:**\n${data.conteudo.proximosPassos}`;
-          
-          processedData.conteudo = conteudoFormatado || 'Conteúdo estruturado disponível';
-        }
-      } else if (data.data?.conteudo) {
-        processedData.conteudo = typeof data.data.conteudo === 'string' ? data.data.conteudo : 'Conteúdo processado pela IA';
-      }
+          if (data.conteudo) {
+            if (typeof data.conteudo === 'string') {
+              processedData.conteudo = data.conteudo;
+            } else if (typeof data.conteudo === 'object') {
+              // Se conteudo for um objeto, extrair propriedades específicas
+              let conteudoFormatado = '';
+
+              // Função helper para converter valores para string de forma segura
+              const safeString = (value: any): string => {
+                if (value === null || value === undefined) return '';
+                if (typeof value === 'string') return value;
+                if (typeof value === 'object') {
+                  // Se for um objeto com propriedades específicas
+                  if (value.tipo && value.conteudo) {
+                    return typeof value.conteudo === 'string' ? value.conteudo : '';
+                  }
+                  return JSON.stringify(value);
+                }
+                return String(value);
+              };
+
+              if (data.conteudo.titulo) conteudoFormatado += `**${safeString(data.conteudo.titulo)}**\n\n`;
+              if (data.conteudo.descricao) conteudoFormatado += `${safeString(data.conteudo.descricao)}\n\n`;
+              if (data.conteudo.introducao) conteudoFormatado += `**Introdução:**\n${safeString(data.conteudo.introducao)}\n\n`;
+              if (data.conteudo.conceitosPrincipais) conteudoFormatado += `**Conceitos Principais:**\n${safeString(data.conteudo.conceitosPrincipais)}\n\n`;
+              if (data.conteudo.exemplosPraticos) conteudoFormatado += `**Exemplos Práticos:**\n${safeString(data.conteudo.exemplosPraticos)}\n\n`;
+
+              processedData.conteudo = conteudoFormatado || 'Conteúdo estruturado disponível';
+            }
+          } else if (data.data?.conteudo) {
+            const dataConteudo = data.data.conteudo;
+            if (typeof dataConteudo === 'string') {
+              processedData.conteudo = dataConteudo;
+            } else if (typeof dataConteudo === 'object') {
+              processedData.conteudo = 'Conteúdo estruturado processado pela IA';
+            } else {
+              processedData.conteudo = String(dataConteudo);
+            }
+          }
 
       // Extrair outros campos
       processedData.disciplina = data.disciplina || data.subject || data.data?.disciplina || 'Matemática';
@@ -130,7 +147,7 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
               <div className="prose prose-lg max-w-none">
                 {processedData.conteudo.split('\n').map((paragrafo, index) => {
                   if (!paragrafo.trim()) return null;
-                  
+
                   if (paragrafo.startsWith('**') && paragrafo.endsWith('**')) {
                     return (
                       <h3 key={index} className="text-xl font-bold text-gray-800 mt-6 mb-3 flex items-center gap-2">
@@ -139,7 +156,7 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
                       </h3>
                     );
                   }
-                  
+
                   return (
                     <p key={index} className="text-gray-700 leading-relaxed mb-4">
                       {paragrafo}
@@ -172,7 +189,7 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
           </CardContent>
         </Card>
 
-        
+
       </div>
     </div>
   );
