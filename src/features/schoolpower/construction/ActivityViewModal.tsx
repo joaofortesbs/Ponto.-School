@@ -429,7 +429,54 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           // Process data according to the found structure
           let processedData = quadroContent;
 
-          // If data is within 'data' (API result)
+          // Se os dados estão dentro de uma propriedade 'data'
+          if (quadroContent.data && typeof quadroContent.data === 'object') {
+            processedData = quadroContent.data;
+          }
+
+          // Verificar se é um objeto com estrutura de seções
+          if (processedData && typeof processedData === 'object') {
+            // Se tem estrutura de seções (introducao, conceitosPrincipais, etc.)
+            if (processedData.introducao || processedData.conceitosPrincipais || 
+                processedData.exemplosPraticos || processedData.atividadesPraticas || 
+                processedData.resumo || processedData.proximosPassos) {
+              
+              // Manter a estrutura de seções para o preview processar
+              previewData = {
+                ...previewData,
+                ...processedData,
+                id: activity.id,
+                type: activityType,
+                title: processedData.titulo || 
+                       processedData.title || 
+                       previewData.title,
+                description: processedData.descricao || 
+                            processedData.description || 
+                            previewData.description
+              };
+            } else {
+              // Estrutura tradicional com titulo e conteudo
+              previewData = {
+                ...previewData,
+                titulo: processedData.titulo || processedData.title || previewData.title,
+                conteudo: processedData.conteudo || processedData.content || '',
+                id: activity.id,
+                type: activityType,
+                title: processedData.titulo || 
+                       processedData.title || 
+                       previewData.title,
+                description: processedData.descricao || 
+                            processedData.description || 
+                            previewData.description
+              };
+            }
+          }
+
+          console.log('🖼️ Processed quadro interativo data for visualization:', previewData);
+        } else {
+          console.log('⚠️ No specific quadro interativo content found');
+          // Create basic structure from form data
+          previewDdata' (API result)
           if (quadroContent.data) {
             processedData = quadroContent.data;
           }

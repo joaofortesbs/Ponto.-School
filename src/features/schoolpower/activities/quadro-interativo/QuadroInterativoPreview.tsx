@@ -26,13 +26,52 @@ export default function QuadroInterativoPreview({ data, activityData }: QuadroIn
              activityData?.personalizedTitle ||
              'Quadro Interativo';
 
-    // Tentar extrair conteúdo
-    conteudo = data.conteudo || 
-               data.content || 
-               data.data?.conteudo ||
-               data.descricao ||
-               data.description ||
-               '';
+    // Tentar extrair conteúdo - verificar se é um objeto estruturado ou texto simples
+    if (typeof data === 'object' && data !== null) {
+      // Se o data tem a estrutura com seções (introducao, conceitosPrincipais, etc.)
+      if (data.introducao || data.conceitosPrincipais || data.exemplosPraticos || 
+          data.atividadesPraticas || data.resumo || data.proximosPassos) {
+        
+        // Construir conteúdo formatado a partir das seções
+        const secoes = [];
+        
+        if (data.introducao) {
+          secoes.push(`Introdução:\n${data.introducao}`);
+        }
+        
+        if (data.conceitosPrincipais) {
+          secoes.push(`Conceitos Principais:\n${data.conceitosPrincipais}`);
+        }
+        
+        if (data.exemplosPraticos) {
+          secoes.push(`Exemplos Práticos:\n${data.exemplosPraticos}`);
+        }
+        
+        if (data.atividadesPraticas) {
+          secoes.push(`Atividades Práticas:\n${data.atividadesPraticas}`);
+        }
+        
+        if (data.resumo) {
+          secoes.push(`Resumo:\n${data.resumo}`);
+        }
+        
+        if (data.proximosPassos) {
+          secoes.push(`Próximos Passos:\n${data.proximosPassos}`);
+        }
+        
+        conteudo = secoes.join('\n\n');
+      } else {
+        // Tentar outras propriedades
+        conteudo = data.conteudo || 
+                   data.content || 
+                   data.data?.conteudo ||
+                   data.descricao ||
+                   data.description ||
+                   '';
+      }
+    } else if (typeof data === 'string') {
+      conteudo = data;
+    }
 
     console.log('🎯 Título extraído:', titulo);
     console.log('📝 Conteúdo extraído:', conteudo);
