@@ -1,0 +1,11 @@
+Faça as seguintes alterações dentro da seção de School Power: Dentro da interface de Construção de Atividades: Dentro do modal de Visualizar Atividades, mas especificamente dentro ddas atividades de Quadro Interativo:
+
+Agora precisamos começar a configurar a maneira e a lógica da criação da atividade de Quadro Interativo é construida dentro do modal de Editar Materiais! (Verifique se existe um arquivo especifico que cuida da lógica de geração/construção da atividade de Quadro Interativo, se ainda não exsitir, crie um arquivo separado para essa lógica! Se inspire nos sistema de geração/construção de ativiadede de Quadro Interativo)!!!!!!!
+
+Seja extremamente cuidadoso e super analista! Revise e analise tudo para não fazer nada errado! Reflita sobre cada modificação e analise como você vai fazer cada alteração dentro da plataforma! Não se esqueça de fazer nada que eu te pedi! Faça que a plataforma seja renderizada corretamente depois de todas as alterações!!!!!!!
+
+A nova lógica de construção, precisa ser:
+
+A IA do Gemini vai construir um texto, que vai ser composto por titulo e conteúdo, esse texto vai ser gerado de maneira personalizada de acordo com os dados coletados dentro da interface de Editar de dentro do modal de Editar Materiais! E o sistema da plataforma vai mostrar a atividade de Quadro Interativo contruida, dentro da interface da mini-seção de Pré-visualização, vai ter um card retangular, dentro da interface que mostra a atividade construida, e dentro desse card retangular, vai ter o texto que a IA do Gemini tinha gerado!!!!!!! Faça todas as configurções da maneira correta, principalmetne dentro do card, para que ele seja simples e consiga guardar o texto gerado pela a IA do Gemini!
+
+Garanta com 100% de certeza que a IA do Gemini está conseguindo receber e analisar os dados de dentro dos campos de dentro do modal de Editar Materiais dentro da mini-seção de Editar, para que a IA do Gemini consiga analisar e fazer o texto da maneira correta!!!!!!! Veja todos os fluxos, analise e verifique todas as integrações, todas as sicronizações e todas as conexões dentro do sistema!!!!!!! Reflita muito bem sobre as alterações que você vai fazer, para que você não cometa erros ou bugs dentro da plataforma, e sem prejudicar nenhuma outra uncionalidade já funcional!!!!!!!
