@@ -7,9 +7,20 @@ import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
 import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
+import { QuizStep, QuizFinalStep } from './QuizSteps';
 
 export const QuizWithSchoolPower: React.FC = () => {
-  const { state, goToSchoolPower, goToIntro, resetQuiz } = useQuizSchoolPower();
+  const { 
+    state, 
+    goToSchoolPower, 
+    goToIntro, 
+    resetQuiz, 
+    goToQuizStep2, 
+    goToQuizStep3, 
+    goToQuizStep4, 
+    goToQuizFinal, 
+    saveQuizAnswer 
+  } = useQuizSchoolPower();
 
   const renderIntro = () => (
     <div className="min-h-screen relative overflow-hidden">
@@ -43,7 +54,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       className="my-8"
                     >
                       <Button 
-                        onClick={goToSchoolPower}
+                        onClick={goToQuizStep2}
                         size="lg"
                         className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
                       >
@@ -68,6 +79,67 @@ export const QuizWithSchoolPower: React.FC = () => {
 
             
           </motion.div>
+        </div>
+      </AnimatedBackground>
+    </div>
+  );
+
+  const renderQuizStep2 = () => (
+    <div className="min-h-screen relative overflow-hidden">
+      <AnimatedBackground>
+        <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
+          <QuizStep
+            step={2}
+            question="Você gasta mais de 5 horas por semana planejando aulas?"
+            options={["Sim", "Muito mais", "Não"]}
+            onSelectOption={(option) => saveQuizAnswer('step2', option)}
+            onNext={goToQuizStep3}
+            selectedOption={state.quizAnswers.step2}
+          />
+        </div>
+      </AnimatedBackground>
+    </div>
+  );
+
+  const renderQuizStep3 = () => (
+    <div className="min-h-screen relative overflow-hidden">
+      <AnimatedBackground>
+        <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
+          <QuizStep
+            step={3}
+            question="Você acredita que ter alunos engajados na sua aula é fundamental?"
+            options={["Claro!", "Um pouco", "Não"]}
+            onSelectOption={(option) => saveQuizAnswer('step3', option)}
+            onNext={goToQuizStep4}
+            selectedOption={state.quizAnswers.step3}
+          />
+        </div>
+      </AnimatedBackground>
+    </div>
+  );
+
+  const renderQuizStep4 = () => (
+    <div className="min-h-screen relative overflow-hidden">
+      <AnimatedBackground>
+        <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
+          <QuizStep
+            step={4}
+            question="Se você pudesse acessar uma plataforma que cria todas as atividades/materiais interativos do semestre em 2 minutos, você acessaria?"
+            options={["Com certeza!", "Talvez", "Não"]}
+            onSelectOption={(option) => saveQuizAnswer('step4', option)}
+            onNext={goToQuizFinal}
+            selectedOption={state.quizAnswers.step4}
+          />
+        </div>
+      </AnimatedBackground>
+    </div>
+  );
+
+  const renderQuizFinal = () => (
+    <div className="min-h-screen relative overflow-hidden">
+      <AnimatedBackground>
+        <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
+          <QuizFinalStep onAccessPlatform={goToSchoolPower} />
         </div>
       </AnimatedBackground>
     </div>
@@ -123,6 +195,50 @@ export const QuizWithSchoolPower: React.FC = () => {
           transition={{ duration: 0.3 }}
         >
           {renderIntro()}
+        </motion.div>
+      )}
+      {state.currentStep === 'quiz-step2' && (
+        <motion.div
+          key="quiz-step2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderQuizStep2()}
+        </motion.div>
+      )}
+      {state.currentStep === 'quiz-step3' && (
+        <motion.div
+          key="quiz-step3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderQuizStep3()}
+        </motion.div>
+      )}
+      {state.currentStep === 'quiz-step4' && (
+        <motion.div
+          key="quiz-step4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderQuizStep4()}
+        </motion.div>
+      )}
+      {state.currentStep === 'quiz-final' && (
+        <motion.div
+          key="quiz-final"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderQuizFinal()}
         </motion.div>
       )}
       {state.currentStep === 'schoolpower' && (
