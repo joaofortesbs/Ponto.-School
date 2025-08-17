@@ -136,10 +136,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                   step={2}
                   question="Você gasta mais de 5 horas por semana planejando aulas?"
                   options={["Sim", "Muito mais", "Não"]}
-                  onSelectOption={(option) => {
-                    saveQuizAnswer('step2', option);
-                    setTimeout(() => goToQuizStep3(), 300);
-                  }}
+                  onSelectOption={(option) => saveQuizAnswer('step2', option)}
                   onNext={goToQuizStep3}
                   selectedOption={state.quizAnswers.step2}
                 />
@@ -177,10 +174,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                   step={3}
                   question="Você acredita que ter alunos engajados na sua aula é fundamental?"
                   options={["Claro!", "Um pouco", "Não"]}
-                  onSelectOption={(option) => {
-                    saveQuizAnswer('step3', option);
-                    setTimeout(() => goToQuizStep4(), 300);
-                  }}
+                  onSelectOption={(option) => saveQuizAnswer('step3', option)}
                   onNext={goToQuizStep4}
                   selectedOption={state.quizAnswers.step3}
                 />
@@ -218,10 +212,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                   step={4}
                   question="Se você pudesse acessar uma plataforma que cria todas as atividades/materiais interativos do semestre em 2 minutos, você acessaria?"
                   options={["Com certeza!", "Talvez", "Não"]}
-                  onSelectOption={(option) => {
-                    saveQuizAnswer('step4', option);
-                    setTimeout(() => goToQuizFinal(), 300);
-                  }}
+                  onSelectOption={(option) => saveQuizAnswer('step4', option)}
                   onNext={goToQuizFinal}
                   selectedOption={state.quizAnswers.step4}
                 />

@@ -24,6 +24,10 @@ export const QuizStep: React.FC<QuizStepProps> = ({
 }) => {
   const handleOptionSelect = (option: string) => {
     onSelectOption(option);
+    // Atualizar instantaneamente após seleção
+    setTimeout(() => {
+      onNext();
+    }, 500); // Pequeno delay para mostrar a seleção
   };
 
   return (
