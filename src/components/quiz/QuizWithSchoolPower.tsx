@@ -1,15 +1,19 @@
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Play, ArrowLeft, Home } from 'lucide-react';
+import { Play, ArrowLeft, Home } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
 import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
+import { QuizSteps } from './QuizSteps';
 
 export const QuizWithSchoolPower: React.FC = () => {
-  const { state, goToSchoolPower, goToIntro, resetQuiz } = useQuizSchoolPower();
+  const { state, quizSteps, goToQuiz, goToSchoolPower, goToIntro, goToFinal, answerQuizStep, resetQuiz } = useQuizSchoolPower();
+
+  const currentQuizStep = quizSteps.find(step => step.id === state.quizStepNumber);
 
   const renderIntro = () => (
     <div className="min-h-screen relative overflow-hidden">
@@ -35,7 +39,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
 
-                    {/* Botão Quero Testar Agora - Reposicionado acima do carrossel */}
+                    {/* Botão Quero Testar Agora - Agora vai para o quiz */}
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -43,7 +47,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       className="my-8"
                     >
                       <Button 
-                        onClick={goToSchoolPower}
+                        onClick={goToQuiz}
                         size="lg"
                         className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
                       >
@@ -65,9 +69,21 @@ export const QuizWithSchoolPower: React.FC = () => {
                 </motion.div>
               </CardContent>
             </Card>
-
-            
           </motion.div>
+        </div>
+      </AnimatedBackground>
+    </div>
+  );
+
+  const renderQuiz = () => (
+    <div className="min-h-screen relative overflow-hidden">
+      <AnimatedBackground>
+        <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
+          <QuizSteps
+            currentStep={currentQuizStep}
+            progressPercentage={state.progressPercentage}
+            onAnswerSelect={answerQuizStep}
+          />
         </div>
       </AnimatedBackground>
     </div>
@@ -123,6 +139,17 @@ export const QuizWithSchoolPower: React.FC = () => {
           transition={{ duration: 0.3 }}
         >
           {renderIntro()}
+        </motion.div>
+      )}
+      {state.currentStep === 'quiz' && (
+        <motion.div
+          key="quiz"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderQuiz()}
         </motion.div>
       )}
       {state.currentStep === 'schoolpower' && (

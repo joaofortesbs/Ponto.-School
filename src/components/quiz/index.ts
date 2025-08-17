@@ -1,4 +1,5 @@
 
-export { default as QuizSchoolPowerInterface } from './QuizSchoolPowerInterface';
-export { default as QuizWithSchoolPower } from './QuizWithSchoolPower';
+export { QuizWithSchoolPower } from './QuizWithSchoolPower';
+export { QuizSteps } from './QuizSteps';
 export { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
+export { default } from './QuizWithSchoolPower';
