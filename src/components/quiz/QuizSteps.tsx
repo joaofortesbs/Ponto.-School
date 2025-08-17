@@ -68,10 +68,13 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button
-                    onClick={() => onAnswerSelect(currentStep.id, option)}
+                    onClick={() => {
+                      console.log(`🎯 Usuário selecionou opção "${option}" na etapa ${currentStep.id}`);
+                      onAnswerSelect(currentStep.id, option);
+                    }}
                     variant="outline"
                     size="lg"
-                    className="w-full p-6 text-lg font-medium border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition-all duration-300 rounded-xl"
+                    className="w-full p-6 text-lg font-medium border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition-all duration-300 rounded-xl transform hover:scale-105 active:scale-95"
                   >
                     {option}
                   </Button>

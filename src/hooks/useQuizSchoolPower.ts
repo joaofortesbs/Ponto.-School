@@ -40,8 +40,8 @@ const QUIZ_STEPS: QuizStep[] = [
   },
   {
     id: 3,
-    question: "Você acredita que ter alunos engajados na sua aula é fundamental?",
-    options: ["Claro!", "Um pouco", "Não"]
+    question: "Você tem dificuldades para criar atividades diversificadas para suas aulas?",
+    options: ["Sempre", "Às vezes", "Nunca"]
   },
   {
     id: 4,
@@ -98,22 +98,25 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       const progressPercentage = (stepId / totalSteps) * 100;
       
       // Se respondeu a última pergunta (etapa 4), vai diretamente para School Power
-      if (stepId >= totalSteps) {
-        setTimeout(() => {
-          setState(current => ({
-            ...current,
-            currentStep: 'schoolpower',
-            quizCompleted: true,
-            schoolPowerAccessed: true,
-            progressPercentage: 100
-          }));
-        }, 500); // Pequeno delay para mostrar o progresso completo
-        
-        return {
+      if (stepId === totalSteps) {
+        // Primeiro atualiza o estado com a resposta e progresso 100%
+        const updatedState = {
           ...current,
           answers: newAnswers,
           progressPercentage: 100
         };
+        
+        // Depois de um pequeno delay, redireciona para School Power
+        setTimeout(() => {
+          setState(prevState => ({
+            ...prevState,
+            currentStep: 'schoolpower',
+            quizCompleted: true,
+            schoolPowerAccessed: true
+          }));
+        }, 800); // Delay um pouco maior para melhor experiência
+        
+        return updatedState;
       }
       
       // Caso contrário, vai para a próxima etapa

@@ -13,6 +13,11 @@ import { QuizSteps } from './QuizSteps';
 export const QuizWithSchoolPower: React.FC = () => {
   const { state, quizSteps, goToQuiz, goToSchoolPower, goToIntro, goToFinal, answerQuizStep, resetQuiz } = useQuizSchoolPower();
 
+  console.log('🔍 QuizWithSchoolPower - Estado atual:', state.currentStep);
+  console.log('🔍 Quiz Step Number:', state.quizStepNumber);
+  console.log('🔍 Quiz Completed:', state.quizCompleted);
+  console.log('🔍 School Power Accessed:', state.schoolPowerAccessed);
+
   const currentQuizStep = quizSteps.find(step => step.id === state.quizStepNumber);
 
   const renderIntro = () => (
@@ -146,8 +151,8 @@ export const QuizWithSchoolPower: React.FC = () => {
           key="quiz"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
         >
           {renderQuiz()}
         </motion.div>
@@ -155,10 +160,10 @@ export const QuizWithSchoolPower: React.FC = () => {
       {state.currentStep === 'schoolpower' && (
         <motion.div
           key="schoolpower"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -20 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
           {renderSchoolPower()}
         </motion.div>
