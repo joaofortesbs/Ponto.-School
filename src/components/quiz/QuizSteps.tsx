@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { QuizStep } from '@/hooks/useQuizSchoolPower';
+import { CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface QuizStepsProps {
   currentStep: QuizStep | undefined;
@@ -41,44 +42,101 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
       className="w-full max-w-5xl"
     >
       <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
-        <CardContent className="p-12 md:p-16">
-          {/* Barra de Progresso */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-600">
-                Etapa {currentStep.id} de 4
-              </span>
-              <span className="text-sm font-medium text-gray-600">
-                {Math.round(progressPercentage)}%
-              </span>
+        <CardContent className="p-8 md:p-12">
+          {/* Barra de Progresso Aprimorada */}
+          <div className="mb-10">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">{currentStep.id}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700">
+                    Etapa {currentStep.id} de 4
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg font-bold text-gray-800">
+                  {Math.round(progressPercentage)}%
+                </span>
+                <CheckCircle2 className={`h-5 w-5 transition-colors duration-300 ${
+                  progressPercentage > 0 ? 'text-green-500' : 'text-gray-300'
+                }`} />
+              </div>
             </div>
-            <Progress
-              value={progressPercentage}
-              className="h-2 bg-gray-200"
-              indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
-            />
+            
+            {/* Barra de Progresso Sofisticada */}
+            <div className="relative">
+              <Progress
+                value={progressPercentage}
+                className="h-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full shadow-inner"
+                indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full shadow-lg transition-all duration-500 ease-out"
+              />
+              
+              {/* Etapas na barra */}
+              <div className="absolute inset-0 flex justify-between items-center px-1">
+                {[1, 2, 3, 4].map((step) => (
+                  <div
+                    key={step}
+                    className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
+                      step <= currentStep.id
+                        ? 'bg-white border-orange-500 shadow-md'
+                        : 'bg-gray-300 border-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Labels das etapas */}
+            <div className="flex justify-between mt-2 px-1">
+              {['Início', 'Planejamento', 'Engajamento', 'Plataforma'].map((label, index) => (
+                <span
+                  key={index}
+                  className={`text-xs font-medium transition-colors duration-300 ${
+                    index + 1 <= currentStep.id ? 'text-orange-600' : 'text-gray-400'
+                  }`}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
 
-          {/* Pergunta */}
+          {/* Pergunta Redesenhada */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-center space-y-8"
+            className="text-center space-y-10"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-12">
-              {currentStep.question}
-            </h2>
+            <div className="space-y-4">
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-100 to-orange-50 rounded-full border border-orange-200"
+              >
+                <span className="text-orange-600 font-semibold text-sm">
+                  Pergunta {currentStep.id}
+                </span>
+              </motion.div>
+              
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight max-w-4xl mx-auto">
+                {currentStep.question}
+              </h2>
+            </div>
 
-            {/* Opções */}
-            <div className="space-y-4 max-w-2xl mx-auto">
+            {/* Opções Redesenhadas */}
+            <div className="space-y-4 max-w-3xl mx-auto">
               {currentStep.options.map((option, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 + 0.3 }}
-                  whileHover={{ scale: 1.02 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 + 0.4 }}
+                  whileHover={{ scale: 1.02, x: 8 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button
@@ -88,9 +146,14 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
                     }}
                     variant="outline"
                     size="lg"
-                    className="w-full p-6 text-lg font-medium border-2 border-gray-200 hover:border-orange-500 hover:bg-orange-50 transition-all duration-300 rounded-xl transform hover:scale-105 active:scale-95"
+                    className="group w-full p-6 text-left text-lg font-medium border-2 border-gray-200 hover:border-orange-400 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-25 transition-all duration-300 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
                   >
-                    {option}
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-800 group-hover:text-orange-700 transition-colors duration-300">
+                        {option}
+                      </span>
+                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-orange-500 transform group-hover:translate-x-1 transition-all duration-300" />
+                    </div>
                   </Button>
                 </motion.div>
               ))}
