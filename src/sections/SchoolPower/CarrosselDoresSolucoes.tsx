@@ -13,37 +13,37 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
       id: 1,
       text: "Falta de tempo para planejamento",
       icon: <Clock className="h-4 w-4" />,
-      color: "from-red-500/20 to-red-600/10"
+      color: "from-red-500 to-red-600"
     },
     {
       id: 2,
       text: "Dificuldade em personalizar para cada turma",
       icon: <Users className="h-4 w-4" />,
-      color: "from-red-500/20 to-red-600/10"
+      color: "from-red-500 to-red-600"
     },
     {
       id: 3,
       text: "Gastando com materiais caros",
       icon: <AlertTriangle className="h-4 w-4" />,
-      color: "from-red-500/20 to-red-600/10"
+      color: "from-red-500 to-red-600"
     },
     {
       id: 4,
       text: "Passando horas criando atividades",
       icon: <Clock className="h-4 w-4" />,
-      color: "from-red-500/20 to-red-600/10"
+      color: "from-red-500 to-red-600"
     },
     {
       id: 5,
       text: "Sem tempo para inovação pedagógica",
       icon: <Lightbulb className="h-4 w-4" />,
-      color: "from-red-500/20 to-red-600/10"
+      color: "from-red-500 to-red-600"
     },
     {
       id: 6,
       text: "Avaliações manuais demoradas",
       icon: <BarChart3 className="h-4 w-4" />,
-      color: "from-red-500/20 to-red-600/10"
+      color: "from-red-500 to-red-600"
     }
   ];
 
@@ -52,43 +52,43 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
       id: 1,
       text: "Planos de Aula",
       icon: <FileText className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     },
     {
       id: 2,
       text: "Avaliações Automatizadas",
       icon: <Target className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     },
     {
       id: 3,
       text: "Material Visual Criativo",
       icon: <Video className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     },
     {
       id: 4,
       text: "Exercícios Adaptativos",
       icon: <BookOpen className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     },
     {
       id: 5,
       text: "Jogos Educativos",
       icon: <Gamepad2 className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     },
     {
       id: 6,
       text: "Experimentos Práticos",
       icon: <Zap className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     },
     {
       id: 7,
       text: "Calculadoras Automáticas",
       icon: <Calculator className="h-4 w-4" />,
-      color: "from-orange-500/20 to-orange-600/10"
+      color: "from-orange-500 to-orange-600"
     }
   ];
 
@@ -102,10 +102,10 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
       <div className="relative bg-transparent rounded-3xl p-8">
         
         {/* Fileira Superior - Dores (movimento para direita) */}
-        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-r from-red-500/5 to-red-600/5 p-4">
+        <div className="relative mb-6 overflow-hidden rounded-2xl bg-transparent p-4">
           <div className="flex items-center mb-3">
-            <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
-            <span className="text-red-300 font-semibold text-sm">Principais Dores dos Professores</span>
+            <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+            <span className="text-red-500 font-semibold text-sm">Principais Dores dos Professores</span>
           </div>
           
           <div className="relative h-16 overflow-hidden">
@@ -128,9 +128,9 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <div className={`bg-gradient-to-r ${dor.color} backdrop-blur-sm border border-red-400/20 rounded-xl p-4 h-full`}>
+                  <div className={`bg-gradient-to-r ${dor.color} backdrop-blur-sm border border-red-500 rounded-xl p-4 h-full`}>
                     <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 p-2 bg-red-500/20 rounded-lg text-red-400">
+                      <div className="flex-shrink-0 p-2 bg-white/20 rounded-lg text-white">
                         {dor.icon}
                       </div>
                       <span className="text-white font-medium text-sm leading-tight">
@@ -145,10 +145,10 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
         </div>
 
         {/* Fileira Inferior - Ferramentas (movimento para esquerda) */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 p-4">
+        <div className="relative overflow-hidden rounded-2xl bg-transparent p-4">
           <div className="flex items-center mb-3">
-            <Zap className="h-5 w-5 text-orange-400 mr-2" />
-            <span className="text-orange-300 font-semibold text-sm">Ferramentas do School Power</span>
+            <Zap className="h-5 w-5 text-orange-500 mr-2" />
+            <span className="text-orange-500 font-semibold text-sm">Ferramentas do School Power</span>
           </div>
           
           <div className="relative h-16 overflow-hidden">
@@ -171,9 +171,9 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <div className={`bg-gradient-to-r ${ferramenta.color} backdrop-blur-sm border border-orange-400/20 rounded-xl p-4 h-full`}>
+                  <div className={`bg-gradient-to-r ${ferramenta.color} backdrop-blur-sm border border-orange-500 rounded-xl p-4 h-full`}>
                     <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 p-2 bg-orange-500/20 rounded-lg text-orange-400">
+                      <div className="flex-shrink-0 p-2 bg-white/20 rounded-lg text-white">
                         {ferramenta.icon}
                       </div>
                       <span className="text-white font-medium text-sm leading-tight">
