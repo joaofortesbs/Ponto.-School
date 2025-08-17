@@ -5,6 +5,7 @@ import {
   Navigate,
   useLocation,
   useNavigate,
+  BrowserRouter as Router,
 } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
@@ -154,13 +155,10 @@ function App() {
   }, []);
 
   // Rotas de autenticação
-  const isAuthRoute = [
-    "/login",
-    "/register",
-    "/forgot-password",
-    "/reset-password",
-    "/select-plan",
-  ].some((route) => location.pathname.startsWith(route));
+  const isAuthRoute = ['/auth', '/login', '/register', '/forgot-password', '/reset-password', '/plan-selection', '/welcome'].includes(location.pathname);
+
+  // Verificar se é uma rota de quiz - incluindo qualquer variação da rota de quiz
+  const isQuizRoute = location.pathname === '/quiz' || location.pathname.startsWith('/quiz/');
 
   const navigate = useNavigate();
 
@@ -336,8 +334,8 @@ function App() {
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
 
-              {/* Floating Chat Support */}
-              {!isAuthRoute && !isLoading && <FloatingChatSupport />}
+              {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
+              {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && <FloatingChatSupport />}
 
               {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
               {!isAuthRoute &&
