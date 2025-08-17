@@ -30,22 +30,27 @@ export const QuizWithSchoolPower: React.FC = () => {
                   className="text-center space-y-8"
                 >
                   <div className="text-center space-y-8 mb-12">
-                    <motion.div
-                      className="inline-block bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium"
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      🤖 IA Pedagógica Avançada
-                    </motion.div>
-
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
-                    <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                      Teste agora gratuitamente a IA pedagógica que cria todas as suas atividades personalizadas com 1 comando.
-                    </p>
+
+                    {/* Botão Quero Testar Agora - Reposicionado acima do carrossel */}
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      className="my-8"
+                    >
+                      <Button 
+                        onClick={goToSchoolPower}
+                        size="lg"
+                        className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
+                      >
+                        <Play className="mr-3 h-7 w-7" />
+                        QUERO TESTAR AGORA
+                      </Button>
+                    </motion.div>
 
                     {/* Carrossel de Dores e Soluções */}
                     <motion.div
@@ -57,36 +62,11 @@ export const QuizWithSchoolPower: React.FC = () => {
                       <CarrosselDoresSolucoes className="mt-8" />
                     </motion.div>
                   </div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <Button 
-                      onClick={goToSchoolPower}
-                      size="lg"
-                      className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
-                    >
-                      <Play className="mr-3 h-6 w-6" />
-                      QUERO TESTAR AGORA
-                    </Button>
-                  </motion.div>
                 </motion.div>
               </CardContent>
             </Card>
 
-            {/* Footer */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 0.6 }}
-              className="text-center mt-8"
-            >
-              <p className="text-white/80 text-lg backdrop-blur-sm bg-black/20 rounded-2xl px-6 py-3 inline-block border border-white/20">
-                Powered by <span className="text-orange-400 font-bold">Ponto. School</span> IA
-              </p>
-            </motion.div>
+            
           </motion.div>
         </div>
       </AnimatedBackground>
