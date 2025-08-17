@@ -42,6 +42,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       case 'quiz-step-3': return 50;
       case 'quiz-step-4': return 75;
       case 'quiz-final': return 100;
+      case 'schoolpower': return 100;
       default: return 0;
     }
   };

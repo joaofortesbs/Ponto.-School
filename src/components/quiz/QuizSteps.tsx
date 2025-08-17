@@ -22,6 +22,10 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
 }) => {
   const handleOptionSelect = (option: string) => {
     onSelectOption(option);
+    // Avançar automaticamente para a próxima etapa após seleção
+    setTimeout(() => {
+      onNext();
+    }, 500); // Delay de 500ms para mostrar feedback visual da seleção
   };
 
   return (
