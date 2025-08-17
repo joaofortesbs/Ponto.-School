@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Zap, Clock, Users, Target, BookOpen, Lightbulb, BarChart3, FileText, Video, Gamepad2, Calculator } from 'lucide-react';
@@ -100,14 +99,14 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
     <div className={`relative w-full overflow-hidden ${className}`}>
       {/* Container Principal */}
       <div className="relative bg-transparent rounded-3xl p-8">
-        
+
         {/* Fileira Superior - Dores (movimento para direita) */}
         <div className="relative mb-6 overflow-hidden rounded-2xl bg-transparent p-4">
           <div className="flex items-center mb-3">
             <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
             <span className="text-red-500 font-semibold text-sm">Principais Dores dos Professores</span>
           </div>
-          
+
           <div className="relative h-16 overflow-hidden">
             <motion.div
               className="flex gap-4 absolute"
@@ -150,7 +149,7 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
             <Zap className="h-5 w-5 text-orange-500 mr-2" />
             <span className="text-orange-500 font-semibold text-sm">Ferramentas do School Power</span>
           </div>
-          
+
           <div className="relative h-16 overflow-hidden">
             <motion.div
               className="flex gap-4 absolute"
