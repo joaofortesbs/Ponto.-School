@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Play, ArrowLeft } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
+import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
 
 interface QuizSchoolPowerInterfaceProps {
   onBack?: () => void;
@@ -44,7 +44,7 @@ export const QuizSchoolPowerInterface: React.FC<QuizSchoolPowerInterfaceProps> =
             Voltar ao Quiz
           </Button>
         </div>
-        
+
         {/* Interface completa do School Power */}
         <SchoolPowerPage />
       </div>
@@ -79,7 +79,7 @@ export const QuizSchoolPowerInterface: React.FC<QuizSchoolPowerInterfaceProps> =
                       <Sparkles className="h-5 w-5 text-orange-500 mr-2" />
                       <span className="text-orange-700 font-semibold text-sm">IA Pedagógica Avançada</span>
                     </motion.div>
-                    
+
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
@@ -88,7 +88,18 @@ export const QuizSchoolPowerInterface: React.FC<QuizSchoolPowerInterfaceProps> =
                       Teste agora gratuitamente a IA pedagógica que cria todas as suas atividades personalizadas com 1 comando.
                     </p>
                   </div>
-                  
+
+                  {/* Carrossel de Dores e Soluções */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.6 }}
+                    className="w-full max-w-6xl mx-auto mb-8"
+                  >
+                    <CarrosselDoresSolucoes />
+                  </motion.div>
+
+                  {/* Botão de Ação */}
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
