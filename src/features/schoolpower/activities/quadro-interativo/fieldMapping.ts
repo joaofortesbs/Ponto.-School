@@ -155,20 +155,6 @@ export function validateRequiredFields(data: Partial<QuadroInterativoFields>): b
   );
 }
 
-// Função para extrair dados específicos do Quadro Interativo
-export function extractQuadroInterativoData(formData: any): QuadroInterativoFields {
-  const mapped: Partial<QuadroInterativoFields> = {};
-  
-  Object.entries(formData).forEach(([key, value]) => {
-    if (key in quadroInterativoFieldMapping) {
-      const mappedKey = quadroInterativoFieldMapping[key];
-      mapped[mappedKey] = value as any;
-    }
-  });
-
-  return mapped as QuadroInterativoFields;
-}
-
 // Atualizar mapeamento de campos do Quadro Interativo para corresponder exatamente aos nomes dos campos
 export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFields, string[]> = {
   subject: ['Disciplina / Área de conhecimento', 'disciplina', 'Disciplina'],

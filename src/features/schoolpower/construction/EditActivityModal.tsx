@@ -72,44 +72,6 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
 );
 
 // Componente específico para Quadro Interativo
-const QuadroInterativoFields = ({ formData, onFieldChange }: FieldProps) => (
-  <>
-    <div>
-      <Label htmlFor="quadroInterativoCampoEspecifico" className="text-sm">Campo Específico do Quadro</Label>
-      <Textarea
-        id="quadroInterativoCampoEspecifico"
-        value={formData.quadroInterativoCampoEspecifico || ''}
-        onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
-        placeholder="Descreva características específicas para o quadro interativo..."
-        className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="interactiveResources" className="text-sm">Recursos Interativos</Label>
-      <Textarea
-        id="interactiveResources"
-        value={formData.interactiveResources || ''}
-        onChange={(e) => onFieldChange('interactiveResources', e.target.value)}
-        placeholder="Liste os recursos interativos a serem utilizados..."
-        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="digitalActivities" className="text-sm">Atividades Digitais</Label>
-      <Textarea
-        id="digitalActivities"
-        value={formData.digitalActivities || ''}
-        onChange={(e) => onFieldChange('digitalActivities', e.target.value)}
-        placeholder="Descreva as atividades digitais planejadas..."
-        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-  </>
-);
-
-// Componente específico para Quadro Interativo
 const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
@@ -517,44 +479,103 @@ const EditActivityModal = ({
     }
   }, [formData, activity?.id]);
 
-  // Função para gerar conteúdo de atividades
+  // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
-    console.log(`Simulando geração de conteúdo para tipo: ${type}`, data);
+    console.log(`Simulando geração de conteúdo para tipo: ${type} com dados:`, data);
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Implementação específica para Quadro Interativo
-    if (type === 'quadro-interativo') {
-      try {
-        // Import dinâmico para evitar dependência circular ou carregamento desnecessário
-        const QuadroInterativoGeneratorModule = await import('../activities/quadro-interativo/QuadroInterativoGenerator');
-        const QuadroInterativoGenerator = QuadroInterativoGeneratorModule.default || QuadroInterativoGeneratorModule; // Handle default export or named export
-
-        const result = await QuadroInterativoGenerator.generateContent(data);
-
-        if (result.success) {
-          return {
-            title: result.title,
-            content: result.content // Assumindo que o conteúdo gerado está em 'content'
-          };
-        } else {
-          console.warn('Falha na geração do Quadro Interativo:', result.error);
-          return {
-            title: 'Erro na Geração',
-            description: 'Não foi possível gerar o conteúdo. Verifique os dados e tente novamente.'
-          };
+    if (type === 'plano-aula') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Plano de Aula Exemplo",
+          description: data.description || "Descrição do plano de aula...",
+          content: {
+            objetivos: data.objectives,
+            materiais: data.materials,
+            avaliacao: data.evaluation,
+            tempoEstimado: data.timeLimit,
+            componenteCurricular: data.subject,
+            tema: data.theme,
+            anoSerie: data.schoolYear,
+            habilidadesBNCC: data.competencies,
+            perfilTurma: data.context,
+            tipoAula: data.difficultyLevel,
+            observacoes: data.evaluation,
+          },
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
         }
-      } catch (error) {
-        console.error('Erro na geração do Quadro Interativo:', error);
-        return {
-          title: 'Erro na Geração',
-          description: 'Ocorreu um erro interno. Tente novamente.'
-        };
-      }
+      };
+    } else if (type === 'lista-exercicios') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Lista de Exercícios Exemplo",
+          description: data.description || "Descrição da lista de exercícios...",
+          questoes: [
+            { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
+            { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
+          ],
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'sequencia-didatica') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.tituloTemaAssunto || "Sequência Didática Exemplo",
+          description: data.objetivosAprendizagem || "Descrição da sequência didática...",
+          content: {
+            tituloTemaAssunto: data.tituloTemaAssunto,
+            anoSerie: data.anoSerie,
+            disciplina: data.disciplina,
+            bnccCompetencias: data.bnccCompetencias,
+            publicoAlvo: data.publicoAlvo,
+            objetivosAprendizagem: data.objetivosAprendizagem,
+            quantidadeAulas: data.quantidadeAulas,
+            quantidadeDiagnosticos: data.quantidadeDiagnosticos,
+            quantidadeAvaliacoes: data.quantidadeAvaliacoes,
+            cronograma: data.cronograma,
+            subject: data.subject,
+            theme: data.theme,
+            schoolYear: data.schoolYear,
+            competencies: data.competencies,
+            objectives: data.objectives,
+            materials: data.materials,
+            instructions: data.instructions,
+            evaluation: data.evaluation,
+            timeLimit: data.timeLimit,
+            context: data.context,
+          },
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'quadro-interativo') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Quadro Interativo Exemplo",
+          description: data.description || "Descrição do quadro interativo...",
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
     }
 
-    // TODO: Implementar integração real com IA para outros tipos
     return {
-      title: `${type} Gerado`,
-      description: `Conteúdo gerado para ${type} baseado nos dados fornecidos.`
+      success: true,
+      data: {
+        ...data,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+      }
     };
   };
 
@@ -817,8 +838,8 @@ const EditActivityModal = ({
                   // Sobrescrever com dados automáticos se existirem e forem válidos
                   ...(autoFormData.title && { title: autoFormData.title }),
                   ...(autoFormData.description && { description: autoFormData.description }),
-                  ...(autoFormData.subject && autoFormData.subject !== 'Matemática' && { subject: autoFormData.subject }),
-                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º Ano' && { schoolYear: autoFormData.schoolYear }),
+                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                   ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                   ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
                   ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
