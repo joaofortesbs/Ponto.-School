@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,22 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
   progressPercentage,
   onAnswerSelect
 }) => {
-  if (!currentStep) return null;
+  if (!currentStep) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Adicionando uma verificação de segurança caso currentStep.id ou options não estejam definidos
+  if (currentStep.id === undefined || !currentStep.options) {
+    console.error("Erro: currentStep está malformado ou faltando dados essenciais.");
+    return null; // Ou exiba uma mensagem de erro apropriada
+  }
 
   return (
     <motion.div
@@ -38,8 +52,8 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
                 {Math.round(progressPercentage)}%
               </span>
             </div>
-            <Progress 
-              value={progressPercentage} 
+            <Progress
+              value={progressPercentage}
               className="h-2 bg-gray-200"
               indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
             />

@@ -60,6 +60,14 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
     answers: {}
   });
 
+  // Garantir que o estado seja sempre válido
+  const safeState = React.useMemo(() => ({
+    ...state,
+    currentStep: state.currentStep || 'intro',
+    quizStepNumber: Math.max(1, Math.min(state.quizStepNumber || 1, QUIZ_STEPS.length)),
+    progressPercentage: Math.max(0, Math.min(state.progressPercentage || 0, 100))
+  }), [state]);
+
   const goToQuiz = useCallback(() => {
     setState(current => ({
       ...current,
@@ -97,29 +105,26 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       const totalSteps = QUIZ_STEPS.length;
       const progressPercentage = (stepId / totalSteps) * 100;
       
-      // Se respondeu a última pergunta (etapa 4), vai diretamente para School Power
-      if (stepId === totalSteps) {
-        // Primeiro atualiza o estado com a resposta e progresso 100%
-        const updatedState = {
+      console.log(`📝 Resposta registrada - Etapa ${stepId}/${totalSteps}: "${answer}"`);
+      
+      // Se respondeu a última pergunta (etapa 4), vai IMEDIATAMENTE para School Power
+      if (stepId >= totalSteps) {
+        console.log('🎯 ÚLTIMA ETAPA RESPONDIDA! Redirecionando para School Power...');
+        
+        // Transição IMEDIATA e SÍNCRONA para School Power
+        return {
           ...current,
           answers: newAnswers,
-          progressPercentage: 100
+          progressPercentage: 100,
+          currentStep: 'schoolpower',
+          quizCompleted: true,
+          schoolPowerAccessed: true,
+          quizStepNumber: stepId
         };
-        
-        // Depois de um pequeno delay, redireciona para School Power
-        setTimeout(() => {
-          setState(prevState => ({
-            ...prevState,
-            currentStep: 'schoolpower',
-            quizCompleted: true,
-            schoolPowerAccessed: true
-          }));
-        }, 800); // Delay um pouco maior para melhor experiência
-        
-        return updatedState;
       }
       
       // Caso contrário, vai para a próxima etapa
+      console.log(`➡️ Avançando para etapa ${stepId + 1}`);
       return {
         ...current,
         answers: newAnswers,
@@ -141,7 +146,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   }, []);
 
   return {
-    state,
+    state: safeState,
     quizSteps: QUIZ_STEPS,
     goToQuiz,
     goToSchoolPower,

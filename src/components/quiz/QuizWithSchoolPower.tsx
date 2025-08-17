@@ -13,10 +13,12 @@ import { QuizSteps } from './QuizSteps';
 export const QuizWithSchoolPower: React.FC = () => {
   const { state, quizSteps, goToQuiz, goToSchoolPower, goToIntro, goToFinal, answerQuizStep, resetQuiz } = useQuizSchoolPower();
 
-  console.log('🔍 QuizWithSchoolPower - Estado atual:', state.currentStep);
-  console.log('🔍 Quiz Step Number:', state.quizStepNumber);
-  console.log('🔍 Quiz Completed:', state.quizCompleted);
-  console.log('🔍 School Power Accessed:', state.schoolPowerAccessed);
+  // Log apenas quando há mudança de estado importante
+  React.useEffect(() => {
+    if (state.currentStep === 'schoolpower') {
+      console.log('✅ School Power carregado com sucesso!');
+    }
+  }, [state.currentStep]);
 
   const currentQuizStep = quizSteps.find(step => step.id === state.quizStepNumber);
 
@@ -133,9 +135,12 @@ export const QuizWithSchoolPower: React.FC = () => {
     </div>
   );
 
+  // Garantir que sempre haja um fallback
+  const currentStepToRender = state.currentStep || 'intro';
+  
   return (
     <AnimatePresence mode="wait">
-      {state.currentStep === 'intro' && (
+      {currentStepToRender === 'intro' && (
         <motion.div
           key="intro"
           initial={{ opacity: 0 }}
@@ -146,24 +151,24 @@ export const QuizWithSchoolPower: React.FC = () => {
           {renderIntro()}
         </motion.div>
       )}
-      {state.currentStep === 'quiz' && (
+      {currentStepToRender === 'quiz' && currentQuizStep && (
         <motion.div
           key="quiz"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.4, ease: "easeInOut" }}
         >
           {renderQuiz()}
         </motion.div>
       )}
-      {state.currentStep === 'schoolpower' && (
+      {currentStepToRender === 'schoolpower' && (
         <motion.div
           key="schoolpower"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: -20 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
         >
           {renderSchoolPower()}
         </motion.div>

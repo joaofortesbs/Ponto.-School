@@ -29,7 +29,12 @@ export function SchoolPowerPage() {
     isLoading
   } = useSchoolPowerFlow();
 
-  console.log('🏠 SchoolPowerPage renderizada com estado:', { flowState, flowData, isLoading });
+  // Log apenas mudanças importantes de estado
+  React.useEffect(() => {
+    if (flowState !== 'idle') {
+      console.log('🔄 School Power - Estado alterado:', flowState);
+    }
+  }, [flowState]);
 
   const handleCentralExpandedChange = (expanded: boolean) => {
     setIsCentralExpanded(expanded);
