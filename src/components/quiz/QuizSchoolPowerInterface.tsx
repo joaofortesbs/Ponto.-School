@@ -87,17 +87,17 @@ export const QuizSchoolPowerInterface: React.FC<QuizSchoolPowerInterfaceProps> =
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                       Teste agora gratuitamente a IA pedagógica que cria todas as suas atividades personalizadas com 1 comando.
                     </p>
-                  </div>
 
-                  {/* Carrossel de Dores e Soluções */}
-                  <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.6 }}
-                    className="w-full max-w-6xl mx-auto mb-8"
-                  >
-                    <CarrosselDoresSolucoes />
-                  </motion.div>
+                    {/* Carrossel de Dores e Soluções - Logo após o headline */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6, duration: 0.6 }}
+                      className="w-full max-w-6xl mx-auto pt-8"
+                    >
+                      <CarrosselDoresSolucoes />
+                    </motion.div>
+                  </div>
 
                   {/* Botão de Ação */}
                   <motion.div
