@@ -2,14 +2,9 @@
 import { useState, useCallback } from 'react';
 
 export interface QuizSchoolPowerState {
-  currentStep: 'intro' | 'quiz' | 'quiz-step2' | 'quiz-step3' | 'quiz-step4' | 'quiz-final' | 'schoolpower';
+  currentStep: 'intro' | 'quiz' | 'schoolpower';
   quizCompleted: boolean;
   schoolPowerAccessed: boolean;
-  quizAnswers: {
-    step2?: string;
-    step3?: string;
-    step4?: string;
-  };
 }
 
 export interface UseQuizSchoolPowerReturn {
@@ -19,11 +14,6 @@ export interface UseQuizSchoolPowerReturn {
   goToIntro: () => void;
   completeQuiz: () => void;
   resetQuiz: () => void;
-  goToQuizStep2: () => void;
-  goToQuizStep3: () => void;
-  goToQuizStep4: () => void;
-  goToQuizFinal: () => void;
-  saveQuizAnswer: (step: string, answer: string) => void;
 }
 
 export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
@@ -31,7 +21,6 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
     currentStep: 'intro',
     quizCompleted: false,
     schoolPowerAccessed: false,
-    quizAnswers: {},
   });
 
   const goToQuiz = useCallback(() => {
@@ -63,50 +52,11 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
     }));
   }, []);
 
-  const goToQuizStep2 = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      currentStep: 'quiz-step2'
-    }));
-  }, []);
-
-  const goToQuizStep3 = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      currentStep: 'quiz-step3'
-    }));
-  }, []);
-
-  const goToQuizStep4 = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      currentStep: 'quiz-step4'
-    }));
-  }, []);
-
-  const goToQuizFinal = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      currentStep: 'quiz-final'
-    }));
-  }, []);
-
-  const saveQuizAnswer = useCallback((step: string, answer: string) => {
-    setState(prev => ({
-      ...prev,
-      quizAnswers: {
-        ...prev.quizAnswers,
-        [step]: answer
-      }
-    }));
-  }, []);
-
   const resetQuiz = useCallback(() => {
     setState({
       currentStep: 'intro',
       quizCompleted: false,
       schoolPowerAccessed: false,
-      quizAnswers: {},
     });
   }, []);
 
@@ -117,10 +67,5 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
     goToIntro,
     completeQuiz,
     resetQuiz,
-    goToQuizStep2,
-    goToQuizStep3,
-    goToQuizStep4,
-    goToQuizFinal,
-    saveQuizAnswer,
   };
 }
