@@ -14,10 +14,17 @@ import { ContextualizationCard } from "../../features/schoolpower/contextualizat
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 
-export function SchoolPowerPage() {
+interface SchoolPowerPageProps {
+  isQuizMode?: boolean;
+}
+
+export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
-  const [isQuizMode] = useState(false); // Supondo que isQuizMode seja definido em outro lugar ou seja uma constante
+
+  const handleCentralExpandedChange = (expanded: boolean) => {
+    setIsCentralExpanded(expanded);
+  };
 
   // Hook para gerenciar o fluxo do School Power
   const {
@@ -118,9 +125,8 @@ export function SchoolPowerPage() {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <ProfileSelector isQuizMode={isQuizMode}
-                  isDarkTheme={isDarkTheme}
-                  onExpandedChange={handleCentralExpandedChange}
+                <ProfileSelector 
+                  isQuizMode={isQuizMode}
                 />
               </div>
 

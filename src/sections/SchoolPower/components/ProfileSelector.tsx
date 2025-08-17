@@ -178,19 +178,20 @@ const GreetingMessage = ({ isQuizMode }: { isQuizMode?: boolean }) => {
 // Componente do Ícone Central
 export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }: ProfileSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(profiles[0]);
+  const [currentProfile, setCurrentProfile] = useState(profiles[0]);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAvatarClick = () => {
     const newExpandedState = !isExpanded;
     setIsExpanded(newExpandedState);
-    onExpandedChange?.(newExpandedState);
   };
 
   const handleProfileSelect = (profile: any) => {
-    setSelectedProfile(profile);
+    setCurrentProfile(profile);
     setIsExpanded(false);
-    onExpandedChange?.(false);
+    if (onProfileSelect) {
+      onProfileSelect(profile.id);
+    }
   };
 
   const handleMouseEnter = () => {
@@ -230,17 +231,13 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
           }}
         >
           <div className="text-white pointer-events-none">
-            {selectedProfile.icon || <StudentIcon />}
+            {currentProfile.icon || <StudentIcon />}
           </div>
         </div>
 
         <motion.div
           animate={{ rotate: isExpanded ? 45 : 0 }}
-          className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border-2 transition-all duration-200 ${
-            isDarkTheme
-              ? "bg-white border-orange-200"
-              : "bg-gray-100 border-orange-300"
-          }`}
+          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border-2 transition-all duration-200 bg-white border-orange-200"
           style={{
             zIndex: 1001,
             cursor: "pointer",
@@ -270,7 +267,7 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
             style={{ zIndex: 999 }}
           >
             {profiles
-              .filter((profile) => profile.id !== selectedProfile.id)
+              .filter((profile) => profile.id !== currentProfile.id)
               .map((profile, index) => (
                 <div key={profile.id} className="pointer-events-auto">
                   <ProfileOptionBubble
@@ -294,7 +291,6 @@ export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }
             style={{ cursor: "default" }}
             onClick={() => {
               setIsExpanded(false);
-              onExpandedChange?.(false);
             }}
           />
         )}
