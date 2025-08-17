@@ -11,7 +11,7 @@ export interface QuizStep {
 }
 
 export interface QuizSchoolPowerState {
-  currentStep: 'intro' | 'quiz' | 'schoolpower';
+  currentStep: 'intro' | 'quiz' | 'final' | 'schoolpower';
   quizStepNumber: number;
   quizAnswers: Record<number, string>;
   quizCompleted: boolean;
@@ -25,6 +25,7 @@ export interface UseQuizSchoolPowerReturn {
   goToQuiz: () => void;
   goToSchoolPower: () => void;
   goToIntro: () => void;
+  goToFinal: () => void;
   answerQuizStep: (stepId: number, answer: string) => void;
   completeQuiz: () => void;
   resetQuiz: () => void;
@@ -46,6 +47,24 @@ const QUIZ_STEPS: QuizStep[] = [
     options: [
       { text: "Claro!", value: "claro" },
       { text: "Um pouco", value: "um_pouco" },
+      { text: "Não", value: "nao" }
+    ]
+  },
+  {
+    id: 3,
+    question: "Você acredita que ter alunos engajados na sua aula é fundamental?",
+    options: [
+      { text: "Claro!", value: "claro" },
+      { text: "Um pouco", value: "um_pouco" },
+      { text: "Não", value: "nao" }
+    ]
+  },
+  {
+    id: 4,
+    question: "Se você pudesse acessar uma plataforma que cria todas as atividades/materiais interativos do semestre em -2 minutos, você acessaria?",
+    options: [
+      { text: "Com certeza!", value: "com_certeza" },
+      { text: "Talvez", value: "talvez" },
       { text: "Não", value: "nao" }
     ]
   }
@@ -88,6 +107,14 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
     }));
   }, []);
 
+  const goToFinal = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      currentStep: 'final',
+      progressPercentage: 100
+    }));
+  }, []);
+
   const answerQuizStep = useCallback((stepId: number, answer: string) => {
     setState(prev => {
       const newAnswers = { ...prev.quizAnswers, [stepId]: answer };
@@ -95,13 +122,12 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       const totalSteps = QUIZ_STEPS.length;
       const progressPercentage = (stepId / totalSteps) * 100;
       
-      // Se respondeu a última pergunta, marca como completo e vai para School Power
+      // Se respondeu a última pergunta (etapa 4), vai para tela final
       if (stepId >= totalSteps) {
         setTimeout(() => {
           setState(current => ({
             ...current,
-            currentStep: 'schoolpower',
-            schoolPowerAccessed: true,
+            currentStep: 'final',
             quizCompleted: true,
             progressPercentage: 100
           }));
@@ -150,6 +176,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
     goToQuiz,
     goToSchoolPower,
     goToIntro,
+    goToFinal,
     answerQuizStep,
     completeQuiz,
     resetQuiz,
