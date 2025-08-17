@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export interface QuizStep {
   id: number;
@@ -61,7 +61,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   });
 
   // Garantir que o estado seja sempre válido
-  const safeState = React.useMemo(() => ({
+  const safeState = useMemo(() => ({
     ...state,
     currentStep: state.currentStep || 'intro',
     quizStepNumber: Math.max(1, Math.min(state.quizStepNumber || 1, QUIZ_STEPS.length)),
