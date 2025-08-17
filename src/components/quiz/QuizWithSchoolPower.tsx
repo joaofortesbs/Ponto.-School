@@ -6,7 +6,7 @@ import { Sparkles, Play, ArrowLeft, Home } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
-import { CarrosselDoresSolucoes } from '../../sections/SchoolPower/CarrosselDoresSolucoes';
+import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
 
 export const QuizWithSchoolPower: React.FC = () => {
   const { state, goToSchoolPower, goToIntro, resetQuiz } = useQuizSchoolPower();
