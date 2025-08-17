@@ -98,7 +98,7 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
   return (
     <div className={`relative w-full overflow-hidden ${className}`}>
       {/* Container Principal */}
-      <div className="relative bg-transparent rounded-3xl p-8">
+      <div className="relative bg-transparent rounded-3xl p-8" style={{ backgroundColor: 'transparent' }}>
 
         {/* Fileira Superior - Dores (movimento para direita) */}
         <div className="relative mb-6 overflow-hidden rounded-2xl bg-transparent p-4">
