@@ -21,25 +21,43 @@ export const QuizWithSchoolPower: React.FC = () => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="w-full max-w-5xl"
           >
-            <Card className="relative w-full max-w-4xl mx-auto bg-black/30 backdrop-blur-md border border-white/20 shadow-2xl">
-              <CardContent className="p-12 text-center">
-                {/* Título Principal */}
-                <motion.h1 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                  className="text-5xl md:text-6xl font-bold mb-12 bg-gradient-to-r from-white via-orange-200 to-orange-400 bg-clip-text text-transparent leading-tight"
-                >
-                  Descubra em <span className="text-orange-400">2 minutos</span> como a IA da Ponto. School pode economizar até <span className="text-orange-400">15 horas</span> do seu planejamento semanal
-                </motion.h1>
-
-                {/* Botão de Ação */}
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
+              <CardContent className="p-12 md:p-16">
                 <motion.div 
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6, duration: 0.6 }}
-                  className="mb-12"
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="text-center space-y-8"
                 >
+                  <div className="text-center space-y-8 mb-12">
+                    <motion.div
+                      className="inline-block bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium"
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      🤖 IA Pedagógica Avançada
+                    </motion.div>
+
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
+                    </h1>
+                    <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                      Teste agora gratuitamente a IA pedagógica que cria todas as suas atividades personalizadas com 1 comando.
+                    </p>
+
+                    {/* Carrossel de Dores e Soluções */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="max-w-4xl mx-auto"
+                    >
+                      <CarrosselDoresSolucoes className="mt-8" />
+                    </motion.div>
+                  </div>
+
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -48,22 +66,12 @@ export const QuizWithSchoolPower: React.FC = () => {
                     <Button 
                       onClick={goToSchoolPower}
                       size="lg"
-                      className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-6 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
+                      className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
                     >
-                      <Play className="mr-4 h-7 w-7" />
+                      <Play className="mr-3 h-6 w-6" />
                       QUERO TESTAR AGORA
                     </Button>
                   </motion.div>
-                </motion.div>
-
-                {/* Carrossel de Dores e Soluções */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.8, duration: 0.6 }}
-                  className="mb-8"
-                >
-                  <CarrosselDoresSolucoes className="w-full" />
                 </motion.div>
               </CardContent>
             </Card>
@@ -75,6 +83,9 @@ export const QuizWithSchoolPower: React.FC = () => {
               transition={{ delay: 1, duration: 0.6 }}
               className="text-center mt-8"
             >
+              <p className="text-white/80 text-lg backdrop-blur-sm bg-black/20 rounded-2xl px-6 py-3 inline-block border border-white/20">
+                Powered by <span className="text-orange-400 font-bold">Ponto. School</span> IA
+              </p>
             </motion.div>
           </motion.div>
         </div>
