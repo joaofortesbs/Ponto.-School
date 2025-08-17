@@ -151,7 +151,7 @@ export const QuizWithSchoolPower: React.FC = () => {
 
       {/* Interface completa do School Power com padding top para a barra de navegação */}
       <div className="pt-16">
-        <SchoolPowerPage />
+        <SchoolPowerPage isQuizMode={true} />
       </div>
     </div>
   );

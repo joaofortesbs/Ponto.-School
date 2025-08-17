@@ -17,6 +17,7 @@ import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDe
 export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
+  const [isQuizMode] = useState(false); // Supondo que isQuizMode seja definido em outro lugar ou seja uma constante
 
   // Hook para gerenciar o fluxo do School Power
   const {
@@ -117,7 +118,7 @@ export function SchoolPowerPage() {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <ProfileSelector
+                <ProfileSelector isQuizMode={isQuizMode}
                   isDarkTheme={isDarkTheme}
                   onExpandedChange={handleCentralExpandedChange}
                 />

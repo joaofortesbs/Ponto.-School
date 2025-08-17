@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -141,12 +140,43 @@ const ProfileOptionBubble = ({ profile, onClick, index }: any) => {
 };
 
 interface ProfileSelectorProps {
-  isDarkTheme?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
+  onProfileSelect?: (profileId: string) => void;
+  selectedProfile?: string;
+  isQuizMode?: boolean;
 }
 
+const GreetingMessage = ({ isQuizMode }: { isQuizMode?: boolean }) => {
+  const currentTime = new Date().getHours();
+  let greeting = '';
+
+  if (currentTime < 12) {
+    greeting = 'Bom dia';
+  } else if (currentTime < 18) {
+    greeting = 'Boa tarde';
+  } else {
+    greeting = 'Boa noite';
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="text-center mb-8"
+    >
+      <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+        {isQuizMode ? 'Bom dia, professor!' : `${greeting}, Professor!`}
+      </h1>
+      <p className="text-white/80 text-lg">
+        Vamos criar algo incrível hoje?
+      </p>
+    </motion.div>
+  );
+};
+
+
 // Componente do Ícone Central
-const ProfileSelector: React.FC<ProfileSelectorProps> = ({ isDarkTheme, onExpandedChange }) => {
+export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }: ProfileSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(profiles[0]);
   const [isHovered, setIsHovered] = useState(false);
