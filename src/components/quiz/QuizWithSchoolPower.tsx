@@ -22,6 +22,12 @@ export const QuizWithSchoolPower: React.FC = () => {
     resetQuiz 
   } = useQuizSchoolPower();
 
+  console.log('🔄 QuizWithSchoolPower renderizado:', { 
+    currentStep: state.currentStep, 
+    progress: state.progressPercentage, 
+    answers: state.quizAnswers 
+  });
+
   const renderQuizSteps = () => (
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground>
@@ -34,12 +40,12 @@ export const QuizWithSchoolPower: React.FC = () => {
           >
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
               {/* Barra de Progresso */}
-              <div className="h-2 bg-gray-200 overflow-hidden">
+              <div className="h-2 bg-gray-200 overflow-hidden rounded-full">
                 <motion.div
                   className="h-full bg-gradient-to-r from-orange-500 to-orange-600 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${state.progressPercentage}%` }}
-                  transition={{ duration: 0.8, ease: "easeInOut" }}
+                  transition={{ duration: 1.0, ease: "easeInOut" }}
                 />
               </div>
 
@@ -51,7 +57,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       initial={{ opacity: 0, x: 50 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
                     >
                       <QuizSteps
                         step={2}
@@ -70,7 +76,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       initial={{ opacity: 0, x: 50 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
                     >
                       <QuizSteps
                         step={3}
@@ -89,7 +95,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       initial={{ opacity: 0, x: 50 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3 }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
                     >
                       <QuizSteps
                         step={4}
@@ -177,7 +183,10 @@ export const QuizWithSchoolPower: React.FC = () => {
                       className="my-8"
                     >
                       <Button 
-                        onClick={goToQuizStep2}
+                        onClick={() => {
+                          console.log('🚀 Botão "Quero testar agora" clicado');
+                          goToQuizStep2();
+                        }}
                         size="lg"
                         className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
                       >

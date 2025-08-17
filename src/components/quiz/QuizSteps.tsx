@@ -25,7 +25,7 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
     // Avançar automaticamente para a próxima etapa após seleção
     setTimeout(() => {
       onNext();
-    }, 500); // Delay de 500ms para mostrar feedback visual da seleção
+    }, 800); // Delay de 800ms para mostrar feedback visual da seleção
   };
 
   return (
@@ -52,10 +52,10 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
             <Button
               onClick={() => handleOptionSelect(option)}
               variant={selectedOption === option ? "default" : "outline"}
-              className={`w-full py-4 px-6 text-lg font-semibold rounded-xl transition-all duration-300 ${
+              className={`w-full py-4 px-6 text-lg font-semibold rounded-xl transition-all duration-500 ${
                 selectedOption === option
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg transform scale-105'
-                  : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50'
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-xl transform scale-105 border-0'
+                  : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50 hover:scale-102'
               }`}
             >
               {option}

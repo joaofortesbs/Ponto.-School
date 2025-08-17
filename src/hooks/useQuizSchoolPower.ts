@@ -56,6 +56,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   }, []);
 
   const goToQuizStep3 = useCallback(() => {
+    console.log('🚀 Avançando para Quiz Step 3');
     setState(prev => ({
       ...prev,
       currentStep: 'quiz-step-3',
@@ -64,6 +65,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   }, []);
 
   const goToQuizStep4 = useCallback(() => {
+    console.log('🚀 Avançando para Quiz Step 4');
     setState(prev => ({
       ...prev,
       currentStep: 'quiz-step-4',
@@ -72,6 +74,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   }, []);
 
   const goToQuizFinal = useCallback(() => {
+    console.log('🚀 Avançando para Quiz Final');
     setState(prev => ({
       ...prev,
       currentStep: 'quiz-final',
@@ -97,6 +100,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   }, []);
 
   const saveQuizAnswer = useCallback((step: string, answer: string) => {
+    console.log(`💾 Salvando resposta: ${step} = ${answer}`);
     setState(prev => ({
       ...prev,
       quizAnswers: {
