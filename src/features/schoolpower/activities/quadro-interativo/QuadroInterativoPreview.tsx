@@ -1,305 +1,218 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Clock, Users, BookOpen, Target, Copy, Download, X } from 'lucide-react';
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
-import QuadroInterativoGenerator, { QuadroInterativoGeneratedContent } from './QuadroInterativoGenerator';
+import { Separator } from '@/components/ui/separator';
+import { 
+  BookOpen, 
+  Calendar, 
+  Clock, 
+  Target, 
+  Monitor,
+  Users,
+  Settings,
+  CheckCircle,
+  PlayCircle
+} from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
-  data: ActivityFormData;
+  data: any;
   activityData?: any;
-  activityId?: string;
 }
 
-/**
- * Card de Visualização de Quadro - Interface completa para mostrar conteúdo gerado
- */
-const CardDeVisualizacaoDeQuadro: React.FC<{
-  title: string;
-  description: string;
-  subject: string;
-  schoolYear: string;
-  difficultyLevel: string;
-  content: string;
-  isLoading?: boolean;
-  onClose?: () => void;
-  onCopy?: () => void;
-  onSave?: () => void;
-}> = ({ 
-  title, 
-  description, 
-  subject, 
-  schoolYear, 
-  difficultyLevel, 
-  content, 
-  isLoading = false,
-  onClose,
-  onCopy,
-  onSave
+const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
+  data, 
+  activityData 
 }) => {
-  if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-900 rounded-xl">
-        <Card className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700">
-          <CardContent className="p-8">
-            <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
-              <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                Gerando atividade...
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-500">
-                A IA está criando sua atividade de Quadro Interativo personalizada
+  // Função para extrair dados consolidados
+  const getPreviewData = () => {
+    // Priorizar dados processados, depois dados diretos, depois fallback
+    const consolidated = {
+      title: data?.title || activityData?.title || activityData?.personalizedTitle || 'Quadro Interativo',
+      description: data?.description || activityData?.description || activityData?.personalizedDescription || 'Atividade de Quadro Interativo',
+      subject: data?.subject || activityData?.customFields?.['Disciplina / Área de conhecimento'] || activityData?.customFields?.disciplina || 'Matemática',
+      schoolYear: data?.schoolYear || activityData?.customFields?.['Ano / Série'] || activityData?.customFields?.anoSerie || '6º Ano',
+      theme: data?.theme || activityData?.customFields?.['Tema ou Assunto da aula'] || activityData?.customFields?.tema || 'Conteúdo Interativo',
+      objectives: data?.objectives || activityData?.customFields?.['Objetivo de aprendizagem da aula'] || activityData?.customFields?.objetivos || 'Desenvolver habilidades através de atividades interativas',
+      difficultyLevel: data?.difficultyLevel || activityData?.customFields?.['Nível de Dificuldade'] || 'Intermediário',
+      quadroInterativoCampoEspecifico: data?.quadroInterativoCampoEspecifico || activityData?.customFields?.['Atividade mostrada'] || activityData?.customFields?.quadroInterativoCampoEspecifico || 'Atividade interativa no quadro',
+      timeLimit: data?.timeLimit || activityData?.customFields?.['Tempo Estimado'] || '45 minutos',
+      materials: data?.materials || activityData?.customFields?.['Materiais'] || 'Quadro interativo, computador, projetor',
+      instructions: data?.instructions || activityData?.customFields?.['Instruções'] || 'Siga as orientações apresentadas no quadro interativo',
+      evaluation: data?.evaluation || activityData?.customFields?.['Avaliação'] || 'Participação e engajamento durante a atividade'
+    };
+
+    return consolidated;
+  };
+
+  const previewData = getPreviewData();
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header Principal */}
+        <Card className="border-l-4 border-l-[#FF6B00] shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] text-white">
+            <div className="flex items-center gap-3">
+              <Monitor className="w-8 h-8" />
+              <div>
+                <CardTitle className="text-2xl font-bold">{previewData.title}</CardTitle>
+                <p className="text-orange-100 mt-1">{previewData.description}</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Informações Gerais */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#FF6B00]" />
+                Informações da Disciplina
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Disciplina:</span>
+                <Badge variant="secondary">{previewData.subject}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Ano/Série:</span>
+                <Badge variant="outline">{previewData.schoolYear}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Tema:</span>
+                <span className="font-medium text-sm">{previewData.theme}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Settings className="w-5 h-5 text-[#FF6B00]" />
+                Configurações da Atividade
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Dificuldade:</span>
+                <Badge 
+                  variant={
+                    previewData.difficultyLevel === 'Fácil' ? 'default' : 
+                    previewData.difficultyLevel === 'Médio' ? 'secondary' : 'destructive'
+                  }
+                >
+                  {previewData.difficultyLevel}
+                </Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Duração:</span>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  <span className="font-medium">{previewData.timeLimit}</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 dark:text-gray-400">Modalidade:</span>
+                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  Interativa
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Objetivos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-[#FF6B00]" />
+              Objetivos de Aprendizagem
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {previewData.objectives}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Atividade Específica do Quadro */}
+        <Card className="border-2 border-[#FF6B00]/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-[#FF6B00]">
+              <PlayCircle className="w-6 h-6" />
+              Atividade do Quadro Interativo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-4 rounded-lg">
+              <h4 className="font-semibold text-lg mb-2 text-gray-800 dark:text-gray-200">
+                Atividade Principal
+              </h4>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {previewData.quadroInterativoCampoEspecifico}
               </p>
             </div>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
 
-  return (
-    <div className="w-full h-full p-6 bg-gray-50 dark:bg-gray-900 rounded-xl">
-      <Card className="w-full max-w-5xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300">
-        
-        {/* Header do Card */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <BookOpen className="h-6 w-6" />
-              </div>
+        {/* Recursos e Materiais */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#FF6B00]" />
+              Recursos Necessários
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
               <div>
-                <h1 className="text-xl font-bold">Quadro Interativo: {title}</h1>
-                <p className="text-orange-100 text-sm">{description}</p>
+                <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Materiais:</h5>
+                <p className="text-gray-600 dark:text-gray-400">{previewData.materials}</p>
+              </div>
+              <Separator />
+              <div>
+                <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Instruções:</h5>
+                <p className="text-gray-600 dark:text-gray-400">{previewData.instructions}</p>
               </div>
             </div>
-            {onClose && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onClose}
-                className="text-white hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <CardContent className="p-6 space-y-6">
-          
-          {/* Badges de Informações */}
-          <div className="flex flex-wrap gap-3">
-            <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              <BookOpen className="h-3 w-3 mr-1" />
-              {subject}
-            </Badge>
-            <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-              <Users className="h-3 w-3 mr-1" />
-              {schoolYear}
-            </Badge>
-            <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
-              <Target className="h-3 w-3 mr-1" />
-              Nível {difficultyLevel}
-            </Badge>
-            <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200">
-              <Clock className="h-3 w-3 mr-1" />
-              Atividade Gerada
-            </Badge>
-          </div>
+        {/* Critérios de Avaliação */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-[#FF6B00]" />
+              Critérios de Avaliação
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {previewData.evaluation}
+            </p>
+          </CardContent>
+        </Card>
 
-          {/* Área de Conteúdo */}
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-600 pb-2">
-              Conteúdo da Atividade
-            </h2>
-            
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600 min-h-[300px]">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono leading-relaxed">
-                {content || 'Conteúdo da atividade será exibido aqui após a geração...'}
-              </pre>
+        {/* Status de Construção */}
+        <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-green-700 dark:text-green-300">
+              <CheckCircle className="w-6 h-6" />
+              <div>
+                <h4 className="font-semibold">Atividade Construída com Sucesso!</h4>
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  O quadro interativo foi configurado e está pronto para uso.
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* Botões de Ação */}
-          <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={onClose}
-              className="flex items-center space-x-2"
-            >
-              <X className="h-4 w-4" />
-              <span>Fechar</span>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={onCopy}
-              className="flex items-center space-x-2"
-            >
-              <Copy className="h-4 w-4" />
-              <span>Copiar Conteúdo</span>
-            </Button>
-            
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={onSave}
-              className="flex items-center space-x-2 bg-orange-500 hover:bg-orange-600"
-            >
-              <Download className="h-4 w-4" />
-              <span>Salvar Alterações</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
-  );
-};
-
-const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
-  data, 
-  activityData,
-  activityId = 'default'
-}) => {
-  const [generatedContent, setGeneratedContent] = useState<QuadroInterativoGeneratedContent | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
-
-  /**
-   * Gera ou recupera conteúdo da atividade
-   */
-  const generateOrRetrieveContent = async () => {
-    try {
-      setIsLoading(true);
-      console.log('🎯 Iniciando geração/recuperação de conteúdo');
-
-      // Primeiro, tentar recuperar conteúdo salvo
-      const storedContent = QuadroInterativoGenerator.getStoredContent(activityId);
-
-      if (storedContent && storedContent.success) {
-        console.log('📂 Usando conteúdo armazenado');
-        setGeneratedContent(storedContent);
-        setHasGeneratedOnce(true);
-        return;
-      }
-
-      // Se não há conteúdo salvo, gerar novo
-      console.log('🔄 Gerando novo conteúdo');
-      const newContent = await QuadroInterativoGenerator.generateContent(data);
-
-      if (newContent.success) {
-        setGeneratedContent(newContent);
-        setHasGeneratedOnce(true);
-
-        // Salvar conteúdo gerado
-        QuadroInterativoGenerator.saveGeneratedContent(activityId, newContent);
-        console.log('✅ Conteúdo gerado e salvo com sucesso');
-      } else {
-        console.error('❌ Falha na geração:', newContent.error);
-        setGeneratedContent({
-          title: 'Erro na Geração',
-          content: 'Houve um erro ao gerar o conteúdo. Verifique os dados e tente novamente.',
-          success: false,
-          error: newContent.error
-        });
-      }
-
-    } catch (error) {
-      console.error('❌ Erro inesperado:', error);
-      setGeneratedContent({
-        title: 'Erro Inesperado',
-        content: 'Ocorreu um erro inesperado durante a geração.',
-        success: false,
-        error: 'Erro inesperado'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Monitora mudanças nos dados principais
-   */
-  useEffect(() => {
-    const hasRequiredData = data.subject && data.schoolYear && data.theme && data.difficultyLevel;
-    
-    if (hasRequiredData && !hasGeneratedOnce) {
-      generateOrRetrieveContent();
-    }
-  }, [data.subject, data.schoolYear, data.theme, data.difficultyLevel]);
-
-  /**
-   * Handlers para ações do card
-   */
-  const handleCopyContent = () => {
-    if (generatedContent?.content) {
-      navigator.clipboard.writeText(generatedContent.content);
-      console.log('📋 Conteúdo copiado para a área de transferência');
-    }
-  };
-
-  const handleSaveChanges = () => {
-    if (generatedContent) {
-      QuadroInterativoGenerator.saveGeneratedContent(activityId, generatedContent);
-      console.log('💾 Alterações salvas');
-    }
-  };
-
-  const handleClosePreview = () => {
-    console.log('🔒 Preview fechado');
-  };
-
-  // Renderizar preview baseado no estado
-  if (!data.subject || !data.schoolYear || !data.theme) {
-    return (
-      <CardDeVisualizacaoDeQuadro
-        title="Aguardando Dados"
-        description="Preencha os campos do formulário para visualizar a atividade de Quadro Interativo."
-        subject="Não especificado"
-        schoolYear="Não especificado"
-        difficultyLevel="Não especificado"
-        content="Configure os dados da atividade nos campos ao lado para gerar o conteúdo automaticamente."
-        onClose={handleClosePreview}
-        onCopy={handleCopyContent}
-        onSave={handleSaveChanges}
-      />
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <CardDeVisualizacaoDeQuadro
-        title={data.title || 'Gerando Atividade'}
-        description={data.description || 'Aguarde enquanto geramos sua atividade...'}
-        subject={data.subject}
-        schoolYear={data.schoolYear}
-        difficultyLevel={data.difficultyLevel || 'Médio'}
-        content=""
-        isLoading={true}
-        onClose={handleClosePreview}
-        onCopy={handleCopyContent}
-        onSave={handleSaveChanges}
-      />
-    );
-  }
-
-  return (
-    <CardDeVisualizacaoDeQuadro
-      title={generatedContent?.title || data.title || 'Atividade de Quadro Interativo'}
-      description={data.description || 'Apresentação interativa sobre os diferentes tipos de relevo e os processos de formação de montanhas, utilizando recursos visuais e atividades práticas.'}
-      subject={data.subject}
-      schoolYear={data.schoolYear}
-      difficultyLevel={data.difficultyLevel || 'Médio'}
-      content={generatedContent?.content || 'Conteúdo da atividade será exibido aqui.'}
-      onClose={handleClosePreview}
-      onCopy={handleCopyContent}
-      onSave={handleSaveChanges}
-    />
   );
 };
 
