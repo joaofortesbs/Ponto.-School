@@ -107,7 +107,9 @@ const QuadroInterativoFields = ({ formData, onFieldChange }: FieldProps) => (
       />
     </div>
   </>
-);dro Interativo
+);
+
+// Componente específico para Quadro Interativo
 const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">

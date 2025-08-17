@@ -166,8 +166,7 @@ export function extractQuadroInterativoData(formData: any): QuadroInterativoFiel
     }
   });
 
-  return mapped as QuadroInterativoFields;eof data[field] === 'string' && data[field]!.trim().length > 0
-  );
+  return mapped as QuadroInterativoFields;
 }
 
 // Atualizar mapeamento de campos do Quadro Interativo para corresponder exatamente aos nomes dos campos
