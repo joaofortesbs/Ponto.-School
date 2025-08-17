@@ -169,11 +169,6 @@ export function extractQuadroInterativoData(formData: any): QuadroInterativoFiel
   return mapped as QuadroInterativoFields;
 }
 
-// Função de processamento que estava faltando
-export function processQuadroInterativoData(data: any): QuadroInterativoFields {
-  return mapFieldsToQuadroInterativo(data);
-}
-
 // Atualizar mapeamento de campos do Quadro Interativo para corresponder exatamente aos nomes dos campos
 export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFields, string[]> = {
   subject: ['Disciplina / Área de conhecimento', 'disciplina', 'Disciplina'],

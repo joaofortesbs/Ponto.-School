@@ -18,7 +18,6 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
-import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -71,12 +70,6 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
     </div>
   </>
 );
-
-// Interface para props dos campos
-interface FieldProps {
-  formData: ActivityFormData;
-  onFieldChange: (field: keyof ActivityFormData, value: string) => void;
-}
 
 // Componente específico para Quadro Interativo
 const QuadroInterativoFields = ({ formData, onFieldChange }: FieldProps) => (
@@ -1149,7 +1142,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customFields['nivelDificuldade'] ||
+                              customCustomFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1932,8 +1925,8 @@ const EditActivityModal = ({
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <QuadroInterativoPreview
-                        data={generatedContent || formData}
+                      <ActivityPreview
+                        content={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (
