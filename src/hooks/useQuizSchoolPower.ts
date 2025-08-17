@@ -122,13 +122,14 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       const totalSteps = QUIZ_STEPS.length;
       const progressPercentage = (stepId / totalSteps) * 100;
       
-      // Se respondeu a última pergunta (etapa 4), vai para tela final
+      // Se respondeu a última pergunta (etapa 4), vai diretamente para School Power
       if (stepId >= totalSteps) {
         setTimeout(() => {
           setState(current => ({
             ...current,
-            currentStep: 'final',
+            currentStep: 'schoolpower',
             quizCompleted: true,
+            schoolPowerAccessed: true,
             progressPercentage: 100
           }));
         }, 500); // Pequeno delay para mostrar o progresso completo
