@@ -35,48 +35,23 @@ export const QuizWithSchoolPower: React.FC = () => {
           >
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
               <CardContent className="p-8 md:p-12">
-                {/* Barra de Progresso Vazia na Intro */}
+                {/* Barra de Progresso Simplificada na Intro */}
                 <div className="mb-10">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-500 text-sm font-bold">0</span>
-                        </div>
-                        <span className="text-sm font-semibold text-gray-500">
-                          Aguardando início...
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg font-bold text-gray-500">0%</span>
-                      <CheckCircle2 className="h-5 w-5 text-gray-300" />
-                    </div>
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-semibold text-gray-500">
+                      Aguardando início...
+                    </span>
+                    <span className="text-sm font-bold text-gray-400">
+                      0%
+                    </span>
                   </div>
                   
                   <div className="relative">
                     <Progress
                       value={0}
-                      className="h-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full shadow-inner"
-                      indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full shadow-lg"
+                      className="h-2 bg-gray-200 rounded-full overflow-hidden"
+                      indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full transition-all duration-1000 ease-out"
                     />
-                    
-                    <div className="absolute inset-0 flex justify-between items-center px-1">
-                      {[1, 2, 3, 4].map((step) => (
-                        <div
-                          key={step}
-                          className="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-400"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between mt-2 px-1">
-                    {['Início', 'Planejamento', 'Engajamento', 'Plataforma'].map((label, index) => (
-                      <span key={index} className="text-xs font-medium text-gray-400">
-                        {label}
-                      </span>
-                    ))}
                   </div>
                 </div>
 

@@ -43,64 +43,32 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
     >
       <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
         <CardContent className="p-8 md:p-12">
-          {/* Barra de Progresso Aprimorada */}
+          {/* Barra de Progresso Simplificada */}
           <div className="mb-10">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">{currentStep.id}</span>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-700">
-                    Etapa {currentStep.id} de 4
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-lg font-bold text-gray-800">
-                  {Math.round(progressPercentage)}%
-                </span>
-                <CheckCircle2 className={`h-5 w-5 transition-colors duration-300 ${
-                  progressPercentage > 0 ? 'text-green-500' : 'text-gray-300'
-                }`} />
-              </div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-semibold text-gray-700">
+                Etapa {currentStep.id} de 4
+              </span>
+              <span className="text-sm font-bold text-orange-600">
+                {Math.round(progressPercentage)}%
+              </span>
             </div>
-            
-            {/* Barra de Progresso Sofisticada */}
+
             <div className="relative">
               <Progress
                 value={progressPercentage}
-                className="h-3 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full shadow-inner"
-                indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full shadow-lg transition-all duration-500 ease-out"
+                className="h-2 bg-gray-200 rounded-full overflow-hidden"
+                indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full transition-all duration-1000 ease-out transform"
               />
-              
-              {/* Etapas na barra */}
-              <div className="absolute inset-0 flex justify-between items-center px-1">
-                {[1, 2, 3, 4].map((step) => (
-                  <div
-                    key={step}
-                    className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
-                      step <= currentStep.id
-                        ? 'bg-white border-orange-500 shadow-md'
-                        : 'bg-gray-300 border-gray-400'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {/* Labels das etapas */}
-            <div className="flex justify-between mt-2 px-1">
-              {['Início', 'Planejamento', 'Engajamento', 'Plataforma'].map((label, index) => (
-                <span
-                  key={index}
-                  className={`text-xs font-medium transition-colors duration-300 ${
-                    index + 1 <= currentStep.id ? 'text-orange-600' : 'text-gray-400'
-                  }`}
-                >
-                  {label}
-                </span>
-              ))}
+
+              {/* Efeito de brilho na barra */}
+              <div 
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full transition-all duration-1000 ease-out"
+                style={{ 
+                  width: `${progressPercentage}%`,
+                  animation: progressPercentage > 0 ? 'shimmer 2s ease-in-out infinite' : 'none'
+                }}
+              />
             </div>
           </div>
 
@@ -122,7 +90,7 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
                   Pergunta {currentStep.id}
                 </span>
               </motion.div>
-              
+
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight max-w-4xl mx-auto">
                 {currentStep.question}
               </h2>
