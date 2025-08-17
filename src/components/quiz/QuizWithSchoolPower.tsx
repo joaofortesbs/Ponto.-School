@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Sparkles, Play, ArrowLeft, Home } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
+import { CarrosselDoresSolucoes } from '../../sections/SchoolPower/CarrosselDoresSolucoes';
 
 export const QuizWithSchoolPower: React.FC = () => {
   const { state, goToSchoolPower, goToIntro, resetQuiz } = useQuizSchoolPower();
@@ -29,17 +29,16 @@ export const QuizWithSchoolPower: React.FC = () => {
                   transition={{ duration: 0.8, ease: "easeOut" }}
                   className="text-center space-y-8"
                 >
-                  <div className="space-y-6">
+                  <div className="text-center space-y-8 mb-12">
                     <motion.div
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.2, duration: 0.6 }}
-                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-100 to-orange-50 border border-orange-200 rounded-2xl mb-4"
+                      className="inline-block bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium"
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      <Sparkles className="h-5 w-5 text-orange-500 mr-2" />
-                      <span className="text-orange-700 font-semibold text-sm">IA Pedagógica Avançada</span>
+                      🤖 IA Pedagógica Avançada
                     </motion.div>
-                    
+
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
@@ -47,8 +46,18 @@ export const QuizWithSchoolPower: React.FC = () => {
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                       Teste agora gratuitamente a IA pedagógica que cria todas as suas atividades personalizadas com 1 comando.
                     </p>
+
+                    {/* Carrossel de Dores e Soluções */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="max-w-4xl mx-auto"
+                    >
+                      <CarrosselDoresSolucoes className="mt-8" />
+                    </motion.div>
                   </div>
-                  
+
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -115,7 +124,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Interface completa do School Power com padding top para a barra de navegação */}
       <div className="pt-16">
         <SchoolPowerPage />
