@@ -11,16 +11,16 @@ import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
 import { QuizStep, QuizFinalStep } from './QuizSteps';
 
 export const QuizWithSchoolPower: React.FC = () => {
-  const { 
-    state, 
-    goToSchoolPower, 
-    goToIntro, 
-    resetQuiz, 
-    goToQuizStep2, 
-    goToQuizStep3, 
-    goToQuizStep4, 
-    goToQuizFinal, 
-    saveQuizAnswer 
+  const {
+    state,
+    goToSchoolPower,
+    goToIntro,
+    resetQuiz,
+    goToQuizStep2,
+    goToQuizStep3,
+    goToQuizStep4,
+    goToQuizFinal,
+    saveQuizAnswer
   } = useQuizSchoolPower();
 
   const getProgressValue = () => {
@@ -54,15 +54,15 @@ export const QuizWithSchoolPower: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
               {/* Barra de Progresso no Topo */}
               <div className="w-full bg-gray-100 h-2">
-                <Progress 
-                  value={getProgressValue()} 
-                  className="h-2 rounded-none"
-                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                <Progress
+                  value={getProgressValue()}
+                  className="h-2 rounded-none transition-all duration-700 ease-out"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-700 ease-out"
                 />
               </div>
-              
+
               <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -70,7 +70,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                 >
                   <div className="text-center space-y-8 mb-12">
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
+                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
 
@@ -81,7 +81,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
                       className="my-8"
                     >
-                      <Button 
+                      <Button
                         onClick={goToQuizStep2}
                         size="lg"
                         className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
@@ -124,13 +124,13 @@ export const QuizWithSchoolPower: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
               {/* Barra de Progresso no Topo */}
               <div className="w-full bg-gray-100 h-2">
-                <Progress 
-                  value={getProgressValue()} 
-                  className="h-2 rounded-none"
-                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                <Progress
+                  value={getProgressValue()}
+                  className="h-2 rounded-none transition-all duration-700 ease-out"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-700 ease-out"
                 />
               </div>
-              
+
               <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
                 <QuizStep
                   step={2}
@@ -165,13 +165,13 @@ export const QuizWithSchoolPower: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
               {/* Barra de Progresso no Topo */}
               <div className="w-full bg-gray-100 h-2">
-                <Progress 
-                  value={getProgressValue()} 
-                  className="h-2 rounded-none"
-                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                <Progress
+                  value={getProgressValue()}
+                  className="h-2 rounded-none transition-all duration-700 ease-out"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-700 ease-out"
                 />
               </div>
-              
+
               <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
                 <QuizStep
                   step={3}
@@ -206,13 +206,13 @@ export const QuizWithSchoolPower: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
               {/* Barra de Progresso no Topo */}
               <div className="w-full bg-gray-100 h-2">
-                <Progress 
-                  value={getProgressValue()} 
-                  className="h-2 rounded-none"
-                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                <Progress
+                  value={getProgressValue()}
+                  className="h-2 rounded-none transition-all duration-700 ease-out"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-700 ease-out"
                 />
               </div>
-              
+
               <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
                 <QuizStep
                   step={4}
@@ -247,13 +247,13 @@ export const QuizWithSchoolPower: React.FC = () => {
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
               {/* Barra de Progresso no Topo */}
               <div className="w-full bg-gray-100 h-2">
-                <Progress 
-                  value={getProgressValue()} 
-                  className="h-2 rounded-none"
-                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                <Progress
+                  value={getProgressValue()}
+                  className="h-2 rounded-none transition-all duration-700 ease-out"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-700 ease-out"
                 />
               </div>
-              
+
               <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
                 <QuizFinalStep onAccessPlatform={goToSchoolPower} />
               </CardContent>
@@ -311,7 +311,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderIntro()}
         </motion.div>
@@ -322,7 +322,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderQuizStep2()}
         </motion.div>
@@ -333,7 +333,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderQuizStep3()}
         </motion.div>
@@ -344,7 +344,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderQuizStep4()}
         </motion.div>
@@ -355,7 +355,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderQuizFinal()}
         </motion.div>
@@ -366,7 +366,7 @@ export const QuizWithSchoolPower: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {renderSchoolPower()}
         </motion.div>
