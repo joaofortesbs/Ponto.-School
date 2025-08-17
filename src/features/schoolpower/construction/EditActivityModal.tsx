@@ -72,6 +72,42 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
 );
 
 // Componente específico para Quadro Interativo
+const QuadroInterativoFields = ({ formData, onFieldChange }: FieldProps) => (
+  <>
+    <div>
+      <Label htmlFor="quadroInterativoCampoEspecifico" className="text-sm">Campo Específico do Quadro</Label>
+      <Textarea
+        id="quadroInterativoCampoEspecifico"
+        value={formData.quadroInterativoCampoEspecifico || ''}
+        onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
+        placeholder="Descreva características específicas para o quadro interativo..."
+        className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="interactiveResources" className="text-sm">Recursos Interativos</Label>
+      <Textarea
+        id="interactiveResources"
+        value={formData.interactiveResources || ''}
+        onChange={(e) => onFieldChange('interactiveResources', e.target.value)}
+        placeholder="Liste os recursos interativos a serem utilizados..."
+        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="digitalActivities" className="text-sm">Atividades Digitais</Label>
+      <Textarea
+        id="digitalActivities"
+        value={formData.digitalActivities || ''}
+        onChange={(e) => onFieldChange('digitalActivities', e.target.value)}
+        placeholder="Descreva as atividades digitais planejadas..."
+        className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+  </>
+);dro Interativo
 const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">

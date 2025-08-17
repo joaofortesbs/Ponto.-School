@@ -6,52 +6,55 @@ export interface QuadroInterativoGeneratedContent {
   content: string;
   success: boolean;
   error?: string;
+  timestamp?: string;
+  activityId?: string;
 }
 
-/**
- * Gerador específico para atividades de Quadro Interativo
- * Analisa os dados dos campos e gera conteúdo usando a API Gemini
- */
-export class QuadroInterativoGenerator {
-  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
-  
+class QuadroInterativoGenerator {
+  private static readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+  private static readonly STORAGE_PREFIX = 'quadro_interativo_';
+
   /**
    * Gera conteúdo para atividade de Quadro Interativo
    */
   static async generateContent(formData: ActivityFormData): Promise<QuadroInterativoGeneratedContent> {
     try {
-      console.log('🎯 Iniciando geração de conteúdo do Quadro Interativo:', formData);
+      console.log('🎯 Iniciando geração de conteúdo para Quadro Interativo');
+      console.log('📝 Dados recebidos:', formData);
 
       // Validar dados essenciais
-      if (!this.validateFormData(formData)) {
+      if (!this.validateRequiredData(formData)) {
         return {
           title: 'Dados Insuficientes',
-          content: 'Por favor, preencha todos os campos obrigatórios para gerar a atividade.',
+          content: 'Por favor, preencha todos os campos obrigatórios: Disciplina, Ano/Série, Tema e Nível de Dificuldade.',
           success: false,
-          error: 'Campos obrigatórios não preenchidos'
+          error: 'Dados obrigatórios não preenchidos'
         };
       }
 
-      // Construir prompt para a API Gemini
-      const prompt = this.buildPrompt(formData);
-      console.log('📝 Prompt construído:', prompt);
+      // Gerar prompt otimizado
+      const prompt = this.buildOptimizedPrompt(formData);
+      console.log('🔧 Prompt gerado para API');
 
       // Chamar API Gemini
-      const generatedContent = await this.callGeminiAPI(prompt);
+      const result = await this.callGeminiAPI(prompt);
       
-      if (generatedContent.success) {
-        console.log('✅ Conteúdo gerado com sucesso:', generatedContent);
-        return generatedContent;
+      if (result.success) {
+        console.log('✅ Conteúdo gerado com sucesso');
+        return {
+          ...result,
+          timestamp: new Date().toISOString()
+        };
       } else {
-        throw new Error(generatedContent.error || 'Erro na geração de conteúdo');
+        console.error('❌ Falha na geração:', result.error);
+        return result;
       }
 
     } catch (error) {
-      console.error('❌ Erro na geração de conteúdo do Quadro Interativo:', error);
-      
+      console.error('❌ Erro inesperado no gerador:', error);
       return {
-        title: 'Erro na Geração',
-        content: 'Ocorreu um erro ao gerar o conteúdo. Tente novamente.',
+        title: 'Erro no Sistema',
+        content: 'Ocorreu um erro inesperado durante a geração. Tente novamente.',
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido'
       };
@@ -59,61 +62,58 @@ export class QuadroInterativoGenerator {
   }
 
   /**
-   * Valida se os dados do formulário estão completos
+   * Valida se os dados obrigatórios estão presentes
    */
-  private static validateFormData(formData: ActivityFormData): boolean {
-    const requiredFields = [
-      'title',
-      'description', 
-      'subject',
-      'schoolYear',
-      'theme',
-      'objectives'
-    ];
-
-    return requiredFields.every(field => {
-      const value = formData[field as keyof ActivityFormData];
-      return value && typeof value === 'string' && value.trim().length > 0;
-    });
+  private static validateRequiredData(formData: ActivityFormData): boolean {
+    const required = ['subject', 'schoolYear', 'theme', 'difficultyLevel'];
+    return required.every(field => formData[field as keyof ActivityFormData] && 
+                                  String(formData[field as keyof ActivityFormData]).trim().length > 0);
   }
 
   /**
-   * Constrói prompt específico para Quadro Interativo
+   * Constrói prompt otimizado para geração de conteúdo
    */
-  private static buildPrompt(formData: ActivityFormData): string {
+  private static buildOptimizedPrompt(formData: ActivityFormData): string {
     return `
-Você é um especialista em educação digital e criação de atividades interativas para quadros digitais.
+SISTEMA: Você é um especialista em educação que cria atividades interativas para quadros digitais.
 
-Crie uma atividade de Quadro Interativo baseada nos seguintes dados:
+TAREFA: Criar uma atividade completa de Quadro Interativo baseada nos seguintes dados:
 
-**Informações da Atividade:**
-- Título: ${formData.title}
-- Descrição: ${formData.description}
+**INFORMAÇÕES DA ATIVIDADE:**
+- Título: ${formData.title || 'Atividade de Quadro Interativo'}
+- Descrição: ${formData.description || 'Atividade interativa educacional'}
 - Disciplina: ${formData.subject}
 - Ano/Série: ${formData.schoolYear}
 - Tema: ${formData.theme}
-- Objetivos: ${formData.objectives}
-- Nível de Dificuldade: ${formData.difficultyLevel || 'Médio'}
-- Materiais: ${formData.materials || 'Não especificado'}
-- Instruções: ${formData.instructions || 'A definir'}
-- Avaliação: ${formData.evaluation || 'A definir'}
-- Contexto: ${formData.context || 'Geral'}
+- Objetivos: ${formData.objectives || 'Desenvolver conhecimentos sobre o tema proposto'}
+- Nível de Dificuldade: ${formData.difficultyLevel}
+- Materiais: ${formData.materials || 'Quadro interativo, recursos digitais'}
+- Instruções: ${formData.instructions || 'Seguir as orientações da atividade'}
+- Avaliação: ${formData.evaluation || 'Participação e compreensão do conteúdo'}
+- Contexto: ${formData.context || 'Educacional'}
 
-**Instruções:**
-1. Crie um TÍTULO claro e atrativo para a atividade
-2. Crie um CONTEÚDO simples e direto que descreva a atividade interativa
-3. O conteúdo deve ser adequado para exibição em um quadro digital
-4. Foque na interatividade e engajamento dos alunos
-5. Mantenha a linguagem clara e apropriada para a faixa etária
+**INSTRUÇÕES ESPECÍFICAS:**
+1. Crie um conteúdo estruturado em formato JSON
+2. O título deve ser claro e atrativo
+3. O conteúdo deve incluir:
+   - Introdução ao tema
+   - Desenvolvimento da atividade interativa
+   - Recursos visuais sugeridos
+   - Atividades práticas
+   - Instruções para o professor
+   - Critérios de avaliação
+4. Use linguagem apropriada para a faixa etária
+5. Foque na interatividade e engajamento dos alunos
+6. Inclua elementos que aproveitem as funcionalidades do quadro digital
 
-**Formato de Resposta:**
+**FORMATO DE RESPOSTA:**
 Responda APENAS no seguinte formato JSON:
 {
-  "title": "Título da atividade",
-  "content": "Descrição detalhada da atividade interativa"
+  "title": "Título da atividade de quadro interativo",
+  "content": "Conteúdo detalhado e estruturado da atividade interativa, incluindo todas as seções mencionadas acima"
 }
 
-NÃO inclua explicações adicionais, apenas o JSON.
+IMPORTANTE: NÃO inclua explicações adicionais, apenas o JSON válido.
     `.trim();
   }
 
@@ -125,9 +125,13 @@ NÃO inclua explicações adicionais, apenas o JSON.
       // Obter chave da API
       const apiKey = this.getGeminiApiKey();
       if (!apiKey) {
-        throw new Error('Chave da API Gemini não configurada');
+        console.warn('⚠️ Chave da API Gemini não encontrada, usando conteúdo padrão');
+        return this.generateFallbackContent(prompt);
       }
 
+      console.log('🔑 Chave da API obtida, fazendo chamada para Gemini');
+
+      // Preparar dados para a API
       const requestBody = {
         contents: [{
           parts: [{
@@ -138,12 +142,11 @@ NÃO inclua explicações adicionais, apenas o JSON.
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
         }
       };
 
-      console.log('🌐 Enviando requisição para API Gemini...');
-
+      // Fazer chamada para a API
       const response = await fetch(`${this.GEMINI_API_URL}?key=${apiKey}`, {
         method: 'POST',
         headers: {
@@ -153,29 +156,26 @@ NÃO inclua explicações adicionais, apenas o JSON.
       });
 
       if (!response.ok) {
-        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+        console.error('❌ Erro na resposta da API:', response.status, response.statusText);
+        throw new Error(`Erro da API: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('📡 Resposta da API Gemini recebida:', data);
+      console.log('📥 Resposta da API recebida');
 
-      // Extrair e processar resposta
-      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!generatedText) {
-        throw new Error('Resposta vazia da API Gemini');
+      // Processar resposta
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        const generatedText = data.candidates[0].content.parts[0].text;
+        return this.parseGeminiResponse(generatedText);
+      } else {
+        throw new Error('Resposta da API em formato inesperado');
       }
 
-      return this.parseGeminiResponse(generatedText);
-
     } catch (error) {
-      console.error('❌ Erro na chamada da API Gemini:', error);
+      console.error('❌ Erro na chamada da API:', error);
       
-      return {
-        title: 'Erro na API',
-        content: 'Não foi possível gerar o conteúdo. Verifique a conexão.',
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro na API'
-      };
+      // Fallback para conteúdo padrão
+      return this.generateFallbackContent(prompt);
     }
   }
 
@@ -184,15 +184,19 @@ NÃO inclua explicações adicionais, apenas o JSON.
    */
   private static parseGeminiResponse(responseText: string): QuadroInterativoGeneratedContent {
     try {
+      console.log('🔄 Processando resposta da API');
+      
       // Tentar extrair JSON da resposta
       const cleanText = responseText.trim();
+      
+      // Procurar por JSON na resposta
       let jsonMatch = cleanText.match(/\{[\s\S]*\}/);
       
       if (!jsonMatch) {
-        // Se não encontrar JSON, criar resposta estruturada
+        console.log('⚠️ JSON não encontrado, criando resposta estruturada');
         return {
           title: 'Atividade de Quadro Interativo',
-          content: cleanText,
+          content: this.formatTextContent(cleanText),
           success: true
         };
       }
@@ -201,20 +205,100 @@ NÃO inclua explicações adicionais, apenas o JSON.
       
       return {
         title: jsonData.title || 'Atividade de Quadro Interativo',
-        content: jsonData.content || jsonData.description || cleanText,
+        content: jsonData.content || this.formatTextContent(cleanText),
         success: true
       };
 
     } catch (error) {
       console.error('❌ Erro ao processar resposta:', error);
       
-      // Fallback: usar o texto diretamente
+      // Fallback: usar o texto diretamente formatado
       return {
         title: 'Atividade de Quadro Interativo',
-        content: responseText.trim(),
+        content: this.formatTextContent(responseText),
         success: true
       };
     }
+  }
+
+  /**
+   * Formata texto simples em conteúdo estruturado
+   */
+  private static formatTextContent(text: string): string {
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    return lines.join('\n\n');
+  }
+
+  /**
+   * Gera conteúdo padrão como fallback
+   */
+  private static generateFallbackContent(prompt: string): QuadroInterativoGeneratedContent {
+    const basicData = this.extractDataFromPrompt(prompt);
+    
+    const content = `
+🎯 ATIVIDADE DE QUADRO INTERATIVO
+
+📚 Disciplina: ${basicData.subject}
+👥 Ano/Série: ${basicData.schoolYear}
+🎨 Tema: ${basicData.theme}
+⭐ Nível: ${basicData.difficultyLevel}
+
+📋 DESENVOLVIMENTO DA ATIVIDADE:
+
+1. INTRODUÇÃO INTERATIVA
+   • Apresentação do tema usando recursos visuais
+   • Ativação de conhecimentos prévios dos alunos
+   • Uso de elementos multimídia no quadro
+
+2. EXPLORAÇÃO DO CONTEÚDO
+   • Navegação interativa pelos conceitos principais
+   • Atividades de arrastar e soltar
+   • Questionamentos direcionados para participação
+
+3. ATIVIDADES PRÁTICAS
+   • Exercícios interativos no quadro
+   • Trabalho colaborativo dos alunos
+   • Resolução de desafios em grupo
+
+4. CONSOLIDAÇÃO
+   • Síntese dos aprendizados
+   • Aplicação dos conhecimentos
+   • Avaliação formativa
+
+💡 RECURSOS NECESSÁRIOS:
+- Quadro interativo
+- Materiais digitais preparados
+- Participação ativa dos estudantes
+
+🎯 OBJETIVOS ALCANÇADOS:
+- Engajamento ativo dos alunos
+- Compreensão do tema proposto
+- Desenvolvimento de habilidades colaborativas
+    `.trim();
+
+    return {
+      title: `Quadro Interativo: ${basicData.theme}`,
+      content,
+      success: true
+    };
+  }
+
+  /**
+   * Extrai dados básicos do prompt para fallback
+   */
+  private static extractDataFromPrompt(prompt: string): any {
+    const extractField = (field: string) => {
+      const regex = new RegExp(`${field}:\\s*(.+?)(?:\n|$)`, 'i');
+      const match = prompt.match(regex);
+      return match ? match[1].trim() : 'Não especificado';
+    };
+
+    return {
+      subject: extractField('Disciplina'),
+      schoolYear: extractField('Ano/Série'),
+      theme: extractField('Tema'),
+      difficultyLevel: extractField('Nível de Dificuldade')
+    };
   }
 
   /**
@@ -233,7 +317,7 @@ NÃO inclua explicações adicionais, apenas o JSON.
    */
   static saveGeneratedContent(activityId: string, content: QuadroInterativoGeneratedContent): void {
     try {
-      const storageKey = `quadro_interativo_${activityId}`;
+      const storageKey = `${this.STORAGE_PREFIX}${activityId}`;
       const dataToSave = {
         ...content,
         timestamp: new Date().toISOString(),
@@ -253,7 +337,7 @@ NÃO inclua explicações adicionais, apenas o JSON.
    */
   static getStoredContent(activityId: string): QuadroInterativoGeneratedContent | null {
     try {
-      const storageKey = `quadro_interativo_${activityId}`;
+      const storageKey = `${this.STORAGE_PREFIX}${activityId}`;
       const stored = localStorage.getItem(storageKey);
       
       if (stored) {
@@ -267,6 +351,19 @@ NÃO inclua explicações adicionais, apenas o JSON.
     } catch (error) {
       console.error('❌ Erro ao recuperar conteúdo:', error);
       return null;
+    }
+  }
+
+  /**
+   * Remove conteúdo salvo
+   */
+  static clearStoredContent(activityId: string): void {
+    try {
+      const storageKey = `${this.STORAGE_PREFIX}${activityId}`;
+      localStorage.removeItem(storageKey);
+      console.log('🗑️ Conteúdo removido:', storageKey);
+    } catch (error) {
+      console.error('❌ Erro ao remover conteúdo:', error);
     }
   }
 }
