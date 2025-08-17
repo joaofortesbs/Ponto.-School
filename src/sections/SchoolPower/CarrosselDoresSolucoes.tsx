@@ -99,18 +99,8 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
   return (
     <div className={`relative w-full overflow-hidden ${className}`}>
       {/* Container Principal */}
-      <div className="relative bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50">
+      <div className="relative bg-transparent rounded-3xl p-8">
         
-        {/* Título */}
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold text-white mb-2">
-            Transforme Suas <span className="text-red-400">Dores</span> em <span className="text-orange-400">Soluções</span>
-          </h3>
-          <p className="text-slate-300 text-sm">
-            Veja como o School Power resolve os maiores desafios dos educadores
-          </p>
-        </div>
-
         {/* Fileira Superior - Dores (movimento para direita) */}
         <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-r from-red-500/5 to-red-600/5 p-4">
           <div className="flex items-center mb-3">
@@ -152,24 +142,6 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
               ))}
             </motion.div>
           </div>
-        </div>
-
-        {/* Seta de Transformação */}
-        <div className="flex justify-center mb-6">
-          <motion.div
-            className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-full p-3"
-            animate={{
-              scale: [1, 1.1, 1],
-              rotate: [0, 360]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          >
-            <Zap className="h-6 w-6 text-white" />
-          </motion.div>
         </div>
 
         {/* Fileira Inferior - Ferramentas (movimento para esquerda) */}
