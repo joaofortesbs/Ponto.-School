@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Sparkles, Play, ArrowLeft, Home } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
@@ -22,6 +23,23 @@ export const QuizWithSchoolPower: React.FC = () => {
     saveQuizAnswer 
   } = useQuizSchoolPower();
 
+  const getProgressValue = () => {
+    switch (state.currentStep) {
+      case 'intro':
+        return 0;
+      case 'quiz-step2':
+        return 25;
+      case 'quiz-step3':
+        return 50;
+      case 'quiz-step4':
+        return 75;
+      case 'quiz-final':
+        return 100;
+      default:
+        return 0;
+    }
+  };
+
   const renderIntro = () => (
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground>
@@ -31,9 +49,19 @@ export const QuizWithSchoolPower: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="w-full max-w-5xl"
+            style={{ minHeight: '600px' }}
           >
-            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
-              <CardContent className="p-12 md:p-16">
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
+              {/* Barra de Progresso no Topo */}
+              <div className="w-full bg-gray-100 h-2">
+                <Progress 
+                  value={getProgressValue()} 
+                  className="h-2 rounded-none"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                />
+              </div>
+              
+              <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
                 <motion.div 
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -76,8 +104,6 @@ export const QuizWithSchoolPower: React.FC = () => {
                 </motion.div>
               </CardContent>
             </Card>
-
-            
           </motion.div>
         </div>
       </AnimatedBackground>
@@ -88,14 +114,38 @@ export const QuizWithSchoolPower: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground>
         <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
-          <QuizStep
-            step={2}
-            question="Você gasta mais de 5 horas por semana planejando aulas?"
-            options={["Sim", "Muito mais", "Não"]}
-            onSelectOption={(option) => saveQuizAnswer('step2', option)}
-            onNext={goToQuizStep3}
-            selectedOption={state.quizAnswers.step2}
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="w-full max-w-5xl"
+            style={{ minHeight: '600px' }}
+          >
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
+              {/* Barra de Progresso no Topo */}
+              <div className="w-full bg-gray-100 h-2">
+                <Progress 
+                  value={getProgressValue()} 
+                  className="h-2 rounded-none"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                />
+              </div>
+              
+              <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
+                <QuizStep
+                  step={2}
+                  question="Você gasta mais de 5 horas por semana planejando aulas?"
+                  options={["Sim", "Muito mais", "Não"]}
+                  onSelectOption={(option) => {
+                    saveQuizAnswer('step2', option);
+                    setTimeout(() => goToQuizStep3(), 300);
+                  }}
+                  onNext={goToQuizStep3}
+                  selectedOption={state.quizAnswers.step2}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </AnimatedBackground>
     </div>
@@ -105,14 +155,38 @@ export const QuizWithSchoolPower: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground>
         <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
-          <QuizStep
-            step={3}
-            question="Você acredita que ter alunos engajados na sua aula é fundamental?"
-            options={["Claro!", "Um pouco", "Não"]}
-            onSelectOption={(option) => saveQuizAnswer('step3', option)}
-            onNext={goToQuizStep4}
-            selectedOption={state.quizAnswers.step3}
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="w-full max-w-5xl"
+            style={{ minHeight: '600px' }}
+          >
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
+              {/* Barra de Progresso no Topo */}
+              <div className="w-full bg-gray-100 h-2">
+                <Progress 
+                  value={getProgressValue()} 
+                  className="h-2 rounded-none"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                />
+              </div>
+              
+              <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
+                <QuizStep
+                  step={3}
+                  question="Você acredita que ter alunos engajados na sua aula é fundamental?"
+                  options={["Claro!", "Um pouco", "Não"]}
+                  onSelectOption={(option) => {
+                    saveQuizAnswer('step3', option);
+                    setTimeout(() => goToQuizStep4(), 300);
+                  }}
+                  onNext={goToQuizStep4}
+                  selectedOption={state.quizAnswers.step3}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </AnimatedBackground>
     </div>
@@ -122,14 +196,38 @@ export const QuizWithSchoolPower: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground>
         <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
-          <QuizStep
-            step={4}
-            question="Se você pudesse acessar uma plataforma que cria todas as atividades/materiais interativos do semestre em 2 minutos, você acessaria?"
-            options={["Com certeza!", "Talvez", "Não"]}
-            onSelectOption={(option) => saveQuizAnswer('step4', option)}
-            onNext={goToQuizFinal}
-            selectedOption={state.quizAnswers.step4}
-          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="w-full max-w-5xl"
+            style={{ minHeight: '600px' }}
+          >
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
+              {/* Barra de Progresso no Topo */}
+              <div className="w-full bg-gray-100 h-2">
+                <Progress 
+                  value={getProgressValue()} 
+                  className="h-2 rounded-none"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                />
+              </div>
+              
+              <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
+                <QuizStep
+                  step={4}
+                  question="Se você pudesse acessar uma plataforma que cria todas as atividades/materiais interativos do semestre em 2 minutos, você acessaria?"
+                  options={["Com certeza!", "Talvez", "Não"]}
+                  onSelectOption={(option) => {
+                    saveQuizAnswer('step4', option);
+                    setTimeout(() => goToQuizFinal(), 300);
+                  }}
+                  onNext={goToQuizFinal}
+                  selectedOption={state.quizAnswers.step4}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </AnimatedBackground>
     </div>
@@ -139,7 +237,28 @@ export const QuizWithSchoolPower: React.FC = () => {
     <div className="min-h-screen relative overflow-hidden">
       <AnimatedBackground>
         <div className="relative z-20 min-h-screen flex items-center justify-center p-6">
-          <QuizFinalStep onAccessPlatform={goToSchoolPower} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="w-full max-w-5xl"
+            style={{ minHeight: '600px' }}
+          >
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden h-full">
+              {/* Barra de Progresso no Topo */}
+              <div className="w-full bg-gray-100 h-2">
+                <Progress 
+                  value={getProgressValue()} 
+                  className="h-2 rounded-none"
+                  indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600"
+                />
+              </div>
+              
+              <CardContent className="p-12 md:p-16 flex flex-col justify-center min-h-[550px]">
+                <QuizFinalStep onAccessPlatform={goToSchoolPower} />
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </AnimatedBackground>
     </div>
