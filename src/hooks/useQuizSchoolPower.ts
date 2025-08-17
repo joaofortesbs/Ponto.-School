@@ -116,15 +116,22 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
   }, []);
 
   const answerQuizStep = useCallback((stepId: number, answer: string) => {
+    console.log('🎯 Respondendo pergunta:', stepId, 'Resposta:', answer);
+    
     setState(prev => {
       const newAnswers = { ...prev.quizAnswers, [stepId]: answer };
       const nextStepNumber = stepId + 1;
       const totalSteps = QUIZ_STEPS.length;
       const progressPercentage = (stepId / totalSteps) * 100;
       
+      console.log('📊 Total steps:', totalSteps, 'Current step:', stepId);
+      
       // Se respondeu a última pergunta (etapa 4), vai diretamente para School Power
       if (stepId >= totalSteps) {
+        console.log('✅ Quiz completado! Redirecionando para School Power...');
+        
         setTimeout(() => {
+          console.log('🚀 Executando redirecionamento para School Power');
           setState(current => ({
             ...current,
             currentStep: 'schoolpower',
@@ -143,6 +150,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       }
       
       // Senão, vai para a próxima etapa
+      console.log('➡️ Próxima etapa:', nextStepNumber);
       return {
         ...prev,
         quizAnswers: newAnswers,

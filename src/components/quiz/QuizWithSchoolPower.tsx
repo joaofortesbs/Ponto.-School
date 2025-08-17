@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,16 +33,16 @@ export const QuizWithSchoolPower: React.FC = () => {
                     <span>Progresso do Quiz</span>
                     <span>{Math.round(state.progressPercentage)}%</span>
                   </div>
-                  <Progress 
-                    value={state.progressPercentage} 
-                    className="w-full h-2 bg-gray-200" 
+                  <Progress
+                    value={state.progressPercentage}
+                    className="w-full h-2 bg-gray-200"
                     indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
                   />
                 </div>
               </div>
 
               <CardContent className="p-12 md:p-16">
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -61,7 +60,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                     </motion.div>
 
                     <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
+                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -69,7 +68,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                     </p>
 
                     {/* Carrossel de Dores e Soluções - Logo após o headline */}
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.6, duration: 0.6 }}
@@ -85,7 +84,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Button 
+                    <Button
                       onClick={goToQuiz}
                       size="lg"
                       className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
@@ -99,7 +98,7 @@ export const QuizWithSchoolPower: React.FC = () => {
             </Card>
 
             {/* Footer */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
@@ -138,7 +137,7 @@ export const QuizWithSchoolPower: React.FC = () => {
             </Card>
 
             {/* Footer */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.6 }}
@@ -172,16 +171,16 @@ export const QuizWithSchoolPower: React.FC = () => {
                     <span>Progresso do Quiz</span>
                     <span>100%</span>
                   </div>
-                  <Progress 
-                    value={100} 
-                    className="w-full h-2 bg-gray-200" 
+                  <Progress
+                    value={100}
+                    className="w-full h-2 bg-gray-200"
                     indicatorClassName="bg-gradient-to-r from-orange-500 to-orange-600 transition-all duration-500"
                   />
                 </div>
               </div>
 
               <CardContent className="p-12 md:p-16">
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -213,7 +212,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                      <Button 
+                      <Button
                         onClick={goToSchoolPower}
                         size="lg"
                         className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-12 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
@@ -222,13 +221,13 @@ export const QuizWithSchoolPower: React.FC = () => {
                         ACESSAR PLATAFORMA TESTE
                       </Button>
                     </motion.div>
-                    
+
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     >
-                      <Button 
+                      <Button
                         onClick={resetQuiz}
                         variant="outline"
                         size="lg"
@@ -244,7 +243,7 @@ export const QuizWithSchoolPower: React.FC = () => {
             </Card>
 
             {/* Footer */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
