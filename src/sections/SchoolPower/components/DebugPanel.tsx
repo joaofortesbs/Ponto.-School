@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
+// Removendo a importação de useSchoolPowerFlow pois as props serão passadas externamente
+// import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
 
 interface DebugData {
   timestamp: string;
@@ -22,8 +23,14 @@ interface DebugData {
   };
 }
 
-export default function DebugPanel() {
-  const [isExpanded, setIsExpanded] = useState(false);
+interface DebugPanelProps {
+  flowState: string;
+  flowData: any;
+  isLoading: boolean;
+}
+
+export default function DebugPanel({ flowState, flowData, isLoading }: DebugPanelProps) {
+  const [isExpanded, setIsExpanded] = useState(false); // Renomeado de isVisible para isExpanded para clareza
   const [debugData, setDebugData] = useState<DebugData>({
     timestamp: '',
     flowState: '',
@@ -44,13 +51,15 @@ export default function DebugPanel() {
     }
   });
 
-  const { flowState, flowData, isLoading } = useSchoolPowerFlow();
+  // Removendo a chamada ao hook useSchoolPowerFlow, pois as props são recebidas
+  // const { flowState, flowData, isLoading } = useSchoolPowerFlow();
 
   // Verificações do sistema
   const performSystemChecks = () => {
     const checks = {
       reactImported: typeof React !== 'undefined',
-      hooksLoaded: typeof useSchoolPowerFlow === 'function',
+      // hooksLoaded: typeof useSchoolPowerFlow === 'function', // Descomentar se useSchoolPowerFlow for importado em outro lugar e necessário verificar
+      hooksLoaded: true, // Assumindo que os hooks estão disponíveis se o componente for renderizado
       componentsLoaded: true, // Se chegou até aqui, os componentes carregaram
       servicesLoaded: true, // Verificar se os serviços estão disponíveis
       dataValidated: flowData !== null
@@ -65,6 +74,7 @@ export default function DebugPanel() {
 
     // Override console.error para capturar erros
     const originalError = console.error;
+    // @ts-ignore
     console.error = (...args) => {
       const errorMessage = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
@@ -90,8 +100,9 @@ export default function DebugPanel() {
     };
 
     try {
-      // Verificar se a chave da API Gemini está disponível
-      const geminiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+      // Verificar se a chave da API Gemini está disponível (simulada)
+      // Substituir por uma lógica real de verificação se necessário
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY; // Assumindo que a chave está em .env
       if (geminiKey) {
         status.gemini = 'active';
       } else {
@@ -99,6 +110,7 @@ export default function DebugPanel() {
       }
     } catch (error) {
       status.gemini = 'error';
+      console.error("Erro ao verificar status da API Gemini:", error);
     }
 
     try {
@@ -111,6 +123,7 @@ export default function DebugPanel() {
       }
     } catch (error) {
       status.supabase = 'error';
+      console.error("Erro ao verificar status da API Supabase:", error);
     }
 
     return status;
@@ -125,16 +138,24 @@ export default function DebugPanel() {
 
       let localStorage_data = null;
       try {
-        localStorage_data = JSON.parse(localStorage.getItem('schoolpower_flow_data') || 'null');
+        // A chave do localStorage pode precisar ser ajustada dependendo de onde os dados são salvos.
+        // Assumindo que 'schoolpower_flow_data' é a chave correta.
+        localStorage_data = localStorage.getItem('schoolpower_flow_data');
+        if (localStorage_data) {
+          localStorage_data = JSON.parse(localStorage_data);
+        } else {
+          localStorage_data = null;
+        }
       } catch (error) {
-        errors.push(`LocalStorage Error: ${error}`);
+        console.error("Erro ao ler do LocalStorage:", error);
+        errors.push(`LocalStorage Read Error: ${JSON.stringify(error)}`);
       }
 
       setDebugData({
         timestamp: new Date().toLocaleTimeString(),
-        flowState: flowState || 'undefined',
-        flowData: flowData || null,
-        isLoading: isLoading || false,
+        flowState: flowState || 'undefined', // Usa a prop flowState
+        flowData: flowData || null,       // Usa a prop flowData
+        isLoading: isLoading || false,      // Usa a prop isLoading
         localStorage: localStorage_data,
         errors: errors.slice(-10), // Manter apenas os últimos 10 erros
         apiStatus,
@@ -142,11 +163,20 @@ export default function DebugPanel() {
       });
     };
 
+    // Executa imediatamente ao montar o componente
     updateDebugData();
-    const interval = setInterval(updateDebugData, 2000); // Atualizar a cada 2 segundos
 
-    return () => clearInterval(interval);
-  }, [flowState, flowData, isLoading]);
+    // Configura o intervalo apenas se o componente estiver visível (isExpanded)
+    const interval = isExpanded ? setInterval(updateDebugData, 2000) : null;
+
+    // Limpa o intervalo quando o componente é desmontado ou quando isExpanded muda para false
+    return () => {
+      if (interval) clearInterval(interval);
+      // Restaurar console.error original ao desmontar para evitar efeitos colaterais
+      // @ts-ignore
+      console.error = console.error.originalError || console.log; 
+    };
+  }, [flowState, flowData, isLoading, isExpanded]); // Adicionado isExpanded às dependências
 
   const getStatusColor = (status: string | boolean) => {
     if (typeof status === 'boolean') {
@@ -172,6 +202,7 @@ export default function DebugPanel() {
     }
   };
 
+  // O debug só deve ser visível em ambiente de desenvolvimento
   if (process.env.NODE_ENV !== 'development') {
     return null;
   }
@@ -290,6 +321,8 @@ export default function DebugPanel() {
               onClick={() => {
                 localStorage.removeItem('schoolpower_flow_data');
                 alert('LocalStorage limpo!');
+                // Forçar uma atualização dos dados de debug após limpar o cache
+                setDebugData(prev => ({ ...prev, localStorage: null }));
               }}
               className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
             >

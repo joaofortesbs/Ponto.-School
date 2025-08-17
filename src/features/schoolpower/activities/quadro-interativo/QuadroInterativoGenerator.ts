@@ -134,3 +134,4 @@ class QuadroInterativoGenerator {
 }
 
 export default QuadroInterativoGenerator;
+export { QuadroInterativoGenerator };

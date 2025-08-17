@@ -72,6 +72,12 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
   </>
 );
 
+// Interface para props dos campos
+interface FieldProps {
+  formData: ActivityFormData;
+  onFieldChange: (field: keyof ActivityFormData, value: string) => void;
+}
+
 // Componente específico para Quadro Interativo
 const QuadroInterativoFields = ({ formData, onFieldChange }: FieldProps) => (
   <>
@@ -1143,7 +1149,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customCustomFields['nivelDificuldade'] ||
+                              customFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||

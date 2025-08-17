@@ -77,8 +77,12 @@ export function SchoolPowerPage() {
       className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
       style={{ backgroundColor: "transparent" }}
     >
-      {/* Debug Panel - sempre visível no canto superior direito */}
-      <DebugPanel />
+      {/* Debug Panel - sempre visível */}
+      <DebugPanel 
+        flowState={flowState} 
+        flowData={flowData} 
+        isLoading={isLoading} 
+      />
 
       {/* Background de estrelas - sempre visível */}
       <ParticlesBackground isDarkTheme={isDarkTheme} />

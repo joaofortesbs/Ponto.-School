@@ -604,11 +604,11 @@ export function SidebarNav({
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
                   <div className="flex justify-center mt-2">
-                    <div 
+                    <div
                       className="h-1 bg-[#FF6B00] rounded-full opacity-30"
                       style={{ width: "40px" }}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
                         style={{ width: "65%" }}
                       />
@@ -661,18 +661,18 @@ export function SidebarNav({
                       Nível {userProfile?.level || 1}
                     </p>
                     <div className="flex justify-center">
-                      <div 
+                      <div
                         className="h-1.5 bg-[#FF6B00] rounded-full opacity-30"
                         style={{ width: "80px" }}
                       >
-                        <div 
+                        <div
                           className="h-full bg-[#FF6B00] rounded-full transition-all duration-300"
                           style={{ width: "65%" }}
                         />
                       </div>
                     </div>
                     <div className="flex justify-center mt-2">
-                      <div 
+                      <div
                         className="px-5 py-0.5 border border-[#FF6B00] bg-[#FF6B00] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#FF6B00]">
@@ -807,11 +807,11 @@ export function SidebarNav({
                 {/* Barra de progresso quando colapsado */}
                 {isCollapsed && (
                   <div className="flex justify-center mt-2">
-                    <div 
+                    <div
                       className="h-1 bg-[#2461E7] rounded-full opacity-30"
                       style={{ width: "40px" }}
                     >
-                      <div 
+                      <div
                         className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
                         style={{ width: "65%" }}
                       />
@@ -846,18 +846,18 @@ export function SidebarNav({
                       Nível {userProfile?.level || 1}
                     </p>
                     <div className="flex justify-center">
-                      <div 
+                      <div
                         className="h-1.5 bg-[#2461E7] rounded-full opacity-30"
                         style={{ width: "80px" }}
                       >
-                        <div 
+                        <div
                           className="h-full bg-[#2461E7] rounded-full transition-all duration-300"
                           style={{ width: "65%" }}
                         />
                       </div>
                     </div>
                     <div className="flex justify-center mt-2">
-                      <div 
+                      <div
                         className="px-5 py-0.5 border border-[#2461E7] bg-[#2461E7] bg-opacity-20 rounded-md flex items-center justify-center"
                       >
                         <span className="text-xs font-medium text-[#2461E7]">
@@ -881,7 +881,7 @@ export function SidebarNav({
       >
         {/* Navigation Menu com novo design */}
         <div className={cn(
-          "navigation-menu-container px-2", 
+          "navigation-menu-container px-2",
           isCollapsed && "sidebar-collapsed",
           isCardFlipped ? "professor-mode" : "aluno-mode",
           isModeChanging && "mode-changing"
@@ -891,8 +891,8 @@ export function SidebarNav({
             isMenuFlipping && "menu-flipping"
           )}>
             {navItems.map((item, index) => (
-              <div 
-                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`} 
+              <div
+                key={`${isCardFlipped ? 'professor' : 'aluno'}-${item.path}-${index}`}
                 className={cn(
                   "relative menu-item-wrapper",
                   isMenuFlipping && "animate-menu-transition"
@@ -904,7 +904,7 @@ export function SidebarNav({
                 {item.label === "Agenda" && !isCollapsed ? (
                   <AgendaNav />
                 ) : (
-                  <div 
+                  <div
                     className={cn(
                       "menu-item",
                       isActive(item.path) ? "active" : ""
@@ -922,7 +922,7 @@ export function SidebarNav({
                       {!isCollapsed && (
                         <div className="item-text">
                           <span className="item-title">{item.label}</span>
-                                                </div>
+                        </div>
                       )}
                       <div className="item-indicator"></div>
                     </div>
@@ -1244,10 +1244,10 @@ export function SidebarNav({
         }
 
         @keyframes navigationPulse {
-          0%, 100% { 
+          0%, 100% {
             box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.2);
           }
-          50% { 
+          50% {
             box-shadow: 0 0 0 8px rgba(255, 107, 0, 0);
           }
         }
@@ -1400,10 +1400,6 @@ export function SidebarNav({
           animation-delay: var(--cascade-delay, 0s);
         }
 
-        .menu-item-flip-animation {
-          animation: menuItemFlipTransition 1.8s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
         @keyframes menuFlipCascade {
           0% {
             transform: rotateY(0deg) scale(1);
@@ -1432,54 +1428,6 @@ export function SidebarNav({
           100% {
             transform: rotateY(360deg) scale(1);
             opacity: 1;
-          }
-        }
-
-        @keyframes menuItemFlipTransition {
-          0% {
-            transform: translateX(0) rotateY(0deg) scale(1);
-            filter: brightness(1) hue-rotate(0deg);
-            box-shadow: 0 0 0 rgba(255, 107, 0, 0);
-          }
-          10% {
-            transform: translateX(-8px) rotateY(-20deg) scale(0.98);
-            filter: brightness(1.1) hue-rotate(10deg);
-            box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
-          }
-          25% {
-            transform: translateX(-15px) rotateY(-45deg) scale(0.92);
-            filter: brightness(1.2) hue-rotate(30deg);
-            box-shadow: 0 4px 16px rgba(255, 107, 0, 0.2);
-          }
-          40% {
-            transform: translateX(-20px) rotateY(-90deg) scale(0.85);
-            filter: brightness(1.3) hue-rotate(60deg);
-            box-shadow: 0 6px 24px rgba(255, 107, 0, 0.3);
-          }
-          50% {
-            transform: translateX(-15px) rotateY(-135deg) scale(0.8);
-            filter: brightness(1.4) hue-rotate(90deg);
-            box-shadow: 0 8px 32px rgba(255, 107, 0, 0.4);
-          }
-          60% {
-            transform: translateX(-5px) rotateY(-180deg) scale(0.85);
-            filter: brightness(1.3) hue-rotate(120deg);
-            box-shadow: 0 6px 24px rgba(37, 99, 235, 0.3);
-          }
-          75% {
-            transform: translateX(5px) rotateY(-225deg) scale(0.92);
-            filter: brightness(1.2) hue-rotate(150deg);
-            box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
-          }
-          90% {
-            transform: translateX(8px) rotateY(-340deg) scale(0.98);
-            filter: brightness(1.1) hue-rotate(170deg);
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
-          }
-          100% {
-            transform: translateX(0) rotateY(-360deg) scale(1);
-            filter: brightness(1) hue-rotate(180deg);
-            box-shadow: 0 0 0 rgba(37, 99, 235, 0);
           }
         }
 
