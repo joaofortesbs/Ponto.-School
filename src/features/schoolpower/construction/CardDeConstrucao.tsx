@@ -101,17 +101,6 @@ export function CardDeConstrucao({
   onResetFlow,
   isLoading 
 }: CardDeConstrucaoProps) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Define breakpoint para mobile
-    };
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Chama uma vez ao montar
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
     materias: '',
     publicoAlvo: '',
@@ -851,11 +840,11 @@ export function CardDeConstrucao({
         stiffness: 100,
         damping: 15,
       }}
-      className={`relative rounded-2xl shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321] ${
-        isMobile 
-          ? 'w-[95vw] h-[85vh] max-w-[400px] max-h-[600px] p-4 mx-auto' 
-          : 'w-[90vw] h-[85vh] max-w-[1200px] max-h-[800px] p-6 mx-auto'
-      }`}
+      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
+      style={{
+        width: "1353px",
+        height: "773px"
+      }}
       data-theme="adaptive"
     >
       {/* Cabeçalho Persistente Fixo */}
@@ -864,7 +853,7 @@ export function CardDeConstrucao({
           <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
             {step === "contextualization" ? (
               <svg
-                className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5 sm:w-7 sm:h-7'} text-white`}
+                className="w-7 h-7 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -878,7 +867,7 @@ export function CardDeConstrucao({
               </svg>
             ) : step === "actionPlan" ? (
               <svg
-                className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5 sm:w-7 sm:h-7'} text-white`}
+                className="w-7 h-7 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -892,7 +881,7 @@ export function CardDeConstrucao({
               </svg>
             ) : (
               <svg
-                className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5 sm:w-7 sm:h-7'} text-white animate-spin`}
+                className="w-7 h-7 text-white animate-spin"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -941,38 +930,38 @@ export function CardDeConstrucao({
             ></div>
 
             {/* Step indicators */}
-            <div className={`relative z-10 ${isMobile ? 'w-5 h-5' : 'w-6 h-6 sm:w-8 sm:h-8'} rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
             }`}>
               {step === "contextualization" ? (
-                <span className="text-xs sm:text-sm font-semibold">1</span>
+                <span className="text-sm font-semibold">1</span>
               ) : (
-                <svg className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-white`} fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
             </div>
 
-            <div className={`relative z-10 ${isMobile ? 'w-5 h-5' : 'w-6 h-6 sm:w-8 sm:h-8'} rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
               (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-[#FF6B00] border-white text-white' :
               'bg-white/20 border-white/30 text-white'
             }`}>
               {step === "actionPlan" ? (
-                <span className="text-xs sm:text-sm font-semibold">2</span>
+                <span className="text-sm font-semibold">2</span>
               ) : (step === "generating" || step === "generatingActivities" || step === "activities") ? (
-                <svg className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-white`} fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <span className="text-xs sm:text-sm font-semibold">2</span>
+                <span className="text-sm font-semibold">2</span>
               )}
             </div>
 
-            <div className={`relative z-10 ${isMobile ? 'w-5 h-5' : 'w-6 h-6 sm:w-8 sm:h-8'} rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
-              <span className="text-xs sm:text-sm font-semibold">3</span>
+              <span className="text-sm font-semibold">3</span>
             </div>
           </div>
         </div>
@@ -1054,23 +1043,20 @@ export function CardDeConstrucao({
           </div>
 
           {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden flex items-center justify-center">
+          <div className="flex-1 overflow-hidden">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
-            <div className="w-full max-w-6xl mx-auto">
-              <ConstructionInterface 
-                approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
-                handleEditActivity={handleEditActivity} 
-              />
-            </div>
+            <ConstructionInterface 
+              approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
+              handleEditActivity={handleEditActivity} 
+            />
           </div>
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col items-center justify-center pt-16"
+          className="relative z-10 h-full flex flex-col pt-16"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ minHeight: '100%' }}
         >
           <div className="text-center mb-4 sm:mb-6"></div>
 
@@ -1083,12 +1069,10 @@ export function CardDeConstrucao({
               className="flex-1 flex flex-col overflow-hidden"
             >
               <div
-                className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
-                  isMobile ? 'space-y-3' : 'space-y-4'
-                }`}
+                className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2"
                 style={{
-                  maxHeight: isMobile ? "calc(85vh - 180px)" : "calc(85vh - 200px)",
-                  minHeight: isMobile ? "300px" : "400px",
+                  maxHeight: "calc(100vh - 200px)",
+                  minHeight: "400px",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                 }}
@@ -1102,10 +1086,8 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("materias", e.target.value)
                     }
-                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
-                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
-                    }`}
-                    rows={isMobile ? 2 : 3}
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    rows={2}
                     placeholder="Descreva as matérias e temas que você quer estudar..."
                   />
                 </div>
@@ -1120,9 +1102,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("publicoAlvo", e.target.value)
                     }
-                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
-                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
-                    }`}
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     placeholder="Ex: Ensino Médio, 3º ano, vestibular..."
                   />
                 </div>
@@ -1136,10 +1116,8 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("restricoes", e.target.value)
                     }
-                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
-                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
-                    }`}
-                    rows={isMobile ? 2 : 3}
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    rows={2}
                     placeholder="Descreva limitações de tempo, dificuldades específicas, etc..."
                   />
                 </div>
@@ -1154,9 +1132,7 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("datasImportantes", e.target.value)
                     }
-                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
-                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
-                    }`}
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
                     placeholder="Ex: Prova em 2 semanas, ENEM em novembro..."
                   />
                 </div>
@@ -1170,26 +1146,18 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("observacoes", e.target.value)
                     }
-                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
-                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
-                    }`}
-                    rows={isMobile ? 2 : 3}
+                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    rows={2}
                     placeholder="Informações adicionais que podem ajudar..."
                   />
                 </div>
               </div>
 
-              <div className={`flex justify-end border-t border-gray-300 dark:border-gray-700 ${
-                isMobile ? 'pt-3' : 'pt-4'
-              }`}>
+              <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
                 <button
                   onClick={handleSubmitContextualization}
                   disabled={!isContextualizationValid || isLoading}
-                  className={`bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isMobile 
-                      ? 'w-full px-4 py-2 text-sm' 
-                      : 'px-6 py-3 text-base'
-                  }`}
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 >
                   {isLoading ? "Processando..." : "Gerar Plano de Aula"}
                 </button>
@@ -1416,7 +1384,7 @@ export function CardDeConstrucao({
                               >
                                 {isSelected ? (
                                   <svg 
-                                    className={`${isMobile ? 'w-3 h-3' : 'w-5 h-5'} text-white transition-all duration-300 relative z-10`} 
+                                    className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
                                     fill="currentColor" 
                                     viewBox="0 0 20 20"
                                   >
@@ -1427,7 +1395,7 @@ export function CardDeConstrucao({
                                   </svg>
                                 ) : (
                                   React.createElement(getIconByActivityId(activity.id), {
-                                    className: `${isMobile ? 'w-3 h-3' : 'w-5 h-5'} transition-all duration-300 relative z-10`,
+                                    className: `w-5 h-5 transition-all duration-300 relative z-10`,
                                     style: {
                                       color: '#FF6E06'
                                     }
@@ -1551,7 +1519,7 @@ export function CardDeConstrucao({
                   <Button
                     onClick={handleApproveActionPlan}
                     disabled={selectedActivities2.length === 0 || isLoading}
-                    className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
                   >
                     <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                     {isLoading
