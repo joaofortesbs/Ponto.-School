@@ -840,10 +840,13 @@ export function CardDeConstrucao({
         stiffness: 100,
         damping: 15,
       }}
-      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
+      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321] mx-auto"
       style={{
         width: "1353px",
-        height: "773px"
+        height: "773px",
+        position: "relative",
+        left: "50%",
+        transform: "translateX(-50%)"
       }}
       data-theme="adaptive"
     >
@@ -1055,10 +1058,11 @@ export function CardDeConstrucao({
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col items-center justify-center pt-16"
+          className="relative z-10 h-full flex flex-col items-center justify-center pt-16 px-4"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
+          style={{ minHeight: '100%' }}
         >
           <div className="text-center mb-4 sm:mb-6"></div>
 
