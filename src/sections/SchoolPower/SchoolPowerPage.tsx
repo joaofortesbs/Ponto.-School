@@ -105,8 +105,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
             <div 
               className="relative" 
               style={{ 
-                width: isMobile && isQuizMode ? "300px" : "900px", 
-                height: isMobile && isQuizMode ? "400px" : "617px" 
+                width: isMobile && isQuizMode ? "320px" : "900px", 
+                height: isMobile && isQuizMode ? "420px" : "617px" 
               }}
             >
               {/* TechCircle posicionado no topo do container Ripple */}
@@ -139,7 +139,10 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
               <div 
                 className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`} 
-                style={{ marginTop: isMobile && isQuizMode ? "-100px" : "-150px" }}
+                style={{ 
+                  marginTop: isMobile && isQuizMode ? "-80px" : "-150px",
+                  width: isMobile && isQuizMode ? "100%" : "auto"
+                }}
               >
                 <ChatInput 
                   isDarkTheme={isDarkTheme} 
