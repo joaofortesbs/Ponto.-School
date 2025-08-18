@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
@@ -166,7 +167,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           }}
         >
           <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-8'}`}>
-            <div className="w-full flex justify-center"></div>
+            <div className="w-full flex justify-center">
               <CardDeConstrucao
                 flowData={{
                   ...flowData,
