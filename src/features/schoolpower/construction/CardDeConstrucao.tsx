@@ -1043,17 +1043,19 @@ export function CardDeConstrucao({
           </div>
 
           {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden flex items-center justify-center">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
-            <ConstructionInterface 
-              approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
-              handleEditActivity={handleEditActivity} 
-            />
+            <div className="w-full max-w-6xl mx-auto">
+              <ConstructionInterface 
+                approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
+                handleEditActivity={handleEditActivity} 
+              />
+            </div>
           </div>
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col pt-16"
+          className="relative z-10 h-full flex flex-col items-center justify-center pt-16"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
