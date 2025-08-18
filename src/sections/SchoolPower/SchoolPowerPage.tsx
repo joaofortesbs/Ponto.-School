@@ -141,32 +141,40 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
-          className="absolute inset-0 flex items-center justify-center z-40"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-slate-900 to-slate-800"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          style={{ background: 'transparent' }}
+          style={{ 
+            width: '100vw', 
+            height: '100vh',
+            top: 0,
+            left: 0,
+            position: 'fixed'
+          }}
         >
-          <div className="flex items-center justify-center w-full h-full">
-            <CardDeConstrucao
-              flowData={{
-                ...flowData,
-                actionPlan: (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [],
-                contextualizationData: flowData?.contextualizationData || null,
-                manualActivities: flowData?.manualActivities || []
-              }}
-              onBack={handleBack}
-              step={flowState === 'contextualizing' ? 'contextualization' : 
-                    flowState === 'actionplan' ? 'actionPlan' : 
-                    flowState === 'generating' ? 'generating' : 
-                    flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
-              contextualizationData={flowData?.contextualizationData || null}
-              actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
-              onSubmitContextualization={handleSubmitContextualization}
-              onApproveActionPlan={handleApproveActionPlan}
-              onResetFlow={handleResetFlow}
-              isLoading={isLoading}
-            />
+          <div className="flex items-center justify-center w-full h-full p-4">
+            <div className="w-full max-w-7xl mx-auto">
+              <CardDeConstrucao
+                flowData={{
+                  ...flowData,
+                  actionPlan: (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [],
+                  contextualizationData: flowData?.contextualizationData || null,
+                  manualActivities: flowData?.manualActivities || []
+                }}
+                onBack={handleBack}
+                step={flowState === 'contextualizing' ? 'contextualization' : 
+                      flowState === 'actionplan' ? 'actionPlan' : 
+                      flowState === 'generating' ? 'generating' : 
+                      flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
+                contextualizationData={flowData?.contextualizationData || null}
+                actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
+                onSubmitContextualization={handleSubmitContextualization}
+                onApproveActionPlan={handleApproveActionPlan}
+                onResetFlow={handleResetFlow}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </motion.div>
       )}
