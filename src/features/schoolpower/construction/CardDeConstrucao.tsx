@@ -1566,7 +1566,7 @@ export function CardDeConstrucao({
                   <Button
                     onClick={handleApproveActionPlan}
                     disabled={selectedActivities2.length === 0 || isLoading}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base ${isMobile
+                    className={`px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${isMobile
                       ? 'bg-white/10 text-white border border-white/30 hover:bg-white/20'
                       : 'bg-[#FF6B00] hover:bg-[#D65A00] text-white'
                     }`}
