@@ -19,8 +19,59 @@ import {
   FileText,
   Edit3,
   Eye,
-  Play
-} from 'lucide-react';
+  Play,
+  Wrench,
+  CheckSquare,
+  Filter,
+  Trophy,
+  Zap,
+  Brain,
+  Heart,
+  PenTool,
+  Presentation,
+  Search,
+  MapPin,
+  Calculator,
+  Globe,
+  Microscope,
+  Palette,
+  Music,
+  Camera,
+  Video,
+  Headphones,
+  Gamepad2,
+  Puzzle,
+  Award,
+  Star,
+  Flag,
+  Compass,
+  Download,
+  Upload,
+  Share2,
+  MessageSquare,
+  ThumbsUp,
+  Pause,
+  SkipForward,
+  Volume2,
+  Wifi,
+  Battery,
+  Shield,
+  Lock,
+  Key,
+  Mail,
+  Phone,
+  Home,
+  Car,
+  Plane,
+  TreePine,
+  Sun,
+  Moon,
+  Cloud,
+  Umbrella,
+  Snowflake,
+  Triangle,
+  Sparkles
+} from "lucide-react";
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -29,17 +80,6 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ConstructionGrid } from './ConstructionGrid';
 
-import {
-  Wrench, CheckSquare, Filter,
-  Trophy, Zap, Brain, Heart,
-  PenTool, Presentation, Search, MapPin, Calculator, Globe,
-  Microscope, Palette, Music, Camera, Video, Headphones,
-  Gamepad2, Puzzle, Award, Star, Flag, Compass,
-  Download, Upload, Share2, MessageSquare, ThumbsUp,
-  Pause, SkipForward, Volume2, Wifi, Battery,
-  Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
-  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle
-} from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";

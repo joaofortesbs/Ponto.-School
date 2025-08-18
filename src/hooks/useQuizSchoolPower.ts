@@ -1,5 +1,6 @@
-
 import { useState, useCallback, useMemo } from 'react';
+
+export type StepType = 'intro' | 'quiz' | 'schoolpower';
 
 export interface QuizStep {
   id: number;
@@ -104,13 +105,13 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
       const newAnswers = { ...current.answers, [stepId]: answer };
       const totalSteps = QUIZ_STEPS.length;
       const progressPercentage = (stepId / totalSteps) * 100;
-      
+
       console.log(`📝 Resposta registrada - Etapa ${stepId}/${totalSteps}: "${answer}"`);
-      
+
       // Se respondeu a última pergunta (etapa 4), vai IMEDIATAMENTE para School Power
       if (stepId >= totalSteps) {
         console.log('🎯 ÚLTIMA ETAPA RESPONDIDA! Redirecionando para School Power...');
-        
+
         // Transição IMEDIATA e SÍNCRONA para School Power
         return {
           ...current,
@@ -122,7 +123,7 @@ export function useQuizSchoolPower(): UseQuizSchoolPowerReturn {
           quizStepNumber: stepId
         };
       }
-      
+
       // Caso contrário, vai para a próxima etapa
       console.log(`➡️ Avançando para etapa ${stepId + 1}`);
       return {
