@@ -38,7 +38,7 @@ import {
   Download, Upload, Share2, MessageSquare, ThumbsUp,
   Pause, SkipForward, Volume2, Wifi, Battery,
   Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
-  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle, Sparkles
+  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle
 } from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";

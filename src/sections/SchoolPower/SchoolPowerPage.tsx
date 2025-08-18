@@ -14,7 +14,6 @@ import { ContextualizationCard } from "../../features/schoolpower/contextualizat
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { useIsMobile } from "../../hooks/useIsMobile";
-import { Sparkles } from "lucide-react";
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
@@ -161,7 +160,7 @@ export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
 
       {/* Input de chat fixo na parte inferior */}
       <AnimatePresence>
-        {componentsVisible && (
+        {isComponentsVisible && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
