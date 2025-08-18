@@ -35,7 +35,10 @@ export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
     submitContextualization: handleSubmitContextualizationHook,
     approveActionPlan: handleApproveActionPlanHook,
     resetFlow: handleResetFlowHook,
-    isLoading
+    isLoading,
+    currentMessage,
+    actionPlan,
+    constructionActivities
   } = useSchoolPowerFlow();
 
   // Log apenas mudanças importantes de estado
@@ -160,7 +163,7 @@ export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
 
       {/* Input de chat fixo na parte inferior */}
       <AnimatePresence>
-        {isComponentsVisible && (
+        {componentsVisible && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
