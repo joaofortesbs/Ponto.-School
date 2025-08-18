@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
-import { Loader, Send, Sparkles } from 'lucide-react'; // Importando ícones necessários
+import { Loader, Send } from 'lucide-react'; // Importando ícones necessários
 
 // MovingBorder component
 const MovingBorder = ({

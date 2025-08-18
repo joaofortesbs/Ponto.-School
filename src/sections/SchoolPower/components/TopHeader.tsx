@@ -1,12 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Settings, User, MessageSquare, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ProfileSelector } from './ProfileSelector';
-import { useIsMobile } from '@/hooks/useIsMobile';
-
 
 interface TopHeaderProps {
   isDarkTheme?: boolean;

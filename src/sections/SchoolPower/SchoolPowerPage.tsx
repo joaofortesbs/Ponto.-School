@@ -14,7 +14,6 @@ import { ContextualizationCard } from "../../features/schoolpower/contextualizat
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { useIsMobile } from "../../hooks/useIsMobile";
-import { Sparkles } from "lucide-react";
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
