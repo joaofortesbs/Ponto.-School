@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
-import { Loader, Send } from 'lucide-react'; // Importando ícones necessários
 
 // MovingBorder component
 const MovingBorder = ({
@@ -67,17 +66,12 @@ const MovingBorder = ({
 };
 
 interface ChatInputProps {
-  onSendMessage: (message: string) => void;
-  isLoading?: boolean;
-  isMobile?: boolean;
+  isDarkTheme?: boolean;
+  onSend?: (message: string) => void;
 }
 
 // Componente AIMessageBox
-const ChatInput: React.FC<ChatInputProps> = ({ 
-  onSendMessage, 
-  isLoading = false,
-  isMobile = false
-}) => {
+const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -93,7 +87,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const handleSend = () => {
     if (message.trim()) {
       console.log("Enviando mensagem:", message);
-      onSendMessage(message.trim());
+
+      // Chama a função onSend se fornecida
+      if (onSend) {
+        onSend(message.trim());
+      }
+
+      // Limpa o campo apenas após o envio
       setMessage("");
       setIsTyping(false);
     }

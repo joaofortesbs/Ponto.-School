@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   TopHeader,
   ProfileSelector,
@@ -13,17 +13,12 @@ import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerF
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
-import { useIsMobile } from "../../hooks/useIsMobile";
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
 }
 
-export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
-  isQuizMode = false
-}) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
+export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
 
@@ -87,26 +82,11 @@ export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
 
   return (
     <div
-      ref={containerRef}
-      className="relative min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden"
+      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
+      style={{ backgroundColor: "transparent" }}
     >
-      {/* Fundo estrelado sempre visível */}
-      <ParticlesBackground />
-
-      {/* Header fixo */}
-      <AnimatePresence>
-        {componentsVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="fixed top-0 left-0 right-0 z-40"
-          >
-            <TopHeader isMobile={isMobile} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Background de estrelas - sempre visível */}
+      <ParticlesBackground isDarkTheme={isDarkTheme} />
 
       {/* Componentes padrões - só aparecem quando flowState é 'idle' */}
       {componentsVisible && (
@@ -141,15 +121,15 @@ export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <ProfileSelector
+                <ProfileSelector 
                   isQuizMode={isQuizMode}
                 />
               </div>
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
               <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
-                <ChatInput
-                  isDarkTheme={isDarkTheme}
+                <ChatInput 
+                  isDarkTheme={isDarkTheme} 
                   onSend={handleSendMessage}
                 />
               </div>
@@ -158,44 +138,39 @@ export const SchoolPowerPage: React.FC<SchoolPowerPageProps> = ({
         </>
       )}
 
-      {/* Input de chat fixo na parte inferior */}
-      <AnimatePresence>
-        {componentsVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.3 }}
-            className="fixed bottom-0 left-0 right-0 z-40"
-          >
-            <ChatInput
-              onSendMessage={handleSendMessage}
-              isLoading={flowState === 'contextualizing'}
-              isMobile={isMobile}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
-        <motion.div
+        <motion.div 
           className="absolute inset-0 flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          style={{
+          style={{ 
             background: 'rgba(15, 23, 42, 0.95)'
           }}
         >
-          <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-4'}`}>
-            <CardDeConstrucao
-              flowState={flowState}
-              currentMessage={currentMessage}
-              actionPlan={actionPlan}
-              constructionActivities={constructionActivities}
-              isMobile={isMobile}
-            />
+          <div className="flex items-center justify-center w-full h-full p-4">
+            <div className="w-full max-w-7xl mx-auto">
+              <CardDeConstrucao
+                flowData={{
+                  ...flowData,
+                  actionPlan: (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [],
+                  contextualizationData: flowData?.contextualizationData || null,
+                  manualActivities: flowData?.manualActivities || []
+                }}
+                onBack={handleBack}
+                step={flowState === 'contextualizing' ? 'contextualization' : 
+                      flowState === 'actionplan' ? 'actionPlan' : 
+                      flowState === 'generating' ? 'generating' : 
+                      flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
+                contextualizationData={flowData?.contextualizationData || null}
+                actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
+                onSubmitContextualization={handleSubmitContextualization}
+                onApproveActionPlan={handleApproveActionPlan}
+                onResetFlow={handleResetFlow}
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </motion.div>
       )}

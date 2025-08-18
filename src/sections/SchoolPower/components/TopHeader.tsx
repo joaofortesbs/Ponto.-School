@@ -5,10 +5,9 @@ import { motion } from "framer-motion";
 interface TopHeaderProps {
   isDarkTheme?: boolean;
   isQuizMode?: boolean;
-  isMobile?: boolean;
 }
 
-const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = false, isMobile = false }) => {
+const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = false }) => {
   const flipWords = [
     "estudar",
     "planejar",
@@ -54,61 +53,174 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className={`bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-xl border-b border-white/10 ${isMobile ? 'px-3 py-3' : 'px-6 py-4'}`}
-    >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo e título */}
-        <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-4'}`}>
-          <motion.div
-            whileHover={{ scale: isMobile ? 1.02 : 1.05, rotate: 5 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className={`${isMobile ? 'p-2' : 'p-3'} bg-gradient-to-br from-orange-500 to-orange-600 ${isMobile ? 'rounded-xl' : 'rounded-2xl'} shadow-lg`}
-          >
-            <img
-              src="/lovable-uploads/Logo-Ponto.School-Icone.png"
-              alt="Logo Ponto School"
-              className={`${isMobile ? 'w-5 h-5' : 'w-7 h-7'} object-contain`}
-              style={{
-                filter: "brightness(1.1) contrast(1.1)",
-                userSelect: "none",
-                WebkitUserSelect: "none",
-                MozUserSelect: "none",
-                msUserSelect: "none",
-                WebkitUserDrag: "none",
-                WebkitTouchCallout: "none",
-              }}
-              draggable={false}
-            />
-          </motion.div>
+    <div className="flex flex-col items-center justify-center min-h-full bg-transparent p-2 gap-2">
+      <div className="relative">
+        {/* Aura externa */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 50%, transparent 70%)",
+            transform: "scale(0.9)",
+            filter: "blur(25px)",
+            animation: "pulse 4s ease-in-out infinite alternate",
+          }}
+        />
 
-          <div>
-            <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-white tracking-tight`}>
-              School Power
-            </h1>
-            <p className={`text-orange-300 ${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>
-              IA Pedagógica Avançada
-            </p>
+        {/* Aura média */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(249, 115, 22, 0.2) 0%, rgba(251, 146, 60, 0.1) 60%, transparent 80%)",
+            transform: "scale(0.7)",
+            filter: "blur(18px)",
+            animation: "pulse 3s ease-in-out infinite alternate",
+          }}
+        />
+
+        {/* Círculo principal */}
+        <div
+          className="relative w-20 h-20 rounded-full overflow-hidden"
+          style={{
+            background: "#111827",
+            border: "3px solid transparent",
+            backgroundImage: `
+              linear-gradient(#111827, #111827),
+              linear-gradient(45deg,
+                #f97316 0%,
+                #fb923c 20%,
+                #fdba74 40%,
+                #fbbf24 60%,
+                #fb923c 80%,
+                #f97316 100%
+              )
+            `,
+            backgroundOrigin: "border-box",
+            backgroundClip: "content-box, border-box",
+            boxShadow: `
+              0 0 12px rgba(249, 115, 22, 0.12),
+              0 0 25px rgba(249, 115, 22, 0.06),
+              inset 0 0 30px rgba(249, 115, 22, 0.03),
+              inset 0 -15px 30px rgba(0, 0, 0, 0.4),
+              inset 0 15px 30px rgba(255, 255, 255, 0.15),
+              0 8px 25px rgba(0, 0, 0, 0.3),
+              0 -8px 25px rgba(249, 115, 22, 0.03)
+            `,
+            transform: "perspective(1000px) rotateX(15deg)",
+          }}
+        >
+          {/* Imagem quadrada */}
+          <div className="w-full h-full flex items-center justify-center p-3">
+            <div className="w-14 h-14 overflow-hidden pointer-events-none select-none">
+              <img
+                src="/lovable-uploads/Logo-Ponto.School-Icone.png"
+                alt="Logo Ponto School"
+                className="w-full h-full object-contain"
+                style={{
+                  filter: "brightness(1.1) contrast(1.1)",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  MozUserSelect: "none",
+                  msUserSelect: "none",
+                  WebkitUserDrag: "none",
+                  WebkitTouchCallout: "none",
+                }}
+                draggable={false}
+              />
+            </div>
           </div>
+
+          {/* Reflexo 3D */}
+          <div
+            className="absolute top-1 left-1 w-5 h-5 rounded-full opacity-30"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, transparent 70%)",
+              filter: "blur(6px)",
+            }}
+          />
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0% {
+            transform: translateY(0px) scale(1);
+          }
+          100% {
+            transform: translateY(-8px) scale(1.1);
+          }
+        }
+      `}</style>
+
+      {/* Texto com FlipWords abaixo do círculo */}
+      <div className="text-center max-w-2xl space-y-0.5">
+        {/* Primeira linha: Saudação */}
+        <div
+          className="text-xl font-bold tracking-tight leading-tight"
+          style={{
+            fontFamily:
+              "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
+            fontWeight: "700",
+            letterSpacing: "-0.02em",
+            color: isDarkTheme ? "white" : "#1f2937",
+          }}
+        >
+          <span
+            className={
+              isDarkTheme
+                ? "bg-gradient-to-r from-slate-100 via-white to-slate-100 bg-clip-text text-transparent"
+                : "bg-gradient-to-r from-gray-900 via-black to-gray-900 bg-clip-text text-transparent"
+            }
+          >
+            {isQuizMode ? "Bom dia, professor!" : `Bom dia, João!`}
+          </span>
         </div>
 
-        {/* Badge de status */}
-        <motion.div
-          whileHover={{ scale: isMobile ? 1.01 : 1.02 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'} bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30 rounded-full ${isMobile ? 'px-2 py-1' : 'px-4 py-2'}`}
+        {/* Segunda linha: Pergunta com FlipWords */}
+        <div
+          className="flex flex-wrap items-center justify-center gap-2 text-lg font-semibold tracking-tight"
+          style={{
+            fontFamily:
+              "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
+            fontWeight: "600",
+            letterSpacing: "-0.01em",
+            color: isDarkTheme ? "white" : "#374151",
+          }}
         >
-          <div className={`${isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-green-400 rounded-full animate-pulse`}></div>
-          <span className={`text-green-300 ${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>
-            {isMobile ? 'Ativo' : 'Sistema Ativo'}
+          <span
+            className={
+              isDarkTheme
+                ? "bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent"
+                : "bg-gradient-to-r from-gray-700 via-gray-800 to-gray-700 bg-clip-text text-transparent"
+            }
+          >
+            O que vamos
           </span>
-          <Sparkles className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-green-400`} />
-        </motion.div>
+          <FlipWords
+            words={flipWords}
+            duration={5000}
+            className={`font-bold text-lg ${isDarkTheme ? "text-orange-500" : "text-orange-700"}`}
+            style={{
+              fontFamily:
+                "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
+              fontWeight: "700",
+              letterSpacing: "-0.02em",
+            }}
+          />
+          <span
+            className={
+              isDarkTheme
+                ? "bg-gradient-to-r from-gray-300 via-white to-gray-300 bg-clip-text text-transparent"
+                : "bg-gradient-to-r from-gray-700 via-gray-800 to-gray-700 bg-clip-text text-transparent"
+            }
+          >
+            hoje?
+          </span>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
