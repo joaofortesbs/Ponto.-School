@@ -141,16 +141,12 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
-          className="fixed inset-0 flex items-center justify-center z-50 bg-gradient-to-br from-slate-900 to-slate-800"
+          className="absolute inset-0 flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
           style={{ 
-            width: '100vw', 
-            height: '100vh',
-            top: 0,
-            left: 0,
-            position: 'fixed'
+            background: 'rgba(15, 23, 42, 0.95)'
           }}
         >
           <div className="flex items-center justify-center w-full h-full p-4">
