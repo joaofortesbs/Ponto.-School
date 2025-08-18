@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Play, ArrowLeft, Home, CheckCircle2 } from 'lucide-react';
+import { Play, ArrowLeft, Home, CheckCircle2, Sparkles } from 'lucide-react';
 import { AnimatedBackground } from '@/components/auth/AnimatedBackground';
 import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
