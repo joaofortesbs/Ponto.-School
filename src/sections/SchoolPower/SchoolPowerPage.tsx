@@ -101,12 +101,12 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           )}
 
           {/* Container Ripple fixo e centralizado no background */}
-          <div className={`absolute ${isMobile && isQuizMode ? 'top-1/2' : 'top-[57%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
+          <div className={`absolute ${isMobile && isQuizMode ? 'top-[45%]' : 'top-[57%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
             <div 
               className="relative" 
               style={{ 
-                width: isMobile && isQuizMode ? "320px" : "900px", 
-                height: isMobile && isQuizMode ? "420px" : "617px" 
+                width: isMobile && isQuizMode ? "350px" : "900px", 
+                height: isMobile && isQuizMode ? "450px" : "617px" 
               }}
             >
               {/* TechCircle posicionado no topo do container Ripple */}
@@ -141,7 +141,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`} 
                 style={{ 
                   marginTop: isMobile && isQuizMode ? "-80px" : "-150px",
-                  width: isMobile && isQuizMode ? "100%" : "auto"
+                  width: isMobile && isQuizMode ? "110%" : "auto"
                 }}
               >
                 <ChatInput 
