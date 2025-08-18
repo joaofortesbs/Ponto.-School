@@ -666,8 +666,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                         ease: [0.25, 0.1, 0.25, 1],
                       }}
                     >
-                      <TextShimmerWave 
-                        className='font-mono text-sm text-white' 
+                      <TextShimmerWave
+                        className='font-mono text-sm text-white'
                         duration={1.5}
                         zDistance={8}
                         xDistance={1.5}
