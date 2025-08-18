@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Clock, 
-  Building2, 
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Clock,
+  Building2,
   Lightbulb,
   Target,
   BookOpen,
@@ -29,9 +29,9 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ConstructionGrid } from './ConstructionGrid';
 
-import { 
-  Wrench, CheckSquare, Filter, 
-  Trophy, Zap, Brain, Heart, 
+import {
+  Wrench, CheckSquare, Filter,
+  Trophy, Zap, Brain, Heart,
   PenTool, Presentation, Search, MapPin, Calculator, Globe,
   Microscope, Palette, Music, Camera, Video, Headphones,
   Gamepad2, Puzzle, Award, Star, Flag, Compass,
@@ -90,16 +90,18 @@ interface CardDeConstrucaoProps {
   onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
   onResetFlow: () => void;
   isLoading?: boolean;
+  isMobile?: boolean;
 }
 
-export function CardDeConstrucao({ 
-  step, 
-  contextualizationData, 
-  actionPlan, 
-  onSubmitContextualization, 
-  onApproveActionPlan, 
+export function CardDeConstrucao({
+  step,
+  contextualizationData,
+  actionPlan,
+  onSubmitContextualization,
+  onApproveActionPlan,
   onResetFlow,
-  isLoading 
+  isLoading,
+  isMobile = false
 }: CardDeConstrucaoProps) {
   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
     materias: '',
@@ -278,7 +280,7 @@ export function CardDeConstrucao({
       title: manualActivityForm.title,
       description: manualActivityForm.description,
       duration: "Personalizado",
-      difficulty: "Personalizado", 
+      difficulty: "Personalizado",
       category: activityType?.tags[0] || "manual",
       type: activityType?.name || "Atividade Manual",
       isManual: true,
@@ -382,8 +384,8 @@ export function CardDeConstrucao({
             className="absolute top-full right-0 mt-3 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-600 overflow-hidden z-50 backdrop-blur-sm"
             style={{
               background: `
-                linear-gradient(135deg, 
-                  rgba(255, 255, 255, 0.95) 0%, 
+                linear-gradient(135deg,
+                  rgba(255, 255, 255, 0.95) 0%,
                   rgba(248, 250, 252, 0.98) 100%
                 )
               `,
@@ -391,8 +393,8 @@ export function CardDeConstrucao({
               window.matchMedia("(prefers-color-scheme: dark)").matches
                 ? {
                     background: `
-                  linear-gradient(135deg, 
-                    rgba(31, 41, 55, 0.95) 0%, 
+                  linear-gradient(135deg,
+                    rgba(31, 41, 55, 0.95) 0%,
                     rgba(17, 24, 39, 0.98) 100%
                   )
                 `,
@@ -661,10 +663,10 @@ export function CardDeConstrucao({
 
   // Helper function to store auto-filled data and manage modal state
   const storeAutoData = (
-    activity: ActionPlanItem, 
-    processedFormData: any, 
-    customFields: Record<string, string> | undefined, 
-    originalData: ActionPlanItem, 
+    activity: ActionPlanItem,
+    processedFormData: any,
+    customFields: Record<string, string> | undefined,
+    originalData: ActionPlanItem,
     actionPlanActivity: ActionPlanItem | undefined
   ) => {
     const autoDataKey = `auto_activity_data_${activity.id}`;
@@ -696,7 +698,7 @@ export function CardDeConstrucao({
     console.log('🔍 Dados completos da atividade:', activity);
 
     // Buscar dados da atividade no action plan se disponível
-    const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
+    const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) ||
                                actionPlan?.find(item => item.id === activity.id);
 
     // Também verificar nos dados originais da atividade
@@ -789,7 +791,7 @@ export function CardDeConstrucao({
     console.log('💾 Atualizando atividade:', updatedActivity);
 
     // Atualiza o plano de ação com a atividade modificada
-    const newActionPlan = actionPlan?.map(activity => 
+    const newActionPlan = actionPlan?.map(activity =>
       activity.id === updatedActivity.id ? updatedActivity : activity
     ) || []; // Garante que newActionPlan seja sempre um array
 
@@ -840,17 +842,19 @@ export function CardDeConstrucao({
         stiffness: 100,
         damping: 15,
       }}
-      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
+      className={`relative rounded-2xl p-6 shadow-2xl border bg-white dark:bg-[#021321] ${isMobile ? 'w-full h-auto' : 'w-[1353px] h-[773px]'}`}
       style={{
-        width: "1353px",
-        height: "773px"
+        ...(isMobile ? {} : { width: "1353px", height: "773px" }),
+        borderColor: isMobile ? 'transparent' : '#FF6B00', // Ajuste a cor da borda conforme necessário
+        borderWidth: isMobile ? '0' : '2px',
       }}
       data-theme="adaptive"
     >
       {/* Cabeçalho Persistente Fixo */}
-      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-0">
+      <div className={`absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 ${isMobile ? 'z-0' : 'z-0'}`}
+      >
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${isMobile ? 'bg-white/20' : 'bg-white/20'}`}>
             {step === "contextualization" ? (
               <svg
                 className="w-7 h-7 text-white"
@@ -896,7 +900,7 @@ export function CardDeConstrucao({
             )}
           </div>
           <div>
-            <h1 className="text-white font-bold text-2xl">
+            <h1 className={`text-white font-bold ${isMobile ? 'text-xl' : 'text-2xl'}`}>
               {step === "contextualization"
                 ? "Quiz de Contextualização"
                 : step === "actionPlan"
@@ -911,15 +915,15 @@ export function CardDeConstrucao({
         </div>
 
         {/* Barra de Progresso */}
-        <div className="flex items-center gap-4">
+        <div className={`flex items-center gap-4 ${isMobile ? 'hidden' : ''}`}>
           <div className="relative flex items-center justify-between w-44">
             {/* Background progress line */}
             <div className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white/30 rounded-full z-0" style={{ left: '16px', right: '16px' }}></div>
 
             {/* Active progress line */}
-            <div 
+            <div
               className="absolute top-1/2 transform -translate-y-1/2 h-1.5 bg-white rounded-full z-0 transition-all duration-500 ease-out"
-              style={{ 
+              style={{
                 left: '16px',
                 width: `${
                   step === "contextualization" ? "0%" :
@@ -970,7 +974,7 @@ export function CardDeConstrucao({
       {/* Renderização condicional baseada no step */}
       {step === "generating" || step === "generatingActivities" ? (
         <motion.div
-          className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
+          className="relative z-10 flex flex-col items-center justify-center text-center px-4 pt-16"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -979,18 +983,18 @@ export function CardDeConstrucao({
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#FF6B00]/20 border-t-[#FF6B00] mx-auto"></div>
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF6B00]/10 to-transparent animate-pulse"></div>
           </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
+          <h3 className={`text-xl sm:text-2xl font-bold mb-3 ${isMobile ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
             {step === "generating"
               ? "🤖 Analisando com IA Gemini"
               : "🎯 Gerando Atividades"}
           </h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-lg text-sm sm:text-base">
+          <p className={`mb-4 max-w-lg text-sm sm:text-base ${isMobile ? 'text-gray-300' : 'text-gray-700 dark:text-gray-300'}`}>
             {step === "generating"
               ? "A IA está processando sua mensagem e contexto para criar um plano de ação personalizado..."
               : "As atividades aprovadas estão sendo geradas automaticamente pelo School Power..."}
           </p>
-          <div className="bg-gradient-to-r from-[#FF6B00]/10 to-orange-100/20 dark:to-[#29335C]/10 rounded-lg p-3 sm:p-4 mb-4 border border-[#FF6B00]/20 max-w-md w-full">
-            <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          <div className={`rounded-lg p-3 sm:p-4 mb-4 border max-w-md w-full ${isMobile ? 'bg-[#FF6B00]/5 border-[#FF6B00]/20' : 'bg-gradient-to-r from-[#FF6B00]/10 to-orange-100/20 dark:to-[#29335C]/10 border-[#FF6B00]/20'}`}>
+            <p className={`leading-relaxed text-xs sm:text-sm ${isMobile ? 'text-gray-300' : 'text-gray-700 dark:text-gray-300'}`}>
               {step === "generating" ? (
                 <>
                   ✨ Consultando 137 atividades disponíveis
@@ -1018,7 +1022,10 @@ export function CardDeConstrucao({
             {onResetFlow && (
               <button
                 onClick={onResetFlow}
-                className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${isMobile
+                  ? 'bg-white/10 text-white border-white/30 hover:bg-white/20'
+                  : 'text-gray-600 dark:text-gray-300 border border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
               >
                 Cancelar
               </button>
@@ -1031,12 +1038,12 @@ export function CardDeConstrucao({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
-          className="relative z-10 h-full flex flex-col pt-16"
+          className="relative z-10 h-full flex flex-col"
         >
-          <div className="flex items-center justify-end mb-4">
+          <div className={`flex items-center justify-end mb-4 ${isMobile ? 'px-4' : ''}`}>
             <button
               onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${isMobile ? 'text-white hover:text-gray-200' : 'text-gray-600 dark:text-gray-400 dark:hover:text-white'}`}
             >
               Voltar ao início
             </button>
@@ -1045,15 +1052,15 @@ export function CardDeConstrucao({
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
-            <ConstructionInterface 
-              approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
-              handleEditActivity={handleEditActivity} 
+            <ConstructionInterface
+              approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2}
+              handleEditActivity={handleEditActivity}
             />
           </div>
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col pt-16"
+          className={`relative z-10 flex flex-col ${isMobile ? 'pt-16' : 'h-full pt-16'}`}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
@@ -1066,19 +1073,18 @@ export function CardDeConstrucao({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col overflow-hidden"
+              className={`flex-1 flex flex-col overflow-hidden ${isMobile ? 'px-4' : ''}`}
             >
               <div
-                className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2"
+                className={`flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2 ${isMobile ? 'max-h-[80vh]' : 'max-h-[calc(100vh-200px)]'}`}
                 style={{
-                  maxHeight: "calc(100vh - 200px)",
                   minHeight: "400px",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                 }}
               >
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                     📚 Quais matérias e temas serão trabalhados? *
                   </label>
                   <textarea
@@ -1086,14 +1092,14 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("materias", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                     rows={2}
                     placeholder="Descreva as matérias e temas que você quer estudar..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                     🎯 Qual o público-alvo? *
                   </label>
                   <input
@@ -1102,13 +1108,13 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("publicoAlvo", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                     placeholder="Ex: Ensino Médio, 3º ano, vestibular..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                     ⚠️ Quais restrições ou preferências específicas? *
                   </label>
                   <textarea
@@ -1116,14 +1122,14 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("restricoes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                     rows={2}
                     placeholder="Descreva limitações de tempo, dificuldades específicas, etc..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                     📅 Período de entrega ou datas importantes
                   </label>
                   <input
@@ -1132,13 +1138,13 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("datasImportantes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                     placeholder="Ex: Prova em 2 semanas, ENEM em novembro..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                     📝 Outras observações importantes
                   </label>
                   <textarea
@@ -1146,18 +1152,21 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("observacoes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                     rows={2}
                     placeholder="Informações adicionais que podem ajudar..."
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+              <div className={`flex justify-end pt-3 sm:pt-4 border-t ${isMobile ? 'border-white/20' : 'border-gray-300 dark:border-gray-700'}`}>
                 <button
                   onClick={handleSubmitContextualization}
                   disabled={!isContextualizationValid || isLoading}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  className={`px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${isMobile
+                    ? 'bg-white/10 text-white border border-white/30 hover:bg-white/20'
+                    : 'bg-[#FF6B00] hover:bg-[#D65A00] text-white'
+                  }`}
                 >
                   {isLoading ? "Processando..." : "Gerar Plano de Aula"}
                 </button>
@@ -1169,14 +1178,14 @@ export function CardDeConstrucao({
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col overflow-hidden"
+              className={`flex-1 flex flex-col overflow-hidden ${isMobile ? 'px-4' : ''}`}
             >
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+              <div className={`flex items-center justify-between mb-3 sm:mb-4 ${isMobile ? 'pb-4' : ''}`}>
+                <h3 className={`text-base sm:text-lg font-semibold ${isMobile ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                   {showAddActivityInterface ? "Adicionar Atividade Manual" : "Atividades Sugeridas"}
                 </h3>
                 {!showAddActivityInterface && (
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 ${isMobile ? 'ml-auto' : ''}`}>
                     <button
                       onClick={() => setShowAddActivityInterface(true)}
                       className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#FF6B00]/10 to-[#FF9248]/5 hover:from-[#FF6B00]/20 hover:to-[#FF9248]/10 border border-[#FF6B00]/30 hover:border-[#FF6B00]/50 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -1186,7 +1195,7 @@ export function CardDeConstrucao({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                       </svg>
                     </button>
-                    <div className="bg-[#FF6B00]/10 text-[#FF6B00] px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
+                    <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${isMobile ? 'bg-white/10 text-white' : 'bg-[#FF6B00]/10 text-[#FF6B00]'}`}>
                       {selectedActivities2.length} selecionada
                       {selectedActivities2.length !== 1 ? "s" : ""}
                       {selectedTrilhasCount > 0 && (
@@ -1195,11 +1204,11 @@ export function CardDeConstrucao({
                         </span>
                       )}
                     </div>
-                    <GridToggleComponent 
+                    <GridToggleComponent
                       viewMode={viewMode}
                       onToggle={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
                     />
-                    <FilterComponent 
+                    <FilterComponent
                       activities={getCombinedActivities()}
                       selectedActivities2={selectedActivities2}
                       onFilterApply={(filterType) => handleFilterApply(filterType)}
@@ -1210,38 +1219,37 @@ export function CardDeConstrucao({
 
               {showAddActivityInterface ? (
                 <motion.div
-                  className="flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2"
+                  className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${isMobile ? 'max-h-[70vh]' : ''}`}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
                   style={{
-                    maxHeight: "calc(100vh - 250px)",
                     minHeight: "400px"
                   }}
                 >
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                      <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                         📝 Título da Atividade *
                       </label>
                       <input
                         type="text"
                         value={manualActivityForm.title}
                         onChange={(e) => handleManualFormChange('title', e.target.value)}
-                        className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                         placeholder="Ex: Lista de Exercícios sobre Funções"
                         maxLength={100}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                      <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                         🎯 Tipo de Atividade *
                       </label>
                       <select
                         value={manualActivityForm.typeId}
                         onChange={(e) => handleManualFormChange('typeId', e.target.value)}
-                        className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm"
+                        className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white'}`}
                       >
                         <option value="">Selecione o tipo de atividade...</option>
                         {schoolPowerActivities.map((activity) => (
@@ -1253,18 +1261,18 @@ export function CardDeConstrucao({
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                      <label className={`block text-sm font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-800 dark:text-white'}`}>
                         📋 Descrição da Atividade *
                       </label>
                       <textarea
                         value={manualActivityForm.description}
                         onChange={(e) => handleManualFormChange('description', e.target.value)}
-                        className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400"
+                        className={`w-full p-2 sm:p-3 border-2 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${isMobile ? 'bg-white/10 border-[#FF6B00]/30 text-white' : 'bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white border-[#FF6B00]/30 dark:border-[#FF6B00]/40'}`}
                         rows={4}
                         placeholder="Descreva detalhadamente o que você quer que seja feito nesta atividade..."
                         maxLength={500}
                       />
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <div className={`text-xs mt-1 ${isMobile ? 'text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
                         {manualActivityForm.description.length}/500 caracteres
                       </div>
                     </div>
@@ -1272,14 +1280,14 @@ export function CardDeConstrucao({
                     <div className="flex gap-3 pt-4">
                       <button
                         onClick={() => setShowAddActivityInterface(false)}
-                        className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-400 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                        className={`flex-1 px-4 py-3 font-semibold rounded-xl transition-colors duration-200 ${isMobile ? 'bg-white/10 text-white border border-white/30 hover:bg-white/20' : 'text-gray-600 dark:text-gray-300 border border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                       >
                         Cancelar
                       </button>
                       <button
                         onClick={handleAddManualActivity}
                         disabled={!manualActivityForm.title.trim() || !manualActivityForm.typeId || !manualActivityForm.description.trim()}
-                        className="flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className={`flex-1 px-4 py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${isMobile ? '' : ''}`}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -1291,20 +1299,19 @@ export function CardDeConstrucao({
                 </motion.div>
               ) : (
                 <div
-                  className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
-                    viewMode === 'grid' 
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 auto-rows-min' 
-                      : 'space-y-2 sm:space-y-3'
+                  className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${isMobile ? `grid grid-cols-1 gap-3 ${viewMode === 'grid' ? 'auto-rows-min' : ''}` : ''}
+                    ${viewMode === 'grid' && !isMobile
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 auto-rows-min'
+                      : !isMobile ? 'space-y-2 sm:space-y-3' : ''
                   }`}
                   style={{
-                    maxHeight: "calc(100vh - 250px)",
                     minHeight: "500px",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                   }}
                 >
-                  {(filterState === 'selected' 
-                    ? selectedActivities2 
+                  {(filterState === 'selected'
+                    ? selectedActivities2
                     : getCombinedActivities()
                   )?.map((activity, index) => {
                     const isSelected = selectedActivities2.some(
@@ -1321,13 +1328,13 @@ export function CardDeConstrucao({
                         } ${
                           isSelected
                             ? 'border-[#FF6B00] bg-[#FF6B00]/5 dark:bg-[#FF6B00]/10 shadow-lg transform scale-[1.01]'
-                            : 'border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md'
+                            : `border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 hover:border-[#FF6B00]/50 hover:shadow-md ${isMobile ? 'border-white/20 hover:border-white/30' : ''}`
                         }`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.3) }}
                         onClick={() => handleActivityToggle(activity)}
-                        style={{ minHeight: viewMode === 'grid' ? '180px' : '140px' }}
+                        style={{ minHeight: isMobile ? '140px' : viewMode === 'grid' ? '180px' : '140px' }}
                       >
                         {/* Badge Manual - para atividades manuais */}
                         {activity.isManual && (
@@ -1354,7 +1361,7 @@ export function CardDeConstrucao({
                         <div className="flex items-start gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <div 
+                              <div
                                 className={`icon-container ${isSelected ? 'active' : ''}`}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1369,28 +1376,28 @@ export function CardDeConstrucao({
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
-                                  background: isSelected 
-                                    ? 'linear-gradient(135deg, #FF6E06, #FF8A39)' 
+                                  background: isSelected
+                                    ? 'linear-gradient(135deg, #FF6E06, #FF8A39)'
                                     : 'rgba(255, 110, 6, 0.1)',
                                   transition: 'all 0.3s ease',
                                   position: 'relative',
                                   overflow: 'hidden',
                                   cursor: 'pointer',
-                                  boxShadow: isSelected 
-                                    ? '0 6px 12px rgba(255, 110, 6, 0.3)' 
+                                  boxShadow: isSelected
+                                    ? '0 6px 12px rgba(255, 110, 6, 0.3)'
                                     : 'none',
                                   transform: isSelected ? 'scale(1.05)' : 'scale(1)'
                                 }}
                               >
                                 {isSelected ? (
-                                  <svg 
-                                    className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
-                                    fill="currentColor" 
+                                  <svg
+                                    className="w-5 h-5 text-white transition-all duration-300 relative z-10"
+                                    fill="currentColor"
                                     viewBox="0 0 20 20"
                                   >
-                                    <path 
-                                      fillRule="evenodd" 
-                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                                       clipRule="evenodd"/>
                                   </svg>
                                 ) : (
@@ -1401,7 +1408,7 @@ export function CardDeConstrucao({
                                     }
                                   })
                                 )}
-                                <div 
+                                <div
                                   className="icon-glow"
                                   style={{
                                     position: 'absolute',
@@ -1411,24 +1418,24 @@ export function CardDeConstrucao({
                                     height: '20px',
                                     background: 'radial-gradient(circle, rgba(255, 110, 6, 0.5), transparent)',
                                     borderRadius: '50%',
-                                    transform: isSelected 
-                                      ? 'translate(-50%, -50%) scale(2.2)' 
+                                    transform: isSelected
+                                      ? 'translate(-50%, -50%) scale(2.2)'
                                       : 'translate(-50%, -50%) scale(0)',
                                     transition: 'transform 0.3s ease'
                                   }}
                                 />
                               </div>
 
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 pr-8">
+                              <h3 className={`flex-1 pr-8 ${isMobile ? 'text-white' : 'text-gray-900 dark:text-white'} ${isMobile ? 'line-clamp-2' : 'line-clamp-2'}`}>
                                 {activity.title}
                               </h3>
                             </div>
 
-                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-2 mb-2 text-sm">
+                            <p className={`leading-relaxed ${isMobile ? 'text-gray-300 line-clamp-2' : 'text-gray-600 dark:text-gray-400 text-sm line-clamp-2'} mb-2`}>
                               {activity.description}
                             </p>
 
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            <div className={`text-xs mt-1 ${isMobile ? 'text-gray-300' : 'text-gray-600 dark:text-gray-400'}`}>
                                         📊 {activity.difficulty} • ⏱️ {activity.duration || '30 min'}
                                       </div>
 
@@ -1453,9 +1460,9 @@ export function CardDeConstrucao({
                                             const displayValue = safeValue(value);
 
                                             return (
-                                              <div 
-                                                key={key} 
-                                                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
+                                              <div
+                                                key={key}
+                                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${isMobile ? 'bg-white/10 border-white/20 text-white' : 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40'} transition-all duration-200`}
                                               >
                                                 <span className="font-semibold">{key}:</span>
                                                 <span className="ml-1 truncate max-w-[150px]">{displayValue}</span>
@@ -1466,7 +1473,7 @@ export function CardDeConstrucao({
                                       )}
 
                             <div className="mt-2">
-                              <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded">
+                              <span className={`text-xs px-2 py-1 rounded ${isMobile ? 'bg-white/10 text-white/70' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                                 ID: {activity.id}
                               </span>
                             </div>
@@ -1474,39 +1481,39 @@ export function CardDeConstrucao({
                         </div>
 
                         {isSelected && (
-                          <div className="absolute inset-0 rounded-[32px] border-2 border-[#FF6B00] animate-pulse opacity-50 pointer-events-none"></div>
+                          <div className={`absolute inset-0 rounded-[32px] border-2 animate-pulse opacity-50 pointer-events-none ${isMobile ? 'border-white/30' : 'border-[#FF6B00]'}`}></div>
                         )}
                       </motion.div>
                     );
                   })}
 
                   {filterState === 'selected' && selectedActivities2.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className={`flex flex-col items-center justify-center py-12 text-center ${isMobile ? 'text-white' : ''}`}>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isMobile ? 'bg-white/10' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                        <svg className={`w-8 h-8 ${isMobile ? 'text-white/70' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      <h3 className={`text-lg font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                         Nenhuma atividade selecionada
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                      <p className={`text-sm max-w-xs ${isMobile ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>
                         Selecione algumas atividades primeiro para vê-las aqui
                       </p>
                     </div>
                   )}
 
                   {getCombinedActivities().length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className={`flex flex-col items-center justify-center py-12 text-center ${isMobile ? 'text-white' : ''}`}>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isMobile ? 'bg-white/10' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                        <svg className={`w-8 h-8 ${isMobile ? 'text-white/70' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      <h3 className={`text-lg font-semibold mb-2 ${isMobile ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                         Nenhuma atividade disponível
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                      <p className={`text-sm max-w-xs ${isMobile ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'}`}>
                         Adicione atividades manuais ou aguarde as sugestões da IA
                       </p>
                     </div>
@@ -1515,11 +1522,14 @@ export function CardDeConstrucao({
               )}
 
               {!showAddActivityInterface && (
-                <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+                <div className={`flex justify-end pt-3 sm:pt-4 border-t ${isMobile ? 'border-white/20' : 'border-gray-300 dark:border-gray-700'}`}>
                   <Button
                     onClick={handleApproveActionPlan}
                     disabled={selectedActivities2.length === 0 || isLoading}
-                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                    className={`px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base ${isMobile
+                      ? 'bg-white/10 text-white border border-white/30 hover:bg-white/20'
+                      : 'bg-[#FF6B00] hover:bg-[#D65A00] text-white'
+                    }`}
                   >
                     <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                     {isLoading
