@@ -153,7 +153,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
         
         @media (max-width: 768px) {
           .message-container {
-            width: 90%; /* Ajusta a largura para telas menores */
+            width: 95%; /* Aumenta a largura para telas menores */
+            max-width: calc(100vw - 20px); /* Garante que não ultrapasse a tela */
             border-radius: 16px;
           }
         }
