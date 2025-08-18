@@ -101,6 +101,17 @@ export function CardDeConstrucao({
   onResetFlow,
   isLoading 
 }: CardDeConstrucaoProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // Define breakpoint para mobile
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Chama uma vez ao montar
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
     materias: '',
     publicoAlvo: '',
@@ -854,7 +865,7 @@ export function CardDeConstrucao({
           <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
             {step === "contextualization" ? (
               <svg
-                className="w-5 h-5 sm:w-7 sm:h-7 text-white"
+                className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5 sm:w-7 sm:h-7'} text-white`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -868,7 +879,7 @@ export function CardDeConstrucao({
               </svg>
             ) : step === "actionPlan" ? (
               <svg
-                className="w-5 h-5 sm:w-7 sm:h-7 text-white"
+                className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5 sm:w-7 sm:h-7'} text-white`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -882,7 +893,7 @@ export function CardDeConstrucao({
               </svg>
             ) : (
               <svg
-                className="w-5 h-5 sm:w-7 sm:h-7 text-white animate-spin"
+                className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5 sm:w-7 sm:h-7'} text-white animate-spin`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -931,19 +942,19 @@ export function CardDeConstrucao({
             ></div>
 
             {/* Step indicators */}
-            <div className={`relative z-10 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 ${isMobile ? 'w-5 h-5' : 'w-6 h-6 sm:w-8 sm:h-8'} rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "contextualization" ? 'bg-white border-white text-[#FF6B00]' : 'bg-[#FF6B00] border-white text-white'
             }`}>
               {step === "contextualization" ? (
                 <span className="text-xs sm:text-sm font-semibold">1</span>
               ) : (
-                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-white`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
             </div>
 
-            <div className={`relative z-10 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 ${isMobile ? 'w-5 h-5' : 'w-6 h-6 sm:w-8 sm:h-8'} rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step === "actionPlan" ? 'bg-white border-white text-[#FF6B00]' :
               (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-[#FF6B00] border-white text-white' :
               'bg-white/20 border-white/30 text-white'
@@ -951,7 +962,7 @@ export function CardDeConstrucao({
               {step === "actionPlan" ? (
                 <span className="text-xs sm:text-sm font-semibold">2</span>
               ) : (step === "generating" || step === "generatingActivities" || step === "activities") ? (
-                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-white`} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
@@ -959,7 +970,7 @@ export function CardDeConstrucao({
               )}
             </div>
 
-            <div className={`relative z-10 w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+            <div className={`relative z-10 ${isMobile ? 'w-5 h-5' : 'w-6 h-6 sm:w-8 sm:h-8'} rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               (step === "generating" || step === "generatingActivities" || step === "activities") ? 'bg-white border-white text-[#FF6B00]' : 'bg-white/20 border-white/30 text-white'
             }`}>
               <span className="text-xs sm:text-sm font-semibold">3</span>
@@ -1388,7 +1399,7 @@ export function CardDeConstrucao({
                               >
                                 {isSelected ? (
                                   <svg 
-                                    className="w-5 h-5 text-white transition-all duration-300 relative z-10" 
+                                    className={`${isMobile ? 'w-3 h-3' : 'w-5 h-5'} text-white transition-all duration-300 relative z-10`} 
                                     fill="currentColor" 
                                     viewBox="0 0 20 20"
                                   >
@@ -1399,7 +1410,7 @@ export function CardDeConstrucao({
                                   </svg>
                                 ) : (
                                   React.createElement(getIconByActivityId(activity.id), {
-                                    className: `w-5 h-5 transition-all duration-300 relative z-10`,
+                                    className: `${isMobile ? 'w-3 h-3' : 'w-5 h-5'} transition-all duration-300 relative z-10`,
                                     style: {
                                       color: '#FF6E06'
                                     }
