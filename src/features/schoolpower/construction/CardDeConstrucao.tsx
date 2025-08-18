@@ -19,59 +19,8 @@ import {
   FileText,
   Edit3,
   Eye,
-  Play,
-  Wrench,
-  CheckSquare,
-  Filter,
-  Trophy,
-  Zap,
-  Brain,
-  Heart,
-  PenTool,
-  Presentation,
-  Search,
-  MapPin,
-  Calculator,
-  Globe,
-  Microscope,
-  Palette,
-  Music,
-  Camera,
-  Video,
-  Headphones,
-  Gamepad2,
-  Puzzle,
-  Award,
-  Star,
-  Flag,
-  Compass,
-  Download,
-  Upload,
-  Share2,
-  MessageSquare,
-  ThumbsUp,
-  Pause,
-  SkipForward,
-  Volume2,
-  Wifi,
-  Battery,
-  Shield,
-  Lock,
-  Key,
-  Mail,
-  Phone,
-  Home,
-  Car,
-  Plane,
-  TreePine,
-  Sun,
-  Moon,
-  Cloud,
-  Umbrella,
-  Snowflake,
-  Triangle,
-  Sparkles
-} from "lucide-react";
+  Play
+} from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -80,6 +29,17 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { ConstructionGrid } from './ConstructionGrid';
 
+import {
+  Wrench, CheckSquare, Filter,
+  Trophy, Zap, Brain, Heart,
+  PenTool, Presentation, Search, MapPin, Calculator, Globe,
+  Microscope, Palette, Music, Camera, Video, Headphones,
+  Gamepad2, Puzzle, Award, Star, Flag, Compass,
+  Download, Upload, Share2, MessageSquare, ThumbsUp,
+  Pause, SkipForward, Volume2, Wifi, Battery,
+  Shield, Lock, Key, Mail, Phone, Home, Car, Plane,
+  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle
+} from "lucide-react";
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
@@ -1566,7 +1526,7 @@ export function CardDeConstrucao({
                   <Button
                     onClick={handleApproveActionPlan}
                     disabled={selectedActivities2.length === 0 || isLoading}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${isMobile
+                    className={`px-4 sm:px-6 py-2 sm:py-3 font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base ${isMobile
                       ? 'bg-white/10 text-white border border-white/30 hover:bg-white/20'
                       : 'bg-[#FF6B00] hover:bg-[#D65A00] text-white'
                     }`}

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Zap, Clock, Users, Target, BookOpen, Lightbulb, BarChart3, FileText, Video, Gamepad2, Calculator, Sparkles } from 'lucide-react';
+import { AlertTriangle, Zap, Clock, Users, Target, BookOpen, Lightbulb, BarChart3, FileText, Video, Gamepad2, Calculator } from 'lucide-react';
 
 interface CarrosselDoresSolucoesProps {
   className?: string;

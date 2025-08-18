@@ -479,7 +479,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
       console.log('📊 Atividade aprovada com dados completos:', approvedActivity);
 
-      // Salvar dados específicos para preenchimento automatico
+      // Salvar dados específicos para preenchimento automático
       if (activity.id === 'plano-aula') {
         console.log('📚 Salvando dados específicos do Plano de Aula para preenchimento automático');
 
