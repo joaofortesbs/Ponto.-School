@@ -22,10 +22,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
 
-  const handleCentralExpandedChange = (expanded: boolean) => {
-    setIsCentralExpanded(expanded);
-  };
-
   // Hook para gerenciar o fluxo do School Power
   const {
     flowState,
