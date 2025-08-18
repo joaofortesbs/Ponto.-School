@@ -119,40 +119,8 @@ export const QuizWithSchoolPower: React.FC = () => {
 
   const renderSchoolPower = () => (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 relative">
-      {/* Barra de navegação superior */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm border-b border-white/10">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              onClick={goToIntro}
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar ao Quiz
-            </Button>
-            <div className="h-4 w-px bg-white/20" />
-            <span className="text-white/80 text-sm">
-              School Power - Modo Quiz
-            </span>
-          </div>
-          <Button
-            onClick={resetQuiz}
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/10"
-          >
-            <Home className="h-4 w-4 mr-2" />
-            Início
-          </Button>
-        </div>
-      </div>
-
-      {/* Interface completa do School Power com padding top para a barra de navegação */}
-      <div className="pt-16">
-        <SchoolPowerPage isQuizMode={true} />
-      </div>
+      {/* Interface completa do School Power */}
+      <SchoolPowerPage isQuizMode={true} />
     </div>
   );
 
