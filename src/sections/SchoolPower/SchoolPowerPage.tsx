@@ -104,7 +104,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
                 style={{ marginTop: "7px" }}
               >
-                <TopHeader isDarkTheme={isDarkTheme} />
+                <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
               </div>
 
               {/* Ripple centralizado */}
