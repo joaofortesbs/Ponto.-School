@@ -851,12 +851,11 @@ export function CardDeConstrucao({
         stiffness: 100,
         damping: 15,
       }}
-      className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
-      style={{
-        width: "1353px",
-        height: "773px",
-        margin: "0 auto"
-      }}
+      className={`relative rounded-2xl shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321] ${
+        isMobile 
+          ? 'w-[95vw] h-[85vh] max-w-[400px] max-h-[600px] p-4 mx-auto' 
+          : 'w-[90vw] h-[85vh] max-w-[1200px] max-h-[800px] p-6 mx-auto'
+      }`}
       data-theme="adaptive"
     >
       {/* Cabeçalho Persistente Fixo */}
@@ -1084,10 +1083,12 @@ export function CardDeConstrucao({
               className="flex-1 flex flex-col overflow-hidden"
             >
               <div
-                className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2"
+                className={`flex-1 overflow-y-auto mb-3 sm:mb-4 pr-1 sm:pr-2 ${
+                  isMobile ? 'space-y-3' : 'space-y-4'
+                }`}
                 style={{
-                  maxHeight: "calc(100vh - 200px)",
-                  minHeight: "400px",
+                  maxHeight: isMobile ? "calc(85vh - 180px)" : "calc(85vh - 200px)",
+                  minHeight: isMobile ? "300px" : "400px",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#FF6B00 rgba(255,107,0,0.1)",
                 }}
@@ -1101,8 +1102,10 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("materias", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
-                    rows={2}
+                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
+                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
+                    }`}
+                    rows={isMobile ? 2 : 3}
                     placeholder="Descreva as matérias e temas que você quer estudar..."
                   />
                 </div>
@@ -1117,7 +1120,9 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("publicoAlvo", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
+                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
+                    }`}
                     placeholder="Ex: Ensino Médio, 3º ano, vestibular..."
                   />
                 </div>
@@ -1131,8 +1136,10 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("restricoes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
-                    rows={2}
+                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
+                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
+                    }`}
+                    rows={isMobile ? 2 : 3}
                     placeholder="Descreva limitações de tempo, dificuldades específicas, etc..."
                   />
                 </div>
@@ -1147,7 +1154,9 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("datasImportantes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
+                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
+                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
+                    }`}
                     placeholder="Ex: Prova em 2 semanas, ENEM em novembro..."
                   />
                 </div>
@@ -1161,18 +1170,26 @@ export function CardDeConstrucao({
                     onChange={(e) =>
                       handleInputChange("observacoes", e.target.value)
                     }
-                    className="w-full p-2 sm:p-3 border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 text-sm"
-                    rows={2}
+                    className={`w-full border-2 border-[#FF6B00]/30 dark:border-[#FF6B00]/40 bg-white/90 dark:bg-gray-800/80 text-gray-900 dark:text-white rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] transition-all duration-200 backdrop-blur-sm placeholder-gray-500 dark:placeholder-gray-400 ${
+                      isMobile ? 'p-2 text-sm' : 'p-3 text-base'
+                    }`}
+                    rows={isMobile ? 2 : 3}
                     placeholder="Informações adicionais que podem ajudar..."
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end pt-3 sm:pt-4 border-t border-gray-300 dark:border-gray-700">
+              <div className={`flex justify-end border-t border-gray-300 dark:border-gray-700 ${
+                isMobile ? 'pt-3' : 'pt-4'
+              }`}>
                 <button
                   onClick={handleSubmitContextualization}
                   disabled={!isContextualizationValid || isLoading}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+                  className={`bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isMobile 
+                      ? 'w-full px-4 py-2 text-sm' 
+                      : 'px-6 py-3 text-base'
+                  }`}
                 >
                   {isLoading ? "Processando..." : "Gerar Plano de Aula"}
                 </button>
