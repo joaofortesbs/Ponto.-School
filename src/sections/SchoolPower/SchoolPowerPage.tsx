@@ -165,8 +165,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
             background: 'rgba(15, 23, 42, 0.95)'
           }}
         >
-          <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-4'}`}>
-            <div className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-7xl'} mx-auto`}>
+          <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-1' : 'p-4'}`}>
+            <div className={`w-full ${isMobile ? 'max-w-[98vw]' : 'max-w-7xl'} mx-auto`}>
               <CardDeConstrucao
                 flowData={{
                   ...flowData,
