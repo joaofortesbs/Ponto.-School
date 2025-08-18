@@ -13,6 +13,7 @@ import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerF
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
@@ -21,6 +22,7 @@ interface SchoolPowerPageProps {
 export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
+  const isMobile = useIsMobile();
 
   // Hook para gerenciar o fluxo do School Power
   const {
@@ -82,7 +84,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   return (
     <div
-      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
+      className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[90vh] min-h-[650px]'} w-full flex-col items-center justify-center overflow-hidden rounded-lg`}
       style={{ backgroundColor: "transparent" }}
     >
       {/* Background de estrelas - sempre visível */}
@@ -91,18 +93,26 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {/* Componentes padrões - só aparecem quando flowState é 'idle' */}
       {componentsVisible && (
         <>
-          {/* Vertical dock positioned at right side */}
-          <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-            <SideMenu />
-          </div>
+          {/* Vertical dock positioned at right side - hidden on mobile quiz mode */}
+          {!(isMobile && isQuizMode) && (
+            <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+              <SideMenu />
+            </div>
+          )}
 
           {/* Container Ripple fixo e centralizado no background */}
-          <div className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
-            <div className="relative" style={{ width: "900px", height: "617px" }}>
+          <div className={`absolute ${isMobile && isQuizMode ? 'top-1/2' : 'top-[57%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
+            <div 
+              className="relative" 
+              style={{ 
+                width: isMobile && isQuizMode ? "300px" : "900px", 
+                height: isMobile && isQuizMode ? "400px" : "617px" 
+              }}
+            >
               {/* TechCircle posicionado no topo do container Ripple */}
               <div
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
-                style={{ marginTop: "7px" }}
+                style={{ marginTop: isMobile && isQuizMode ? "4px" : "7px" }}
               >
                 <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
               </div>
@@ -127,7 +137,10 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               </div>
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
-              <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
+              <div 
+                className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`} 
+                style={{ marginTop: isMobile && isQuizMode ? "-100px" : "-150px" }}
+              >
                 <ChatInput 
                   isDarkTheme={isDarkTheme} 
                   onSend={handleSendMessage}
@@ -149,8 +162,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
             background: 'rgba(15, 23, 42, 0.95)'
           }}
         >
-          <div className="flex items-center justify-center w-full h-full p-4">
-            <div className="w-full max-w-7xl mx-auto">
+          <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-4'}`}>
+            <div className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-7xl'} mx-auto`}>
               <CardDeConstrucao
                 flowData={{
                   ...flowData,

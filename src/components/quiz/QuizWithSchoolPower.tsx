@@ -10,9 +10,11 @@ import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
 import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
 import { QuizSteps } from './QuizSteps';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const QuizWithSchoolPower: React.FC = () => {
   const { state, quizSteps, goToQuiz, goToSchoolPower, goToIntro, goToFinal, answerQuizStep, resetQuiz } = useQuizSchoolPower();
+  const isMobile = useIsMobile();
 
   // Log apenas quando há mudança de estado importante
   React.useEffect(() => {
@@ -31,10 +33,10 @@ export const QuizWithSchoolPower: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="w-full max-w-5xl"
+            className={`w-full ${isMobile ? 'max-w-sm mx-4' : 'max-w-5xl'}`}
           >
             <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
-              <CardContent className="p-8 md:p-12">
+              <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'}`}>
                 {/* Barra de Progresso Simplificada na Intro */}
                 <div className="mb-10">
                   <div className="flex justify-between items-center mb-3">
@@ -59,28 +61,28 @@ export const QuizWithSchoolPower: React.FC = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
-                  className="text-center space-y-8"
+                  className={`text-center ${isMobile ? 'space-y-6' : 'space-y-8'}`}
                 >
-                  <div className="text-center space-y-8 mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                  <div className={`text-center ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'}`}>
+                    <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 leading-tight`}>
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
 
                     {/* Botão Quero Testar Agora - Agora vai para o quiz */}
                     <motion.div
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: isMobile ? 1.02 : 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      className="my-8"
+                      className={`${isMobile ? 'my-6' : 'my-8'}`}
                     >
                       <Button 
                         onClick={goToQuiz}
-                        size="lg"
-                        className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
+                        size={isMobile ? "default" : "lg"}
+                        className={`bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white ${isMobile ? 'px-8 py-3' : 'px-16 py-5'} ${isMobile ? 'rounded-xl' : 'rounded-2xl'} font-bold ${isMobile ? 'text-lg' : 'text-xl'} shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0`}
                       >
-                        <Play className="mr-3 h-7 w-7" />
-                        QUERO TESTAR AGORA
+                        <Play className={`${isMobile ? 'mr-2 h-5 w-5' : 'mr-3 h-7 w-7'}`} />
+                        {isMobile ? 'TESTAR AGORA' : 'QUERO TESTAR AGORA'}
                       </Button>
                     </motion.div>
 
