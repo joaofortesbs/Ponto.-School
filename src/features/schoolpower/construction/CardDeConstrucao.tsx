@@ -828,6 +828,9 @@ export function CardDeConstrucao({
     }
   };
 
+  // Determina se o modo Quiz está ativo (assumindo que 'activities' é o modo Quiz)
+  const isQuizMode = step === 'activities';
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -1034,13 +1037,17 @@ export function CardDeConstrucao({
           className="relative z-10 h-full flex flex-col pt-16"
         >
           <div className="flex items-center justify-end mb-4">
-            <button
-              onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-            >
-              Voltar ao início
-            </button>
-          </div>
+            {/* Botão de voltar - escondido em modo Quiz */}
+          {!isQuizMode && (
+            <div className="absolute top-4 right-4 z-20">
+              <button
+                onClick={onResetFlow}
+                className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+              >
+                Voltar ao início
+              </button>
+            </div>
+          )}
 
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
@@ -1484,7 +1491,7 @@ export function CardDeConstrucao({
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
