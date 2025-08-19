@@ -61,7 +61,8 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
 
 // Componente do Cronômetro e Botão de Acesso Vitalício
 const TimerCard: React.FC = () => {
-  const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutos em segundos
+  const TOTAL_TIME = 5 * 60; // 5 minutos em segundos
+  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
@@ -69,11 +70,13 @@ const TimerCard: React.FC = () => {
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
           setIsActive(false);
+          console.log('⏰ Cronômetro finalizado!');
           return 0;
         }
-        return prev - 1;
+        return newTime;
       });
     }, 1000);
 
@@ -86,8 +89,12 @@ const TimerCard: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Calcula a porcentagem de progresso (de 100% para 0%)
+  const progressPercentage = (timeLeft / TOTAL_TIME) * 100;
+
   const handleVitalicioClick = () => {
     console.log('🎯 Usuário clicou em "Quero acesso vitalício"');
+    console.log(`⏰ Tempo restante: ${formatTime(timeLeft)}`);
     // Aqui você pode adicionar a lógica para redirecionar ou abrir modal de pagamento
     alert('Redirecionando para página de acesso vitalício...');
   };
@@ -137,14 +144,26 @@ const TimerCard: React.FC = () => {
         </div>
       </div>
 
-      {/* Barra de progresso do tempo */}
-      <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-        <div 
-          className={`h-1.5 rounded-full transition-all duration-1000 ease-linear ${
+      {/* Barra de progresso do tempo - funcional e progressiva */}
+      <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+        <motion.div 
+          className={`h-1.5 rounded-full transition-colors duration-500 ${
             timeLeft <= 60 ? 'bg-red-500' : timeLeft <= 180 ? 'bg-orange-500' : 'bg-[#FF6B00]'
           }`}
-          style={{ width: `${(timeLeft / (5 * 60)) * 100}%` }}
+          initial={{ width: "100%" }}
+          animate={{ width: `${progressPercentage}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         />
+      </div>
+
+      {/* Indicador numérico de progresso */}
+      <div className="mt-1 flex justify-between items-center">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {Math.round(progressPercentage)}% restante
+        </span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {TOTAL_TIME - timeLeft}s decorridos
+        </span>
       </div>
 
       {/* Texto de urgência */}
@@ -158,6 +177,19 @@ const TimerCard: React.FC = () => {
             timeLeft <= 60 ? 'text-red-600' : 'text-orange-600'
           }`}>
             ⚡ Oferta por tempo limitado!
+          </div>
+        </motion.div>
+      )}
+
+      {/* Alerta quando o tempo acaba */}
+      {timeLeft <= 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-2 text-center"
+        >
+          <div className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">
+            🔥 Tempo esgotado! Não perca esta oportunidade!
           </div>
         </motion.div>
       )}
