@@ -59,11 +59,179 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   name: activity.name || activity.title || activity.description
 }));
 
+// Componente do Modal de Acesso Vitalício
+const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-2xl w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Seja 15x mais produtivo com IA!
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Transforme sua carreira em minutos!
+          </p>
+        </div>
+
+        {/* Gráfico */}
+        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 mb-6">
+          <div className="relative h-48">
+            {/* Linha do gráfico */}
+            <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
+              {/* Grid lines */}
+              <defs>
+                <pattern id="grid" width="80" height="30" patternUnits="userSpaceOnUse">
+                  <path d="M 80 0 L 0 0 0 30" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              
+              {/* Linha de progresso */}
+              <path
+                d="M 20 120 Q 80 110 100 100 T 180 80 Q 240 70 280 60 T 380 30"
+                fill="none"
+                stroke="#FF6B00"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              
+              {/* Pontos no gráfico */}
+              <circle cx="20" cy="120" r="4" fill="#FF6B00" />
+              <circle cx="100" cy="100" r="4" fill="#FF6B00" />
+              <circle cx="180" cy="80" r="4" fill="#FF6B00" />
+              <circle cx="280" cy="60" r="4" fill="#FF6B00" />
+              <circle cx="380" cy="30" r="4" fill="#FF6B00" />
+              
+              {/* Labels */}
+              <text x="20" y="140" textAnchor="middle" className="text-xs fill-gray-500">Ago</text>
+              <text x="100" y="140" textAnchor="middle" className="text-xs fill-gray-500">Set</text>
+              <text x="180" y="140" textAnchor="middle" className="text-xs fill-gray-500">Out</text>
+              <text x="280" y="140" textAnchor="middle" className="text-xs fill-gray-500">Nov</text>
+              <text x="380" y="140" textAnchor="middle" className="text-xs fill-gray-500">Dez</text>
+            </svg>
+            
+            {/* Labels laterais */}
+            <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 dark:text-gray-400">
+              <span>Ponto.<br/>School</span>
+              <span>Você</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Benefícios */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">+15 horas por semana</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">Alunos engajados</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">Mais reputação na profissão</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">Materiais personalizados</span>
+          </div>
+        </div>
+
+        {/* Problemas resolvidos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Dor de cabeça</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Alunos desmotivados</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Falta de criatividade</span>
+          </div>
+        </div>
+
+        {/* Botões */}
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+          >
+            Talvez mais tarde
+          </button>
+          <button
+            onClick={() => {
+              console.log('🚀 Redirecionando para página de pagamento do acesso vitalício');
+              alert('Redirecionando para página de pagamento...');
+            }}
+            className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            Quero ser 15x mais produtivo!
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 // Componente do Cronômetro e Botão de Acesso Vitalício
 const TimerCard: React.FC = () => {
   const TOTAL_TIME = 5 * 60; // 5 minutos em segundos
   const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
   const [isActive, setIsActive] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (!isActive || timeLeft <= 0) return;
@@ -95,8 +263,7 @@ const TimerCard: React.FC = () => {
   const handleVitalicioClick = () => {
     console.log('🎯 Usuário clicou em "Quero acesso vitalício"');
     console.log(`⏰ Tempo restante: ${formatTime(timeLeft)}`);
-    // Aqui você pode adicionar a lógica para redirecionar ou abrir modal de pagamento
-    alert('Redirecionando para página de acesso vitalício...');
+    setShowModal(true);
   };
 
   return (
@@ -156,15 +323,7 @@ const TimerCard: React.FC = () => {
         />
       </div>
 
-      {/* Indicador numérico de progresso */}
-      <div className="mt-1 flex justify-between items-center">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {Math.round(progressPercentage)}% restante
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {TOTAL_TIME - timeLeft}s decorridos
-        </span>
-      </div>
+      
 
       {/* Texto de urgência */}
       {timeLeft <= 180 && timeLeft > 0 && (
@@ -193,6 +352,12 @@ const TimerCard: React.FC = () => {
           </div>
         </motion.div>
       )}
+
+      {/* Modal de Acesso Vitalício */}
+      <AcessoVitalicioModal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+      />
     </motion.div>
   );
 };
