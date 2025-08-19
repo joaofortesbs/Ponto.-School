@@ -1038,16 +1038,17 @@ export function CardDeConstrucao({
         >
           <div className="flex items-center justify-end mb-4">
             {/* Botão de voltar - escondido em modo Quiz */}
-          {!isQuizMode && (
-            <div className="absolute top-4 right-4 z-20">
-              <button
-                onClick={onResetFlow}
-                className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-              >
-                Voltar ao início
-              </button>
-            </div>
-          )}
+            {!isQuizMode && (
+              <div className="absolute top-4 right-4 z-20">
+                <button
+                  onClick={onResetFlow}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                >
+                  Voltar ao início
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden">
