@@ -59,6 +59,112 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   name: activity.name || activity.title || activity.description
 }));
 
+// Componente do Cronômetro e Botão de Acesso Vitalício
+const TimerCard: React.FC = () => {
+  const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutos em segundos
+  const [isActive, setIsActive] = useState(true);
+
+  useEffect(() => {
+    if (!isActive || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setIsActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isActive, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleVitalicioClick = () => {
+    console.log('🎯 Usuário clicou em "Quero acesso vitalício"');
+    // Aqui você pode adicionar a lógica para redirecionar ou abrir modal de pagamento
+    alert('Redirecionando para página de acesso vitalício...');
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, x: 50 }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="absolute top-4 right-4 z-30 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 min-w-[280px]"
+    >
+      <div className="flex items-center justify-between gap-4">
+        {/* Cronômetro */}
+        <div className="flex flex-col items-center">
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            Tempo Restante
+          </div>
+          <div className={`text-2xl font-bold transition-colors duration-300 ${
+            timeLeft <= 60 ? 'text-red-500' : timeLeft <= 180 ? 'text-orange-500' : 'text-[#FF6B00]'
+          }`}>
+            {formatTime(timeLeft)}
+          </div>
+          {timeLeft <= 0 && (
+            <div className="text-xs text-red-500 font-medium mt-1">
+              Tempo esgotado!
+            </div>
+          )}
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
+
+        {/* Botão de Acesso Vitalício */}
+        <div className="flex-1">
+          <button
+            onClick={handleVitalicioClick}
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold text-sm rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span>Quero acesso</span>
+              <span>vitalício</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Barra de progresso do tempo */}
+      <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+        <div 
+          className={`h-1.5 rounded-full transition-all duration-1000 ease-linear ${
+            timeLeft <= 60 ? 'bg-red-500' : timeLeft <= 180 ? 'bg-orange-500' : 'bg-[#FF6B00]'
+          }`}
+          style={{ width: `${(timeLeft / (5 * 60)) * 100}%` }}
+        />
+      </div>
+
+      {/* Texto de urgência */}
+      {timeLeft <= 180 && timeLeft > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 text-center"
+        >
+          <div className={`text-xs font-medium ${
+            timeLeft <= 60 ? 'text-red-600' : 'text-orange-600'
+          }`}>
+            ⚡ Oferta por tempo limitado!
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+};
+
 export interface ContextualizationData {
   materias: string;
   publicoAlvo: string;
@@ -1051,12 +1157,17 @@ export function CardDeConstrucao({
           </div>
 
           {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden relative">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
             <ConstructionInterface 
               approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
               handleEditActivity={handleEditActivity} 
             />
+            
+            {/* Cronômetro e Botão de Acesso Vitalício - Apenas na página de Quiz */}
+            {isQuizMode && selectedActivities.length > 0 && (
+              <TimerCard />
+            )}
           </div>
         </motion.div>
       ) : (
