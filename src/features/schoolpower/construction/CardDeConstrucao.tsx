@@ -59,8 +59,45 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   name: activity.name || activity.title || activity.description
 }));
 
-// Componente do Modal de Acesso Vitalício
+// Componente do Modal de Acesso Vitalício com código exato fornecido
 const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const [data, setData] = useState([]);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsVisible(false);
+      setData([]);
+      return;
+    }
+
+    // Animação de entrada do card
+    setTimeout(() => setIsVisible(true), 100);
+
+    // Dados iniciais
+    const initialData = [
+      { name: 'Jul', value: 18 },
+      { name: 'Ago', value: 22 },
+      { name: 'Set', value: 45 },
+      { name: 'Out', value: 48 },
+      { name: 'Nov', value: 68 },
+      { name: 'Dez', value: 78 }
+    ];
+
+    // Animar crescimento dos dados
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex < initialData.length) {
+        setData(initialData.slice(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -68,7 +105,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-8"
       onClick={onClose}
     >
       <motion.div
@@ -76,135 +113,191 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 50 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-2xl w-full mx-4"
+        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl w-full mx-auto max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Seja 15x mais produtivo com IA!
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Transforme sua carreira em minutos!
-          </p>
-        </div>
+        {/* Card Principal do Gráfico */}
+        <div 
+          className={`bg-white rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 w-full h-auto min-h-60 sm:min-h-80 transform transition-all duration-1000 ease-out ${
+            isVisible 
+              ? 'translate-y-0 opacity-100 scale-100' 
+              : 'translate-y-10 opacity-0 scale-95'
+          }`}
+          style={{
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+          }}
+        >
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2 text-center sm:text-left">
+              Seja 15x mais produtivo com IA!
+            </h3>
+            <p className="text-gray-500 text-xs sm:text-sm text-center sm:text-left">
+              Transforme sua carreira em minutos!
+            </p>
+          </div>
 
-        {/* Gráfico */}
-        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 mb-6">
-          <div className="relative h-48">
-            {/* Linha do gráfico */}
-            <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
+          <div className="h-32 sm:h-40 lg:h-48 w-full relative">
+            <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
               {/* Grid lines */}
               <defs>
-                <pattern id="grid" width="80" height="30" patternUnits="userSpaceOnUse">
-                  <path d="M 80 0 L 0 0 0 30" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
-                </pattern>
+                <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#F97316" />
+                  <stop offset="100%" stopColor="#FB923C" />
+                </linearGradient>
               </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
               
-              {/* Linha de progresso */}
-              <path
-                d="M 20 120 Q 80 110 100 100 T 180 80 Q 240 70 280 60 T 380 30"
-                fill="none"
-                stroke="#FF6B00"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
+              {/* Linha de progresso animada */}
+              {data.length >= 2 && (
+                <path
+                  d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
+                    `L ${20 + index * 76} ${160 - item.value * 1.5}`
+                  ).join(' ')}`}
+                  fill="none"
+                  stroke="url(#gradient)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  style={{
+                    strokeDasharray: '1000',
+                    strokeDashoffset: isVisible ? '0' : '1000',
+                    transition: 'stroke-dashoffset 2s ease-in-out'
+                  }}
+                />
+              )}
               
               {/* Pontos no gráfico */}
-              <circle cx="20" cy="120" r="4" fill="#FF6B00" />
-              <circle cx="100" cy="100" r="4" fill="#FF6B00" />
-              <circle cx="180" cy="80" r="4" fill="#FF6B00" />
-              <circle cx="280" cy="60" r="4" fill="#FF6B00" />
-              <circle cx="380" cy="30" r="4" fill="#FF6B00" />
+              {data.map((item, index) => (
+                <circle 
+                  key={index}
+                  cx={20 + index * 76} 
+                  cy={160 - item.value * 1.5} 
+                  r="4" 
+                  fill="#F97316"
+                  stroke="#ffffff"
+                  strokeWidth="2"
+                  className={`transform transition-all duration-800 ease-out ${
+                    isVisible ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                  }`}
+                  style={{ transitionDelay: `${index * 400 + 800}ms` }}
+                />
+              ))}
               
-              {/* Labels */}
-              <text x="20" y="140" textAnchor="middle" className="text-xs fill-gray-500">Ago</text>
-              <text x="100" y="140" textAnchor="middle" className="text-xs fill-gray-500">Set</text>
-              <text x="180" y="140" textAnchor="middle" className="text-xs fill-gray-500">Out</text>
-              <text x="280" y="140" textAnchor="middle" className="text-xs fill-gray-500">Nov</text>
-              <text x="380" y="140" textAnchor="middle" className="text-xs fill-gray-500">Dez</text>
+              {/* Labels do eixo X */}
+              {data.map((item, index) => (
+                <text 
+                  key={index}
+                  x={20 + index * 76} 
+                  y="185" 
+                  textAnchor="middle" 
+                  className="text-xs fill-gray-400"
+                  style={{ fontSize: 10 }}
+                >
+                  {item.name}
+                </text>
+              ))}
             </svg>
             
             {/* Labels laterais */}
-            <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 dark:text-gray-400">
-              <span>Ponto.<br/>School</span>
-              <span>Você</span>
-            </div>
+            {data.length >= 2 && (
+              <div 
+                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 bg-white px-1 sm:px-2 py-1 rounded shadow-sm transform -translate-x-1/2 -translate-y-6 sm:-translate-y-8 transition-all duration-500 ${
+                  isVisible ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  left: `${5 + (1 / 5) * 80}%`,
+                  top: `${100 - (22 / 78) * 70}%`,
+                  transitionDelay: '1200ms'
+                }}
+              >
+                Você
+              </div>
+            )}
+            
+            {data.length >= 6 && (
+              <div 
+                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 bg-white px-1 sm:px-2 py-1 rounded shadow-sm transform -translate-x-1/2 -translate-y-6 sm:-translate-y-8 transition-all duration-500 ${
+                  isVisible ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  left: `${20 + (5 / 5) * 80}%`,
+                  top: `${100 - (78 / 78) * 70}%`,
+                  transitionDelay: '2400ms'
+                }}
+              >
+                Ponto. School
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Benefícios */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-700 dark:text-gray-300">+15 horas por semana</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-700 dark:text-gray-300">Alunos engajados</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-700 dark:text-gray-300">Mais reputação na profissão</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-700 dark:text-gray-300">Materiais personalizados</span>
-          </div>
-        </div>
-
-        {/* Problemas resolvidos */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Dor de cabeça</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Alunos desmotivados</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Falta de criatividade</span>
+        
+        {/* Checklist - Benefícios vs Problemas */}
+        <div 
+          className={`bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-full mt-4 sm:mt-6 transform transition-all duration-1000 ease-out delay-500 ${
+            isVisible 
+              ? 'translate-y-0 opacity-100 scale-100' 
+              : 'translate-y-10 opacity-0 scale-95'
+          }`}
+          style={{
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+          }}
+        >
+          <div className="space-y-3 sm:space-y-4">
+            {[
+              { text: '+15 horas por semana', type: 'positive' },
+              { text: 'Alunos engajados', type: 'positive' },
+              { text: 'Mais reputação na profissão', type: 'positive' },
+              { text: 'Materiais personalizados', type: 'positive' },
+              { text: 'Dor de cabeça', type: 'negative' },
+              { text: 'Alunos desmotivados', type: 'negative' },
+              { text: 'Falta de criatividade', type: 'negative' }
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center space-x-3 transform transition-all duration-500 ease-out ${
+                  isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                }`}
+                style={{ transitionDelay: `${800 + index * 200}ms` }}
+              >
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
+                  item.type === 'positive' 
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
+                    : 'bg-gradient-to-r from-red-500 to-red-400'
+                }`}>
+                  {item.type === 'positive' ? (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  ) : (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className={`font-medium text-sm sm:text-base ${
+                  item.type === 'positive' ? 'text-gray-700' : 'text-gray-600 line-through'
+                }`}>{item.text}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Botões */}
-        <div className="flex gap-4 justify-center">
+        <div className="flex gap-4 justify-center mt-6">
           <button
             onClick={onClose}
             className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
