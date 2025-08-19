@@ -144,109 +144,172 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                   <stop offset="100%" stopColor="#FB923C" />
                 </linearGradient>
                 <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                   <feMerge> 
                     <feMergeNode in="coloredBlur"/>
                     <feMergeNode in="SourceGraphic"/>
                   </feMerge>
                 </filter>
                 <filter id="drop-shadow">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#F97316" floodOpacity="0.3"/>
+                  <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#F97316" floodOpacity="0.4"/>
+                </filter>
+                <filter id="soft-glow">
+                  <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
                 </filter>
               </defs>
               
-              {/* Grid de fundo sutil */}
+              {/* Grid de fundo sutil com animação */}
               <defs>
                 <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
                   <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" strokeWidth="0.5" opacity="0.3"/>
                 </pattern>
               </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
+              <rect 
+                width="100%" 
+                height="100%" 
+                fill="url(#grid)"
+                style={{
+                  opacity: isVisible ? 0.3 : 0,
+                  transition: 'opacity 1s ease-out',
+                  transitionDelay: '200ms'
+                }}
+              />
               
-              {/* Área sombreada sob a linha */}
+              {/* Área sombreada sob a linha com animação aprimorada */}
               {data.length >= 2 && (
                 <path
                   d={`M 20 160 L ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
                     `L ${20 + index * 95} ${160 - item.value * 1.5}`
                   ).join(' ')} L ${20 + (data.length - 1) * 95} 160 Z`}
                   fill="url(#gradient)"
-                  fillOpacity="0.1"
-                  className="transition-all duration-1000 ease-out"
+                  fillOpacity="0.15"
+                  filter="url(#soft-glow)"
                   style={{
                     opacity: isVisible ? 1 : 0,
                     transform: isVisible ? 'scaleY(1)' : 'scaleY(0)',
                     transformOrigin: 'bottom',
-                    transitionDelay: '800ms'
+                    transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    transitionDelay: '1s'
                   }}
                 />
               )}
               
-              {/* Linha de progresso animada */}
+              {/* Linha de progresso com animação suave e crescimento */}
               {data.length >= 2 && (
-                <path
-                  d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
-                    `L ${20 + index * 95} ${160 - item.value * 1.5}`
-                  ).join(' ')}`}
-                  fill="none"
-                  stroke="url(#gradient)"
-                  strokeWidth={4}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  filter="url(#drop-shadow)"
-                  style={{
-                    strokeDasharray: '1000',
-                    strokeDashoffset: isVisible ? '0' : '1000',
-                    transition: 'stroke-dashoffset 2.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                />
+                <>
+                  {/* Linha base para efeito de crescimento */}
+                  <path
+                    d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
+                      `L ${20 + index * 95} ${160 - item.value * 1.5}`
+                    ).join(' ')}`}
+                    fill="none"
+                    stroke="#F97316"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity="0.3"
+                    style={{
+                      strokeDasharray: '800',
+                      strokeDashoffset: isVisible ? '0' : '800',
+                      transition: 'stroke-dashoffset 2s ease-in-out',
+                      transitionDelay: '800ms'
+                    }}
+                  />
+                  
+                  {/* Linha principal com efeito de crescimento animado */}
+                  <path
+                    d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
+                      `L ${20 + index * 95} ${160 - item.value * 1.5}`
+                    ).join(' ')}`}
+                    fill="none"
+                    stroke="url(#gradient)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    filter="url(#drop-shadow)"
+                    style={{
+                      strokeDasharray: '1000',
+                      strokeDashoffset: isVisible ? '0' : '1000',
+                      transition: 'stroke-dashoffset 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      transitionDelay: '1.2s'
+                    }}
+                  />
+                </>
               )}
               
-              {/* Pontos no gráfico com animação suave */}
+              {/* Pontos no gráfico com animação de crescimento suave */}
               {data.map((item, index) => (
                 <g key={index}>
-                  {/* Círculo de brilho */}
+                  {/* Círculo de brilho expandido */}
+                  <circle 
+                    cx={20 + index * 95} 
+                    cy={160 - item.value * 1.5} 
+                    r="12" 
+                    fill="#F97316"
+                    fillOpacity="0.1"
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 200 + 1800}ms`,
+                      animation: isVisible ? 'pulse 3s infinite' : 'none'
+                    }}
+                  />
+                  
+                  {/* Círculo de brilho médio */}
                   <circle 
                     cx={20 + index * 95} 
                     cy={160 - item.value * 1.5} 
                     r="8" 
                     fill="#F97316"
                     fillOpacity="0.2"
-                    className={`transition-all duration-1000 ease-out ${
-                      isVisible ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                    }`}
-                    style={{ 
-                      transitionDelay: `${index * 300 + 1200}ms`,
-                      animation: isVisible ? 'pulse 2s infinite' : 'none'
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 200 + 1600}ms`,
+                      animation: isVisible ? 'pulse 2.5s infinite' : 'none'
                     }}
                   />
-                  {/* Ponto principal */}
+                  
+                  {/* Ponto principal com crescimento suave */}
                   <circle 
                     cx={20 + index * 95} 
                     cy={160 - item.value * 1.5} 
-                    r="5" 
+                    r="6" 
                     fill="#F97316"
                     stroke="#ffffff"
                     strokeWidth="3"
                     filter="url(#glow)"
-                    className={`transition-all duration-1000 ease-out ${
-                      isVisible ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                    }`}
-                    style={{ 
-                      transitionDelay: `${index * 300 + 1000}ms`,
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 200 + 1400}ms`,
                       cursor: 'pointer'
                     }}
                   />
-                  {/* Valor do ponto */}
+                  
+                  {/* Valor do ponto com animação de crescimento */}
                   <text
                     x={20 + index * 95}
-                    y={160 - item.value * 1.5 - 15}
+                    y={160 - item.value * 1.5 - 18}
                     textAnchor="middle"
-                    className={`text-xs font-bold fill-orange-600 transition-all duration-800 ${
-                      isVisible ? 'opacity-100' : 'opacity-0'
-                    }`}
+                    className="text-xs font-bold fill-orange-600"
                     style={{ 
-                      fontSize: 11,
-                      transitionDelay: `${index * 300 + 1400}ms`
+                      fontSize: 12,
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.8)',
+                      transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      transitionDelay: `${index * 200 + 2000}ms`,
+                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
                     }}
                   >
                     {item.value}%
@@ -254,19 +317,20 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 </g>
               ))}
               
-              {/* Labels do eixo X com animação */}
+              {/* Labels do eixo X com animação de aparição suave */}
               {data.map((item, index) => (
                 <text 
                   key={index}
                   x={20 + index * 95} 
                   y="185" 
                   textAnchor="middle" 
-                  className={`text-xs fill-gray-500 font-medium transition-all duration-600 ${
-                    isVisible ? 'opacity-100' : 'opacity-0'
-                  }`}
+                  className="text-xs fill-gray-500 font-medium"
                   style={{ 
                     fontSize: 11,
-                    transitionDelay: `${index * 200 + 1600}ms`
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
+                    transition: 'all 0.5s ease-out',
+                    transitionDelay: `${index * 150 + 2200}ms`
                   }}
                 >
                   {item.name}
