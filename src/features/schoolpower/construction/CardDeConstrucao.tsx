@@ -828,8 +828,8 @@ export function CardDeConstrucao({
     }
   };
 
-  // Determina se o modo Quiz está ativo (assumindo que 'activities' é o modo Quiz)
-  const isQuizMode = step === 'activities';
+  // Determina se estamos na página de Quiz verificando a URL
+  const isQuizMode = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
 
   return (
     <motion.div
