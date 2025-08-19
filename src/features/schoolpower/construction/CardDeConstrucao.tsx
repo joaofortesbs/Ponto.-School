@@ -74,9 +74,8 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
     // Animação de entrada do card
     setTimeout(() => setIsVisible(true), 100);
 
-    // Dados iniciais
+    // Dados iniciais (removido Julho)
     const initialData = [
-      { name: 'Jul', value: 18 },
       { name: 'Ago', value: 22 },
       { name: 'Set', value: 45 },
       { name: 'Out', value: 48 },
@@ -138,92 +137,177 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
 
           <div className="h-32 sm:h-40 lg:h-48 w-full relative">
             <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-              {/* Grid lines */}
+              {/* Definições de gradientes e filtros */}
               <defs>
                 <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor="#F97316" />
                   <stop offset="100%" stopColor="#FB923C" />
                 </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <filter id="drop-shadow">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#F97316" floodOpacity="0.3"/>
+                </filter>
               </defs>
+              
+              {/* Grid de fundo sutil */}
+              <defs>
+                <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" strokeWidth="0.5" opacity="0.3"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              
+              {/* Área sombreada sob a linha */}
+              {data.length >= 2 && (
+                <path
+                  d={`M 20 160 L ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
+                    `L ${20 + index * 95} ${160 - item.value * 1.5}`
+                  ).join(' ')} L ${20 + (data.length - 1) * 95} 160 Z`}
+                  fill="url(#gradient)"
+                  fillOpacity="0.1"
+                  className="transition-all duration-1000 ease-out"
+                  style={{
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible ? 'scaleY(1)' : 'scaleY(0)',
+                    transformOrigin: 'bottom',
+                    transitionDelay: '800ms'
+                  }}
+                />
+              )}
               
               {/* Linha de progresso animada */}
               {data.length >= 2 && (
                 <path
                   d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
-                    `L ${20 + index * 76} ${160 - item.value * 1.5}`
+                    `L ${20 + index * 95} ${160 - item.value * 1.5}`
                   ).join(' ')}`}
                   fill="none"
                   stroke="url(#gradient)"
-                  strokeWidth={3}
+                  strokeWidth={4}
                   strokeLinecap="round"
+                  strokeLinejoin="round"
+                  filter="url(#drop-shadow)"
                   style={{
                     strokeDasharray: '1000',
                     strokeDashoffset: isVisible ? '0' : '1000',
-                    transition: 'stroke-dashoffset 2s ease-in-out'
+                    transition: 'stroke-dashoffset 2.5s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 />
               )}
               
-              {/* Pontos no gráfico */}
+              {/* Pontos no gráfico com animação suave */}
               {data.map((item, index) => (
-                <circle 
-                  key={index}
-                  cx={20 + index * 76} 
-                  cy={160 - item.value * 1.5} 
-                  r="4" 
-                  fill="#F97316"
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                  className={`transform transition-all duration-800 ease-out ${
-                    isVisible ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                  }`}
-                  style={{ transitionDelay: `${index * 400 + 800}ms` }}
-                />
+                <g key={index}>
+                  {/* Círculo de brilho */}
+                  <circle 
+                    cx={20 + index * 95} 
+                    cy={160 - item.value * 1.5} 
+                    r="8" 
+                    fill="#F97316"
+                    fillOpacity="0.2"
+                    className={`transition-all duration-1000 ease-out ${
+                      isVisible ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                    }`}
+                    style={{ 
+                      transitionDelay: `${index * 300 + 1200}ms`,
+                      animation: isVisible ? 'pulse 2s infinite' : 'none'
+                    }}
+                  />
+                  {/* Ponto principal */}
+                  <circle 
+                    cx={20 + index * 95} 
+                    cy={160 - item.value * 1.5} 
+                    r="5" 
+                    fill="#F97316"
+                    stroke="#ffffff"
+                    strokeWidth="3"
+                    filter="url(#glow)"
+                    className={`transition-all duration-1000 ease-out ${
+                      isVisible ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                    }`}
+                    style={{ 
+                      transitionDelay: `${index * 300 + 1000}ms`,
+                      cursor: 'pointer'
+                    }}
+                  />
+                  {/* Valor do ponto */}
+                  <text
+                    x={20 + index * 95}
+                    y={160 - item.value * 1.5 - 15}
+                    textAnchor="middle"
+                    className={`text-xs font-bold fill-orange-600 transition-all duration-800 ${
+                      isVisible ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    style={{ 
+                      fontSize: 11,
+                      transitionDelay: `${index * 300 + 1400}ms`
+                    }}
+                  >
+                    {item.value}%
+                  </text>
+                </g>
               ))}
               
-              {/* Labels do eixo X */}
+              {/* Labels do eixo X com animação */}
               {data.map((item, index) => (
                 <text 
                   key={index}
-                  x={20 + index * 76} 
+                  x={20 + index * 95} 
                   y="185" 
                   textAnchor="middle" 
-                  className="text-xs fill-gray-400"
-                  style={{ fontSize: 10 }}
+                  className={`text-xs fill-gray-500 font-medium transition-all duration-600 ${
+                    isVisible ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  style={{ 
+                    fontSize: 11,
+                    transitionDelay: `${index * 200 + 1600}ms`
+                  }}
                 >
                   {item.name}
                 </text>
               ))}
             </svg>
             
-            {/* Labels laterais */}
-            {data.length >= 2 && (
+            {/* Labels laterais ajustados */}
+            {data.length >= 1 && (
               <div 
-                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 bg-white px-1 sm:px-2 py-1 rounded shadow-sm transform -translate-x-1/2 -translate-y-6 sm:-translate-y-8 transition-all duration-500 ${
-                  isVisible ? 'opacity-100' : 'opacity-0'
+                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 bg-white px-2 py-1 rounded-lg shadow-md transform -translate-x-1/2 -translate-y-8 transition-all duration-800 ease-out ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                 }`}
                 style={{
-                  left: `${5 + (1 / 5) * 80}%`,
-                  top: `${100 - (22 / 78) * 70}%`,
-                  transitionDelay: '1200ms'
+                  left: `${8 + (0 / 4) * 84}%`,
+                  top: `${100 - (22 / 78) * 60}%`,
+                  transitionDelay: '1800ms'
                 }}
               >
-                Você
+                <div className="text-center">
+                  <div className="text-orange-600 font-bold">Você</div>
+                  <div className="text-xs text-gray-400">Atual</div>
+                </div>
               </div>
             )}
             
-            {data.length >= 6 && (
+            {data.length >= 5 && (
               <div 
-                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 bg-white px-1 sm:px-2 py-1 rounded shadow-sm transform -translate-x-1/2 -translate-y-6 sm:-translate-y-8 transition-all duration-500 ${
-                  isVisible ? 'opacity-100' : 'opacity-0'
+                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 bg-white px-2 py-1 rounded-lg shadow-md transform -translate-x-1/2 -translate-y-8 transition-all duration-800 ease-out ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                 }`}
                 style={{
-                  left: `${20 + (5 / 5) * 80}%`,
-                  top: `${100 - (78 / 78) * 70}%`,
-                  transitionDelay: '2400ms'
+                  left: `${8 + (4 / 4) * 84}%`,
+                  top: `${100 - (78 / 78) * 60}%`,
+                  transitionDelay: '2200ms'
                 }}
               >
-                Ponto. School
+                <div className="text-center">
+                  <div className="text-orange-600 font-bold">Ponto. School</div>
+                  <div className="text-xs text-gray-400">Meta</div>
+                </div>
               </div>
             )}
           </div>
@@ -451,6 +535,29 @@ const TimerCard: React.FC = () => {
         isOpen={showModal} 
         onClose={() => setShowModal(false)} 
       />
+
+      {/* Estilos CSS para animações */}
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.2;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.4;
+            transform: scale(1.1);
+          }
+        }
+        
+        svg circle:hover {
+          transform: scale(1.2);
+          transition: transform 0.2s ease-out;
+        }
+        
+        svg text {
+          pointer-events: none;
+        }
+      `}</style>
     </motion.div>
   );
 };
