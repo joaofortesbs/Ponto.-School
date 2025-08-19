@@ -193,55 +193,42 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     transform: isVisible ? 'scaleY(1)' : 'scaleY(0)',
                     transformOrigin: 'bottom',
                     transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    transitionDelay: '1s'
+                    transitionDelay: `${(data.length - 1) * 400 + 1000}ms`
                   }}
                 />
               )}
               
-              {/* Linha de progresso com animação suave e crescimento */}
-              {data.length >= 2 && (
-                <>
-                  {/* Linha base para efeito de crescimento */}
-                  <path
-                    d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
-                      `L ${20 + index * 95} ${160 - item.value * 1.5}`
-                    ).join(' ')}`}
-                    fill="none"
-                    stroke="#F97316"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity="0.3"
-                    style={{
-                      strokeDasharray: '800',
-                      strokeDashoffset: isVisible ? '0' : '800',
-                      transition: 'stroke-dashoffset 2s ease-in-out',
-                      transitionDelay: '800ms'
-                    }}
-                  />
-                  
-                  {/* Linha principal com efeito de crescimento animado */}
-                  <path
-                    d={`M ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
-                      `L ${20 + index * 95} ${160 - item.value * 1.5}`
-                    ).join(' ')}`}
-                    fill="none"
+              {/* Linhas progressivas conectando os pontos */}
+              {data.map((item, index) => {
+                if (index === 0) return null;
+                const prevItem = data[index - 1];
+                const lineLength = Math.sqrt(
+                  Math.pow((20 + index * 95) - (20 + (index - 1) * 95), 2) + 
+                  Math.pow((160 - item.value * 1.5) - (160 - prevItem.value * 1.5), 2)
+                );
+                
+                return (
+                  <line
+                    key={`line-${index}`}
+                    x1={20 + (index - 1) * 95}
+                    y1={160 - prevItem.value * 1.5}
+                    x2={20 + index * 95}
+                    y2={160 - item.value * 1.5}
                     stroke="url(#gradient)"
                     strokeWidth="4"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
                     filter="url(#drop-shadow)"
                     style={{
-                      strokeDasharray: '1000',
-                      strokeDashoffset: isVisible ? '0' : '1000',
-                      transition: 'stroke-dashoffset 3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                      transitionDelay: '1.2s'
+                      strokeDasharray: lineLength,
+                      strokeDashoffset: isVisible ? 0 : lineLength,
+                      transition: 'stroke-dashoffset 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      transitionDelay: `${index * 400 + 800}ms`
                     }}
                   />
-                </>
-              )}
+                );
+              })}
               
-              {/* Pontos no gráfico com animação de crescimento suave */}
+              {/* Pontos no gráfico com animação sequencial */}
               {data.map((item, index) => (
                 <g key={index}>
                   {/* Círculo de brilho expandido */}
@@ -255,9 +242,10 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                       opacity: isVisible ? 1 : 0,
                       transform: isVisible ? 'scale(1)' : 'scale(0)',
                       transformOrigin: 'center',
-                      transition: 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-                      transitionDelay: `${index * 200 + 1800}ms`,
-                      animation: isVisible ? 'pulse 3s infinite' : 'none'
+                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 400 + 600}ms`,
+                      animation: isVisible ? 'pulse 3s infinite' : 'none',
+                      animationDelay: `${index * 400 + 1200}ms`
                     }}
                   />
                   
@@ -272,13 +260,14 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                       opacity: isVisible ? 1 : 0,
                       transform: isVisible ? 'scale(1)' : 'scale(0)',
                       transformOrigin: 'center',
-                      transition: 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-                      transitionDelay: `${index * 200 + 1600}ms`,
-                      animation: isVisible ? 'pulse 2.5s infinite' : 'none'
+                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 400 + 500}ms`,
+                      animation: isVisible ? 'pulse 2.5s infinite' : 'none',
+                      animationDelay: `${index * 400 + 1100}ms`
                     }}
                   />
                   
-                  {/* Ponto principal com crescimento suave */}
+                  {/* Ponto principal com crescimento sequencial */}
                   <circle 
                     cx={20 + index * 95} 
                     cy={160 - item.value * 1.5} 
@@ -291,13 +280,13 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                       opacity: isVisible ? 1 : 0,
                       transform: isVisible ? 'scale(1)' : 'scale(0)',
                       transformOrigin: 'center',
-                      transition: 'all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-                      transitionDelay: `${index * 200 + 1400}ms`,
+                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 400 + 400}ms`,
                       cursor: 'pointer'
                     }}
                   />
                   
-                  {/* Valor do ponto com animação de crescimento */}
+                  {/* Valor do ponto com animação sequencial */}
                   <text
                     x={20 + index * 95}
                     y={160 - item.value * 1.5 - 18}
@@ -307,8 +296,8 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                       fontSize: 12,
                       opacity: isVisible ? 1 : 0,
                       transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.8)',
-                      transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                      transitionDelay: `${index * 200 + 2000}ms`,
+                      transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      transitionDelay: `${index * 400 + 700}ms`,
                       filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
                     }}
                   >
@@ -317,7 +306,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 </g>
               ))}
               
-              {/* Labels do eixo X com animação de aparição suave */}
+              {/* Labels do eixo X com animação sequencial */}
               {data.map((item, index) => (
                 <text 
                   key={index}
@@ -329,8 +318,8 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     fontSize: 11,
                     opacity: isVisible ? 1 : 0,
                     transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
-                    transition: 'all 0.5s ease-out',
-                    transitionDelay: `${index * 150 + 2200}ms`
+                    transition: 'all 0.4s ease-out',
+                    transitionDelay: `${index * 400 + 300}ms`
                   }}
                 >
                   {item.name}
