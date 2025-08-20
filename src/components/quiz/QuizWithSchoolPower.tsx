@@ -60,23 +60,22 @@ export const QuizWithSchoolPower: React.FC = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`${isMobile ? 'text-center space-y-6' : 'flex items-start justify-between gap-8'}`}
+                  className={`text-center ${isMobile ? 'space-y-6' : 'space-y-8'}`}
                 >
-                  {/* Coluna Principal - Conteúdo Esquerdo */}
-                  <div className={`${isMobile ? 'w-full' : 'flex-1'} ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'} ${!isMobile ? 'text-center' : ''}`}>
+                  <div className={`text-center ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'}`}>
                     <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 leading-tight`}>
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
 
-                    {/* Vídeo acima do botão */}
+                    {/* Vídeo acima do botão com scroll */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.6 }}
                       className={`${isMobile ? 'my-6' : 'my-8'} w-full flex justify-center`}
                     >
-                      <div className="w-full max-w-md">
+                      <div className="w-full max-w-md max-h-64 overflow-y-auto">
                         <div 
                           dangerouslySetInnerHTML={{
                             __html: `
@@ -113,24 +112,17 @@ export const QuizWithSchoolPower: React.FC = () => {
                         {isMobile ? 'TESTAR AGORA' : 'QUERO TESTAR AGORA'}
                       </Button>
                     </motion.div>
+
+                    {/* Carrossel de Dores e Soluções */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="max-w-4xl mx-auto"
+                    >
+                      <CarrosselDoresSolucoes className="mt-8" />
+                    </motion.div>
                   </div>
-
-                  {/* Coluna Lateral Direita - Se não for mobile */}
-                  {!isMobile && (
-                    <div className="flex flex-col items-center justify-start w-full max-w-xs">
-                      {/* Espaço reservado para conteúdo adicional, se necessário */}
-                    </div>
-                  )}
-                </motion.div>
-
-                {/* Carrossel de Dores e Soluções */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="max-w-4xl mx-auto"
-                >
-                  <CarrosselDoresSolucoes className="mt-8" />
                 </motion.div>
               </CardContent>
             </Card>
