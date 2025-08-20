@@ -34,8 +34,8 @@ export const QuizWithSchoolPower: React.FC = () => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className={`w-full ${isMobile ? 'max-w-sm mx-4' : 'max-w-5xl'}`}
           >
-            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
-              <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'}`}>
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh]">
+              <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'} overflow-y-auto max-h-[85vh]`}>
                 {/* Barra de Progresso Simplificada na Intro */}
                 <div className="mb-10">
                   <div className="flex justify-between items-center mb-3">
