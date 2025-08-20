@@ -109,7 +109,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-8"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
         onClick={onClose}
       >
         <motion.div
@@ -117,139 +117,129 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 50 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl w-full mx-auto max-h-[90vh] overflow-y-auto"
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl transform transition-all duration-1000 ease-out"
           onClick={(e) => e.stopPropagation()}
+          style={{
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+          }}
         >
-          <div className="min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center">
-            {/* Checklist - Benefícios vs Problemas */}
-            <div 
-              className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl transform transition-all duration-1000 ease-out ${
-                isVisible 
-                  ? 'translate-y-0 opacity-100 scale-100' 
-                  : 'translate-y-10 opacity-0 scale-95'
-              }`}
-              style={{
-                boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)'
-              }}
-            >
               {/* Logo centralizado */}
-              <div className="flex justify-center">
-                <img 
-                  src="/lovable-uploads/Logo-Ponto.School-Icone.png" 
-                  alt="Logo" 
-                  className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
-                />
-              </div>
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/lovable-uploads/Logo-Ponto.School-Icone.png" 
+              alt="Logo" 
+              className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+            />
+          </div>
 
-              {/* Toggle Mensal/Anual */}
-              <div className="flex justify-center mb-6">
-                <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-1 flex">
-                  <button
-                    onClick={() => setSelectedPlan('monthly')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                      selectedPlan === 'monthly'
-                        ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-                    }`}
-                  >
-                    Mensal
-                  </button>
-                  <button
-                    onClick={() => setSelectedPlan('yearly')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                      selectedPlan === 'yearly'
-                        ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-                    }`}
-                  >
-                    Anual
-                  </button>
-                </div>
-              </div>
+          {/* Toggle Mensal/Anual */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-1 flex">
+              <button
+                onClick={() => setSelectedPlan('monthly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedPlan === 'monthly'
+                    ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                }`}
+              >
+                Mensal
+              </button>
+              <button
+                onClick={() => setSelectedPlan('yearly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedPlan === 'yearly'
+                    ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                }`}
+              >
+                Anual
+              </button>
+            </div>
+          </div>
 
               {/* Preço */}
-              <div className="text-center mb-6">
-                <div className="text-3xl sm:text-4xl font-bold text-orange-500 mb-1">
-                  R${selectedPlan === 'monthly' ? '37,90' : '397,90'}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400 text-sm">
-                  {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
-                </div>
-              </div>
-              {/* Checklist */}
-              <div className="space-y-3 sm:space-y-4">
-                {[
-                  { text: 'Criação de +130 atividades', type: 'positive' },
-                  { text: 'Personalização para seu perfil', type: 'positive' },
-                  { text: 'Personalização para sua escola', type: 'positive' },
-                  { text: 'Transforme suas atividades em trilhas', type: 'positive' },
-                  { text: 'Atividades gamificadas para seus alunos', type: 'positive' },
-                  { text: 'Exporte e apresente tudo', type: 'positive' }
-                ].map((item, index) => (
-                  <div 
-                    key={index} 
-                    className={`flex items-center space-x-3 transform transition-all duration-500 ease-out ${
-                      isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
-                    }`}
-                    style={{ transitionDelay: `${800 + index * 200}ms` }}
-                  >
-                    <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
-                      item.type === 'positive' 
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
-                        : 'bg-gradient-to-r from-red-500 to-red-400'
-                    }`}>
-                      {item.type === 'positive' ? (
-                        <svg 
-                          className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
-                          fill="currentColor" 
-                          viewBox="0 0 20 20"
-                        >
-                          <path 
-                            fillRule="evenodd" 
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                            clipRule="evenodd" 
-                          />
-                        </svg>
-                      ) : (
-                        <svg 
-                          className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
-                          fill="currentColor" 
-                          viewBox="0 0 20 20"
-                        >
-                          <path 
-                            fillRule="evenodd" 
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
-                            clipRule="evenodd" 
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    <span className={`font-medium text-sm sm:text-base ${
-                      item.type === 'positive' ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400 line-through'
-                    }`}>{item.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Botões da nova interface */}
-              <div className="flex gap-4 justify-center mt-6">
-                <button
-                  onClick={() => setShowPlanSelection(false)}
-                  className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
-                >
-                  Voltar
-                </button>
-                <button
-                  onClick={() => {
-                    console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                    alert(`Redirecionando para pagamento do plano ${selectedPlan === 'monthly' ? 'mensal' : 'anual'}...`);
-                  }}
-                  className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                  Assinar Agora
-                </button>
-              </div>
+          <div className="text-center mb-6">
+            <div className="text-3xl sm:text-4xl font-bold text-orange-500 mb-1">
+              R${selectedPlan === 'monthly' ? '37,90' : '397,90'}
             </div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
+            </div>
+          </div>
+          
+          {/* Checklist */}
+          <div className="space-y-3 sm:space-y-4">
+            {[
+              { text: 'Criação de +130 atividades', type: 'positive' },
+              { text: 'Personalização para seu perfil', type: 'positive' },
+              { text: 'Personalização para sua escola', type: 'positive' },
+              { text: 'Transforme suas atividades em trilhas', type: 'positive' },
+              { text: 'Atividades gamificadas para seus alunos', type: 'positive' },
+              { text: 'Exporte e apresente tudo', type: 'positive' }
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center space-x-3 transform transition-all duration-500 ease-out ${
+                  isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                }`}
+                style={{ transitionDelay: `${800 + index * 200}ms` }}
+              >
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
+                  item.type === 'positive' 
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
+                    : 'bg-gradient-to-r from-red-500 to-red-400'
+                }`}>
+                  {item.type === 'positive' ? (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  ) : (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className={`font-medium text-sm sm:text-base ${
+                  item.type === 'positive' ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400 line-through'
+                }`}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Botões da nova interface */}
+          <div className="flex gap-4 justify-center mt-6">
+            <button
+              onClick={() => setShowPlanSelection(false)}
+              className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+            >
+              Voltar
+            </button>
+            <button
+              onClick={() => {
+                console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
+                alert(`Redirecionando para pagamento do plano ${selectedPlan === 'monthly' ? 'mensal' : 'anual'}...`);
+              }}
+              className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              Assinar Agora
+            </button>
           </div>
         </motion.div>
       </motion.div>
