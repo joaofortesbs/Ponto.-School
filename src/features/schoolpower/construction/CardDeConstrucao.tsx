@@ -128,7 +128,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <img 
               src="/lovable-uploads/Logo-Ponto. School.png" 
               alt="Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+              className="w-45 h-35 sm:w-45 sm:h-35 object-contain"
             />
           </div>
 
@@ -234,7 +234,14 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                alert(`Redirecionando para pagamento do plano ${selectedPlan === 'monthly' ? 'mensal' : 'anual'}...`);
+                
+                // Define o link baseado no plano selecionado
+                const paymentLink = selectedPlan === 'monthly' 
+                  ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
+                  : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
+                
+                // Redireciona para o link de pagamento
+                window.open(paymentLink, '_blank');
               }}
               className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
