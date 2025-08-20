@@ -128,7 +128,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <img 
               src="/lovable-uploads/Logo-Ponto. School.png" 
               alt="Logo" 
-              className="w-20 h-20 sm:w-24 sm:h-24 object-contain"
+              className="w-330 h-30 sm:w-73 sm:h-73 object-contain"
             />
           </div>
 
