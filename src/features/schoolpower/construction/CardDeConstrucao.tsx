@@ -286,23 +286,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                     }}
                   />
 
-                  {/* Valor do ponto com animação sequencial */}
-                  <text
-                    x={20 + index * 95}
-                    y={160 - item.value * 1.5 - 18}
-                    textAnchor="middle"
-                    className="text-xs font-bold fill-orange-600"
-                    style={{ 
-                      fontSize: 12,
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.8)',
-                      transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                      transitionDelay: `${index * 400 + 700}ms`,
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
-                    }}
-                  >
-                    {item.value}%
-                  </text>
+                  
                 </g>
               ))}
 
