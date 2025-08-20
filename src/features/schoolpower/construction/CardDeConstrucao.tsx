@@ -80,7 +80,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
       { name: 'Set', value: 45 },
       { name: 'Out', value: 48 },
       { name: 'Nov', value: 68 },
-      { name: 'Dez', value: 78 }
+      { name: 'Dez', value: 88 }
     ];
 
     // Animar crescimento dos dados
@@ -337,7 +337,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 }`}
                 style={{
                   left: `${8 + (4 / 4) * 84}%`,
-                  top: `${100 - (78 / 78) * 60}%`,
+                  top: `${100 - (88 / 88) * 60}%`,
                   transitionDelay: '2200ms'
                 }}
               >
