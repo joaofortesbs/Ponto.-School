@@ -34,8 +34,8 @@ export const QuizWithSchoolPower: React.FC = () => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className={`w-full ${isMobile ? 'max-w-sm mx-4' : 'max-w-5xl'}`}
           >
-            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[80vh]">
-              <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'} overflow-y-auto max-h-full`}>
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
+              <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'}`}>
                 {/* Barra de Progresso Simplificada na Intro */}
                 <div className="mb-10">
                   <div className="flex justify-between items-center mb-3">
@@ -60,22 +60,23 @@ export const QuizWithSchoolPower: React.FC = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`text-center ${isMobile ? 'space-y-6' : 'space-y-8'}`}
+                  className={`${isMobile ? 'text-center space-y-6' : 'flex items-start justify-between gap-8'}`}
                 >
-                  <div className={`text-center ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'}`}>
+                  {/* Coluna Principal - Conteúdo Esquerdo */}
+                  <div className={`${isMobile ? 'w-full' : 'flex-1'} ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'} ${!isMobile ? 'text-center' : ''}`}>
                     <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 leading-tight`}>
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
 
-                    {/* Vídeo acima do botão com scroll */}
+                    {/* Vídeo acima do botão */}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3, duration: 0.6 }}
                       className={`${isMobile ? 'my-6' : 'my-8'} w-full flex justify-center`}
                     >
-                      <div className="w-full max-w-md max-h-64">
+                      <div className="w-full max-w-md">
                         <div 
                           dangerouslySetInnerHTML={{
                             __html: `
@@ -112,17 +113,24 @@ export const QuizWithSchoolPower: React.FC = () => {
                         {isMobile ? 'TESTAR AGORA' : 'QUERO TESTAR AGORA'}
                       </Button>
                     </motion.div>
-
-                    {/* Carrossel de Dores e Soluções */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="max-w-4xl mx-auto"
-                    >
-                      <CarrosselDoresSolucoes className="mt-8" />
-                    </motion.div>
                   </div>
+
+                  {/* Coluna Lateral Direita - Se não for mobile */}
+                  {!isMobile && (
+                    <div className="flex flex-col items-center justify-start w-full max-w-xs">
+                      {/* Espaço reservado para conteúdo adicional, se necessário */}
+                    </div>
+                  )}
+                </motion.div>
+
+                {/* Carrossel de Dores e Soluções */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="max-w-4xl mx-auto"
+                >
+                  <CarrosselDoresSolucoes className="mt-8" />
                 </motion.div>
               </CardContent>
             </Card>
