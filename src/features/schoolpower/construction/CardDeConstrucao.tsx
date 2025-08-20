@@ -639,6 +639,16 @@ export interface ActionPlanItem {
   originalData?: any;
 }
 
+interface CardDeConstrucaoProps {
+  step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
+  contextualizationData?: ContextualizationData | null;
+  actionPlan?: ActionPlanItem[] | null;
+  onSubmitContextualization: (data: ContextualizationData) => void;
+  onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
+  onResetFlow: () => void;
+  isLoading?: boolean;
+}
+
 export function CardDeConstrucao({ 
   step, 
   contextualizationData, 
