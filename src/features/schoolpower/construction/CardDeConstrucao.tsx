@@ -133,7 +133,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               }}
             >
               {/* Logo centralizado */}
-              <div className="flex justify-center mb-6">
+              <div className="flex justify-center">
                 <img 
                   src="/lovable-uploads/Logo-Ponto.School-Icone.png" 
                   alt="Logo" 
