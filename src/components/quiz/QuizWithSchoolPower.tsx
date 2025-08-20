@@ -69,6 +69,27 @@ export const QuizWithSchoolPower: React.FC = () => {
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
 
+                    {/* Vídeo do Vimeo */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.6 }}
+                      className={`${isMobile ? 'my-6' : 'my-8'} w-full max-w-lg mx-auto`}
+                    >
+                      <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                        <div style={{ padding: '177.78% 0 0 0', position: 'relative' }}>
+                          <iframe 
+                            src="https://player.vimeo.com/video/1111521115?badge=0&autopause=0&player_id=0&app_id=58479" 
+                            frameBorder="0" 
+                            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" 
+                            referrerPolicy="strict-origin-when-cross-origin" 
+                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} 
+                            title="WhatsApp Video 2025-08-19 at 23.12.05"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+
                     {/* Botão Quero Testar Agora - Agora vai para o quiz */}
                     <motion.div
                       whileHover={{ scale: isMobile ? 1.02 : 1.05 }}
