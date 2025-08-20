@@ -234,7 +234,14 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                alert(`Redirecionando para pagamento do plano ${selectedPlan === 'monthly' ? 'mensal' : 'anual'}...`);
+                
+                // Definir o link baseado no plano selecionado
+                const paymentLink = selectedPlan === 'monthly' 
+                  ? 'https://pay.cakto.com.br/i7wcpdt_530213'
+                  : 'https://pay.cakto.com.br/7e88ydh';
+                
+                // Redirecionar para o link de pagamento
+                window.open(paymentLink, '_blank');
               }}
               className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
