@@ -61,13 +61,38 @@ export const QuizWithSchoolPower: React.FC = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`text-center ${isMobile ? 'space-y-6' : 'space-y-8'}`}
+                  className={`${isMobile ? 'text-center space-y-6' : 'flex items-start justify-between gap-8'}`}
                 >
-                  <div className={`text-center ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'}`}>
+                  {/* Coluna Principal - Conteúdo Esquerdo */}
+                  <div className={`${isMobile ? 'w-full' : 'flex-1'} ${isMobile ? 'space-y-6 mb-8' : 'space-y-8 mb-12'} ${!isMobile ? 'text-center' : ''}`}>
                     <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 leading-tight`}>
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
+
+                    {/* Vídeo acima do botão */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.6 }}
+                      className={`${isMobile ? 'my-6' : 'my-8'} w-full flex justify-center`}
+                    >
+                      <div className="w-full max-w-md">
+                        <div 
+                          dangerouslySetInnerHTML={{
+                            __html: `
+                              <vturb-smartplayer id="vid-68a540d0caaf2808dd7c0dec" style="display: block; margin: 0 auto; width: 100%; max-width: 400px;"></vturb-smartplayer>
+                              <script type="text/javascript">
+                                var s=document.createElement("script"); 
+                                s.src="https://scripts.converteai.net/6cc509b6-8017-4754-9738-1fdbf9989ab0/players/68a540d0caaf2808dd7c0dec/v4/player.js"; 
+                                s.async=true;
+                                document.head.appendChild(s);
+                              </script>
+                            `
+                          }}
+                        />
+                      </div>
+                    </motion.div>
 
                     {/* Botão Quero Testar Agora - Agora vai para o quiz */}
                     <motion.div
@@ -85,17 +110,31 @@ export const QuizWithSchoolPower: React.FC = () => {
                         {isMobile ? 'TESTAR AGORA' : 'QUERO TESTAR AGORA'}
                       </Button>
                     </motion.div>
+                  </div>
 
-                    {/* Carrossel de Dores e Soluções */}
+                  {/* Barra Lateral Direita - Carrossel (apenas no desktop) */}
+                  {!isMobile && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4, duration: 0.6 }}
+                      className="w-80 flex-shrink-0"
+                    >
+                      <CarrosselDoresSolucoes className="h-full" />
+                    </motion.div>
+                  )}
+
+                  {/* Carrossel no mobile (mantém posição original) */}
+                  {isMobile && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="max-w-4xl mx-auto"
+                      className="max-w-4xl mx-auto mt-8"
                     >
-                      <CarrosselDoresSolucoes className="mt-8" />
+                      <CarrosselDoresSolucoes />
                     </motion.div>
-                  </div>
+                  )}
                 </motion.div>
               </CardContent>
             </Card>
