@@ -90,45 +90,94 @@ USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
     // Construir o prompt para a Gemini
     const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
-DADOS COLETADOS DO USUÁRIO:
-- Mensagem inicial: "${initialMessage}"
-- Matérias e temas: ${contextualizationData.materias || 'Não especificado'}
-- Público-alvo: ${contextualizationData.publicoAlvo || 'Não especificado'}
-- Restrições: "${contextualizationData.restricoes || 'Nenhuma'}"
-- Datas importantes: "${contextualizationData.datasImportantes || 'Não informado'}"
-- Observações: ${contextualizationData.observacoes || 'Nenhuma'}
+Here are the collected information:
 
-ATIVIDADES DISPONÍVEIS: ${activitiesString}
+DATA:
+- Request: "${initialMessage}"
+- Subjects and themes: ${contextualizationData?.subjects || 'General'}
+- Audience: ${contextualizationData?.audience || 'Students'}
+- Restrictions: "${contextualizationData?.restrictions || 'undefined'}"
+- Important dates: "${contextualizationData?.dates || 'undefined'}"
+- Observations: ${contextualizationData?.notes || 'None'}
 
-CAMPOS PERSONALIZADOS POR ATIVIDADE:
+AVAILABLE ACTIVITIES: ${activitiesString}
+
+CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
 
 ${planoAulaSpecificInfo}
 
-INSTRUÇÕES CRÍTICAS:
-1. ANALISE CUIDADOSAMENTE o pedido: "${initialMessage}"
-2. IDENTIFIQUE TODAS as atividades específicas mencionadas (ex: "Quadro Interativo", "Sequência Didática", etc.)
-3. INCLUA OBRIGATORIAMENTE todas as atividades específicas pedidas pelo usuário
-4. Complete com 3-5 atividades complementares relevantes ao contexto
-5. Para CADA atividade, PREENCHA os customFields com informações ESPECÍFICAS baseadas nos dados coletados
-6. Use SEMPRE as matérias informadas (${contextualizationData.materias}) para personalizar os campos
-7. Use SEMPRE o público-alvo informado (${contextualizationData.publicoAlvo}) nos campos relevantes
-8. Retorne APENAS JSON válido no formato especificado abaixo
+INSTRUCTIONS:
+1. Carefully analyze the request and provided information
+2. Select ONLY activities from the available list that are relevant to the request
+3. Generate a COMPREHENSIVE action plan with 15-50 different activities according to the request complexity
+4. Each activity must have a personalized and descriptive title
+5. The description must be specific and detailed for the given context
+6. Use the exact IDs of the available activities
+7. Vary duration and difficulty as appropriate
+8. MANDATORY: For each activity, fill ALL custom fields listed above for that specific ID
+9. Custom fields must contain realistic, contextualized, and specific data - NEVER leave them empty or generic
+10. All extra fields must be strings (plain text)
+11. Prioritize diversity of activity types for a complete and comprehensive plan
 
-FORMATO DE RESPOSTA (JSON):
+RESPONSE FORMAT (JSON):
+Return ONLY a valid JSON array with the selected activities, following this exact format:
+
 [
   {
-    "id": "id-da-atividade-exata-da-lista",
-    "personalizedTitle": "Título personalizado com a matéria: ${contextualizationData.materias}",
-    "personalizedDescription": "Descrição detalhada personalizada baseada no contexto coletado",
-    "customFields": {
-      "campo1": "valor personalizado baseado nos dados coletados",
-      "campo2": "valor personalizado baseado nos dados coletados"
-    }
+    "id": "exact-activity-id",
+    "title": "Personalized activity title",
+    "description": "Specific and detailed activity description for this context",
+    "duration": "XX min",
+    "difficulty": "Easy/Medium/Hard",
+    "category": "Subject category",
+    "type": "activity",
+    "Custom Field 1": "Specific and realistic value",
+    "Custom Field 2": "Specific and realistic value",
+    "Custom Field N": "Specific and realistic value"
   }
 ]
 
-IMPORTANTE: Retorne APENAS o JSON, sem texto adicional antes ou depois.`;
+EXAMPLE for exercise-list:
+{
+  "id": "lista-exercicios",
+  "title": "Exercise List: Nouns and Verbs",
+  "description": "Development of an exercise list covering the identification, classification, and use of nouns and verbs in different contexts.",
+  "duration": "30 min",
+  "difficulty": "Medium",
+  "category": "Grammar",
+  "type": "activity",
+  "Number of Questions": "10 mixed questions involving common and proper nouns, as well as regular verbs",
+  "Theme": "Nouns and Verbs",
+  "Subject": "Portuguese Language",
+  "Grade Level": "6th Grade",
+  "Difficulty Level": "Intermediate",
+  "Question Model": "Objective and essay questions",
+  "Sources": "Projeto Ápis textbook and site TodaMatéria"
+}
+
+REMEMBER:
+- ALL custom fields MUST be filled for EACH activity
+- Values must be specific, detailed, and contextualized
+- NEVER leave a field empty or with a generic value
+- Each activity must have ALL its custom fields filled
+
+IMPORTANT:
+- Use ONLY available IDs from the list
+- FILL ALL custom fields for each activity
+- Field data must be specific, realistic, and contextualized
+- DO NOT include explanations before or after the JSON
+- DO NOT use markdown or formatting
+- Return ONLY the valid JSON array
+
+        IMPORTANTE: Para atividades do tipo "quadro-interativo", use OBRIGATORIAMENTE estes campos específicos:
+        - "Disciplina / Área de conhecimento"
+        - "Ano / Série"
+        - "Tema ou Assunto da aula"
+        - "Objetivo de aprendizagem da aula"
+        - "Nível de Dificuldade"
+        - "Atividade mostrada" (deve conter apenas atividades válidas do School Power disponíveis)
+`;
 
   return prompt;
 }
@@ -138,6 +187,7 @@ IMPORTANTE: Retorne APENAS o JSON, sem texto adicional antes ou depois.`;
  */
 async function callGeminiAPI(prompt: string): Promise<string> {
   console.log('🚀 Making call to Gemini API...');
+  console.log('📤 Sent Prompt (first 300 chars):', prompt.substring(0, 300));
   console.log('🔑 API Key available:', !!GEMINI_API_KEY);
   console.log('🌐 API URL:', GEMINI_API_URL);
 
