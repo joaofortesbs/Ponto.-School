@@ -59,6 +59,700 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   name: activity.name || activity.title || activity.description
 }));
 
+// Componente do Modal de Acesso Vitalício com código exato fornecido
+const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const [data, setData] = useState([]);
+  const [isVisible, setIsVisible] = useState(false);
+  const [showPlanSelection, setShowPlanSelection] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('monthly');
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsVisible(false);
+      setData([]);
+      setShowPlanSelection(false);
+      return;
+    }
+
+    // Animação de entrada do card
+    setTimeout(() => setIsVisible(true), 100);
+
+    // Dados iniciais (removido Julho)
+    const initialData = [
+      { name: 'Ago', value: 22 },
+      { name: 'Set', value: 45 },
+      { name: 'Out', value: 48 },
+      { name: 'Nov', value: 68 },
+      { name: 'Dez', value: 78 }
+    ];
+
+    // Animar crescimento dos dados
+    let currentIndex = 0;
+    const interval = setInterval(() => {
+      if (currentIndex < initialData.length) {
+        setData(initialData.slice(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 400);
+
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  // Interface da seleção de planos (código exato fornecido)
+  if (showPlanSelection) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, y: 50 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 50 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl transform transition-all duration-1000 ease-out"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+          }}
+        >
+              {/* Logo centralizado */}
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/lovable-uploads/Logo-Ponto. School.png" 
+              alt="Logo" 
+              className="w-45 h-35 sm:w-45 sm:h-35 object-contain"
+            />
+          </div>
+
+          {/* Toggle Mensal/Anual */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-1 flex">
+              <button
+                onClick={() => setSelectedPlan('monthly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedPlan === 'monthly'
+                    ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                }`}
+              >
+                Mensal
+              </button>
+              <button
+                onClick={() => setSelectedPlan('yearly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedPlan === 'yearly'
+                    ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+                }`}
+              >
+                Anual
+              </button>
+            </div>
+          </div>
+
+              {/* Preço */}
+          <div className="text-center mb-6">
+            <div className="text-3xl sm:text-4xl font-bold text-orange-500 mb-1">
+              R${selectedPlan === 'monthly' ? '37,90' : '397,90'}
+            </div>
+            <div className="text-gray-600 dark:text-gray-400 text-sm">
+              {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
+            </div>
+          </div>
+          
+          {/* Checklist */}
+          <div className="space-y-3 sm:space-y-4">
+            {[
+              { text: 'Criação de +130 atividades', type: 'positive' },
+              { text: 'Personalização para seu perfil', type: 'positive' },
+              { text: 'Personalização para sua escola', type: 'positive' },
+              { text: 'Transforme suas atividades em trilhas', type: 'positive' },
+              { text: 'Atividades gamificadas para seus alunos', type: 'positive' },
+              { text: 'Exporte e apresente tudo', type: 'positive' }
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center space-x-3 transform transition-all duration-500 ease-out ${
+                  isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                }`}
+                style={{ transitionDelay: `${800 + index * 200}ms` }}
+              >
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
+                  item.type === 'positive' 
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
+                    : 'bg-gradient-to-r from-red-500 to-red-400'
+                }`}>
+                  {item.type === 'positive' ? (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  ) : (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className={`font-medium text-sm sm:text-base ${
+                  item.type === 'positive' ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400 line-through'
+                }`}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Botões da nova interface */}
+          <div className="flex gap-4 justify-center mt-6">
+            <button
+              onClick={() => setShowPlanSelection(false)}
+              className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+            >
+              Voltar
+            </button>
+            <button
+              onClick={() => {
+                console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
+                
+                // Define o link baseado no plano selecionado
+                const paymentLink = selectedPlan === 'monthly' 
+                  ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
+                  : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
+                
+                // Redireciona para o link de pagamento
+                window.open(paymentLink, '_blank');
+              }}
+              className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              Assinar Agora
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-8"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl w-full mx-auto max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Card Principal do Gráfico */}
+        <div 
+          className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 w-full max-w-lg xl:max-w-xl h-auto min-h-60 sm:min-h-80 transform transition-all duration-1000 ease-out ${
+            isVisible 
+              ? 'translate-y-0 opacity-100 scale-100' 
+              : 'translate-y-10 opacity-0 scale-95'
+          }`}
+          style={{
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+          }}
+        >
+          <div className="mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white mb-2 text-center sm:text-left">
+              Seja 15x mais produtivo com IA!
+            </h3>
+            <p className="text-gray-500 dark:text-gray-300 text-xs sm:text-sm text-center sm:text-left">
+              Transforme sua carreira em minutos!
+            </p>
+          </div>
+
+          <div className="h-32 sm:h-40 lg:h-48 w-full relative">
+            <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
+              {/* Definições de gradientes e filtros */}
+              <defs>
+                <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#F97316" />
+                  <stop offset="100%" stopColor="#FB923C" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <filter id="drop-shadow">
+                  <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#F97316" floodOpacity="0.4"/>
+                </filter>
+                <filter id="soft-glow">
+                  <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Grid de fundo sutil com animação */}
+              <defs>
+                <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" strokeWidth="0.5" opacity="0.3"/>
+                </pattern>
+              </defs>
+              <rect 
+                width="100%" 
+                height="100%" 
+                fill="url(#grid)"
+                style={{
+                  opacity: isVisible ? 0.3 : 0,
+                  transition: 'opacity 1s ease-out',
+                  transitionDelay: '200ms'
+                }}
+              />
+
+              {/* Área sombreada sob a linha com animação aprimorada */}
+              {data.length >= 2 && (
+                <path
+                  d={`M 20 160 L ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
+                    `L ${20 + index * 95} ${160 - item.value * 1.5}`
+                  ).join(' ')} L ${20 + (data.length - 1) * 95} 160 Z`}
+                  fill="url(#gradient)"
+                  fillOpacity="0.15"
+                  filter="url(#soft-glow)"
+                  style={{
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible ? 'scaleY(1)' : 'scaleY(0)',
+                    transformOrigin: 'bottom',
+                    transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                    transitionDelay: `${(data.length - 1) * 400 + 1000}ms`
+                  }}
+                />
+              )}
+
+              {/* Linhas progressivas conectando os pontos */}
+              {data.map((item, index) => {
+                if (index === 0) return null;
+                const prevItem = data[index - 1];
+                const lineLength = Math.sqrt(
+                  Math.pow((20 + index * 95) - (20 + (index - 1) * 95), 2) + 
+                  Math.pow((160 - item.value * 1.5) - (160 - prevItem.value * 1.5), 2)
+                );
+
+                return (
+                  <line
+                    key={`line-${index}`}
+                    x1={20 + (index - 1) * 95}
+                    y1={160 - prevItem.value * 1.5}
+                    x2={20 + index * 95}
+                    y2={160 - item.value * 1.5}
+                    stroke="url(#gradient)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    filter="url(#drop-shadow)"
+                    style={{
+                      strokeDasharray: lineLength,
+                      strokeDashoffset: isVisible ? 0 : lineLength,
+                      transition: 'stroke-dashoffset 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                      transitionDelay: `${index * 400 + 800}ms`
+                    }}
+                  />
+                );
+              })}
+
+              {/* Pontos no gráfico com animação sequencial */}
+              {data.map((item, index) => (
+                <g key={index}>
+                  {/* Círculo de brilho expandido */}
+                  <circle 
+                    cx={20 + index * 95} 
+                    cy={160 - item.value * 1.5} 
+                    r="12" 
+                    fill="#F97316"
+                    fillOpacity="0.1"
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 400 + 600}ms`,
+                      animation: isVisible ? 'pulse 3s infinite' : 'none',
+                      animationDelay: `${index * 400 + 1200}ms`
+                    }}
+                  />
+
+                  {/* Círculo de brilho médio */}
+                  <circle 
+                    cx={20 + index * 95} 
+                    cy={160 - item.value * 1.5} 
+                    r="8" 
+                    fill="#F97316"
+                    fillOpacity="0.2"
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 400 + 500}ms`,
+                      animation: isVisible ? 'pulse 2.5s infinite' : 'none',
+                      animationDelay: `${index * 400 + 1100}ms`
+                    }}
+                  />
+
+                  {/* Ponto principal com crescimento sequencial */}
+                  <circle 
+                    cx={20 + index * 95} 
+                    cy={160 - item.value * 1.5} 
+                    r="6" 
+                    fill="#F97316"
+                    stroke="#ffffff"
+                    strokeWidth="3"
+                    filter="url(#glow)"
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transformOrigin: 'center',
+                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+                      transitionDelay: `${index * 400 + 400}ms`,
+                      cursor: 'pointer'
+                    }}
+                  />
+
+
+                </g>
+              ))}
+
+              {/* Labels do eixo X com animação sequencial */}
+              {data.map((item, index) => (
+                <text 
+                  key={index}
+                  x={20 + index * 95} 
+                  y="185" 
+                  textAnchor="middle" 
+                  className="text-xs text-gray-400 dark:text-gray-500"
+                  style={{ 
+                    fontSize: 11,
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
+                    transition: 'all 0.4s ease-out',
+                    transitionDelay: `${index * 400 + 300}ms`
+                  }}
+                >
+                  {item.name}
+                </text>
+              ))}
+            </svg>
+
+            {/* Labels laterais ajustados */}
+            {data.length >= 1 && (
+              <div 
+                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md transform -translate-x-1/2 -translate-y-8 transition-all duration-800 ease-out ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                }`}
+                style={{
+                  left: `${8 + (0 / 4) * 84}%`,
+                  top: `${100 - (22 / 78) * 60}%`,
+                  transitionDelay: '1800ms'
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-orange-600 font-bold">Você</div>
+                  <div className="text-xs text-gray-400">Atual</div>
+                </div>
+              </div>
+            )}
+
+            {data.length >= 5 && (
+              <div 
+                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md transform -translate-x-1/2 -translate-y-8 transition-all duration-800 ease-out ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                }`}
+                style={{
+                  left: `${8 + (4 / 4) * 84}%`,
+                  top: `${100 - (88 / 88) * 60}%`,
+                  transitionDelay: '2200ms'
+                }}
+              >
+                <div className="text-center">
+                  <div className="text-orange-600 font-bold">Ponto. School</div>
+                  <div className="text-xs text-gray-400">Meta</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Checklist - Benefícios vs Problemas */}
+        <div 
+          className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-full mt-4 sm:mt-6 transform transition-all duration-1000 ease-out delay-500 ${
+            isVisible 
+              ? 'translate-y-0 opacity-100 scale-100' 
+              : 'translate-y-10 opacity-0 scale-95'
+          }`}
+          style={{
+            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+          }}
+        >
+          <div className="space-y-3 sm:space-y-4">
+            {[
+              { text: '+15 horas por semana', type: 'positive' },
+              { text: 'Alunos engajados', type: 'positive' },
+              { text: 'Mais reputação na profissão', type: 'positive' },
+              { text: 'Materiais personalizados', type: 'positive' },
+              { text: 'Dor de cabeça', type: 'negative' },
+              { text: 'Alunos desmotivados', type: 'negative' },
+              { text: 'Falta de criatividade', type: 'negative' }
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className={`flex items-center space-x-3 transform transition-all duration-500 ease-out ${
+                  isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
+                }`}
+                style={{ transitionDelay: `${800 + index * 200}ms` }}
+              >
+                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
+                  item.type === 'positive' 
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
+                    : 'bg-gradient-to-r from-red-500 to-red-400'
+                }`}>
+                  {item.type === 'positive' ? (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  ) : (
+                    <svg 
+                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
+                      fill="currentColor" 
+                      viewBox="0 0 20 20"
+                    >
+                      <path 
+                        fillRule="evenodd" 
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
+                        clipRule="evenodd" 
+                      />
+                    </svg>
+                  )}
+                </div>
+                <span className={`font-medium text-sm sm:text-base ${
+                  item.type === 'positive' ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400 line-through'
+                }`}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Botões */}
+        <div className="flex gap-4 justify-center mt-6">
+          <button
+            onClick={onClose}
+            className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+          >
+            Talvez mais tarde
+          </button>
+          <button
+            onClick={() => {
+              console.log('🚀 Usuário clicou em "Quero ser 15x mais produtivo!" - Mudando para interface de planos');
+              setShowPlanSelection(true);
+            }}
+            className="px-8 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            Quero ser 15x mais produtivo!
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Componente do Cronômetro e Botão de Acesso Vitalício
+const TimerCard: React.FC = () => {
+  const TOTAL_TIME = 5 * 60; // 5 minutos em segundos
+  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+  const [isActive, setIsActive] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (!isActive || timeLeft <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          setIsActive(false);
+          console.log('⏰ Cronômetro finalizado!');
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isActive, timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calcula a porcentagem de progresso (de 100% para 0%)
+  const progressPercentage = (timeLeft / TOTAL_TIME) * 100;
+
+  const handleVitalicioClick = () => {
+    console.log('🎯 Usuário clicou em "Quero acesso vitalício"');
+    console.log(`⏰ Tempo restante: ${formatTime(timeLeft)}`);
+    setShowModal(true);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, x: 50 }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="absolute top-4 right-4 z-30 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 min-w-[280px]"
+    >
+      <div className="flex items-center justify-between gap-4">
+        {/* Cronômetro */}
+        <div className="flex flex-col items-center">
+          <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+            Tempo Restante
+          </div>
+          <div className={`text-2xl font-bold transition-colors duration-300 ${
+            timeLeft <= 60 ? 'text-red-500' : timeLeft <= 180 ? 'text-orange-500' : 'text-[#FF6B00]'
+          }`}>
+            {formatTime(timeLeft)}
+          </div>
+          {timeLeft <= 0 && (
+            <div className="text-xs text-red-500 font-medium mt-1">
+              Tempo esgotado!
+            </div>
+          )}
+        </div>
+
+        {/* Separador */}
+        <div className="w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
+
+        {/* Botão de Acesso Vitalício */}
+        <div className="flex-1">
+          <button
+            onClick={handleVitalicioClick}
+            className="w-full px-4 py-3 bg-gradient-to-r from-[#FF6B00] to-[#FF8A39] hover:from-[#E55A00] hover:to-[#FF7A29] text-white font-bold text-sm rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+              </svg>
+              <span>Quero acesso</span>
+              <span>vitalício</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Barra de progresso do tempo - funcional e progressiva */}
+      <div className="mt-3 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+        <motion.div 
+          className={`h-1.5 rounded-full transition-colors duration-500 ${
+            timeLeft <= 60 ? 'bg-red-500' : timeLeft <= 180 ? 'bg-orange-500' : 'bg-[#FF6B00]'
+          }`}
+          initial={{ width: "100%" }}
+          animate={{ width: `${progressPercentage}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+      </div>
+
+
+
+      {/* Texto de urgência */}
+      {timeLeft <= 180 && timeLeft > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 text-center"
+        >
+          <div className={`text-xs font-medium ${
+            timeLeft <= 60 ? 'text-red-600' : 'text-orange-600'
+          }`}>
+            ⚡ Oferta por tempo limitado!
+          </div>
+        </motion.div>
+      )}
+
+      {/* Alerta quando o tempo acaba */}
+      {timeLeft <= 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-2 text-center"
+        >
+          <div className="text-sm font-bold text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">
+            🔥 Tempo esgotado! Não perca esta oportunidade!
+          </div>
+        </motion.div>
+      )}
+
+      {/* Modal de Acesso Vitalício */}
+      <AcessoVitalicioModal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+      />
+
+      {/* Estilos CSS para animações */}
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.2;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.4;
+            transform: scale(1.1);
+          }
+        }
+
+        svg circle:hover {
+          transform: scale(1.2);
+          transition: transform 0.2s ease-out;
+        }
+
+        svg text {
+          pointer-events: none;
+        }
+      `}</style>
+    </motion.div>
+  );
+};
+
 export interface ContextualizationData {
   materias: string;
   publicoAlvo: string;
@@ -80,6 +774,7 @@ export interface ActionPlanItem {
   customFields?: Record<string, string>;
   isManual?: boolean;
   isBuilt?: boolean;
+  originalData?: any;
 }
 
 interface CardDeConstrucaoProps {
@@ -132,7 +827,7 @@ export function CardDeConstrucao({
   // Debug state for trilhas system
   const [showTrilhasDebug, setShowTrilhasDebug] = useState<boolean>(false);
 
-  // Estado para mostrar a interface de adicionar atividade manual
+  // State for showing the interface to add manual activity
   const [showAddActivityInterface, setShowAddActivityInterface] = useState(false);
 
   // Manual activity addition state
@@ -243,10 +938,17 @@ export function CardDeConstrucao({
   useEffect(() => {
     if (actionPlan) {
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
+      console.log('📋 Verificando personalização das atividades:', actionPlan.map(item => ({
+        id: item.id,
+        title: item.title,
+        hasCustomFields: item.customFields && Object.keys(item.customFields).length > 0,
+        customFields: item.customFields
+      })));
+      
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
 
-      // Se estivermos na etapa de atividades, também atualizar selectedActivities
+      // If we are in the activities step, also update selectedActivities
       if (step === 'activities') {
         setSelectedActivities(approved);
       }
@@ -257,10 +959,10 @@ export function CardDeConstrucao({
     console.log('✅ Plano de ação aprovado! Transitando para interface de construção...');
     console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
 
-    // Atualizar estado local imediatamente
+    // Update local state immediately
     setSelectedActivities(selectedActivities2);
 
-    // Aprovar plano e passar as atividades selecionadas
+    // Approve plan and pass selected activities
     onApproveActionPlan(selectedActivities2);
   };
 
@@ -283,7 +985,7 @@ export function CardDeConstrucao({
       type: activityType?.name || "Atividade Manual",
       isManual: true,
       approved: false,
-      customFields: {} // Atividades manuais também podem ter customFields
+      customFields: {} // Manual activities can also have customFields
     };
 
     // Add to manual activities list
@@ -492,7 +1194,7 @@ export function CardDeConstrucao({
         setFilterState('all');
         break;
       case 'selectRecommended':
-        // Seleciona as 3 primeiras atividades como "recomendadas"
+        // Select the first 3 activities as "recommended"
         const recommended = combinedActivities.slice(0, Math.min(3, combinedActivities.length));
         setSelectedActivities2(recommended);
         setFilterState('all');
@@ -513,7 +1215,7 @@ export function CardDeConstrucao({
   };
 
   const getIconByActivityId = (activityId: string) => {
-    // Sistema de mapeamento 100% único - cada ID tem seu próprio ícone específico
+    // 100% unique mapping system - each ID has its own specific icon
     const uniqueIconMapping: { [key: string]: any } = {
       "atividade-adaptada": Heart,
       "atividades-contos-infantis": BookOpen,
@@ -598,12 +1300,12 @@ export function CardDeConstrucao({
       "tornar-relevante": Star
     };
 
-    // Verifica se existe mapeamento direto para o ID
+    // Check if direct mapping exists for the ID
     if (uniqueIconMapping[activityId]) {
       return uniqueIconMapping[activityId];
     }
 
-    // Sistema de fallback com hash consistente para IDs não mapeados
+    // Fallback system with consistent hash for unmapped IDs
     const fallbackIcons = [
       BookOpen, FileText, PenTool, Search, Brain,
       Users, MessageSquare, Presentation, ThumbsUp, Heart,
@@ -615,7 +1317,7 @@ export function CardDeConstrucao({
       TreePine, Sun, Cloud, Home, Car
     ];
 
-    // Gera hash consistente baseado no ID
+    // Generate consistent hash based on the ID
     let hash = 0;
     for (let i = 0; i < activityId.length; i++) {
       const char = activityId.charCodeAt(i);
@@ -690,22 +1392,22 @@ export function CardDeConstrucao({
     }
   };
 
-  // Adicionar preenchimento automático dos campos do modal com dados da IA
-  const handleEditActivity = (activity: any) => {
+  // Add auto-filling of modal fields with AI data
+  const handleEditActivity = (activity: ActionPlanItem) => {
     console.log('🔧 Editando atividade:', activity.id);
     console.log('🔍 Dados completos da atividade:', activity);
 
-    // Buscar dados da atividade no action plan se disponível
+    // Find activity data in action plan if available
     const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
                                actionPlan?.find(item => item.id === activity.id);
 
-    // Também verificar nos dados originais da atividade
+    // Also check in original activity data
     const originalData = activity.originalData || activity;
 
     console.log('📊 Action plan activity encontrada:', actionPlanActivity);
     console.log('📊 Dados originais da atividade:', originalData);
 
-    // Coletar todos os customFields disponíveis
+    // Collect all available customFields
     const customFields = {
       ...originalData?.customFields,
       ...actionPlanActivity?.customFields
@@ -716,7 +1418,7 @@ export function CardDeConstrucao({
     if (customFields && Object.keys(customFields).length > 0) {
       console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
 
-      // Processamento específico para diferentes tipos de atividades
+      // Specific processing for different activity types
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
         autoFormData = processSequenciaDidaticaData({
@@ -727,13 +1429,14 @@ export function CardDeConstrucao({
         });
 
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
+        storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
       } else if (activity.id === 'quadro-interativo') {
         console.log('🖼️ Processando atividade Quadro Interativo do Action Plan');
         const processedData = processQuadroInterativoData(activity);
         console.log('📊 Dados processados para armazenamento:', processedData);
         storeAutoData(activity, processedData, customFields, originalData, actionPlanActivity);
       } else {
-        // Processamento padrão para outras atividades
+        // Default processing for other activities
         autoFormData = {
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
@@ -748,7 +1451,7 @@ export function CardDeConstrucao({
           materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
           instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
           evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
-          // Campos adicionais específicos
+          // Additional specific fields
           timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
           context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || customFields['contexto'] || '',
           textType: customFields['Tipo de Texto'] || customFields['tipoTexto'] || '',
@@ -768,14 +1471,14 @@ export function CardDeConstrucao({
           knowledgeArea: customFields['Área de Conhecimento'] || customFields['areaConhecimento'] || '',
           complexityLevel: customFields['Nível de Complexidade'] || customFields['nivelComplexidade'] || ''
         };
+        storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
       }
 
-      // Salvar dados automáticos no localStorage para o modal usar
-      // A lógica de salvar no localStorage e abrir o modal foi movida para a função storeAutoData
-      // A chamada para storeAutoData é feita dentro dos blocos if/else acima.
+      // Saving automatic data to localStorage and opening the modal logic was moved to storeAutoData.
+      // The call to storeAutoData is made within the if/else blocks above.
     } else {
       console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
-      // Se não houver custom fields, ainda assim abrir o modal se for o caso
+      // If no custom fields, still open the modal if applicable
       if (typeof setSelectedActivity === 'function') {
         setSelectedActivity(activity);
       }
@@ -788,45 +1491,48 @@ export function CardDeConstrucao({
   const handleUpdateActivity = async (updatedActivity: any) => {
     console.log('💾 Atualizando atividade:', updatedActivity);
 
-    // Atualiza o plano de ação com a atividade modificada
+    // Update action plan with modified activity
     const newActionPlan = actionPlan?.map(activity => 
       activity.id === updatedActivity.id ? updatedActivity : activity
-    ) || []; // Garante que newActionPlan seja sempre um array
+    ) || []; // Ensure newActionPlan is always an array
 
-    // Atualiza o estado local com o novo plano de ação
+    // Update local state with the new action plan
     setActionPlanItems(newActionPlan);
-    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Atualiza selectedActivities2 também
+    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Update selectedActivities2 as well
 
-    // Sincronizar com localStorage se necessário
+    // Synchronize with localStorage if needed
     try {
       const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
         localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
-        console.log('✅ Dados do plano de ação sincronizados no localStorage');
+        console.log('✅ Plano de ação data synchronized in localStorage');
       }
     } catch (error) {
-      console.error('Erro ao sincronizar plano de ação com localStorage:', error);
+      console.error('Error synchronizing action plan with localStorage:', error);
     }
   };
 
   const handleRemoveActivity = (activityId: string) => {
-    const newActionPlan = actionPlan?.filter(activity => activity.id !== activityId) || []; // Garante que newActionPlan seja sempre um array
+    const newActionPlan = actionPlan?.filter(activity => activity.id !== activityId) || []; // Ensure newActionPlan is always an array
     setActionPlanItems(newActionPlan);
-    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Atualiza selectedActivities2 também
+    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Update selectedActivities2 as well
 
-    // Também remover do localStorage
+    // Also remove from localStorage
     try {
       const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
         localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
-        console.log('✅ Atividade removida e plano de ação sincronizado no localStorage');
+        console.log('✅ Activity removed and action plan synchronized in localStorage');
       }
     } catch (error) {
-      console.error('Erro ao remover atividade do localStorage:', error);
+      console.error('Error removing activity from localStorage:', error);
     }
   };
+
+  // Determine if we are on the Quiz page by checking the URL
+  const isQuizMode = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
 
   return (
     <motion.div
@@ -843,12 +1549,11 @@ export function CardDeConstrucao({
       className="relative rounded-2xl p-6 shadow-2xl border border-[#FF6B00]/30 dark:border-[#FF6B00]/30 bg-white dark:bg-[#021321]"
       style={{
         width: "1353px",
-        height: "773px",
-        margin: "0 auto"
+        height: "773px"
       }}
       data-theme="adaptive"
     >
-      {/* Cabeçalho Persistente Fixo */}
+      {/* Persistent Fixed Header */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-0">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -911,7 +1616,7 @@ export function CardDeConstrucao({
           </div>
         </div>
 
-        {/* Barra de Progresso */}
+        {/* Progress Bar */}
         <div className="flex items-center gap-4">
           <div className="relative flex items-center justify-between w-44">
             {/* Background progress line */}
@@ -938,7 +1643,10 @@ export function CardDeConstrucao({
                 <span className="text-sm font-semibold">1</span>
               ) : (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <path 
+                    fillRule="evenodd" 
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                    clipRule="evenodd"/>
                 </svg>
               )}
             </div>
@@ -952,7 +1660,10 @@ export function CardDeConstrucao({
                 <span className="text-sm font-semibold">2</span>
               ) : (step === "generating" || step === "generatingActivities" || step === "activities") ? (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <path 
+                    fillRule="evenodd" 
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                    clipRule="evenodd"/>
                 </svg>
               ) : (
                 <span className="text-sm font-semibold">2</span>
@@ -968,7 +1679,7 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-      {/* Renderização condicional baseada no step */}
+      {/* Conditional Rendering based on step */}
       {step === "generating" || step === "generatingActivities" ? (
         <motion.div
           className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
@@ -1035,32 +1746,39 @@ export function CardDeConstrucao({
           className="relative z-10 h-full flex flex-col pt-16"
         >
           <div className="flex items-center justify-end mb-4">
-            <button
-              onClick={onResetFlow}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-            >
-              Voltar ao início
-            </button>
+            {/* Back button - hidden in Quiz mode */}
+            {!isQuizMode && (
+              <div className="absolute top-4 right-4 z-20">
+                <button
+                  onClick={onResetFlow}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                >
+                  Voltar ao início
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Interface de Construção */}
-          <div className="flex-1 overflow-hidden flex items-center justify-center">
+          {/* Construction Interface */}
+          <div className="flex-1 overflow-hidden relative">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
-            <div className="w-full max-w-6xl mx-auto">
-              <ConstructionInterface 
-                approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
-                handleEditActivity={handleEditActivity} 
-              />
-            </div>
+            <ConstructionInterface 
+              approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
+              handleEditActivity={handleEditActivity} 
+            />
+
+            {/* Timer and Lifetime Access Button - Only on Quiz page */}
+            {isQuizMode && selectedActivities.length > 0 && (
+              <TimerCard />
+            )}
           </div>
         </motion.div>
       ) : (
         <motion.div
-          className="relative z-10 h-full flex flex-col items-center justify-center pt-16"
+          className="relative z-10 h-full flex flex-col pt-16"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          style={{ minHeight: '100%' }}
         >
           <div className="text-center mb-4 sm:mb-6"></div>
 
@@ -1333,7 +2051,7 @@ export function CardDeConstrucao({
                         onClick={() => handleActivityToggle(activity)}
                         style={{ minHeight: viewMode === 'grid' ? '180px' : '140px' }}
                       >
-                        {/* Badge Manual - para atividades manuais */}
+                        {/* Manual Activity Badge - for manual activities */}
                         {activity.isManual && (
                           <div className={`absolute top-4 z-20 ${badgeProps.showBadge ? 'right-[131px]' : 'right-4'}`}>
                             <div className="flex items-center gap-3 px-4 py-2 border-2 border-purple-500 rounded-full bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-600 transition-all duration-300 cursor-default hover:scale-105">
@@ -1348,7 +2066,7 @@ export function CardDeConstrucao({
                           </div>
                         )}
 
-                        {/* Badge Trilhas */}
+                        {/* Trilhas Badge */}
                         {badgeProps.showBadge && (
                           <div className="absolute top-4 right-4 z-20">
                             <TrilhasBadge />
@@ -1436,20 +2154,20 @@ export function CardDeConstrucao({
                                         📊 {activity.difficulty} • ⏱️ {activity.duration || '30 min'}
                                       </div>
 
-                                      {/* Exibir customFields como tags/badges */}
+                                      {/* Display customFields as tags/badges */}
                                       {activity.customFields && Object.keys(activity.customFields).length > 0 && (
                                         <div className="mt-3 flex flex-wrap gap-2">
                                           {Object.entries(activity.customFields).map(([key, value]) => {
-                                            // Função para garantir renderização segura
+                                            // Function to ensure safe rendering
                                             const safeValue = (val: any): string => {
                                               if (val === null || val === undefined) return '';
                                               if (typeof val === 'object') {
-                                                // Se for um objeto, tentar extrair propriedades comuns
+                                                // If it's an object, try to extract common properties
                                                 if (val.nome) return String(val.nome);
                                                 if (val.title) return String(val.title);
                                                 if (val.descricao) return String(val.descricao);
                                                 if (val.description) return String(val.description);
-                                                return '[Dados Complexos]';
+                                                return '[Complex Data]';
                                               }
                                               return String(val);
                                             };
@@ -1488,7 +2206,7 @@ export function CardDeConstrucao({
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -1537,8 +2255,8 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-      {/* Debug Panels para desenvolvimento */}
-      {/* <TrilhasDebugPanel /> - Removido */}
+      {/* Debug Panels for development */}
+      {/* <TrilhasDebugPanel /> - Removed */}
       {/* <AutomationDebugPanel /> */}
       <EditActivityModal
         isOpen={showEditModal}

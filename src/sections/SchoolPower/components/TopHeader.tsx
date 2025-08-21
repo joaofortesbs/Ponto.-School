@@ -173,10 +173,10 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
       `}</style>
 
       {/* Texto com FlipWords abaixo do círculo */}
-      <div className={`text-center max-w-4xl space-y-0.5 ${isMobile ? 'w-full px-2' : 'w-full px-8'}`}>
+      <div className={`text-center max-w-2xl space-y-0.5 ${isMobile ? 'w-full px-4' : ''}`}>
         {/* Primeira linha: Saudação */}
         <div
-          className={`text-xl font-bold tracking-tight leading-tight ${isMobile ? 'text-lg w-full' : 'text-2xl w-full'}`}
+          className={`text-xl font-bold tracking-tight leading-tight ${isMobile ? 'text-lg' : 'text-xl'}`}
           style={{
             fontFamily:
               "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
