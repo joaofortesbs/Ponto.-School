@@ -16,7 +16,7 @@ interface ConstructionGridProps {
   handleEditActivity?: (activity: any) => void;
 }
 
-export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
+function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
@@ -425,3 +425,5 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     </motion.div>
   );
 }
+
+export default ConstructionGrid;

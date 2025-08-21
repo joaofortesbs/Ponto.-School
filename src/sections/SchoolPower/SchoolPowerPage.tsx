@@ -10,9 +10,9 @@ import {
   ParticlesBackground,
 } from "./components";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
-import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
-import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
-import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
+import ContextualizationCard from "../../features/schoolpower/contextualization/ContextualizationCard";
+import ActionPlanCard from "../../features/schoolpower/actionplan/ActionPlanCard";
+import CardDeConstrucao from "../../features/schoolpower/construction/CardDeConstrucao";
 import { useIsMobile } from "../../hooks/useIsMobile";
 
 interface SchoolPowerPageProps {

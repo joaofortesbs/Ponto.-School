@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
@@ -25,7 +24,7 @@ export default function useSchoolPowerFlow() {
       if (saved) {
         const parsed = JSON.parse(saved);
         console.log('📥 Dados carregados do localStorage:', parsed);
-        
+
         // Verificar se os dados são válidos
         if (parsed.contextualizationData) {
           const isDataValid = validateContextualizationData(parsed.contextualizationData);
@@ -41,14 +40,14 @@ export default function useSchoolPowerFlow() {
             };
           }
         }
-        
+
         return parsed;
       }
     } catch (error) {
       console.error('❌ Erro ao carregar dados do localStorage:', error);
       localStorage.removeItem(STORAGE_KEY);
     }
-    
+
     return {
       initialMessage: null,
       contextualizationData: null,
@@ -62,26 +61,26 @@ export default function useSchoolPowerFlow() {
   // Função para validar dados de contextualização
   const validateContextualizationData = (data: ContextualizationData): boolean => {
     if (!data) return false;
-    
+
     const isValidField = (field: string) => {
-      return field && 
-             field.trim() !== '' && 
-             field.trim() !== '73' && 
+      return field &&
+             field.trim() !== '' &&
+             field.trim() !== '73' &&
              field.length > 2;
     };
-    
+
     return isValidField(data.materias) && isValidField(data.publicoAlvo);
   };
 
   // Detectar estado baseado nos dados
   React.useEffect(() => {
     console.log('🔄 Detectando estado do fluxo baseado nos dados:', flowData);
-    
+
     if (flowData.actionPlan && flowData.actionPlan.length > 0) {
       // Verificar se existem atividades aprovadas
       const approvedActivities = flowData.actionPlan.filter(item => item.approved);
       console.log('✅ Atividades aprovadas encontradas:', approvedActivities.length);
-      
+
       if (approvedActivities.length > 0) {
         console.log('🎯 Mudando para estado activities');
         setFlowState('activities');
@@ -92,7 +91,7 @@ export default function useSchoolPowerFlow() {
     } else if (flowData.contextualizationData) {
       const isValid = validateContextualizationData(flowData.contextualizationData);
       console.log('🔍 Dados de contextualização válidos:', isValid);
-      
+
       if (isValid) {
         console.log('📋 Dados válidos - mudando para actionplan');
         setFlowState('actionplan');
@@ -122,7 +121,7 @@ export default function useSchoolPowerFlow() {
   // Função para enviar mensagem inicial
   const sendInitialMessage = useCallback(async (message: string) => {
     console.log('📤 Enviando mensagem inicial:', message);
-    
+
     if (!message?.trim()) {
       console.error('❌ Mensagem vazia');
       return;
@@ -144,7 +143,7 @@ export default function useSchoolPowerFlow() {
   // Função para submeter contextualização
   const submitContextualization = useCallback(async (data: ContextualizationData) => {
     console.log('📝 Submetendo contextualização:', data);
-    
+
     if (!flowData.initialMessage) {
       console.error('❌ Mensagem inicial não encontrada');
       alert('Mensagem inicial é obrigatória para gerar o plano.');
@@ -156,10 +155,10 @@ export default function useSchoolPowerFlow() {
 
     try {
       console.log('🤖 Iniciando geração do plano personalizado...');
-      
+
       // Sempre gerar plano, mesmo com dados inválidos (o service fará a correção)
       const actionPlan = await generatePersonalizedPlan(flowData.initialMessage, data);
-      
+
       if (!actionPlan || actionPlan.length === 0) {
         console.error('❌ Nenhuma atividade foi gerada pelo serviço');
         throw new Error('Nenhuma atividade foi gerada');
@@ -177,7 +176,7 @@ export default function useSchoolPowerFlow() {
 
       setFlowData(newData);
       saveToLocalStorage(newData);
-      
+
       // Aguardar um pouco para garantir que os dados foram salvos
       setTimeout(() => {
         setFlowState('actionplan');
@@ -195,7 +194,7 @@ export default function useSchoolPowerFlow() {
   // Função para aprovar action plan
   const approveActionPlan = useCallback(async (approvedItems: ActionPlanItem[]) => {
     console.log('✅ Aprovando action plan:', approvedItems.length, 'itens');
-    
+
     if (!approvedItems || approvedItems.length === 0) {
       console.error('❌ Nenhuma atividade selecionada');
       alert('Selecione pelo menos uma atividade para continuar.');
@@ -224,7 +223,7 @@ export default function useSchoolPowerFlow() {
 
       setFlowData(newData);
       saveToLocalStorage(newData);
-      
+
       // Simular processo de geração
       setTimeout(() => {
         setFlowState('activities');
@@ -242,7 +241,7 @@ export default function useSchoolPowerFlow() {
   // Função para resetar o fluxo
   const resetFlow = useCallback(() => {
     console.log('🔄 Resetando fluxo do School Power');
-    
+
     const emptyData: SchoolPowerFlowData = {
       initialMessage: null,
       contextualizationData: null,
@@ -254,7 +253,7 @@ export default function useSchoolPowerFlow() {
     setFlowData(emptyData);
     setFlowState('idle');
     setIsLoading(false);
-    
+
     try {
       localStorage.removeItem(STORAGE_KEY);
       console.log('🗑️ Dados removidos do localStorage');

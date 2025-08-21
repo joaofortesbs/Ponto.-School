@@ -23,7 +23,7 @@ interface CardDeConstrucaoProps {
   step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'activities';
 }
 
-export default function CardDeConstrucao({ flowData, onBack, step }: CardDeConstrucaoProps) {
+function CardDeConstrucao({ flowData, onBack, step }: CardDeConstrucaoProps) {
   console.log('👁️ Componentes padrão visíveis:', false);
   console.log('🏗️ Estado atual do fluxo:', step);
   console.log('🎯 ActionPlan recebido no CardDeConstrucao:', flowData?.actionPlan);
@@ -49,10 +49,15 @@ export default function CardDeConstrucao({ flowData, onBack, step }: CardDeConst
       return field && 
              field.trim() !== '' && 
              field.trim() !== '73' && 
-             field.length > 2;
+             field.length > 3 &&
+             !field.includes('Based on:') &&
+             field !== 'undefined';
     };
     
-    return isValidField(data.materias) && isValidField(data.publicoAlvo);
+    return isValidField(data.materias) && 
+           isValidField(data.publicoAlvo) &&
+           isValidField(data.restricoes || '') &&
+           isValidField(data.observacoes || '');
   };
 
   // Verificar se dados são válidos e regenerar se necessário
@@ -81,9 +86,13 @@ export default function CardDeConstrucao({ flowData, onBack, step }: CardDeConst
       
       // Verificar se as atividades foram realmente personalizadas
       const hasPersonalizedActivities = flowData.actionPlan.some(activity => 
-        activity.title && !activity.title.includes('Based on:') && 
+        activity.title && 
+        !activity.title.includes('Based on:') && 
+        !activity.title.includes('Personalized') &&
         activity.title !== activity.id && 
-        activity.title.length > 10
+        activity.title.length > 15 &&
+        activity.description &&
+        !activity.description.includes('Based on:')
       );
       
       if (!hasPersonalizedActivities && !shouldRegenerateActivities) {
@@ -104,13 +113,19 @@ export default function CardDeConstrucao({ flowData, onBack, step }: CardDeConst
     setErrorMessage(null);
 
     try {
-      // Dados de contextualização corrigidos baseados na mensagem inicial
+      // Extrair dados corretos da mensagem inicial
+      const mensagem = flowData.initialMessage || '';
       const correctedContextualizationData: ContextualizationData = {
-        materias: 'Geografia - Relevo e Formações Geográficas',
-        publicoAlvo: '3º Bimestre - Ensino Fundamental',
-        restricoes: 'Focar em relevo, montanhas e formações geográficas',
-        datasImportantes: '3º Bimestre do ano letivo',
-        observacoes: 'Atividades práticas e interativas sobre geografia física'
+        materias: mensagem.includes('Geografia') ? 'Geografia - Relevo e Formações Geográficas' : 
+                 mensagem.includes('Matemática') ? 'Matemática' :
+                 mensagem.includes('História') ? 'História' :
+                 'Área de Conhecimento Identificada',
+        publicoAlvo: mensagem.includes('3') ? '3º Bimestre - Ensino Fundamental' :
+                    mensagem.includes('bimestre') ? 'Ensino Fundamental' :
+                    'Ensino Fundamental e Médio',
+        restricoes: 'Atividades baseadas no conteúdo solicitado',
+        datasImportantes: 'Período letivo atual',
+        observacoes: 'Materiais educacionais personalizados conforme necessidade'
       };
 
       console.log('✅ Dados de contextualização corrigidos:', correctedContextualizationData);
@@ -357,3 +372,6 @@ export default function CardDeConstrucao({ flowData, onBack, step }: CardDeConst
     </div>
   );
 }
+
+export default CardDeConstrucao;
+export { CardDeConstrucao };
