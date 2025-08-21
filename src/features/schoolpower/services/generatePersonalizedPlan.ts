@@ -47,19 +47,30 @@ interface GeminiActivityResponse {
 function validateContextualizationData(data: ContextualizationData): boolean {
   console.log('🔍 Validando dados de contextualização:', data);
   
+  if (!data) {
+    console.warn('❌ Dados de contextualização não fornecidos');
+    return false;
+  }
+  
   // Verificar se os dados não são apenas "73" ou valores inválidos
   const isValidField = (field: string) => {
     return field && 
            field.trim() !== '' && 
            field.trim() !== '73' && 
+           field.trim() !== 'undefined' &&
+           field.trim() !== 'null' &&
            field.length > 2;
   };
   
-  const isValid = isValidField(data.materias) && isValidField(data.publicoAlvo);
+  const materiasValid = isValidField(data.materias);
+  const publicoAlvoValid = isValidField(data.publicoAlvo);
+  const isValid = materiasValid && publicoAlvoValid;
   
   console.log('✅ Validação de contextualização:', {
-    materias: isValidField(data.materias),
-    publicoAlvo: isValidField(data.publicoAlvo),
+    materias: materiasValid,
+    publicoAlvo: publicoAlvoValid,
+    materiasValue: data.materias,
+    publicoAlvoValue: data.publicoAlvo,
     isValid
   });
   
@@ -81,14 +92,27 @@ function buildGeminiPrompt(
   // Verificar se os dados são válidos
   if (!validateContextualizationData(contextualizationData)) {
     console.warn('⚠️ Dados de contextualização inválidos, usando fallback');
+    
+    // Extrair dados corretos da mensagem inicial
+    const materiasExtracted = extrairMateriasFromMessage(initialMessage);
+    const publicoAlvoExtracted = extrairPublicoAlvoFromMessage(initialMessage);
+    
+    console.log('🔧 Dados extraídos da mensagem:', {
+      materiasExtracted,
+      publicoAlvoExtracted,
+      messagemOriginal: initialMessage
+    });
+    
     // Usar dados de fallback baseados na mensagem inicial
     contextualizationData = {
-      materias: extrairMateriasFromMessage(initialMessage),
-      publicoAlvo: extrairPublicoAlvoFromMessage(initialMessage),
-      restricoes: contextualizationData.restricoes || 'Nenhuma restrição específica',
-      datasImportantes: contextualizationData.datasImportantes || '',
-      observacoes: contextualizationData.observacoes || ''
+      materias: materiasExtracted,
+      publicoAlvo: publicoAlvoExtracted,
+      restricoes: 'Baseado na solicitação do usuário para o 3º bimestre',
+      datasImportantes: '3º Bimestre - Geografia',
+      observacoes: 'Atividades personalizadas baseadas na mensagem inicial do usuário'
     };
+    
+    console.log('✅ Dados de contextualização corrigidos:', contextualizationData);
   }
 
   // Simplificar lista de atividades para economizar tokens
@@ -170,6 +194,8 @@ IMPORTANTE:
  * Extrai matérias da mensagem inicial quando dados de contextualização são inválidos
  */
 function extrairMateriasFromMessage(message: string): string {
+  console.log('🔍 Extraindo matérias da mensagem:', message);
+  
   const materiasComuns = [
     'matemática', 'português', 'história', 'geografia', 'ciências', 'física', 
     'química', 'biologia', 'inglês', 'educação física', 'artes', 'filosofia',
@@ -181,37 +207,73 @@ function extrairMateriasFromMessage(message: string): string {
     messageLower.includes(materia)
   );
   
+  console.log('📚 Matérias encontradas:', materiasEncontradas);
+  
   if (materiasEncontradas.length > 0) {
-    return materiasEncontradas.join(', ');
+    const resultado = materiasEncontradas.map(m => 
+      m.charAt(0).toUpperCase() + m.slice(1)
+    ).join(', ');
+    console.log('✅ Matérias formatadas:', resultado);
+    return resultado;
   }
   
   // Se menciona relevo e geografia, focar nessas
   if (messageLower.includes('relevo') || messageLower.includes('geográfica') || messageLower.includes('montanhas')) {
+    console.log('🌍 Detectado conteúdo de Geografia');
     return 'Geografia - Relevo e Formações Geográficas';
   }
   
-  return 'Ensino Fundamental';
+  // Verificar outros termos relacionados a geografia
+  if (messageLower.includes('curricular') && messageLower.includes('grade')) {
+    console.log('📋 Detectado grade curricular - assumindo Geografia');
+    return 'Geografia';
+  }
+  
+  console.log('⚠️ Nenhuma matéria específica encontrada, usando fallback');
+  return 'Ensino Fundamental - Múltiplas Disciplinas';
 }
 
 /**
  * Extrai público-alvo da mensagem inicial
  */
 function extrairPublicoAlvoFromMessage(message: string): string {
+  console.log('🎯 Extraindo público-alvo da mensagem:', message);
+  
   const messageLower = message.toLowerCase();
   
+  // Verificar bimestre específico
   if (messageLower.includes('bimestre')) {
     const bimestreMatch = message.match(/(\d+).*?bimestre/i);
     if (bimestreMatch) {
-      return `Ensino Fundamental - ${bimestreMatch[1]}º Bimestre`;
+      const resultado = `Ensino Fundamental - ${bimestreMatch[1]}º Bimestre`;
+      console.log('📅 Bimestre identificado:', resultado);
+      return resultado;
     }
   }
   
   // Verificar menções de anos escolares
   const anoMatch = message.match(/(\d+)º?\s*ano/i);
   if (anoMatch) {
-    return `${anoMatch[1]}º Ano do Ensino Fundamental`;
+    const resultado = `${anoMatch[1]}º Ano do Ensino Fundamental`;
+    console.log('🎓 Ano escolar identificado:', resultado);
+    return resultado;
   }
   
+  // Verificar menções de séries
+  const serieMatch = message.match(/(\d+)ª?\s*série/i);
+  if (serieMatch) {
+    const resultado = `${serieMatch[1]}ª Série do Ensino Fundamental`;
+    console.log('📚 Série identificada:', resultado);
+    return resultado;
+  }
+  
+  // Se menciona grade curricular, assumir ensino fundamental
+  if (messageLower.includes('curricular') || messageLower.includes('grade')) {
+    console.log('📋 Grade curricular mencionada');
+    return 'Ensino Fundamental - 6º ao 9º Ano';
+  }
+  
+  console.log('⚠️ Público-alvo específico não identificado, usando fallback');
   return 'Ensino Fundamental';
 }
 

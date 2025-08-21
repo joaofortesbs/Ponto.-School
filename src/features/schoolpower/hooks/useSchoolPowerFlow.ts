@@ -75,23 +75,36 @@ export default function useSchoolPowerFlow() {
 
   // Detectar estado baseado nos dados
   React.useEffect(() => {
+    console.log('🔄 Detectando estado do fluxo baseado nos dados:', flowData);
+    
     if (flowData.actionPlan && flowData.actionPlan.length > 0) {
       // Verificar se existem atividades aprovadas
       const approvedActivities = flowData.actionPlan.filter(item => item.approved);
+      console.log('✅ Atividades aprovadas encontradas:', approvedActivities.length);
+      
       if (approvedActivities.length > 0) {
+        console.log('🎯 Mudando para estado activities');
         setFlowState('activities');
       } else {
+        console.log('📋 Mudando para estado actionplan');
         setFlowState('actionplan');
       }
     } else if (flowData.contextualizationData) {
-      if (validateContextualizationData(flowData.contextualizationData)) {
+      const isValid = validateContextualizationData(flowData.contextualizationData);
+      console.log('🔍 Dados de contextualização válidos:', isValid);
+      
+      if (isValid) {
+        console.log('📋 Dados válidos - mudando para actionplan');
         setFlowState('actionplan');
       } else {
+        console.log('❌ Dados inválidos - mudando para contextualizing');
         setFlowState('contextualizing');
       }
     } else if (flowData.initialMessage) {
+      console.log('💬 Mensagem inicial encontrada - mudando para contextualizing');
       setFlowState('contextualizing');
     } else {
+      console.log('🏠 Nenhum dado encontrado - mudando para idle');
       setFlowState('idle');
     }
   }, [flowData]);
@@ -132,15 +145,9 @@ export default function useSchoolPowerFlow() {
   const submitContextualization = useCallback(async (data: ContextualizationData) => {
     console.log('📝 Submetendo contextualização:', data);
     
-    // Validar dados antes de processar
-    if (!validateContextualizationData(data)) {
-      console.error('❌ Dados de contextualização inválidos:', data);
-      alert('Por favor, preencha todos os campos obrigatórios com informações válidas.');
-      return;
-    }
-
     if (!flowData.initialMessage) {
       console.error('❌ Mensagem inicial não encontrada');
+      alert('Mensagem inicial é obrigatória para gerar o plano.');
       return;
     }
 
@@ -148,15 +155,18 @@ export default function useSchoolPowerFlow() {
     setFlowState('generating');
 
     try {
-      // Gerar plano personalizado
-      console.log('🤖 Gerando plano personalizado...');
+      console.log('🤖 Iniciando geração do plano personalizado...');
+      
+      // Sempre gerar plano, mesmo com dados inválidos (o service fará a correção)
       const actionPlan = await generatePersonalizedPlan(flowData.initialMessage, data);
       
       if (!actionPlan || actionPlan.length === 0) {
+        console.error('❌ Nenhuma atividade foi gerada pelo serviço');
         throw new Error('Nenhuma atividade foi gerada');
       }
 
       console.log('✅ Plano gerado com sucesso:', actionPlan.length, 'atividades');
+      console.log('📋 Atividades geradas:', actionPlan.map(a => ({ id: a.id, title: a.title })));
 
       const newData: SchoolPowerFlowData = {
         ...flowData,
@@ -167,11 +177,15 @@ export default function useSchoolPowerFlow() {
 
       setFlowData(newData);
       saveToLocalStorage(newData);
-      setFlowState('actionplan');
+      
+      // Aguardar um pouco para garantir que os dados foram salvos
+      setTimeout(() => {
+        setFlowState('actionplan');
+      }, 500);
 
     } catch (error) {
       console.error('❌ Erro ao gerar plano:', error);
-      alert('Erro ao gerar o plano de ação. Tente novamente.');
+      alert(`Erro ao gerar o plano de ação: ${error.message || error}`);
       setFlowState('contextualizing');
     } finally {
       setIsLoading(false);
