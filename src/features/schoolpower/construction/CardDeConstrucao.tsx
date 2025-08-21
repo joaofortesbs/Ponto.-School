@@ -938,6 +938,13 @@ export function CardDeConstrucao({
   useEffect(() => {
     if (actionPlan) {
       console.log('🎯 ActionPlan recebido no CardDeConstrucao:', actionPlan);
+      console.log('📋 Verificando personalização das atividades:', actionPlan.map(item => ({
+        id: item.id,
+        title: item.title,
+        hasCustomFields: item.customFields && Object.keys(item.customFields).length > 0,
+        customFields: item.customFields
+      })));
+      
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
 
