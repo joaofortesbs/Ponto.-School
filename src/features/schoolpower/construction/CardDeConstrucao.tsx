@@ -59,44 +59,8 @@ const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   name: activity.name || activity.title || activity.description
 }));
 
-// Componente do Modal de Acesso Vitalício com código exato fornecido
+// Componente do Modal de Acesso Vitalício
 const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const [data, setData] = useState([]);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setIsVisible(false);
-      setData([]);
-      return;
-    }
-
-    // Animação de entrada do card
-    setTimeout(() => setIsVisible(true), 100);
-
-    // Dados iniciais (removido Julho)
-    const initialData = [
-      { name: 'Ago', value: 22 },
-      { name: 'Set', value: 45 },
-      { name: 'Out', value: 48 },
-      { name: 'Nov', value: 68 },
-      { name: 'Dez', value: 78 }
-    ];
-
-    // Animar crescimento dos dados
-    let currentIndex = 0;
-    const interval = setInterval(() => {
-      if (currentIndex < initialData.length) {
-        setData(initialData.slice(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 400);
-
-    return () => clearInterval(interval);
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
@@ -104,7 +68,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-8"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={onClose}
     >
       <motion.div
@@ -112,329 +76,135 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 50 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl w-full mx-auto max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-2xl w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Card Principal do Gráfico */}
-        <div 
-          className={`bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 w-full max-w-lg xl:max-w-xl h-auto min-h-60 sm:min-h-80 transform transition-all duration-1000 ease-out ${
-            isVisible 
-              ? 'translate-y-0 opacity-100 scale-100' 
-              : 'translate-y-10 opacity-0 scale-95'
-          }`}
-          style={{
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8)'
-          }}
-        >
-          <div className="mb-4 sm:mb-6">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white mb-2 text-center sm:text-left">
-              Seja 15x mais produtivo com IA!
-            </h3>
-            <p className="text-gray-500 dark:text-gray-300 text-xs sm:text-sm text-center sm:text-left">
-              Transforme sua carreira em minutos!
-            </p>
-          </div>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Seja 15x mais produtivo com IA!
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Transforme sua carreira em minutos!
+          </p>
+        </div>
 
-          <div className="h-32 sm:h-40 lg:h-48 w-full relative">
-            <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
-              {/* Definições de gradientes e filtros */}
+        {/* Gráfico */}
+        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-6 mb-6">
+          <div className="relative h-48">
+            {/* Linha do gráfico */}
+            <svg className="w-full h-full" viewBox="0 0 400 150" preserveAspectRatio="none">
+              {/* Grid lines */}
               <defs>
-                <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#F97316" />
-                  <stop offset="100%" stopColor="#FB923C" />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge> 
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-                <filter id="drop-shadow">
-                  <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#F97316" floodOpacity="0.4"/>
-                </filter>
-                <filter id="soft-glow">
-                  <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-                  <feMerge> 
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Grid de fundo sutil com animação */}
-              <defs>
-                <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-                  <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f0f0f0" strokeWidth="0.5" opacity="0.3"/>
+                <pattern id="grid" width="80" height="30" patternUnits="userSpaceOnUse">
+                  <path d="M 80 0 L 0 0 0 30" fill="none" stroke="#e5e7eb" strokeWidth="0.5"/>
                 </pattern>
               </defs>
-              <rect 
-                width="100%" 
-                height="100%" 
-                fill="url(#grid)"
-                style={{
-                  opacity: isVisible ? 0.3 : 0,
-                  transition: 'opacity 1s ease-out',
-                  transitionDelay: '200ms'
-                }}
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              
+              {/* Linha de progresso */}
+              <path
+                d="M 20 120 Q 80 110 100 100 T 180 80 Q 240 70 280 60 T 380 30"
+                fill="none"
+                stroke="#FF6B00"
+                strokeWidth="3"
+                strokeLinecap="round"
               />
-
-              {/* Área sombreada sob a linha com animação aprimorada */}
-              {data.length >= 2 && (
-                <path
-                  d={`M 20 160 L ${20} ${160 - (data[0]?.value || 0) * 1.5} ${data.map((item, index) => 
-                    `L ${20 + index * 95} ${160 - item.value * 1.5}`
-                  ).join(' ')} L ${20 + (data.length - 1) * 95} 160 Z`}
-                  fill="url(#gradient)"
-                  fillOpacity="0.15"
-                  filter="url(#soft-glow)"
-                  style={{
-                    opacity: isVisible ? 1 : 0,
-                    transform: isVisible ? 'scaleY(1)' : 'scaleY(0)',
-                    transformOrigin: 'bottom',
-                    transition: 'all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                    transitionDelay: `${(data.length - 1) * 400 + 1000}ms`
-                  }}
-                />
-              )}
-
-              {/* Linhas progressivas conectando os pontos */}
-              {data.map((item, index) => {
-                if (index === 0) return null;
-                const prevItem = data[index - 1];
-                const lineLength = Math.sqrt(
-                  Math.pow((20 + index * 95) - (20 + (index - 1) * 95), 2) + 
-                  Math.pow((160 - item.value * 1.5) - (160 - prevItem.value * 1.5), 2)
-                );
-
-                return (
-                  <line
-                    key={`line-${index}`}
-                    x1={20 + (index - 1) * 95}
-                    y1={160 - prevItem.value * 1.5}
-                    x2={20 + index * 95}
-                    y2={160 - item.value * 1.5}
-                    stroke="url(#gradient)"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    filter="url(#drop-shadow)"
-                    style={{
-                      strokeDasharray: lineLength,
-                      strokeDashoffset: isVisible ? 0 : lineLength,
-                      transition: 'stroke-dashoffset 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                      transitionDelay: `${index * 400 + 800}ms`
-                    }}
-                  />
-                );
-              })}
-
-              {/* Pontos no gráfico com animação sequencial */}
-              {data.map((item, index) => (
-                <g key={index}>
-                  {/* Círculo de brilho expandido */}
-                  <circle 
-                    cx={20 + index * 95} 
-                    cy={160 - item.value * 1.5} 
-                    r="12" 
-                    fill="#F97316"
-                    fillOpacity="0.1"
-                    style={{
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'scale(1)' : 'scale(0)',
-                      transformOrigin: 'center',
-                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-                      transitionDelay: `${index * 400 + 600}ms`,
-                      animation: isVisible ? 'pulse 3s infinite' : 'none',
-                      animationDelay: `${index * 400 + 1200}ms`
-                    }}
-                  />
-
-                  {/* Círculo de brilho médio */}
-                  <circle 
-                    cx={20 + index * 95} 
-                    cy={160 - item.value * 1.5} 
-                    r="8" 
-                    fill="#F97316"
-                    fillOpacity="0.2"
-                    style={{
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'scale(1)' : 'scale(0)',
-                      transformOrigin: 'center',
-                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-                      transitionDelay: `${index * 400 + 500}ms`,
-                      animation: isVisible ? 'pulse 2.5s infinite' : 'none',
-                      animationDelay: `${index * 400 + 1100}ms`
-                    }}
-                  />
-
-                  {/* Ponto principal com crescimento sequencial */}
-                  <circle 
-                    cx={20 + index * 95} 
-                    cy={160 - item.value * 1.5} 
-                    r="6" 
-                    fill="#F97316"
-                    stroke="#ffffff"
-                    strokeWidth="3"
-                    filter="url(#glow)"
-                    style={{
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'scale(1)' : 'scale(0)',
-                      transformOrigin: 'center',
-                      transition: 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-                      transitionDelay: `${index * 400 + 400}ms`,
-                      cursor: 'pointer'
-                    }}
-                  />
-
-                  {/* Valor do ponto com animação sequencial */}
-                  <text
-                    x={20 + index * 95}
-                    y={160 - item.value * 1.5 - 18}
-                    textAnchor="middle"
-                    className="text-xs font-bold fill-orange-600"
-                    style={{ 
-                      fontSize: 12,
-                      opacity: isVisible ? 1 : 0,
-                      transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.8)',
-                      transition: 'all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                      transitionDelay: `${index * 400 + 700}ms`,
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
-                    }}
-                  >
-                    {item.value}%
-                  </text>
-                </g>
-              ))}
-
-              {/* Labels do eixo X com animação sequencial */}
-              {data.map((item, index) => (
-                <text 
-                  key={index}
-                  x={20 + index * 95} 
-                  y="185" 
-                  textAnchor="middle" 
-                  className="text-xs text-gray-400 dark:text-gray-500"
-                  style={{ 
-                    fontSize: 11,
-                    opacity: isVisible ? 1 : 0,
-                    transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
-                    transition: 'all 0.4s ease-out',
-                    transitionDelay: `${index * 400 + 300}ms`
-                  }}
-                >
-                  {item.name}
-                </text>
-              ))}
+              
+              {/* Pontos no gráfico */}
+              <circle cx="20" cy="120" r="4" fill="#FF6B00" />
+              <circle cx="100" cy="100" r="4" fill="#FF6B00" />
+              <circle cx="180" cy="80" r="4" fill="#FF6B00" />
+              <circle cx="280" cy="60" r="4" fill="#FF6B00" />
+              <circle cx="380" cy="30" r="4" fill="#FF6B00" />
+              
+              {/* Labels */}
+              <text x="20" y="140" textAnchor="middle" className="text-xs fill-gray-500">Ago</text>
+              <text x="100" y="140" textAnchor="middle" className="text-xs fill-gray-500">Set</text>
+              <text x="180" y="140" textAnchor="middle" className="text-xs fill-gray-500">Out</text>
+              <text x="280" y="140" textAnchor="middle" className="text-xs fill-gray-500">Nov</text>
+              <text x="380" y="140" textAnchor="middle" className="text-xs fill-gray-500">Dez</text>
             </svg>
-
-            {/* Labels laterais ajustados */}
-            {data.length >= 1 && (
-              <div 
-                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md transform -translate-x-1/2 -translate-y-8 transition-all duration-800 ease-out ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-                }`}
-                style={{
-                  left: `${8 + (0 / 4) * 84}%`,
-                  top: `${100 - (22 / 78) * 60}%`,
-                  transitionDelay: '1800ms'
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-orange-600 font-bold">Você</div>
-                  <div className="text-xs text-gray-400">Atual</div>
-                </div>
-              </div>
-            )}
-
-            {data.length >= 5 && (
-              <div 
-                className={`absolute text-xs sm:text-xs font-semibold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md transform -translate-x-1/2 -translate-y-8 transition-all duration-800 ease-out ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-                }`}
-                style={{
-                  left: `${8 + (4 / 4) * 84}%`,
-                  top: `${100 - (78 / 78) * 60}%`,
-                  transitionDelay: '2200ms'
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-orange-600 font-bold">Ponto. School</div>
-                  <div className="text-xs text-gray-400">Meta</div>
-                </div>
-              </div>
-            )}
+            
+            {/* Labels laterais */}
+            <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 dark:text-gray-400">
+              <span>Ponto.<br/>School</span>
+              <span>Você</span>
+            </div>
           </div>
         </div>
 
-        {/* Checklist - Benefícios vs Problemas */}
-        <div 
-          className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 w-full mt-4 sm:mt-6 transform transition-all duration-1000 ease-out delay-500 ${
-            isVisible 
-              ? 'translate-y-0 opacity-100 scale-100' 
-              : 'translate-y-10 opacity-0 scale-95'
-          }`}
-          style={{
-            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)'
-          }}
-        >
-          <div className="space-y-3 sm:space-y-4">
-            {[
-              { text: '+15 horas por semana', type: 'positive' },
-              { text: 'Alunos engajados', type: 'positive' },
-              { text: 'Mais reputação na profissão', type: 'positive' },
-              { text: 'Materiais personalizados', type: 'positive' },
-              { text: 'Dor de cabeça', type: 'negative' },
-              { text: 'Alunos desmotivados', type: 'negative' },
-              { text: 'Falta de criatividade', type: 'negative' }
-            ].map((item, index) => (
-              <div 
-                key={index} 
-                className={`flex items-center space-x-3 transform transition-all duration-500 ease-out ${
-                  isVisible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
-                }`}
-                style={{ transitionDelay: `${800 + index * 200}ms` }}
-              >
-                <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
-                  item.type === 'positive' 
-                    ? 'bg-gradient-to-r from-orange-500 to-orange-400' 
-                    : 'bg-gradient-to-r from-red-500 to-red-400'
-                }`}>
-                  {item.type === 'positive' ? (
-                    <svg 
-                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
-                      fill="currentColor" 
-                      viewBox="0 0 20 20"
-                    >
-                      <path 
-                        fillRule="evenodd" 
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                        clipRule="evenodd" 
-                      />
-                    </svg>
-                  ) : (
-                    <svg 
-                      className="w-2 h-2 sm:w-3 sm:h-3 text-white" 
-                      fill="currentColor" 
-                      viewBox="0 0 20 20"
-                    >
-                      <path 
-                        fillRule="evenodd" 
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
-                        clipRule="evenodd" 
-                      />
-                    </svg>
-                  )}
-                </div>
-                <span className={`font-medium text-sm sm:text-base ${
-                  item.type === 'positive' ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400 line-through'
-                }`}>{item.text}</span>
-              </div>
-            ))}
+        {/* Benefícios */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">+15 horas por semana</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">Alunos engajados</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">Mais reputação na profissão</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-[#FF6B00] flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-700 dark:text-gray-300">Materiais personalizados</span>
+          </div>
+        </div>
+
+        {/* Problemas resolvidos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Dor de cabeça</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Alunos desmotivados</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400 line-through text-sm">Falta de criatividade</span>
           </div>
         </div>
 
         {/* Botões */}
-        <div className="flex gap-4 justify-center mt-6">
+        <div className="flex gap-4 justify-center">
           <button
             onClick={onClose}
             className="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
@@ -553,7 +323,7 @@ const TimerCard: React.FC = () => {
         />
       </div>
 
-
+      
 
       {/* Texto de urgência */}
       {timeLeft <= 180 && timeLeft > 0 && (
@@ -588,29 +358,6 @@ const TimerCard: React.FC = () => {
         isOpen={showModal} 
         onClose={() => setShowModal(false)} 
       />
-
-      {/* Estilos CSS para animações */}
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 0.2;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.4;
-            transform: scale(1.1);
-          }
-        }
-
-        svg circle:hover {
-          transform: scale(1.2);
-          transition: transform 0.2s ease-out;
-        }
-
-        svg text {
-          pointer-events: none;
-        }
-      `}</style>
     </motion.div>
   );
 };
@@ -636,7 +383,16 @@ export interface ActionPlanItem {
   customFields?: Record<string, string>;
   isManual?: boolean;
   isBuilt?: boolean;
-  originalData?: any;
+}
+
+interface CardDeConstrucaoProps {
+  step: 'contextualization' | 'actionPlan' | 'generating' | 'generatingActivities' | 'construction' | 'activities';
+  contextualizationData?: ContextualizationData | null;
+  actionPlan?: ActionPlanItem[] | null;
+  onSubmitContextualization: (data: ContextualizationData) => void;
+  onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
+  onResetFlow: () => void;
+  isLoading?: boolean;
 }
 
 export function CardDeConstrucao({ 
@@ -679,7 +435,7 @@ export function CardDeConstrucao({
   // Debug state for trilhas system
   const [showTrilhasDebug, setShowTrilhasDebug] = useState<boolean>(false);
 
-  // State for showing the interface to add manual activity
+  // Estado para mostrar a interface de adicionar atividade manual
   const [showAddActivityInterface, setShowAddActivityInterface] = useState(false);
 
   // Manual activity addition state
@@ -793,7 +549,7 @@ export function CardDeConstrucao({
       const approved = actionPlan.filter(item => item.approved);
       setSelectedActivities2(approved);
 
-      // If we are in the activities step, also update selectedActivities
+      // Se estivermos na etapa de atividades, também atualizar selectedActivities
       if (step === 'activities') {
         setSelectedActivities(approved);
       }
@@ -804,10 +560,10 @@ export function CardDeConstrucao({
     console.log('✅ Plano de ação aprovado! Transitando para interface de construção...');
     console.log('📋 Atividades selecionadas:', selectedActivities2.map(a => a.title));
 
-    // Update local state immediately
+    // Atualizar estado local imediatamente
     setSelectedActivities(selectedActivities2);
 
-    // Approve plan and pass selected activities
+    // Aprovar plano e passar as atividades selecionadas
     onApproveActionPlan(selectedActivities2);
   };
 
@@ -830,7 +586,7 @@ export function CardDeConstrucao({
       type: activityType?.name || "Atividade Manual",
       isManual: true,
       approved: false,
-      customFields: {} // Manual activities can also have customFields
+      customFields: {} // Atividades manuais também podem ter customFields
     };
 
     // Add to manual activities list
@@ -1039,7 +795,7 @@ export function CardDeConstrucao({
         setFilterState('all');
         break;
       case 'selectRecommended':
-        // Select the first 3 activities as "recommended"
+        // Seleciona as 3 primeiras atividades como "recomendadas"
         const recommended = combinedActivities.slice(0, Math.min(3, combinedActivities.length));
         setSelectedActivities2(recommended);
         setFilterState('all');
@@ -1060,7 +816,7 @@ export function CardDeConstrucao({
   };
 
   const getIconByActivityId = (activityId: string) => {
-    // 100% unique mapping system - each ID has its own specific icon
+    // Sistema de mapeamento 100% único - cada ID tem seu próprio ícone específico
     const uniqueIconMapping: { [key: string]: any } = {
       "atividade-adaptada": Heart,
       "atividades-contos-infantis": BookOpen,
@@ -1145,12 +901,12 @@ export function CardDeConstrucao({
       "tornar-relevante": Star
     };
 
-    // Check if direct mapping exists for the ID
+    // Verifica se existe mapeamento direto para o ID
     if (uniqueIconMapping[activityId]) {
       return uniqueIconMapping[activityId];
     }
 
-    // Fallback system with consistent hash for unmapped IDs
+    // Sistema de fallback com hash consistente para IDs não mapeados
     const fallbackIcons = [
       BookOpen, FileText, PenTool, Search, Brain,
       Users, MessageSquare, Presentation, ThumbsUp, Heart,
@@ -1162,7 +918,7 @@ export function CardDeConstrucao({
       TreePine, Sun, Cloud, Home, Car
     ];
 
-    // Generate consistent hash based on the ID
+    // Gera hash consistente baseado no ID
     let hash = 0;
     for (let i = 0; i < activityId.length; i++) {
       const char = activityId.charCodeAt(i);
@@ -1237,22 +993,22 @@ export function CardDeConstrucao({
     }
   };
 
-  // Add auto-filling of modal fields with AI data
-  const handleEditActivity = (activity: ActionPlanItem) => {
+  // Adicionar preenchimento automático dos campos do modal com dados da IA
+  const handleEditActivity = (activity: any) => {
     console.log('🔧 Editando atividade:', activity.id);
     console.log('🔍 Dados completos da atividade:', activity);
 
-    // Find activity data in action plan if available
+    // Buscar dados da atividade no action plan se disponível
     const actionPlanActivity = selectedActivities2?.find(item => item.id === activity.id) || 
                                actionPlan?.find(item => item.id === activity.id);
 
-    // Also check in original activity data
+    // Também verificar nos dados originais da atividade
     const originalData = activity.originalData || activity;
 
     console.log('📊 Action plan activity encontrada:', actionPlanActivity);
     console.log('📊 Dados originais da atividade:', originalData);
 
-    // Collect all available customFields
+    // Coletar todos os customFields disponíveis
     const customFields = {
       ...originalData?.customFields,
       ...actionPlanActivity?.customFields
@@ -1263,7 +1019,7 @@ export function CardDeConstrucao({
     if (customFields && Object.keys(customFields).length > 0) {
       console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
 
-      // Specific processing for different activity types
+      // Processamento específico para diferentes tipos de atividades
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
         autoFormData = processSequenciaDidaticaData({
@@ -1274,14 +1030,13 @@ export function CardDeConstrucao({
         });
 
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
-        storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
       } else if (activity.id === 'quadro-interativo') {
         console.log('🖼️ Processando atividade Quadro Interativo do Action Plan');
         const processedData = processQuadroInterativoData(activity);
         console.log('📊 Dados processados para armazenamento:', processedData);
         storeAutoData(activity, processedData, customFields, originalData, actionPlanActivity);
       } else {
-        // Default processing for other activities
+        // Processamento padrão para outras atividades
         autoFormData = {
           title: actionPlanActivity?.title || activity.title || originalData?.title || '',
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
@@ -1296,7 +1051,7 @@ export function CardDeConstrucao({
           materials: customFields['Materiais'] || customFields['materiais'] || customFields['Recursos Visuais'] || '',
           instructions: customFields['Instruções'] || customFields['instrucoes'] || customFields['Estratégias de Leitura'] || customFields['Atividades Práticas'] || '',
           evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
-          // Additional specific fields
+          // Campos adicionais específicos
           timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
           context: customFields['Contexto de Aplicação'] || customFields['Contexto de Uso'] || customFields['contexto'] || '',
           textType: customFields['Tipo de Texto'] || customFields['tipoTexto'] || '',
@@ -1316,14 +1071,14 @@ export function CardDeConstrucao({
           knowledgeArea: customFields['Área de Conhecimento'] || customFields['areaConhecimento'] || '',
           complexityLevel: customFields['Nível de Complexidade'] || customFields['nivelComplexidade'] || ''
         };
-        storeAutoData(activity, autoFormData, customFields, originalData, actionPlanActivity);
       }
 
-      // Saving automatic data to localStorage and opening the modal logic was moved to storeAutoData.
-      // The call to storeAutoData is made within the if/else blocks above.
+      // Salvar dados automáticos no localStorage para o modal usar
+      // A lógica de salvar no localStorage e abrir o modal foi movida para a função storeAutoData
+      // A chamada para storeAutoData é feita dentro dos blocos if/else acima.
     } else {
       console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
-      // If no custom fields, still open the modal if applicable
+      // Se não houver custom fields, ainda assim abrir o modal se for o caso
       if (typeof setSelectedActivity === 'function') {
         setSelectedActivity(activity);
       }
@@ -1336,47 +1091,47 @@ export function CardDeConstrucao({
   const handleUpdateActivity = async (updatedActivity: any) => {
     console.log('💾 Atualizando atividade:', updatedActivity);
 
-    // Update action plan with modified activity
+    // Atualiza o plano de ação com a atividade modificada
     const newActionPlan = actionPlan?.map(activity => 
       activity.id === updatedActivity.id ? updatedActivity : activity
-    ) || []; // Ensure newActionPlan is always an array
+    ) || []; // Garante que newActionPlan seja sempre um array
 
-    // Update local state with the new action plan
+    // Atualiza o estado local com o novo plano de ação
     setActionPlanItems(newActionPlan);
-    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Update selectedActivities2 as well
+    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Atualiza selectedActivities2 também
 
-    // Synchronize with localStorage if needed
+    // Sincronizar com localStorage se necessário
     try {
       const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
         localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
-        console.log('✅ Plano de ação data synchronized in localStorage');
+        console.log('✅ Dados do plano de ação sincronizados no localStorage');
       }
     } catch (error) {
-      console.error('Error synchronizing action plan with localStorage:', error);
+      console.error('Erro ao sincronizar plano de ação com localStorage:', error);
     }
   };
 
   const handleRemoveActivity = (activityId: string) => {
-    const newActionPlan = actionPlan?.filter(activity => activity.id !== activityId) || []; // Ensure newActionPlan is always an array
+    const newActionPlan = actionPlan?.filter(activity => activity.id !== activityId) || []; // Garante que newActionPlan seja sempre um array
     setActionPlanItems(newActionPlan);
-    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Update selectedActivities2 as well
+    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Atualiza selectedActivities2 também
 
-    // Also remove from localStorage
+    // Também remover do localStorage
     try {
       const flowData = JSON.parse(localStorage.getItem('schoolPowerFlow') || '{}');
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
         localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
-        console.log('✅ Activity removed and action plan synchronized in localStorage');
+        console.log('✅ Atividade removida e plano de ação sincronizado no localStorage');
       }
     } catch (error) {
-      console.error('Error removing activity from localStorage:', error);
+      console.error('Erro ao remover atividade do localStorage:', error);
     }
   };
 
-  // Determine if we are on the Quiz page by checking the URL
+  // Determina se estamos na página de Quiz verificando a URL
   const isQuizMode = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
 
   return (
@@ -1398,7 +1153,7 @@ export function CardDeConstrucao({
       }}
       data-theme="adaptive"
     >
-      {/* Persistent Fixed Header */}
+      {/* Cabeçalho Persistente Fixo */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] rounded-t-2xl flex items-center justify-between px-6 z-0">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -1461,7 +1216,7 @@ export function CardDeConstrucao({
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {/* Barra de Progresso */}
         <div className="flex items-center gap-4">
           <div className="relative flex items-center justify-between w-44">
             {/* Background progress line */}
@@ -1488,10 +1243,7 @@ export function CardDeConstrucao({
                 <span className="text-sm font-semibold">1</span>
               ) : (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path 
-                    fillRule="evenodd" 
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                    clipRule="evenodd"/>
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               )}
             </div>
@@ -1505,10 +1257,7 @@ export function CardDeConstrucao({
                 <span className="text-sm font-semibold">2</span>
               ) : (step === "generating" || step === "generatingActivities" || step === "activities") ? (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path 
-                    fillRule="evenodd" 
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                    clipRule="evenodd"/>
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               ) : (
                 <span className="text-sm font-semibold">2</span>
@@ -1524,7 +1273,7 @@ export function CardDeConstrucao({
         </div>
       </div>
 
-      {/* Conditional Rendering based on step */}
+      {/* Renderização condicional baseada no step */}
       {step === "generating" || step === "generatingActivities" ? (
         <motion.div
           className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pt-16"
@@ -1591,7 +1340,7 @@ export function CardDeConstrucao({
           className="relative z-10 h-full flex flex-col pt-16"
         >
           <div className="flex items-center justify-end mb-4">
-            {/* Back button - hidden in Quiz mode */}
+            {/* Botão de voltar - escondido em modo Quiz */}
             {!isQuizMode && (
               <div className="absolute top-4 right-4 z-20">
                 <button
@@ -1604,15 +1353,15 @@ export function CardDeConstrucao({
             )}
           </div>
 
-          {/* Construction Interface */}
+          {/* Interface de Construção */}
           <div className="flex-1 overflow-hidden relative">
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
             <ConstructionInterface 
               approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
               handleEditActivity={handleEditActivity} 
             />
-
-            {/* Timer and Lifetime Access Button - Only on Quiz page */}
+            
+            {/* Cronômetro e Botão de Acesso Vitalício - Apenas na página de Quiz */}
             {isQuizMode && selectedActivities.length > 0 && (
               <TimerCard />
             )}
@@ -1896,7 +1645,7 @@ export function CardDeConstrucao({
                         onClick={() => handleActivityToggle(activity)}
                         style={{ minHeight: viewMode === 'grid' ? '180px' : '140px' }}
                       >
-                        {/* Manual Activity Badge - for manual activities */}
+                        {/* Badge Manual - para atividades manuais */}
                         {activity.isManual && (
                           <div className={`absolute top-4 z-20 ${badgeProps.showBadge ? 'right-[131px]' : 'right-4'}`}>
                             <div className="flex items-center gap-3 px-4 py-2 border-2 border-purple-500 rounded-full bg-purple-500/10 hover:bg-purple-500/15 hover:border-purple-600 transition-all duration-300 cursor-default hover:scale-105">
@@ -1911,7 +1660,7 @@ export function CardDeConstrucao({
                           </div>
                         )}
 
-                        {/* Trilhas Badge */}
+                        {/* Badge Trilhas */}
                         {badgeProps.showBadge && (
                           <div className="absolute top-4 right-4 z-20">
                             <TrilhasBadge />
@@ -1999,20 +1748,20 @@ export function CardDeConstrucao({
                                         📊 {activity.difficulty} • ⏱️ {activity.duration || '30 min'}
                                       </div>
 
-                                      {/* Display customFields as tags/badges */}
+                                      {/* Exibir customFields como tags/badges */}
                                       {activity.customFields && Object.keys(activity.customFields).length > 0 && (
                                         <div className="mt-3 flex flex-wrap gap-2">
                                           {Object.entries(activity.customFields).map(([key, value]) => {
-                                            // Function to ensure safe rendering
+                                            // Função para garantir renderização segura
                                             const safeValue = (val: any): string => {
                                               if (val === null || val === undefined) return '';
                                               if (typeof val === 'object') {
-                                                // If it's an object, try to extract common properties
+                                                // Se for um objeto, tentar extrair propriedades comuns
                                                 if (val.nome) return String(val.nome);
                                                 if (val.title) return String(val.title);
                                                 if (val.descricao) return String(val.descricao);
                                                 if (val.description) return String(val.description);
-                                                return '[Complex Data]';
+                                                return '[Dados Complexos]';
                                               }
                                               return String(val);
                                             };
@@ -2100,8 +1849,8 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-      {/* Debug Panels for development */}
-      {/* <TrilhasDebugPanel /> - Removed */}
+      {/* Debug Panels para desenvolvimento */}
+      {/* <TrilhasDebugPanel /> - Removido */}
       {/* <AutomationDebugPanel /> */}
       <EditActivityModal
         isOpen={showEditModal}
