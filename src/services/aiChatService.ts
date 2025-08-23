@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // Chaves de API
 const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
-const GEMINI_API_KEY = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+// Usar a chave da API do Gemini
+const GEMINI_API_KEY = 'AIzaSyCTFP7NXclzBjV5M2JzhealO_SQ8rDrzDg';
 
 // URLs base
 const XAI_BASE_URL = 'https://api.x.ai/v1/chat/completions';
@@ -1275,7 +1276,7 @@ Para aprofundamento posterior, recomenda-se a consulta às seguintes fontes auto
           },
           {
             "termo": "Metacognição",
-            "definicao": "Consciência e compreensão dos próprios processos cognitivos. Inclui a capacidade de monitorar, avaliar e regular o próprio pensamento e aprendizagem, permitindo ao indivíduo desenvolver estratégias mais eficazes de estudo e resolução de problemas."
+            "definicao": "Consciência e compreensão dos próprios processos cognitivos, incluindo a capacidade de monitorar e regular o próprio pensamento."
           },
           {
             "termo": "Zona de Desenvolvimento Proximal",
