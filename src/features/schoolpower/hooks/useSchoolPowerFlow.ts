@@ -25,14 +25,17 @@ export default function useSchoolPowerFlow() {
         const parsed = JSON.parse(saved);
         console.log('📥 Dados carregados do localStorage:', parsed);
 
-        // Verificar se os dados são válidos
+        // Verificar se os dados são válidos - limpar se inválidos
         if (parsed.contextualizationData) {
-          const isDataValid = validateContextualizationData(parsed.contextualizationData);
-          if (!isDataValid) {
-            console.warn('⚠️ Dados de contextualização inválidos encontrados no localStorage, limpando...');
+          const hasInvalidData = Object.values(parsed.contextualizationData).some(
+            (value: any) => value === '73' || value === 'undefined'
+          );
+          
+          if (hasInvalidData) {
+            console.warn('⚠️ Dados corrompidos encontrados no localStorage, limpando...');
             localStorage.removeItem(STORAGE_KEY);
             return {
-              initialMessage: null,
+              initialMessage: parsed.initialMessage || null,
               contextualizationData: null,
               actionPlan: null,
               manualActivities: null,
@@ -71,6 +74,28 @@ export default function useSchoolPowerFlow() {
 
     return isValidField(data.materias) && isValidField(data.publicoAlvo);
   };
+
+  // Cleanup inicial para dados corrompidos
+  React.useEffect(() => {
+    const cleanup = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const data = JSON.parse(saved);
+          if (data.contextualizationData && Object.values(data.contextualizationData).includes('73')) {
+            console.log('🧹 Limpando dados corrompidos do localStorage...');
+            localStorage.removeItem(STORAGE_KEY);
+            window.location.reload();
+          }
+        }
+      } catch (error) {
+        console.error('Erro na limpeza:', error);
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    };
+    
+    cleanup();
+  }, []);
 
   // Detectar estado baseado nos dados
   React.useEffect(() => {

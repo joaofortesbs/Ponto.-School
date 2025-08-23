@@ -49,123 +49,29 @@ function CardDeConstrucao({ flowData, onBack, step }: CardDeConstrucaoProps) {
       return field && 
              field.trim() !== '' && 
              field.trim() !== '73' && 
-             field.length > 3 &&
+             field.length > 2 &&
              !field.includes('Based on:') &&
              field !== 'undefined';
     };
     
-    return isValidField(data.materias) && 
-           isValidField(data.publicoAlvo) &&
-           isValidField(data.restricoes || '') &&
-           isValidField(data.observacoes || '');
+    return isValidField(data.materias) && isValidField(data.publicoAlvo);
   };
 
-  // Verificar se dados são válidos e regenerar se necessário
+  // Verificar se dados são válidos apenas uma vez
   useEffect(() => {
     console.log('🔍 Verificando validade dos dados de contextualização...');
     
-    if (flowData?.contextualizationData && flowData?.actionPlan) {
+    if (flowData?.contextualizationData && step === 'contextualization') {
       const isDataValid = validateContextualizationData(flowData.contextualizationData);
       
-      if (!isDataValid && !shouldRegenerateActivities) {
-        console.warn('⚠️ Dados de contextualização inválidos detectados, será necessário regenerar');
-        setShouldRegenerateActivities(true);
-        setErrorMessage('Dados de contextualização inválidos. Regenerando atividades...');
+      if (!isDataValid) {
+        console.warn('⚠️ Dados de contextualização inválidos detectados');
+        setErrorMessage('Dados de contextualização precisam ser corrigidos.');
       }
     }
-  }, [flowData, shouldRegenerateActivities]);
+  }, [flowData?.contextualizationData, step]);
 
-  // Verificar personalização das atividades
-  useEffect(() => {
-    if (flowData?.actionPlan) {
-      const activityTitles = flowData.actionPlan.map(activity => ({
-        id: activity.id,
-        title: activity.title
-      }));
-      console.log('📋 Verificando personalização das atividades:', activityTitles);
-      
-      // Verificar se as atividades foram realmente personalizadas
-      const hasPersonalizedActivities = flowData.actionPlan.some(activity => 
-        activity.title && 
-        !activity.title.includes('Based on:') && 
-        !activity.title.includes('Personalized') &&
-        activity.title !== activity.id && 
-        activity.title.length > 15 &&
-        activity.description &&
-        !activity.description.includes('Based on:')
-      );
-      
-      if (!hasPersonalizedActivities && !shouldRegenerateActivities) {
-        console.warn('⚠️ Atividades não foram personalizadas adequadamente');
-        setShouldRegenerateActivities(true);
-        setErrorMessage('Atividades não foram personalizadas. Regenerando...');
-      }
-    }
-  }, [flowData?.actionPlan, shouldRegenerateActivities]);
-
-  // Função para regenerar atividades com dados corretos
-  const regenerateActivities = async () => {
-    if (!flowData?.initialMessage) return;
-
-    console.log('🔄 Iniciando regeneração de atividades...');
-    setIsGenerating(true);
-    setGenerationProgress(0);
-    setErrorMessage(null);
-
-    try {
-      // Extrair dados corretos da mensagem inicial
-      const mensagem = flowData.initialMessage || '';
-      const correctedContextualizationData: ContextualizationData = {
-        materias: mensagem.includes('Geografia') ? 'Geografia - Relevo e Formações Geográficas' : 
-                 mensagem.includes('Matemática') ? 'Matemática' :
-                 mensagem.includes('História') ? 'História' :
-                 'Área de Conhecimento Identificada',
-        publicoAlvo: mensagem.includes('3') ? '3º Bimestre - Ensino Fundamental' :
-                    mensagem.includes('bimestre') ? 'Ensino Fundamental' :
-                    'Ensino Fundamental e Médio',
-        restricoes: 'Atividades baseadas no conteúdo solicitado',
-        datasImportantes: 'Período letivo atual',
-        observacoes: 'Materiais educacionais personalizados conforme necessidade'
-      };
-
-      console.log('✅ Dados de contextualização corrigidos:', correctedContextualizationData);
-
-      // Simular progresso
-      const progressInterval = setInterval(() => {
-        setGenerationProgress(prev => Math.min(prev + 10, 90));
-      }, 500);
-
-      // Gerar plano personalizado
-      const newActionPlan = await generatePersonalizedPlan(
-        flowData.initialMessage,
-        correctedContextualizationData
-      );
-
-      clearInterval(progressInterval);
-      setGenerationProgress(100);
-
-      console.log('✅ Novas atividades geradas:', newActionPlan);
-
-      // Submeter contextualização com dados corretos
-      await submitContextualization(correctedContextualizationData);
-      
-      setShouldRegenerateActivities(false);
-
-    } catch (error) {
-      console.error('❌ Erro ao regenerar atividades:', error);
-      setErrorMessage('Erro ao regenerar atividades. Tente novamente.');
-    } finally {
-      setIsGenerating(false);
-      setGenerationProgress(0);
-    }
-  };
-
-  // Executar regeneração quando necessário
-  useEffect(() => {
-    if (shouldRegenerateActivities && !isGenerating) {
-      regenerateActivities();
-    }
-  }, [shouldRegenerateActivities, isGenerating]);
+  
 
   // Função para lidar com submissão de contextualização
   const handleContextualizationSubmit = async (data: ContextualizationData) => {

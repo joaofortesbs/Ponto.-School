@@ -12,14 +12,14 @@ import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react'
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
-  approvedActivities: any[];
-  handleEditActivity?: (activity: any) => void;
+  activities: any[];
+  contextualizationData?: any;
 }
 
-function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
+function ConstructionGrid({ activities: approvedActivities, contextualizationData }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
-  const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
+  const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities || []);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -33,12 +33,7 @@ function ConstructionGrid({ approvedActivities, handleEditActivity: externalHand
 
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
-
-    if (externalHandleEditActivity) {
-      externalHandleEditActivity(activity);
-    } else {
-      openModal(activity);
-    }
+    openModal(activity);
   };
 
   const handleView = (activity: ConstructionActivity) => {
@@ -427,3 +422,4 @@ function ConstructionGrid({ approvedActivities, handleEditActivity: externalHand
 }
 
 export default ConstructionGrid;
+export { ConstructionGrid };

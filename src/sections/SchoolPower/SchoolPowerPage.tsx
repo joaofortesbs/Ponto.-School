@@ -179,12 +179,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                       flowState === 'actionplan' ? 'actionPlan' : 
                       flowState === 'generating' ? 'generating' : 
                       flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
-                contextualizationData={flowData?.contextualizationData || null}
-                actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
-                onSubmitContextualization={handleSubmitContextualization}
-                onApproveActionPlan={handleApproveActionPlan}
-                onResetFlow={handleResetFlow}
-                isLoading={isLoading}
               />
             </div>
           </div>
