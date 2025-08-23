@@ -660,37 +660,6 @@ export function CardDeConstrucao({
     setSelectedTrilhasCount(selectedTrilhas.length);
   }, [selectedActivities2]);
 
-  // Helper function to store auto-filled data and manage modal state
-  const storeAutoData = (
-    activity: ActionPlanItem, 
-    processedFormData: any, 
-    customFields: Record<string, string> | undefined, 
-    originalData: ActionPlanItem, 
-    actionPlanActivity: ActionPlanItem | undefined
-  ) => {
-    const autoDataKey = `auto_activity_data_${activity.id}`;
-    const autoData = {
-      formData: processedFormData,
-      customFields: customFields || {},
-      originalActivity: originalData,
-      actionPlanActivity: actionPlanActivity,
-      timestamp: Date.now()
-    };
-
-    localStorage.setItem(autoDataKey, JSON.stringify(autoData));
-    console.log('💾 Dados automáticos salvos para:', activity.id);
-    console.log('📋 Form data preparado:', processedFormData);
-    console.log('🔧 Custom fields salvos:', customFields);
-
-    // Update modal state
-    if (typeof setSelectedActivity === 'function') {
-      setSelectedActivity(activity);
-    }
-    if (typeof setShowEditModal === 'function') {
-      setShowEditModal(true);
-    }
-  };
-
   // Adicionar preenchimento automático dos campos do modal com dados da IA
   const handleEditActivity = (activity: any) => {
     console.log('🔧 Editando atividade:', activity.id);
@@ -717,6 +686,9 @@ export function CardDeConstrucao({
     if (customFields && Object.keys(customFields).length > 0) {
       console.log('📋 Preenchendo automaticamente com dados da IA:', customFields);
 
+      // Preparar dados automáticos para preenchimento do modal com mapeamento completo
+          const autoDataKey = `auto_activity_data_${activity.id}`;
+
       // Processamento específico para diferentes tipos de atividades
       let autoFormData;
       if (activity.id === 'sequencia-didatica') {
@@ -726,13 +698,17 @@ export function CardDeConstrucao({
           description: actionPlanActivity?.description || activity.description || originalData?.description || '',
           customFields: customFields
         });
-
+        
         console.log('🔧 Dados processados para Sequência Didática:', autoFormData);
       } else if (activity.id === 'quadro-interativo') {
-        console.log('🖼️ Processando atividade Quadro Interativo do Action Plan');
-        const processedData = processQuadroInterativoData(activity);
-        console.log('📊 Dados processados para armazenamento:', processedData);
-        storeAutoData(activity, processedData, customFields, originalData, actionPlanActivity);
+        autoFormData = processQuadroInterativoData({
+          id: activity.id,
+          title: actionPlanActivity?.title || activity.title || originalData?.title || '',
+          description: actionPlanActivity?.description || activity.description || originalData?.description || '',
+          customFields: customFields
+        });
+        
+        console.log('🔧 Dados processados para Quadro Interativo:', autoFormData);
       } else {
         // Processamento padrão para outras atividades
         autoFormData = {
@@ -772,31 +748,40 @@ export function CardDeConstrucao({
       }
 
       // Salvar dados automáticos no localStorage para o modal usar
-      // A lógica de salvar no localStorage e abrir o modal foi movida para a função storeAutoData
-      // A chamada para storeAutoData é feita dentro dos blocos if/else acima.
+      const autoData = {
+        formData: autoFormData,
+        customFields: customFields,
+        originalActivity: originalData,
+        actionPlanActivity: actionPlanActivity,
+        timestamp: Date.now()
+      };
+
+      localStorage.setItem(autoDataKey, JSON.stringify(autoData));
+      console.log('💾 Dados automáticos salvos para:', activity.id);
+      console.log('📋 Form data preparado:', autoFormData);
+      console.log('🔧 Custom fields salvos:', customFields);
     } else {
       console.warn('⚠️ Nenhum customField encontrado para preenchimento automático');
-      // Se não houver custom fields, ainda assim abrir o modal se for o caso
-      if (typeof setSelectedActivity === 'function') {
-        setSelectedActivity(activity);
-      }
-      if (typeof setShowEditModal === 'function') {
-        setShowEditModal(true);
-      }
+    }
+
+    // Para componentes que usam handleEditActivity, precisamos definir essas variáveis
+    if (typeof setSelectedActivity === 'function') {
+      setSelectedActivity(activity);
+    }
+    if (typeof setIsEditModalOpen === 'function') {
+      setIsEditModalOpen(true);
     }
   };
 
   const handleUpdateActivity = async (updatedActivity: any) => {
     console.log('💾 Atualizando atividade:', updatedActivity);
 
-    // Atualiza o plano de ação com a atividade modificada
-    const newActionPlan = actionPlan?.map(activity => 
+    const newActionPlan = actionPlan.map(activity => 
       activity.id === updatedActivity.id ? updatedActivity : activity
-    ) || []; // Garante que newActionPlan seja sempre um array
+    );
 
-    // Atualiza o estado local com o novo plano de ação
+    // updateActionPlan(newActionPlan);
     setActionPlanItems(newActionPlan);
-    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Atualiza selectedActivities2 também
 
     // Sincronizar com localStorage se necessário
     try {
@@ -804,17 +789,17 @@ export function CardDeConstrucao({
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
         localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
-        console.log('✅ Dados do plano de ação sincronizados no localStorage');
+        console.log('✅ Dados sincronizados no localStorage');
       }
     } catch (error) {
-      console.error('Erro ao sincronizar plano de ação com localStorage:', error);
+      console.error('Erro ao sincronizar com localStorage:', error);
     }
   };
 
   const handleRemoveActivity = (activityId: string) => {
-    const newActionPlan = actionPlan?.filter(activity => activity.id !== activityId) || []; // Garante que newActionPlan seja sempre um array
+    const newActionPlan = actionPlan.filter(activity => activity.id !== activityId);
+    // updateActionPlan(newActionPlan);
     setActionPlanItems(newActionPlan);
-    setSelectedActivities2(newActionPlan.filter(item => item.approved)); // Atualiza selectedActivities2 também
 
     // Também remover do localStorage
     try {
@@ -822,10 +807,9 @@ export function CardDeConstrucao({
       if (flowData.actionPlan) {
         flowData.actionPlan = newActionPlan;
         localStorage.setItem('schoolPowerFlow', JSON.stringify(flowData));
-        console.log('✅ Atividade removida e plano de ação sincronizado no localStorage');
       }
     } catch (error) {
-      console.error('Erro ao remover atividade do localStorage:', error);
+      console.error('Erro ao remover do localStorage:', error);
     }
   };
 
@@ -1452,7 +1436,7 @@ export function CardDeConstrucao({
                                             };
 
                                             const displayValue = safeValue(value);
-
+                                            
                                             return (
                                               <div 
                                                 key={key} 
