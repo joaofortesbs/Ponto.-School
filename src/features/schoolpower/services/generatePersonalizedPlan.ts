@@ -172,12 +172,12 @@ IMPORTANT:
 - Return ONLY the valid JSON array
 
         IMPORTANTE: Para atividades do tipo "quadro-interativo", use OBRIGATORIAMENTE estes campos específicos:
-        - "Disciplina / Área de conhecimento": Disciplina/matéria específica (ex: Matemática, Português, Ciências)
-        - "Ano / Série": Ano escolar específico (ex: 6º Ano, 7º Ano, 8º Ano)
-        - "Tema ou Assunto da aula": Tema específico da aula (ex: Frações, Verbos, Sistema Solar)
-        - "Objetivo de aprendizagem da aula": Objetivo detalhado e específico para a atividade
-        - "Nível de Dificuldade": Nível apropriado (ex: Básico, Intermediário, Avançado)
-        - "Atividade mostrada": Tipo de atividade interativa (ex: Quiz interativo, Jogo de arrastar e soltar, Mapa mental interativo)
+        - "Disciplina / Área de conhecimento"
+        - "Ano / Série"
+        - "Tema ou Assunto da aula"
+        - "Objetivo de aprendizagem da aula"
+        - "Nível de Dificuldade"
+        - "Atividade mostrada" (deve conter apenas atividades válidas do School Power disponíveis)
 `;
 
   return prompt;

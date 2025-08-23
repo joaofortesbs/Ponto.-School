@@ -25,7 +25,7 @@ import { CheckCircle2 } from 'lucide-react';
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
-const DefaultEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <>
     <div>
       <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -74,7 +74,7 @@ const DefaultEditActivity = ({formData, onFieldChange}: {formData: ActivityFormD
 );
 
 // Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -154,7 +154,7 @@ const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: Acti
 );
 
 // Componente específico para Sequência Didática
-const SequenciaDidaticaEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -484,7 +484,7 @@ const EditActivityModal = ({
   // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-
+    
     if (type === 'quadro-interativo') {
       const generator = new QuadroInterativoGenerator();
       const result = await generator.generateQuadroInterativoContent({
@@ -495,29 +495,28 @@ const EditActivityModal = ({
         difficultyLevel: data.difficultyLevel,
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       });
-
-      console.log('🖼️ Resultado da geração do Quadro Interativo:', result);
-
-      // Estrutura consistente para retorno
-      const finalResult = {
+      
+      // Salvar conteúdo gerado
+      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
+      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
         success: true,
         data: {
           ...data,
-          title: result.title,
-          description: result.description,
-          cardContent: result.cardContent,
-          generatedAt: result.generatedAt,
-          isGeneratedByAI: result.isGeneratedByAI
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      }));
+      
+      return {
+        success: true,
+        data: {
+          ...data,
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
         }
       };
-
-      // Salvar conteúdo gerado de forma consistente
-      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
-      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify(finalResult));
-
-      console.log('💾 Dados salvos no localStorage para visualização:', finalResult);
-
-      return finalResult;
     } else if (type === 'plano-aula') {
       return {
         success: true,
@@ -873,10 +872,10 @@ const EditActivityModal = ({
                   ...(autoFormData.title && { title: autoFormData.title }),
                   ...(autoFormData.description && { description: autoFormData.description }),
                   ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
-                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º Ano' && { schoolYear: autoFormData.schoolYear }),
-                  ...(autoFormData.theme && autoFormData.theme !== 'Tema da Aula' && { theme: autoFormData.theme }),
+                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
+                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                   ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Intermediário' && { difficultyLevel: autoFormData.difficultyLevel }),
+                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
                   ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
                   ...(autoFormData.materials && { materials: autoFormData.materials }),
                   ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
@@ -1197,7 +1196,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customFields['nivelDificuldade'] ||
+                              customCustomFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1386,6 +1385,135 @@ const EditActivityModal = ({
       setBuildProgress(0);
     }
   }, [activity, formData, isBuilding, toast]);
+
+  // Função para automação - será chamada externamente
+  useEffect(() => {
+    const handleAutoBuild = () => {
+      if (activity && formData.title && formData.description && !isGenerating) {
+        console.log('🤖 Construção automática iniciada para:', activity.title);
+        handleBuildActivity();
+      }
+    };
+
+    if (activity) {
+      (window as any).autoBuildCurrentActivity = handleAutoBuild;
+    }
+
+    return () => {
+      delete (window as any).autoBuildCurrentActivity;
+    };
+  }, [activity, formData, isGenerating, handleBuildActivity]);
+
+  const handleSaveChanges = () => {
+    const activityData = {
+      ...formData,
+      generatedContent
+    };
+    onSave(activityData);
+    onClose();
+  };
+
+  const handleCopyContent = () => {
+    navigator.clipboard.writeText(JSON.stringify(generatedContent, null, 2));
+    toast({
+      title: "Conteúdo copiado!",
+      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
+    });
+  };
+
+  const getActivityPreviewData = () => {
+    return {
+      title: formData.title,
+      description: formData.description,
+      difficulty: formData.difficultyLevel,
+      timeLimit: '45 minutos',
+      instructions: formData.instructions,
+      materials: formData.materials ? formData.materials.split('\n').filter(m => m.trim()) : [],
+      objective: formData.objectives,
+      targetAudience: formData.schoolYear,
+      rubric: formData.evaluation,
+      questions: []
+    };
+  };
+
+  const handleSave = async () => {
+    if (!activity) return;
+
+    try {
+      const customFields = activity.customFields || {};
+
+      const updatedActivity = {
+        ...activity,
+        ...formData,
+        customFields: {
+          ...customFields,
+          'Disciplina': formData.subject,
+          'Tema': formData.theme,
+          'Ano de Escolaridade': formData.schoolYear,
+          'Tempo Limite': formData.timeLimit,
+          'Competências': formData.competencies,
+          'Objetivos': formData.objectives,
+          'Materiais': formData.materials,
+          'Contexto': formData.context,
+          'Nível de Dificuldade': formData.difficultyLevel,
+          'Critérios de Avaliação': formData.evaluation,
+          ...(activity?.id === 'lista-exercicios' && {
+            'Quantidade de Questões': formData.numberOfQuestions,
+            'Modelo de Questões': formData.questionModel,
+            'Fontes': formData.sources,
+            'Instruções': formData.instructions
+          }),
+          ...(activity?.id === 'sequencia-didatica' && {
+            'Título do Tema / Assunto': formData.tituloTemaAssunto,
+            'Ano / Série': formData.anoSerie,
+            'Disciplina': formData.disciplina,
+            'BNCC / Competências': formData.bnccCompetencias,
+            'Público-alvo': formData.publicoAlvo,
+            'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
+            'Quantidade de Aulas': formData.quantidadeAulas,
+            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
+            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
+            'Cronograma': formData.cronograma
+          }),
+          ...(activity?.id === 'quadro-interativo' && {
+            'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
+          })
+        }
+      };
+
+      if (onUpdateActivity) {
+        await onUpdateActivity(updatedActivity);
+      }
+
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updatedActivity));
+      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields));
+
+      if (activity.categoryId === 'sequencia-didatica' || activity.type === 'sequencia-didatica') {
+        const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
+        localStorage.setItem(constructedKey, JSON.stringify(updatedActivity));
+        console.log('📚 Sequência Didática salva como atividade construída');
+      }
+
+      console.log('💾 Dados salvos no localStorage:', {
+        activity: updatedActivity,
+        fields: customFields
+      });
+
+      toast({
+        title: "Atividade atualizada",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar atividade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações.",
+      });
+    }
+  };
 
   // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
@@ -1852,7 +1980,7 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
-                        data={generatedContent?.data || generatedContent || {}}
+                        data={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (
