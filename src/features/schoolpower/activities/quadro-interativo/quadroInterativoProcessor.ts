@@ -1,6 +1,5 @@
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { fieldMapping, normalizeMaterials } from './fieldMapping';
-import { geminiLogger } from '@/utils/geminiDebugLogger';
 
 export interface QuadroInterativoFields {
   [key: string]: string;
@@ -17,171 +16,6 @@ export interface QuadroInterativoActivity {
   customFields: QuadroInterativoCustomFields;
   personalizedTitle?: string;
   personalizedDescription?: string;
-}
-
-export interface QuadroInterativoData {
-  disciplina?: string;
-  anoSerie?: string;
-  tema?: string;
-  objetivos?: string;
-  nivelDificuldade?: string;
-  atividadeMostrada?: string;
-  [key: string]: any;
-}
-
-export interface QuadroInterativoResult {
-  title: string;
-  description: string;
-  cardContent: {
-    title: string;
-    text: string;
-  };
-  generatedAt: string;
-  isGeneratedByAI: boolean;
-}
-
-export function processQuadroInterativoData(formData: any): QuadroInterativoResult {
-  console.log('🔄 Processando dados do Quadro Interativo:', formData);
-
-  try {
-    // Verificar se formData é válido
-    if (!formData || typeof formData !== 'object') {
-      console.warn('⚠️ FormData inválido:', formData);
-      return createFallbackResult();
-    }
-
-    // Estratégia robusta de extração de dados
-    const extractDataWithFallback = (keys: string[], data: any): string => {
-      for (const key of keys) {
-        if (data[key] && typeof data[key] === 'string' && data[key].trim() !== '') {
-          return data[key].trim();
-        }
-      }
-      return '';
-    };
-
-    // Extrair dados com múltiplas possibilidades
-    const disciplina = extractDataWithFallback([
-      'disciplina', 'subject', 'Disciplina / Área de conhecimento', 'Disciplina'
-    ], formData);
-
-    const anoSerie = extractDataWithFallback([
-      'anoSerie', 'schoolYear', 'Ano / Série', 'anoEscolaridade'
-    ], formData);
-
-    const tema = extractDataWithFallback([
-      'tema', 'theme', 'title', 'Tema ou Assunto da aula', 'Tema'
-    ], formData);
-
-    const objetivos = extractDataWithFallback([
-      'objetivos', 'objectives', 'description', 'Objetivo de aprendizagem da aula', 'Objetivos'
-    ], formData);
-
-    const nivelDificuldade = extractDataWithFallback([
-      'nivelDificuldade', 'difficultyLevel', 'Nível de Dificuldade', 'dificuldade'
-    ], formData);
-
-    const atividadeMostrada = extractDataWithFallback([
-      'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Atividade mostrada', 'atividade'
-    ], formData);
-
-    console.log('📊 Dados extraídos:', {
-      disciplina, anoSerie, tema, objetivos, nivelDificuldade, atividadeMostrada
-    });
-
-    // Verificar se temos dados gerados pela IA em diferentes estruturas
-    let cardContent = null;
-    let isGeneratedByAI = false;
-
-    // Buscar cardContent em diferentes locais
-    const cardContentSources = [
-      formData.cardContent,
-      formData.data?.cardContent,
-      formData.generatedContent?.cardContent,
-      formData.result?.cardContent
-    ];
-
-    for (const source of cardContentSources) {
-      if (source && (source.title || source.text)) {
-        cardContent = source;
-        isGeneratedByAI = true;
-        console.log('✅ Usando cardContent encontrado:', cardContent);
-        break;
-      }
-    }
-
-    // Se temos conteúdo gerado, usar ele
-    if (cardContent && (cardContent.title || cardContent.text)) {
-      return {
-        title: tema || cardContent.title || 'Quadro Interativo',
-        description: objetivos || cardContent.text || 'Atividade de quadro interativo',
-        cardContent: {
-          title: cardContent.title || tema || 'Conteúdo do Quadro',
-          text: cardContent.text || objetivos || 'Conteúdo educativo gerado pela IA.'
-        },
-        generatedAt: formData.generatedAt || new Date().toISOString(),
-        isGeneratedByAI: true
-      };
-    }
-
-    // Verificar indicadores de IA
-    isGeneratedByAI = formData.isGeneratedByAI === true || 
-                     formData.data?.isGeneratedByAI === true ||
-                     formData.generatedContent?.isGeneratedByAI === true;
-
-    // Criar estrutura com dados do formulário
-    const result: QuadroInterativoResult = {
-      title: tema || 'Quadro Interativo',
-      description: objetivos || 'Atividade de quadro interativo',
-      cardContent: {
-        title: tema || 'Conteúdo do Quadro',
-        text: objetivos || 'Conteúdo educativo será exibido aqui após a geração pela IA.'
-      },
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: isGeneratedByAI
-    };
-
-    console.log('✅ Dados processados com sucesso:', result);
-    geminiLogger.info('quadro_interativo_processor', 'Dados processados com sucesso', result);
-
-    return result;
-  } catch (error) {
-    console.error('❌ Erro ao processar dados do Quadro Interativo:', error);
-    geminiLogger.error('quadro_interativo_processor', 'Erro no processamento', error);
-
-    // Retornar estrutura de fallback
-    return createFallbackResult();
-  }
-}
-
-// Função auxiliar para criar resultado de fallback
-function createFallbackResult(): QuadroInterativoResult {
-  return {
-    title: 'Quadro Interativo',
-    description: 'Atividade de quadro interativo',
-    cardContent: {
-      title: 'Conteúdo do Quadro',
-      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
-    },
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: false
-  };
-}
-
-export function consolidateQuadroInterativoData(data: any): QuadroInterativoData {
-  console.log('🔄 Consolidando dados do Quadro Interativo:', data);
-
-  const consolidated: QuadroInterativoData = {
-    disciplina: data.disciplina || data['Disciplina / Área de conhecimento'] || data.subject || '',
-    anoSerie: data.anoSerie || data['Ano / Série'] || data.schoolYear || '',
-    tema: data.tema || data['Tema ou Assunto da aula'] || data.theme || data.title || '',
-    objetivos: data.objetivos || data['Objetivo de aprendizagem da aula'] || data.objectives || data.description || '',
-    nivelDificuldade: data.nivelDificuldade || data['Nível de Dificuldade'] || data.difficultyLevel || '',
-    atividadeMostrada: data.atividadeMostrada || data['Atividade mostrada'] || data.quadroInterativoCampoEspecifico || ''
-  };
-
-  console.log('✅ Dados consolidados:', consolidated);
-  return consolidated;
 }
 
 /**
@@ -226,7 +60,7 @@ function sanitizeJsonString(str: string): string {
  * Processa dados de uma atividade de Quadro Interativo do Action Plan
  * para o formato do formulário do modal
  */
-export function processQuadroInterativoData_old(activity: QuadroInterativoActivity): ActivityFormData {
+export function processQuadroInterativoData(activity: QuadroInterativoActivity): ActivityFormData {
   console.log('📱 Processando dados do Quadro Interativo:', activity);
 
   // Validar dados de entrada
@@ -477,6 +311,5 @@ export default {
   isQuadroInterativoActivity,
   generateQuadroInterativoFields,
   extractQuadroInterativoData,
-  validateQuadroInterativoFields,
-  consolidateQuadroInterativoData
+  validateQuadroInterativoFields
 };

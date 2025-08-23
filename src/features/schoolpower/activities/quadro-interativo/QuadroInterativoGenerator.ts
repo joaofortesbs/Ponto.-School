@@ -1,21 +1,13 @@
 
-import { GeminiClient } from '@/utils/api/geminiClient';
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 
 interface QuadroInterativoData {
-  disciplina?: string;
-  anoSerie?: string;
-  tema?: string;
-  objetivos?: string;
-  nivelDificuldade?: string;
-  atividadeMostrada?: string;
-  theme?: string;
-  objectives?: string;
-  subject?: string;
-  schoolYear?: string;
-  difficultyLevel?: string;
-  quadroInterativoCampoEspecifico?: string;
-  [key: string]: any;
+  subject: string;
+  schoolYear: string;
+  theme: string;
+  objectives: string;
+  difficultyLevel: string;
+  quadroInterativoCampoEspecifico: string;
 }
 
 interface QuadroInterativoContent {
@@ -30,172 +22,147 @@ interface QuadroInterativoContent {
 }
 
 export class QuadroInterativoGenerator {
-  private geminiClient: GeminiClient;
+  private apiKey: string;
 
   constructor() {
-    this.geminiClient = new GeminiClient();
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   }
 
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
     geminiLogger.logRequest('Gerando conteúdo de Quadro Interativo', data);
-
+    
     try {
-      // Normalizar dados de entrada
-      const normalizedData = this.normalizeInputData(data);
-      console.log('📝 Dados normalizados para geração:', normalizedData);
-
-      const prompt = this.buildPrompt(normalizedData);
-      console.log('📝 Prompt construído para Gemini:', prompt.substring(0, 200) + '...');
-
-      const response = await this.geminiClient.generate({
-        prompt,
-        temperature: 0.7,
-        maxTokens: 1000,
-        topP: 0.9,
-        topK: 40
-      });
-
-      if (!response.success) {
-        console.error('❌ Erro na resposta do Gemini:', response.error);
-        // Retornar conteúdo de fallback em caso de erro da API
-        return this.createFallbackContent(normalizedData);
-      }
-
-      const parsedContent = this.parseGeminiResponse(response.result);
-
+      const prompt = this.buildPrompt(data);
+      const response = await this.callGeminiAPI(prompt);
+      const parsedContent = this.parseGeminiResponse(response);
+      
       const result: QuadroInterativoContent = {
-        title: normalizedData.tema || 'Quadro Interativo',
-        description: normalizedData.objetivos || 'Atividade de quadro interativo',
+        title: data.theme || 'Quadro Interativo',
+        description: data.objectives || 'Atividade de quadro interativo',
         cardContent: parsedContent,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
       };
 
-      console.log('✅ Conteúdo gerado com sucesso:', result);
       geminiLogger.logResponse(result, Date.now());
       return result;
     } catch (error) {
-      console.error('❌ Erro ao gerar conteúdo:', error);
       geminiLogger.logError(error as Error, { data });
-      
-      // Retornar conteúdo de fallback em vez de lançar erro
-      const normalizedData = this.normalizeInputData(data);
-      return this.createFallbackContent(normalizedData);
+      throw new Error(`Erro ao gerar conteúdo do Quadro Interativo: ${error.message}`);
     }
-  }
-
-  private normalizeInputData(data: QuadroInterativoData): QuadroInterativoData {
-    return {
-      disciplina: data.disciplina || data.subject || 'Matemática',
-      anoSerie: data.anoSerie || data.schoolYear || '6º Ano',
-      tema: data.tema || data.theme || data.title || 'Tema da Aula',
-      objetivos: data.objetivos || data.objectives || data.description || 'Objetivos de aprendizagem',
-      nivelDificuldade: data.nivelDificuldade || data.difficultyLevel || 'Intermediário',
-      atividadeMostrada: data.atividadeMostrada || data.quadroInterativoCampoEspecifico || 'Atividade interativa'
-    };
-  }
-
-  private createFallbackContent(data: QuadroInterativoData): QuadroInterativoContent {
-    console.log('🔧 Criando conteúdo de fallback para:', data);
-    
-    const tema = data?.tema || 'Tema da Aula';
-    const objetivos = data?.objetivos || 'Objetivos de aprendizagem';
-    const disciplina = data?.disciplina || 'Disciplina';
-    const anoSerie = data?.anoSerie || 'Ano/Série';
-    
-    const fallbackTitle = `${tema} - ${disciplina}`;
-    const fallbackText = `Conteúdo educativo sobre ${tema} para ${anoSerie}. ${objetivos}`;
-    
-    return {
-      title: tema,
-      description: objetivos,
-      cardContent: {
-        title: fallbackTitle,
-        text: fallbackText
-      },
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false
-    };
   }
 
   private buildPrompt(data: QuadroInterativoData): string {
     return `
-Você é uma IA especializada em educação que cria conteúdo para quadros interativos educacionais.
+Você é uma IA especializada em educação que cria conteúdo para quadros interativos.
 
-Com base nos dados fornecidos, gere um conteúdo educativo claro e objetivo para ser exibido em um quadro interativo de sala de aula.
+Com base nos seguintes dados:
+- Disciplina: ${data.subject}
+- Ano/Série: ${data.schoolYear}
+- Tema: ${data.theme}
+- Objetivos: ${data.objectives}
+- Nível de Dificuldade: ${data.difficultyLevel}
+- Atividade Mostrada: ${data.quadroInterativoCampoEspecifico}
 
-**DADOS DA ATIVIDADE:**
-- Disciplina: ${data.disciplina}
-- Ano/Série: ${data.anoSerie}
-- Tema: ${data.tema}
-- Objetivos: ${data.objetivos}
-- Nível de Dificuldade: ${data.nivelDificuldade}
-- Atividade: ${data.atividadeMostrada}
+Gere um conteúdo específico para ser exibido em um quadro interativo que será mostrado em um card retangular central.
 
-**INSTRUÇÕES:**
-1. Crie um título atrativo e direto sobre o tema
-2. Desenvolva um texto educativo claro e objetivo (máximo 150 palavras)
-3. O conteúdo deve ser adequado para o ano/série especificado
-4. Mantenha foco nos objetivos de aprendizagem
-5. Use linguagem adequada para estudantes
-6. Inclua elementos que tornem o conteúdo interativo
+IMPORTANTE: Responda APENAS no seguinte formato JSON, sem texto adicional:
 
-**FORMATO DE RESPOSTA (JSON):**
 {
-  "title": "Título atrativo para o quadro",
-  "text": "Texto educativo claro e objetivo para exibição no quadro interativo"
+  "title": "Título claro e objetivo da atividade para o quadro (máximo 60 caracteres)",
+  "text": "Texto descritivo e educativo que será exibido no quadro interativo, adequado para a série e disciplina especificadas (máximo 300 caracteres, linguagem simples e direta)"
 }
 
-Retorne APENAS o JSON válido, sem comentários adicionais.
+O conteúdo deve ser:
+- Educativo e apropriado para a série especificada
+- Claro e objetivo
+- Relacionado diretamente ao tema e objetivos
+- Adequado para exibição em quadro interativo
+- Sem códigos ou dados técnicos visíveis
 `;
   }
 
-  private parseGeminiResponse(response: string): { title: string; text: string } {
+  private async callGeminiAPI(prompt: string): Promise<any> {
+    const startTime = Date.now();
+    
     try {
-      console.log('🔄 Parseando resposta do Gemini:', response);
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        })
+      });
 
-      // Limpar a resposta
-      let cleanedResponse = response.trim();
-      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*$/g, '');
-
-      // Encontrar o JSON
-      const jsonStart = cleanedResponse.indexOf('{');
-      const jsonEnd = cleanedResponse.lastIndexOf('}');
-
-      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
       }
 
-      const parsed = JSON.parse(cleanedResponse);
-
-      const result = {
-        title: parsed.title || parsed.titulo || 'Conteúdo do Quadro',
-        text: parsed.text || parsed.texto || parsed.content || parsed.conteudo || 'Conteúdo educativo gerado pela IA.'
-      };
-
-      // Validar e sanitizar o resultado
-      if (!result.title || result.title.trim() === '') {
-        result.title = 'Conteúdo do Quadro';
-      }
-
-      if (!result.text || result.text.trim() === '') {
-        result.text = 'Conteúdo educativo gerado pela IA.';
-      }
-
-      console.log('✅ Resposta parseada:', result);
-      return result;
+      const data = await response.json();
+      const executionTime = Date.now() - startTime;
+      
+      geminiLogger.logResponse(data, executionTime);
+      
+      return data;
     } catch (error) {
-      console.error('❌ Erro ao parsear resposta:', error);
+      geminiLogger.logError(error as Error, { prompt: prompt.substring(0, 200) });
+      throw error;
+    }
+  }
+
+  private parseGeminiResponse(response: any): { title: string; text: string } {
+    try {
+      const responseText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
       
-      // Fallback: tentar extrair conteúdo textual da resposta
-      const fallbackText = response && response.length > 50 ? 
-                          response.substring(0, 150) + '...' : 
-                          'Erro ao processar conteúdo gerado pela IA.';
+      if (!responseText) {
+        throw new Error('Resposta vazia da API Gemini');
+      }
+
+      // Limpar a resposta removendo markdown e extraindo JSON
+      let cleanedResponse = responseText
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .replace(/^\s*[\r\n]/gm, '')
+        .trim();
+
+      // Tentar fazer parse do JSON
+      const parsedContent = JSON.parse(cleanedResponse);
       
+      // Validar estrutura
+      if (!parsedContent.title || !parsedContent.text) {
+        throw new Error('Estrutura JSON inválida na resposta');
+      }
+
+      // Limitar tamanhos
+      const title = parsedContent.title.substring(0, 60);
+      const text = parsedContent.text.substring(0, 300);
+
+      geminiLogger.logValidation({ title, text }, true);
+      
+      return { title, text };
+      
+    } catch (error) {
+      geminiLogger.logValidation(response, false, [error.message]);
+      
+      // Fallback com conteúdo padrão
       return {
-        title: 'Conteúdo do Quadro',
-        text: fallbackText
+        title: 'Atividade de Quadro Interativo',
+        text: 'Conteúdo educativo para interação no quadro digital da sala de aula.'
       };
     }
   }
 }
+
+export default QuadroInterativoGenerator;

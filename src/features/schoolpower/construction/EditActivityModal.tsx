@@ -25,7 +25,7 @@ import { CheckCircle2 } from 'lucide-react';
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
-const DefaultEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void}) => (
+const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <>
     <div>
       <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -73,27 +73,8 @@ const DefaultEditActivity = ({formData, onFieldChange}: {formData: ActivityFormD
   </>
 );
 
-// Função auxiliar para criar fallback do Quadro Interativo
-const createQuadroInterativoFallback = (data: any) => {
-  const tema = data?.theme || data?.tema || data?.title || 'Quadro Interativo';
-  const objetivos = data?.objectives || data?.objetivos || data?.description || 'Atividade de quadro interativo';
-  const disciplina = data?.subject || data?.disciplina || 'Disciplina';
-  const anoSerie = data?.schoolYear || data?.anoSerie || 'Ano/Série';
-
-  return {
-    title: tema,
-    description: objetivos,
-    cardContent: {
-      title: `${tema} - ${disciplina}`,
-      text: `Conteúdo educativo sobre ${tema} para ${anoSerie}. ${objetivos}`
-    },
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: false
-  };
-};
-
 // Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void}) => (
+const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -173,7 +154,7 @@ const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: Acti
 );
 
 // Componente específico para Sequência Didática
-const SequenciaDidaticaEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void}) => (
+const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -427,7 +408,7 @@ const EditActivityModal = ({
   const [error, setError] = useState<string | null>(null);
   const [builtContent, setBuiltContent] = useState<any>(null);
 
-  const {toast} = useToast();
+  const { toast } = useToast();
 
   // Hook para geração de atividades
   const {
@@ -471,27 +452,26 @@ const EditActivityModal = ({
              formData.quantidadeDiagnosticos?.trim() &&
              formData.quantidadeAvaliacoes?.trim();
     } else if (activityType === 'quadro-interativo') {
-      const requiredFields = [
-        {name: 'title', value: formData.title},
-        {name: 'description', value: formData.description},
-        {name: 'subject', value: formData.subject},
-        {name: 'schoolYear', value: formData.schoolYear},
-        {name: 'theme', value: formData.theme},
-        {name: 'objectives', value: formData.objectives},
-        {name: 'difficultyLevel', value: formData.difficultyLevel},
-        {name: 'quadroInterativoCampoEspecifico', value: formData.quadroInterativoCampoEspecifico}
-      ];
+      const isValid = formData.title.trim() &&
+                     formData.description.trim() &&
+                     formData.subject?.trim() &&
+                     formData.schoolYear?.trim() &&
+                     formData.theme?.trim() &&
+                     formData.objectives?.trim() &&
+                     formData.difficultyLevel?.trim() &&
+                     formData.quadroInterativoCampoEspecifico?.trim();
 
-      const validation = {};
-      let isValid = true;
-
-      requiredFields.forEach(field => {
-        const hasValue = field.value && typeof field.value === 'string' && field.value.trim() !== '';
-        validation[field.name] = hasValue;
-        if (!hasValue) isValid = false;
+      console.log('🔍 Validação do Quadro Interativo:', {
+        title: !!formData.title.trim(),
+        description: !!formData.description.trim(),
+        subject: !!formData.subject?.trim(),
+        schoolYear: !!formData.schoolYear?.trim(),
+        theme: !!formData.theme?.trim(),
+        objectives: !!formData.objectives?.trim(),
+        difficultyLevel: !!formData.difficultyLevel?.trim(),
+        quadroInterativoCampoEspecifico: !!formData.quadroInterativoCampoEspecifico?.trim(),
+        isValid
       });
-
-      console.log('🔍 Validação do Quadro Interativo:', {...validation, isValid});
 
       return isValid;
     } else {
@@ -501,93 +481,42 @@ const EditActivityModal = ({
     }
   }, [formData, activity?.id]);
 
-  // Função para gerar conteúdo (agora com import dinâmico e lógica específica para Quadro Interativo)
+  // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
-    console.log(`🎯 Gerando conteúdo para tipo: ${type} com dados:`, data);
-
+    console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
+    
     if (type === 'quadro-interativo') {
-      try {
-        console.log('🎯 Gerando conteúdo para Quadro Interativo:', data);
-
-        // Validar dados de entrada
-        if (!data || typeof data !== 'object') {
-          console.error('❌ Dados inválidos para geração do Quadro Interativo');
-          return {success: false, data: createQuadroInterativoFallback(data)};
-        }
-
-        // Preparar dados para o gerador com validação robusta
-        const generationData = {
-          disciplina: data.subject || data.disciplina || 'Matemática',
-          anoSerie: data.schoolYear || data.anoSerie || '6º Ano',
-          tema: data.theme || data.tema || data.title || 'Tema da Aula',
-          objetivos: data.objectives || data.objetivos || data.description || 'Objetivos de aprendizagem',
-          nivelDificuldade: data.difficultyLevel || data.nivelDificuldade || 'Intermediário',
-          atividadeMostrada: data.quadroInterativoCampoEspecifico || data.atividadeMostrada || 'Atividade interativa',
-          // Campos adicionais para compatibilidade
-          subject: data.subject || data.disciplina || 'Matemática',
-          schoolYear: data.schoolYear || data.anoSerie || '6º Ano',
-          theme: data.theme || data.tema || data.title || 'Tema da Aula',
-          objectives: data.objectives || data.objetivos || data.description || 'Objetivos de aprendizagem',
-          difficultyLevel: data.difficultyLevel || data.nivelDificuldade || 'Intermediário'
-        };
-
-        console.log('📋 Dados preparados para geração:', generationData);
-
-        // Importar e usar o gerador de Quadro Interativo
-        const {QuadroInterativoGenerator} = await import('../activities/quadro-interativo/QuadroInterativoGenerator');
-        const generator = new QuadroInterativoGenerator();
-        const generatedContent = await generator.generateQuadroInterativoContent(generationData);
-
-        console.log('✅ Conteúdo gerado pelo Gemini:', generatedContent);
-
-        // Validar se o conteúdo foi gerado corretamente
-        if (!generatedContent || !generatedContent.cardContent) {
-          console.warn('⚠️ Conteúdo gerado incompleto, usando fallback');
-          return {success: true, data: createQuadroInterativoFallback(generationData)};
-        }
-
-        // Estrutura final robusta
-        const result = {
-          ...generatedContent,
-          title: generatedContent.title || generationData.tema || 'Quadro Interativo',
-          description: generatedContent.description || generationData.objetivos || 'Atividade de quadro interativo',
-          cardContent: {
-            title: generatedContent.cardContent.title || generationData.tema || 'Conteúdo do Quadro',
-            text: generatedContent.cardContent.text || generationData.objetivos || 'Conteúdo educativo gerado pela IA.'
-          },
-          // Metadados para tracking
-          originalData: data,
-          generationData: generationData,
+      const generator = new QuadroInterativoGenerator();
+      const result = await generator.generateQuadroInterativoContent({
+        subject: data.subject,
+        schoolYear: data.schoolYear,
+        theme: data.theme,
+        objectives: data.objectives,
+        difficultyLevel: data.difficultyLevel,
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
+      });
+      
+      // Salvar conteúdo gerado
+      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
+      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
+        success: true,
+        data: {
+          ...data,
+          ...result,
           generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true
-        };
-
-        // Salvar no localStorage para preservar o conteúdo
-        const storageKey = `quadro_interativo_data_${activity?.id}`;
-        localStorage.setItem(storageKey, JSON.stringify(result));
-        console.log('💾 Conteúdo salvo no localStorage:', storageKey);
-
-        return {
-          success: true,
-          data: result
-        };
-      } catch (error) {
-        console.error('❌ Erro ao gerar Quadro Interativo:', error);
-
-        // Fallback estratégico em múltiplas camadas
-        try {
-          const {processQuadroInterativoData} = await import('../activities/quadro-interativo/quadroInterativoProcessor');
-          const processedData = processQuadroInterativoData(data);
-
-          console.log('🔧 Usando processador como fallback:', processedData);
-          return {success: true, data: processedData};
-        } catch (fallbackError) {
-          console.error('❌ Erro no fallback do processador:', fallbackError);
-
-          // Último recurso: estrutura mínima válida
-          return {success: true, data: createQuadroInterativoFallback(data)};
+          isGeneratedByAI: true,
         }
-      }
+      }));
+      
+      return {
+        success: true,
+        data: {
+          ...data,
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
     } else if (type === 'plano-aula') {
       return {
         success: true,
@@ -620,8 +549,8 @@ const EditActivityModal = ({
           title: data.title || "Lista de Exercícios Exemplo",
           description: data.description || "Descrição da lista de exercícios...",
           questoes: [
-            {id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha'},
-            {id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso'},
+            { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
+            { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
           ],
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
@@ -656,6 +585,17 @@ const EditActivityModal = ({
             timeLimit: data.timeLimit,
             context: data.context,
           },
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'quadro-interativo') {
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || "Quadro Interativo Exemplo",
+          description: data.description || "Descrição do quadro interativo...",
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
@@ -865,8 +805,8 @@ const EditActivityModal = ({
                 publicoAlvo: consolidatedCustomFields['Público-alvo'] || '',
                 objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || '',
                 quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || '',
-                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnosticos'] || consolidatedCustomFields['Quantidade de Diagnósticos'] || '',
-                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliacoes'] || consolidatedCustomFields['Quantidade de Avaliações'] || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || '',
                 cronograma: consolidatedCustomFields['Cronograma'] || '',
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || '',
               };
@@ -886,8 +826,8 @@ const EditActivityModal = ({
                 publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
                 objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
                 quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
-                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnosticos'] || consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
-                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliacoes'] || consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
                 cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
                 subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || activity?.customFields?.disciplina || 'Português',
                 theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity?.theme || '',
@@ -906,7 +846,7 @@ const EditActivityModal = ({
 
               try {
                 // Importar o processador específico do Quadro Interativo
-                const {prepareQuadroInterativoDataForModal} = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+                const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
                 // Preparar dados consolidados para o processador
                 const activityForProcessor = {
@@ -929,19 +869,19 @@ const EditActivityModal = ({
                   ...processedQuadroData,
 
                   // Sobrescrever com dados automáticos se existirem e forem válidos
-                  ...(autoFormData.title && {title: autoFormData.title}),
-                  ...(autoFormData.description && {description: autoFormData.description}),
-                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && {subject: autoFormData.subject}),
-                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && {schoolYear: autoFormData.schoolYear}),
-                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && {theme: autoFormData.theme}),
-                  ...(autoFormData.objectives && {objectives: autoFormData.objectives}),
-                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && {difficultyLevel: autoFormData.difficultyLevel}),
-                  ...(autoFormData.quadroInterativoCampoEspecifico && {quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico}),
-                  ...(autoFormData.materials && {materials: autoFormData.materials}),
-                  ...(autoFormData.instructions && {instructions: autoFormData.instructions}),
-                  ...(autoFormData.evaluation && {evaluation: autoFormData.evaluation}),
-                  ...(autoFormData.timeLimit && {timeLimit: autoFormData.timeLimit}),
-                  ...(autoFormData.context && {context: autoFormData.context})
+                  ...(autoFormData.title && { title: autoFormData.title }),
+                  ...(autoFormData.description && { description: autoFormData.description }),
+                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
+                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
+                  ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
+                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
+                  ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
+                  ...(autoFormData.materials && { materials: autoFormData.materials }),
+                  ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
+                  ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
+                  ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
+                  ...(autoFormData.context && { context: autoFormData.context })
                 };
 
                 console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
@@ -1004,8 +944,8 @@ const EditActivityModal = ({
                 publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
                 objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
                 quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
-                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnosticos'] || consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
-                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliacoes'] || consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
                 cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
@@ -1165,8 +1105,8 @@ const EditActivityModal = ({
               publicoAlvo: customFields['Público-alvo'] || '',
               objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
               quantidadeAulas: customFields['Quantidade de Aulas'] || '',
-              quantidadeDiagnosticos: customFields['Quantidade de Diagnosticos'] || customFields['Quantidade de Diagnósticos'] || '',
-              quantidadeAvaliacoes: customFields['Quantidade de Avaliacoes'] || customFields['Quantidade de Avaliações'] || '',
+              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
               cronograma: customFields['Cronograma'] || '',
               quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
             };
@@ -1186,8 +1126,8 @@ const EditActivityModal = ({
               publicoAlvo: customFields['Público-alvo'] || '',
               objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
               quantidadeAulas: customFields['Quantidade de Aulas'] || '',
-              quantidadeDiagnosticos: customFields['Quantidade de Diagnosticos'] || customFields['Quantidade de Diagnósticos'] || '',
-              quantidadeAvaliacoes: customFields['Quantidade de Avaliacoes'] || customFields['Quantidade de Avaliações'] || '',
+              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
               cronograma: customFields['Cronograma'] || '',
               subject: customFields['Disciplina'] || 'Português',
               theme: customFields['Tema'] || '',
@@ -1205,7 +1145,7 @@ const EditActivityModal = ({
             console.log('🖼️ Processando dados diretos de Quadro Interativo');
 
             // Usar o processador específico para dados diretos também
-            const {prepareQuadroInterativoDataForModal} = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+            const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
             const processedDirectData = prepareQuadroInterativoDataForModal({
               ...activityData,
@@ -1349,8 +1289,8 @@ const EditActivityModal = ({
               publicoAlvo: customFields['Público-alvo'] || '',
               objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
               quantidadeAulas: customFields['Quantidade de Aulas'] || '',
-              quantidadeDiagnosticos: customFields['Quantidade de Diagnosticos'] || customFields['Quantidade de Diagnósticos'] || '',
-              quantidadeAvaliacoes: customFields['Quantidade de Avaliacoes'] || customFields['Quantidade de Avaliações'] || '',
+              quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+              quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
               cronograma: customFields['Cronograma'] || '',
               quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
             };
@@ -1448,8 +1388,6 @@ const EditActivityModal = ({
 
   // Função para automação - será chamada externamente
   useEffect(() => {
-    if (!activity || !isOpen) return;
-
     const handleAutoBuild = () => {
       if (activity && formData.title && formData.description && !isGenerating) {
         console.log('🤖 Construção automática iniciada para:', activity.title);
@@ -1533,8 +1471,8 @@ const EditActivityModal = ({
             'Público-alvo': formData.publicoAlvo,
             'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
             'Quantidade de Aulas': formData.quantidadeAulas,
-            'Quantidade de Diagnosticos': formData.quantidadeDiagnosticos,
-            'Quantidade de Avaliacoes': formData.quantidadeAvaliacoes,
+            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
+            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
             'Cronograma': formData.cronograma
           }),
           ...(activity?.id === 'quadro-interativo' && {
@@ -1631,17 +1569,17 @@ const EditActivityModal = ({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{opacity: 0}}
-        animate={{opacity: 1}}
-        exit={{opacity: 0}}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 dark:bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
-          initial={{opacity: 0, scale: 0.95}}
-          animate={{opacity: 1, scale: 1}}
-          exit={{opacity: 0, scale: 0.95}}
-          transition={{duration: 0.3}}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
           className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 max-w-7xl w-full mx-4"
           onClick={(e) => e.stopPropagation()}
         >
@@ -2043,9 +1981,7 @@ const EditActivityModal = ({
                     ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
                         data={generatedContent || formData}
-                        content={generatedContent}
                         activityData={activity}
-                        previewData={generatedContent || formData}
                       />
                     ) : (
                       <ActivityPreview
@@ -2122,4 +2058,4 @@ const EditActivityModal = ({
 };
 
 export default EditActivityModal;
-export {EditActivityModal};
+export { EditActivityModal };
