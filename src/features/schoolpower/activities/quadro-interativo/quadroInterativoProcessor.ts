@@ -1,5 +1,6 @@
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { fieldMapping, normalizeMaterials } from './fieldMapping';
+import { geminiLogger } from '@/utils/geminiDebugLogger';
 
 export interface QuadroInterativoFields {
   [key: string]: string;
@@ -17,6 +18,111 @@ export interface QuadroInterativoActivity {
   personalizedTitle?: string;
   personalizedDescription?: string;
 }
+
+// --- Start of edited code ---
+export interface QuadroInterativoData {
+  disciplina?: string;
+  anoSerie?: string;
+  tema?: string;
+  objetivos?: string;
+  nivelDificuldade?: string;
+  atividadeMostrada?: string;
+  [key: string]: any;
+}
+
+export interface QuadroInterativoResult {
+  title: string;
+  description: string;
+  cardContent: {
+    title: string;
+    text: string;
+  };
+  generatedAt: string;
+  isGeneratedByAI: boolean;
+}
+
+export function processQuadroInterativoData(formData: any): QuadroInterativoResult {
+  console.log('🔄 Processando dados do Quadro Interativo:', formData);
+
+  try {
+    // Extrair dados dos campos do formulário
+    const disciplina = formData.disciplina || formData['Disciplina / Área de conhecimento'] || '';
+    const anoSerie = formData.anoSerie || formData['Ano / Série'] || '';
+    const tema = formData.tema || formData['Tema ou Assunto da aula'] || '';
+    const objetivos = formData.objetivos || formData['Objetivo de aprendizagem da aula'] || '';
+    const nivelDificuldade = formData.nivelDificuldade || formData['Nível de Dificuldade'] || '';
+    const atividadeMostrada = formData.atividadeMostrada || formData['Atividade mostrada'] || '';
+
+    console.log('📊 Dados extraídos:', {
+      disciplina, anoSerie, tema, objetivos, nivelDificuldade, atividadeMostrada
+    });
+
+    // Se já temos dados gerados pela IA, usar eles
+    if (formData.cardContent && formData.cardContent.title && formData.cardContent.text) {
+      console.log('✅ Usando dados já gerados pela IA');
+      return {
+        title: tema || 'Quadro Interativo',
+        description: objetivos || 'Atividade de quadro interativo',
+        cardContent: {
+          title: formData.cardContent.title,
+          text: formData.cardContent.text
+        },
+        generatedAt: formData.generatedAt || new Date().toISOString(),
+        isGeneratedByAI: formData.isGeneratedByAI || true
+      };
+    }
+
+    // Criar estrutura padrão enquanto aguarda geração da IA
+    const result: QuadroInterativoResult = {
+      title: tema || 'Quadro Interativo',
+      description: objetivos || 'Atividade de quadro interativo',
+      cardContent: {
+        title: tema || 'Conteúdo do Quadro',
+        text: objetivos || 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+      },
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false
+    };
+
+    console.log('✅ Dados processados:', result);
+    geminiLogger.info('quadro_interativo_processor', 'Dados processados com sucesso', result);
+
+    return result;
+  } catch (error) {
+    console.error('❌ Erro ao processar dados do Quadro Interativo:', error);
+    geminiLogger.error('quadro_interativo_processor', 'Erro no processamento', error);
+
+    // Retornar estrutura de fallback
+    return {
+      title: 'Quadro Interativo',
+      description: 'Atividade de quadro interativo',
+      cardContent: {
+        title: 'Conteúdo do Quadro',
+        text: 'Erro ao processar dados. Tente novamente.'
+      },
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false
+    };
+  }
+}
+
+export function consolidateQuadroInterativoData(data: any): QuadroInterativoData {
+  console.log('🔄 Consolidando dados do Quadro Interativo:', data);
+
+  const consolidated: QuadroInterativoData = {
+    disciplina: data.disciplina || data['Disciplina / Área de conhecimento'] || '',
+    anoSerie: data.anoSerie || data['Ano / Série'] || '',
+    tema: data.tema || data['Tema ou Assunto da aula'] || '',
+    objetivos: data.objetivos || data['Objetivo de aprendizagem da aula'] || '',
+    nivelDificuldade: data.nivelDificuldade || data['Nível de Dificuldade'] || '',
+    atividadeMostrada: data.atividadeMostrada || data['Atividade mostrada'] || ''
+  };
+
+  console.log('✅ Dados consolidados:', consolidated);
+  return consolidated;
+}
+// --- End of edited code ---
+
 
 /**
  * Valida se os dados do Quadro Interativo são válidos
@@ -60,7 +166,7 @@ function sanitizeJsonString(str: string): string {
  * Processa dados de uma atividade de Quadro Interativo do Action Plan
  * para o formato do formulário do modal
  */
-export function processQuadroInterativoData(activity: QuadroInterativoActivity): ActivityFormData {
+export function processQuadroInterativoData_old(activity: QuadroInterativoActivity): ActivityFormData {
   console.log('📱 Processando dados do Quadro Interativo:', activity);
 
   // Validar dados de entrada
@@ -311,5 +417,6 @@ export default {
   isQuadroInterativoActivity,
   generateQuadroInterativoFields,
   extractQuadroInterativoData,
-  validateQuadroInterativoFields
+  validateQuadroInterativoFields,
+  // consolidateQuadroInterativoData is exposed via its own export
 };

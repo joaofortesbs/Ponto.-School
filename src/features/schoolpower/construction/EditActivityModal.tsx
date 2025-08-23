@@ -481,42 +481,39 @@ const EditActivityModal = ({
     }
   }, [formData, activity?.id]);
 
-  // Função placeholder para gerar conteúdo
+  // Função para gerar conteúdo (agora com import dinâmico e lógica específica para Quadro Interativo)
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-    
+
     if (type === 'quadro-interativo') {
-      const generator = new QuadroInterativoGenerator();
-      const result = await generator.generateQuadroInterativoContent({
-        subject: data.subject,
-        schoolYear: data.schoolYear,
-        theme: data.theme,
-        objectives: data.objectives,
-        difficultyLevel: data.difficultyLevel,
-        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
-      });
-      
-      // Salvar conteúdo gerado
-      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
-      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
-        success: true,
-        data: {
-          ...data,
-          ...result,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      }));
-      
-      return {
-        success: true,
-        data: {
-          ...data,
-          ...result,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
+      try {
+        // Importar e usar o gerador de Quadro Interativo
+        const { QuadroInterativoGenerator } = await import('../activities/quadro-interativo/QuadroInterativoGenerator');
+        const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+
+        console.log('🎯 Gerando conteúdo para Quadro Interativo:', data);
+
+        const generator = new QuadroInterativoGenerator();
+        const generatedContent = await generator.generateQuadroInterativoContent(data);
+
+        console.log('✅ Conteúdo gerado:', generatedContent);
+
+        return {
+          success: true,
+          data: generatedContent
+        };
+      } catch (error) {
+        console.error('❌ Erro ao gerar Quadro Interativo:', error);
+
+        // Fallback em caso de erro
+        const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+        const processedData = processQuadroInterativoData(data);
+
+        return {
+          success: true,
+          data: processedData
+        };
+      }
     } else if (type === 'plano-aula') {
       return {
         success: true,
@@ -585,17 +582,6 @@ const EditActivityModal = ({
             timeLimit: data.timeLimit,
             context: data.context,
           },
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'quadro-interativo') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Quadro Interativo Exemplo",
-          description: data.description || "Descrição do quadro interativo...",
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
@@ -1388,6 +1374,8 @@ const EditActivityModal = ({
 
   // Função para automação - será chamada externamente
   useEffect(() => {
+    if (!activity || !isOpen) return;
+
     const handleAutoBuild = () => {
       if (activity && formData.title && formData.description && !isGenerating) {
         console.log('🤖 Construção automática iniciada para:', activity.title);
