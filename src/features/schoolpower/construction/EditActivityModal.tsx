@@ -73,23 +73,13 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
   </>
 );
 
-// Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
-  <div className="space-y-4">
-    <div className="grid grid-cols-2 gap-4">
-      <div>
-        <Label htmlFor="subject">Disciplina / Área de conhecimento *</Label>
-        <Input
-          id="subject"
-          value={formData.subject || ''}
-
 // Função auxiliar para criar fallback do Quadro Interativo
 const createQuadroInterativoFallback = (data: any) => {
   const tema = data?.theme || data?.tema || data?.title || 'Quadro Interativo';
   const objetivos = data?.objectives || data?.objetivos || data?.description || 'Atividade de quadro interativo';
   const disciplina = data?.subject || data?.disciplina || 'Disciplina';
   const anoSerie = data?.schoolYear || data?.anoSerie || 'Ano/Série';
-  
+
   return {
     title: tema,
     description: objetivos,
@@ -596,7 +586,7 @@ const EditActivityModal = ({
           };
         } catch (fallbackError) {
           console.error('❌ Erro no fallback do processador:', fallbackError);
-          
+
           // Último recurso: estrutura mínima válida
           return {
             success: true,
