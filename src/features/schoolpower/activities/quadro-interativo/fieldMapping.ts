@@ -1,3 +1,4 @@
+
 export interface QuadroInterativoFields {
   recursos: string;
   conteudo: string;
@@ -79,6 +80,7 @@ export const quadroInterativoFieldMapping: Record<string, keyof QuadroInterativo
   'Atividades': 'quadroInterativoCampoEspecifico',
   'Tipo de Atividade': 'quadroInterativoCampoEspecifico',
   'Recursos Interativos': 'quadroInterativoCampoEspecifico',
+  'Tipo de Interação': 'quadroInterativoCampoEspecifico',
 
   'Materiais': 'materials',
   'Materiais Necessários': 'materials',
@@ -119,7 +121,7 @@ export const reverseQuadroInterativoFieldMapping: Record<keyof QuadroInterativoF
   schoolYear: ['schoolYear', 'Ano / Série', 'Ano de Escolaridade'],
   objectives: ['objectives', 'Objetivos', 'Objetivo de aprendizagem da aula'],
   difficultyLevel: ['difficultyLevel', 'Nível de Dificuldade', 'Dificuldade'],
-  quadroInterativoCampoEspecifico: ['quadroInterativoCampoEspecifico', 'Atividade mostrada', 'Atividade'],
+  quadroInterativoCampoEspecifico: ['quadroInterativoCampoEspecifico', 'Atividade mostrada', 'Atividade', 'Tipo de Interação'],
   materials: ['materials', 'Materiais', 'Recursos'],
   instructions: ['instructions', 'Instruções', 'Metodologia'],
   evaluation: ['evaluation', 'Avaliação', 'Critérios de Avaliação'],
@@ -162,7 +164,20 @@ export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFi
   theme: ['Tema ou Assunto da aula', 'tema', 'Tema'],
   objectives: ['Objetivo de aprendizagem da aula', 'objetivos', 'Objetivos'],
   difficultyLevel: ['Nível de Dificuldade', 'nivelDificuldade', 'dificuldade'],
-  quadroInterativoCampoEspecifico: ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico do Quadro Interativo']
+  quadroInterativoCampoEspecifico: ['Atividade mostrada', 'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Campo Específico do Quadro Interativo', 'Tipo de Interação'],
+  recursos: ['Recursos', 'Materiais', 'Materiais Necessários'],
+  conteudo: ['Conteúdo', 'Instruções', 'Metodologia'],
+  interatividade: ['Interatividade', 'Atividade mostrada', 'Recursos Interativos'],
+  design: ['Design', 'Nível de Dificuldade', 'Complexidade'],
+  objetivo: ['Objetivo', 'Objetivos', 'Objetivo de aprendizagem da aula'],
+  avaliacao: ['Avaliação', 'Critérios', 'Critérios de Avaliação'],
+  title: ['title', 'Título'],
+  description: ['description', 'Descrição'],
+  materials: ['materials', 'Materiais', 'Recursos'],
+  instructions: ['instructions', 'Instruções', 'Metodologia'],
+  evaluation: ['evaluation', 'Avaliação', 'Critérios de Avaliação'],
+  timeLimit: ['timeLimit', 'Tempo', 'Duração'],
+  context: ['context', 'Contexto', 'Aplicação']
 };
 
 // Função para mapear dados do Action Plan para campos do formulário
@@ -178,11 +193,11 @@ export function mapQuadroInterativoFields(actionPlanData: any): any {
     objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || '',
     difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Ex: Básico, Intermediário, Avançado',
     quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
-    materials: getFieldValue(customFields, ['Materiais', 'Recursos']), // Exemplo de mapeamento para materials
-    instructions: getFieldValue(customFields, ['Instruções', 'Metodologia']), // Exemplo de mapeamento para instructions
-    evaluation: getFieldValue(customFields, ['Avaliação', 'Critérios de Avaliação']), // Exemplo de mapeamento para evaluation
-    timeLimit: getFieldValue(customFields, ['Tempo', 'Duração']), // Exemplo de mapeamento para timeLimit
-    context: getFieldValue(customFields, ['Contexto', 'Aplicação']) // Exemplo de mapeamento para context
+    materials: getFieldValue(customFields, ['Materiais', 'Recursos']),
+    instructions: getFieldValue(customFields, ['Instruções', 'Metodologia']),
+    evaluation: getFieldValue(customFields, ['Avaliação', 'Critérios de Avaliação']),
+    timeLimit: getFieldValue(customFields, ['Tempo', 'Duração']),
+    context: getFieldValue(customFields, ['Contexto', 'Aplicação'])
   };
 }
 
@@ -194,17 +209,6 @@ function getFieldValue(customFields: any, possibleKeys: string[]): string {
   }
   return '';
 }
-
-export const quadroInterativoFieldMapping = {
-  'Título do Tema / Assunto': 'theme',
-  'Ano / Série': 'schoolYear',
-  'Disciplina': 'subject',
-  'BNCC / Competências': 'bnccCompetencias',
-  'Público-alvo': 'publico',
-  'Objetivos de Aprendizagem': 'objectives',
-  'Nível de Dificuldade': 'difficultyLevel',
-  'Tipo de Interação': 'quadroInterativoCampoEspecifico'
-};
 
 /**
  * Sanitiza texto para evitar problemas de JSON

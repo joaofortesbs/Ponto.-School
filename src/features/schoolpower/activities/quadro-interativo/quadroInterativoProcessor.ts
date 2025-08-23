@@ -1,4 +1,5 @@
 
+
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 
 export interface QuadroInterativoFields {
@@ -85,7 +86,7 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
   };
 
   // Extrair campos customizados com valores padrão seguros
-  const safeCustomFields = {};
+  const safeCustomFields: { [key: string]: string } = {};
   Object.keys(customFields).forEach(key => {
     const value = customFields[key];
     if (value && typeof value === 'string') {
@@ -108,31 +109,10 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     // Campos adicionais
     bnccCompetencias: safeCustomFields['BNCC / Competências'] || '',
     publico: safeCustomFields['Público-alvo'] || '',
-    
-    // Campos extras que podem estar presentes
-    ...safeCustomFields
-  };
 
-  console.log('✅ Dados do Quadro Interativo processados com sucesso:', formData);
-  return formData;
-}
-  };
-
-  return {
+    // Campos padrão necessários para ActivityFormData
     title: consolidatedData.title || '',
     description: consolidatedData.description || '',
-    subject: customFields['Disciplina / Área de conhecimento'] || 'Matemática',
-    schoolYear: customFields['Ano / Série'] || '6º Ano',
-    theme: customFields['Tema ou Assunto da aula'] || consolidatedData.title || 'Tema da Aula',
-    objectives: customFields['Objetivo de aprendizagem da aula'] || consolidatedData.description || 'Objetivos de aprendizagem',
-    difficultyLevel: customFields['Nível de Dificuldade'] || 'Intermediário',
-    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] || 'Atividade interativa no quadro',
-    materials: customFields['Materiais Necessários'] || '',
-    instructions: customFields['Instruções'] || '',
-    evaluation: customFields['Critérios de Avaliação'] || '',
-    timeLimit: customFields['Tempo Estimado'] || '45 minutos',
-    context: customFields['Contexto de Aplicação'] || '',
-    // Campos padrão
     numberOfQuestions: '1',
     questionModel: '',
     sources: '',
@@ -155,14 +135,24 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     tituloTemaAssunto: '',
     anoSerie: '',
     disciplina: '',
-    bnccCompetencias: '',
     publicoAlvo: '',
     objetivosAprendizagem: '',
     quantidadeAulas: '',
     quantidadeDiagnosticos: '',
     quantidadeAvaliacoes: '',
-    cronograma: ''
+    cronograma: '',
+    materials: '',
+    instructions: '',
+    evaluation: '',
+    timeLimit: '',
+    context: '',
+    
+    // Campos extras que podem estar presentes
+    ...safeCustomFields
   };
+
+  console.log('✅ Dados do Quadro Interativo processados com sucesso:', formData);
+  return formData;
 }
 
 /**
