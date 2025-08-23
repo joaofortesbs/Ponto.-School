@@ -301,9 +301,25 @@ export const normalizeMaterials = (materials: any): string => {
   }
 
   if (Array.isArray(materials)) {
-    return materials.map(item =>
-      typeof item === 'string' ? item : String(item)
-    ).join('\n');
+    return materials.map(item => {
+      if (typeof item === 'string') return item;
+      if (typeof item === 'object' && item !== null) {
+        // Se for um objeto, tentar extrair propriedades relevantes
+        if (item.nome || item.name) return String(item.nome || item.name);
+        if (item.titulo || item.title) return String(item.titulo || item.title);
+        if (item.descricao || item.description) return String(item.descricao || item.description);
+        return JSON.stringify(item);
+      }
+      return String(item);
+    }).filter(item => item.trim()).join('\n');
+  }
+
+  if (typeof materials === 'object' && materials !== null) {
+    // Se for um objeto, tentar extrair propriedades relevantes
+    if (materials.nome || materials.name) return String(materials.nome || materials.name);
+    if (materials.titulo || materials.title) return String(materials.titulo || materials.title);
+    if (materials.descricao || materials.description) return String(materials.descricao || materials.description);
+    return JSON.stringify(materials);
   }
 
   return String(materials);

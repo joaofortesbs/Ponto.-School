@@ -25,24 +25,32 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 }) => {
   // Extrair dados do formulário ou conteúdo gerado
   const previewData = {
-    title: data.title || data.personalizedTitle || 'Quadro Interativo',
-    description: data.description || data.personalizedDescription || '',
-    subject: data.subject || 'Disciplina',
-    schoolYear: data.schoolYear || 'Ano/Série',
-    theme: data.theme || 'Tema da Aula',
-    objectives: data.objectives || 'Objetivos de Aprendizagem',
-    difficultyLevel: data.difficultyLevel || 'Médio',
-    activityShown: data.quadroInterativoCampoEspecifico || 'Atividade Interativa',
+    title: String(data.title || data.personalizedTitle || 'Quadro Interativo'),
+    description: String(data.description || data.personalizedDescription || ''),
+    subject: String(data.subject || 'Disciplina'),
+    schoolYear: String(data.schoolYear || 'Ano/Série'),
+    theme: String(data.theme || 'Tema da Aula'),
+    objectives: String(data.objectives || 'Objetivos de Aprendizagem'),
+    difficultyLevel: String(data.difficultyLevel || 'Médio'),
+    activityShown: String(data.quadroInterativoCampoEspecifico || 'Atividade Interativa'),
     materials: data.materials || 'Materiais não especificados',
-    timeLimit: data.timeLimit || '45 minutos',
-    instructions: data.instructions || 'Instruções a serem definidas',
-    evaluation: data.evaluation || 'Critérios de avaliação a serem definidos',
-    context: data.context || 'Contexto de aplicação geral',
+    timeLimit: String(data.timeLimit || '45 minutos'),
+    instructions: String(data.instructions || 'Instruções a serem definidas'),
+    evaluation: String(data.evaluation || 'Critérios de avaliação a serem definidos'),
+    context: String(data.context || 'Contexto de aplicação geral'),
     // Dados gerados pela IA
-    cardContent: data.cardContent || {
-      title: 'Conteúdo do Quadro',
-      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
-    }
+    cardContent: (() => {
+      if (data.cardContent && typeof data.cardContent === 'object') {
+        return {
+          title: String(data.cardContent.title || 'Conteúdo do Quadro'),
+          text: String(data.cardContent.text || 'Conteúdo educativo será exibido aqui após a geração pela IA.')
+        };
+      }
+      return {
+        title: 'Conteúdo do Quadro',
+        text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+      };
+    })()
   };
 
   const getDifficultyColor = (level: string) => {
@@ -232,33 +240,35 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             <CardContent>
               <div className="space-y-2">
                 {(() => {
-                  // Verificar se materials é uma string
-                  if (typeof previewData.materials === 'string') {
-                    const materialsList = previewData.materials.split('\n').filter(m => m.trim());
+                  // Função para normalizar materials para string
+                  const normalizeMaterials = (materials) => {
+                    if (!materials) return '';
+                    if (typeof materials === 'string') return materials;
+                    if (Array.isArray(materials)) {
+                      return materials.map(item => String(item)).join('\n');
+                    }
+                    if (typeof materials === 'object') {
+                      return String(materials);
+                    }
+                    return String(materials);
+                  };
+
+                  const normalizedMaterials = normalizeMaterials(previewData.materials);
+                  
+                  if (normalizedMaterials && normalizedMaterials.trim()) {
+                    const materialsList = normalizedMaterials.split('\n').filter(m => m.trim());
                     if (materialsList.length > 0) {
                       return materialsList.map((material, index) => (
                         <div key={index} className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
                           <p className="text-gray-700 dark:text-gray-300">
-                            {material.trim()}
+                            {String(material).trim()}
                           </p>
                         </div>
                       ));
                     }
                   }
-                  // Se materials é um array
-                  else if (Array.isArray(previewData.materials)) {
-                    if (previewData.materials.length > 0) {
-                      return previewData.materials.map((material, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
-                          <p className="text-gray-700 dark:text-gray-300">
-                            {typeof material === 'string' ? material : String(material)}
-                          </p>
-                        </div>
-                      ));
-                    }
-                  }
+                  
                   // Fallback para materiais não especificados
                   return (
                     <p className="text-gray-500 dark:text-gray-400 italic">

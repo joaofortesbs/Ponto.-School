@@ -134,7 +134,7 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     tituloTemaAssunto: '',
     anoSerie: '',
     disciplina: '',
-    materials: normalizeMaterials(consolidatedData.materials),
+    materials: String(normalizeMaterials(consolidatedData.materials || '')),
     instructions: '',
     evaluation: '',
     timeLimit: '',
