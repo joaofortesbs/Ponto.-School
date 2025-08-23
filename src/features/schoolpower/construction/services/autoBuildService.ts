@@ -40,132 +40,158 @@ export class AutoBuildService {
   private prepareFormDataExactlyLikeModal(activity: ConstructionActivity): any {
     console.log(`🎯 Preparando formData EXATAMENTE como EditActivityModal para: ${activity.title}`);
 
-    // Mapear TODOS os campos EXATAMENTE como o modal EditActivityModal faz
+    try {
+      // Usar o mesmo processo do modal EditActivityModal
+      if (activity.id === 'quadro-interativo') {
+        console.log('📱 Processando Quadro Interativo especificamente');
+
+        // Validar dados de entrada
+        if (!activity.title || !activity.description) {
+          console.warn('⚠️ Atividade de Quadro Interativo sem dados suficientes');
+          throw new Error('Dados insuficientes para Quadro Interativo');
+        }
+
+        // Usar função específica do Quadro Interativo com tratamento de erro
+        const formData = prepareQuadroInterativoDataForModal(activity);
+
+        // Validar resultado
+        if (!formData || typeof formData !== 'object') {
+          throw new Error('Falha na preparação dos dados do Quadro Interativo');
+        }
+
+        console.log('✅ FormData do Quadro Interativo preparado com sucesso:', formData);
+        return formData;
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao preparar formData para ${activity.title}:`, error);
+      throw error; // Propaga o erro para ser tratado no buildActivityWithExactModalLogic
+    }
+
+    // Campos básicos obrigatórios
     const formData = {
-      // Campos básicos obrigatórios
       title: activity.title || '',
       description: activity.description || '',
 
       // Campos padrão com fallbacks EXATOS do modal
-      subject: activity.customFields?.['Disciplina'] || 
-               activity.customFields?.['disciplina'] || 
+      subject: activity.customFields?.['Disciplina'] ||
+               activity.customFields?.['disciplina'] ||
                'Português',
 
-      theme: activity.customFields?.['Tema'] || 
-             activity.customFields?.['tema'] || 
+      theme: activity.customFields?.['Tema'] ||
+             activity.customFields?.['tema'] ||
              'Conteúdo Geral',
 
-      schoolYear: activity.customFields?.['Ano de Escolaridade'] || 
-                  activity.customFields?.['anoEscolaridade'] || 
+      schoolYear: activity.customFields?.['Ano de Escolaridade'] ||
+                  activity.customFields?.['anoEscolaridade'] ||
                   '6º ano',
 
-      numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || 
-                        activity.customFields?.['quantidadeQuestoes'] || 
-                        activity.customFields?.['numeroQuestoes'] || 
+      numberOfQuestions: activity.customFields?.['Quantidade de Questões'] ||
+                        activity.customFields?.['quantidadeQuestoes'] ||
+                        activity.customFields?.['numeroQuestoes'] ||
                         '10',
 
-      difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
-                      activity.customFields?.['nivelDificuldade'] || 
+      difficultyLevel: activity.customFields?.['Nível de Dificuldade'] ||
+                      activity.customFields?.['nivelDificuldade'] ||
                       'Médio',
 
-      questionModel: activity.customFields?.['Modelo de Questões'] || 
-                    activity.customFields?.['modeloQuestoes'] || 
+      questionModel: activity.customFields?.['Modelo de Questões'] ||
+                    activity.customFields?.['modeloQuestoes'] ||
                     'Múltipla escolha',
 
       // Campos opcionais EXATOS do modal
-      sources: activity.customFields?.['Fontes'] || 
-               activity.customFields?.['fontes'] || 
+      sources: activity.customFields?.['Fontes'] ||
+               activity.customFields?.['fontes'] ||
                '',
 
-      objectives: activity.customFields?.['Objetivos'] || 
-                  activity.customFields?.['objetivos'] || 
+      objectives: activity.customFields?.['Objetivos'] ||
+                  activity.customFields?.['objetivos'] ||
                   '',
 
-      materials: activity.customFields?.['Materiais'] || 
-                activity.customFields?.['materiais'] || 
+      materials: activity.customFields?.['Materiais'] ||
+                activity.customFields?.['materiais'] ||
                 '',
 
-      instructions: activity.customFields?.['Instruções'] || 
-                   activity.customFields?.['instrucoes'] || 
+      instructions: activity.customFields?.['Instruções'] ||
+                   activity.customFields?.['instrucoes'] ||
                    '',
 
-      evaluation: activity.customFields?.['Critérios de Correção'] || 
-                 activity.customFields?.['criteriosAvaliacao'] || 
-                 activity.customFields?.['criteriosCorrecao'] || 
+      evaluation: activity.customFields?.['Critérios de Correção'] ||
+                 activity.customFields?.['criteriosAvaliacao'] ||
+                 activity.customFields?.['criteriosCorrecao'] ||
                  '',
 
-      timeLimit: activity.customFields?.['Tempo Limite'] || 
-                activity.customFields?.['tempoLimite'] || 
+      timeLimit: activity.customFields?.['Tempo Limite'] ||
+                activity.customFields?.['tempoLimite'] ||
                 '',
 
-      context: activity.customFields?.['Contexto de Aplicação'] || 
-              activity.customFields?.['contextoAplicacao'] || 
-              activity.customFields?.['contexto'] || 
+      context: activity.customFields?.['Contexto de Aplicação'] ||
+              activity.customFields?.['contextoAplicacao'] ||
+              activity.customFields?.['contexto'] ||
               '',
 
       // Campos específicos para diferentes tipos de atividade (COMPLETOS)
-      textType: activity.customFields?.['Tipo de Texto'] || 
-               activity.customFields?.['tipoTexto'] || 
+      textType: activity.customFields?.['Tipo de Texto'] ||
+               activity.customFields?.['tipoTexto'] ||
                '',
 
-      textGenre: activity.customFields?.['Gênero Textual'] || 
-                activity.customFields?.['generoTextual'] || 
+      textGenre: activity.customFields?.['Gênero Textual'] ||
+                activity.customFields?.['generoTextual'] ||
                 '',
 
-      textLength: activity.customFields?.['Extensão do Texto'] || 
-                 activity.customFields?.['extensaoTexto'] || 
+      textLength: activity.customFields?.['Extensão do Texto'] ||
+                 activity.customFields?.['extensaoTexto'] ||
                  '',
 
-      associatedQuestions: activity.customFields?.['Questões Associadas'] || 
-                          activity.customFields?.['questoesAssociadas'] || 
+      associatedQuestions: activity.customFields?.['Questões Associadas'] ||
+                          activity.customFields?.['questoesAssociadas'] ||
                           '',
 
-      competencies: activity.customFields?.['Competências'] || 
-                   activity.customFields?.['competencias'] || 
+      competencies: activity.customFields?.['Competências'] ||
+                   activity.customFields?.['competencias'] ||
                    '',
 
-      readingStrategies: activity.customFields?.['Estratégias de Leitura'] || 
-                        activity.customFields?.['estrategiasLeitura'] || 
+      readingStrategies: activity.customFields?.['Estratégias de Leitura'] ||
+                        activity.customFields?.['estrategiasLeitura'] ||
                         '',
 
-      visualResources: activity.customFields?.['Recursos Visuais'] || 
-                      activity.customFields?.['recursosVisuais'] || 
+      visualResources: activity.customFields?.['Recursos Visuais'] ||
+                      activity.customFields?.['recursosVisuais'] ||
                       '',
 
-      practicalActivities: activity.customFields?.['Atividades Práticas'] || 
-                          activity.customFields?.['atividadesPraticas'] || 
+      practicalActivities: activity.customFields?.['Atividades Práticas'] ||
+                          activity.customFields?.['atividadesPraticas'] ||
                           '',
 
-      wordsIncluded: activity.customFields?.['Palavras Incluídas'] || 
-                    activity.customFields?.['palavrasIncluidas'] || 
+      wordsIncluded: activity.customFields?.['Palavras Incluídas'] ||
+                    activity.customFields?.['palavrasIncluidas'] ||
                     '',
 
-      gridFormat: activity.customFields?.['Formato da Grade'] || 
-                 activity.customFields?.['formatoGrade'] || 
+      gridFormat: activity.customFields?.['Formato da Grade'] ||
+                 activity.customFields?.['formatoGrade'] ||
                  '',
 
-      providedHints: activity.customFields?.['Dicas Fornecidas'] || 
-                    activity.customFields?.['dicasFornecidas'] || 
+      providedHints: activity.customFields?.['Dicas Fornecidas'] ||
+                    activity.customFields?.['dicasFornecidas'] ||
                     '',
 
-      vocabularyContext: activity.customFields?.['Contexto do Vocabulário'] || 
-                        activity.customFields?.['contextoVocabulario'] || 
+      vocabularyContext: activity.customFields?.['Contexto do Vocabulário'] ||
+                        activity.customFields?.['contextoVocabulario'] ||
                         '',
 
-      language: activity.customFields?.['Idioma'] || 
-               activity.customFields?.['idioma'] || 
+      language: activity.customFields?.['Idioma'] ||
+               activity.customFields?.['idioma'] ||
                'Português',
 
-      associatedExercises: activity.customFields?.['Exercícios Associados'] || 
-                          activity.customFields?.['exerciciosAssociados'] || 
+      associatedExercises: activity.customFields?.['Exercícios Associados'] ||
+                          activity.customFields?.['exerciciosAssociados'] ||
                           '',
 
-      knowledgeArea: activity.customFields?.['Área do Conhecimento'] || 
-                    activity.customFields?.['areaConhecimento'] || 
+      knowledgeArea: activity.customFields?.['Área do Conhecimento'] ||
+                    activity.customFields?.['areaConhecimento'] ||
                     '',
 
-      complexityLevel: activity.customFields?.['Nível de Complexidade'] || 
-                      activity.customFields?.['nivelComplexidade'] || 
+      complexityLevel: activity.customFields?.['Nível de Complexidade'] ||
+                      activity.customFields?.['nivelComplexidade'] ||
                       '',
 
       // Campo específico para Quadro Interativo - mapeamento completo

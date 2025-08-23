@@ -24,7 +24,7 @@ export interface QuadroInterativoFields {
 export const quadroInterativoFieldMapping: Record<string, keyof QuadroInterativoFields> = {
   // Mapeamentos originais
   'Recursos': 'recursos',
-  'Conteúdo': 'conteudo', 
+  'Conteúdo': 'conteudo',
   'Interatividade': 'interatividade',
   'Design': 'design',
   'Objetivo': 'objetivo',
@@ -53,7 +53,7 @@ export const quadroInterativoFieldMapping: Record<string, keyof QuadroInterativo
   'Matéria': 'subject',
 
   'Ano / Série': 'schoolYear',
-  'Ano': 'schoolYear', 
+  'Ano': 'schoolYear',
   'Série': 'schoolYear',
   'Ano de Escolaridade': 'schoolYear',
   'Público-Alvo': 'schoolYear',
@@ -141,7 +141,7 @@ export function isValidQuadroInterativoField(fieldKey: string): boolean {
 // Campos obrigatórios para Quadro Interativo
 export const requiredQuadroInterativoFields: (keyof QuadroInterativoFields)[] = [
   'subject',
-  'schoolYear', 
+  'schoolYear',
   'theme',
   'objectives',
   'difficultyLevel',
@@ -150,7 +150,7 @@ export const requiredQuadroInterativoFields: (keyof QuadroInterativoFields)[] = 
 
 // Função para validar se todos os campos obrigatórios estão preenchidos
 export function validateRequiredFields(data: Partial<QuadroInterativoFields>): boolean {
-  return requiredQuadroInterativoFields.every(field => 
+  return requiredQuadroInterativoFields.every(field =>
     data[field] && typeof data[field] === 'string' && data[field]!.trim().length > 0
   );
 }
@@ -193,4 +193,89 @@ function getFieldValue(customFields: any, possibleKeys: string[]): string {
     }
   }
   return '';
+}
+
+export const quadroInterativoFieldMapping = {
+  'Título do Tema / Assunto': 'theme',
+  'Ano / Série': 'schoolYear',
+  'Disciplina': 'subject',
+  'BNCC / Competências': 'bnccCompetencias',
+  'Público-alvo': 'publico',
+  'Objetivos de Aprendizagem': 'objectives',
+  'Nível de Dificuldade': 'difficultyLevel',
+  'Tipo de Interação': 'quadroInterativoCampoEspecifico'
+};
+
+/**
+ * Sanitiza texto para evitar problemas de JSON
+ */
+function sanitizeText(text: string | undefined | null): string {
+  if (!text || typeof text !== 'string') return '';
+
+  return text
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Remove caracteres de controle
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, ' ')
+    .replace(/\r/g, ' ')
+    .replace(/\t/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Valida se o valor é seguro para uso
+ */
+function isValidValue(value: any): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string' && value.trim() === '') return false;
+  return true;
+}
+
+export function prepareQuadroInterativoDataForModal(activity: any) {
+  console.log('🎯 Preparando dados do Quadro Interativo para o modal:', activity);
+
+  try {
+    const customFields = activity.customFields || {};
+
+    // Sanitizar e validar cada campo
+    const safeTitle = sanitizeText(activity.personalizedTitle || activity.title);
+    const safeDescription = sanitizeText(activity.personalizedDescription || activity.description);
+
+    const formData = {
+      subject: isValidValue(customFields['Disciplina']) ? sanitizeText(customFields['Disciplina']) : 'Matemática',
+      schoolYear: isValidValue(customFields['Ano / Série']) ? sanitizeText(customFields['Ano / Série']) : 'Ex: 6º Ano, 7º Ano, 8º Ano',
+      theme: safeTitle || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+      objectives: isValidValue(customFields['Objetivos de Aprendizagem']) ? sanitizeText(customFields['Objetivos de Aprendizagem']) : '',
+      difficultyLevel: isValidValue(customFields['Nível de Dificuldade']) ? sanitizeText(customFields['Nível de Dificuldade']) : 'Ex: Básico, Intermediário, Avançado',
+      quadroInterativoCampoEspecifico: isValidValue(customFields['Tipo de Interação']) ? sanitizeText(customFields['Tipo de Interação']) : 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+      bnccCompetencias: isValidValue(customFields['BNCC / Competências']) ? sanitizeText(customFields['BNCC / Competências']) : '',
+      publico: isValidValue(customFields['Público-alvo']) ? sanitizeText(customFields['Público-alvo']) : ''
+    };
+
+    // Validar que nenhum campo contém valores problemáticos
+    Object.keys(formData).forEach(key => {
+      if (typeof formData[key] === 'string' && formData[key].includes('undefined')) {
+        formData[key] = '';
+      }
+    });
+
+    console.log('✅ FormData do Quadro Interativo preparado e validado:', formData);
+    return formData;
+
+  } catch (error) {
+    console.error('❌ Erro ao preparar dados do Quadro Interativo:', error);
+
+    // Retornar dados padrão seguros em caso de erro
+    return {
+      subject: 'Matemática',
+      schoolYear: 'Ex: 6º Ano, 7º Ano, 8º Ano',
+      theme: 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+      objectives: '',
+      difficultyLevel: 'Ex: Básico, Intermediário, Avançado',
+      quadroInterativoCampoEspecifico: 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+      bnccCompetencias: '',
+      publico: ''
+    };
+  }
 }
