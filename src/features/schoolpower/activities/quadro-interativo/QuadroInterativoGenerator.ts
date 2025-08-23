@@ -1,3 +1,4 @@
+
 import { GeminiClient } from '@/utils/api/geminiClient';
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 
@@ -8,6 +9,12 @@ interface QuadroInterativoData {
   objetivos?: string;
   nivelDificuldade?: string;
   atividadeMostrada?: string;
+  theme?: string;
+  objectives?: string;
+  subject?: string;
+  schoolYear?: string;
+  difficultyLevel?: string;
+  quadroInterativoCampoEspecifico?: string;
   [key: string]: any;
 }
 
@@ -33,7 +40,11 @@ export class QuadroInterativoGenerator {
     geminiLogger.logRequest('Gerando conteúdo de Quadro Interativo', data);
 
     try {
-      const prompt = this.buildPrompt(data);
+      // Normalizar dados de entrada
+      const normalizedData = this.normalizeInputData(data);
+      console.log('📝 Dados normalizados para geração:', normalizedData);
+
+      const prompt = this.buildPrompt(normalizedData);
       console.log('📝 Prompt construído para Gemini:', prompt.substring(0, 200) + '...');
 
       const response = await this.geminiClient.generate({
@@ -47,14 +58,14 @@ export class QuadroInterativoGenerator {
       if (!response.success) {
         console.error('❌ Erro na resposta do Gemini:', response.error);
         // Retornar conteúdo de fallback em caso de erro da API
-        return this.createFallbackContent(data);
+        return this.createFallbackContent(normalizedData);
       }
 
       const parsedContent = this.parseGeminiResponse(response.result);
 
       const result: QuadroInterativoContent = {
-        title: data.tema || data.theme || 'Quadro Interativo',
-        description: data.objetivos || data.objectives || 'Atividade de quadro interativo',
+        title: normalizedData.tema || 'Quadro Interativo',
+        description: normalizedData.objetivos || 'Atividade de quadro interativo',
         cardContent: parsedContent,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
@@ -68,25 +79,38 @@ export class QuadroInterativoGenerator {
       geminiLogger.logError(error as Error, { data });
       
       // Retornar conteúdo de fallback em vez de lançar erro
-      return this.createFallbackContent(data);
+      const normalizedData = this.normalizeInputData(data);
+      return this.createFallbackContent(normalizedData);
     }
+  }
+
+  private normalizeInputData(data: QuadroInterativoData): QuadroInterativoData {
+    return {
+      disciplina: data.disciplina || data.subject || 'Matemática',
+      anoSerie: data.anoSerie || data.schoolYear || '6º Ano',
+      tema: data.tema || data.theme || data.title || 'Tema da Aula',
+      objetivos: data.objetivos || data.objectives || data.description || 'Objetivos de aprendizagem',
+      nivelDificuldade: data.nivelDificuldade || data.difficultyLevel || 'Intermediário',
+      atividadeMostrada: data.atividadeMostrada || data.quadroInterativoCampoEspecifico || 'Atividade interativa'
+    };
   }
 
   private createFallbackContent(data: QuadroInterativoData): QuadroInterativoContent {
     console.log('🔧 Criando conteúdo de fallback para:', data);
     
-    const tema = data?.tema || data?.theme || 'Tema da Aula';
-    const objetivos = data?.objetivos || data?.objectives || 'Objetivos de aprendizagem';
+    const tema = data?.tema || 'Tema da Aula';
+    const objetivos = data?.objetivos || 'Objetivos de aprendizagem';
     const disciplina = data?.disciplina || 'Disciplina';
     const anoSerie = data?.anoSerie || 'Ano/Série';
     
-    const fallbackText = `Conteúdo educativo sobre ${tema} para ${disciplina} - ${anoSerie}. ${objetivos}`;
+    const fallbackTitle = `${tema} - ${disciplina}`;
+    const fallbackText = `Conteúdo educativo sobre ${tema} para ${anoSerie}. ${objetivos}`;
     
     return {
       title: tema,
       description: objetivos,
       cardContent: {
-        title: tema,
+        title: fallbackTitle,
         text: fallbackText
       },
       generatedAt: new Date().toISOString(),
@@ -101,18 +125,20 @@ Você é uma IA especializada em educação que cria conteúdo para quadros inte
 Com base nos dados fornecidos, gere um conteúdo educativo claro e objetivo para ser exibido em um quadro interativo de sala de aula.
 
 **DADOS DA ATIVIDADE:**
-- Disciplina: ${data.disciplina || 'Não especificado'}
-- Ano/Série: ${data.anoSerie || 'Não especificado'}
-- Tema: ${data.tema || 'Não especificado'}
-- Objetivos: ${data.objetivos || 'Não especificado'}
-- Nível de Dificuldade: ${data.nivelDificuldade || 'Não especificado'}
-- Atividade: ${data.atividadeMostrada || 'Não especificado'}
+- Disciplina: ${data.disciplina}
+- Ano/Série: ${data.anoSerie}
+- Tema: ${data.tema}
+- Objetivos: ${data.objetivos}
+- Nível de Dificuldade: ${data.nivelDificuldade}
+- Atividade: ${data.atividadeMostrada}
 
 **INSTRUÇÕES:**
 1. Crie um título atrativo e direto sobre o tema
 2. Desenvolva um texto educativo claro e objetivo (máximo 150 palavras)
 3. O conteúdo deve ser adequado para o ano/série especificado
 4. Mantenha foco nos objetivos de aprendizagem
+5. Use linguagem adequada para estudantes
+6. Inclua elementos que tornem o conteúdo interativo
 
 **FORMATO DE RESPOSTA (JSON):**
 {
@@ -120,7 +146,7 @@ Com base nos dados fornecidos, gere um conteúdo educativo claro e objetivo para
   "text": "Texto educativo claro e objetivo para exibição no quadro interativo"
 }
 
-Retorne APENAS o JSON, sem comentários adicionais.
+Retorne APENAS o JSON válido, sem comentários adicionais.
 `;
   }
 
@@ -147,17 +173,28 @@ Retorne APENAS o JSON, sem comentários adicionais.
         text: parsed.text || parsed.texto || parsed.content || parsed.conteudo || 'Conteúdo educativo gerado pela IA.'
       };
 
+      // Validar e sanitizar o resultado
+      if (!result.title || result.title.trim() === '') {
+        result.title = 'Conteúdo do Quadro';
+      }
+
+      if (!result.text || result.text.trim() === '') {
+        result.text = 'Conteúdo educativo gerado pela IA.';
+      }
+
       console.log('✅ Resposta parseada:', result);
       return result;
     } catch (error) {
       console.error('❌ Erro ao parsear resposta:', error);
       
       // Fallback: tentar extrair conteúdo textual da resposta
-      const fallbackText = response.length > 50 ? response.substring(0, 150) + '...' : response;
+      const fallbackText = response && response.length > 50 ? 
+                          response.substring(0, 150) + '...' : 
+                          'Erro ao processar conteúdo gerado pela IA.';
       
       return {
         title: 'Conteúdo do Quadro',
-        text: fallbackText || 'Erro ao processar conteúdo gerado pela IA.'
+        text: fallbackText
       };
     }
   }

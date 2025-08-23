@@ -19,7 +19,6 @@ export interface QuadroInterativoActivity {
   personalizedDescription?: string;
 }
 
-// --- Start of edited code ---
 export interface QuadroInterativoData {
   disciplina?: string;
   anoSerie?: string;
@@ -51,13 +50,40 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
       return createFallbackResult();
     }
 
-    // Extrair dados dos campos do formulário com múltiplas possibilidades
-    const disciplina = formData.disciplina || formData.subject || formData['Disciplina / Área de conhecimento'] || '';
-    const anoSerie = formData.anoSerie || formData.schoolYear || formData['Ano / Série'] || '';
-    const tema = formData.tema || formData.theme || formData.title || formData['Tema ou Assunto da aula'] || '';
-    const objetivos = formData.objetivos || formData.objectives || formData.description || formData['Objetivo de aprendizagem da aula'] || '';
-    const nivelDificuldade = formData.nivelDificuldade || formData.difficultyLevel || formData['Nível de Dificuldade'] || '';
-    const atividadeMostrada = formData.atividadeMostrada || formData.quadroInterativoCampoEspecifico || formData['Atividade mostrada'] || '';
+    // Estratégia robusta de extração de dados
+    const extractDataWithFallback = (keys: string[], data: any): string => {
+      for (const key of keys) {
+        if (data[key] && typeof data[key] === 'string' && data[key].trim() !== '') {
+          return data[key].trim();
+        }
+      }
+      return '';
+    };
+
+    // Extrair dados com múltiplas possibilidades
+    const disciplina = extractDataWithFallback([
+      'disciplina', 'subject', 'Disciplina / Área de conhecimento', 'Disciplina'
+    ], formData);
+
+    const anoSerie = extractDataWithFallback([
+      'anoSerie', 'schoolYear', 'Ano / Série', 'anoEscolaridade'
+    ], formData);
+
+    const tema = extractDataWithFallback([
+      'tema', 'theme', 'title', 'Tema ou Assunto da aula', 'Tema'
+    ], formData);
+
+    const objetivos = extractDataWithFallback([
+      'objetivos', 'objectives', 'description', 'Objetivo de aprendizagem da aula', 'Objetivos'
+    ], formData);
+
+    const nivelDificuldade = extractDataWithFallback([
+      'nivelDificuldade', 'difficultyLevel', 'Nível de Dificuldade', 'dificuldade'
+    ], formData);
+
+    const atividadeMostrada = extractDataWithFallback([
+      'atividadeMostrada', 'quadroInterativoCampoEspecifico', 'Atividade mostrada', 'atividade'
+    ], formData);
 
     console.log('📊 Dados extraídos:', {
       disciplina, anoSerie, tema, objetivos, nivelDificuldade, atividadeMostrada
@@ -65,21 +91,27 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
 
     // Verificar se temos dados gerados pela IA em diferentes estruturas
     let cardContent = null;
-    
-    if (formData.cardContent && (formData.cardContent.title || formData.cardContent.text)) {
-      cardContent = formData.cardContent;
-      console.log('✅ Usando cardContent existente');
-    } else if (formData.data && formData.data.cardContent) {
-      cardContent = formData.data.cardContent;
-      console.log('✅ Usando cardContent de formData.data');
-    } else if (formData.generatedContent && formData.generatedContent.cardContent) {
-      cardContent = formData.generatedContent.cardContent;
-      console.log('✅ Usando cardContent de generatedContent');
+    let isGeneratedByAI = false;
+
+    // Buscar cardContent em diferentes locais
+    const cardContentSources = [
+      formData.cardContent,
+      formData.data?.cardContent,
+      formData.generatedContent?.cardContent,
+      formData.result?.cardContent
+    ];
+
+    for (const source of cardContentSources) {
+      if (source && (source.title || source.text)) {
+        cardContent = source;
+        isGeneratedByAI = true;
+        console.log('✅ Usando cardContent encontrado:', cardContent);
+        break;
+      }
     }
 
     // Se temos conteúdo gerado, usar ele
     if (cardContent && (cardContent.title || cardContent.text)) {
-      console.log('✅ Usando dados já gerados pela IA:', cardContent);
       return {
         title: tema || cardContent.title || 'Quadro Interativo',
         description: objetivos || cardContent.text || 'Atividade de quadro interativo',
@@ -88,11 +120,16 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
           text: cardContent.text || objetivos || 'Conteúdo educativo gerado pela IA.'
         },
         generatedAt: formData.generatedAt || new Date().toISOString(),
-        isGeneratedByAI: formData.isGeneratedByAI !== false
+        isGeneratedByAI: true
       };
     }
 
-    // Criar estrutura padrão com dados do formulário
+    // Verificar indicadores de IA
+    isGeneratedByAI = formData.isGeneratedByAI === true || 
+                     formData.data?.isGeneratedByAI === true ||
+                     formData.generatedContent?.isGeneratedByAI === true;
+
+    // Criar estrutura com dados do formulário
     const result: QuadroInterativoResult = {
       title: tema || 'Quadro Interativo',
       description: objetivos || 'Atividade de quadro interativo',
@@ -101,10 +138,10 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
         text: objetivos || 'Conteúdo educativo será exibido aqui após a geração pela IA.'
       },
       generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false
+      isGeneratedByAI: isGeneratedByAI
     };
 
-    console.log('✅ Dados processados (estrutura padrão):', result);
+    console.log('✅ Dados processados com sucesso:', result);
     geminiLogger.info('quadro_interativo_processor', 'Dados processados com sucesso', result);
 
     return result;
@@ -135,19 +172,17 @@ export function consolidateQuadroInterativoData(data: any): QuadroInterativoData
   console.log('🔄 Consolidando dados do Quadro Interativo:', data);
 
   const consolidated: QuadroInterativoData = {
-    disciplina: data.disciplina || data['Disciplina / Área de conhecimento'] || '',
-    anoSerie: data.anoSerie || data['Ano / Série'] || '',
-    tema: data.tema || data['Tema ou Assunto da aula'] || '',
-    objetivos: data.objetivos || data['Objetivo de aprendizagem da aula'] || '',
-    nivelDificuldade: data.nivelDificuldade || data['Nível de Dificuldade'] || '',
-    atividadeMostrada: data.atividadeMostrada || data['Atividade mostrada'] || ''
+    disciplina: data.disciplina || data['Disciplina / Área de conhecimento'] || data.subject || '',
+    anoSerie: data.anoSerie || data['Ano / Série'] || data.schoolYear || '',
+    tema: data.tema || data['Tema ou Assunto da aula'] || data.theme || data.title || '',
+    objetivos: data.objetivos || data['Objetivo de aprendizagem da aula'] || data.objectives || data.description || '',
+    nivelDificuldade: data.nivelDificuldade || data['Nível de Dificuldade'] || data.difficultyLevel || '',
+    atividadeMostrada: data.atividadeMostrada || data['Atividade mostrada'] || data.quadroInterativoCampoEspecifico || ''
   };
 
   console.log('✅ Dados consolidados:', consolidated);
   return consolidated;
 }
-// --- End of edited code ---
-
 
 /**
  * Valida se os dados do Quadro Interativo são válidos
@@ -443,5 +478,5 @@ export default {
   generateQuadroInterativoFields,
   extractQuadroInterativoData,
   validateQuadroInterativoFields,
-  // consolidateQuadroInterativoData is exposed via its own export
+  consolidateQuadroInterativoData
 };

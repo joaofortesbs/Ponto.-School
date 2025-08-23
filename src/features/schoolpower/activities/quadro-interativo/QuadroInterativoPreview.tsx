@@ -10,36 +10,85 @@ interface QuadroInterativoPreviewProps {
   previewData?: any;
 }
 
-export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ data, content, activityData, previewData }) => {
-  console.log('🎯 QuadroInterativoPreview - Dados recebidos:', { data, content, activityData, previewData });
+export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
+  data, 
+  content, 
+  activityData, 
+  previewData 
+}) => {
+  console.log('🎯 QuadroInterativoPreview - Dados recebidos:', { 
+    data, 
+    content, 
+    activityData, 
+    previewData 
+  });
 
-  // Consolidar dados de múltiplas fontes incluindo previewData
+  // Estratégia robusta de consolidação de dados
   const consolidatedData = {
+    // Prioridade 1: previewData (dados mais recentes)
     ...previewData,
+    // Prioridade 2: data (dados do formulário)
     ...data,
+    // Prioridade 3: content (conteúdo gerado)
     ...content,
+    // Prioridade 4: activityData (dados da atividade)
     ...activityData
   };
 
-  // Garantir que temos os dados necessários com fallbacks robustos
-  const cardTitle = consolidatedData?.cardContent?.title || 
-                   consolidatedData?.title || 
-                   consolidatedData?.theme || 
-                   activityData?.title || 
-                   data?.theme ||
-                   previewData?.theme ||
-                   'Conteúdo do Quadro';
-                   
-  const cardText = consolidatedData?.cardContent?.text || 
-                  consolidatedData?.text || 
-                  consolidatedData?.description || 
-                  consolidatedData?.objectives ||
-                  activityData?.description ||
-                  data?.objectives ||
-                  previewData?.objectives ||
-                  'Conteúdo educativo será exibido aqui após a geração pela IA.';
+  // Extrair conteúdo do card com fallbacks robustos
+  let cardTitle = '';
+  let cardText = '';
 
-  console.log('📝 Dados consolidados do card:', { cardTitle, cardText, consolidatedData });
+  // Estratégia 1: Buscar no cardContent
+  if (consolidatedData?.cardContent) {
+    cardTitle = consolidatedData.cardContent.title || '';
+    cardText = consolidatedData.cardContent.text || '';
+  }
+
+  // Estratégia 2: Buscar em data.cardContent
+  if ((!cardTitle || !cardText) && consolidatedData?.data?.cardContent) {
+    cardTitle = cardTitle || consolidatedData.data.cardContent.title || '';
+    cardText = cardText || consolidatedData.data.cardContent.text || '';
+  }
+
+  // Estratégia 3: Buscar nos campos diretos
+  if (!cardTitle) {
+    cardTitle = consolidatedData?.title || 
+               consolidatedData?.theme || 
+               consolidatedData?.tema ||
+               activityData?.title || 
+               data?.theme ||
+               previewData?.theme ||
+               'Conteúdo do Quadro';
+  }
+
+  if (!cardText) {
+    cardText = consolidatedData?.description || 
+              consolidatedData?.text || 
+              consolidatedData?.objectives || 
+              consolidatedData?.objetivos ||
+              activityData?.description ||
+              data?.objectives ||
+              previewData?.objectives ||
+              'Conteúdo educativo gerado pela IA será exibido aqui.';
+  }
+
+  // Garantir que temos conteúdo válido
+  if (!cardTitle || cardTitle.trim() === '') {
+    cardTitle = 'Conteúdo do Quadro';
+  }
+
+  if (!cardText || cardText.trim() === '') {
+    cardText = 'Conteúdo educativo será exibido aqui após a geração pela IA.';
+  }
+
+  console.log('📝 Dados finais do card:', { cardTitle, cardText });
+
+  // Verificar se é conteúdo gerado pela IA
+  const isAIGenerated = consolidatedData?.isGeneratedByAI === true || 
+                       consolidatedData?.data?.isGeneratedByAI === true ||
+                       (cardText !== 'Conteúdo educativo será exibido aqui após a geração pela IA.' && 
+                        cardTitle !== 'Conteúdo do Quadro');
 
   return (
     <div className="space-y-6 p-6">
@@ -69,8 +118,8 @@ export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = (
             {/* Indicador de IA */}
             <div className="mt-6 pt-4 border-t border-blue-200 dark:border-blue-700">
               <div className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                Conteúdo gerado por IA
+                <div className={`w-2 h-2 rounded-full ${isAIGenerated ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></div>
+                {isAIGenerated ? 'Conteúdo gerado por IA' : 'Aguardando geração da IA'}
               </div>
             </div>
           </div>

@@ -82,6 +82,27 @@ const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: A
         <Input
           id="subject"
           value={formData.subject || ''}
+
+// Função auxiliar para criar fallback do Quadro Interativo
+const createQuadroInterativoFallback = (data: any) => {
+  const tema = data?.theme || data?.tema || data?.title || 'Quadro Interativo';
+  const objetivos = data?.objectives || data?.objetivos || data?.description || 'Atividade de quadro interativo';
+  const disciplina = data?.subject || data?.disciplina || 'Disciplina';
+  const anoSerie = data?.schoolYear || data?.anoSerie || 'Ano/Série';
+  
+  return {
+    title: tema,
+    description: objetivos,
+    cardContent: {
+      title: `${tema} - ${disciplina}`,
+      text: `Conteúdo educativo sobre ${tema} para ${anoSerie}. ${objetivos}`
+    },
+    generatedAt: new Date().toISOString(),
+    isGeneratedByAI: false
+  };
+};
+
+
           onChange={(e) => onFieldChange('subject', e.target.value)}
           placeholder="Ex: Matemática, Português, Ciências"
           required
@@ -484,7 +505,7 @@ const EditActivityModal = ({
 
   // Função para gerar conteúdo (agora com import dinâmico e lógica específica para Quadro Interativo)
   const generateActivityContent = async (type: string, data: any) => {
-    console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
+    console.log(`🎯 Gerando conteúdo para tipo: ${type} com dados:`, data);
 
     if (type === 'quadro-interativo') {
       try {
@@ -492,19 +513,24 @@ const EditActivityModal = ({
 
         // Validar dados de entrada
         if (!data || typeof data !== 'object') {
-          throw new Error('Dados inválidos para geração do Quadro Interativo');
+          console.error('❌ Dados inválidos para geração do Quadro Interativo');
+          return { success: false, data: createQuadroInterativoFallback(data) };
         }
 
-        // Preparar dados para o gerador com validação
+        // Preparar dados para o gerador com validação robusta
         const generationData = {
-          disciplina: data.subject || 'Matemática',
-          anoSerie: data.schoolYear || '6º Ano',
-          tema: data.theme || data.title || 'Tema da Aula',
-          objetivos: data.objectives || data.description || 'Objetivos de aprendizagem',
-          nivelDificuldade: data.difficultyLevel || 'Intermediário',
-          atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
-          theme: data.theme || data.title || 'Tema da Aula',
-          objectives: data.objectives || data.description || 'Objetivos de aprendizagem'
+          disciplina: data.subject || data.disciplina || 'Matemática',
+          anoSerie: data.schoolYear || data.anoSerie || '6º Ano',
+          tema: data.theme || data.tema || data.title || 'Tema da Aula',
+          objetivos: data.objectives || data.objetivos || data.description || 'Objetivos de aprendizagem',
+          nivelDificuldade: data.difficultyLevel || data.nivelDificuldade || 'Intermediário',
+          atividadeMostrada: data.quadroInterativoCampoEspecifico || data.atividadeMostrada || 'Atividade interativa',
+          // Campos adicionais para compatibilidade
+          subject: data.subject || data.disciplina || 'Matemática',
+          schoolYear: data.schoolYear || data.anoSerie || '6º Ano',
+          theme: data.theme || data.tema || data.title || 'Tema da Aula',
+          objectives: data.objectives || data.objetivos || data.description || 'Objetivos de aprendizagem',
+          difficultyLevel: data.difficultyLevel || data.nivelDificuldade || 'Intermediário'
         };
 
         console.log('📋 Dados preparados para geração:', generationData);
@@ -514,21 +540,34 @@ const EditActivityModal = ({
         const generator = new QuadroInterativoGenerator();
         const generatedContent = await generator.generateQuadroInterativoContent(generationData);
 
-        console.log('✅ Conteúdo gerado:', generatedContent);
+        console.log('✅ Conteúdo gerado pelo Gemini:', generatedContent);
 
-        // Garantir que o conteúdo esteja na estrutura correta
+        // Validar se o conteúdo foi gerado corretamente
+        if (!generatedContent || !generatedContent.cardContent) {
+          console.warn('⚠️ Conteúdo gerado incompleto, usando fallback');
+          return { success: true, data: createQuadroInterativoFallback(generationData) };
+        }
+
+        // Estrutura final robusta
         const result = {
           ...generatedContent,
-          title: generatedContent.title || generationData.tema,
-          description: generatedContent.description || generationData.objetivos,
-          cardContent: generatedContent.cardContent || {
-            title: generationData.tema,
-            text: generationData.objetivos
+          title: generatedContent.title || generationData.tema || 'Quadro Interativo',
+          description: generatedContent.description || generationData.objetivos || 'Atividade de quadro interativo',
+          cardContent: {
+            title: generatedContent.cardContent.title || generationData.tema || 'Conteúdo do Quadro',
+            text: generatedContent.cardContent.text || generationData.objetivos || 'Conteúdo educativo gerado pela IA.'
           },
-          // Manter dados originais para referência
+          // Metadados para tracking
           originalData: data,
-          generationData: generationData
+          generationData: generationData,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true
         };
+
+        // Salvar no localStorage para preservar o conteúdo
+        const storageKey = `quadro_interativo_data_${activity?.id}`;
+        localStorage.setItem(storageKey, JSON.stringify(result));
+        console.log('💾 Conteúdo salvo no localStorage:', storageKey);
 
         return {
           success: true,
@@ -537,31 +576,23 @@ const EditActivityModal = ({
       } catch (error) {
         console.error('❌ Erro ao gerar Quadro Interativo:', error);
 
-        // Fallback robusto em caso de erro
+        // Fallback estratégico em múltiplas camadas
         try {
           const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
           const processedData = processQuadroInterativoData(data);
 
+          console.log('🔧 Usando processador como fallback:', processedData);
           return {
             success: true,
             data: processedData
           };
         } catch (fallbackError) {
-          console.error('❌ Erro no fallback:', fallbackError);
+          console.error('❌ Erro no fallback do processador:', fallbackError);
           
           // Último recurso: estrutura mínima válida
           return {
             success: true,
-            data: {
-              title: data.theme || data.title || 'Quadro Interativo',
-              description: data.objectives || data.description || 'Atividade de quadro interativo',
-              cardContent: {
-                title: data.theme || data.title || 'Conteúdo do Quadro',
-                text: data.objectives || data.description || 'Conteúdo educativo gerado pela IA.'
-              },
-              generatedAt: new Date().toISOString(),
-              isGeneratedByAI: false
-            }
+            data: createQuadroInterativoFallback(data)
           };
         }
       }
