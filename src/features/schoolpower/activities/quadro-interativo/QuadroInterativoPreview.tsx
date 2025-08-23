@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lightbulb } from 'lucide-react';
 
@@ -12,81 +12,109 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   data, 
   activityData 
 }) => {
-  console.log('🖼️ QuadroInterativoPreview - Dados recebidos:', data);
-  console.log('🖼️ QuadroInterativoPreview - Activity data:', activityData);
+  const [cardContent, setCardContent] = useState({
+    title: 'Conteúdo do Quadro',
+    text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+  });
 
-  // Extrair dados do conteúdo gerado pela IA
-  const getCardContent = () => {
-    // Prioridade 1: Dados diretos da IA na estrutura data.cardContent
-    if (data?.cardContent) {
-      console.log('✅ Usando cardContent diretamente:', data.cardContent);
-      return {
-        title: String(data.cardContent.title || 'Conteúdo do Quadro'),
-        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-      };
-    }
+  useEffect(() => {
+    console.log('🖼️ QuadroInterativoPreview - Dados recebidos:', data);
+    console.log('🖼️ QuadroInterativoPreview - Activity data:', activityData);
 
-    // Prioridade 2: Dados da IA na estrutura data.data.cardContent
-    if (data?.data?.cardContent) {
-      console.log('✅ Usando cardContent da estrutura data.data:', data.data.cardContent);
-      return {
-        title: String(data.data.cardContent.title || 'Conteúdo do Quadro'),
-        text: String(data.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-      };
-    }
+    const extractCardContent = () => {
+      // Prioridade 1: Dados diretos da IA na estrutura data.cardContent
+      if (data?.cardContent?.title && data?.cardContent?.text) {
+        console.log('✅ Usando cardContent diretamente:', data.cardContent);
+        return {
+          title: String(data.cardContent.title),
+          text: String(data.cardContent.text)
+        };
+      }
 
-    // Prioridade 3: Verificar localStorage para dados construídos
-    if (typeof window !== 'undefined' && activityData?.id) {
-      const constructedKey = `constructed_quadro-interativo_${activityData.id}`;
-      const savedData = localStorage.getItem(constructedKey);
-      
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          console.log('✅ Dados encontrados no localStorage:', parsed);
-          
-          if (parsed?.data?.cardContent) {
-            return {
-              title: String(parsed.data.cardContent.title || 'Conteúdo do Quadro'),
-              text: String(parsed.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-            };
+      // Prioridade 2: Dados da IA na estrutura data.data.cardContent
+      if (data?.data?.cardContent?.title && data?.data?.cardContent?.text) {
+        console.log('✅ Usando cardContent da estrutura data.data:', data.data.cardContent);
+        return {
+          title: String(data.data.cardContent.title),
+          text: String(data.data.cardContent.text)
+        };
+      }
+
+      // Prioridade 3: Verificar localStorage para dados construídos
+      if (typeof window !== 'undefined' && activityData?.id) {
+        const constructedKey = `constructed_quadro-interativo_${activityData.id}`;
+        const savedData = localStorage.getItem(constructedKey);
+        
+        if (savedData) {
+          try {
+            const parsed = JSON.parse(savedData);
+            console.log('✅ Dados encontrados no localStorage:', parsed);
+            
+            if (parsed?.data?.cardContent?.title && parsed?.data?.cardContent?.text) {
+              return {
+                title: String(parsed.data.cardContent.title),
+                text: String(parsed.data.cardContent.text)
+              };
+            }
+            
+            if (parsed?.cardContent?.title && parsed?.cardContent?.text) {
+              return {
+                title: String(parsed.cardContent.title),
+                text: String(parsed.cardContent.text)
+              };
+            }
+          } catch (error) {
+            console.error('❌ Erro ao parsear dados do localStorage:', error);
           }
-          
-          if (parsed?.cardContent) {
-            return {
-              title: String(parsed.cardContent.title || 'Conteúdo do Quadro'),
-              text: String(parsed.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-            };
-          }
-        } catch (error) {
-          console.error('❌ Erro ao parsear dados do localStorage:', error);
         }
       }
-    }
 
-    // Prioridade 4: Tentar extrair de outros formatos de dados
-    if (data?.title || data?.theme) {
-      const title = data.title || data.theme || 'Conteúdo do Quadro';
-      const text = data.text || data.objectives || data.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.';
-      
-      console.log('✅ Usando dados alternativos extraídos:', { title, text });
+      // Prioridade 4: Extrair dados dos campos do formulário ou atividade
+      if (data?.title || data?.theme || activityData?.title) {
+        const title = data.title || data.theme || activityData?.title || 'Conteúdo Educativo';
+        const text = data.text || data.objectives || data.description || 
+                    activityData?.description || 
+                    'Explore este conteúdo educativo através do quadro interativo.';
+        
+        console.log('✅ Usando dados extraídos dos campos:', { title, text });
+        return {
+          title: String(title),
+          text: String(text)
+        };
+      }
+
+      // Prioridade 5: Verificar outros padrões de localStorage
+      if (typeof window !== 'undefined' && activityData?.id) {
+        const activityDataKey = `activity_${activityData.id}`;
+        const activityDataSaved = localStorage.getItem(activityDataKey);
+        
+        if (activityDataSaved) {
+          try {
+            const parsed = JSON.parse(activityDataSaved);
+            if (parsed?.title || parsed?.description) {
+              return {
+                title: String(parsed.title || 'Conteúdo Educativo'),
+                text: String(parsed.description || 'Conteúdo desenvolvido especialmente para o quadro interativo.')
+              };
+            }
+          } catch (error) {
+            console.error('❌ Erro ao parsear activity data do localStorage:', error);
+          }
+        }
+      }
+
+      // Fallback final
+      console.log('⚠️ Usando dados de fallback');
       return {
-        title: String(title),
-        text: String(text)
+        title: 'Conteúdo do Quadro',
+        text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
       };
-    }
-
-    // Fallback final
-    console.log('⚠️ Usando dados de fallback');
-    return {
-      title: 'Conteúdo do Quadro',
-      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
     };
-  };
 
-  const cardContent = getCardContent();
-
-  console.log('🎯 CardContent final que será renderizado:', cardContent);
+    const extractedContent = extractCardContent();
+    setCardContent(extractedContent);
+    console.log('🎯 CardContent final que será renderizado:', extractedContent);
+  }, [data, activityData]);
 
   return (
     <div className="h-full overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">

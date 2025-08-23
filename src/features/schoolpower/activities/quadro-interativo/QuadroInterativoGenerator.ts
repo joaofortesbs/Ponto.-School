@@ -37,13 +37,13 @@ export class QuadroInterativoGenerator {
       const response = await this.callGeminiAPI(prompt);
       const parsedContent = this.parseGeminiResponse(response);
       
-      // Garantir que o resultado tenha a estrutura correta
+      // Garantir que o resultado tenha a estrutura correta e consistente
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
         cardContent: {
           title: parsedContent.title || data.theme || 'Conteúdo Educativo',
-          text: parsedContent.text || `Explore o tema "${data.theme}" de forma interativa. ${data.objectives || 'Desenvolva habilidades através desta atividade educativa.'}`
+          text: parsedContent.text || this.generateFallbackText(data)
         },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
@@ -52,23 +52,47 @@ export class QuadroInterativoGenerator {
       console.log('✅ Conteúdo do Quadro Interativo gerado com sucesso:', result);
       geminiLogger.logResponse(result, Date.now());
       
+      // Salvar automaticamente no localStorage para garantir persistência
+      if (typeof window !== 'undefined') {
+        try {
+          const storageKey = `quadro_interativo_generated_${Date.now()}`;
+          localStorage.setItem(storageKey, JSON.stringify(result));
+          console.log('💾 Conteúdo salvo automaticamente no localStorage:', storageKey);
+        } catch (storageError) {
+          console.warn('⚠️ Erro ao salvar no localStorage:', storageError);
+        }
+      }
+      
       return result;
     } catch (error) {
       console.error('❌ Erro ao gerar conteúdo do Quadro Interativo:', error);
       geminiLogger.logError(error as Error, { data });
       
       // Retornar conteúdo fallback estruturado em caso de erro
-      return {
+      const fallbackResult: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
         cardContent: {
           title: data.theme || 'Conteúdo Educativo',
-          text: `Explore o tema "${data.theme}" de forma interativa. ${data.objectives || 'Desenvolva habilidades através desta atividade educativa.'}`
+          text: this.generateFallbackText(data)
         },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
       };
+
+      console.log('🔧 Usando conteúdo fallback estruturado:', fallbackResult);
+      return fallbackResult;
     }
+  }
+
+  private generateFallbackText(data: QuadroInterativoData): string {
+    const baseText = `Explore o tema "${data.theme}" de forma interativa`;
+    const objectiveText = data.objectives ? `. ${data.objectives}` : '';
+    const activityText = data.quadroInterativoCampoEspecifico ? 
+      ` através de ${data.quadroInterativoCampoEspecifico.toLowerCase()}.` : 
+      '. Desenvolva habilidades através desta atividade educativa.';
+    
+    return baseText + objectiveText + activityText;
   }
 
   private buildPrompt(data: QuadroInterativoData): string {

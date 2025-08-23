@@ -1,5 +1,6 @@
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { fieldMapping, normalizeMaterials } from './fieldMapping';
+import { ActionPlanItem } from '../../actionplan/ActionPlanCard';
 
 export interface QuadroInterativoFields {
   [key: string]: string;
@@ -151,37 +152,41 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
 /**
  * Prepara dados de Quadro Interativo para o modal de edição
  */
-export function prepareQuadroInterativoDataForModal(activity: any): ActivityFormData {
+export function prepareQuadroInterativoDataForModal(activity: ActionPlanItem): QuadroInterativoFormData {
   console.log('🔄 Preparando dados do Quadro Interativo para modal:', activity);
 
   const customFields = activity.customFields || {};
 
-  return {
-    title: activity.personalizedTitle || activity.title || '',
-    description: activity.personalizedDescription || activity.description || '',
+  // Mapear campos específicos do Quadro Interativo
+  const formData: QuadroInterativoFormData = {
+    title: activity.personalizedTitle || activity.title || 'Quadro Interativo',
+    description: activity.personalizedDescription || activity.description || 'Atividade de quadro interativo',
 
-    // Campos específicos do Quadro Interativo
     subject: customFields['Disciplina / Área de conhecimento'] ||
              customFields['disciplina'] ||
              customFields['Disciplina'] ||
+             customFields['Componente Curricular'] ||
              'Matemática',
 
     schoolYear: customFields['Ano / Série'] ||
                 customFields['anoSerie'] ||
                 customFields['Ano de Escolaridade'] ||
+                customFields['Público-Alvo'] ||
                 '6º Ano',
 
     theme: customFields['Tema ou Assunto da aula'] ||
            customFields['tema'] ||
            customFields['Tema'] ||
+           customFields['Assunto'] ||
            activity.title ||
-           'Tema da Aula',
+           'Tema Educativo',
 
     objectives: customFields['Objetivo de aprendizagem da aula'] ||
                 customFields['objetivos'] ||
                 customFields['Objetivos'] ||
+                customFields['Objetivo Principal'] ||
                 activity.description ||
-                'Objetivos de aprendizagem',
+                'Desenvolver habilidades educativas através do quadro interativo',
 
     difficultyLevel: customFields['Nível de Dificuldade'] ||
                      customFields['nivelDificuldade'] ||
@@ -189,48 +194,35 @@ export function prepareQuadroInterativoDataForModal(activity: any): ActivityForm
                      'Intermediário',
 
     quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
-                                    customFields['atividadeMostrada'] ||
-                                    customFields['quadroInterativoCampoEspecifico'] ||
-                                    'Atividade interativa no quadro',
+                                     customFields['atividadeMostrada'] ||
+                                     customFields['quadroInterativoCampoEspecifico'] ||
+                                     customFields['Tipo de Atividade'] ||
+                                     'Atividade interativa no quadro',
 
-    // Campos opcionais
-    materials: normalizeMaterials(customFields['Materiais Necessários'] || customFields['materiais'] || ''),
-    instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
-    evaluation: customFields['Critérios de Avaliação'] || customFields['avaliacao'] || '',
-    timeLimit: customFields['Tempo Estimado'] || customFields['tempoLimite'] || '45 minutos',
-    context: customFields['Contexto de Aplicação'] || customFields['contexto'] || '',
+    materials: customFields['Materiais'] ||
+               customFields['Materiais Necessários'] ||
+               customFields['Recursos'] ||
+               '',
 
-    // Campos padrão necessários para ActivityFormData
-    numberOfQuestions: '1',
-    questionModel: '',
-    sources: '',
-    textType: '',
-    textGenre: '',
-    textLength: '',
-    associatedQuestions: '',
-    competencies: '',
-    readingStrategies: '',
-    visualResources: '',
-    practicalActivities: '',
-    wordsIncluded: '',
-    gridFormat: '',
-    providedHints: '',
-    vocabularyContext: '',
-    language: '',
-    associatedExercises: '',
-    knowledgeArea: '',
-    complexityLevel: '',
-    tituloTemaAssunto: '',
-    anoSerie: '',
-    disciplina: '',
-    bnccCompetencias: '',
-    publicoAlvo: '',
-    objetivosAprendizagem: '',
-    quantidadeAulas: '',
-    quantidadeDiagnosticos: '',
-    quantidadeAvaliacoes: '',
-    cronograma: ''
+    instructions: customFields['Instruções'] ||
+                  customFields['Metodologia'] ||
+                  '',
+
+    evaluation: customFields['Avaliação'] ||
+                customFields['Critérios de Avaliação'] ||
+                '',
+
+    timeLimit: customFields['Tempo Estimado'] ||
+               customFields['Duração'] ||
+               '',
+
+    context: customFields['Contexto'] ||
+             customFields['Aplicação'] ||
+             ''
   };
+
+  console.log('✅ Dados do Quadro Interativo preparados:', formData);
+  return formData;
 }
 
 /**
@@ -366,5 +358,29 @@ export const processConstructedQuadroInterativoData = (constructedData: any) => 
     return null;
   }
 };
+
+export function processQuadroInterativoSubmission(formData: QuadroInterativoFormData): any {
+  console.log('📤 Processando submissão do Quadro Interativo:', formData);
+
+  return {
+    ...formData,
+    customFields: {
+      'Disciplina / Área de conhecimento': formData.subject,
+      'Ano / Série': formData.schoolYear,
+      'Tema ou Assunto da aula': formData.theme,
+      'Objetivo de aprendizagem da aula': formData.objectives,
+      'Nível de Dificuldade': formData.difficultyLevel,
+      'Atividade mostrada': formData.quadroInterativoCampoEspecifico,
+      ...(formData.materials && { 'Materiais': formData.materials }),
+      ...(formData.instructions && { 'Instruções': formData.instructions }),
+      ...(formData.evaluation && { 'Avaliação': formData.evaluation }),
+      ...(formData.timeLimit && { 'Tempo Estimado': formData.timeLimit }),
+      ...(formData.context && { 'Contexto': formData.context })
+    },
+    type: 'quadro-interativo',
+    categoryId: 'quadro-interativo',
+    generatedAt: new Date().toISOString()
+  };
+}
 
 export { processQuadroInterativoData, prepareQuadroInterativoDataForModal, processConstructedQuadroInterativoData };
