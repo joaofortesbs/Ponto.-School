@@ -2,6 +2,31 @@
 import React, { useState, useEffect } from 'react';
 import useSchoolPowerFlow from '../../../features/schoolpower/hooks/useSchoolPowerFlow';
 
+interface GeminiApiCall {
+  id: string;
+  timestamp: string;
+  status: 'preparing' | 'sending' | 'success' | 'error' | 'timeout';
+  requestData?: {
+    prompt: string;
+    promptLength: number;
+    temperature?: number;
+    maxTokens?: number;
+  };
+  responseData?: {
+    responseText: string;
+    responseLength: number;
+    tokensUsed?: number;
+    executionTime: number;
+  };
+  errorData?: {
+    errorMessage: string;
+    errorCode?: string;
+    httpStatus?: number;
+  };
+  phase: string;
+  processingSteps: string[];
+}
+
 interface DebugData {
   timestamp: string;
   flowState: string;
@@ -19,6 +44,13 @@ interface DebugData {
     componentsLoaded: boolean;
     servicesLoaded: boolean;
     dataValidated: boolean;
+  };
+  geminiApiCalls: GeminiApiCall[];
+  geminiApiStats: {
+    totalCalls: number;
+    successfulCalls: number;
+    failedCalls: number;
+    averageResponseTime: number;
   };
 }
 
@@ -41,6 +73,13 @@ export default function DebugPanel() {
       componentsLoaded: false,
       servicesLoaded: false,
       dataValidated: false
+    },
+    geminiApiCalls: [],
+    geminiApiStats: {
+      totalCalls: 0,
+      successfulCalls: 0,
+      failedCalls: 0,
+      averageResponseTime: 0
     }
   });
 
@@ -57,6 +96,28 @@ export default function DebugPanel() {
     };
 
     return checks;
+  };
+
+  // Monitorar chamadas da API Gemini
+  const monitorGeminiApiCalls = () => {
+    const storedCalls = localStorage.getItem('gemini_api_calls');
+    const calls: GeminiApiCall[] = storedCalls ? JSON.parse(storedCalls) : [];
+    
+    // Manter apenas as últimas 20 chamadas
+    const recentCalls = calls.slice(-20);
+    
+    // Calcular estatísticas
+    const stats = {
+      totalCalls: recentCalls.length,
+      successfulCalls: recentCalls.filter(call => call.status === 'success').length,
+      failedCalls: recentCalls.filter(call => call.status === 'error').length,
+      averageResponseTime: recentCalls
+        .filter(call => call.responseData?.executionTime)
+        .reduce((acc, call) => acc + (call.responseData?.executionTime || 0), 0) / 
+        Math.max(recentCalls.filter(call => call.responseData?.executionTime).length, 1)
+    };
+
+    return { calls: recentCalls, stats };
   };
 
   // Capturar erros do console
@@ -81,6 +142,145 @@ export default function DebugPanel() {
 
     return errors;
   };
+
+  // Interceptar fetch para monitorar chamadas Gemini
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    
+    window.fetch = async (...args) => {
+      const [url, options] = args;
+      const urlString = typeof url === 'string' ? url : url.toString();
+      
+      // Verificar se é uma chamada para Gemini API
+      if (urlString.includes('generativelanguage.googleapis.com')) {
+        const callId = `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const startTime = Date.now();
+        
+        // Criar registro inicial da chamada
+        const apiCall: GeminiApiCall = {
+          id: callId,
+          timestamp: new Date().toISOString(),
+          status: 'preparing',
+          phase: 'Preparando requisição',
+          processingSteps: ['Iniciando chamada para API Gemini'],
+          requestData: {
+            prompt: 'Extraindo prompt...',
+            promptLength: 0,
+            temperature: 0.7,
+            maxTokens: 2048
+          }
+        };
+
+        // Tentar extrair dados da requisição
+        try {
+          if (options?.body) {
+            const requestBody = JSON.parse(options.body as string);
+            if (requestBody.contents?.[0]?.parts?.[0]?.text) {
+              const prompt = requestBody.contents[0].parts[0].text;
+              apiCall.requestData = {
+                prompt: prompt.substring(0, 500) + (prompt.length > 500 ? '...' : ''),
+                promptLength: prompt.length,
+                temperature: requestBody.generationConfig?.temperature || 0.7,
+                maxTokens: requestBody.generationConfig?.maxOutputTokens || 2048
+              };
+            }
+          }
+        } catch (error) {
+          apiCall.processingSteps.push(`Erro ao extrair dados da requisição: ${error}`);
+        }
+
+        // Salvar chamada inicial
+        const existingCalls = JSON.parse(localStorage.getItem('gemini_api_calls') || '[]');
+        existingCalls.push(apiCall);
+        localStorage.setItem('gemini_api_calls', JSON.stringify(existingCalls));
+
+        try {
+          // Atualizar status
+          apiCall.status = 'sending';
+          apiCall.phase = 'Enviando requisição';
+          apiCall.processingSteps.push('Requisição enviada para o servidor Gemini');
+          
+          const response = await originalFetch(...args);
+          const responseTime = Date.now() - startTime;
+
+          if (response.ok) {
+            const responseData = await response.clone().json();
+            
+            apiCall.status = 'success';
+            apiCall.phase = 'Resposta recebida com sucesso';
+            apiCall.processingSteps.push(`Resposta recebida em ${responseTime}ms`);
+            
+            if (responseData.candidates?.[0]?.content?.parts?.[0]?.text) {
+              const responseText = responseData.candidates[0].content.parts[0].text;
+              apiCall.responseData = {
+                responseText: responseText.substring(0, 500) + (responseText.length > 500 ? '...' : ''),
+                responseLength: responseText.length,
+                executionTime: responseTime,
+                tokensUsed: Math.ceil((apiCall.requestData?.promptLength || 0 + responseText.length) / 4)
+              };
+              apiCall.processingSteps.push(`Texto gerado: ${responseText.length} caracteres`);
+              apiCall.processingSteps.push(`Tokens estimados: ${apiCall.responseData.tokensUsed}`);
+            } else {
+              apiCall.status = 'error';
+              apiCall.phase = 'Resposta inválida';
+              apiCall.errorData = {
+                errorMessage: 'Resposta da API não contém texto válido',
+                errorCode: 'INVALID_RESPONSE'
+              };
+              apiCall.processingSteps.push('Erro: Resposta não contém conteúdo válido');
+            }
+          } else {
+            const errorText = await response.text();
+            apiCall.status = 'error';
+            apiCall.phase = 'Erro na resposta HTTP';
+            apiCall.errorData = {
+              errorMessage: errorText || 'Erro desconhecido na API',
+              httpStatus: response.status,
+              errorCode: `HTTP_${response.status}`
+            };
+            apiCall.processingSteps.push(`Erro HTTP ${response.status}: ${errorText}`);
+          }
+
+          // Atualizar chamada no localStorage
+          const updatedCalls = JSON.parse(localStorage.getItem('gemini_api_calls') || '[]');
+          const callIndex = updatedCalls.findIndex((call: GeminiApiCall) => call.id === callId);
+          if (callIndex !== -1) {
+            updatedCalls[callIndex] = apiCall;
+            localStorage.setItem('gemini_api_calls', JSON.stringify(updatedCalls));
+          }
+
+          return response;
+
+        } catch (error) {
+          const responseTime = Date.now() - startTime;
+          
+          apiCall.status = 'error';
+          apiCall.phase = 'Erro na requisição';
+          apiCall.errorData = {
+            errorMessage: error instanceof Error ? error.message : 'Erro desconhecido',
+            errorCode: 'NETWORK_ERROR'
+          };
+          apiCall.processingSteps.push(`Erro de rede após ${responseTime}ms: ${error}`);
+
+          // Atualizar chamada no localStorage
+          const updatedCalls = JSON.parse(localStorage.getItem('gemini_api_calls') || '[]');
+          const callIndex = updatedCalls.findIndex((call: GeminiApiCall) => call.id === callId);
+          if (callIndex !== -1) {
+            updatedCalls[callIndex] = apiCall;
+            localStorage.setItem('gemini_api_calls', JSON.stringify(updatedCalls));
+          }
+
+          throw error;
+        }
+      }
+
+      return originalFetch(...args);
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
 
   // Verificar status das APIs
   const checkAPIStatus = async () => {
@@ -122,6 +322,7 @@ export default function DebugPanel() {
       const errors = captureConsoleErrors();
       const systemChecks = performSystemChecks();
       const apiStatus = await checkAPIStatus();
+      const { calls, stats } = monitorGeminiApiCalls();
 
       let localStorage_data = null;
       try {
@@ -138,7 +339,9 @@ export default function DebugPanel() {
         localStorage: localStorage_data,
         errors: errors.slice(-10), // Manter apenas os últimos 10 erros
         apiStatus,
-        systemChecks
+        systemChecks,
+        geminiApiCalls: calls,
+        geminiApiStats: stats
       });
     };
 
@@ -275,6 +478,145 @@ export default function DebugPanel() {
             </div>
           </div>
 
+          {/* Estatísticas da API Gemini */}
+          <div className="mb-4">
+            <h4 className="text-purple-300 font-semibold mb-2">🧠 API Gemini - Estatísticas</h4>
+            <div className="bg-purple-900/20 border border-purple-500/30 p-2 rounded text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div>Total de Calls: <span className="text-purple-300">{debugData.geminiApiStats.totalCalls}</span></div>
+                <div>Calls com Sucesso: <span className="text-green-300">{debugData.geminiApiStats.successfulCalls}</span></div>
+                <div>Calls com Erro: <span className="text-red-300">{debugData.geminiApiStats.failedCalls}</span></div>
+                <div>Tempo Médio: <span className="text-yellow-300">{Math.round(debugData.geminiApiStats.averageResponseTime)}ms</span></div>
+              </div>
+              <div className="mt-2">
+                Taxa de Sucesso: <span className={debugData.geminiApiStats.totalCalls > 0 
+                  ? (debugData.geminiApiStats.successfulCalls / debugData.geminiApiStats.totalCalls) > 0.8 
+                    ? 'text-green-300' : 'text-yellow-300'
+                  : 'text-gray-300'}>
+                  {debugData.geminiApiStats.totalCalls > 0 
+                    ? `${Math.round((debugData.geminiApiStats.successfulCalls / debugData.geminiApiStats.totalCalls) * 100)}%`
+                    : 'N/A'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Chamadas Recentes da API Gemini */}
+          <div className="mb-4">
+            <h4 className="text-purple-300 font-semibold mb-2">📡 Chamadas API Gemini Recentes</h4>
+            <div className="bg-purple-900/20 border border-purple-500/30 p-2 rounded text-xs max-h-64 overflow-y-auto">
+              {debugData.geminiApiCalls.length > 0 ? (
+                debugData.geminiApiCalls.slice(-5).reverse().map((call) => (
+                  <div key={call.id} className="mb-3 pb-2 border-b border-purple-500/20 last:border-b-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-purple-200 font-semibold">Call #{call.id.split('_')[1]?.substring(0, 4)}</span>
+                      <span className={`px-1 py-0.5 rounded text-xs ${
+                        call.status === 'success' ? 'bg-green-600 text-green-100' :
+                        call.status === 'error' ? 'bg-red-600 text-red-100' :
+                        call.status === 'sending' ? 'bg-yellow-600 text-yellow-100' :
+                        'bg-gray-600 text-gray-100'
+                      }`}>
+                        {call.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-300 mb-1">
+                      📅 {new Date(call.timestamp).toLocaleTimeString()}
+                    </div>
+                    <div className="text-xs text-blue-200 mb-1">
+                      📍 Fase: {call.phase}
+                    </div>
+                    
+                    {call.requestData && (
+                      <div className="text-xs mb-2">
+                        <div className="text-green-300">📤 Request:</div>
+                        <div className="text-gray-300 pl-2">
+                          • Prompt: {call.requestData.promptLength} chars
+                          • Temp: {call.requestData.temperature}
+                          • Max Tokens: {call.requestData.maxTokens}
+                        </div>
+                      </div>
+                    )}
+
+                    {call.responseData && (
+                      <div className="text-xs mb-2">
+                        <div className="text-green-300">📥 Response:</div>
+                        <div className="text-gray-300 pl-2">
+                          • Resposta: {call.responseData.responseLength} chars
+                          • Tokens: ~{call.responseData.tokensUsed}
+                          • Tempo: {call.responseData.executionTime}ms
+                        </div>
+                      </div>
+                    )}
+
+                    {call.errorData && (
+                      <div className="text-xs mb-2">
+                        <div className="text-red-300">❌ Erro:</div>
+                        <div className="text-red-200 pl-2 break-words">
+                          {call.errorData.errorCode && `[${call.errorData.errorCode}] `}
+                          {call.errorData.errorMessage}
+                          {call.errorData.httpStatus && ` (HTTP ${call.errorData.httpStatus})`}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-xs">
+                      <div className="text-blue-300">🔄 Etapas:</div>
+                      {call.processingSteps.map((step, index) => (
+                        <div key={index} className="text-gray-300 pl-2">
+                          {index + 1}. {step}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-400">Nenhuma chamada registrada ainda</span>
+              )}
+            </div>
+          </div>
+
+          {/* Teste Manual da API */}
+          <div className="mb-4">
+            <h4 className="text-orange-300 font-semibold mb-2">🧪 Teste Manual API</h4>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    const testPrompt = 'Teste de conectividade: responda apenas "OK" se você recebeu esta mensagem.';
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBHSqe2PLstOR-M9pBn45DQFcuAN3msYmw`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        contents: [{ parts: [{ text: testPrompt }] }],
+                        generationConfig: { temperature: 0.3, maxOutputTokens: 50 }
+                      })
+                    });
+                    
+                    if (response.ok) {
+                      alert('✅ Teste manual bem-sucedido! API Gemini está funcionando.');
+                    } else {
+                      alert(`❌ Teste manual falhou! HTTP ${response.status}`);
+                    }
+                  } catch (error) {
+                    alert(`❌ Erro no teste: ${error}`);
+                  }
+                }}
+                className="px-2 py-1 bg-orange-600 hover:bg-orange-700 rounded text-xs transition-colors duration-200"
+              >
+                🔥 Testar API
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('gemini_api_calls');
+                  alert('Histórico de chamadas Gemini limpo!');
+                }}
+                className="px-2 py-1 bg-purple-600 hover:bg-purple-700 rounded text-xs transition-colors duration-200"
+              >
+                🧹 Limpar Histórico
+              </button>
+            </div>
+          </div>
+
           {/* Ações de Debug */}
           <div className="flex gap-2 pt-2 border-t border-blue-500/30">
             <button
@@ -294,6 +636,23 @@ export default function DebugPanel() {
               className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors duration-200"
             >
               🗑️ Limpar Cache
+            </button>
+            <button
+              onClick={() => {
+                const debugReport = {
+                  timestamp: new Date().toISOString(),
+                  flowState: debugData.flowState,
+                  geminiStats: debugData.geminiApiStats,
+                  recentCalls: debugData.geminiApiCalls.slice(-3),
+                  systemChecks: debugData.systemChecks,
+                  errors: debugData.errors
+                };
+                navigator.clipboard.writeText(JSON.stringify(debugReport, null, 2));
+                alert('📋 Relatório completo copiado para área de transferência!');
+              }}
+              className="px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs transition-colors duration-200"
+            >
+              📊 Copiar Relatório
             </button>
           </div>
 

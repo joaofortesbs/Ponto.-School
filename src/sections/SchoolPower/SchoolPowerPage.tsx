@@ -14,6 +14,8 @@ import { ContextualizationCard } from "../../features/schoolpower/contextualizat
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import DebugPanel from './components/DebugPanel';
+import GeminiApiMonitor from './components/GeminiApiMonitor';
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
@@ -190,6 +192,12 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           </div>
         </motion.div>
       )}
+      
+      {/* Debug Panel - apenas em desenvolvimento */}
+      <DebugPanel />
+
+      {/* Monitor API Gemini - apenas em desenvolvimento */}
+      <GeminiApiMonitor />
     </div>
   );
 }
