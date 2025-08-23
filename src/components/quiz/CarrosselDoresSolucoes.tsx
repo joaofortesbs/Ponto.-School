@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Zap, Clock, Users, Target, BookOpen, Lightbulb, BarChart3, FileText, Video, Gamepad2, Calculator } from 'lucide-react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface CarrosselDoresSolucoesProps {
   className?: string;
@@ -94,6 +95,8 @@ export const CarrosselDoresSolucoes: React.FC<CarrosselDoresSolucoesProps> = ({ 
   // Duplicar arrays para criar loop infinito
   const doresInfinitas = [...doresProfessores, ...doresProfessores];
   const ferramentasInfinitas = [...ferramentasSchoolPower, ...ferramentasSchoolPower];
+
+  const isMobile = useIsMobile();
 
   return (
     <div className={`relative w-full overflow-hidden ${className}`}>

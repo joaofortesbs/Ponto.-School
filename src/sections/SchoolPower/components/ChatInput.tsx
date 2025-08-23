@@ -2,6 +2,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, useMotionValue, useTransform, useAnimationFrame, useMotionTemplate } from "framer-motion";
 import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
+import { useIsMobile } from "../../../hooks/useIsMobile";
+
 
 // MovingBorder component
 const MovingBorder = ({
@@ -78,6 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
   const [selectedMode, setSelectedMode] = useState("Agente IA");
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -147,6 +150,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           width: 600px;
           overflow: visible;
         }
+        
+        @media (max-width: 768px) {
+          .message-container {
+            width: 99%; /* Aumenta ainda mais a largura para telas menores */
+            max-width: calc(100vw - 6px); /* Reduz ainda mais as margens laterais */
+            border-radius: 16px;
+          }
+        }
 
         .message-container-inner {
           position: relative;
@@ -161,6 +172,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 3;
         }
+        
+        @media (max-width: 768px) {
+          .message-container-inner {
+             border-radius: 14px;
+          }
+        }
 
         .moving-border-container {
           position: absolute;
@@ -171,6 +188,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           overflow: hidden;
           z-index: 2;
           pointer-events: none;
+        }
+        
+        @media (max-width: 768px) {
+          .moving-border-container {
+            border-radius: 16px;
+          }
         }
 
         .typing .moving-border-container {
@@ -200,6 +223,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           padding: 20px;
           border: 1px solid #333;
           transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+          .inner-container {
+            border-radius: 14px;
+            padding: 16px;
+          }
         }
 
         .typing .inner-container {
@@ -313,6 +343,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             inset 0 2px 4px rgba(255, 255, 255, 0.1),
             inset 0 -2px 4px rgba(0, 0, 0, 0.3);
         }
+        
+        @media (max-width: 768px) {
+          .file-button {
+            width: 40px;
+            height: 40px;
+          }
+        }
 
         .file-button:hover {
           background: linear-gradient(145deg, #555, #777);
@@ -357,6 +394,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             inset 0 2px 4px rgba(255, 255, 255, 0.1),
             inset 0 -2px 4px rgba(0, 0, 0, 0.3);
         }
+        
+        @media (max-width: 768px) {
+          .mode-button {
+            padding: 6px 12px;
+            font-size: 10px;
+            gap: 6px;
+          }
+        }
 
         .mode-button:hover {
           background: linear-gradient(145deg, #555, #777);
@@ -397,6 +442,14 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           z-index: 1000;
           backdrop-filter: blur(10px);
         }
+        
+        @media (max-width: 768px) {
+          .mode-dropdown {
+            min-width: 150px;
+            border-radius: 12px;
+            padding: 8px;
+          }
+        }
 
         .mode-option {
           padding: 12px 16px;
@@ -416,6 +469,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           margin-bottom: 4px;
           position: relative;
           overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+          .mode-option {
+            padding: 8px 12px;
+            font-size: 11px;
+            gap: 8px;
+            border-radius: 10px;
+          }
         }
 
         .mode-option:last-child {
@@ -467,6 +529,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           flex-shrink: 0;
           transition: all 0.3s ease;
         }
+        
+        @media (max-width: 768px) {
+          .mode-icon {
+            width: 16px;
+            height: 16px;
+          }
+        }
 
         .mode-option:hover .mode-icon {
           transform: scale(1.1);
@@ -495,6 +564,15 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           opacity: 0;
           transition: opacity 0.3s ease;
         }
+        
+        @media (max-width: 768px) {
+          .tech-accent {
+             top: -1px;
+             right: -1px;
+             width: 6px;
+             height: 6px;
+          }
+        }
 
         .typing .tech-accent {
           opacity: 1;
@@ -512,6 +590,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           padding: 16px 20px;
           position: relative;
           overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+          .expanded-card {
+            border-radius: 12px;
+            padding: 12px 16px;
+          }
         }
 
         .expanded-card::before {
@@ -533,6 +618,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           align-items: center;
           gap: 12px;
         }
+        
+        @media (max-width: 768px) {
+          .thinking-indicator {
+            gap: 8px;
+          }
+        }
 
         .pulse-dot {
           width: 12px;
@@ -544,12 +635,25 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 0 12px rgba(255, 107, 53, 0.4),
             0 0 24px rgba(255, 107, 53, 0.2);
         }
+        
+        @media (max-width: 768px) {
+          .pulse-dot {
+            width: 10px;
+            height: 10px;
+          }
+        }
 
         .thinking-text {
           color: #ccc;
           font-size: 13px;
           font-weight: 400;
           line-height: 1.4;
+        }
+        
+        @media (max-width: 768px) {
+          .thinking-text {
+            font-size: 11px;
+          }
         }
 
         @keyframes softPulse {
@@ -591,9 +695,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   onKeyPress={handleKeyPress}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  placeholder="Digite sua mensagem para a IA..."
+                  placeholder={isMobile ? "Descreva seu desafio..." : "Digite sua mensagem para a IA..."}
                   className="textarea-custom"
                   rows={1}
+                  style={{ fontSize: isMobile ? '14px' : '16px' }}
                 />
               </div>
 
@@ -630,7 +735,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 className="expanded-section"
                 style={{
                   position: "absolute",
-                  top: "-85px",
+                  top: isMobile ? "-75px" : "-85px",
                   left: 0,
                   right: 0,
                   zIndex: 1000,
@@ -685,7 +790,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                 </motion.div>
               </motion.div>
 
-              <div className="flex gap-3 items-center justify-between">
+              <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} justify-between`}>
                 <div className="mode-selector">
                   <button
                     className="mode-button"
@@ -804,7 +909,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   )}
                 </div>
 
-                <div className="flex gap-3 items-center">
+                <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
                   <button className="file-button">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                       <path
@@ -822,8 +927,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                   >
                     {message.trim() ? (
                       <svg
-                        width="20"
-                        height="20"
+                        width={isMobile ? 16 : 20}
+                        height={isMobile ? 16 : 20}
                         viewBox="0 0 24 24"
                         fill="none"
                       >
@@ -837,8 +942,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                       </svg>
                     ) : (
                       <svg
-                        width="20"
-                        height="20"
+                        width={isMobile ? 16 : 20}
+                        height={isMobile ? 16 : 20}
                         viewBox="0 0 24 24"
                         fill="none"
                       >
