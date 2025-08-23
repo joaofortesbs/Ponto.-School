@@ -8,17 +8,14 @@ import {
   Particles3D,
   SideMenu,
   ParticlesBackground,
+  DebugPanel,
 } from "./components";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
 import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
 import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
 import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 
-interface SchoolPowerPageProps {
-  isQuizMode?: boolean;
-}
-
-export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
+export function SchoolPowerPage() {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
 
@@ -33,12 +30,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     isLoading
   } = useSchoolPowerFlow();
 
-  // Log apenas mudanças importantes de estado
-  React.useEffect(() => {
-    if (flowState !== 'idle') {
-      console.log('🔄 School Power - Estado alterado:', flowState);
-    }
-  }, [flowState]);
+  console.log('🏠 SchoolPowerPage renderizada com estado:', { flowState, flowData, isLoading });
 
   const handleCentralExpandedChange = (expanded: boolean) => {
     setIsCentralExpanded(expanded);
@@ -85,6 +77,9 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
       style={{ backgroundColor: "transparent" }}
     >
+      {/* Debug Panel - sempre visível no canto superior direito */}
+      <DebugPanel />
+
       {/* Background de estrelas - sempre visível */}
       <ParticlesBackground isDarkTheme={isDarkTheme} />
 
@@ -104,7 +99,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
                 style={{ marginTop: "7px" }}
               >
-                <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
+                <TopHeader isDarkTheme={isDarkTheme} />
               </div>
 
               {/* Ripple centralizado */}
@@ -121,8 +116,9 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
                   transform: "translate(-50%, -50%)",
                 }}
               >
-                <ProfileSelector 
-                  isQuizMode={isQuizMode}
+                <ProfileSelector
+                  isDarkTheme={isDarkTheme}
+                  onExpandedChange={handleCentralExpandedChange}
                 />
               </div>
 

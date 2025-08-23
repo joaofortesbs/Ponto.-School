@@ -43,6 +43,7 @@ import {
 import { ContextualizationData } from "../contextualization/ContextualizationCard";
 import { ActionPlanItem } from "../actionplan/ActionPlanCard";
 import { isActivityEligibleForTrilhas, getTrilhasBadgeProps } from "../data/trilhasActivitiesConfig";
+import { TrilhasDebugPanel } from "../components/TrilhasDebugPanel";
 import { TrilhasBadge } from "../components/TrilhasBadge";
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 import { ConstructionInterface } from './index';
@@ -1533,9 +1534,26 @@ export function CardDeConstrucao({
         </motion.div>
       )}
 
-      {/* Debug Panels para desenvolvimento */}
-      {/* <TrilhasDebugPanel /> - Removido */}
-      {/* <AutomationDebugPanel /> */}
+      {/* Debug Panel para verificar sistema de Trilhas */}
+      {actionPlan && (
+        <TrilhasDebugPanel 
+          activities={actionPlan.map(activity => ({ 
+            id: activity.id, 
+            title: activity.title 
+          }))}
+          isVisible={showTrilhasDebug}
+        />
+      )}
+
+      {/* Botão para toggle do debug (só visível em desenvolvimento) */}
+      {process.env.NODE_ENV === 'development' && actionPlan && (
+        <button
+          onClick={() => setShowTrilhasDebug(!showTrilhasDebug)}
+          className="fixed bottom-4 left-4 z-40 bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-lg hover:bg-blue-600 transition-colors"
+        >
+          {showTrilhasDebug ? '🔍 Fechar Debug' : '🔍 Debug Trilhas'}
+        </button>
+      )}
       <EditActivityModal
         isOpen={showEditModal}
         onClose={() => {
