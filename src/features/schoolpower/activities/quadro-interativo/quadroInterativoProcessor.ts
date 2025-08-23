@@ -305,11 +305,66 @@ export function validateQuadroInterativoFields(data: ActivityFormData): boolean 
   );
 }
 
-export default {
-  processQuadroInterativoData,
-  prepareQuadroInterativoDataForModal,
-  isQuadroInterativoActivity,
-  generateQuadroInterativoFields,
-  extractQuadroInterativoData,
-  validateQuadroInterativoFields
+// Função auxiliar para criar fallback do Quadro Interativo
+const createQuadroInterativoFallback = (data: any) => {
+  const tema = data?.theme || data?.tema || data?.title || 'Quadro Interativo';
+  const objetivos = data?.objectives || data?.objetivos || data?.description || 'Atividade de quadro interativo';
+  const disciplina = data?.subject || data?.disciplina || 'Disciplina';
+  const anoSerie = data?.schoolYear || data?.anoSerie || 'Ano/Série';
+
+  console.log('🔧 Criando fallback para Quadro Interativo:', {
+    tema, objetivos, disciplina, anoSerie
+  });
+
+  return {
+    title: tema,
+    description: objetivos,
+  };
 };
+
+/**
+ * Processa dados construídos do Quadro Interativo para exibição
+ */
+export const processConstructedQuadroInterativoData = (constructedData: any) => {
+  console.log('🎯 Processando dados construídos do Quadro Interativo:', constructedData);
+
+  try {
+    // Verificar se há dados construídos válidos
+    if (constructedData?.data) {
+      const data = constructedData.data;
+
+      // Estrutura processada para exibição
+      const processedData = {
+        title: data.title || 'Quadro Interativo',
+        description: data.description || 'Atividade de quadro interativo',
+        subject: data.subject || 'Disciplina',
+        schoolYear: data.schoolYear || 'Ano/Série',
+        theme: data.theme || 'Tema da Aula',
+        objectives: data.objectives || 'Objetivos de Aprendizagem',
+        difficultyLevel: data.difficultyLevel || 'Médio',
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
+
+        // Dados específicos do conteúdo do quadro
+        cardContent: data.cardContent || {
+          title: data.theme || 'Conteúdo do Quadro',
+          text: data.objectives || 'Conteúdo educativo será exibido aqui.'
+        },
+
+        // Metadados
+        generatedAt: data.generatedAt || new Date().toISOString(),
+        isGeneratedByAI: data.isGeneratedByAI || true
+      };
+
+      console.log('✅ Dados construídos processados com sucesso:', processedData);
+      return processedData;
+    }
+
+    console.warn('⚠️ Dados construídos inválidos ou ausentes');
+    return null;
+  } catch (error) {
+    console.error('❌ Erro ao processar dados construídos:', error);
+    return null;
+  }
+};
+
+export { processQuadroInterativoData, prepareQuadroInterativoDataForModal, processConstructedQuadroInterativoData };

@@ -25,7 +25,7 @@ import { CheckCircle2 } from 'lucide-react';
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
-const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const DefaultEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <>
     <div>
       <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -74,7 +74,7 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
 );
 
 // Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const QuadroInterativoEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -154,7 +154,7 @@ const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: A
 );
 
 // Componente específico para Sequência Didática
-const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const SequenciaDidaticaEditActivity = ({formData, onFieldChange}: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -484,7 +484,7 @@ const EditActivityModal = ({
   // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-    
+
     if (type === 'quadro-interativo') {
       const generator = new QuadroInterativoGenerator();
       const result = await generator.generateQuadroInterativoContent({
@@ -495,7 +495,7 @@ const EditActivityModal = ({
         difficultyLevel: data.difficultyLevel,
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       });
-      
+
       // Salvar conteúdo gerado
       const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
       localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
@@ -507,7 +507,7 @@ const EditActivityModal = ({
           isGeneratedByAI: true,
         }
       }));
-      
+
       return {
         success: true,
         data: {
@@ -1429,8 +1429,6 @@ const EditActivityModal = ({
       timeLimit: '45 minutos',
       instructions: formData.instructions,
       materials: formData.materials ? formData.materials.split('\n').filter(m => m.trim()) : [],
-      objective: formData.objectives,
-      targetAudience: formData.schoolYear,
       rubric: formData.evaluation,
       questions: []
     };
@@ -1980,7 +1978,7 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
-                        data={generatedContent || formData}
+                        data={generatedContent?.data || generatedContent || {}}
                         activityData={activity}
                       />
                     ) : (
