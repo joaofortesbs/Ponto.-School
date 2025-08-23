@@ -12,14 +12,14 @@ import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react'
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
-  activities: any[];
-  contextualizationData?: any;
+  approvedActivities: any[];
+  handleEditActivity?: (activity: any) => void;
 }
 
-function ConstructionGrid({ activities: approvedActivities, contextualizationData }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
-  const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities || []);
+  const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -33,7 +33,12 @@ function ConstructionGrid({ activities: approvedActivities, contextualizationDat
 
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
-    openModal(activity);
+
+    if (externalHandleEditActivity) {
+      externalHandleEditActivity(activity);
+    } else {
+      openModal(activity);
+    }
   };
 
   const handleView = (activity: ConstructionActivity) => {
@@ -420,6 +425,3 @@ function ConstructionGrid({ activities: approvedActivities, contextualizationDat
     </motion.div>
   );
 }
-
-export default ConstructionGrid;
-export { ConstructionGrid };

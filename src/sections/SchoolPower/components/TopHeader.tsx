@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles } from "lucide-react";
-import { useIsMobile } from "../../../hooks/useIsMobile";
 
 interface TopHeaderProps {
   isDarkTheme?: boolean;
@@ -54,10 +52,8 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
     return () => clearInterval(interval);
   }, []);
 
-  const isMobile = useIsMobile();
-
   return (
-    <div className={`flex flex-col items-center justify-center min-h-full bg-transparent p-2 gap-2 ${isMobile ? 'scale-90' : ''}`}>
+    <div className="flex flex-col items-center justify-center min-h-full bg-transparent p-2 gap-2">
       <div className="relative">
         {/* Aura externa */}
         <div
@@ -65,7 +61,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
           style={{
             background:
               "radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 50%, transparent 70%)",
-            transform: isMobile ? "scale(0.7)" : "scale(0.9)",
+            transform: "scale(0.9)",
             filter: "blur(25px)",
             animation: "pulse 4s ease-in-out infinite alternate",
           }}
@@ -77,7 +73,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
           style={{
             background:
               "radial-gradient(circle, rgba(249, 115, 22, 0.2) 0%, rgba(251, 146, 60, 0.1) 60%, transparent 80%)",
-            transform: isMobile ? "scale(0.5)" : "scale(0.7)",
+            transform: "scale(0.7)",
             filter: "blur(18px)",
             animation: "pulse 3s ease-in-out infinite alternate",
           }}
@@ -85,7 +81,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
 
         {/* Círculo principal */}
         <div
-          className={`relative ${isMobile ? 'w-16 h-16' : 'w-20 h-20'} rounded-full overflow-hidden`}
+          className="relative w-20 h-20 rounded-full overflow-hidden"
           style={{
             background: "#111827",
             border: "3px solid transparent",
@@ -111,12 +107,12 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
               0 8px 25px rgba(0, 0, 0, 0.3),
               0 -8px 25px rgba(249, 115, 22, 0.03)
             `,
-            transform: isMobile ? "perspective(500px) rotateX(10deg)" : "perspective(1000px) rotateX(15deg)",
+            transform: "perspective(1000px) rotateX(15deg)",
           }}
         >
           {/* Imagem quadrada */}
-          <div className={`w-full h-full flex items-center justify-center p-3 ${isMobile ? 'p-2' : ''}`}>
-            <div className={`${isMobile ? 'w-10 h-10' : 'w-14 h-14'} overflow-hidden pointer-events-none select-none`}>
+          <div className="w-full h-full flex items-center justify-center p-3">
+            <div className="w-14 h-14 overflow-hidden pointer-events-none select-none">
               <img
                 src="/lovable-uploads/Logo-Ponto.School-Icone.png"
                 alt="Logo Ponto School"
@@ -137,15 +133,11 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
 
           {/* Reflexo 3D */}
           <div
-            className="absolute top-1 left-1 rounded-full opacity-30"
+            className="absolute top-1 left-1 w-5 h-5 rounded-full opacity-30"
             style={{
               background:
                 "linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, transparent 70%)",
               filter: "blur(6px)",
-              width: isMobile ? '10px' : '20px',
-              height: isMobile ? '10px' : '20px',
-              top: isMobile ? '0.5rem' : '1rem',
-              left: isMobile ? '0.5rem' : '1rem',
             }}
           />
         </div>
@@ -160,28 +152,18 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
             transform: translateY(-8px) scale(1.1);
           }
         }
-        @keyframes pulse {
-          0% {
-            transform: scale(0.7);
-            opacity: 0.5;
-          }
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
       `}</style>
 
       {/* Texto com FlipWords abaixo do círculo */}
-      <div className={`text-center max-w-2xl space-y-0.5 ${isMobile ? 'w-full px-4' : ''}`}>
+      <div className="text-center max-w-2xl space-y-0.5">
         {/* Primeira linha: Saudação */}
         <div
-          className={`text-xl font-bold tracking-tight leading-tight ${isMobile ? 'text-lg' : 'text-xl'}`}
+          className="text-xl font-bold tracking-tight leading-tight"
           style={{
             fontFamily:
               "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
             fontWeight: "700",
-            letterSpacing: isMobile ? "-0.01em" : "-0.02em",
+            letterSpacing: "-0.02em",
             color: isDarkTheme ? "white" : "#1f2937",
           }}
         >
@@ -198,12 +180,12 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
 
         {/* Segunda linha: Pergunta com FlipWords */}
         <div
-          className={`flex flex-wrap items-center justify-center gap-2 text-lg font-semibold tracking-tight ${isMobile ? 'text-base gap-1' : 'text-lg'}`}
+          className="flex flex-wrap items-center justify-center gap-2 text-lg font-semibold tracking-tight"
           style={{
             fontFamily:
               "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",
             fontWeight: "600",
-            letterSpacing: isMobile ? "-0.01em" : "-0.01em",
+            letterSpacing: "-0.01em",
             color: isDarkTheme ? "white" : "#374151",
           }}
         >
@@ -218,8 +200,8 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = 
           </span>
           <FlipWords
             words={flipWords}
-            duration={isMobile ? 2000 : 3000}
-            className={`font-bold ${isMobile ? 'text-base' : 'text-lg'} ${isDarkTheme ? "text-orange-500" : "text-orange-700"}`}
+            duration={5000}
+            className={`font-bold text-lg ${isDarkTheme ? "text-orange-500" : "text-orange-700"}`}
             style={{
               fontFamily:
                 "'Inter', 'SF Pro Display', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'sans-serif'",

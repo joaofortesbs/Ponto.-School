@@ -14,286 +14,282 @@ interface SchoolPowerFlowData {
   timestamp: number;
 }
 
-const STORAGE_KEY = 'schoolPowerFlow';
+interface UseSchoolPowerFlowReturn {
+  flowState: FlowState;
+  flowData: SchoolPowerFlowData;
+  sendInitialMessage: (message: string) => void;
+  submitContextualization: (data: ContextualizationData) => void;
+  approveActionPlan: (approvedItems: ActionPlanItem[]) => void;
+  resetFlow: () => void;
+  isLoading: boolean;
+}
 
-export default function useSchoolPowerFlow() {
+const STORAGE_KEY = 'schoolpower_flow_data';
+
+export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   const [flowState, setFlowState] = useState<FlowState>('idle');
-  const [flowData, setFlowData] = useState<SchoolPowerFlowData>(() => {
+  const [flowData, setFlowData] = useState<SchoolPowerFlowData>({
+    initialMessage: null,
+    contextualizationData: null,
+    actionPlan: [],
+    manualActivities: [],
+    timestamp: Date.now()
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Salva dados no localStorage de forma sincronizada
+  const saveData = useCallback((data: SchoolPowerFlowData) => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        console.log('📥 Dados carregados do localStorage:', parsed);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      console.log('💾 Dados do School Power Flow salvos no localStorage:', data);
+    } catch (error) {
+      console.error('❌ Erro ao salvar dados do School Power Flow no localStorage:', error);
+    }
+  }, []);
 
-        // Verificar se os dados são válidos - limpar se inválidos
-        if (parsed.contextualizationData) {
-          const hasInvalidData = Object.values(parsed.contextualizationData).some(
-            (value: any) => value === '73' || value === 'undefined'
-          );
-          
-          if (hasInvalidData) {
-            console.warn('⚠️ Dados corrompidos encontrados no localStorage, limpando...');
-            localStorage.removeItem(STORAGE_KEY);
-            return {
-              initialMessage: parsed.initialMessage || null,
-              contextualizationData: null,
-              actionPlan: null,
-              manualActivities: null,
-              timestamp: 0
-            };
-          }
+  // Carrega dados do localStorage apenas na inicialização
+  const loadStoredData = useCallback((): SchoolPowerFlowData | null => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        // Verifica se os dados não são muito antigos (1 hora)
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - data.timestamp < oneHour) {
+          console.log('📥 Dados carregados do localStorage:', data);
+          return data;
+        } else {
+          console.log('⏰ Dados do localStorage expiraram, usando estado limpo');
+          localStorage.removeItem(STORAGE_KEY);
         }
-
-        return parsed;
       }
     } catch (error) {
       console.error('❌ Erro ao carregar dados do localStorage:', error);
       localStorage.removeItem(STORAGE_KEY);
     }
-
-    return {
-      initialMessage: null,
-      contextualizationData: null,
-      actionPlan: null,
-      manualActivities: null,
-      timestamp: 0
-    };
-  });
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Função para validar dados de contextualização
-  const validateContextualizationData = (data: ContextualizationData): boolean => {
-    if (!data) return false;
-
-    const isValidField = (field: string) => {
-      return field &&
-             field.trim() !== '' &&
-             field.trim() !== '73' &&
-             field.length > 2;
-    };
-
-    return isValidField(data.materias) && isValidField(data.publicoAlvo);
-  };
-
-  // Cleanup inicial para dados corrompidos
-  React.useEffect(() => {
-    const cleanup = () => {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const data = JSON.parse(saved);
-          if (data.contextualizationData && Object.values(data.contextualizationData).includes('73')) {
-            console.log('🧹 Limpando dados corrompidos do localStorage...');
-            localStorage.removeItem(STORAGE_KEY);
-            window.location.reload();
-          }
-        }
-      } catch (error) {
-        console.error('Erro na limpeza:', error);
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    };
-    
-    cleanup();
+    return null;
   }, []);
 
-  // Detectar estado baseado nos dados
+  // Inicializar com dados salvos se existirem
   React.useEffect(() => {
-    console.log('🔄 Detectando estado do fluxo baseado nos dados:', flowData);
+    const storedData = loadStoredData();
+    if (storedData) {
+      setFlowData(storedData);
 
-    if (flowData.actionPlan && flowData.actionPlan.length > 0) {
-      // Verificar se existem atividades aprovadas
-      const approvedActivities = flowData.actionPlan.filter(item => item.approved);
-      console.log('✅ Atividades aprovadas encontradas:', approvedActivities.length);
-
-      if (approvedActivities.length > 0) {
-        console.log('🎯 Mudando para estado activities');
-        setFlowState('activities');
-      } else {
-        console.log('📋 Mudando para estado actionplan');
-        setFlowState('actionplan');
-      }
-    } else if (flowData.contextualizationData) {
-      const isValid = validateContextualizationData(flowData.contextualizationData);
-      console.log('🔍 Dados de contextualização válidos:', isValid);
-
-      if (isValid) {
-        console.log('📋 Dados válidos - mudando para actionplan');
-        setFlowState('actionplan');
-      } else {
-        console.log('❌ Dados inválidos - mudando para contextualizing');
+      // Definir estado baseado nos dados carregados
+      if (storedData.initialMessage && !storedData.contextualizationData) {
         setFlowState('contextualizing');
+      } else if (storedData.initialMessage && storedData.contextualizationData && !storedData.actionPlan) {
+        setFlowState('actionplan');
+      } else if (storedData.initialMessage && storedData.contextualizationData && storedData.actionPlan) {
+        // Verificar se temos atividades aprovadas
+        const hasApprovedActivities = storedData.actionPlan.some(item => item.approved);
+        if (hasApprovedActivities) {
+          setFlowState('activities');
+        } else {
+          setFlowState('actionplan');
+        }
       }
-    } else if (flowData.initialMessage) {
-      console.log('💬 Mensagem inicial encontrada - mudando para contextualizing');
-      setFlowState('contextualizing');
-    } else {
-      console.log('🏠 Nenhum dado encontrado - mudando para idle');
-      setFlowState('idle');
     }
-  }, [flowData]);
+  }, [loadStoredData]);
 
-  // Salvar no localStorage sempre que os dados mudarem
-  const saveToLocalStorage = useCallback((data: SchoolPowerFlowData) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log('💾 Dados salvos no localStorage');
-    } catch (error) {
-      console.error('❌ Erro ao salvar no localStorage:', error);
-    }
-  }, []);
-
-  // Função para enviar mensagem inicial
-  const sendInitialMessage = useCallback(async (message: string) => {
-    console.log('📤 Enviando mensagem inicial:', message);
-
-    if (!message?.trim()) {
-      console.error('❌ Mensagem vazia');
-      return;
-    }
+  // Envia mensagem inicial e inicia processo de contextualização
+  const sendInitialMessage = useCallback((message: string) => {
+    console.log('📤 Enviando mensagem inicial para School Power:', message);
 
     const newData: SchoolPowerFlowData = {
-      initialMessage: message.trim(),
+      initialMessage: message,
       contextualizationData: null,
-      actionPlan: null,
-      manualActivities: null,
+      actionPlan: [],
       timestamp: Date.now()
     };
 
+    // Atualizar estado imediatamente
     setFlowData(newData);
-    saveToLocalStorage(newData);
     setFlowState('contextualizing');
-  }, [saveToLocalStorage]);
 
-  // Função para submeter contextualização
-  const submitContextualization = useCallback(async (data: ContextualizationData) => {
-    console.log('📝 Submetendo contextualização:', data);
+    // Salvar no localStorage de forma sincronizada
+    saveData(newData);
 
-    if (!flowData.initialMessage) {
+    console.log('✅ Mensagem inicial salva e estado atualizado para contextualizing');
+  }, [saveData]);
+
+  // Submete contextualização e gera action plan
+  const submitContextualization = useCallback(async (contextData: ContextualizationData) => {
+    console.log('📝 Contextualização submetida:', contextData);
+    console.log('📋 Dados atuais do flow:', flowData);
+
+    // Validar se temos initialMessage (buscar também no localStorage se necessário)
+    let currentMessage = flowData.initialMessage;
+    if (!currentMessage) {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const storedData = JSON.parse(stored);
+          currentMessage = storedData.initialMessage;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar mensagem do localStorage:', error);
+      }
+    }
+
+    if (!currentMessage) {
       console.error('❌ Mensagem inicial não encontrada');
-      alert('Mensagem inicial é obrigatória para gerar o plano.');
       return;
     }
 
+    // Atualizar estado para generating imediatamente
     setIsLoading(true);
     setFlowState('generating');
 
+    // Salvar dados de contextualização no estado
+    const dataWithContext = {
+      initialMessage: currentMessage, // Garantir que a mensagem está presente
+      contextualizationData: contextData,
+      actionPlan: [],
+      timestamp: Date.now()
+    };
+
+    setFlowData(dataWithContext);
+    saveData(dataWithContext);
+
+    console.log('✅ Dados de contextualização salvos:', dataWithContext);
+
     try {
-      console.log('🤖 Iniciando geração do plano personalizado...');
+      // Gera action plan usando o novo serviço personalizado
+      console.log('🤖 Iniciando geração de plano de ação com IA Gemini...');
+      console.log('📝 Dados coletados:', {
+        message: currentMessage,
+        contextData
+      });
 
-      // Sempre gerar plano, mesmo com dados inválidos (o service fará a correção)
-      const actionPlan = await generatePersonalizedPlan(flowData.initialMessage, data);
+      console.log('📤 Enviando para geração personalizada...');
+      const actionPlan = await generatePersonalizedPlan(
+        currentMessage,
+        contextData
+      );
 
-      if (!actionPlan || actionPlan.length === 0) {
-        console.error('❌ Nenhuma atividade foi gerada pelo serviço');
-        throw new Error('Nenhuma atividade foi gerada');
-      }
+      console.log('✅ Action plan personalizado gerado:', actionPlan);
 
-      console.log('✅ Plano gerado com sucesso:', actionPlan.length, 'atividades');
-      console.log('📋 Atividades geradas:', actionPlan.map(a => ({ id: a.id, title: a.title })));
-
-      const newData: SchoolPowerFlowData = {
-        ...flowData,
-        contextualizationData: data,
-        actionPlan: actionPlan,
+      // Salvar action plan gerado
+      const finalData = {
+        ...dataWithContext,
+        actionPlan,
         timestamp: Date.now()
       };
 
-      setFlowData(newData);
-      saveToLocalStorage(newData);
+      setFlowData(finalData);
+      saveData(finalData);
+      setFlowState('actionplan');
 
-      // Aguardar um pouco para garantir que os dados foram salvos
-      setTimeout(() => {
-        setFlowState('actionplan');
-      }, 500);
+      console.log('✅ Action plan gerado e salvo:', actionPlan);
 
     } catch (error) {
-      console.error('❌ Erro ao gerar plano:', error);
-      alert(`Erro ao gerar o plano de ação: ${error.message || error}`);
-      setFlowState('contextualizing');
+      console.error('❌ Erro ao gerar plano de ação com IA Gemini:', error);
+
+      // Em caso de erro, o generatePersonalizedPlan já retorna um fallback
+      // Então tentamos novamente com dados mínimos
+      try {
+        console.log('🔄 Tentando fallback...');
+        const fallbackPlan = await generatePersonalizedPlan(
+          flowData.initialMessage || 'Atividades educacionais gerais',
+          contextData
+        );
+
+        const finalData = {
+          ...dataWithContext,
+          actionPlan: fallbackPlan,
+          timestamp: Date.now()
+        };
+
+        setFlowData(finalData);
+        saveData(finalData);
+        setFlowState('actionplan');
+
+        console.log('🔄 Plano de fallback aplicado:', fallbackPlan);
+      } catch (fallbackError) {
+        console.error('❌ Erro crítico no fallback:', fallbackError);
+        setFlowState('idle');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [flowData, saveToLocalStorage]);
+  }, [flowData, saveData]);
 
-  // Função para aprovar action plan
   const approveActionPlan = useCallback(async (approvedItems: ActionPlanItem[]) => {
-    console.log('✅ Aprovando action plan:', approvedItems.length, 'itens');
-
-    if (!approvedItems || approvedItems.length === 0) {
-      console.error('❌ Nenhuma atividade selecionada');
-      alert('Selecione pelo menos uma atividade para continuar.');
-      return;
-    }
-
-    setIsLoading(true);
-    setFlowState('generatingActivities');
+    console.log('📋 Aprovando plano de ação:', approvedItems);
 
     try {
-      // Marcar atividades como aprovadas
-      const approvedActivities = approvedItems.map(item => ({
-        ...item,
-        approved: true,
-        timestamp: Date.now()
-      }));
+      setIsLoading(true);
 
-      const newData: SchoolPowerFlowData = {
+      const newFlowData = {
         ...flowData,
-        actionPlan: flowData.actionPlan?.map(item => {
-          const approved = approvedActivities.find(a => a.id === item.id);
-          return approved ? { ...item, approved: true } : item;
-        }) || [],
+        actionPlan: approvedItems,
         timestamp: Date.now()
       };
 
-      setFlowData(newData);
-      saveToLocalStorage(newData);
+      setFlowData(newFlowData);
+      saveData(newFlowData);
 
-      // Simular processo de geração
-      setTimeout(() => {
-        setFlowState('activities');
-        setIsLoading(false);
-      }, 2000);
+      // Transição imediata para activities sem geração automática
+      console.log('🎯 Transitando imediatamente para interface de construção...');
+      setFlowState('activities');
+      setIsLoading(false);
+
+      // Opcional: Se quiser manter a automação, pode fazer em background
+      // setTimeout(async () => {
+      //   try {
+      //     const AutomationController = (await import('../construction/automationController')).default;
+      //     const controller = AutomationController.getInstance();
+      //     // Processo de automação em background...
+      //   } catch (error) {
+      //     console.error('Erro na automação em background:', error);
+      //   }
+      // }, 100);
+
+      console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
     } catch (error) {
-      console.error('❌ Erro ao aprovar action plan:', error);
-      alert('Erro ao processar atividades. Tente novamente.');
+      console.error('❌ Erro ao aprovar plano de ação:', error);
       setFlowState('actionplan');
+    } finally {
       setIsLoading(false);
     }
-  }, [flowData, saveToLocalStorage]);
+  }, [flowData, saveData]);
 
-  // Função para resetar o fluxo
+  // Reset do fluxo
   const resetFlow = useCallback(() => {
-    console.log('🔄 Resetando fluxo do School Power');
+    console.log('🔄 Resetando School Power Flow...');
 
-    const emptyData: SchoolPowerFlowData = {
+    const resetData: SchoolPowerFlowData = {
       initialMessage: null,
       contextualizationData: null,
-      actionPlan: null,
-      manualActivities: null,
-      timestamp: 0
+      actionPlan: [],
+      timestamp: Date.now()
     };
 
-    setFlowData(emptyData);
+    setFlowData(resetData);
     setFlowState('idle');
     setIsLoading(false);
 
+    // Limpar localStorage
     try {
       localStorage.removeItem(STORAGE_KEY);
-      console.log('🗑️ Dados removidos do localStorage');
+      console.log('🗑️ LocalStorage limpo');
     } catch (error) {
       console.error('❌ Erro ao limpar localStorage:', error);
     }
+
+    console.log('✅ School Power Flow resetado completamente');
   }, []);
 
   return {
     flowState,
     flowData,
-    isLoading,
     sendInitialMessage,
     submitContextualization,
     approveActionPlan,
-    resetFlow
+    resetFlow,
+    isLoading
   };
 }

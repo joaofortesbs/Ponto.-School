@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -9,11 +10,9 @@ import { SchoolPowerPage } from '../../sections/SchoolPower/SchoolPowerPage';
 import { useQuizSchoolPower } from '../../hooks/useQuizSchoolPower';
 import { CarrosselDoresSolucoes } from './CarrosselDoresSolucoes';
 import { QuizSteps } from './QuizSteps';
-import { useIsMobile } from '@/hooks/useIsMobile';
 
 export const QuizWithSchoolPower: React.FC = () => {
   const { state, quizSteps, goToQuiz, goToSchoolPower, goToIntro, goToFinal, answerQuizStep, resetQuiz } = useQuizSchoolPower();
-  const isMobile = useIsMobile();
 
   // Log apenas quando há mudança de estado importante
   React.useEffect(() => {
@@ -32,10 +31,10 @@ export const QuizWithSchoolPower: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`w-full ${isMobile ? 'max-w-sm mx-4' : 'max-w-5xl'}`}
+            className="w-full max-w-5xl"
           >
-            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh]">
-              <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'} overflow-y-auto max-h-[85vh]`}>
+            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
+              <CardContent className="p-8 md:p-12">
                 {/* Barra de Progresso Simplificada na Intro */}
                 <div className="mb-10">
                   <div className="flex justify-between items-center mb-3">
@@ -46,7 +45,7 @@ export const QuizWithSchoolPower: React.FC = () => {
                       0%
                     </span>
                   </div>
-
+                  
                   <div className="relative">
                     <Progress
                       value={0}
@@ -62,68 +61,39 @@ export const QuizWithSchoolPower: React.FC = () => {
                   transition={{ duration: 0.8, ease: "easeOut" }}
                   className="text-center space-y-8"
                 >
-                  {/* Headline Centralizado */}
-                  <div className="w-full max-w-4xl mx-auto">
-                    <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 leading-tight`}>
+                  <div className="text-center space-y-8 mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
                       Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
                     </h1>
-                  </div>
 
-                  {/* Vídeo Centralizado */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.6 }}
-                    className="w-full flex justify-center"
-                  >
-                    <div className="w-full max-w-md">
-                      <div 
-                        dangerouslySetInnerHTML={{
-                          __html: `
-                            <script type="text/javascript"> 
-                              var s=document.createElement("script"); 
-                              s.src="https://scripts.converteai.net/lib/js/smartplayer-wc/v4/sdk.js"; 
-                              s.async=true;
-                              document.head.appendChild(s); 
-                            </script> 
-                            <div id="ifr_68a540d0caaf2808dd7c0dec_wrapper" style="margin: 0 auto; width: 100%; max-width: 400px;"> 
-                              <div style="position: relative; padding: 153.33333333333334% 0 0 0;" id="ifr_68a540d0caaf2808dd7c0dec_aspect"> 
-                                <iframe frameborder="0" allowfullscreen src="about:blank" id="ifr_68a540d0caaf2808dd7c0dec" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" referrerpolicy="origin" onload="this.onload=null, this.src='https://scripts.converteai.net/6cc509b6-8017-4754-9738-1fdbf9989ab0/players/68a540d0caaf2808dd7c0dec/v4/embed.html' +(location.search||'?') +'&vl=' +encodeURIComponent(location.href)"></iframe> 
-                              </div> 
-                            </div>
-                          `
-                        }}
-                      />
-                    </div>
-                  </motion.div>
-
-                  {/* Botão Centralizado */}
-                  <motion.div
-                    whileHover={{ scale: isMobile ? 1.02 : 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className="w-full flex justify-center"
-                  >
-                    <Button 
-                      onClick={goToQuiz}
-                      size={isMobile ? "default" : "lg"}
-                      className={`bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white ${isMobile ? 'px-8 py-3' : 'px-16 py-5'} ${isMobile ? 'rounded-xl' : 'rounded-2xl'} font-bold ${isMobile ? 'text-lg' : 'text-xl'} shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0`}
+                    {/* Botão Quero Testar Agora - Agora vai para o quiz */}
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      className="my-8"
                     >
-                      <Play className={`${isMobile ? 'mr-2 h-5 w-5' : 'mr-3 h-7 w-7'}`} />
-                      {isMobile ? 'TESTAR AGORA' : 'QUERO TESTAR AGORA'}
-                    </Button>
-                  </motion.div>
-                </motion.div>
+                      <Button 
+                        onClick={goToQuiz}
+                        size="lg"
+                        className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white px-16 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0"
+                      >
+                        <Play className="mr-3 h-7 w-7" />
+                        QUERO TESTAR AGORA
+                      </Button>
+                    </motion.div>
 
-                {/* Carrossel de Dores e Soluções */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="max-w-4xl mx-auto"
-                >
-                  <CarrosselDoresSolucoes className="mt-8" />
+                    {/* Carrossel de Dores e Soluções */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="max-w-4xl mx-auto"
+                    >
+                      <CarrosselDoresSolucoes className="mt-8" />
+                    </motion.div>
+                  </div>
                 </motion.div>
               </CardContent>
             </Card>
@@ -156,7 +126,7 @@ export const QuizWithSchoolPower: React.FC = () => {
 
   // Garantir que sempre haja um fallback
   const currentStepToRender = state.currentStep || 'intro';
-
+  
   return (
     <AnimatePresence mode="wait">
       {currentStepToRender === 'intro' && (

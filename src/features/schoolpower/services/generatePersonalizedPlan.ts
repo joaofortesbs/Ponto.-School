@@ -1,4 +1,3 @@
-
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import schoolPowerActivities from '../data/schoolPowerActivities.json';
@@ -42,42 +41,6 @@ interface GeminiActivityResponse {
 }
 
 /**
- * Valida dados de contextualização
- */
-function validateContextualizationData(data: ContextualizationData): boolean {
-  console.log('🔍 Validando dados de contextualização:', data);
-  
-  if (!data) {
-    console.warn('❌ Dados de contextualização não fornecidos');
-    return false;
-  }
-  
-  // Verificar se os dados não são apenas "73" ou valores inválidos
-  const isValidField = (field: string) => {
-    return field && 
-           field.trim() !== '' && 
-           field.trim() !== '73' && 
-           field.trim() !== 'undefined' &&
-           field.trim() !== 'null' &&
-           field.length > 2;
-  };
-  
-  const materiasValid = isValidField(data.materias);
-  const publicoAlvoValid = isValidField(data.publicoAlvo);
-  const isValid = materiasValid && publicoAlvoValid;
-  
-  console.log('✅ Validação de contextualização:', {
-    materias: materiasValid,
-    publicoAlvo: publicoAlvoValid,
-    materiasValue: data.materias,
-    publicoAlvoValue: data.publicoAlvo,
-    isValid
-  });
-  
-  return isValid;
-}
-
-/**
  * Constrói o prompt otimizado para a API Gemini
  */
 function buildGeminiPrompt(
@@ -85,242 +48,151 @@ function buildGeminiPrompt(
   contextualizationData: ContextualizationData,
   allowedActivities: typeof schoolPowerActivities
 ): string {
-  console.log('🏗️ Construindo prompt para Gemini...');
-  console.log('📝 Mensagem inicial:', initialMessage);
-  console.log('📊 Dados de contextualização:', contextualizationData);
-
-  // Verificar se os dados são válidos
-  if (!validateContextualizationData(contextualizationData)) {
-    console.warn('⚠️ Dados de contextualização inválidos, usando fallback');
-    
-    // Extrair dados corretos da mensagem inicial
-    const materiasExtracted = extrairMateriasFromMessage(initialMessage);
-    const publicoAlvoExtracted = extrairPublicoAlvoFromMessage(initialMessage);
-    
-    console.log('🔧 Dados extraídos da mensagem:', {
-      materiasExtracted,
-      publicoAlvoExtracted,
-      messagemOriginal: initialMessage
-    });
-    
-    // Usar dados de fallback baseados na mensagem inicial
-    contextualizationData = {
-      materias: materiasExtracted,
-      publicoAlvo: publicoAlvoExtracted,
-      restricoes: 'Baseado na solicitação do usuário para o 3º bimestre',
-      datasImportantes: '3º Bimestre - Geografia',
-      observacoes: 'Atividades personalizadas baseadas na mensagem inicial do usuário'
-    };
-    
-    console.log('✅ Dados de contextualização corrigidos:', contextualizationData);
-  }
-
   // Simplificar lista de atividades para economizar tokens
-  const activitiesString = allowedActivities
+  const activitiesIds = allowedActivities
+    .filter(a => a.enabled)
+    .map(a => a.id); // Remover limitação para permitir todas as atividades
+
+    const activitiesString = allowedActivities
     .filter(a => a.enabled)
     .map(a => `"${a.id}"`)
     .join(', ');
 
-  // Obter campos personalizados disponíveis
-  const getCustomFieldsForActivity = (activityId: string): string[] => {
-    const schema = activityFieldsSchema[activityId as keyof typeof activityFieldsSchema];
-    return schema?.fields || [];
-  };
+      // Obter campos personalizados disponíveis
+    const getCustomFieldsForActivity = (activityId: string): string[] => {
+      const schema = activityFieldsSchema[activityId as keyof typeof activityFieldsSchema];
+      return schema?.fields || [];
+    };
 
-  // Criar string com informações sobre campos personalizados
-  const customFieldsInfo = Object.keys(activityFieldsSchema).map(activityId => {
-    const fields = getCustomFieldsForActivity(activityId);
-    return `${activityId}: [${fields.join(', ')}]`;
-  }).join('\n');
+    // Criar string com informações sobre campos personalizados
+    const customFieldsInfo = Object.keys(activityFieldsSchema).map(activityId => {
+      const fields = getCustomFieldsForActivity(activityId);
+      return `${activityId}: [${fields.join(', ')}]`;
+    }).join('\n');
 
-  // Analisar atividades específicas mencionadas na mensagem
-  const atividadesEspecificas = extrairAtividadesEspecificas(initialMessage);
-  
-  // Construir o prompt para a Gemini
-  const prompt = `Você é uma IA especializada em educação que gera planos de ação personalizados para professores.
+    // Adicionar informações específicas para plano-aula
+    const planoAulaSpecificInfo = `
+ATENÇÃO ESPECIAL PARA PLANO-AULA:
+Os campos obrigatórios são EXATAMENTE:
+- Tema ou Tópico Central
+- Ano/Série Escolar
+- Componente Curricular
+- Carga Horária
+- Habilidades BNCC
+- Objetivo Geral
+- Materiais/Recursos
+- Perfil da Turma
+- Tipo de Aula
+- Observações do Professor
 
-ANÁLISE DA SOLICITAÇÃO:
-Mensagem do usuário: "${initialMessage}"
-Atividades específicas identificadas: ${atividadesEspecificas.join(', ') || 'Nenhuma específica'}
+USE EXATAMENTE ESTES NOMES DE CAMPOS para plano-aula!`;
 
-DADOS DO CONTEXTO EDUCACIONAL:
-- Matérias/Disciplinas: ${contextualizationData.materias}
-- Público-alvo: ${contextualizationData.publicoAlvo}
-- Restrições: ${contextualizationData.restricoes || 'Nenhuma'}
-- Datas importantes: ${contextualizationData.datasImportantes || 'Não informado'}
-- Observações: ${contextualizationData.observacoes || 'Nenhuma'}
+    // Construir o prompt para a Gemini
+    const prompt = `Você é uma IA especializada em gerar planos de ação educacionais para professores e coordenadores, seguindo e planejando exatamente o que eles pedem, e seguindo muito bem os requesitos, sendo super treinado, utilizando apenas as atividades possíveis listadas abaixo.
 
-ATIVIDADES DISPONÍVEIS: ${activitiesString}
+Here are the collected information:
 
-CAMPOS PERSONALIZADOS POR ATIVIDADE:
+DATA:
+- Request: "${initialMessage}"
+- Subjects and themes: ${contextualizationData?.subjects || 'General'}
+- Audience: ${contextualizationData?.audience || 'Students'}
+- Restrictions: "${contextualizationData?.restrictions || 'undefined'}"
+- Important dates: "${contextualizationData?.dates || 'undefined'}"
+- Observations: ${contextualizationData?.notes || 'None'}
+
+AVAILABLE ACTIVITIES: ${activitiesString}
+
+CUSTOM FIELDS PER ACTIVITY:
 ${customFieldsInfo}
 
-INSTRUÇÕES ESPECÍFICAS:
-1. IDENTIFIQUE todas as atividades mencionadas na mensagem do usuário
-2. INCLUA OBRIGATORIAMENTE todas as atividades específicas solicitadas
-3. ADICIONE atividades complementares relevantes (total de 8-15 atividades)
-4. PERSONALIZE cada atividade com base no contexto fornecido
-5. PREENCHA os customFields com informações específicas e detalhadas
-6. Use as matérias (${contextualizationData.materias}) para personalizar títulos e descrições
-7. Adapte para o público-alvo (${contextualizationData.publicoAlvo})
+${planoAulaSpecificInfo}
 
-ATIVIDADES ESPECÍFICAS OBRIGATÓRIAS:
-${atividadesEspecificas.map(ativ => `- ${ativ}`).join('\n')}
+INSTRUCTIONS:
+1. Carefully analyze the request and provided information
+2. Select ONLY activities from the available list that are relevant to the request
+3. Generate a COMPREHENSIVE action plan with 15-50 different activities according to the request complexity
+4. Each activity must have a personalized and descriptive title
+5. The description must be specific and detailed for the given context
+6. Use the exact IDs of the available activities
+7. Vary duration and difficulty as appropriate
+8. MANDATORY: For each activity, fill ALL custom fields listed above for that specific ID
+9. Custom fields must contain realistic, contextualized, and specific data - NEVER leave them empty or generic
+10. All extra fields must be strings (plain text)
+11. Prioritize diversity of activity types for a complete and comprehensive plan
 
-FORMATO DE RESPOSTA (JSON VÁLIDO):
+RESPONSE FORMAT (JSON):
+Return ONLY a valid JSON array with the selected activities, following this exact format:
+
 [
   {
-    "id": "id-exato-da-atividade-da-lista",
-    "personalizedTitle": "Título personalizado para ${contextualizationData.materias} - ${contextualizationData.publicoAlvo}",
-    "personalizedDescription": "Descrição detalhada personalizada baseada no contexto",
-    "customFields": {
-      "campo1": "valor específico baseado em ${contextualizationData.materias}",
-      "campo2": "valor específico baseado em ${contextualizationData.publicoAlvo}"
-    }
+    "id": "exact-activity-id",
+    "title": "Personalized activity title",
+    "description": "Specific and detailed activity description for this context",
+    "duration": "XX min",
+    "difficulty": "Easy/Medium/Hard",
+    "category": "Subject category",
+    "type": "activity",
+    "Custom Field 1": "Specific and realistic value",
+    "Custom Field 2": "Specific and realistic value",
+    "Custom Field N": "Specific and realistic value"
   }
 ]
 
-IMPORTANTE: 
-- Retorne APENAS o JSON válido
-- Inclua TODAS as atividades específicas mencionadas pelo usuário
-- Personalize com base nos dados reais fornecidos
-- Preencha customFields com informações úteis e específicas`;
+EXAMPLE for exercise-list:
+{
+  "id": "lista-exercicios",
+  "title": "Exercise List: Nouns and Verbs",
+  "description": "Development of an exercise list covering the identification, classification, and use of nouns and verbs in different contexts.",
+  "duration": "30 min",
+  "difficulty": "Medium",
+  "category": "Grammar",
+  "type": "activity",
+  "Number of Questions": "10 mixed questions involving common and proper nouns, as well as regular verbs",
+  "Theme": "Nouns and Verbs",
+  "Subject": "Portuguese Language",
+  "Grade Level": "6th Grade",
+  "Difficulty Level": "Intermediate",
+  "Question Model": "Objective and essay questions",
+  "Sources": "Projeto Ápis textbook and site TodaMatéria"
+}
 
-  console.log('✅ Prompt construído com sucesso');
+REMEMBER:
+- ALL custom fields MUST be filled for EACH activity
+- Values must be specific, detailed, and contextualized
+- NEVER leave a field empty or with a generic value
+- Each activity must have ALL its custom fields filled
+
+IMPORTANT:
+- Use ONLY available IDs from the list
+- FILL ALL custom fields for each activity
+- Field data must be specific, realistic, and contextualized
+- DO NOT include explanations before or after the JSON
+- DO NOT use markdown or formatting
+- Return ONLY the valid JSON array
+
+        IMPORTANTE: Para atividades do tipo "quadro-interativo", use OBRIGATORIAMENTE estes campos específicos:
+        - "Disciplina / Área de conhecimento"
+        - "Ano / Série"
+        - "Tema ou Assunto da aula"
+        - "Objetivo de aprendizagem da aula"
+        - "Nível de Dificuldade"
+        - "Atividade mostrada" (deve conter apenas atividades válidas do School Power disponíveis)
+`;
+
   return prompt;
-}
-
-/**
- * Extrai matérias da mensagem inicial quando dados de contextualização são inválidos
- */
-function extrairMateriasFromMessage(message: string): string {
-  console.log('🔍 Extraindo matérias da mensagem:', message);
-  
-  const materiasComuns = [
-    'matemática', 'português', 'história', 'geografia', 'ciências', 'física', 
-    'química', 'biologia', 'inglês', 'educação física', 'artes', 'filosofia',
-    'sociologia', 'literatura', 'redação', 'geometria', 'álgebra'
-  ];
-  
-  const messageLower = message.toLowerCase();
-  const materiasEncontradas = materiasComuns.filter(materia => 
-    messageLower.includes(materia)
-  );
-  
-  console.log('📚 Matérias encontradas:', materiasEncontradas);
-  
-  if (materiasEncontradas.length > 0) {
-    const resultado = materiasEncontradas.map(m => 
-      m.charAt(0).toUpperCase() + m.slice(1)
-    ).join(', ');
-    console.log('✅ Matérias formatadas:', resultado);
-    return resultado;
-  }
-  
-  // Se menciona relevo e geografia, focar nessas
-  if (messageLower.includes('relevo') || messageLower.includes('geográfica') || messageLower.includes('montanhas')) {
-    console.log('🌍 Detectado conteúdo de Geografia');
-    return 'Geografia - Relevo e Formações Geográficas';
-  }
-  
-  // Verificar outros termos relacionados a geografia
-  if (messageLower.includes('curricular') && messageLower.includes('grade')) {
-    console.log('📋 Detectado grade curricular - assumindo Geografia');
-    return 'Geografia';
-  }
-  
-  console.log('⚠️ Nenhuma matéria específica encontrada, usando fallback');
-  return 'Ensino Fundamental - Múltiplas Disciplinas';
-}
-
-/**
- * Extrai público-alvo da mensagem inicial
- */
-function extrairPublicoAlvoFromMessage(message: string): string {
-  console.log('🎯 Extraindo público-alvo da mensagem:', message);
-  
-  const messageLower = message.toLowerCase();
-  
-  // Verificar bimestre específico
-  if (messageLower.includes('bimestre')) {
-    const bimestreMatch = message.match(/(\d+).*?bimestre/i);
-    if (bimestreMatch) {
-      const resultado = `Ensino Fundamental - ${bimestreMatch[1]}º Bimestre`;
-      console.log('📅 Bimestre identificado:', resultado);
-      return resultado;
-    }
-  }
-  
-  // Verificar menções de anos escolares
-  const anoMatch = message.match(/(\d+)º?\s*ano/i);
-  if (anoMatch) {
-    const resultado = `${anoMatch[1]}º Ano do Ensino Fundamental`;
-    console.log('🎓 Ano escolar identificado:', resultado);
-    return resultado;
-  }
-  
-  // Verificar menções de séries
-  const serieMatch = message.match(/(\d+)ª?\s*série/i);
-  if (serieMatch) {
-    const resultado = `${serieMatch[1]}ª Série do Ensino Fundamental`;
-    console.log('📚 Série identificada:', resultado);
-    return resultado;
-  }
-  
-  // Se menciona grade curricular, assumir ensino fundamental
-  if (messageLower.includes('curricular') || messageLower.includes('grade')) {
-    console.log('📋 Grade curricular mencionada');
-    return 'Ensino Fundamental - 6º ao 9º Ano';
-  }
-  
-  console.log('⚠️ Público-alvo específico não identificado, usando fallback');
-  return 'Ensino Fundamental';
-}
-
-/**
- * Extrai atividades específicas mencionadas na mensagem
- */
-function extrairAtividadesEspecificas(message: string): string[] {
-  const atividades = [];
-  const messageLower = message.toLowerCase();
-  
-  // Mapear termos mencionados para IDs de atividades
-  const mapeamento = {
-    'quadro interativo': 'quadro-interativo',
-    'sequência didática': 'sequencia-didatica',
-    'lista de exercícios': 'lista-exercicios',
-    'exercícios': 'lista-exercicios',
-    'plano de aula': 'plano-aula',
-    'prova': 'prova',
-    'avaliação': 'prova',
-    'teste': 'prova',
-    'mapa mental': 'mapa-mental',
-    'resumo': 'resumo',
-    'slides': 'slides-didaticos',
-    'apresentação': 'slides-didaticos',
-    'jogo': 'jogos-educativos',
-    'atividade': 'atividades-matematica'
-  };
-  
-  for (const [termo, id] of Object.entries(mapeamento)) {
-    if (messageLower.includes(termo)) {
-      atividades.push(id);
-    }
-  }
-  
-  return [...new Set(atividades)]; // Remove duplicatas
 }
 
 /**
  * Makes the call to the Gemini API
  */
 async function callGeminiAPI(prompt: string): Promise<string> {
-  console.log('🚀 Fazendo chamada para API Gemini...');
-  console.log('🔑 API Key disponível:', !!GEMINI_API_KEY);
+  console.log('🚀 Making call to Gemini API...');
+  console.log('📤 Sent Prompt (first 300 chars):', prompt.substring(0, 300));
+  console.log('🔑 API Key available:', !!GEMINI_API_KEY);
   console.log('🌐 API URL:', GEMINI_API_URL);
 
   if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API Key não está configurada');
+    throw new Error('Gemini API Key is not configured');
   }
 
   try {
@@ -331,14 +203,14 @@ async function callGeminiAPI(prompt: string): Promise<string> {
         }]
       }],
       generationConfig: {
-        temperature: 0.3,
+        temperature: 0.3, // Reduced for more consistent responses
         topK: 20,
         topP: 0.8,
-        maxOutputTokens: 32768,
+        maxOutputTokens: 32768, // Significantly increased to support 50+ activities
       }
     };
 
-    console.log('📋 Enviando requisição para Gemini...');
+    console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -350,25 +222,25 @@ async function callGeminiAPI(prompt: string): Promise<string> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Erro na resposta da API Gemini:', response.status, errorText);
-      throw new Error(`Erro da API Gemini: ${response.status} - ${errorText}`);
+      console.error('❌ Error in Gemini API response:', response.status, errorText);
+      throw new Error(`Gemini API Error: ${response.status} - ${errorText}`);
     }
 
     const data: GeminiResponse = await response.json();
-    console.log('📥 Resposta bruta da Gemini recebida');
+    console.log('📥 Raw Gemini response:', data);
 
     const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!generatedText) {
-      console.error('❌ Resposta vazia da API Gemini');
-      throw new Error('Resposta vazia da API Gemini');
+      console.error('❌ Empty response from Gemini API');
+      throw new Error('Empty response from Gemini API');
     }
 
-    console.log('✅ Texto gerado pela Gemini:', generatedText.substring(0, 500) + '...');
+    console.log('✅ Text generated by Gemini:', generatedText);
     return generatedText;
 
   } catch (error) {
-    console.error('❌ Erro ao chamar API Gemini:', error);
+    console.error('❌ Error calling Gemini API:', error);
     throw error;
   }
 }
@@ -377,34 +249,34 @@ async function callGeminiAPI(prompt: string): Promise<string> {
  * Processes and cleans the Gemini response
  */
 function parseGeminiResponse(responseText: string): GeminiActivityResponse[] {
-  console.log('🔍 Processando resposta da Gemini...');
+  console.log('🔍 Processing Gemini response...');
 
   try {
-    // Remove markdown e outros caracteres indesejados
+    // Removes markdown and other unwanted characters
     let cleanedText = responseText.trim();
 
-    // Remove blocos de código markdown se existirem
+    // Removes markdown code blocks if they exist
     cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
 
-    // Remove quebras de linha extras
+    // Removes extra line breaks
     cleanedText = cleanedText.trim();
 
-    console.log('🧹 Texto limpo:', cleanedText.substring(0, 300) + '...');
+    console.log('🧹 Cleaned text:', cleanedText);
 
-    // Tenta fazer o parse do JSON
+    // Attempts to parse the JSON
     const parsedActivities: GeminiActivityResponse[] = JSON.parse(cleanedText);
 
     if (!Array.isArray(parsedActivities)) {
-      throw new Error('Resposta não é um array válido');
+      throw new Error('Response is not a valid array');
     }
 
-    console.log('✅ Atividades parseadas:', parsedActivities.length);
+    console.log('✅ Parsed activities:', parsedActivities);
     return parsedActivities;
 
   } catch (error) {
-    console.error('❌ Erro ao processar resposta:', error);
-    console.error('📝 Texto original:', responseText);
-    throw new Error('Erro ao processar resposta da IA');
+    console.error('❌ Error parsing response:', error);
+    console.error('📝 Original text:', responseText);
+    throw new Error('Error processing AI response');
   }
 }
 
@@ -415,14 +287,14 @@ function convertToActionPlanItems(
   geminiActivities: GeminiActivityResponse[],
   allowedActivities: typeof schoolPowerActivities
 ): ActionPlanItem[] {
-  console.log('🔄 Convertendo atividades para ActionPlanItems...');
+  console.log('🔄 Converting activities to ActionPlanItems...');
 
   return geminiActivities.map(activity => {
-    // Encontra a atividade original no JSON para validação
+    // Finds the original activity in the JSON for validation
     const originalActivity = allowedActivities.find(a => a.id === activity.id);
 
     if (!originalActivity) {
-      console.warn(`⚠️ Atividade não encontrada: ${activity.id}`);
+      console.warn(`⚠️ Activity not found: ${activity.id}`);
       return null;
     }
 
@@ -435,7 +307,7 @@ function convertToActionPlanItems(
       customFields: activity.customFields || {}
     };
 
-    console.log('✅ ActionPlanItem criado:', actionPlanItem.id);
+    console.log('✅ ActionPlanItem created:', actionPlanItem);
     return actionPlanItem;
   }).filter((item): item is ActionPlanItem => item !== null);
 }
@@ -447,59 +319,59 @@ function generateFallbackPlan(
   initialMessage: string,
   contextualizationData: ContextualizationData
 ): ActionPlanItem[] {
-  console.log('🔄 Gerando plano de fallback...');
+  console.log('🔄 Generating fallback plan...');
 
-  // Extrair atividades específicas da mensagem
-  const atividadesEspecificas = extrairAtividadesEspecificas(initialMessage);
-  
-  // Selecionar atividades relevantes
+  // Selects relevant activities based on keywords
+  const keywords = [
+    initialMessage.toLowerCase(),
+    contextualizationData.subjects?.toLowerCase() || '',
+    contextualizationData.audience?.toLowerCase() || '',
+  ].join(' ');
+
   let relevantActivities = schoolPowerActivities.filter(activity => {
     return activity.enabled && (
-      atividadesEspecificas.includes(activity.id) ||
-      activity.tags.some(tag => 
-        initialMessage.toLowerCase().includes(tag.toLowerCase())
-      )
+      keywords.includes('prova') && activity.tags.includes('avaliação') ||
+      keywords.includes('exercicio') && activity.tags.includes('exercícios') ||
+      keywords.includes('resumo') && activity.tags.includes('resumo') ||
+      keywords.includes('jogo') && activity.tags.includes('jogos') ||
+      keywords.includes('atividade') && activity.tags.includes('atividades')
     );
   });
 
-  // Se nenhuma atividade específica foi encontrada, usar as mais populares
+  // If no specific activities are found, uses the most popular ones
   if (relevantActivities.length === 0) {
     relevantActivities = schoolPowerActivities.filter(activity =>
       activity.enabled && [
         'lista-exercicios',
         'resumo',
         'prova',
+        'atividades-matematica',
         'plano-aula',
-        'sequencia-didatica',
-        'quadro-interativo',
         'mapa-mental',
         'jogos-educativos',
-        'slides-didaticos'
+        'atividades-ortografia-alfabeto',
+        'caca-palavras',
+        'projeto',
+        'slides-didaticos',
+        'palavra-cruzada',
+        'desenho-simetrico',
+        'sequencia-didatica',
+        'atividades-contos-infantis'
       ].includes(activity.id)
     );
   }
 
-  // Garantir que temos pelo menos as atividades específicas mencionadas
-  atividadesEspecificas.forEach(idEspecifico => {
-    const atividadeEspecifica = schoolPowerActivities.find(a => a.id === idEspecifico);
-    if (atividadeEspecifica && !relevantActivities.some(r => r.id === idEspecifico)) {
-      relevantActivities.push(atividadeEspecifica);
-    }
-  });
+  // Removes limit to allow generation of more activities as needed
+  // relevantActivities = relevantActivities.slice(0, 35);
 
   const fallbackPlan: ActionPlanItem[] = relevantActivities.map(activity => ({
     id: activity.id,
-    title: `${activity.name} - Personalizado`,
-    description: `${activity.description} Baseado em: "${initialMessage.substring(0, 100)}..."`,
-    approved: false,
-    customFields: {
-      'Disciplina': extrairMateriasFromMessage(initialMessage),
-      'Público-alvo': extrairPublicoAlvoFromMessage(initialMessage),
-      'Observações': 'Gerado automaticamente pelo sistema'
-    }
+    title: `${activity.name} - ${contextualizationData.subjects || 'Personalized'}`,
+    description: `${activity.description} Based on: "${initialMessage.substring(0, 100)}..."`,
+    approved: false
   }));
 
-  console.log('✅ Plano de fallback gerado:', fallbackPlan.length, 'atividades');
+  console.log('✅ Fallback plan generated:', fallbackPlan);
   return fallbackPlan;
 }
 
@@ -510,38 +382,38 @@ export async function generatePersonalizedPlan(
   initialMessage: string,
   contextualizationData: ContextualizationData
 ): Promise<ActionPlanItem[]> {
-  console.log('🤖 Iniciando geração de plano personalizado...');
-  console.log('📝 Dados de entrada:', { initialMessage, contextualizationData });
+  console.log('🤖 Starting personalized plan generation...');
+  console.log('📝 Input data:', { initialMessage, contextualizationData });
 
   try {
-    // Validação de dados de entrada
+    // Validation of input data
     if (!initialMessage?.trim()) {
-      throw new Error('Mensagem inicial é obrigatória');
+      throw new Error('Initial message is mandatory');
     }
 
     if (!contextualizationData) {
-      throw new Error('Dados de contextualização são obrigatórios');
+      throw new Error('Contextualization data is mandatory');
     }
 
-    // Carregar atividades permitidas
-    console.log('📚 Atividades disponíveis:', schoolPowerActivities.length);
+    // Loads allowed activities
+    console.log('📚 Available activities:', schoolPowerActivities.length);
 
-    // Construir o prompt estruturado
+    // Builds the structured prompt
     const prompt = buildGeminiPrompt(initialMessage, contextualizationData, schoolPowerActivities);
-    console.log('📝 Prompt construído com sucesso');
+    console.log('📝 Prompt built successfully');
 
-    // Chamar a API Gemini
+    // Calls the Gemini API
     const geminiResponse = await callGeminiAPI(prompt);
 
-    // Processar a resposta
+    // Processes the response
     const generatedActivities = parseGeminiResponse(geminiResponse);
 
-    // Validar as atividades retornadas
+    // Validates the returned activities
     const validatedActivities = await validateGeminiPlan(generatedActivities, schoolPowerActivities);
 
     // Processar cada atividade e extrair custom fields
     const actionPlanItems = validatedActivities.map(activityData => {
-        console.log(`🔄 Processando atividade: ${activityData.id}`);
+        console.log(`🔄 Processing activity: ${activityData.id}`);
 
         // Validação específica para Sequência Didática
         if (activityData.id === 'sequencia-didatica') {
@@ -555,10 +427,10 @@ export async function generatePersonalizedPlan(
               ...activityData,
               customFields: {
                 'Título do Tema / Assunto': activityData.personalizedTitle || 'Sequência Didática Personalizada',
-                'Ano / Série': extrairPublicoAlvoFromMessage(initialMessage),
-                'Disciplina': extrairMateriasFromMessage(initialMessage),
-                'BNCC / Competências': 'Competências específicas da disciplina',
-                'Público-alvo': contextualizationData.publicoAlvo,
+                'Ano / Série': '9º Ano',
+                'Disciplina': 'Português',
+                'BNCC / Competências': 'EF89LP01, EF89LP02',
+                'Público-alvo': 'Alunos do Ensino Fundamental',
                 'Objetivos de Aprendizagem': 'Desenvolver habilidades específicas',
                 'Quantidade de Aulas': '4',
                 'Quantidade de Diagnósticos': '1',
@@ -571,7 +443,7 @@ export async function generatePersonalizedPlan(
           }
         }
 
-        // Extrair custom fields
+        // Extract custom fields (all fields except standard ones)
         const customFields: Record<string, string> = {};
         const standardFields = ['id', 'title', 'description', 'duration',
                                'difficulty', 'category', 'type', 'personalizedTitle', 'personalizedDescription'];
@@ -585,48 +457,54 @@ export async function generatePersonalizedPlan(
         // Garantir que customFields seja um objeto válido
         const finalCustomFields = activityData.customFields || customFields || {};
 
-        // Garantir que todos os valores sejam strings
-        Object.keys(finalCustomFields).forEach(key => {
-          if (typeof finalCustomFields[key] !== 'string') {
-            finalCustomFields[key] = String(finalCustomFields[key]);
-          }
-        });
+        // Para Sequência Didática, garantir que todos os valores sejam strings
+        if (activityData.id === 'sequencia-didatica') {
+          Object.keys(finalCustomFields).forEach(key => {
+            if (typeof finalCustomFields[key] !== 'string') {
+              finalCustomFields[key] = String(finalCustomFields[key]);
+            }
+          });
+        }
 
-        console.log(`✅ Custom fields extraídos para ${activityData.id}:`, finalCustomFields);
+        console.log(`✅ Custom fields extracted for ${activityData.id}:`, finalCustomFields);
 
         const activity = {
           id: activityData.id,
-          title: activityData.personalizedTitle || activityData.title,
-          description: activityData.personalizedDescription || activityData.description,
-          duration: activityData.duration || "30 min",
-          difficulty: activityData.difficulty || "Médio",
-          category: activityData.category || "educacional",
-          type: activityData.type || "atividade",
+          title: activityData.title,
+          description: activityData.description,
+          duration: activityData.duration,
+          difficulty: activityData.difficulty,
+          category: activityData.category,
+          type: activityData.type,
           customFields: finalCustomFields,
           approved: true,
-          isTrilhasEligible: isActivityEligibleForTrilhas(activityData.id),
-          isBuilt: false,
+          isTrilhasEligible: true,
+          isBuilt: false, // Will be marked as true after automatic build
           builtAt: null
         };
 
-        console.log(`✅ ActionPlanItem completo criado para ${activityData.id}:`, activity);
+        console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, activity);
         return activity;
     });
 
     if (validatedActivities.length === 0) {
-      console.warn('⚠️ Nenhuma atividade válida retornada, usando fallback');
+      console.warn('⚠️ No valid activities returned, using fallback');
       return generateFallbackPlan(initialMessage, contextualizationData);
     }
 
-    console.log(`✅ Total de atividades validadas geradas: ${validatedActivities.length}`);
-    console.log('✅ Plano personalizado gerado com sucesso:', actionPlanItems);
+    console.log(`✅ Total validated activities generated: ${validatedActivities.length}`);
+
+    // Converts to ActionPlanItems
+    const actionPlanItems2 = convertToActionPlanItems(validatedActivities, schoolPowerActivities);
+
+    console.log('✅ Personalized plan generated successfully:', actionPlanItems);
     return actionPlanItems;
 
   } catch (error) {
-    console.error('❌ Erro ao gerar plano personalizado:', error);
+    console.error('❌ Error generating personalized plan:', error);
 
-    // Em caso de erro, retorna o plano de fallback
-    console.log('🔄 Usando plano de fallback devido ao erro');
+    // In case of error, returns the fallback plan
+    console.log('🔄 Using fallback plan due to error');
     return generateFallbackPlan(initialMessage, contextualizationData);
   }
 }

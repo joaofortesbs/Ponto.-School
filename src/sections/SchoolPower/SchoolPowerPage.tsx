@@ -10,10 +10,9 @@ import {
   ParticlesBackground,
 } from "./components";
 import useSchoolPowerFlow from "../../features/schoolpower/hooks/useSchoolPowerFlow";
-import ContextualizationCard from "../../features/schoolpower/contextualization/ContextualizationCard";
-import ActionPlanCard from "../../features/schoolpower/actionplan/ActionPlanCard";
-import CardDeConstrucao from "../../features/schoolpower/construction/CardDeConstrucao";
-import { useIsMobile } from "../../hooks/useIsMobile";
+import { ContextualizationCard } from "../../features/schoolpower/contextualization/ContextualizationCard";
+import { ActionPlanCard } from "../../features/schoolpower/actionplan/ActionPlanCard";
+import { CardDeConstrucao } from "../../features/schoolpower/construction/CardDeConstrucao";
 
 interface SchoolPowerPageProps {
   isQuizMode?: boolean;
@@ -22,7 +21,6 @@ interface SchoolPowerPageProps {
 export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
-  const isMobile = useIsMobile();
 
   // Hook para gerenciar o fluxo do School Power
   const {
@@ -84,7 +82,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   return (
     <div
-      className={`relative flex ${isMobile && isQuizMode ? 'h-screen min-h-screen' : 'h-[90vh] min-h-[650px]'} w-full flex-col items-center justify-center overflow-hidden rounded-lg`}
+      className="relative flex h-[90vh] min-h-[650px] w-full flex-col items-center justify-center overflow-hidden rounded-lg"
       style={{ backgroundColor: "transparent" }}
     >
       {/* Background de estrelas - sempre visível */}
@@ -93,26 +91,18 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {/* Componentes padrões - só aparecem quando flowState é 'idle' */}
       {componentsVisible && (
         <>
-          {/* Vertical dock positioned at right side - hidden on mobile quiz mode */}
-          {!(isMobile && isQuizMode) && (
-            <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-              <SideMenu />
-            </div>
-          )}
+          {/* Vertical dock positioned at right side */}
+          <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+            <SideMenu />
+          </div>
 
           {/* Container Ripple fixo e centralizado no background */}
-          <div className={`absolute ${isMobile && isQuizMode ? 'top-[45%]' : 'top-[57%]'} left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none`}>
-            <div 
-              className="relative" 
-              style={{ 
-                width: isMobile && isQuizMode ? "350px" : "900px", 
-                height: isMobile && isQuizMode ? "450px" : "617px" 
-              }}
-            >
+          <div className="absolute top-[57%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+            <div className="relative" style={{ width: "900px", height: "617px" }}>
               {/* TechCircle posicionado no topo do container Ripple */}
               <div
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-full z-30 pointer-events-none"
-                style={{ marginTop: isMobile && isQuizMode ? "4px" : "7px" }}
+                style={{ marginTop: "7px" }}
               >
                 <TopHeader isDarkTheme={isDarkTheme} isQuizMode={isQuizMode} />
               </div>
@@ -137,13 +127,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
               </div>
 
               {/* Caixa de Mensagem dentro do mesmo container Ripple */}
-              <div 
-                className={`absolute ${isMobile && isQuizMode ? 'bottom-16' : 'bottom-24'} left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto`} 
-                style={{ 
-                  marginTop: isMobile && isQuizMode ? "-80px" : "-150px",
-                  width: isMobile && isQuizMode ? "110%" : "auto"
-                }}
-              >
+              <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 translate-y-full z-40 pointer-events-auto" style={{ marginTop: "-150px" }}>
                 <ChatInput 
                   isDarkTheme={isDarkTheme} 
                   onSend={handleSendMessage}
@@ -157,30 +141,32 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
       {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
       {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
-          className="absolute inset-0 flex items-center justify-center z-50"
+          className="absolute inset-0 flex items-center justify-center z-40"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          style={{ 
-            background: 'rgba(15, 23, 42, 0.95)'
-          }}
+          style={{ background: 'transparent' }}
         >
-          <div className={`flex items-center justify-center w-full h-full ${isMobile ? 'p-2' : 'p-4'}`}>
-            <div className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-7xl'} mx-auto`}>
-              <CardDeConstrucao
-                flowData={{
-                  ...flowData,
-                  actionPlan: (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [],
-                  contextualizationData: flowData?.contextualizationData || null,
-                  manualActivities: flowData?.manualActivities || []
-                }}
-                onBack={handleBack}
-                step={flowState === 'contextualizing' ? 'contextualization' : 
-                      flowState === 'actionplan' ? 'actionPlan' : 
-                      flowState === 'generating' ? 'generating' : 
-                      flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
-              />
-            </div>
+          <div className="flex items-center justify-center w-full h-full">
+            <CardDeConstrucao
+              flowData={{
+                ...flowData,
+                actionPlan: (flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : [],
+                contextualizationData: flowData?.contextualizationData || null,
+                manualActivities: flowData?.manualActivities || []
+              }}
+              onBack={handleBack}
+              step={flowState === 'contextualizing' ? 'contextualization' : 
+                    flowState === 'actionplan' ? 'actionPlan' : 
+                    flowState === 'generating' ? 'generating' : 
+                    flowState === 'generatingActivities' ? 'generatingActivities' : 'activities'}
+              contextualizationData={flowData?.contextualizationData || null}
+              actionPlan={(flowData?.actionPlan && Array.isArray(flowData.actionPlan)) ? flowData.actionPlan : []}
+              onSubmitContextualization={handleSubmitContextualization}
+              onApproveActionPlan={handleApproveActionPlan}
+              onResetFlow={handleResetFlow}
+              isLoading={isLoading}
+            />
           </div>
         </motion.div>
       )}

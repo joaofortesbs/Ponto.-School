@@ -1,234 +1,215 @@
-
+"use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Send, BookOpen, Users, GraduationCap } from 'lucide-react';
 
 export interface ContextualizationData {
-  disciplina: string;
-  anoEscolar: string;
-  tema: string;
-  objetivos: string;
-  metodologia: string;
-  recursos: string;
-  avaliacao: string;
-  observacoes?: string;
+  subjects: string;
+  audience: string;
+  restrictions: string;
+  dates?: string;
+  notes?: string;
 }
 
 interface ContextualizationCardProps {
   onSubmit: (data: ContextualizationData) => void;
-  onBack: () => void;
-  isLoading?: boolean;
 }
 
-const ContextualizationCard: React.FC<ContextualizationCardProps> = ({
-  onSubmit,
-  onBack,
-  isLoading = false
-}) => {
+export function ContextualizationCard({ onSubmit }: ContextualizationCardProps) {
   const [formData, setFormData] = useState<ContextualizationData>({
-    disciplina: '',
-    anoEscolar: '',
-    tema: '',
-    objetivos: '',
-    metodologia: '',
-    recursos: '',
-    avaliacao: '',
-    observacoes: ''
+    subjects: '',
+    audience: '',
+    restrictions: '',
+    dates: '',
+    notes: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field: keyof ContextualizationData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    if (formData.disciplina && formData.anoEscolar && formData.tema && formData.objetivos) {
+  const handleSubmit = async () => {
+    if (!formData.subjects.trim() || !formData.audience.trim() || !formData.restrictions.trim()) {
+      alert('Por favor, preencha os campos obrigatórios.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Simula processamento
+      await new Promise(resolve => setTimeout(resolve, 1000));
       onSubmit(formData);
+    } catch (error) {
+      console.error('Erro ao processar contextualização:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isFormValid = formData.disciplina && formData.anoEscolar && formData.tema && formData.objetivos;
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full max-w-4xl mx-auto"
+      initial={{ opacity: 0, scale: 0.8, y: 50 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: -50 }}
+      transition={{ 
+        duration: 0.6, 
+        ease: [0.25, 0.1, 0.25, 1],
+        type: "spring",
+        stiffness: 100,
+        damping: 15
+      }}
+      className="relative bg-gradient-to-br from-white/95 to-gray-50/95 dark:from-gray-900/95 dark:to-gray-800/95 backdrop-blur-xl rounded-2xl p-8 max-w-3xl w-full shadow-2xl border border-white/20 dark:border-gray-700/50"
+      style={{
+        background: `
+          linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%),
+          radial-gradient(circle at 20% 20%, rgba(255,107,0,0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(255,146,72,0.1) 0%, transparent 50%)
+        `,
+      }}
     >
-      <Card className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <Button
-              onClick={onBack}
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </Button>
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-blue-500" />
-              <CardTitle className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                Contextualização
-              </CardTitle>
-            </div>
-          </div>
-        </CardHeader>
+      {/* Background decorativo */}
+      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-[#FF6B00]/20 to-[#FF9248]/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-[#FF9248]/20 to-[#FF6B00]/10 rounded-full blur-3xl"></div>
+      </div>
 
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="disciplina" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Disciplina *
-              </Label>
-              <Input
-                id="disciplina"
-                value={formData.disciplina}
-                onChange={(e) => handleInputChange('disciplina', e.target.value)}
-                placeholder="Ex: Matemática, Português, História..."
-                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
-              />
-            </div>
+      <motion.div 
+        className="relative z-10"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200 }}
+            className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-[#FF6B00] to-[#FF9248] rounded-2xl flex items-center justify-center shadow-lg"
+          >
+            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </motion.div>
 
-            <div className="space-y-2">
-              <Label htmlFor="anoEscolar" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Ano Escolar *
-              </Label>
-              <Select value={formData.anoEscolar} onValueChange={(value) => handleInputChange('anoEscolar', value)}>
-                <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600">
-                  <SelectValue placeholder="Selecione o ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1ano">1º Ano</SelectItem>
-                  <SelectItem value="2ano">2º Ano</SelectItem>
-                  <SelectItem value="3ano">3º Ano</SelectItem>
-                  <SelectItem value="4ano">4º Ano</SelectItem>
-                  <SelectItem value="5ano">5º Ano</SelectItem>
-                  <SelectItem value="6ano">6º Ano</SelectItem>
-                  <SelectItem value="7ano">7º Ano</SelectItem>
-                  <SelectItem value="8ano">8º Ano</SelectItem>
-                  <SelectItem value="9ano">9º Ano</SelectItem>
-                  <SelectItem value="1ensino">1º Ensino Médio</SelectItem>
-                  <SelectItem value="2ensino">2º Ensino Médio</SelectItem>
-                  <SelectItem value="3ensino">3º Ensino Médio</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <motion.h2 
+            className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-3"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            Quiz de Contextualização
+          </motion.h2>
 
-          <div className="space-y-2">
-            <Label htmlFor="tema" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Tema da Aula *
-            </Label>
-            <Input
-              id="tema"
-              value={formData.tema}
-              onChange={(e) => handleInputChange('tema', e.target.value)}
-              placeholder="Ex: Funções de 1º Grau, Revolução Francesa..."
-              className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
+          <motion.p 
+            className="text-gray-600 dark:text-gray-400 text-lg"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            Responda algumas perguntas para personalizar sua experiência
+          </motion.p>
+        </div>
+
+        <motion.div 
+          className="space-y-6"
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              📚 Quais matérias e temas serão trabalhados? *
+            </label>
+            <textarea
+              value={formData.subjects}
+              onChange={(e) => handleInputChange('subjects', e.target.value)}
+              className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] dark:bg-gray-800/50 dark:text-white transition-all duration-200 backdrop-blur-sm"
+              rows={3}
+              placeholder="Descreva as matérias e temas que você quer estudar..."
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="objetivos" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Objetivos de Aprendizagem *
-            </Label>
-            <Textarea
-              id="objetivos"
-              value={formData.objetivos}
-              onChange={(e) => handleInputChange('objetivos', e.target.value)}
-              placeholder="Descreva os objetivos que os alunos devem alcançar com esta aula..."
-              className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 min-h-[100px]"
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              🎯 Qual o público-alvo? *
+            </label>
+            <input
+              type="text"
+              value={formData.audience}
+              onChange={(e) => handleInputChange('audience', e.target.value)}
+              className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] dark:bg-gray-800/50 dark:text-white transition-all duration-200 backdrop-blur-sm"
+              placeholder="Ex: Ensino Médio, 3º ano, vestibular..."
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="metodologia" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Metodologia
-              </Label>
-              <Textarea
-                id="metodologia"
-                value={formData.metodologia}
-                onChange={(e) => handleInputChange('metodologia', e.target.value)}
-                placeholder="Como será desenvolvida a aula?"
-                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 min-h-[80px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="recursos" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Recursos Necessários
-              </Label>
-              <Textarea
-                id="recursos"
-                value={formData.recursos}
-                onChange={(e) => handleInputChange('recursos', e.target.value)}
-                placeholder="Materiais, equipamentos, ferramentas..."
-                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 min-h-[80px]"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="avaliacao" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Forma de Avaliação
-            </Label>
-            <Textarea
-              id="avaliacao"
-              value={formData.avaliacao}
-              onChange={(e) => handleInputChange('avaliacao', e.target.value)}
-              placeholder="Como os alunos serão avaliados?"
-              className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 min-h-[80px]"
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              ⚠️ Quais restrições ou preferências específicas? *
+            </label>
+            <textarea
+              value={formData.restrictions}
+              onChange={(e) => handleInputChange('restrictions', e.target.value)}
+              className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] dark:bg-gray-800/50 dark:text-white transition-all duration-200 backdrop-blur-sm"
+              rows={3}
+              placeholder="Descreva limitações de tempo, dificuldades específicas, etc..."
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="observacoes" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Observações Adicionais
-            </Label>
-            <Textarea
-              id="observacoes"
-              value={formData.observacoes}
-              onChange={(e) => handleInputChange('observacoes', e.target.value)}
-              placeholder="Informações complementares, adaptações necessárias..."
-              className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 min-h-[80px]"
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              📅 Período de entrega ou datas importantes
+            </label>
+            <input
+              type="text"
+              value={formData.dates}
+              onChange={(e) => handleInputChange('dates', e.target.value)}
+              className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] dark:bg-gray-800/50 dark:text-white transition-all duration-200 backdrop-blur-sm"
+              placeholder="Ex: Prova em 2 semanas, ENEM em novembro..."
             />
           </div>
 
-          <div className="flex justify-end pt-4">
-            <Button
-              onClick={handleSubmit}
-              disabled={!isFormValid || isLoading}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium px-6 py-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  Gerar Plano de Ação
-                </>
-              )}
-            </Button>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+              📝 Outras observações importantes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              className="w-full p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-[#FF6B00] focus:border-[#FF6B00] dark:bg-gray-800/50 dark:text-white transition-all duration-200 backdrop-blur-sm"
+              rows={2}
+              placeholder="Informações adicionais que podem ajudar..."
+            />
           </div>
-        </CardContent>
-      </Card>
+        </motion.div>
+
+        <motion.div 
+          className="flex justify-center mt-8"
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+        >
+          <button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="px-8 py-4 bg-gradient-to-r from-[#FF6B00] to-[#FF9248] text-white rounded-xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-lg min-w-[200px]"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-3 justify-center">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Processando...
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 justify-center">
+                <span>Enviar Contextualização</span>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            )}
+          </button>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
-};
-
-export default ContextualizationCard;
+}

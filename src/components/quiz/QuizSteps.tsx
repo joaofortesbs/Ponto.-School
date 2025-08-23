@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { QuizStep } from '@/hooks/useQuizSchoolPower';
 import { CheckCircle2, ArrowRight } from 'lucide-react';
-import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface QuizStepsProps {
   currentStep: QuizStep | undefined;
@@ -18,7 +17,6 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
   progressPercentage,
   onAnswerSelect
 }) => {
-  const isMobile = useIsMobile();
   if (!currentStep) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -41,17 +39,17 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`w-full ${isMobile ? 'max-w-sm mx-4' : 'max-w-5xl'}`}
+      className="w-full max-w-5xl"
     >
       <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden">
-        <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'}`}>
+        <CardContent className="p-8 md:p-12">
           {/* Barra de Progresso Simplificada */}
-          <div className={`${isMobile ? 'mb-6' : 'mb-10'}`}>
+          <div className="mb-10">
             <div className="flex justify-between items-center mb-3">
-              <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-gray-700`}>
+              <span className="text-sm font-semibold text-gray-700">
                 Etapa {currentStep.id} de 4
               </span>
-              <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-orange-600`}>
+              <span className="text-sm font-bold text-orange-600">
                 {Math.round(progressPercentage)}%
               </span>
             </div>
@@ -79,34 +77,34 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className={`text-center ${isMobile ? 'space-y-6' : 'space-y-10'}`}
+            className="text-center space-y-10"
           >
-            <div className={`${isMobile ? 'space-y-3' : 'space-y-4'}`}>
+            <div className="space-y-4">
               <motion.div
                 initial={{ scale: 0.9 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className={`inline-flex items-center ${isMobile ? 'px-3 py-1.5' : 'px-4 py-2'} bg-gradient-to-r from-orange-100 to-orange-50 rounded-full border border-orange-200`}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-100 to-orange-50 rounded-full border border-orange-200"
               >
-                <span className={`text-orange-600 font-semibold ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                <span className="text-orange-600 font-semibold text-sm">
                   Pergunta {currentStep.id}
                 </span>
               </motion.div>
 
-              <h2 className={`${isMobile ? 'text-xl' : 'text-3xl md:text-4xl'} font-bold text-gray-900 leading-tight ${isMobile ? 'max-w-xs' : 'max-w-4xl'} mx-auto`}>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight max-w-4xl mx-auto">
                 {currentStep.question}
               </h2>
             </div>
 
             {/* Opções Redesenhadas */}
-            <div className={`${isMobile ? 'space-y-3 max-w-xs' : 'space-y-4 max-w-3xl'} mx-auto`}>
+            <div className="space-y-4 max-w-3xl mx-auto">
               {currentStep.options.map((option, index) => (
                 <motion.div
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 + 0.4 }}
-                  whileHover={{ scale: isMobile ? 1.01 : 1.02, x: isMobile ? 4 : 8 }}
+                  whileHover={{ scale: 1.02, x: 8 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button
@@ -115,14 +113,14 @@ export const QuizSteps: React.FC<QuizStepsProps> = ({
                       onAnswerSelect(currentStep.id, option);
                     }}
                     variant="outline"
-                    size={isMobile ? "default" : "lg"}
-                    className={`group w-full ${isMobile ? 'p-4' : 'p-6'} text-left ${isMobile ? 'text-sm' : 'text-lg'} font-medium border-2 border-gray-200 hover:border-orange-400 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-25 transition-all duration-300 ${isMobile ? 'rounded-xl' : 'rounded-2xl'} bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl`}
+                    size="lg"
+                    className="group w-full p-6 text-left text-lg font-medium border-2 border-gray-200 hover:border-orange-400 hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-25 transition-all duration-300 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-gray-800 group-hover:text-orange-700 transition-colors duration-300">
                         {option}
                       </span>
-                      <ArrowRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-gray-400 group-hover:text-orange-500 transform group-hover:translate-x-1 transition-all duration-300`} />
+                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-orange-500 transform group-hover:translate-x-1 transition-all duration-300" />
                     </div>
                   </Button>
                 </motion.div>
