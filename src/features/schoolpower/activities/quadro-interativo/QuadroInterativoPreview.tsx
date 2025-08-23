@@ -231,19 +231,41 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {previewData.materials.split('\n').filter(m => m.trim()).map((material, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {material.trim()}
+                {(() => {
+                  // Verificar se materials é uma string
+                  if (typeof previewData.materials === 'string') {
+                    const materialsList = previewData.materials.split('\n').filter(m => m.trim());
+                    if (materialsList.length > 0) {
+                      return materialsList.map((material, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
+                          <p className="text-gray-700 dark:text-gray-300">
+                            {material.trim()}
+                          </p>
+                        </div>
+                      ));
+                    }
+                  }
+                  // Se materials é um array
+                  else if (Array.isArray(previewData.materials)) {
+                    if (previewData.materials.length > 0) {
+                      return previewData.materials.map((material, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-400 rounded-full flex-shrink-0"></div>
+                          <p className="text-gray-700 dark:text-gray-300">
+                            {typeof material === 'string' ? material : String(material)}
+                          </p>
+                        </div>
+                      ));
+                    }
+                  }
+                  // Fallback para materiais não especificados
+                  return (
+                    <p className="text-gray-500 dark:text-gray-400 italic">
+                      Materiais não especificados
                     </p>
-                  </div>
-                ))}
-                {!previewData.materials.trim() && (
-                  <p className="text-gray-500 dark:text-gray-400 italic">
-                    Materiais não especificados
-                  </p>
-                )}
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>

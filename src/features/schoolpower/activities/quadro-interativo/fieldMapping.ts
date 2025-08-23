@@ -1,4 +1,3 @@
-
 export interface QuadroInterativoFields {
   recursos: string;
   conteudo: string;
@@ -173,7 +172,14 @@ export const quadroInterativoFieldMappingUpdate: Record<keyof QuadroInterativoFi
   avaliacao: ['Avaliação', 'Critérios', 'Critérios de Avaliação'],
   title: ['title', 'Título'],
   description: ['description', 'Descrição'],
-  materials: ['materials', 'Materiais', 'Recursos'],
+  materials: [
+    'materials',
+    'material',
+    'materiais',
+    'materiaisNecessarios',
+    'recursos',
+    'recursos_necessarios'
+  ],
   instructions: ['instructions', 'Instruções', 'Metodologia'],
   evaluation: ['evaluation', 'Avaliação', 'Critérios de Avaliação'],
   timeLimit: ['timeLimit', 'Tempo', 'Duração'],
@@ -193,7 +199,7 @@ export function mapQuadroInterativoFields(actionPlanData: any): any {
     objectives: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.objectives) || actionPlanData.description || '',
     difficultyLevel: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.difficultyLevel) || 'Ex: Básico, Intermediário, Avançado',
     quadroInterativoCampoEspecifico: getFieldValue(customFields, quadroInterativoFieldMappingUpdate.quadroInterativoCampoEspecifico) || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
-    materials: getFieldValue(customFields, ['Materiais', 'Recursos']),
+    materials: normalizeMaterials(getFieldValue(customFields, ['Materiais', 'Recursos'])),
     instructions: getFieldValue(customFields, ['Instruções', 'Metodologia']),
     evaluation: getFieldValue(customFields, ['Avaliação', 'Critérios de Avaliação']),
     timeLimit: getFieldValue(customFields, ['Tempo', 'Duração']),
@@ -254,7 +260,8 @@ export function prepareQuadroInterativoDataForModal(activity: any) {
       difficultyLevel: isValidValue(customFields['Nível de Dificuldade']) ? sanitizeText(customFields['Nível de Dificuldade']) : 'Ex: Básico, Intermediário, Avançado',
       quadroInterativoCampoEspecifico: isValidValue(customFields['Tipo de Interação']) ? sanitizeText(customFields['Tipo de Interação']) : 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
       bnccCompetencias: isValidValue(customFields['BNCC / Competências']) ? sanitizeText(customFields['BNCC / Competências']) : '',
-      publico: isValidValue(customFields['Público-alvo']) ? sanitizeText(customFields['Público-alvo']) : ''
+      publico: isValidValue(customFields['Público-alvo']) ? sanitizeText(customFields['Público-alvo']) : '',
+      materials: normalizeMaterials(customFields['Materiais'] || customFields['Recursos'])
     };
 
     // Validar que nenhum campo contém valores problemáticos
@@ -279,7 +286,25 @@ export function prepareQuadroInterativoDataForModal(activity: any) {
       difficultyLevel: 'Ex: Básico, Intermediário, Avançado',
       quadroInterativoCampoEspecifico: 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
       bnccCompetencias: '',
-      publico: ''
+      publico: '',
+      materials: ''
     };
   }
 }
+
+// Função para normalizar o campo materials
+export const normalizeMaterials = (materials: any): string => {
+  if (!materials) return '';
+
+  if (typeof materials === 'string') {
+    return materials;
+  }
+
+  if (Array.isArray(materials)) {
+    return materials.map(item =>
+      typeof item === 'string' ? item : String(item)
+    ).join('\n');
+  }
+
+  return String(materials);
+};

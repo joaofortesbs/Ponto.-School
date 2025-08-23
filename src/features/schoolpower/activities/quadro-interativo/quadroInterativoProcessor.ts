@@ -1,6 +1,5 @@
-
-
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { fieldMapping, normalizeMaterials } from './fieldMapping';
 
 export interface QuadroInterativoFields {
   [key: string]: string;
@@ -25,7 +24,7 @@ export interface QuadroInterativoActivity {
 function validateQuadroInterativoData(data: any): boolean {
   try {
     if (!data || typeof data !== 'object') return false;
-    
+
     // Verificar campos essenciais
     const requiredFields = ['title', 'description'];
     for (const field of requiredFields) {
@@ -34,7 +33,7 @@ function validateQuadroInterativoData(data: any): boolean {
         return false;
       }
     }
-    
+
     return true;
   } catch (error) {
     console.error('❌ Erro na validação dos dados do Quadro Interativo:', error);
@@ -47,7 +46,7 @@ function validateQuadroInterativoData(data: any): boolean {
  */
 function sanitizeJsonString(str: string): string {
   if (!str || typeof str !== 'string') return '';
-  
+
   return str
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
@@ -71,7 +70,7 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
   }
 
   const customFields = activity.customFields || {};
-  
+
   // Sanitizar dados
   const sanitizedActivity = {
     ...activity,
@@ -102,10 +101,10 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     theme: sanitizeJsonString(consolidatedData.title) || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
     objectives: safeCustomFields['Objetivos de Aprendizagem'] || '',
     difficultyLevel: safeCustomFields['Nível de Dificuldade'] || 'Ex: Básico, Intermediário, Avançado',
-    
+
     // Campo específico do Quadro Interativo
     quadroInterativoCampoEspecifico: safeCustomFields['Tipo de Interação'] || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
-    
+
     // Campos adicionais
     bnccCompetencias: safeCustomFields['BNCC / Competências'] || '',
     publico: safeCustomFields['Público-alvo'] || '',
@@ -135,18 +134,12 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
     tituloTemaAssunto: '',
     anoSerie: '',
     disciplina: '',
-    publicoAlvo: '',
-    objetivosAprendizagem: '',
-    quantidadeAulas: '',
-    quantidadeDiagnosticos: '',
-    quantidadeAvaliacoes: '',
-    cronograma: '',
-    materials: '',
+    materials: normalizeMaterials(consolidatedData.materials),
     instructions: '',
     evaluation: '',
     timeLimit: '',
     context: '',
-    
+
     // Campos extras que podem estar presentes
     ...safeCustomFields
   };
@@ -162,46 +155,46 @@ export function prepareQuadroInterativoDataForModal(activity: any): ActivityForm
   console.log('🔄 Preparando dados do Quadro Interativo para modal:', activity);
 
   const customFields = activity.customFields || {};
-  
+
   return {
     title: activity.personalizedTitle || activity.title || '',
     description: activity.personalizedDescription || activity.description || '',
-    
+
     // Campos específicos do Quadro Interativo
-    subject: customFields['Disciplina / Área de conhecimento'] || 
-             customFields['disciplina'] || 
-             customFields['Disciplina'] || 
+    subject: customFields['Disciplina / Área de conhecimento'] ||
+             customFields['disciplina'] ||
+             customFields['Disciplina'] ||
              'Matemática',
-             
-    schoolYear: customFields['Ano / Série'] || 
-                customFields['anoSerie'] || 
-                customFields['Ano de Escolaridade'] || 
+
+    schoolYear: customFields['Ano / Série'] ||
+                customFields['anoSerie'] ||
+                customFields['Ano de Escolaridade'] ||
                 '6º Ano',
-                
-    theme: customFields['Tema ou Assunto da aula'] || 
-           customFields['tema'] || 
-           customFields['Tema'] || 
-           activity.title || 
+
+    theme: customFields['Tema ou Assunto da aula'] ||
+           customFields['tema'] ||
+           customFields['Tema'] ||
+           activity.title ||
            'Tema da Aula',
-           
-    objectives: customFields['Objetivo de aprendizagem da aula'] || 
-                customFields['objetivos'] || 
-                customFields['Objetivos'] || 
-                activity.description || 
+
+    objectives: customFields['Objetivo de aprendizagem da aula'] ||
+                customFields['objetivos'] ||
+                customFields['Objetivos'] ||
+                activity.description ||
                 'Objetivos de aprendizagem',
-                
-    difficultyLevel: customFields['Nível de Dificuldade'] || 
-                     customFields['nivelDificuldade'] || 
-                     customFields['dificuldade'] || 
+
+    difficultyLevel: customFields['Nível de Dificuldade'] ||
+                     customFields['nivelDificuldade'] ||
+                     customFields['dificuldade'] ||
                      'Intermediário',
-                     
-    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] || 
-                                    customFields['atividadeMostrada'] || 
-                                    customFields['quadroInterativoCampoEspecifico'] || 
+
+    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
+                                    customFields['atividadeMostrada'] ||
+                                    customFields['quadroInterativoCampoEspecifico'] ||
                                     'Atividade interativa no quadro',
 
     // Campos opcionais
-    materials: customFields['Materiais Necessários'] || customFields['materiais'] || '',
+    materials: normalizeMaterials(customFields['Materiais Necessários'] || customFields['materiais'] || ''),
     instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
     evaluation: customFields['Critérios de Avaliação'] || customFields['avaliacao'] || '',
     timeLimit: customFields['Tempo Estimado'] || customFields['tempoLimite'] || '45 minutos',
@@ -244,7 +237,7 @@ export function prepareQuadroInterativoDataForModal(activity: any): ActivityForm
  * Valida se uma atividade é do tipo Quadro Interativo
  */
 export function isQuadroInterativoActivity(activity: any): activity is QuadroInterativoActivity {
-  return activity && 
+  return activity &&
          activity.id === 'quadro-interativo' &&
          typeof activity.title === 'string' &&
          typeof activity.description === 'string' &&
@@ -282,7 +275,7 @@ export function extractQuadroInterativoData(activity: any): QuadroInterativoCust
   // Campos obrigatórios para Quadro Interativo
   const requiredFields = [
     'Disciplina / Área de conhecimento',
-    'Ano / Série', 
+    'Ano / Série',
     'Tema ou Assunto da aula',
     'Objetivo de aprendizagem da aula',
     'Nível de Dificuldade',
