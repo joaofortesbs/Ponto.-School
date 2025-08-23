@@ -80,13 +80,14 @@ export const activityRegistry: ActivityRegistryType = {
   // Adicionar quadro-interativo à atividade
   "quadro-interativo": {
     editor: lazy(() => import("./quadro-interativo/EditActivity")),
-    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview")),
+    preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreviewview")),
   },
 };
 
 export const activityProcessors = {
+  'lista-exercicios': null, // Implementar se necessário
+  'plano-aula': PlanoAulaProcessor.processData,
   'sequencia-didatica': processSequenciaDidaticaData,
-  'plano-aula': PlanoAulaProcessor,
   'quadro-interativo': processQuadroInterativoData
 };
 

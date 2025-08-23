@@ -1,13 +1,13 @@
-
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface TopHeaderProps {
   isDarkTheme?: boolean;
+  isQuizMode?: boolean;
 }
 
-const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true }) => {
+const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true, isQuizMode = false }) => {
   const flipWords = [
     "estudar",
     "planejar",
@@ -87,12 +87,12 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true }) => {
             border: "3px solid transparent",
             backgroundImage: `
               linear-gradient(#111827, #111827),
-              linear-gradient(45deg, 
-                #f97316 0%, 
-                #fb923c 20%, 
-                #fdba74 40%, 
-                #fbbf24 60%, 
-                #fb923c 80%, 
+              linear-gradient(45deg,
+                #f97316 0%,
+                #fb923c 20%,
+                #fdba74 40%,
+                #fbbf24 60%,
+                #fb923c 80%,
                 #f97316 100%
               )
             `,
@@ -174,7 +174,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ isDarkTheme = true }) => {
                 : "bg-gradient-to-r from-gray-900 via-black to-gray-900 bg-clip-text text-transparent"
             }
           >
-            {greeting}, João!
+            {isQuizMode ? "Bom dia, professor!" : `Bom dia, João!`}
           </span>
         </div>
 

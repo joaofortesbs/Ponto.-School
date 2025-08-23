@@ -53,6 +53,7 @@ localPort = 8081
 externalPort = 8081
 
 [workflows]
+runButton = "Run Quiz App"
 
 [[workflows.workflow]]
 name = "Run App"

@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -141,26 +140,58 @@ const ProfileOptionBubble = ({ profile, onClick, index }: any) => {
 };
 
 interface ProfileSelectorProps {
-  isDarkTheme?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
+  onProfileSelect?: (profileId: string) => void;
+  selectedProfile?: string;
+  isQuizMode?: boolean;
 }
 
+const GreetingMessage = ({ isQuizMode }: { isQuizMode?: boolean }) => {
+  const currentTime = new Date().getHours();
+  let greeting = '';
+
+  if (currentTime < 12) {
+    greeting = 'Bom dia';
+  } else if (currentTime < 18) {
+    greeting = 'Boa tarde';
+  } else {
+    greeting = 'Boa noite';
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      className="text-center mb-8"
+    >
+      <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+        {isQuizMode ? 'Bom dia, professor!' : `${greeting}, Professor!`}
+      </h1>
+      <p className="text-white/80 text-lg">
+        Vamos criar algo incrível hoje?
+      </p>
+    </motion.div>
+  );
+};
+
+
 // Componente do Ícone Central
-const ProfileSelector: React.FC<ProfileSelectorProps> = ({ isDarkTheme, onExpandedChange }) => {
+export function ProfileSelector({ onProfileSelect, selectedProfile, isQuizMode }: ProfileSelectorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState(profiles[0]);
+  const [currentProfile, setCurrentProfile] = useState(profiles[0]);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAvatarClick = () => {
     const newExpandedState = !isExpanded;
     setIsExpanded(newExpandedState);
-    onExpandedChange?.(newExpandedState);
   };
 
   const handleProfileSelect = (profile: any) => {
-    setSelectedProfile(profile);
+    setCurrentProfile(profile);
     setIsExpanded(false);
-    onExpandedChange?.(false);
+    if (onProfileSelect) {
+      onProfileSelect(profile.id);
+    }
   };
 
   const handleMouseEnter = () => {
@@ -200,17 +231,13 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ isDarkTheme, onExpand
           }}
         >
           <div className="text-white pointer-events-none">
-            {selectedProfile.icon || <StudentIcon />}
+            {currentProfile.icon || <StudentIcon />}
           </div>
         </div>
 
         <motion.div
           animate={{ rotate: isExpanded ? 45 : 0 }}
-          className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border-2 transition-all duration-200 ${
-            isDarkTheme
-              ? "bg-white border-orange-200"
-              : "bg-gray-100 border-orange-300"
-          }`}
+          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full shadow-md flex items-center justify-center border-2 transition-all duration-200 bg-white border-orange-200"
           style={{
             zIndex: 1001,
             cursor: "pointer",
@@ -240,7 +267,7 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ isDarkTheme, onExpand
             style={{ zIndex: 999 }}
           >
             {profiles
-              .filter((profile) => profile.id !== selectedProfile.id)
+              .filter((profile) => profile.id !== currentProfile.id)
               .map((profile, index) => (
                 <div key={profile.id} className="pointer-events-auto">
                   <ProfileOptionBubble
@@ -264,7 +291,6 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ isDarkTheme, onExpand
             style={{ cursor: "default" }}
             onClick={() => {
               setIsExpanded(false);
-              onExpandedChange?.(false);
             }}
           />
         )}
