@@ -18,6 +18,8 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
+import QuadroInterativoGenerator from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoGenerator';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -481,10 +483,41 @@ const EditActivityModal = ({
 
   // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
-    console.log(`Simulando geração de conteúdo para tipo: ${type} com dados:`, data);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (type === 'plano-aula') {
+    console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
+    
+    if (type === 'quadro-interativo') {
+      const generator = new QuadroInterativoGenerator();
+      const result = await generator.generateQuadroInterativoContent({
+        subject: data.subject,
+        schoolYear: data.schoolYear,
+        theme: data.theme,
+        objectives: data.objectives,
+        difficultyLevel: data.difficultyLevel,
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
+      });
+      
+      // Salvar conteúdo gerado
+      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
+      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
+        success: true,
+        data: {
+          ...data,
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      }));
+      
+      return {
+        success: true,
+        data: {
+          ...data,
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'plano-aula') {
       return {
         success: true,
         data: {
@@ -1946,8 +1979,8 @@ const EditActivityModal = ({
                         data={generatedContent || formData}
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
-                      <ActivityPreview
-                        content={generatedContent || formData}
+                      <QuadroInterativoPreview
+                        data={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (

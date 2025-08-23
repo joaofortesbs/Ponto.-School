@@ -2,7 +2,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
   Monitor, 
   Target, 
@@ -11,7 +10,8 @@ import {
   Users, 
   CheckCircle,
   PlayCircle,
-  Settings
+  Settings,
+  Lightbulb
 } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
@@ -37,7 +37,12 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     timeLimit: data.timeLimit || '45 minutos',
     instructions: data.instructions || 'Instruções a serem definidas',
     evaluation: data.evaluation || 'Critérios de avaliação a serem definidos',
-    context: data.context || 'Contexto de aplicação geral'
+    context: data.context || 'Contexto de aplicação geral',
+    // Dados gerados pela IA
+    cardContent: data.cardContent || {
+      title: 'Conteúdo do Quadro',
+      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+    }
   };
 
   const getDifficultyColor = (level: string) => {
@@ -126,6 +131,41 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                   <p className="text-gray-900 dark:text-white font-medium">
                     {previewData.timeLimit}
                   </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card de Quadro Visível - PRINCIPAL */}
+        <Card className="shadow-lg border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-xl text-blue-700 dark:text-blue-300">
+              <Lightbulb className="h-6 w-6" />
+              Card de Quadro Visível
+            </CardTitle>
+            <p className="text-blue-600 dark:text-blue-400 text-sm">
+              Conteúdo gerado pela IA para exibição no quadro interativo
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-inner border border-blue-200 dark:border-blue-700">
+              <div className="text-center space-y-4">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                  {previewData.cardContent.title}
+                </h3>
+                <div className="w-16 h-1 bg-blue-500 mx-auto rounded-full"></div>
+                <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto">
+                  {previewData.cardContent.text}
+                </p>
+              </div>
+              
+              {/* Indicador de IA */}
+              <div className="mt-6 pt-4 border-t border-blue-200 dark:border-blue-700">
+                <div className="flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="font-medium">Conteúdo gerado por IA</span>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                 </div>
               </div>
             </div>
