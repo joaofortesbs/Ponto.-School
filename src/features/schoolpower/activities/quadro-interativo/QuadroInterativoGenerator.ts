@@ -117,17 +117,21 @@ Retorne APENAS o JSON, sem comentários adicionais.
       const parsed = JSON.parse(cleanedResponse);
 
       const result = {
-        title: parsed.title || 'Conteúdo do Quadro',
-        text: parsed.text || 'Conteúdo educativo gerado pela IA.'
+        title: parsed.title || parsed.titulo || 'Conteúdo do Quadro',
+        text: parsed.text || parsed.texto || parsed.content || parsed.conteudo || 'Conteúdo educativo gerado pela IA.'
       };
 
       console.log('✅ Resposta parseada:', result);
       return result;
     } catch (error) {
       console.error('❌ Erro ao parsear resposta:', error);
+      
+      // Fallback: tentar extrair conteúdo textual da resposta
+      const fallbackText = response.length > 50 ? response.substring(0, 150) + '...' : response;
+      
       return {
         title: 'Conteúdo do Quadro',
-        text: 'Erro ao processar conteúdo gerado pela IA.'
+        text: fallbackText || 'Erro ao processar conteúdo gerado pela IA.'
       };
     }
   }

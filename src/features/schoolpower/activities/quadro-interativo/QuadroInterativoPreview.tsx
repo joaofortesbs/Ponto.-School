@@ -1,17 +1,19 @@
+
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Lightbulb } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
-  previewData: any;
+  data: any;
+  activityData?: any;
 }
 
-export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ previewData }) => {
-  console.log('🎯 QuadroInterativoPreview - Dados recebidos:', previewData);
+export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ data, activityData }) => {
+  console.log('🎯 QuadroInterativoPreview - Dados recebidos:', data);
 
   // Garantir que temos os dados necessários
-  const cardTitle = previewData?.cardContent?.title || previewData?.title || 'Conteúdo do Quadro';
-  const cardText = previewData?.cardContent?.text || previewData?.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.';
+  const cardTitle = data?.cardContent?.title || data?.title || 'Conteúdo do Quadro';
+  const cardText = data?.cardContent?.text || data?.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.';
 
   console.log('📝 Dados do card:', { cardTitle, cardText });
 

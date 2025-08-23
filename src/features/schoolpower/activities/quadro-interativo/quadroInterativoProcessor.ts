@@ -45,13 +45,13 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
   console.log('🔄 Processando dados do Quadro Interativo:', formData);
 
   try {
-    // Extrair dados dos campos do formulário
-    const disciplina = formData.disciplina || formData['Disciplina / Área de conhecimento'] || '';
-    const anoSerie = formData.anoSerie || formData['Ano / Série'] || '';
-    const tema = formData.tema || formData['Tema ou Assunto da aula'] || '';
-    const objetivos = formData.objetivos || formData['Objetivo de aprendizagem da aula'] || '';
-    const nivelDificuldade = formData.nivelDificuldade || formData['Nível de Dificuldade'] || '';
-    const atividadeMostrada = formData.atividadeMostrada || formData['Atividade mostrada'] || '';
+    // Extrair dados dos campos do formulário com múltiplas possibilidades
+    const disciplina = formData.disciplina || formData.subject || formData['Disciplina / Área de conhecimento'] || '';
+    const anoSerie = formData.anoSerie || formData.schoolYear || formData['Ano / Série'] || '';
+    const tema = formData.tema || formData.theme || formData.title || formData['Tema ou Assunto da aula'] || '';
+    const objetivos = formData.objetivos || formData.objectives || formData.description || formData['Objetivo de aprendizagem da aula'] || '';
+    const nivelDificuldade = formData.nivelDificuldade || formData.difficultyLevel || formData['Nível de Dificuldade'] || '';
+    const atividadeMostrada = formData.atividadeMostrada || formData.quadroInterativoCampoEspecifico || formData['Atividade mostrada'] || '';
 
     console.log('📊 Dados extraídos:', {
       disciplina, anoSerie, tema, objetivos, nivelDificuldade, atividadeMostrada
