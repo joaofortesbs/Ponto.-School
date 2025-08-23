@@ -496,27 +496,28 @@ const EditActivityModal = ({
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       });
 
-      // Salvar conteúdo gerado
-      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
-      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
-        success: true,
-        data: {
-          ...data,
-          ...result,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      }));
+      console.log('🖼️ Resultado da geração do Quadro Interativo:', result);
 
-      return {
+      // Estrutura consistente para retorno
+      const finalResult = {
         success: true,
         data: {
           ...data,
-          ...result,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
+          title: result.title,
+          description: result.description,
+          cardContent: result.cardContent,
+          generatedAt: result.generatedAt,
+          isGeneratedByAI: result.isGeneratedByAI
         }
       };
+
+      // Salvar conteúdo gerado de forma consistente
+      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
+      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify(finalResult));
+
+      console.log('💾 Dados salvos no localStorage para visualização:', finalResult);
+
+      return finalResult;
     } else if (type === 'plano-aula') {
       return {
         success: true,

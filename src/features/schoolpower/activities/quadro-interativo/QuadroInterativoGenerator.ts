@@ -37,22 +37,27 @@ export class QuadroInterativoGenerator {
       const response = await this.callGeminiAPI(prompt);
       const parsedContent = this.parseGeminiResponse(response);
       
+      // Garantir que o resultado tenha a estrutura correta
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
-        cardContent: parsedContent,
+        cardContent: {
+          title: parsedContent.title || data.theme || 'Conteúdo Educativo',
+          text: parsedContent.text || `Explore o tema "${data.theme}" de forma interativa. ${data.objectives || 'Desenvolva habilidades através desta atividade educativa.'}`
+        },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
       };
 
       console.log('✅ Conteúdo do Quadro Interativo gerado com sucesso:', result);
       geminiLogger.logResponse(result, Date.now());
+      
       return result;
     } catch (error) {
       console.error('❌ Erro ao gerar conteúdo do Quadro Interativo:', error);
       geminiLogger.logError(error as Error, { data });
       
-      // Retornar conteúdo fallback em caso de erro
+      // Retornar conteúdo fallback estruturado em caso de erro
       return {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
@@ -88,8 +93,8 @@ Sua tarefa é gerar conteúdo educativo para ser exibido em um quadro interativo
 Retorne APENAS um objeto JSON no seguinte formato:
 
 {
-  "title": "Título atrativo e educativo para o conteúdo do quadro (máximo 50 caracteres)",
-  "text": "Conteúdo educativo principal que será exibido no quadro. Deve ser informativo, claro e adequado para ${data.schoolYear}. Inclua conceitos-chave sobre ${data.theme} de forma didática e envolvente (máximo 200 caracteres)."
+  "title": "Título atrativo e educativo para o conteúdo do quadro (máximo 60 caracteres)",
+  "text": "Conteúdo educativo principal que será exibido no quadro. Deve ser informativo, claro e adequado para ${data.schoolYear}. Inclua conceitos-chave sobre ${data.theme} de forma didática e envolvente (máximo 250 caracteres)."
 }
 
 IMPORTANTE: 
@@ -98,6 +103,7 @@ IMPORTANTE:
 - Use linguagem apropriada para o nível de ensino
 - Seja conciso mas informativo
 - Retorne APENAS o JSON, sem explicações adicionais
+- Certifique-se de que o JSON seja válido e bem formatado
 `;
   }
 
@@ -153,31 +159,42 @@ IMPORTANTE:
 
       console.log('📝 Texto bruto da resposta:', responseText);
 
+      // Limpar o texto da resposta
+      let cleanedText = responseText.trim();
+      
+      // Remover markdown se existir
+      cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      cleanedText = cleanedText.trim();
+
       // Tentar extrair JSON da resposta
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsedContent = JSON.parse(jsonMatch[0]);
-        console.log('✅ Conteúdo JSON parseado:', parsedContent);
-        
-        return {
-          title: String(parsedContent.title || 'Conteúdo Educativo'),
-          text: String(parsedContent.text || 'Conteúdo gerado pela IA.')
-        };
+        try {
+          const parsedContent = JSON.parse(jsonMatch[0]);
+          console.log('✅ Conteúdo JSON parseado com sucesso:', parsedContent);
+          
+          return {
+            title: String(parsedContent.title || 'Conteúdo Educativo').substring(0, 60),
+            text: String(parsedContent.text || 'Conteúdo gerado pela IA.').substring(0, 250)
+          };
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear JSON:', parseError);
+        }
       }
 
-      // Se não conseguir parsear JSON, tentar extrair título e texto do texto bruto
+      // Fallback: tentar extrair título e texto do texto bruto
       const lines = responseText.split('\n').filter(line => line.trim());
       if (lines.length >= 2) {
         return {
-          title: lines[0].replace(/['"*#-]/g, '').trim().substring(0, 50),
-          text: lines.slice(1).join(' ').replace(/['"*#-]/g, '').trim().substring(0, 200)
+          title: lines[0].replace(/['"*#-]/g, '').trim().substring(0, 60),
+          text: lines.slice(1).join(' ').replace(/['"*#-]/g, '').trim().substring(0, 250)
         };
       }
 
-      // Fallback
+      // Fallback final
       return {
         title: 'Conteúdo Educativo',
-        text: responseText.substring(0, 200)
+        text: responseText.substring(0, 250)
       };
 
     } catch (error) {
@@ -189,3 +206,5 @@ IMPORTANTE:
     }
   }
 }
+
+export default QuadroInterativoGenerator;
