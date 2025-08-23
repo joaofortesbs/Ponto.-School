@@ -493,19 +493,42 @@ const EditActivityModal = ({
 
         console.log('🎯 Gerando conteúdo para Quadro Interativo:', data);
 
+        // Preparar dados para o gerador
+        const generationData = {
+          disciplina: data.subject,
+          anoSerie: data.schoolYear,
+          tema: data.theme || data.title,
+          objetivos: data.objectives || data.description,
+          nivelDificuldade: data.difficultyLevel,
+          atividadeMostrada: data.quadroInterativoCampoEspecifico,
+          theme: data.theme || data.title,
+          objectives: data.objectives || data.description
+        };
+
         const generator = new QuadroInterativoGenerator();
-        const generatedContent = await generator.generateQuadroInterativoContent(data);
+        const generatedContent = await generator.generateQuadroInterativoContent(generationData);
 
         console.log('✅ Conteúdo gerado:', generatedContent);
 
+        // Garantir que o conteúdo esteja na estrutura correta
+        const result = {
+          ...generatedContent,
+          title: generatedContent.title || data.theme || 'Quadro Interativo',
+          description: generatedContent.description || data.objectives || 'Atividade de quadro interativo',
+          cardContent: generatedContent.cardContent || {
+            title: data.theme || 'Conteúdo do Quadro',
+            text: data.objectives || 'Conteúdo educativo gerado pela IA.'
+          }
+        };
+
         return {
           success: true,
-          data: generatedContent
+          data: result
         };
       } catch (error) {
         console.error('❌ Erro ao gerar Quadro Interativo:', error);
 
-        // Fallback em caso de erro
+        // Fallback melhorado em caso de erro
         const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
         const processedData = processQuadroInterativoData(data);
 
@@ -1969,6 +1992,7 @@ const EditActivityModal = ({
                     ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
                         data={generatedContent || formData}
+                        content={generatedContent}
                         activityData={activity}
                       />
                     ) : (

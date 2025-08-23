@@ -34,7 +34,7 @@ export class QuadroInterativoGenerator {
 
     try {
       const prompt = this.buildPrompt(data);
-      console.log('📝 Prompt construído para Gemini');
+      console.log('📝 Prompt construído para Gemini:', prompt.substring(0, 200) + '...');
 
       const response = await this.geminiClient.generate({
         prompt,
@@ -45,14 +45,16 @@ export class QuadroInterativoGenerator {
       });
 
       if (!response.success) {
-        throw new Error(`Erro na API Gemini: ${response.error}`);
+        console.error('❌ Erro na resposta do Gemini:', response.error);
+        // Retornar conteúdo de fallback em caso de erro da API
+        return this.createFallbackContent(data);
       }
 
       const parsedContent = this.parseGeminiResponse(response.result);
 
       const result: QuadroInterativoContent = {
-        title: data.tema || 'Quadro Interativo',
-        description: data.objetivos || 'Atividade de quadro interativo',
+        title: data.tema || data.theme || 'Quadro Interativo',
+        description: data.objetivos || data.objectives || 'Atividade de quadro interativo',
         cardContent: parsedContent,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true
@@ -64,8 +66,28 @@ export class QuadroInterativoGenerator {
     } catch (error) {
       console.error('❌ Erro ao gerar conteúdo:', error);
       geminiLogger.logError(error as Error, { data });
-      throw new Error(`Erro ao gerar conteúdo do Quadro Interativo: ${error.message}`);
+      
+      // Retornar conteúdo de fallback em vez de lançar erro
+      return this.createFallbackContent(data);
     }
+  }
+
+  private createFallbackContent(data: QuadroInterativoData): QuadroInterativoContent {
+    console.log('🔧 Criando conteúdo de fallback para:', data);
+    
+    const tema = data.tema || data.theme || 'Tema da Aula';
+    const objetivos = data.objetivos || data.objectives || 'Objetivos de aprendizagem';
+    
+    return {
+      title: tema,
+      description: objetivos,
+      cardContent: {
+        title: tema,
+        text: `Conteúdo educativo sobre ${tema}. ${objetivos}`
+      },
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false
+    };
   }
 
   private buildPrompt(data: QuadroInterativoData): string {

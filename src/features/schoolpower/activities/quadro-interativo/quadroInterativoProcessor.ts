@@ -57,22 +57,36 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
       disciplina, anoSerie, tema, objetivos, nivelDificuldade, atividadeMostrada
     });
 
-    // Se já temos dados gerados pela IA, usar eles
-    if (formData.cardContent && formData.cardContent.title && formData.cardContent.text) {
-      console.log('✅ Usando dados já gerados pela IA');
+    // Verificar se temos dados gerados pela IA em diferentes estruturas
+    let cardContent = null;
+    
+    if (formData.cardContent && (formData.cardContent.title || formData.cardContent.text)) {
+      cardContent = formData.cardContent;
+      console.log('✅ Usando cardContent existente');
+    } else if (formData.data && formData.data.cardContent) {
+      cardContent = formData.data.cardContent;
+      console.log('✅ Usando cardContent de formData.data');
+    } else if (formData.generatedContent && formData.generatedContent.cardContent) {
+      cardContent = formData.generatedContent.cardContent;
+      console.log('✅ Usando cardContent de generatedContent');
+    }
+
+    // Se temos conteúdo gerado, usar ele
+    if (cardContent && (cardContent.title || cardContent.text)) {
+      console.log('✅ Usando dados já gerados pela IA:', cardContent);
       return {
-        title: tema || 'Quadro Interativo',
-        description: objetivos || 'Atividade de quadro interativo',
+        title: tema || cardContent.title || 'Quadro Interativo',
+        description: objetivos || cardContent.text || 'Atividade de quadro interativo',
         cardContent: {
-          title: formData.cardContent.title,
-          text: formData.cardContent.text
+          title: cardContent.title || tema || 'Conteúdo do Quadro',
+          text: cardContent.text || objetivos || 'Conteúdo educativo gerado pela IA.'
         },
         generatedAt: formData.generatedAt || new Date().toISOString(),
-        isGeneratedByAI: formData.isGeneratedByAI || true
+        isGeneratedByAI: formData.isGeneratedByAI !== false
       };
     }
 
-    // Criar estrutura padrão enquanto aguarda geração da IA
+    // Criar estrutura padrão com dados do formulário
     const result: QuadroInterativoResult = {
       title: tema || 'Quadro Interativo',
       description: objetivos || 'Atividade de quadro interativo',
@@ -84,7 +98,7 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
       isGeneratedByAI: false
     };
 
-    console.log('✅ Dados processados:', result);
+    console.log('✅ Dados processados (estrutura padrão):', result);
     geminiLogger.info('quadro_interativo_processor', 'Dados processados com sucesso', result);
 
     return result;

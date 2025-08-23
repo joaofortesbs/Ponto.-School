@@ -5,17 +5,37 @@ import { Lightbulb } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
   data: any;
+  content?: any;
   activityData?: any;
 }
 
-export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ data, activityData }) => {
-  console.log('🎯 QuadroInterativoPreview - Dados recebidos:', data);
+export const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ data, content, activityData }) => {
+  console.log('🎯 QuadroInterativoPreview - Dados recebidos:', { data, content, activityData });
 
-  // Garantir que temos os dados necessários
-  const cardTitle = data?.cardContent?.title || data?.title || 'Conteúdo do Quadro';
-  const cardText = data?.cardContent?.text || data?.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.';
+  // Consolidar dados de múltiplas fontes
+  const consolidatedData = {
+    ...data,
+    ...content,
+    ...activityData
+  };
 
-  console.log('📝 Dados do card:', { cardTitle, cardText });
+  // Garantir que temos os dados necessários com fallbacks robustos
+  const cardTitle = consolidatedData?.cardContent?.title || 
+                   consolidatedData?.title || 
+                   consolidatedData?.theme || 
+                   activityData?.title || 
+                   data?.theme ||
+                   'Conteúdo do Quadro';
+                   
+  const cardText = consolidatedData?.cardContent?.text || 
+                  consolidatedData?.text || 
+                  consolidatedData?.description || 
+                  consolidatedData?.objectives ||
+                  activityData?.description ||
+                  data?.objectives ||
+                  'Conteúdo educativo será exibido aqui após a geração pela IA.';
+
+  console.log('📝 Dados consolidados do card:', { cardTitle, cardText, consolidatedData });
 
   return (
     <div className="space-y-6 p-6">
