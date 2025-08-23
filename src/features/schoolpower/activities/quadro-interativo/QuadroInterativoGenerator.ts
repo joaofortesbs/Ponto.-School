@@ -75,15 +75,19 @@ export class QuadroInterativoGenerator {
   private createFallbackContent(data: QuadroInterativoData): QuadroInterativoContent {
     console.log('🔧 Criando conteúdo de fallback para:', data);
     
-    const tema = data.tema || data.theme || 'Tema da Aula';
-    const objetivos = data.objetivos || data.objectives || 'Objetivos de aprendizagem';
+    const tema = data?.tema || data?.theme || 'Tema da Aula';
+    const objetivos = data?.objetivos || data?.objectives || 'Objetivos de aprendizagem';
+    const disciplina = data?.disciplina || 'Disciplina';
+    const anoSerie = data?.anoSerie || 'Ano/Série';
+    
+    const fallbackText = `Conteúdo educativo sobre ${tema} para ${disciplina} - ${anoSerie}. ${objetivos}`;
     
     return {
       title: tema,
       description: objetivos,
       cardContent: {
         title: tema,
-        text: `Conteúdo educativo sobre ${tema}. ${objetivos}`
+        text: fallbackText
       },
       generatedAt: new Date().toISOString(),
       isGeneratedByAI: false

@@ -452,26 +452,27 @@ const EditActivityModal = ({
              formData.quantidadeDiagnosticos?.trim() &&
              formData.quantidadeAvaliacoes?.trim();
     } else if (activityType === 'quadro-interativo') {
-      const isValid = formData.title.trim() &&
-                     formData.description.trim() &&
-                     formData.subject?.trim() &&
-                     formData.schoolYear?.trim() &&
-                     formData.theme?.trim() &&
-                     formData.objectives?.trim() &&
-                     formData.difficultyLevel?.trim() &&
-                     formData.quadroInterativoCampoEspecifico?.trim();
+      const requiredFields = [
+        { name: 'title', value: formData.title },
+        { name: 'description', value: formData.description },
+        { name: 'subject', value: formData.subject },
+        { name: 'schoolYear', value: formData.schoolYear },
+        { name: 'theme', value: formData.theme },
+        { name: 'objectives', value: formData.objectives },
+        { name: 'difficultyLevel', value: formData.difficultyLevel },
+        { name: 'quadroInterativoCampoEspecifico', value: formData.quadroInterativoCampoEspecifico }
+      ];
 
-      console.log('🔍 Validação do Quadro Interativo:', {
-        title: !!formData.title.trim(),
-        description: !!formData.description.trim(),
-        subject: !!formData.subject?.trim(),
-        schoolYear: !!formData.schoolYear?.trim(),
-        theme: !!formData.theme?.trim(),
-        objectives: !!formData.objectives?.trim(),
-        difficultyLevel: !!formData.difficultyLevel?.trim(),
-        quadroInterativoCampoEspecifico: !!formData.quadroInterativoCampoEspecifico?.trim(),
-        isValid
+      const validation = {};
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        const hasValue = field.value && typeof field.value === 'string' && field.value.trim() !== '';
+        validation[field.name] = hasValue;
+        if (!hasValue) isValid = false;
       });
+
+      console.log('🔍 Validação do Quadro Interativo:', { ...validation, isValid });
 
       return isValid;
     } else {
@@ -487,24 +488,29 @@ const EditActivityModal = ({
 
     if (type === 'quadro-interativo') {
       try {
-        // Importar e usar o gerador de Quadro Interativo
-        const { QuadroInterativoGenerator } = await import('../activities/quadro-interativo/QuadroInterativoGenerator');
-        const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
-
         console.log('🎯 Gerando conteúdo para Quadro Interativo:', data);
 
-        // Preparar dados para o gerador
+        // Validar dados de entrada
+        if (!data || typeof data !== 'object') {
+          throw new Error('Dados inválidos para geração do Quadro Interativo');
+        }
+
+        // Preparar dados para o gerador com validação
         const generationData = {
-          disciplina: data.subject,
-          anoSerie: data.schoolYear,
-          tema: data.theme || data.title,
-          objetivos: data.objectives || data.description,
-          nivelDificuldade: data.difficultyLevel,
-          atividadeMostrada: data.quadroInterativoCampoEspecifico,
-          theme: data.theme || data.title,
-          objectives: data.objectives || data.description
+          disciplina: data.subject || 'Matemática',
+          anoSerie: data.schoolYear || '6º Ano',
+          tema: data.theme || data.title || 'Tema da Aula',
+          objetivos: data.objectives || data.description || 'Objetivos de aprendizagem',
+          nivelDificuldade: data.difficultyLevel || 'Intermediário',
+          atividadeMostrada: data.quadroInterativoCampoEspecifico || 'Atividade interativa',
+          theme: data.theme || data.title || 'Tema da Aula',
+          objectives: data.objectives || data.description || 'Objetivos de aprendizagem'
         };
 
+        console.log('📋 Dados preparados para geração:', generationData);
+
+        // Importar e usar o gerador de Quadro Interativo
+        const { QuadroInterativoGenerator } = await import('../activities/quadro-interativo/QuadroInterativoGenerator');
         const generator = new QuadroInterativoGenerator();
         const generatedContent = await generator.generateQuadroInterativoContent(generationData);
 
@@ -513,12 +519,15 @@ const EditActivityModal = ({
         // Garantir que o conteúdo esteja na estrutura correta
         const result = {
           ...generatedContent,
-          title: generatedContent.title || data.theme || 'Quadro Interativo',
-          description: generatedContent.description || data.objectives || 'Atividade de quadro interativo',
+          title: generatedContent.title || generationData.tema,
+          description: generatedContent.description || generationData.objetivos,
           cardContent: generatedContent.cardContent || {
-            title: data.theme || 'Conteúdo do Quadro',
-            text: data.objectives || 'Conteúdo educativo gerado pela IA.'
-          }
+            title: generationData.tema,
+            text: generationData.objetivos
+          },
+          // Manter dados originais para referência
+          originalData: data,
+          generationData: generationData
         };
 
         return {
@@ -528,14 +537,33 @@ const EditActivityModal = ({
       } catch (error) {
         console.error('❌ Erro ao gerar Quadro Interativo:', error);
 
-        // Fallback melhorado em caso de erro
-        const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
-        const processedData = processQuadroInterativoData(data);
+        // Fallback robusto em caso de erro
+        try {
+          const { processQuadroInterativoData } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+          const processedData = processQuadroInterativoData(data);
 
-        return {
-          success: true,
-          data: processedData
-        };
+          return {
+            success: true,
+            data: processedData
+          };
+        } catch (fallbackError) {
+          console.error('❌ Erro no fallback:', fallbackError);
+          
+          // Último recurso: estrutura mínima válida
+          return {
+            success: true,
+            data: {
+              title: data.theme || data.title || 'Quadro Interativo',
+              description: data.objectives || data.description || 'Atividade de quadro interativo',
+              cardContent: {
+                title: data.theme || data.title || 'Conteúdo do Quadro',
+                text: data.objectives || data.description || 'Conteúdo educativo gerado pela IA.'
+              },
+              generatedAt: new Date().toISOString(),
+              isGeneratedByAI: false
+            }
+          };
+        }
       }
     } else if (type === 'plano-aula') {
       return {
@@ -1994,6 +2022,7 @@ const EditActivityModal = ({
                         data={generatedContent || formData}
                         content={generatedContent}
                         activityData={activity}
+                        previewData={generatedContent || formData}
                       />
                     ) : (
                       <ActivityPreview

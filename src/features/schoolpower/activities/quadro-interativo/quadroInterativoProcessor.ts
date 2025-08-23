@@ -45,6 +45,12 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
   console.log('🔄 Processando dados do Quadro Interativo:', formData);
 
   try {
+    // Verificar se formData é válido
+    if (!formData || typeof formData !== 'object') {
+      console.warn('⚠️ FormData inválido:', formData);
+      return createFallbackResult();
+    }
+
     // Extrair dados dos campos do formulário com múltiplas possibilidades
     const disciplina = formData.disciplina || formData.subject || formData['Disciplina / Área de conhecimento'] || '';
     const anoSerie = formData.anoSerie || formData.schoolYear || formData['Ano / Série'] || '';
@@ -107,17 +113,22 @@ export function processQuadroInterativoData(formData: any): QuadroInterativoResu
     geminiLogger.error('quadro_interativo_processor', 'Erro no processamento', error);
 
     // Retornar estrutura de fallback
-    return {
-      title: 'Quadro Interativo',
-      description: 'Atividade de quadro interativo',
-      cardContent: {
-        title: 'Conteúdo do Quadro',
-        text: 'Erro ao processar dados. Tente novamente.'
-      },
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false
-    };
+    return createFallbackResult();
   }
+}
+
+// Função auxiliar para criar resultado de fallback
+function createFallbackResult(): QuadroInterativoResult {
+  return {
+    title: 'Quadro Interativo',
+    description: 'Atividade de quadro interativo',
+    cardContent: {
+      title: 'Conteúdo do Quadro',
+      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+    },
+    generatedAt: new Date().toISOString(),
+    isGeneratedByAI: false
+  };
 }
 
 export function consolidateQuadroInterativoData(data: any): QuadroInterativoData {
