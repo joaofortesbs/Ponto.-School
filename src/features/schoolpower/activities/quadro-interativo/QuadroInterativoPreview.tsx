@@ -33,7 +33,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           
           return {
             title: title,
-            text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+            text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.'),
+            advancedText: String(generatedContent.cardContent.advancedText || null)
           };
         }
       } catch (error) {
@@ -51,7 +52,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       
       return {
         title: title,
-        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.'),
+        advancedText: String(data.cardContent.advancedText || null)
       };
     }
     
@@ -65,7 +67,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       
       return {
         title: title,
-        text: String(data.text || 'Conteúdo educativo.')
+        text: String(data.text || 'Conteúdo educativo.'),
+        advancedText: String(data.advancedText || null)
       };
     }
     
@@ -79,7 +82,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       
       return {
         title: title,
-        text: String(data.generatedContent.cardContent.text || 'Conteúdo educativo.')
+        text: String(data.generatedContent.cardContent.text || 'Conteúdo educativo.'),
+        advancedText: String(data.generatedContent.cardContent.advancedText || null)
       };
     }
     
@@ -110,7 +114,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     
     return {
       title: fallbackTitle.substring(0, 80),
-      text: fallbackText.substring(0, 500)
+      text: fallbackText.substring(0, 500),
+      advancedText: `Expandindo os conhecimentos sobre ${fallbackTitle.toLowerCase()}, podemos explorar aspectos mais complexos e aplicações avançadas. Este nível de aprofundamento permite conexões interdisciplinares, análise crítica dos conceitos e desenvolvimento de habilidades mais sofisticadas relacionadas ao tema estudado.`.substring(0, 500)
     };
   })();
 
@@ -138,18 +143,62 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           </CardHeader>
           
           <CardContent className="p-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-inner border-2 border-blue-200 dark:border-blue-700">
-              <div className="text-center space-y-6">
-                {/* Título Principal - Conteúdo da IA */}
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-                  {cardContent.title}
-                </h1>
-                
-                {/* Conteúdo Principal - Texto da IA */}
-                <div className="max-w-3xl mx-auto">
-                  <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {cardContent.text}
-                  </p>
+            <div className="space-y-8">
+              {/* Card de Conteúdo Inicial */}
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-inner border-2 border-blue-200 dark:border-blue-700">
+                <div className="text-center space-y-6">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Conteúdo Inicial</span>
+                  </div>
+                  
+                  {/* Título Principal - Conteúdo da IA */}
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                    {cardContent.title}
+                  </h1>
+                  
+                  {/* Conteúdo Principal - Texto da IA */}
+                  <div className="max-w-3xl mx-auto">
+                    <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {cardContent.text}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card de Conteúdo Progressivo/Avançado */}
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-8 shadow-inner border-2 border-indigo-200 dark:border-indigo-700">
+                <div className="text-center space-y-6">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Conteúdo Avançado</span>
+                  </div>
+                  
+                  {/* Título Avançado */}
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                    Aprofundando: {cardContent.title}
+                  </h2>
+                  
+                  {/* Conteúdo Avançado */}
+                  <div className="max-w-3xl mx-auto">
+                    <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {cardContent.advancedText || `Expandindo o conhecimento sobre ${cardContent.title.toLowerCase()}, exploraremos aspectos mais complexos e aplicações práticas. Este conteúdo avançado oferece uma visão aprofundada dos conceitos, incluindo análises críticas, conexões interdisciplinares e desafios mais elaborados para consolidar a aprendizagem de forma significativa e duradoura.`}
+                    </p>
+                  </div>
+                  
+                  {/* Indicadores de Progressão */}
+                  <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-indigo-200 dark:border-indigo-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-indigo-600 dark:text-indigo-400">Nível:</span>
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-indigo-300 rounded-full"></div>
+                      </div>
+                    </div>
+                    <div className="w-px h-4 bg-indigo-200 dark:bg-indigo-700"></div>
+                    <span className="text-sm text-indigo-600 dark:text-indigo-400">Intermediário/Avançado</span>
+                  </div>
                 </div>
               </div>
             </div>
