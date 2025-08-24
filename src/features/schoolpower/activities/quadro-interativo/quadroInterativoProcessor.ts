@@ -96,17 +96,17 @@ export async function prepareQuadroInterativoData(data: any): Promise<any> {
 
     // Construir dados para a IA
     const aiData = {
-      subject: generatedData.customFields?.['Disciplina / Área de conhecimento'] || 
+      subject: generatedData.customFields?.['Disciplina / Área de conhecimento'] ||
               generatedData['Disciplina / Área de conhecimento'] || 'Disciplina',
-      schoolYear: generatedData.customFields?.['Ano / Série'] || 
+      schoolYear: generatedData.customFields?.['Ano / Série'] ||
                  generatedData['Ano / Série'] || 'Ano/Série',
-      theme: generatedData.customFields?.['Tema ou Assunto da aula'] || 
+      theme: generatedData.customFields?.['Tema ou Assunto da aula'] ||
              generatedData['Tema ou Assunto da aula'] || 'Tema da aula',
-      objectives: generatedData.customFields?.['Objetivo de aprendizagem da aula'] || 
+      objectives: generatedData.customFields?.['Objetivo de aprendizagem da aula'] ||
                  generatedData['Objetivo de aprendizagem da aula'] || 'Objetivos',
-      difficultyLevel: generatedData.customFields?.['Nível de Dificuldade'] || 
+      difficultyLevel: generatedData.customFields?.['Nível de Dificuldade'] ||
                       generatedData['Nível de Dificuldade'] || 'Intermediário',
-      quadroInterativoCampoEspecifico: generatedData.customFields?.['Atividade mostrada'] || 
+      quadroInterativoCampoEspecifico: generatedData.customFields?.['Atividade mostrada'] ||
                                       generatedData['Atividade mostrada'] || 'Atividade interativa'
     };
 
