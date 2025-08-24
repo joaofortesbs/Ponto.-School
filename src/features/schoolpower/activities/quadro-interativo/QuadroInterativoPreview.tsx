@@ -19,7 +19,24 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   const cardContent = (() => {
     console.log('🔍 Processando dados para QuadroInterativoPreview:', data);
     
-    // Prioridade 1: Se há conteúdo gerado pela IA com cardContent
+    // Prioridade 1: Verificar se há conteúdo gerado pela IA salvo
+    if (data?.customFields?.generatedContent) {
+      console.log('🤖 Tentando usar conteúdo gerado pela IA salvo');
+      try {
+        const generatedContent = JSON.parse(data.customFields.generatedContent);
+        if (generatedContent?.cardContent) {
+          console.log('✅ Usando cardContent gerado pela IA (salvo)');
+          return {
+            title: String(generatedContent.cardContent.title || 'Conteúdo do Quadro'),
+            text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+          };
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao processar conteúdo gerado pela IA salvo:', error);
+      }
+    }
+    
+    // Prioridade 2: Se há conteúdo gerado pela IA com cardContent
     if (data?.cardContent && typeof data.cardContent === 'object') {
       console.log('✅ Usando cardContent gerado pela IA');
       return {
@@ -28,7 +45,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       };
     }
     
-    // Prioridade 2: Se há dados diretos da IA no nível raiz
+    // Prioridade 3: Se há dados diretos da IA no nível raiz
     if (data?.title && data?.description) {
       console.log('✅ Usando dados diretos da IA');
       return {
@@ -37,7 +54,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       };
     }
     
-    // Prioridade 3: Buscar nos dados aninhados
+    // Prioridade 4: Buscar nos dados aninhados
     if (data?.data && typeof data.data === 'object') {
       if (data.data.cardContent) {
         console.log('✅ Usando cardContent aninhado');
@@ -55,7 +72,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       }
     }
     
-    // Prioridade 4: Se há dados nos campos personalizados
+    // Prioridade 5: Se há dados nos campos personalizados
     if (data?.customFields || (data?.data?.customFields)) {
       const customFields = data.customFields || data.data?.customFields || {};
       console.log('✅ Usando customFields:', customFields);
@@ -79,7 +96,26 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       };
     }
     
-    // Prioridade 5: Usar dados básicos se disponíveis
+    // Prioridade 6: Se há dados de activityData
+    if (activityData?.customFields) {
+      console.log('✅ Usando dados do activityData');
+      const customFields = activityData.customFields;
+      
+      const theme = customFields['Tema ou Assunto da aula'] || 
+                   activityData.title ||
+                   'Conteúdo do Quadro';
+      
+      const objectives = customFields['Objetivo de aprendizagem da aula'] || 
+                        activityData.description ||
+                        'Conteúdo educativo será exibido aqui após a geração pela IA.';
+      
+      return {
+        title: String(theme),
+        text: String(objectives)
+      };
+    }
+    
+    // Prioridade 7: Usar dados básicos se disponíveis
     if (data?.theme || data?.subject) {
       console.log('✅ Usando dados básicos disponíveis');
       return {
@@ -99,6 +135,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   // Verificar se o conteúdo foi gerado pela IA
   const isGeneratedByAI = data?.isGeneratedByAI || 
                          data?.generatedAt || 
+                         data?.customFields?.isAIGenerated === 'true' ||
+                         data?.customFields?.generatedContent ||
                          (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
                          false;
 
