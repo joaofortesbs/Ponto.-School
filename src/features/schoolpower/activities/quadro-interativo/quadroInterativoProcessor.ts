@@ -1,4 +1,3 @@
-
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 import { QuadroInterativoGenerator } from './QuadroInterativoGenerator';
 
@@ -33,7 +32,7 @@ function sanitizeJsonString(value: any): string {
   if (typeof value !== 'string') {
     return String(value || '');
   }
-  
+
   return value
     .replace(/undefined/g, '')
     .replace(/\s+/g, ' ')
@@ -45,11 +44,11 @@ function sanitizeJsonString(value: any): string {
  */
 function normalizeMaterials(materials: any): string {
   if (!materials) return '';
-  
+
   if (typeof materials === 'string') {
     return materials;
   }
-  
+
   if (Array.isArray(materials)) {
     return materials.map(item => {
       if (typeof item === 'string') return item;
@@ -59,11 +58,11 @@ function normalizeMaterials(materials: any): string {
       return String(item);
     }).join(', ');
   }
-  
+
   if (typeof materials === 'object') {
     return JSON.stringify(materials);
   }
-  
+
   return String(materials);
 }
 
@@ -81,11 +80,11 @@ function validateQuadroInterativoData(activity: QuadroInterativoActivity): boole
  */
 export async function prepareQuadroInterativoData(data: any): Promise<any> {
   console.log('🔧 Preparando dados do Quadro Interativo para processamento:', data);
-  
+
   try {
     // Extrair dados das respostas da IA se disponível
     const generatedData = data.respostasIA?.data || data;
-    
+
     console.log('📊 Dados extraídos do generatedData:', generatedData);
 
     if (!generatedData) {
@@ -123,17 +122,17 @@ export async function prepareQuadroInterativoData(data: any): Promise<any> {
         // Dados principais
         title: aiGeneratedContent.title || aiGeneratedContent.cardContent?.title || generatedData.title || 'Quadro Interativo',
         description: aiGeneratedContent.description || aiGeneratedContent.cardContent?.text || generatedData.description || 'Atividade interativa',
-        
+
         // Conteúdo específico do card
         cardContent: aiGeneratedContent.cardContent || {
           title: aiGeneratedContent.title || 'Atividade de Quadro Interativo',
           text: aiGeneratedContent.description || 'Conteúdo educativo interativo'
         },
-        
+
         // Metadados da IA
         generatedAt: aiGeneratedContent.generatedAt || new Date().toISOString(),
         isGeneratedByAI: aiGeneratedContent.isGeneratedByAI || true,
-        
+
         // Preservar campos customizados originais
         customFields: {
           ...generatedData.customFields,
@@ -146,7 +145,7 @@ export async function prepareQuadroInterativoData(data: any): Promise<any> {
 
     } catch (aiError) {
       console.error('❌ Erro na geração de conteúdo pela IA:', aiError);
-      
+
       // Fallback: retornar dados originais com estrutura mínima
       return {
         ...generatedData,
@@ -164,7 +163,7 @@ export async function prepareQuadroInterativoData(data: any): Promise<any> {
   } catch (error) {
     console.error('❌ Erro ao preparar dados do Quadro Interativo:', error);
     geminiLogger.logError(error as Error, { originalData: data });
-    
+
     // Retornar estrutura básica em caso de erro crítico
     return {
       title: 'Quadro Interativo',
@@ -195,7 +194,6 @@ export function validateQuadroInterativoFields(data: ActivityFormData): boolean 
 }
 
 export default {
-  processQuadroInterativoData,
   prepareQuadroInterativoData,
   validateQuadroInterativoFields
 };
