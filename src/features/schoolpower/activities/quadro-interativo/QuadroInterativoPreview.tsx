@@ -1,147 +1,130 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Lightbulb
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, BookOpen, Target } from "lucide-react";
 
 interface QuadroInterativoPreviewProps {
   data: any;
-  activityData?: any;
 }
 
-const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
-  data, 
-  activityData 
-}) => {
-  // Extrair dados do conteúdo gerado pela IA
-  const cardContent = (() => {
-    console.log('🔍 Processando dados para QuadroInterativoPreview:', data);
-    
-    // Prioridade 1: Se há conteúdo gerado pela IA com cardContent
-    if (data?.cardContent && typeof data.cardContent === 'object') {
-      console.log('✅ Usando cardContent gerado pela IA');
-      return {
-        title: String(data.cardContent.title || 'Conteúdo do Quadro'),
-        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-      };
-    }
-    
-    // Prioridade 2: Se há dados diretos da IA no nível raiz
-    if (data?.title && data?.description) {
-      console.log('✅ Usando dados diretos da IA');
-      return {
-        title: String(data.title),
-        text: String(data.description)
-      };
-    }
-    
-    // Prioridade 3: Buscar nos dados aninhados
-    if (data?.data && typeof data.data === 'object') {
-      if (data.data.cardContent) {
-        console.log('✅ Usando cardContent aninhado');
-        return {
-          title: String(data.data.cardContent.title || 'Conteúdo do Quadro'),
-          text: String(data.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-        };
-      }
-      if (data.data.title && data.data.description) {
-        console.log('✅ Usando dados aninhados da IA');
-        return {
-          title: String(data.data.title),
-          text: String(data.data.description)
-        };
-      }
-    }
-    
-    // Prioridade 4: Se há dados nos campos personalizados
-    if (data?.customFields || (data?.data?.customFields)) {
-      const customFields = data.customFields || data.data?.customFields || {};
-      console.log('✅ Usando customFields:', customFields);
-      
-      const theme = customFields['Tema ou Assunto da aula'] || 
-                   customFields['tema'] || 
-                   customFields['theme'] || 
-                   data?.theme ||
-                   'Conteúdo do Quadro';
-      
-      const objectives = customFields['Objetivo de aprendizagem da aula'] || 
-                        customFields['objetivos'] || 
-                        customFields['objectives'] || 
-                        data?.objectives ||
-                        data?.description ||
-                        'Conteúdo educativo será exibido aqui após a geração pela IA.';
-      
-      return {
-        title: String(theme),
-        text: String(objectives)
-      };
-    }
-    
-    // Prioridade 5: Usar dados básicos se disponíveis
-    if (data?.theme || data?.subject) {
-      console.log('✅ Usando dados básicos disponíveis');
-      return {
-        title: String(data.theme || data.subject || 'Conteúdo do Quadro'),
-        text: String(data.objectives || data.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.')
-      };
-    }
-    
-    // Fallback padrão
-    console.log('⚠️ Usando fallback padrão');
-    return {
-      title: 'Conteúdo do Quadro',
-      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
-    };
-  })();
+export function QuadroInterativoPreview({ data }: QuadroInterativoPreviewProps) {
+  const [displayData, setDisplayData] = useState(null);
 
-  // Log de debug para verificar dados recebidos
-  console.log('🔍 QuadroInterativoPreview - Dados recebidos:', data);
-  console.log('🔍 QuadroInterativoPreview - CardContent:', cardContent);
+  useEffect(() => {
+    console.log('🖥️ QuadroInterativoPreview - Dados recebidos:', data);
 
-  // Verificar se o conteúdo foi gerado pela IA
-  const isGeneratedByAI = data?.isGeneratedByAI || 
-                         data?.generatedAt || 
-                         (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
-                         false;
+    // Processar dados de diferentes fontes
+    let processedData = null;
 
-  return (
-    <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto p-6">
-        {/* Card de Quadro Visível - ÚNICO CARD */}
-        <Card className="shadow-xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="flex items-center justify-center gap-2 text-2xl text-blue-700 dark:text-blue-300 mb-2">
-              <Lightbulb className="h-7 w-7" />
-              Card de Quadro Visível
-            </CardTitle>
-            <p className="text-blue-600 dark:text-blue-400 text-sm font-medium">
-              {isGeneratedByAI ? 'Conteúdo gerado pela IA Gemini' : 'Aguardando geração de conteúdo'}
-            </p>
-          </CardHeader>
-          
+    if (data?.cardContent) {
+      // Dados já processados pela IA
+      processedData = {
+        title: data.cardContent.title || data.title || 'Quadro Interativo',
+        text: data.cardContent.text || data.description || 'Conteúdo educativo interativo',
+        isGenerated: data.isGeneratedByAI || false,
+        customFields: data.customFields || {}
+      };
+    } else if (data?.respostasIA?.data) {
+      // Dados da resposta da IA
+      const aiData = data.respostasIA.data;
+      processedData = {
+        title: aiData.title || 'Quadro Interativo',
+        text: aiData.description || 'Conteúdo educativo interativo',
+        isGenerated: true,
+        customFields: aiData.customFields || {}
+      };
+    } else {
+      // Dados básicos
+      processedData = {
+        title: data?.title || 'Quadro Interativo',
+        text: data?.description || 'Conteúdo educativo para interação no quadro digital',
+        isGenerated: false,
+        customFields: data?.customFields || {}
+      };
+    }
+
+    console.log('📋 Dados processados para exibição:', processedData);
+    setDisplayData(processedData);
+  }, [data]);
+
+  if (!displayData) {
+    return (
+      <div className="w-full max-w-4xl mx-auto">
+        <Card className="animate-pulse">
           <CardContent className="p-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-inner border-2 border-blue-200 dark:border-blue-700">
-              <div className="text-center space-y-6">
-                {/* Título Principal - Conteúdo da IA */}
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-                  {cardContent.title}
-                </h1>
-                
-                {/* Conteúdo Principal - Texto da IA */}
-                <div className="max-w-3xl mx-auto">
-                  <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {cardContent.text}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <div className="h-6 bg-gray-200 rounded mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
           </CardContent>
         </Card>
       </div>
+    );
+  }
+
+  return (
+    <div className="w-full max-w-4xl mx-auto space-y-6">
+      {/* Cabeçalho com Badge de Status */}
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <BookOpen className="w-6 h-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-800">
+            Quadro Interativo
+          </h2>
+          {displayData.isGenerated && (
+            <Badge variant="secondary" className="bg-green-100 text-green-700">
+              <Sparkles className="w-3 h-3 mr-1" />
+              Gerado por IA
+            </Badge>
+          )}
+        </div>
+        <p className="text-gray-600">
+          Visualização do conteúdo educativo para o quadro digital
+        </p>
+      </div>
+
+      {/* Card Principal do Quadro Interativo */}
+      <Card className="w-full bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200 shadow-lg">
+        <CardHeader className="text-center pb-4">
+          <CardTitle className="text-xl font-semibold text-blue-800 flex items-center justify-center gap-2">
+            <Target className="w-5 h-5" />
+            {displayData.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="bg-white rounded-lg p-6 shadow-inner border border-blue-100 min-h-[120px] flex items-center justify-center">
+            <p className="text-gray-700 leading-relaxed text-center text-lg font-medium">
+              {displayData.text}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Informações da Atividade */}
+      {Object.keys(displayData.customFields).length > 0 && (
+        <Card className="w-full bg-gray-50 border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-lg text-gray-700 flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              Detalhes da Atividade
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(displayData.customFields).map(([key, value]) => (
+              <div key={key} className="bg-white p-4 rounded-lg border shadow-sm">
+                <p className="font-semibold text-gray-600 text-sm mb-2">{key}:</p>
+                <p className="text-gray-800 text-sm">{String(value)}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Indicador de Status */}
+      <div className="text-center">
+        <Badge variant="outline" className="px-4 py-2">
+          {displayData.isGenerated ? '✅ Conteúdo gerado pela IA Gemini' : '📝 Conteúdo base configurado'}
+        </Badge>
+      </div>
     </div>
   );
-};
-
-export default QuadroInterativoPreview;
+}

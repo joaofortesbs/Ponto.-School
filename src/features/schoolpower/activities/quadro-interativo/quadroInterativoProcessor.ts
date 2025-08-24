@@ -91,47 +91,69 @@ export async function prepareQuadroInterativoData(data: any): Promise<any> {
       throw new Error('Dados não encontrados para processamento do Quadro Interativo');
     }
 
+    // Verificar se já tem conteúdo processado
+    if (generatedData.cardContent && generatedData.isGeneratedByAI) {
+      console.log('✅ Dados já processados, retornando:', generatedData);
+      return generatedData;
+    }
+
     // Instanciar o gerador
     const generator = new QuadroInterativoGenerator();
 
-    // Construir dados para a IA
+    // Construir dados para a IA com validação
+    const extractField = (fieldName: string, fallback: string) => {
+      return generatedData.customFields?.[fieldName] ||
+             generatedData[fieldName] ||
+             generatedData.personalizedTitle ||
+             generatedData.title ||
+             fallback;
+    };
+
     const aiData = {
-      subject: generatedData.customFields?.['Disciplina / Área de conhecimento'] ||
-              generatedData['Disciplina / Área de conhecimento'] || 'Disciplina',
-      schoolYear: generatedData.customFields?.['Ano / Série'] ||
-                 generatedData['Ano / Série'] || 'Ano/Série',
-      theme: generatedData.customFields?.['Tema ou Assunto da aula'] ||
-             generatedData['Tema ou Assunto da aula'] || 'Tema da aula',
-      objectives: generatedData.customFields?.['Objetivo de aprendizagem da aula'] ||
-                 generatedData['Objetivo de aprendizagem da aula'] || 'Objetivos',
-      difficultyLevel: generatedData.customFields?.['Nível de Dificuldade'] ||
-                      generatedData['Nível de Dificuldade'] || 'Intermediário',
-      quadroInterativoCampoEspecifico: generatedData.customFields?.['Atividade mostrada'] ||
-                                      generatedData['Atividade mostrada'] || 'Atividade interativa'
+      subject: extractField('Disciplina / Área de conhecimento', 'Matemática'),
+      schoolYear: extractField('Ano / Série', '5º Ano'),
+      theme: extractField('Tema ou Assunto da aula', 'Tema educativo'),
+      objectives: extractField('Objetivo de aprendizagem da aula', 'Desenvolver conhecimentos'),
+      difficultyLevel: extractField('Nível de Dificuldade', 'Intermediário'),
+      quadroInterativoCampoEspecifico: extractField('Atividade mostrada', 'Atividade interativa no quadro')
     };
 
     console.log('📝 Dados preparados para IA:', aiData);
+
+    // Validar dados essenciais
+    const hasValidData = aiData.subject && aiData.theme && aiData.objectives;
+    
+    if (!hasValidData) {
+      console.warn('⚠️ Dados insuficientes para geração pela IA, usando fallback');
+      return createFallbackData(generatedData);
+    }
 
     try {
       const aiGeneratedContent = await generator.generateQuadroInterativoContent(aiData);
       console.log('🤖 Conteúdo gerado pela IA:', aiGeneratedContent);
 
+      // Validar conteúdo gerado
+      if (!aiGeneratedContent.cardContent?.title || !aiGeneratedContent.cardContent?.text) {
+        console.warn('⚠️ Conteúdo da IA incompleto, ajustando...');
+        aiGeneratedContent.cardContent = {
+          title: aiGeneratedContent.title || 'Quadro Interativo Educativo',
+          text: aiGeneratedContent.description || 'Conteúdo educativo desenvolvido para interação no quadro digital.'
+        };
+      }
+
       // Combinar dados originais com conteúdo gerado pela IA
       const finalResult = {
         ...generatedData,
         // Dados principais
-        title: aiGeneratedContent.title || aiGeneratedContent.cardContent?.title || generatedData.title || 'Quadro Interativo',
-        description: aiGeneratedContent.description || aiGeneratedContent.cardContent?.text || generatedData.description || 'Atividade interativa',
+        title: aiGeneratedContent.title || generatedData.personalizedTitle || generatedData.title || 'Quadro Interativo',
+        description: aiGeneratedContent.description || generatedData.personalizedDescription || generatedData.description || 'Atividade interativa',
 
         // Conteúdo específico do card
-        cardContent: aiGeneratedContent.cardContent || {
-          title: aiGeneratedContent.title || 'Atividade de Quadro Interativo',
-          text: aiGeneratedContent.description || 'Conteúdo educativo interativo'
-        },
+        cardContent: aiGeneratedContent.cardContent,
 
         // Metadados da IA
         generatedAt: aiGeneratedContent.generatedAt || new Date().toISOString(),
-        isGeneratedByAI: aiGeneratedContent.isGeneratedByAI || true,
+        isGeneratedByAI: true,
 
         // Preservar campos customizados originais
         customFields: {
@@ -145,38 +167,29 @@ export async function prepareQuadroInterativoData(data: any): Promise<any> {
 
     } catch (aiError) {
       console.error('❌ Erro na geração de conteúdo pela IA:', aiError);
-
-      // Fallback: retornar dados originais com estrutura mínima
-      return {
-        ...generatedData,
-        title: generatedData.title || 'Quadro Interativo',
-        description: generatedData.description || 'Atividade de quadro interativo',
-        cardContent: {
-          title: 'Atividade de Quadro Interativo',
-          text: 'Conteúdo educativo para interação no quadro digital da sala de aula.'
-        },
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: false
-      };
+      return createFallbackData(generatedData);
     }
 
   } catch (error) {
     console.error('❌ Erro ao preparar dados do Quadro Interativo:', error);
     geminiLogger.logError(error as Error, { originalData: data });
-
-    // Retornar estrutura básica em caso de erro crítico
-    return {
-      title: 'Quadro Interativo',
-      description: 'Atividade educativa interativa',
-      cardContent: {
-        title: 'Atividade de Quadro Interativo',
-        text: 'Conteúdo educativo para interação no quadro digital.'
-      },
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false,
-      customFields: data?.customFields || {}
-    };
+    return createFallbackData(data);
   }
+}
+
+function createFallbackData(originalData: any) {
+  return {
+    ...originalData,
+    title: originalData.personalizedTitle || originalData.title || 'Quadro Interativo',
+    description: originalData.personalizedDescription || originalData.description || 'Atividade de quadro interativo',
+    cardContent: {
+      title: originalData.personalizedTitle || originalData.title || 'Atividade de Quadro Interativo',
+      text: originalData.personalizedDescription || originalData.description || 'Conteúdo educativo para interação no quadro digital da sala de aula.'
+    },
+    generatedAt: new Date().toISOString(),
+    isGeneratedByAI: false,
+    customFields: originalData?.customFields || {}
+  };
 }
 
 /**

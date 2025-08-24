@@ -773,9 +773,9 @@ button[aria-haspopup="menu"] {
 
 /* Estilos auxiliares para o Hub Conectado */
 @keyframes pulse-glow {
-  0% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+  0% { filter: drop-shadow(0 0 5px rgba(13, 34, 160, 0.3)); }
   50% { filter: drop-shadow(0 0 10px rgba(91, 33, 189, 0.6)); }
-  100% { filter: drop-shadow(0 0 5px rgba(13, 35, 160, 0.3)); }
+  100% { filter: drop-shadow(0 0 5px rgba(13, 34, 160, 0.3)); }
 }
 
 .animate-pulse-glow {
