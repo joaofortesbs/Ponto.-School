@@ -1,195 +1,294 @@
-import { geminiLogger } from '@/utils/geminiDebugLogger';
-import { QuadroInterativoGenerator } from './QuadroInterativoGenerator';
+import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { fieldMapping, normalizeMaterials } from './fieldMapping';
 
-// Interfaces
-interface ActivityFormData {
-  subject: string;
-  schoolYear: string;
-  theme: string;
-  objectives: string;
-  difficultyLevel: string;
-  quadroInterativoCampoEspecifico: string;
-  title: string;
-  description: string;
-  materials?: string;
-  [key: string]: any;
+export interface QuadroInterativoFields {
+  [key: string]: string;
 }
 
-interface QuadroInterativoActivity {
-  id?: string;
+export interface QuadroInterativoCustomFields {
+  [key: string]: string;
+}
+
+export interface QuadroInterativoActivity {
+  id: string;
   title: string;
-  description?: string;
+  description: string;
+  customFields: QuadroInterativoCustomFields;
   personalizedTitle?: string;
   personalizedDescription?: string;
-  customFields?: { [key: string]: any };
-  materials?: any;
 }
 
 /**
- * Função utilitária para sanitizar strings JSON
+ * Valida se os dados do Quadro Interativo são válidos
  */
-function sanitizeJsonString(value: any): string {
-  if (typeof value !== 'string') {
-    return String(value || '');
-  }
+function validateQuadroInterativoData(data: any): boolean {
+  try {
+    if (!data || typeof data !== 'object') return false;
 
-  return value
-    .replace(/undefined/g, '')
-    .replace(/\s+/g, ' ')
+    // Verificar campos essenciais
+    const requiredFields = ['title', 'description'];
+    for (const field of requiredFields) {
+      if (!data[field] || typeof data[field] !== 'string' || data[field].trim() === '') {
+        console.warn(`⚠️ Campo obrigatório ausente ou inválido: ${field}`);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Erro na validação dos dados do Quadro Interativo:', error);
+    return false;
+  }
+}
+
+/**
+ * Sanitiza uma string para uso seguro em JSON
+ */
+function sanitizeJsonString(str: string): string {
+  if (!str || typeof str !== 'string') return '';
+
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')
     .trim();
 }
 
 /**
- * Função para normalizar materiais
+ * Processa dados de uma atividade de Quadro Interativo do Action Plan
+ * para o formato do formulário do modal
  */
-function normalizeMaterials(materials: any): string {
-  if (!materials) return '';
+export function processQuadroInterativoData(activity: QuadroInterativoActivity): ActivityFormData {
+  console.log('📱 Processando dados do Quadro Interativo:', activity);
 
-  if (typeof materials === 'string') {
-    return materials;
+  // Validar dados de entrada
+  if (!validateQuadroInterativoData(activity)) {
+    console.error('❌ Dados inválidos para Quadro Interativo:', activity);
+    throw new Error('Dados inválidos para processamento do Quadro Interativo');
   }
 
-  if (Array.isArray(materials)) {
-    return materials.map(item => {
-      if (typeof item === 'string') return item;
-      if (typeof item === 'object' && item !== null) {
-        return JSON.stringify(item);
-      }
-      return String(item);
-    }).join(', ');
-  }
+  const customFields = activity.customFields || {};
 
-  if (typeof materials === 'object') {
-    return JSON.stringify(materials);
-  }
-
-  return String(materials);
-}
-
-/**
- * Valida os dados de entrada do Quadro Interativo
- */
-function validateQuadroInterativoData(activity: QuadroInterativoActivity): boolean {
-  return !!(activity && (activity.title || activity.personalizedTitle));
-}
-
-// Função processQuadroInterativoData removida para evitar duplicação
-
-/**
- * Prepara dados do Quadro Interativo para a IA Gemini gerar conteúdo
- */
-export async function prepareQuadroInterativoData(data: any): Promise<any> {
-  console.log('🔧 Preparando dados do Quadro Interativo para processamento:', data);
-
-  try {
-    // Extrair dados das respostas da IA se disponível
-    const generatedData = data.respostasIA?.data || data;
-
-    console.log('📊 Dados extraídos do generatedData:', generatedData);
-
-    if (!generatedData) {
-      throw new Error('Dados não encontrados para processamento do Quadro Interativo');
-    }
-
-    // Verificar se já tem conteúdo processado
-    if (generatedData.cardContent && generatedData.isGeneratedByAI) {
-      console.log('✅ Dados já processados, retornando:', generatedData);
-      return generatedData;
-    }
-
-    // Instanciar o gerador
-    const generator = new QuadroInterativoGenerator();
-
-    // Construir dados para a IA com validação
-    const extractField = (fieldName: string, fallback: string) => {
-      return generatedData.customFields?.[fieldName] ||
-             generatedData[fieldName] ||
-             generatedData.personalizedTitle ||
-             generatedData.title ||
-             fallback;
-    };
-
-    const aiData = {
-      subject: extractField('Disciplina / Área de conhecimento', 'Matemática'),
-      schoolYear: extractField('Ano / Série', '5º Ano'),
-      theme: extractField('Tema ou Assunto da aula', 'Tema educativo'),
-      objectives: extractField('Objetivo de aprendizagem da aula', 'Desenvolver conhecimentos'),
-      difficultyLevel: extractField('Nível de Dificuldade', 'Intermediário'),
-      quadroInterativoCampoEspecifico: extractField('Atividade mostrada', 'Atividade interativa no quadro')
-    };
-
-    console.log('📝 Dados preparados para IA:', aiData);
-
-    // Validar dados essenciais
-    const hasValidData = aiData.subject && aiData.theme && aiData.objectives;
-    
-    if (!hasValidData) {
-      console.warn('⚠️ Dados insuficientes para geração pela IA, usando fallback');
-      return createFallbackData(generatedData);
-    }
-
-    try {
-      const aiGeneratedContent = await generator.generateQuadroInterativoContent(aiData);
-      console.log('🤖 Conteúdo gerado pela IA:', aiGeneratedContent);
-
-      // Validar conteúdo gerado
-      if (!aiGeneratedContent.cardContent?.title || !aiGeneratedContent.cardContent?.text) {
-        console.warn('⚠️ Conteúdo da IA incompleto, ajustando...');
-        aiGeneratedContent.cardContent = {
-          title: aiGeneratedContent.title || 'Quadro Interativo Educativo',
-          text: aiGeneratedContent.description || 'Conteúdo educativo desenvolvido para interação no quadro digital.'
-        };
-      }
-
-      // Combinar dados originais com conteúdo gerado pela IA
-      const finalResult = {
-        ...generatedData,
-        // Dados principais
-        title: aiGeneratedContent.title || generatedData.personalizedTitle || generatedData.title || 'Quadro Interativo',
-        description: aiGeneratedContent.description || generatedData.personalizedDescription || generatedData.description || 'Atividade interativa',
-
-        // Conteúdo específico do card
-        cardContent: aiGeneratedContent.cardContent,
-
-        // Metadados da IA
-        generatedAt: aiGeneratedContent.generatedAt || new Date().toISOString(),
-        isGeneratedByAI: true,
-
-        // Preservar campos customizados originais
-        customFields: {
-          ...generatedData.customFields,
-          ...aiGeneratedContent.customFields
-        }
-      };
-
-      console.log('✅ Resultado final preparado:', finalResult);
-      return finalResult;
-
-    } catch (aiError) {
-      console.error('❌ Erro na geração de conteúdo pela IA:', aiError);
-      return createFallbackData(generatedData);
-    }
-
-  } catch (error) {
-    console.error('❌ Erro ao preparar dados do Quadro Interativo:', error);
-    geminiLogger.logError(error as Error, { originalData: data });
-    return createFallbackData(data);
-  }
-}
-
-function createFallbackData(originalData: any) {
-  return {
-    ...originalData,
-    title: originalData.personalizedTitle || originalData.title || 'Quadro Interativo',
-    description: originalData.personalizedDescription || originalData.description || 'Atividade de quadro interativo',
-    cardContent: {
-      title: originalData.personalizedTitle || originalData.title || 'Atividade de Quadro Interativo',
-      text: originalData.personalizedDescription || originalData.description || 'Conteúdo educativo para interação no quadro digital da sala de aula.'
-    },
-    generatedAt: new Date().toISOString(),
-    isGeneratedByAI: false,
-    customFields: originalData?.customFields || {}
+  // Sanitizar dados
+  const sanitizedActivity = {
+    ...activity,
+    title: sanitizeJsonString(activity.personalizedTitle || activity.title),
+    description: sanitizeJsonString(activity.personalizedDescription || activity.description)
   };
+
+  const consolidatedData = {
+    ...sanitizedActivity,
+    title: sanitizedActivity.title,
+    description: sanitizedActivity.description
+  };
+
+  // Extrair campos customizados com valores padrão seguros
+  const safeCustomFields: { [key: string]: string } = {};
+  Object.keys(customFields).forEach(key => {
+    const value = customFields[key];
+    if (value && typeof value === 'string') {
+      safeCustomFields[key] = sanitizeJsonString(value);
+    }
+  });
+
+  // Mapeamento para o formato do formulário
+  const formData: ActivityFormData = {
+    // Campos básicos
+    subject: safeCustomFields['Disciplina'] || 'Matemática',
+    schoolYear: safeCustomFields['Ano / Série'] || 'Ex: 6º Ano, 7º Ano, 8º Ano',
+    theme: sanitizeJsonString(consolidatedData.title) || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+    objectives: safeCustomFields['Objetivos de Aprendizagem'] || '',
+    difficultyLevel: safeCustomFields['Nível de Dificuldade'] || 'Ex: Básico, Intermediário, Avançado',
+
+    // Campo específico do Quadro Interativo
+    quadroInterativoCampoEspecifico: safeCustomFields['Tipo de Interação'] || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+
+    // Campos adicionais
+    bnccCompetencias: safeCustomFields['BNCC / Competências'] || '',
+    publico: safeCustomFields['Público-alvo'] || '',
+
+    // Campos padrão necessários para ActivityFormData
+    title: consolidatedData.title || '',
+    description: consolidatedData.description || '',
+    numberOfQuestions: '1',
+    questionModel: '',
+    sources: '',
+    textType: '',
+    textGenre: '',
+    textLength: '',
+    associatedQuestions: '',
+    competencies: '',
+    readingStrategies: '',
+    visualResources: '',
+    practicalActivities: '',
+    wordsIncluded: '',
+    gridFormat: '',
+    providedHints: '',
+    vocabularyContext: '',
+    language: '',
+    associatedExercises: '',
+    knowledgeArea: '',
+    complexityLevel: '',
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    materials: String(normalizeMaterials(consolidatedData.materials || '')),
+    instructions: '',
+    evaluation: '',
+    timeLimit: '',
+    context: '',
+
+    // Campos extras que podem estar presentes
+    ...safeCustomFields
+  };
+
+  console.log('✅ Dados do Quadro Interativo processados com sucesso:', formData);
+  return formData;
+}
+
+/**
+ * Prepara dados de Quadro Interativo para o modal de edição
+ */
+export function prepareQuadroInterativoDataForModal(activity: any): ActivityFormData {
+  console.log('🔄 Preparando dados do Quadro Interativo para modal:', activity);
+
+  const customFields = activity.customFields || {};
+
+  return {
+    title: activity.personalizedTitle || activity.title || '',
+    description: activity.personalizedDescription || activity.description || '',
+
+    // Campos específicos do Quadro Interativo
+    subject: customFields['Disciplina / Área de conhecimento'] ||
+             customFields['disciplina'] ||
+             customFields['Disciplina'] ||
+             'Matemática',
+
+    schoolYear: customFields['Ano / Série'] ||
+                customFields['anoSerie'] ||
+                customFields['Ano de Escolaridade'] ||
+                '6º Ano',
+
+    theme: customFields['Tema ou Assunto da aula'] ||
+           customFields['tema'] ||
+           customFields['Tema'] ||
+           activity.title ||
+           'Tema da Aula',
+
+    objectives: customFields['Objetivo de aprendizagem da aula'] ||
+                customFields['objetivos'] ||
+                customFields['Objetivos'] ||
+                activity.description ||
+                'Objetivos de aprendizagem',
+
+    difficultyLevel: customFields['Nível de Dificuldade'] ||
+                     customFields['nivelDificuldade'] ||
+                     customFields['dificuldade'] ||
+                     'Intermediário',
+
+    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
+                                    customFields['atividadeMostrada'] ||
+                                    customFields['quadroInterativoCampoEspecifico'] ||
+                                    'Atividade interativa no quadro',
+
+    // Campos opcionais
+    materials: normalizeMaterials(customFields['Materiais Necessários'] || customFields['materiais'] || ''),
+    instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
+    evaluation: customFields['Critérios de Avaliação'] || customFields['avaliacao'] || '',
+    timeLimit: customFields['Tempo Estimado'] || customFields['tempoLimite'] || '45 minutos',
+    context: customFields['Contexto de Aplicação'] || customFields['contexto'] || '',
+
+    // Campos padrão necessários para ActivityFormData
+    numberOfQuestions: '1',
+    questionModel: '',
+    sources: '',
+    textType: '',
+    textGenre: '',
+    textLength: '',
+    associatedQuestions: '',
+    competencies: '',
+    readingStrategies: '',
+    visualResources: '',
+    practicalActivities: '',
+    wordsIncluded: '',
+    gridFormat: '',
+    providedHints: '',
+    vocabularyContext: '',
+    language: '',
+    associatedExercises: '',
+    knowledgeArea: '',
+    complexityLevel: '',
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    bnccCompetencias: '',
+    publicoAlvo: '',
+    objetivosAprendizagem: '',
+    quantidadeAulas: '',
+    quantidadeDiagnosticos: '',
+    quantidadeAvaliacoes: '',
+    cronograma: ''
+  };
+}
+
+/**
+ * Valida se uma atividade é do tipo Quadro Interativo
+ */
+export function isQuadroInterativoActivity(activity: any): activity is QuadroInterativoActivity {
+  return activity &&
+         activity.id === 'quadro-interativo' &&
+         typeof activity.title === 'string' &&
+         typeof activity.description === 'string' &&
+         typeof activity.customFields === 'object';
+}
+
+/**
+ * Gera os campos customizados específicos para Quadro Interativo
+ */
+export function generateQuadroInterativoFields(
+  disciplina: string,
+  anoSerie: string,
+  tema: string,
+  objetivo: string,
+  nivelDificuldade: string,
+  atividadeMostrada: string
+): QuadroInterativoCustomFields {
+  return {
+    'Disciplina / Área de conhecimento': disciplina,
+    'Ano / Série': anoSerie,
+    'Tema ou Assunto da aula': tema,
+    'Objetivo de aprendizagem da aula': objetivo,
+    'Nível de Dificuldade': nivelDificuldade,
+    'Atividade mostrada': atividadeMostrada
+  };
+}
+
+/**
+ * Extrai dados específicos do Quadro Interativo de um objeto de atividade
+ */
+export function extractQuadroInterativoData(activity: any): QuadroInterativoCustomFields {
+  const customFields = activity.customFields || {};
+  const extractedData: QuadroInterativoCustomFields = {};
+
+  // Campos obrigatórios para Quadro Interativo
+  const requiredFields = [
+    'Disciplina / Área de conhecimento',
+    'Ano / Série',
+    'Tema ou Assunto da aula',
+    'Objetivo de aprendizagem da aula',
+    'Nível de Dificuldade',
+    'Atividade mostrada'
+  ];
+
+  requiredFields.forEach(field => {
+    if (customFields[field]) {
+      extractedData[field] = customFields[field];
+    }
+  });
+
+  return extractedData;
 }
 
 /**
@@ -207,6 +306,10 @@ export function validateQuadroInterativoFields(data: ActivityFormData): boolean 
 }
 
 export default {
-  prepareQuadroInterativoData,
+  processQuadroInterativoData,
+  prepareQuadroInterativoDataForModal,
+  isQuadroInterativoActivity,
+  generateQuadroInterativoFields,
+  extractQuadroInterativoData,
   validateQuadroInterativoFields
 };

@@ -484,10 +484,8 @@ const EditActivityModal = ({
   // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-
+    
     if (type === 'quadro-interativo') {
-      console.log('🖼️ Gerando conteúdo específico para Quadro Interativo:', data);
-
       const generator = new QuadroInterativoGenerator();
       const result = await generator.generateQuadroInterativoContent({
         subject: data.subject,
@@ -497,28 +495,27 @@ const EditActivityModal = ({
         difficultyLevel: data.difficultyLevel,
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       });
-
-      // Estrutura final dos dados
-      const finalData = {
-        ...data,
-        ...result,
-        cardContent: result.cardContent,
-        generatedAt: result.generatedAt,
-        isGeneratedByAI: result.isGeneratedByAI
-      };
-
+      
       // Salvar conteúdo gerado
       const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
       localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
         success: true,
-        data: finalData
+        data: {
+          ...data,
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
       }));
-
-      console.log('💾 Dados do Quadro Interativo salvos:', finalData);
-
+      
       return {
         success: true,
-        data: finalData
+        data: {
+          ...data,
+          ...result,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
       };
     } else if (type === 'plano-aula') {
       return {
@@ -1199,7 +1196,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customFields['nivelDificuldade'] ||
+                              customCustomFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1532,12 +1529,12 @@ const EditActivityModal = ({
     // Verificação específica para Quadro Interativo
     const isQuadroInterativo = activity.id === 'quadro-interativo';
     const hasQuadroInterativoData = isQuadroInterativo && (
-      (formData.subject && formData.subject !== 'Matemática') ||
-      (formData.schoolYear && formData.schoolYear !== '6º Ano') ||
-      (formData.theme && formData.theme !== '') ||
-      (formData.objectives && formData.objectives !== '') ||
-      (formData.difficultyLevel && formData.difficultyLevel !== 'Intermediário') ||
-      (formData.quadroInterativoCampoEspecifico && formData.quadroInterativoCampoEspecifico !== '')
+      formData.subject !== 'Matemática' || // Mudou do padrão
+      formData.schoolYear !== 'Ex: 6º Ano, 7º Ano, 8º Ano' || // Mudou do placeholder
+      formData.theme !== 'Ex: Substantivos e Verbos, Frações, Sistema Solar' || // Mudou do placeholder
+      formData.objectives !== '' || // Tem objetivos definidos
+      formData.difficultyLevel !== 'Ex: Básico, Intermediário, Avançado' || // Mudou do placeholder
+      formData.quadroInterativoCampoEspecifico !== 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental' // Mudou do placeholder
     );
 
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
@@ -1983,7 +1980,7 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
-                        data={generatedContent?.data || generatedContent || formData}
+                        data={generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (
