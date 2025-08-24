@@ -29,10 +29,10 @@ export class QuadroInterativoGenerator {
   }
 
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
-    geminiLogger.logRequest('Gerando conteúdo de Quadro Interativo', data);
+    geminiLogger.logRequest('Gerando conteúdo COMPLETO de Quadro Interativo', data);
     
     try {
-      const prompt = this.buildPrompt(data);
+      const prompt = this.buildEnhancedPrompt(data);
       const response = await this.callGeminiAPI(prompt);
       const parsedContent = this.parseGeminiResponse(response);
       
@@ -64,23 +64,21 @@ export class QuadroInterativoGenerator {
       };
 
       geminiLogger.logResponse(result, Date.now());
-      console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
+      console.log('✅ Conteúdo COMPLETO do Quadro Interativo gerado:', result);
       return result;
     } catch (error) {
       geminiLogger.logError(error as Error, { data });
       
       // Fallback com conteúdo educativo melhorado
-      const educationalTitle = data.theme || 'Conteúdo Educativo';
-      const educationalText = data.objectives 
-        ? `${data.objectives} - Explore este conceito através de atividades interativas que facilitam o aprendizado e compreensão do tema.`
-        : `Explore o tema "${data.theme}" de forma interativa. Este conteúdo foi desenvolvido para facilitar a compreensão e aplicação dos conceitos fundamentais da disciplina.`;
+      const educationalTitle = this.generateEducationalTitle(data);
+      const educationalText = this.generateEducationalText(data);
       
       const fallbackResult: QuadroInterativoContent = {
         title: data.theme || 'Conteúdo Educativo',
         description: data.objectives || 'Atividade educativa interativa',
         cardContent: {
-          title: educationalTitle.substring(0, 70),
-          text: educationalText.substring(0, 450)
+          title: educationalTitle,
+          text: educationalText
         },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: false,
@@ -92,63 +90,86 @@ export class QuadroInterativoGenerator {
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       };
       
-      console.log('⚠️ Usando conteúdo fallback para Quadro Interativo:', fallbackResult);
+      console.log('⚠️ Usando conteúdo fallback EDUCATIVO para Quadro Interativo:', fallbackResult);
       return fallbackResult;
     }
   }
 
-  private buildPrompt(data: QuadroInterativoData): string {
+  private buildEnhancedPrompt(data: QuadroInterativoData): string {
     return `
-Você é uma IA especializada em educação brasileira que cria conteúdo educativo COMPLETO e DIDÁTICO para quadros interativos em sala de aula.
+VOCÊ É UMA IA ESPECIALIZADA EM EDUCAÇÃO BRASILEIRA QUE CRIA CONTEÚDO DIDÁTICO COMPLETO E PROFUNDO.
 
 DADOS DA AULA:
 - Disciplina: ${data.subject}
 - Ano/Série: ${data.schoolYear}
 - Tema: ${data.theme}
 - Objetivos: ${data.objectives}
-- Nível de Dificuldade: ${data.difficultyLevel}
-- Atividade Mostrada: ${data.quadroInterativoCampoEspecifico}
+- Nível: ${data.difficultyLevel}
+- Atividade: ${data.quadroInterativoCampoEspecifico}
 
-MISSÃO: Criar um conteúdo que ENSINE o conceito de forma clara e completa, como se fosse uma mini-aula explicativa.
+MISSÃO CRÍTICA: Criar um conteúdo que ENSINE o conceito de forma COMPLETA, DETALHADA e EDUCATIVA, como se fosse uma mini-aula explicativa que realmente transmite conhecimento profundo.
 
-FORMATO DE RESPOSTA (JSON apenas):
+FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
 {
-  "title": "Título educativo direto sobre o conceito (máximo 60 caracteres)",
-  "text": "Explicação COMPLETA do conceito com definição, características principais, exemplos práticos e dicas para identificação/aplicação. Deve ser uma mini-aula textual que ensina efetivamente o tema (máximo 400 caracteres)"
+  "title": "Título educativo direto sobre o conceito (SEM 'Quadro Interativo:', máximo 80 caracteres)",
+  "text": "Explicação COMPLETA e DETALHADA do conceito com: definição clara, características principais, exemplos práticos detalhados, dicas para identificação/aplicação, e contexto educativo apropriado. Deve ser uma mini-aula textual que ENSINA efetivamente o tema (máximo 500 caracteres)"
 }
 
-DIRETRIZES OBRIGATÓRIAS:
-
-TÍTULO:
-- Seja direto e educativo sobre o conceito
+DIRETRIZES OBRIGATÓRIAS PARA TÍTULO:
+- NUNCA use "Quadro Interativo:" no início
+- Seja DIRETO sobre o conceito educativo
 - Use terminologia adequada para ${data.schoolYear}
-- Exemplos: "Substantivos Próprios e Comuns", "Função do 1º Grau", "Fotossíntese das Plantas"
-- NÃO use "Quadro Interativo" ou "Atividade de"
+- Exemplos corretos: "Relevo Brasileiro", "Substantivos Próprios e Comuns", "Função do 1º Grau"
+- PROIBIDO: "Quadro Interativo: [tema]", "Atividade de [tema]"
 
-TEXTO:
-- INICIE com uma definição clara do conceito
-- INCLUA as características principais
-- ADICIONE exemplos práticos e concretos
-- FORNEÇA dicas para identificação ou aplicação
-- Use linguagem didática apropriada para ${data.schoolYear}
-- Seja EDUCATIVO, não apenas descritivo
-- Foque em ENSINAR o conceito de forma completa
+DIRETRIZES OBRIGATÓRIAS PARA TEXTO:
+- INICIE com definição clara e objetiva
+- INCLUA características fundamentais
+- ADICIONE exemplos práticos e específicos
+- FORNEÇA dicas de identificação/aplicação
+- CONTEXTUALIZE para a realidade do ${data.schoolYear}
+- Use linguagem didática e acessível
+- Seja EDUCATIVO e INFORMATIVO, não apenas descritivo
+- ENSINE o conceito de forma completa
 
-EXEMPLOS DE QUALIDADE:
+EXEMPLOS DE QUALIDADE MÁXIMA:
+
+Para "Relevo Brasileiro":
+{
+  "title": "Formas de Relevo do Brasil",
+  "text": "O relevo brasileiro apresenta planícies (terras baixas e planas como Pantanal), planaltos (terras altas e planas como Planalto Central), depressões (terras baixas entre planaltos) e serras (elevações como Serra do Mar). Formado por rochas antigas, possui altitudes moderadas. Dica: observe se o terreno é plano e baixo (planície), plano e alto (planalto) ou montanhoso (serra)."
+}
 
 Para "Substantivos Próprios":
 {
   "title": "Substantivos Próprios e Comuns",
-  "text": "Substantivos próprios nomeiam seres específicos e únicos (Maria, Brasil, Amazonas) e sempre iniciam com letra maiúscula. Substantivos comuns nomeiam seres em geral (menina, país, rio) e usam minúscula. Dica: se pode usar artigo 'o/a' antes, é comum; se não, é próprio!"
+  "text": "Substantivos próprios nomeiam seres específicos e únicos (Maria, Brasil, Amazonas) e sempre iniciam com letra maiúscula. Substantivos comuns nomeiam seres em geral (menina, país, rio) e usam minúscula. Diferença: próprios identificam especificamente, comuns generalizam. Dica: se pode colocar artigo 'o/a' antes sem soar estranho, é comum!"
 }
 
-Para "Equação do 1º Grau":
-{
-  "title": "Equações do Primeiro Grau",
-  "text": "Equação do 1º grau tem formato ax + b = 0, onde 'a' é diferente de zero. Para resolver: isole o 'x' fazendo operações inversas. Ex: 2x + 4 = 10 → 2x = 6 → x = 3. Dica: sempre faça a operação contrária nos dois lados da igualdade!"
-}
+AGORA GERE O CONTEÚDO EDUCATIVO COMPLETO E DETALHADO:`;
+  }
 
-AGORA GERE O CONTEÚDO EDUCATIVO:`;
+  private generateEducationalTitle(data: QuadroInterativoData): string {
+    // Remover "Quadro Interativo:" se existir e criar título educativo
+    let title = data.theme || 'Conteúdo Educativo';
+    
+    // Remover prefixos desnecessários
+    title = title.replace(/^Quadro Interativo:\s*/i, '');
+    title = title.replace(/^Atividade de\s*/i, '');
+    title = title.replace(/^Atividade sobre\s*/i, '');
+    
+    // Limitar caracteres
+    return title.substring(0, 80).trim();
+  }
+
+  private generateEducationalText(data: QuadroInterativoData): string {
+    const theme = data.theme || 'o tema proposto';
+    const subject = data.subject || 'a disciplina';
+    const schoolYear = data.schoolYear || 'esta série';
+    
+    const educationalText = `Este conteúdo sobre ${theme.toLowerCase()} apresenta os conceitos fundamentais de ${subject} para ${schoolYear}. Através de explicações claras, exemplos práticos e dicas de aplicação, você compreenderá as características principais do tema e saberá identificar e aplicar esses conhecimentos em diferentes contextos educacionais e práticos.`;
+    
+    return educationalText.substring(0, 500);
   }
 
   private async callGeminiAPI(prompt: string): Promise<any> {
@@ -167,7 +188,7 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
             }]
           }],
           generationConfig: {
-            temperature: 0.8,
+            temperature: 0.7,
             topK: 40,
             topP: 0.95,
             maxOutputTokens: 2048,
@@ -199,12 +220,22 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         throw new Error('Resposta vazia da API Gemini');
       }
 
+      console.log('🔍 Resposta bruta da API Gemini:', responseText);
+
       // Limpar a resposta removendo markdown e extraindo JSON
       let cleanedResponse = responseText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
         .replace(/^\s*[\r\n]/gm, '')
         .trim();
+
+      // Tentar extrair JSON se houver texto antes/depois
+      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanedResponse = jsonMatch[0];
+      }
+
+      console.log('🧹 Resposta limpa:', cleanedResponse);
 
       // Tentar fazer parse do JSON
       const parsedContent = JSON.parse(cleanedResponse);
@@ -214,26 +245,37 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         throw new Error('Estrutura JSON inválida na resposta');
       }
 
-      // Limitar tamanhos conforme especificado no prompt
-      const title = parsedContent.title.substring(0, 70);
-      const text = parsedContent.text.substring(0, 450);
-
-      geminiLogger.logValidation({ title, text }, true);
+      // Processar título - remover prefixos indesejados
+      let title = parsedContent.title.toString().trim();
+      title = title.replace(/^Quadro Interativo:\s*/i, '');
+      title = title.replace(/^Atividade de\s*/i, '');
+      title = title.replace(/^Atividade sobre\s*/i, '');
       
-      return { title, text };
+      // Processar texto
+      let text = parsedContent.text.toString().trim();
+
+      // Limitar tamanhos
+      title = title.substring(0, 80);
+      text = text.substring(0, 500);
+
+      const finalResult = { title, text };
+      console.log('✅ Conteúdo processado final:', finalResult);
+
+      geminiLogger.logValidation(finalResult, true);
+      
+      return finalResult;
       
     } catch (error) {
+      console.error('❌ Erro ao processar resposta da IA:', error);
       geminiLogger.logValidation(response, false, [error.message]);
       
-      // Fallback com conteúdo educativo baseado nos dados fornecidos
-      const educationalTitle = data.theme || 'Conteúdo Educativo';
-      const educationalText = data.objectives 
-        ? `${data.objectives} - Tema: ${data.theme}. Explore este conceito através de atividades interativas que facilitam o aprendizado.`
-        : `Explore o tema "${data.theme}" através de atividades educativas interativas que facilitam a compreensão e aplicação dos conceitos fundamentais.`;
+      // Fallback melhorado
+      const fallbackTitle = 'Conteúdo Educativo';
+      const fallbackText = 'Conteúdo educativo desenvolvido para facilitar a compreensão e aplicação dos conceitos fundamentais da disciplina através de atividades interativas e didáticas.';
       
       return {
-        title: educationalTitle.substring(0, 70),
-        text: educationalText.substring(0, 450)
+        title: fallbackTitle.substring(0, 80),
+        text: fallbackText.substring(0, 500)
       };
     }
   }
