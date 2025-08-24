@@ -94,7 +94,7 @@ export class QuadroInterativoGenerator {
 
   private buildPrompt(data: QuadroInterativoData): string {
     return `
-Você é uma IA especializada em educação que cria conteúdo para quadros interativos.
+Você é uma IA especializada em educação que cria conteúdo educativo completo e explicativo para quadros interativos em sala de aula.
 
 Com base nos seguintes dados:
 - Disciplina: ${data.subject}
@@ -104,21 +104,28 @@ Com base nos seguintes dados:
 - Nível de Dificuldade: ${data.difficultyLevel}
 - Atividade Mostrada: ${data.quadroInterativoCampoEspecifico}
 
-Gere um conteúdo específico para ser exibido em um quadro interativo que será mostrado em um card retangular central.
+Gere um conteúdo EDUCATIVO e EXPLICATIVO para ser exibido em um quadro interativo.
 
 IMPORTANTE: Responda APENAS no seguinte formato JSON, sem texto adicional:
 
 {
-  "title": "Título claro e objetivo da atividade para o quadro (máximo 60 caracteres)",
-  "text": "Texto descritivo e educativo que será exibido no quadro interativo, adequado para a série e disciplina especificadas (máximo 300 caracteres, linguagem simples e direta)"
+  "title": "Título impactante e apresentativo sobre o tema (sem 'Quadro Interativo:', máximo 50 caracteres)",
+  "text": "Conteúdo educativo COMPLETO que explica o tema de forma didática, incluindo definições, características, dicas de identificação ou aplicação, e exemplos quando possível. Deve ser informativo e educativo para ajudar o aluno a entender o conceito (máximo 280 caracteres)"
 }
 
-O conteúdo deve ser:
-- Educativo e apropriado para a série especificada
-- Claro e objetivo
-- Relacionado diretamente ao tema e objetivos
-- Adequado para exibição em quadro interativo
-- Sem códigos ou dados técnicos visíveis
+REGRAS ESPECÍFICAS:
+- TÍTULO: Seja impactante e direto sobre o tema (ex: "Substantivos Próprios", "Equações do 1º Grau")
+- TEXTO: Deve EXPLICAR o conceito, não apenas descrever uma atividade
+- Inclua DEFINIÇÕES, CARACTERÍSTICAS e DICAS PRÁTICAS
+- Use linguagem adequada para ${data.schoolYear}
+- Seja educativo e informativo, não apenas descritivo
+- Foque em ENSINAR o conceito através do texto
+
+EXEMPLO para Substantivos Próprios:
+{
+  "title": "Substantivos Próprios",
+  "text": "Substantivos próprios são palavras que nomeiam seres específicos e únicos, sempre escritos com letra maiúscula. Ex: Maria, Brasil, Amazon. Dica: se você pode colocar 'o/a' antes da palavra, pode ser comum; se não, é próprio!"
+}
 `;
   }
 
