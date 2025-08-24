@@ -172,29 +172,31 @@ IMPORTANT:
 - Return ONLY the valid JSON array
 
         IMPORTANTE: Para atividades do tipo "quadro-interativo", use OBRIGATORIAMENTE estes campos específicos:
-        - "Disciplina / Área de conhecimento": string com a disciplina
-        - "Ano / Série": string com ano/série escolar
-        - "Tema ou Assunto da aula": string com o tema principal
-        - "Objetivo de aprendizagem da aula": string com objetivos específicos
+        - "Disciplina / Área de conhecimento": string com a disciplina específica
+        - "Ano / Série": string com ano/série escolar detalhado
+        - "Tema ou Assunto da aula": string com o tema principal da aula
+        - "Objetivo de aprendizagem da aula": string com objetivos educacionais específicos
         - "Nível de Dificuldade": string (Básico/Intermediário/Avançado)
-        - "Atividade mostrada": string descrevendo a atividade interativa
+        - "Atividade mostrada": string descrevendo detalhadamente a atividade interativa
 
-        EXEMPLO para quadro-interativo:
+        EXEMPLO OBRIGATÓRIO para quadro-interativo:
         {
           "id": "quadro-interativo",
-          "title": "Quadro Interativo: Frações",
-          "description": "Atividade interativa para ensino de frações usando quadro digital",
-          "duration": "45 min",
+          "title": "Quadro Interativo: Sistema Solar",
+          "description": "Atividade interativa para exploração do sistema solar com elementos visuais dinâmicos",
+          "duration": "50 min",
           "difficulty": "Intermediário",
-          "category": "Matemática",
+          "category": "Ciências",
           "type": "activity",
-          "Disciplina / Área de conhecimento": "Matemática",
-          "Ano / Série": "5º Ano",
-          "Tema ou Assunto da aula": "Frações e suas representações",
-          "Objetivo de aprendizagem da aula": "Compreender o conceito de frações e suas representações visuais",
+          "Disciplina / Área de conhecimento": "Ciências da Natureza",
+          "Ano / Série": "4º Ano do Ensino Fundamental",
+          "Tema ou Assunto da aula": "Sistema Solar e os Planetas",
+          "Objetivo de aprendizagem da aula": "Identificar e compreender as características dos planetas do sistema solar",
           "Nível de Dificuldade": "Intermediário",
-          "Atividade mostrada": "Jogo interativo de arrastar e soltar para montar frações"
+          "Atividade mostrada": "Simulação interativa 3D do sistema solar com informações detalhadas sobre cada planeta"
         }
+
+        ATENÇÃO CRÍTICA: Todos os campos customizados para "quadro-interativo" DEVEM ser preenchidos com dados específicos, detalhados e educacionalmente relevantes. NUNCA deixe campos vazios ou genéricos!
 `;
 
   return prompt;

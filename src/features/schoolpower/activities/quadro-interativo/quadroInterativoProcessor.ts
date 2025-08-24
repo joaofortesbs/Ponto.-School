@@ -1,5 +1,7 @@
 import { ActivityFormData } from '../../construction/types/ActivityTypes';
 import { fieldMapping, normalizeMaterials } from './fieldMapping';
+import { geminiLogger } from '../../../utils/geminiDebugLogger';
+import { QuadroInterativoGenerator } from './QuadroInterativoGenerator';
 
 export interface QuadroInterativoFields {
   [key: string]: string;
@@ -149,55 +151,113 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
 }
 
 /**
- * Processa dados gerados pela IA do Gemini para o preview
+ * Processa dados gerados pela IA para Quadro Interativo
  */
-export function processQuadroInterativoAIData(generatedData: any): any {
-  console.log('🤖 Processando dados gerados pela IA:', generatedData);
+export async function processQuadroInterativoData(generatedData: any): Promise<any> {
+  console.log('🔄 Processando dados gerados pela IA para Quadro Interativo:', generatedData);
 
-  // Se já tem a estrutura correta da IA
-  if (generatedData?.data?.cardContent) {
-    return {
-      ...generatedData.data,
-      isGeneratedByAI: true,
-      cardContent: {
-        title: String(generatedData.data.cardContent.title || 'Conteúdo do Quadro'),
-        text: String(generatedData.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+  try {
+    // Se dados já processados pela IA com cardContent
+    if (generatedData?.data?.cardContent) {
+      console.log('✅ Dados já processados com cardContent encontrados');
+      return {
+        ...generatedData.data,
+        isGeneratedByAI: true,
+        cardContent: {
+          title: String(generatedData.data.cardContent.title || 'Conteúdo do Quadro'),
+          text: String(generatedData.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+        }
+      };
+    }
+
+    // Se tem cardContent direto
+    if (generatedData?.cardContent) {
+      console.log('✅ CardContent direto encontrado');
+      return {
+        ...generatedData,
+        isGeneratedByAI: true,
+        cardContent: {
+          title: String(generatedData.cardContent.title || 'Conteúdo do Quadro'),
+          text: String(generatedData.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+        }
+      };
+    }
+
+    // Se tem campos customizados específicos para Quadro Interativo, gerar conteúdo via IA
+    if (generatedData?.customFields || generatedData?.['Disciplina / Área de conhecimento']) {
+      console.log('🤖 Gerando conteúdo via IA Gemini com campos customizados');
+
+      const generator = new QuadroInterativoGenerator();
+
+      // Construir dados para a IA
+      const aiData = {
+        subject: generatedData.customFields?.['Disciplina / Área de conhecimento'] || 
+                generatedData['Disciplina / Área de conhecimento'] || 'Disciplina',
+        schoolYear: generatedData.customFields?.['Ano / Série'] || 
+                   generatedData['Ano / Série'] || 'Ano/Série',
+        theme: generatedData.customFields?.['Tema ou Assunto da aula'] || 
+               generatedData['Tema ou Assunto da aula'] || 'Tema da aula',
+        objectives: generatedData.customFields?.['Objetivo de aprendizagem da aula'] || 
+                   generatedData['Objetivo de aprendizagem da aula'] || 'Objetivos',
+        difficultyLevel: generatedData.customFields?.['Nível de Dificuldade'] || 
+                        generatedData['Nível de Dificuldade'] || 'Intermediário',
+        quadroInterativoCampoEspecifico: generatedData.customFields?.['Atividade mostrada'] || 
+                                        generatedData['Atividade mostrada'] || 'Atividade interativa'
+      };
+
+      console.log('📝 Dados preparados para IA:', aiData);
+
+      try {
+        const aiGeneratedContent = await generator.generateQuadroInterativoContent(aiData);
+        console.log('✅ Conteúdo gerado pela IA:', aiGeneratedContent);
+
+        return aiGeneratedContent;
+      } catch (aiError) {
+        console.error('❌ Erro ao gerar conteúdo com IA:', aiError);
+        // Fallback para conteúdo manual
+        return createFallbackContent(generatedData, aiData);
       }
-    };
-  }
+    }
 
-  // Se tem dados diretos da IA
-  if (generatedData?.cardContent) {
-    return {
-      ...generatedData,
-      isGeneratedByAI: true,
-      cardContent: {
-        title: String(generatedData.cardContent.title || 'Conteúdo do Quadro'),
-        text: String(generatedData.cardContent.text || 'Conteúdo educativo gerado pela IA.')
-      }
-    };
-  }
+    // Se tem título e descrição diretos
+    if (generatedData?.title && generatedData?.description) {
+      console.log('📄 Usando título e descrição diretos');
+      return {
+        ...generatedData,
+        isGeneratedByAI: true,
+        cardContent: {
+          title: String(generatedData.title),
+          text: String(generatedData.description)
+        }
+      };
+    }
 
-  // Se tem título e descrição diretos
-  if (generatedData?.title && generatedData?.description) {
-    return {
-      ...generatedData,
-      isGeneratedByAI: true,
-      cardContent: {
-        title: String(generatedData.title),
-        text: String(generatedData.description)
-      }
-    };
-  }
+    // Fallback final
+    console.log('⚠️ Usando fallback final');
+    return createFallbackContent(generatedData);
 
-  // Fallback - retornar dados originais
-  console.log('⚠️ Estrutura de dados inesperada, usando fallback');
+  } catch (error) {
+    console.error('❌ Erro no processamento de dados:', error);
+    return createFallbackContent(generatedData);
+  }
+}
+
+/**
+ * Cria conteúdo de fallback quando a IA não está disponível
+ */
+function createFallbackContent(generatedData: any, aiData?: any): any {
+  console.log('🔄 Criando conteúdo de fallback');
+
+  const fallbackTitle = aiData?.theme || generatedData?.title || 'Quadro Interativo Educativo';
+  const fallbackText = aiData?.objectives || generatedData?.description || 
+    'Atividade educativa interativa desenvolvida para apoiar o processo de ensino-aprendizagem de forma dinâmica e envolvente.';
+
   return {
     ...generatedData,
     isGeneratedByAI: false,
     cardContent: {
-      title: 'Conteúdo do Quadro',
-      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+      title: String(fallbackTitle),
+      text: String(fallbackText)
     }
   };
 }

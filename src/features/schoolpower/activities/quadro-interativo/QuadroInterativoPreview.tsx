@@ -96,6 +96,10 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     };
   })();
 
+  // Log de debug para verificar dados recebidos
+  console.log('🔍 QuadroInterativoPreview - Dados recebidos:', data);
+  console.log('🔍 QuadroInterativoPreview - CardContent:', cardContent);
+
   // Verificar se o conteúdo foi gerado pela IA
   const isGeneratedByAI = data?.isGeneratedByAI || 
                          data?.generatedAt || 
