@@ -120,52 +120,17 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           <CardContent className="p-8">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-inner border-2 border-blue-200 dark:border-blue-700">
               <div className="text-center space-y-6">
-                {/* Título Principal */}
+                {/* Título Principal - Conteúdo da IA */}
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
                   {cardContent.title}
                 </h1>
                 
-                {/* Linha Decorativa */}
-                <div className="w-20 h-1 bg-blue-500 mx-auto rounded-full"></div>
-                
-                {/* Conteúdo Principal */}
+                {/* Conteúdo Principal - Texto da IA */}
                 <div className="max-w-3xl mx-auto">
                   <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
                     {cardContent.text}
                   </p>
                 </div>
-              </div>
-              
-              {/* Indicador de IA na parte inferior */}
-              <div className="mt-8 pt-6 border-t border-blue-200 dark:border-blue-700">
-                <div className="flex items-center justify-center gap-3">
-                  {isGeneratedByAI ? (
-                    <>
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                        ✨ Conteúdo gerado por IA Gemini
-                      </span>
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                        ⏳ Aguardando geração de conteúdo pela IA
-                      </span>
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                    </>
-                  )}
-                </div>
-                
-                {/* Timestamp se disponível */}
-                {data?.generatedAt && (
-                  <div className="text-center mt-2">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      Gerado em: {new Date(data.generatedAt).toLocaleString('pt-BR')}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </CardContent>
