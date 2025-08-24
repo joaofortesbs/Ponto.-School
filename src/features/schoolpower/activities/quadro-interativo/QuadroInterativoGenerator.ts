@@ -69,13 +69,18 @@ export class QuadroInterativoGenerator {
     } catch (error) {
       geminiLogger.logError(error as Error, { data });
       
-      // Fallback em caso de erro
+      // Fallback com conteúdo educativo melhorado
+      const educationalTitle = data.theme || 'Conteúdo Educativo';
+      const educationalText = data.objectives 
+        ? `${data.objectives} - Explore este conceito através de atividades interativas que facilitam o aprendizado e compreensão do tema.`
+        : `Explore o tema "${data.theme}" de forma interativa. Este conteúdo foi desenvolvido para facilitar a compreensão e aplicação dos conceitos fundamentais da disciplina.`;
+      
       const fallbackResult: QuadroInterativoContent = {
-        title: data.theme || 'Quadro Interativo',
-        description: data.objectives || 'Atividade de quadro interativo',
+        title: data.theme || 'Conteúdo Educativo',
+        description: data.objectives || 'Atividade educativa interativa',
         cardContent: {
-          title: 'Atividade de Quadro Interativo',
-          text: 'Conteúdo educativo para interação no quadro digital da sala de aula.'
+          title: educationalTitle.substring(0, 70),
+          text: educationalText.substring(0, 450)
         },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: false,
@@ -94,9 +99,9 @@ export class QuadroInterativoGenerator {
 
   private buildPrompt(data: QuadroInterativoData): string {
     return `
-Você é uma IA especializada em educação que cria conteúdo educativo completo e explicativo para quadros interativos em sala de aula.
+Você é uma IA especializada em educação brasileira que cria conteúdo educativo COMPLETO e DIDÁTICO para quadros interativos em sala de aula.
 
-Com base nos seguintes dados:
+DADOS DA AULA:
 - Disciplina: ${data.subject}
 - Ano/Série: ${data.schoolYear}
 - Tema: ${data.theme}
@@ -104,29 +109,46 @@ Com base nos seguintes dados:
 - Nível de Dificuldade: ${data.difficultyLevel}
 - Atividade Mostrada: ${data.quadroInterativoCampoEspecifico}
 
-Gere um conteúdo EDUCATIVO e EXPLICATIVO para ser exibido em um quadro interativo.
+MISSÃO: Criar um conteúdo que ENSINE o conceito de forma clara e completa, como se fosse uma mini-aula explicativa.
 
-IMPORTANTE: Responda APENAS no seguinte formato JSON, sem texto adicional:
-
+FORMATO DE RESPOSTA (JSON apenas):
 {
-  "title": "Título impactante e apresentativo sobre o tema (sem 'Quadro Interativo:', máximo 50 caracteres)",
-  "text": "Conteúdo educativo COMPLETO que explica o tema de forma didática, incluindo definições, características, dicas de identificação ou aplicação, e exemplos quando possível. Deve ser informativo e educativo para ajudar o aluno a entender o conceito (máximo 280 caracteres)"
+  "title": "Título educativo direto sobre o conceito (máximo 60 caracteres)",
+  "text": "Explicação COMPLETA do conceito com definição, características principais, exemplos práticos e dicas para identificação/aplicação. Deve ser uma mini-aula textual que ensina efetivamente o tema (máximo 400 caracteres)"
 }
 
-REGRAS ESPECÍFICAS:
-- TÍTULO: Seja impactante e direto sobre o tema (ex: "Substantivos Próprios", "Equações do 1º Grau")
-- TEXTO: Deve EXPLICAR o conceito, não apenas descrever uma atividade
-- Inclua DEFINIÇÕES, CARACTERÍSTICAS e DICAS PRÁTICAS
-- Use linguagem adequada para ${data.schoolYear}
-- Seja educativo e informativo, não apenas descritivo
-- Foque em ENSINAR o conceito através do texto
+DIRETRIZES OBRIGATÓRIAS:
 
-EXEMPLO para Substantivos Próprios:
+TÍTULO:
+- Seja direto e educativo sobre o conceito
+- Use terminologia adequada para ${data.schoolYear}
+- Exemplos: "Substantivos Próprios e Comuns", "Função do 1º Grau", "Fotossíntese das Plantas"
+- NÃO use "Quadro Interativo" ou "Atividade de"
+
+TEXTO:
+- INICIE com uma definição clara do conceito
+- INCLUA as características principais
+- ADICIONE exemplos práticos e concretos
+- FORNEÇA dicas para identificação ou aplicação
+- Use linguagem didática apropriada para ${data.schoolYear}
+- Seja EDUCATIVO, não apenas descritivo
+- Foque em ENSINAR o conceito de forma completa
+
+EXEMPLOS DE QUALIDADE:
+
+Para "Substantivos Próprios":
 {
-  "title": "Substantivos Próprios",
-  "text": "Substantivos próprios são palavras que nomeiam seres específicos e únicos, sempre escritos com letra maiúscula. Ex: Maria, Brasil, Amazon. Dica: se você pode colocar 'o/a' antes da palavra, pode ser comum; se não, é próprio!"
+  "title": "Substantivos Próprios e Comuns",
+  "text": "Substantivos próprios nomeiam seres específicos e únicos (Maria, Brasil, Amazonas) e sempre iniciam com letra maiúscula. Substantivos comuns nomeiam seres em geral (menina, país, rio) e usam minúscula. Dica: se pode usar artigo 'o/a' antes, é comum; se não, é próprio!"
 }
-`;
+
+Para "Equação do 1º Grau":
+{
+  "title": "Equações do Primeiro Grau",
+  "text": "Equação do 1º grau tem formato ax + b = 0, onde 'a' é diferente de zero. Para resolver: isole o 'x' fazendo operações inversas. Ex: 2x + 4 = 10 → 2x = 6 → x = 3. Dica: sempre faça a operação contrária nos dois lados da igualdade!"
+}
+
+AGORA GERE O CONTEÚDO EDUCATIVO:`;
   }
 
   private async callGeminiAPI(prompt: string): Promise<any> {
@@ -145,10 +167,10 @@ EXEMPLO para Substantivos Próprios:
             }]
           }],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.8,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
           }
         })
       });
@@ -192,9 +214,9 @@ EXEMPLO para Substantivos Próprios:
         throw new Error('Estrutura JSON inválida na resposta');
       }
 
-      // Limitar tamanhos
-      const title = parsedContent.title.substring(0, 60);
-      const text = parsedContent.text.substring(0, 300);
+      // Limitar tamanhos conforme especificado no prompt
+      const title = parsedContent.title.substring(0, 70);
+      const text = parsedContent.text.substring(0, 450);
 
       geminiLogger.logValidation({ title, text }, true);
       
@@ -203,10 +225,15 @@ EXEMPLO para Substantivos Próprios:
     } catch (error) {
       geminiLogger.logValidation(response, false, [error.message]);
       
-      // Fallback com conteúdo padrão
+      // Fallback com conteúdo educativo baseado nos dados fornecidos
+      const educationalTitle = data.theme || 'Conteúdo Educativo';
+      const educationalText = data.objectives 
+        ? `${data.objectives} - Tema: ${data.theme}. Explore este conceito através de atividades interativas que facilitam o aprendizado.`
+        : `Explore o tema "${data.theme}" através de atividades educativas interativas que facilitam a compreensão e aplicação dos conceitos fundamentais.`;
+      
       return {
-        title: 'Atividade de Quadro Interativo',
-        text: 'Conteúdo educativo para interação no quadro digital da sala de aula.'
+        title: educationalTitle.substring(0, 70),
+        text: educationalText.substring(0, 450)
       };
     }
   }
