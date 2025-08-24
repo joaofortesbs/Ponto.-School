@@ -172,12 +172,29 @@ IMPORTANT:
 - Return ONLY the valid JSON array
 
         IMPORTANTE: Para atividades do tipo "quadro-interativo", use OBRIGATORIAMENTE estes campos específicos:
-        - "Disciplina / Área de conhecimento"
-        - "Ano / Série"
-        - "Tema ou Assunto da aula"
-        - "Objetivo de aprendizagem da aula"
-        - "Nível de Dificuldade"
-        - "Atividade mostrada" (deve conter apenas atividades válidas do School Power disponíveis)
+        - "Disciplina / Área de conhecimento": string com a disciplina
+        - "Ano / Série": string com ano/série escolar
+        - "Tema ou Assunto da aula": string com o tema principal
+        - "Objetivo de aprendizagem da aula": string com objetivos específicos
+        - "Nível de Dificuldade": string (Básico/Intermediário/Avançado)
+        - "Atividade mostrada": string descrevendo a atividade interativa
+
+        EXEMPLO para quadro-interativo:
+        {
+          "id": "quadro-interativo",
+          "title": "Quadro Interativo: Frações",
+          "description": "Atividade interativa para ensino de frações usando quadro digital",
+          "duration": "45 min",
+          "difficulty": "Intermediário",
+          "category": "Matemática",
+          "type": "activity",
+          "Disciplina / Área de conhecimento": "Matemática",
+          "Ano / Série": "5º Ano",
+          "Tema ou Assunto da aula": "Frações e suas representações",
+          "Objetivo de aprendizagem da aula": "Compreender o conceito de frações e suas representações visuais",
+          "Nível de Dificuldade": "Intermediário",
+          "Atividade mostrada": "Jogo interativo de arrastar e soltar para montar frações"
+        }
 `;
 
   return prompt;

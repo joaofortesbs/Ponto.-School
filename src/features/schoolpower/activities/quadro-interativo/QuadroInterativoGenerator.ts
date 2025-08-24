@@ -39,16 +39,56 @@ export class QuadroInterativoGenerator {
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
-        cardContent: parsedContent,
+        cardContent: {
+          title: parsedContent.title || data.theme || 'Conteúdo do Quadro',
+          text: parsedContent.text || data.objectives || 'Conteúdo educativo gerado pela IA.'
+        },
         generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true
+        isGeneratedByAI: true,
+        // Campos originais para compatibilidade
+        subject: data.subject,
+        schoolYear: data.schoolYear,
+        theme: data.theme,
+        objectives: data.objectives,
+        difficultyLevel: data.difficultyLevel,
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico,
+        // Campos customizados específicos
+        customFields: {
+          'Disciplina / Área de conhecimento': data.subject,
+          'Ano / Série': data.schoolYear,
+          'Tema ou Assunto da aula': data.theme,
+          'Objetivo de aprendizagem da aula': data.objectives,
+          'Nível de Dificuldade': data.difficultyLevel,
+          'Atividade mostrada': data.quadroInterativoCampoEspecifico
+        }
       };
 
       geminiLogger.logResponse(result, Date.now());
+      console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
       return result;
     } catch (error) {
       geminiLogger.logError(error as Error, { data });
-      throw new Error(`Erro ao gerar conteúdo do Quadro Interativo: ${error.message}`);
+      
+      // Fallback em caso de erro
+      const fallbackResult: QuadroInterativoContent = {
+        title: data.theme || 'Quadro Interativo',
+        description: data.objectives || 'Atividade de quadro interativo',
+        cardContent: {
+          title: 'Atividade de Quadro Interativo',
+          text: 'Conteúdo educativo para interação no quadro digital da sala de aula.'
+        },
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: false,
+        subject: data.subject,
+        schoolYear: data.schoolYear,
+        theme: data.theme,
+        objectives: data.objectives,
+        difficultyLevel: data.difficultyLevel,
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
+      };
+      
+      console.log('⚠️ Usando conteúdo fallback para Quadro Interativo:', fallbackResult);
+      return fallbackResult;
     }
   }
 
