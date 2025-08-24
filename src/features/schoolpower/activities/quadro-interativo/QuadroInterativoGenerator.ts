@@ -103,13 +103,6 @@ export class QuadroInterativoGenerator {
       console.log('✅ Resultado final gerado:', result);
       geminiLogger.logResponse(result, Date.now());
       
-      return result;yLevel,
-          'Atividade mostrada': data.quadroInterativoCampoEspecifico
-        }
-      };
-
-      geminiLogger.logResponse(result, Date.now());
-      console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
       return result;
     } catch (error) {
       geminiLogger.logError(error as Error, { data });
