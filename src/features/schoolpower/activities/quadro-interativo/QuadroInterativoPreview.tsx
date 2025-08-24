@@ -17,32 +17,60 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 }) => {
   // Extrair dados do conteúdo gerado pela IA
   const cardContent = (() => {
-    // Se há conteúdo gerado pela IA com cardContent
+    console.log('🔍 Processando dados para QuadroInterativoPreview:', data);
+    
+    // Prioridade 1: Se há conteúdo gerado pela IA com cardContent
     if (data?.cardContent && typeof data.cardContent === 'object') {
+      console.log('✅ Usando cardContent gerado pela IA');
       return {
         title: String(data.cardContent.title || 'Conteúdo do Quadro'),
-        text: String(data.cardContent.text || 'Conteúdo educativo será exibido aqui após a geração pela IA.')
+        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
       };
     }
     
-    // Se há dados diretos da IA no nível raiz
+    // Prioridade 2: Se há dados diretos da IA no nível raiz
     if (data?.title && data?.description) {
+      console.log('✅ Usando dados diretos da IA');
       return {
         title: String(data.title),
         text: String(data.description)
       };
     }
     
-    // Se há dados nos campos personalizados
-    if (data?.customFields) {
-      const theme = data.customFields['Tema ou Assunto da aula'] || 
-                   data.customFields['tema'] || 
-                   data.customFields['theme'] || 
+    // Prioridade 3: Buscar nos dados aninhados
+    if (data?.data && typeof data.data === 'object') {
+      if (data.data.cardContent) {
+        console.log('✅ Usando cardContent aninhado');
+        return {
+          title: String(data.data.cardContent.title || 'Conteúdo do Quadro'),
+          text: String(data.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+        };
+      }
+      if (data.data.title && data.data.description) {
+        console.log('✅ Usando dados aninhados da IA');
+        return {
+          title: String(data.data.title),
+          text: String(data.data.description)
+        };
+      }
+    }
+    
+    // Prioridade 4: Se há dados nos campos personalizados
+    if (data?.customFields || (data?.data?.customFields)) {
+      const customFields = data.customFields || data.data?.customFields || {};
+      console.log('✅ Usando customFields:', customFields);
+      
+      const theme = customFields['Tema ou Assunto da aula'] || 
+                   customFields['tema'] || 
+                   customFields['theme'] || 
+                   data?.theme ||
                    'Conteúdo do Quadro';
       
-      const objectives = data.customFields['Objetivo de aprendizagem da aula'] || 
-                        data.customFields['objetivos'] || 
-                        data.customFields['objectives'] || 
+      const objectives = customFields['Objetivo de aprendizagem da aula'] || 
+                        customFields['objetivos'] || 
+                        customFields['objectives'] || 
+                        data?.objectives ||
+                        data?.description ||
                         'Conteúdo educativo será exibido aqui após a geração pela IA.';
       
       return {
@@ -51,7 +79,17 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       };
     }
     
+    // Prioridade 5: Usar dados básicos se disponíveis
+    if (data?.theme || data?.subject) {
+      console.log('✅ Usando dados básicos disponíveis');
+      return {
+        title: String(data.theme || data.subject || 'Conteúdo do Quadro'),
+        text: String(data.objectives || data.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.')
+      };
+    }
+    
     // Fallback padrão
+    console.log('⚠️ Usando fallback padrão');
     return {
       title: 'Conteúdo do Quadro',
       text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'

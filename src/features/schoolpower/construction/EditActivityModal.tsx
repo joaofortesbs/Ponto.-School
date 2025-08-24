@@ -1199,7 +1199,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customCustomFields['nivelDificuldade'] ||
+                              customFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1532,12 +1532,12 @@ const EditActivityModal = ({
     // Verificação específica para Quadro Interativo
     const isQuadroInterativo = activity.id === 'quadro-interativo';
     const hasQuadroInterativoData = isQuadroInterativo && (
-      formData.subject !== 'Matemática' || // Mudou do padrão
-      formData.schoolYear !== 'Ex: 6º Ano, 7º Ano, 8º Ano' || // Mudou do placeholder
-      formData.theme !== 'Ex: Substantivos e Verbos, Frações, Sistema Solar' || // Mudou do placeholder
-      formData.objectives !== '' || // Tem objetivos definidos
-      formData.difficultyLevel !== 'Ex: Básico, Intermediário, Avançado' || // Mudou do placeholder
-      formData.quadroInterativoCampoEspecifico !== 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental' // Mudou do placeholder
+      (formData.subject && formData.subject !== 'Matemática') ||
+      (formData.schoolYear && formData.schoolYear !== '6º Ano') ||
+      (formData.theme && formData.theme !== '') ||
+      (formData.objectives && formData.objectives !== '') ||
+      (formData.difficultyLevel && formData.difficultyLevel !== 'Intermediário') ||
+      (formData.quadroInterativoCampoEspecifico && formData.quadroInterativoCampoEspecifico !== '')
     );
 
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {

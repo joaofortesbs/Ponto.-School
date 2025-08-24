@@ -40,8 +40,8 @@ export class QuadroInterativoGenerator {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
         cardContent: {
-          title: parsedContent.title || 'Conteúdo do Quadro',
-          text: parsedContent.text || 'Conteúdo educativo gerado pela IA.'
+          title: parsedContent.title || data.theme || 'Conteúdo do Quadro',
+          text: parsedContent.text || data.objectives || 'Conteúdo educativo gerado pela IA.'
         },
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true,
@@ -51,7 +51,16 @@ export class QuadroInterativoGenerator {
         theme: data.theme,
         objectives: data.objectives,
         difficultyLevel: data.difficultyLevel,
-        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico,
+        // Campos customizados específicos
+        customFields: {
+          'Disciplina / Área de conhecimento': data.subject,
+          'Ano / Série': data.schoolYear,
+          'Tema ou Assunto da aula': data.theme,
+          'Objetivo de aprendizagem da aula': data.objectives,
+          'Nível de Dificuldade': data.difficultyLevel,
+          'Atividade mostrada': data.quadroInterativoCampoEspecifico
+        }
       };
 
       geminiLogger.logResponse(result, Date.now());
