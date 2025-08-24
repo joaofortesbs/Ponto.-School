@@ -63,11 +63,6 @@ export class QuadroInterativoGenerator {
         }
       };
 
-      console.log('✅ Conteúdo do Quadro Interativo gerado com sucesso:', result);yLevel,
-          'Atividade mostrada': data.quadroInterativoCampoEspecifico
-        }
-      };
-
       geminiLogger.logResponse(result, Date.now());
       console.log('✅ Conteúdo do Quadro Interativo gerado:', result);
       return result;
