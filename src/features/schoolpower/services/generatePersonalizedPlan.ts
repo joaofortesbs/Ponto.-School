@@ -8,6 +8,7 @@ import { processAIGeneratedContent } from './exerciseListProcessor';
 import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
 import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 import { geminiLogger } from '../../../utils/geminiDebugLogger';
+import { prepareQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
@@ -478,7 +479,7 @@ export async function generatePersonalizedPlan(
     const validatedActivities = await validateGeminiPlan(generatedActivities, schoolPowerActivities);
 
     // Processar cada atividade e extrair custom fields
-    const actionPlanItems = validatedActivities.map(activityData => {
+    const actionPlanItems = await Promise.all(validatedActivities.map(async (activityData) => {
         console.log(`🔄 Processing activity: ${activityData.id}`);
 
         // Validação específica para Sequência Didática
@@ -592,7 +593,7 @@ export async function generatePersonalizedPlan(
 
         console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, processedActivity);
         return processedActivity;
-    });
+    }));
 
     if (actionPlanItems.length === 0) {
       console.warn('⚠️ No valid activities returned, using fallback');
