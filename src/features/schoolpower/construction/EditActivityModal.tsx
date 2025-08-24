@@ -486,6 +486,8 @@ const EditActivityModal = ({
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
     
     if (type === 'quadro-interativo') {
+      console.log('🖼️ Gerando conteúdo específico para Quadro Interativo:', data);
+      
       const generator = new QuadroInterativoGenerator();
       const result = await generator.generateQuadroInterativoContent({
         subject: data.subject,
@@ -496,26 +498,27 @@ const EditActivityModal = ({
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       });
       
+      // Estrutura final dos dados
+      const finalData = {
+        ...data,
+        ...result,
+        cardContent: result.cardContent,
+        generatedAt: result.generatedAt,
+        isGeneratedByAI: result.isGeneratedByAI
+      };
+      
       // Salvar conteúdo gerado
       const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
       localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
         success: true,
-        data: {
-          ...data,
-          ...result,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
+        data: finalData
       }));
+      
+      console.log('💾 Dados do Quadro Interativo salvos:', finalData);
       
       return {
         success: true,
-        data: {
-          ...data,
-          ...result,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
+        data: finalData
       };
     } else if (type === 'plano-aula') {
       return {
@@ -1980,7 +1983,7 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'quadro-interativo' ? (
                       <QuadroInterativoPreview
-                        data={generatedContent || formData}
+                        data={generatedContent?.data || generatedContent || formData}
                         activityData={activity}
                       />
                     ) : (

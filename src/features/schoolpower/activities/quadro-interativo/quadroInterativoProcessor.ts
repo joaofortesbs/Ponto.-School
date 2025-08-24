@@ -96,14 +96,14 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
   // Mapeamento para o formato do formulário
   const formData: ActivityFormData = {
     // Campos básicos
-    subject: safeCustomFields['Disciplina'] || 'Matemática',
+    subject: safeCustomFields['Disciplina'] || safeCustomFields['Disciplina / Área de conhecimento'] || 'Matemática',
     schoolYear: safeCustomFields['Ano / Série'] || 'Ex: 6º Ano, 7º Ano, 8º Ano',
-    theme: sanitizeJsonString(consolidatedData.title) || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
-    objectives: safeCustomFields['Objetivos de Aprendizagem'] || '',
+    theme: sanitizeJsonString(consolidatedData.title) || safeCustomFields['Tema ou Assunto da aula'] || 'Ex: Substantivos e Verbos, Frações, Sistema Solar',
+    objectives: safeCustomFields['Objetivo de aprendizagem da aula'] || safeCustomFields['Objetivos de Aprendizagem'] || '',
     difficultyLevel: safeCustomFields['Nível de Dificuldade'] || 'Ex: Básico, Intermediário, Avançado',
 
     // Campo específico do Quadro Interativo
-    quadroInterativoCampoEspecifico: safeCustomFields['Tipo de Interação'] || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
+    quadroInterativoCampoEspecifico: safeCustomFields['Atividade mostrada'] || safeCustomFields['Tipo de Interação'] || 'Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental',
 
     // Campos adicionais
     bnccCompetencias: safeCustomFields['BNCC / Competências'] || '',
@@ -146,6 +146,60 @@ export function processQuadroInterativoData(activity: QuadroInterativoActivity):
 
   console.log('✅ Dados do Quadro Interativo processados com sucesso:', formData);
   return formData;
+}
+
+/**
+ * Processa dados gerados pela IA do Gemini para o preview
+ */
+export function processQuadroInterativoAIData(generatedData: any): any {
+  console.log('🤖 Processando dados gerados pela IA:', generatedData);
+
+  // Se já tem a estrutura correta da IA
+  if (generatedData?.data?.cardContent) {
+    return {
+      ...generatedData.data,
+      isGeneratedByAI: true,
+      cardContent: {
+        title: String(generatedData.data.cardContent.title || 'Conteúdo do Quadro'),
+        text: String(generatedData.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+      }
+    };
+  }
+
+  // Se tem dados diretos da IA
+  if (generatedData?.cardContent) {
+    return {
+      ...generatedData,
+      isGeneratedByAI: true,
+      cardContent: {
+        title: String(generatedData.cardContent.title || 'Conteúdo do Quadro'),
+        text: String(generatedData.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+      }
+    };
+  }
+
+  // Se tem título e descrição diretos
+  if (generatedData?.title && generatedData?.description) {
+    return {
+      ...generatedData,
+      isGeneratedByAI: true,
+      cardContent: {
+        title: String(generatedData.title),
+        text: String(generatedData.description)
+      }
+    };
+  }
+
+  // Fallback - retornar dados originais
+  console.log('⚠️ Estrutura de dados inesperada, usando fallback');
+  return {
+    ...generatedData,
+    isGeneratedByAI: false,
+    cardContent: {
+      title: 'Conteúdo do Quadro',
+      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
+    }
+  };
 }
 
 /**
