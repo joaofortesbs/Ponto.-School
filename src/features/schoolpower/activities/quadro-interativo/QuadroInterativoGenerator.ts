@@ -107,13 +107,13 @@ DADOS DA AULA:
 - Nível: ${data.difficultyLevel}
 - Atividade: ${data.quadroInterativoCampoEspecifico}
 
-MISSÃO CRÍTICA: Criar um conteúdo que ENSINE o conceito de forma COMPLETA, DETALHADA e EDUCATIVA, como se fosse uma mini-aula explicativa que realmente transmite conhecimento profundo.
+MISSÃO CRÍTICA: Criar um conteúdo que ENSINE o aluno COMO ENTENDER, RESOLVER e APLICAR o conceito. Você está falando DIRETAMENTE com o aluno, ensinando passo a passo como ele deve pensar e resolver.
 
 FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
 {
   "title": "Título educativo direto sobre o conceito (SEM 'Quadro Interativo:', máximo 80 caracteres)",
-  "text": "Explicação COMPLETA e DETALHADA do conceito com: definição clara, características principais, exemplos práticos detalhados, dicas para identificação/aplicação, e contexto educativo apropriado. Deve ser uma mini-aula textual que ENSINA efetivamente o tema (máximo 500 caracteres)",
-  "advancedText": "Conteúdo PROGRESSIVO e AVANÇADO sobre o tema, incluindo: análises mais profundas, aplicações práticas complexas, conexões interdisciplinares, desafios elaborados e aspectos críticos do conceito. Deve expandir e aprofundar o conhecimento inicial (máximo 500 caracteres)"
+  "text": "Explicação DIRETA ao aluno sobre COMO resolver/entender o conceito: 'Para resolver [tema], você deve: 1) [passo], 2) [passo], 3) [passo]. Exemplo: [situação prática]. Dica importante: [estratégia de resolução]. Lembre-se: [ponto-chave para não errar].' (máximo 500 caracteres)",
+  "advancedText": "Orientação AVANÇADA ao aluno: 'Agora que você domina o básico, para situações mais complexas: [estratégias avançadas]. Quando encontrar [situação], faça [ação]. Cuidado com [armadilhas comuns]. Teste seu conhecimento: [desafio prático].' (máximo 500 caracteres)"
 }
 
 DIRETRIZES OBRIGATÓRIAS PARA TÍTULO:
@@ -124,39 +124,37 @@ DIRETRIZES OBRIGATÓRIAS PARA TÍTULO:
 - PROIBIDO: "Quadro Interativo: [tema]", "Atividade de [tema]"
 
 DIRETRIZES OBRIGATÓRIAS PARA TEXTO:
-- INICIE com definição clara e objetiva
-- INCLUA características fundamentais
-- ADICIONE exemplos práticos e específicos
-- FORNEÇA dicas de identificação/aplicação
-- CONTEXTUALIZE para a realidade do ${data.schoolYear}
-- Use linguagem didática e acessível
-- Seja EDUCATIVO e INFORMATIVO, não apenas descritivo
-- ENSINE o conceito de forma completa
+- FALE DIRETAMENTE com o aluno: "Para você resolver...", "Quando você encontrar...", "Faça assim..."
+- ENSINE o PASSO A PASSO: "Primeiro faça..., depois..., por último..."
+- DÊ EXEMPLOS PRÁTICOS: "Por exemplo, se você tem..., então..."
+- FORNEÇA DICAS DE RESOLUÇÃO: "Dica: sempre comece por...", "Lembre-se de..."
+- ALERTE para ERROS COMUNS: "Cuidado para não...", "Evite..."
+- Use linguagem DIRETA e PRÁTICA para ${data.schoolYear}
+- ENSINE como PENSAR e RESOLVER, não apenas o que é o conceito
 
 DIRETRIZES OBRIGATÓRIAS PARA TEXTO AVANÇADO:
-- APROFUNDE conceitos já apresentados no texto inicial
-- INCLUA aplicações práticas mais complexas
-- ADICIONE conexões com outros temas/disciplinas
-- APRESENTE desafios e análises críticas
-- EXPLORE aspectos mais elaborados do tema
-- MANTENHA coerência com o nível educacional
-- SEJA progressivo, não repetitivo
-- ESTIMULE pensamento crítico e análise
+- CONTINUE falando DIRETAMENTE com o aluno
+- ENSINE estratégias AVANÇADAS: "Para casos mais complexos, faça..."
+- APRESENTE DESAFIOS: "Agora teste: tente resolver..."
+- CONECTE com outros temas: "Isso se relaciona com... que você já viu"
+- DÊ DICAS AVANÇADAS: "Truque profissional: quando..., use..."
+- ESTIMULE raciocínio: "Pense: por que isso acontece quando...?"
+- MANTENHA tom de ORIENTAÇÃO DIRETA ao aluno
 
 EXEMPLOS DE QUALIDADE MÁXIMA:
 
 Para "Relevo Brasileiro":
 {
-  "title": "Formas de Relevo do Brasil",
-  "text": "O relevo brasileiro apresenta planícies (terras baixas e planas como Pantanal), planaltos (terras altas e planas como Planalto Central), depressões (terras baixas entre planaltos) e serras (elevações como Serra do Mar). Formado por rochas antigas, possui altitudes moderadas. Dica: observe se o terreno é plano e baixo (planície), plano e alto (planalto) ou montanhoso (serra).",
-  "advancedText": "A formação do relevo brasileiro resulta de processos tectônicos e erosivos ao longo de milhões de anos. A Plataforma Sul-Americana, estável geologicamente, explica as altitudes moderadas. Fatores como intemperismo tropical, ação fluvial e variações climáticas modelaram paisagens distintas. Análise: como o relevo influencia clima, hidrografia e ocupação humana em diferentes regiões?"
+  "title": "Como Identificar Formas de Relevo",
+  "text": "Para você identificar o relevo, siga estes passos: 1) Observe a altitude - baixa (planície) ou alta (planalto/serra). 2) Veja se é plano ou montanhoso. 3) Compare: Pantanal = baixo e plano (planície), Planalto Central = alto e plano, Serra do Mar = alto e montanhoso. Dica: se for plano e baixo, é planície; plano e alto, é planalto; montanhoso, é serra. Memorize: planície = plana e baixa!",
+  "advancedText": "Agora que você sabe identificar, entenda COMO se formaram: processos antigos moldaram o Brasil. Para análises complexas, relacione: relevo baixo = rios lentos e navegáveis; relevo alto = rios rápidos e energia. Desafio: explique por que São Paulo (planalto) tem clima diferente do Pantanal (planície). Dica avançada: altitude influencia temperatura e chuvas!"
 }
 
 Para "Substantivos Próprios":
 {
-  "title": "Substantivos Próprios e Comuns",
-  "text": "Substantivos próprios nomeiam seres específicos e únicos (Maria, Brasil, Amazonas) e sempre iniciam com letra maiúscula. Substantivos comuns nomeiam seres em geral (menina, país, rio) e usam minúscula. Diferença: próprios identificam especificamente, comuns generalizam. Dica: se pode colocar artigo 'o/a' antes sem soar estranho, é comum!",
-  "advancedText": "A distinção próprio/comum relaciona-se à função referencial da linguagem e processos de particularização versus generalização. Em textos, substantivos próprios criam efeitos de realismo e especificidade. Desafio: analise como a transformação próprio→comum (geografismo→substantivo comum) revela processos histórico-linguísticos e culturais de uma sociedade."
+  "title": "Como Identificar Substantivos Próprios",
+  "text": "Para você identificar substantivos próprios, faça assim: 1) Veja se nomeia algo específico (Maria, não menina). 2) Verifique se tem letra maiúscula. 3) Teste: se é único no mundo, é próprio. Exemplos: Brasil (país específico) vs país (qualquer país). Dica infalível: substantivo próprio sempre tem maiúscula e nomeia algo único. Macete: se você pode colocar 'o/a' antes sem soar estranho, é comum (a menina ✓, a Maria ✗).",
+  "advancedText": "Agora domine casos complexos: alguns nomes viram comuns (xerox, gilette). Para você acertar sempre: substantivos geográficos que viram comuns mantêm minúscula (champanhe da região Champagne). Desafio: analise textos e veja como próprios dão precisão. Dica profissional: em redações, use próprios para dar credibilidade e especificidade aos seus argumentos!"
 }
 
 AGORA GERE O CONTEÚDO EDUCATIVO COMPLETO E DETALHADO:`;
