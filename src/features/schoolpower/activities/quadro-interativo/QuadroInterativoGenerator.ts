@@ -97,7 +97,7 @@ export class QuadroInterativoGenerator {
 
   private buildEnhancedPrompt(data: QuadroInterativoData): string {
     return `
-VOCÊ É UMA IA ESPECIALIZADA EM EDUCAÇÃO BRASILEIRA QUE CRIA CONTEÚDO DIDÁTICO COMPLETO E PROFUNDO.
+VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO QUE ENSINA DIRETAMENTE AO ALUNO COMO DOMINAR O CONTEÚDO.
 
 DADOS DA AULA:
 - Disciplina: ${data.subject}
@@ -107,80 +107,85 @@ DADOS DA AULA:
 - Nível: ${data.difficultyLevel}
 - Atividade: ${data.quadroInterativoCampoEspecifico}
 
-MISSÃO CRÍTICA: Criar um conteúdo que ENSINE o aluno COMO ENTENDER, RESOLVER e APLICAR o conceito. Você está falando DIRETAMENTE com o aluno, ensinando passo a passo como ele deve pensar e resolver.
+MISSÃO ABSOLUTA: Você está falando DIRETAMENTE com um aluno de ${data.schoolYear}. Ensine COMO ele deve pensar, resolver e dominar o tema ${data.theme}. NUNCA fale SOBRE o tema - sempre fale COM o aluno ensinando COMO fazer.
 
-FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
+FORMATO OBRIGATÓRIO (JSON):
 {
-  "title": "Título educativo direto sobre o conceito (SEM 'Quadro Interativo:', máximo 80 caracteres)",
-  "text": "Explicação DIRETA ao aluno sobre COMO resolver/entender o conceito: 'Para resolver [tema], você deve: 1) [passo], 2) [passo], 3) [passo]. Exemplo: [situação prática]. Dica importante: [estratégia de resolução]. Lembre-se: [ponto-chave para não errar].' (máximo 500 caracteres)",
-  "advancedText": "Orientação AVANÇADA ao aluno: 'Agora que você domina o básico, para situações mais complexas: [estratégias avançadas]. Quando encontrar [situação], faça [ação]. Cuidado com [armadilhas comuns]. Teste seu conhecimento: [desafio prático].' (máximo 500 caracteres)"
+  "title": "Como [fazer algo relacionado ao tema] - máximo 80 caracteres, SEM 'Quadro Interativo'",
+  "text": "INSTRUÇÕES DIRETAS AO ALUNO: 'Para você [dominar/resolver/identificar] ${data.theme}, siga estes passos: 1) [ação específica], 2) [próxima ação], 3) [ação final]. Exemplo prático: [caso concreto]. Dica que funciona: [estratégia]. Cuidado: [erro comum]. Macete: [truque para lembrar].' (máximo 500 caracteres)",
+  "advancedText": "NÍVEL AVANÇADO DIRETO: 'Agora que você sabe o básico, para casos difíceis faça: [estratégia avançada]. Quando encontrar [situação complexa], use [técnica]. Desafio: [exercício mental]. Conexão: isso se liga com [outro tema]. Dica profissional: [segredo avançado].' (máximo 500 caracteres)"
 }
 
-DIRETRIZES OBRIGATÓRIAS PARA TÍTULO:
-- NUNCA use "Quadro Interativo:" no início
-- Seja DIRETO sobre o conceito educativo
-- Use terminologia adequada para ${data.schoolYear}
-- Exemplos corretos: "Relevo Brasileiro", "Substantivos Próprios e Comuns", "Função do 1º Grau"
-- PROIBIDO: "Quadro Interativo: [tema]", "Atividade de [tema]"
+REGRAS ABSOLUTAS PARA TÍTULO:
+- SEMPRE comece com "Como" + verbo de ação
+- Exemplos CORRETOS: "Como Identificar Substantivos Próprios", "Como Resolver Funções do 1º Grau", "Como Reconhecer Relevo Brasileiro"
+- PROIBIDO: títulos descritivos como "Substantivos Próprios", "Relevo Brasileiro"
 
-DIRETRIZES OBRIGATÓRIAS PARA TEXTO:
-- FALE DIRETAMENTE com o aluno: "Para você resolver...", "Quando você encontrar...", "Faça assim..."
-- ENSINE o PASSO A PASSO: "Primeiro faça..., depois..., por último..."
-- DÊ EXEMPLOS PRÁTICOS: "Por exemplo, se você tem..., então..."
-- FORNEÇA DICAS DE RESOLUÇÃO: "Dica: sempre comece por...", "Lembre-se de..."
-- ALERTE para ERROS COMUNS: "Cuidado para não...", "Evite..."
-- Use linguagem DIRETA e PRÁTICA para ${data.schoolYear}
-- ENSINE como PENSAR e RESOLVER, não apenas o que é o conceito
+REGRAS ABSOLUTAS PARA TEXTO:
+- PRIMEIRA PALAVRA deve ser "Para" 
+- ESTRUTURA OBRIGATÓRIA: "Para você [verbo] [tema], siga: 1) [ação], 2) [ação], 3) [ação]. Exemplo: [caso]. Dica: [truque]. Cuidado: [erro]. Macete: [lembrete]."
+- VERBOS OBRIGATÓRIOS: "Para você identificar...", "Para você resolver...", "Para você calcular...", "Para você classificar..."
+- FALE SEMPRE na 2ª pessoa: "você deve", "você faz", "você verifica"
+- DÊ COMANDOS DIRETOS: "Observe...", "Compare...", "Teste...", "Verifique..."
 
-DIRETRIZES OBRIGATÓRIAS PARA TEXTO AVANÇADO:
-- CONTINUE falando DIRETAMENTE com o aluno
-- ENSINE estratégias AVANÇADAS: "Para casos mais complexos, faça..."
-- APRESENTE DESAFIOS: "Agora teste: tente resolver..."
-- CONECTE com outros temas: "Isso se relaciona com... que você já viu"
-- DÊ DICAS AVANÇADAS: "Truque profissional: quando..., use..."
-- ESTIMULE raciocínio: "Pense: por que isso acontece quando...?"
-- MANTENHA tom de ORIENTAÇÃO DIRETA ao aluno
+REGRAS PARA TEXTO AVANÇADO:
+- COMECE com "Agora que você domina o básico"
+- CONTINUE ensinando AÇÕES: "faça...", "use...", "aplique..."
+- DÊ DESAFIOS PRÁTICOS: "Teste: tente...", "Desafio: explique..."
+- CONECTE conhecimentos: "Isso se liga com... que você aprendeu"
 
-EXEMPLOS DE QUALIDADE MÁXIMA:
+EXEMPLOS PERFEITOS OBRIGATÓRIOS:
 
-Para "Relevo Brasileiro":
+Para "Substantivos Próprios e Verbos":
 {
-  "title": "Como Identificar Formas de Relevo",
-  "text": "Para você identificar o relevo, siga estes passos: 1) Observe a altitude - baixa (planície) ou alta (planalto/serra). 2) Veja se é plano ou montanhoso. 3) Compare: Pantanal = baixo e plano (planície), Planalto Central = alto e plano, Serra do Mar = alto e montanhoso. Dica: se for plano e baixo, é planície; plano e alto, é planalto; montanhoso, é serra. Memorize: planície = plana e baixa!",
-  "advancedText": "Agora que você sabe identificar, entenda COMO se formaram: processos antigos moldaram o Brasil. Para análises complexas, relacione: relevo baixo = rios lentos e navegáveis; relevo alto = rios rápidos e energia. Desafio: explique por que São Paulo (planalto) tem clima diferente do Pantanal (planície). Dica avançada: altitude influencia temperatura e chuvas!"
+  "title": "Como Identificar Substantivos Próprios e Verbos",
+  "text": "Para você identificar substantivos próprios, faça: 1) Procure nomes únicos (Maria, Brasil). 2) Verifique se tem maiúscula. 3) Teste: só existe um no mundo? É próprio! Para verbos: 1) Procure palavras de ação (correr, pensar). 2) Teste: 'Eu posso...' funciona? É verbo! Exemplo: 'Maria corre' - Maria = próprio (única), corre = verbo (ação). Macete: próprio sempre maiúscula, verbo sempre ação!",
+  "advancedText": "Agora que você domina o básico, identifique verbos compostos: 'tinha corrido' = verbo composto. Para substantivos: alguns próprios viram comuns (xerox). Teste avançado: analise frases completas identificando todos. Desafio: crie frases usando 3 substantivos próprios e 3 verbos diferentes. Dica pro: verbos mudam com tempo e pessoa!"
 }
 
-Para "Substantivos Próprios":
+Para "Equações do 1º Grau":
 {
-  "title": "Como Identificar Substantivos Próprios",
-  "text": "Para você identificar substantivos próprios, faça assim: 1) Veja se nomeia algo específico (Maria, não menina). 2) Verifique se tem letra maiúscula. 3) Teste: se é único no mundo, é próprio. Exemplos: Brasil (país específico) vs país (qualquer país). Dica infalível: substantivo próprio sempre tem maiúscula e nomeia algo único. Macete: se você pode colocar 'o/a' antes sem soar estranho, é comum (a menina ✓, a Maria ✗).",
-  "advancedText": "Agora domine casos complexos: alguns nomes viram comuns (xerox, gilette). Para você acertar sempre: substantivos geográficos que viram comuns mantêm minúscula (champanhe da região Champagne). Desafio: analise textos e veja como próprios dão precisão. Dica profissional: em redações, use próprios para dar credibilidade e especificidade aos seus argumentos!"
+  "title": "Como Resolver Equações do 1º Grau",
+  "text": "Para você resolver equações como 2x + 5 = 11, siga: 1) Isole o termo com x: 2x = 11 - 5. 2) Calcule: 2x = 6. 3) Divida: x = 6/2 = 3. 4) Teste: 2(3) + 5 = 11 ✓. Regra de ouro: o que soma vira subtração do outro lado, o que multiplica vira divisão. Exemplo: 3x - 4 = 8 → 3x = 12 → x = 4. Cuidado: sempre teste a resposta!",
+  "advancedText": "Agora domine equações com parênteses: 2(x + 3) = 10. Primeiro distribua: 2x + 6 = 10, depois resolva normal. Para frações: 2x/3 = 4, multiplique por 3: 2x = 12, logo x = 6. Desafio: resolva x/2 + x/3 = 5. Dica profissional: sempre simplifique antes de resolver, economiza tempo e evita erros!"
 }
 
 AGORA GERE O CONTEÚDO EDUCATIVO COMPLETO E DETALHADO:`;
   }
 
   private generateEducationalTitle(data: QuadroInterativoData): string {
-    // Remover "Quadro Interativo:" se existir e criar título educativo
-    let title = data.theme || 'Conteúdo Educativo';
+    let theme = data.theme || 'Conteúdo Educativo';
     
     // Remover prefixos desnecessários
-    title = title.replace(/^Quadro Interativo:\s*/i, '');
-    title = title.replace(/^Atividade de\s*/i, '');
-    title = title.replace(/^Atividade sobre\s*/i, '');
+    theme = theme.replace(/^Quadro Interativo:\s*/i, '');
+    theme = theme.replace(/^Atividade de\s*/i, '');
+    theme = theme.replace(/^Atividade sobre\s*/i, '');
     
-    // Limitar caracteres
-    return title.substring(0, 80).trim();
+    // Criar título direto com "Como"
+    let directTitle;
+    if (theme.toLowerCase().includes('substantivo')) {
+      directTitle = `Como Identificar ${theme}`;
+    } else if (theme.toLowerCase().includes('verbo')) {
+      directTitle = `Como Reconhecer ${theme}`;
+    } else if (theme.toLowerCase().includes('equação') || theme.toLowerCase().includes('função')) {
+      directTitle = `Como Resolver ${theme}`;
+    } else if (theme.toLowerCase().includes('relevo') || theme.toLowerCase().includes('geografia')) {
+      directTitle = `Como Identificar ${theme}`;
+    } else {
+      directTitle = `Como Entender ${theme}`;
+    }
+    
+    return directTitle.substring(0, 80).trim();
   }
 
   private generateEducationalText(data: QuadroInterativoData): string {
-    const theme = data.theme || 'o tema proposto';
-    const subject = data.subject || 'a disciplina';
-    const schoolYear = data.schoolYear || 'esta série';
+    const theme = data.theme || 'este tema';
+    const subject = data.subject || 'a matéria';
     
-    const educationalText = `Este conteúdo sobre ${theme.toLowerCase()} apresenta os conceitos fundamentais de ${subject} para ${schoolYear}. Através de explicações claras, exemplos práticos e dicas de aplicação, você compreenderá as características principais do tema e saberá identificar e aplicar esses conhecimentos em diferentes contextos educacionais e práticos.`;
+    // Texto direto ao aluno conforme solicitado
+    const directText = `Para você dominar ${theme.toLowerCase()}, siga estes passos essenciais: 1) Identifique as características principais do conceito. 2) Compare com exemplos práticos que você conhece. 3) Aplique o conhecimento em exercícios simples. Exemplo: observe situações do dia a dia relacionadas ao tema. Dica importante: pratique regularmente para fixar o aprendizado. Cuidado: não confunda conceitos similares. Lembre-se: a prática leva à perfeição!`;
     
-    return educationalText.substring(0, 500);
+    return directText.substring(0, 500);
   }
 
   private async callGeminiAPI(prompt: string): Promise<any> {
@@ -286,10 +291,10 @@ AGORA GERE O CONTEÚDO EDUCATIVO COMPLETO E DETALHADO:`;
       console.error('❌ Erro ao processar resposta da IA:', error);
       geminiLogger.logValidation(response, false, [error.message]);
       
-      // Fallback melhorado
-      const fallbackTitle = 'Conteúdo Educativo';
-      const fallbackText = 'Conteúdo educativo desenvolvido para facilitar a compreensão e aplicação dos conceitos fundamentais da disciplina através de atividades interativas e didáticas.';
-      const fallbackAdvancedText = 'Aprofundamento do tema com análises mais complexas, aplicações práticas avançadas e conexões interdisciplinares para expandir o conhecimento e desenvolver pensamento crítico.';
+      // Fallback com formato direto ao aluno
+      const fallbackTitle = 'Como Dominar Este Conteúdo';
+      const fallbackText = 'Para você entender este tema, siga: 1) Leia com atenção os conceitos principais. 2) Faça conexões com o que você já sabe. 3) Pratique com exercícios simples. Exemplo: relacione o tema com situações do seu cotidiano. Dica: estude um pouco todo dia, não tudo de uma vez. Cuidado: não decore, entenda! Macete: ensine para alguém, assim você fixa melhor.';
+      const fallbackAdvancedText = 'Agora que você entende o básico, desafie-se: aplique o conhecimento em situações complexas. Quando encontrar dificuldades, volte aos fundamentos. Teste: explique o tema para um colega. Conexão: veja como se relaciona com outros assuntos. Dica profissional: crie mapas mentais conectando tudo que aprendeu!';
       
       return {
         title: fallbackTitle.substring(0, 80),
