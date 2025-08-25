@@ -1618,25 +1618,35 @@ export function CardDeConstrucao({
       if (activityId === 'quadro-interativo') {
         console.log('🎯 CONSTRUÇÃO ESPECIAL PARA QUADRO INTERATIVO');
 
-        // Verificar se já possui conteúdo da IA
-        const hasAIContent = activity.cardContent || 
-                            activity.customFields?.generatedContent || 
-                            activity.customFields?.aiGeneratedText ||
-                            activity.isGeneratedByAI;
+        // Verificar se já possui conteúdo REAL da IA
+        const hasRealAIContent = (
+          activity.isGeneratedByAI && 
+          activity.cardContent && 
+          activity.cardContent.text && 
+          activity.cardContent.text.length > 100 && // Garantir que não é fallback
+          !activity.cardContent.text.includes('Conteúdo educativo específico') && // Evitar texto genérico
+          !activity.cardContent.text.includes('será gerado')
+        ) || (
+          activity.customFields?.aiGeneratedText && 
+          activity.customFields.aiGeneratedText.length > 100 &&
+          !activity.customFields.aiGeneratedText.includes('será gerado')
+        );
 
-        if (hasAIContent) {
-          console.log('✅ QUADRO INTERATIVO JÁ POSSUI CONTEÚDO DA IA - PRESERVANDO');
+        if (hasRealAIContent) {
+          console.log('✅ QUADRO INTERATIVO JÁ POSSUI CONTEÚDO REAL DA IA - PRESERVANDO');
 
           // Marcar como construída sem regerar conteúdo
           activity.isBuilt = true;
           activity.builtAt = new Date().toISOString();
           activity.constructedWithAI = true;
 
-          console.log('🔥 CONTEÚDO DA IA PRESERVADO:', {
+          console.log('🔥 CONTEÚDO REAL DA IA PRESERVADO:', {
             cardContentTitle: activity.cardContent?.title,
             cardContentTextLength: activity.cardContent?.text?.length,
+            textPreview: activity.cardContent?.text?.substring(0, 100),
             hasAdvancedContent: !!activity.cardContent2,
-            customFieldsAI: !!activity.customFields?.aiGeneratedText
+            customFieldsAI: !!activity.customFields?.aiGeneratedText,
+            isRealContent: true
           });
 
         } else {

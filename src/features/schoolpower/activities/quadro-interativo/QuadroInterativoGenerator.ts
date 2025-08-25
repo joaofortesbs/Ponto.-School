@@ -123,9 +123,9 @@ export class QuadroInterativoGenerator {
   }
 
   private buildEnhancedPrompt(data: QuadroInterativoData): string {
-    return `VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO EM ${data.subject}. CRIE CONTEÚDO EDUCATIVO ULTRA-ESPECÍFICO E PRÁTICO PARA O TEMA "${data.theme}".
+    return `VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO EM ${data.subject}. CRIE CONTEÚDO EDUCATIVO ULTRA-ESPECÍFICO E PERSONALIZADO PARA O TEMA "${data.theme}".
 
-📚 CONTEXTO EDUCACIONAL:
+📚 CONTEXTO EDUCACIONAL OBRIGATÓRIO:
 - Disciplina: ${data.subject}
 - Ano/Série: ${data.schoolYear}
 - Tema ESPECÍFICO: ${data.theme}
@@ -133,23 +133,24 @@ export class QuadroInterativoGenerator {
 - Nível: ${data.difficultyLevel}
 - Atividade Alvo: ${data.quadroInterativoCampoEspecifico}
 
-🎯 MISSÃO CRÍTICA:
-Gerar conteúdo educativo EXTREMAMENTE ESPECÍFICO para "${data.theme}" que será usado em quadro interativo para alunos de ${data.schoolYear} em ${data.subject}.
+🎯 MISSÃO ULTRA-ESPECÍFICA:
+Criar conteúdo educativo EXTREMAMENTE DETALHADO e PERSONALIZADO para "${data.theme}" que será exibido em um quadro interativo para alunos de ${data.schoolYear} estudando ${data.subject}.
 
-⚠️ REGRAS OBRIGATÓRIAS:
-1. SEMPRE mencione "${data.theme}" pelo nome no conteúdo (mínimo 3 vezes)
-2. NUNCA use frases genéricas como "dominar este conteúdo" ou "este tema"
-3. SEMPRE forneça exemplos CONCRETOS específicos de ${data.theme}
-4. SEMPRE inclua passos NUMERADOS e PRÁTICOS
-5. SEMPRE use linguagem direta ao aluno ("Para você...")
-6. SEMPRE inclua dicas, macetes e alertas específicos
-7. SEMPRE contextualizar para ${data.schoolYear} de ${data.subject}
+⚠️ REGRAS CRÍTICAS OBRIGATÓRIAS:
+1. SEMPRE mencione "${data.theme}" literalmente no texto (mínimo 5 vezes)
+2. NUNCA use termos genéricos como "este tema", "este conteúdo", "dominar isso"
+3. SEMPRE forneça exemplos REAIS e ESPECÍFICOS de "${data.theme}"
+4. SEMPRE inclua 3-5 passos NUMERADOS e PRÁTICOS específicos para "${data.theme}"
+5. SEMPRE use linguagem direta ao aluno ("Para você entender ${data.theme}...")
+6. SEMPRE inclua macetes, dicas e alertas exclusivos para "${data.theme}"
+7. SEMPRE contextualizar especificamente para ${data.schoolYear} em ${data.subject}
+8. SEMPRE usar exemplos práticos onde "${data.theme}" aparece na vida real
 
-📋 ESTRUTURA OBRIGATÓRIA - RESPONDA APENAS COM JSON VÁLIDO:
+📋 FORMATO JSON OBRIGATÓRIO - RESPONDA EXATAMENTE ASSIM:
 {
-  "title": "Como [ação específica] ${data.theme}",
-  "text": "Para você [objetivo específico com ${data.theme}]: 1) [passo prático específico do ${data.theme}], 2) [segundo passo específico], 3) [terceiro passo específico]. Exemplo real: [situação concreta onde ${data.theme} aparece]. Macete: [dica exclusiva para ${data.theme}]. Cuidado: [erro comum específico em ${data.theme}]. Lembre-se: [reforço específico sobre ${data.theme}].",
-  "advancedText": "Dominando ${data.theme} no nível avançado: [técnica específica avançada]. Para casos complexos de ${data.theme}: [estratégia específica]. Exercício desafiador: [problema específico de ${data.theme}]. Dica profissional: [segredo específico para ${data.theme}]. Conexão: [como ${data.theme} se relaciona com outros temas de ${data.subject}]."
+  "title": "Como Dominar ${data.theme} - Guia Prático para ${data.schoolYear}",
+  "text": "Para você dominar ${data.theme} em ${data.subject} (${data.schoolYear}): 1) [passo específico para ${data.theme}] 2) [segundo passo prático para ${data.theme}] 3) [terceiro passo específico] 4) [quarto passo avançado]. Exemplo prático: [situação real onde ${data.theme} é usado]. Macete especial para ${data.theme}: [dica específica]. Cuidado com ${data.theme}: [erro comum]. Dica final: ${data.theme} é fundamental porque [razão específica para ${data.schoolYear}].",
+  "advancedText": "Dominando ${data.theme} no nível avançado para ${data.schoolYear}: [técnica específica avançada de ${data.theme}]. Para casos complexos de ${data.theme}: [estratégia avançada]. Exercício desafiador de ${data.theme}: [problema específico com solução]. Segredo profissional para ${data.theme}: [dica de especialista]. Conexão avançada: como ${data.theme} se conecta com [outros temas específicos de ${data.subject}]. Aplicação real de ${data.theme}: [exemplo profissional ou acadêmico específico]."
 }
 
 🌟 EXEMPLOS DE QUALIDADE ESPERADA:
@@ -340,24 +341,28 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA "${data.theme}" EM ${data.subject}:`;
   }
 
   private generateSpecificFallback(data: QuadroInterativoData): QuadroInterativoContent {
+    console.log('⚠️ GERANDO FALLBACK ESPECÍFICO PARA:', data.theme);
+    
     const theme = data.theme || 'este conteúdo';
 
-    // Título específico baseado no tema
-    let specificTitle = `Como Dominar ${theme}`;
+    // Título ultra-específico baseado no tema e contexto
+    let specificTitle = `Como Dominar ${theme} - ${data.schoolYear}`;
     if (theme.toLowerCase().includes('substantivo')) {
-      specificTitle = `Como Identificar ${theme}`;
+      specificTitle = `Identificando ${theme} - Guia Prático`;
     } else if (theme.toLowerCase().includes('verbo')) {
-      specificTitle = `Como Reconhecer ${theme}`;
+      specificTitle = `Reconhecendo ${theme} - Método Fácil`;
     } else if (theme.toLowerCase().includes('equação') || theme.toLowerCase().includes('função')) {
-      specificTitle = `Como Resolver ${theme}`;
+      specificTitle = `Resolvendo ${theme} - Passo a Passo`;
+    } else if (theme.toLowerCase().includes('teorema') || theme.toLowerCase().includes('pitágoras')) {
+      specificTitle = `Aplicando ${theme} - Técnicas Práticas`;
     } else if (theme.toLowerCase().includes('matemática') || theme.toLowerCase().includes('cálculo')) {
-      specificTitle = `Como Calcular ${theme}`;
+      specificTitle = `Calculando ${theme} - Métodos Eficazes`;
     }
 
-    // Texto específico para o tema
-    const specificText = `Para você dominar ${theme.toLowerCase()}, siga estes passos essenciais: 1) Identifique os conceitos-chave de ${theme}. 2) Pratique com exemplos específicos de ${theme}. 3) Aplique o conhecimento em exercícios de ${theme}. Exemplo: observe como ${theme} aparece em situações reais. Dica importante: foque nos detalhes específicos de ${theme}. Cuidado: não confunda ${theme} com conceitos similares. Lembre-se: dominar ${theme} requer prática constante!`;
+    // Texto ultra-específico para o tema com detalhes reais
+    const specificText = `Para você dominar ${theme} em ${data.subject} (${data.schoolYear}): 1) Identifique as características específicas de ${theme} - procure pelos elementos únicos que definem ${theme}. 2) Pratique com exemplos reais de ${theme} - use situações do cotidiano onde ${theme} aparece. 3) Aplique técnicas específicas para ${theme} - desenvolva estratégias exclusivas para este conceito. 4) Teste seu conhecimento de ${theme} com exercícios progressivos. Exemplo prático: ${theme} é usado quando [situação específica]. Macete especial: para lembrar de ${theme}, use a técnica [método específico]. Cuidado: o erro mais comum em ${theme} é [problema específico]. Dica final: ${theme} é essencial para ${data.schoolYear} porque conecta com outros conceitos importantes!`;
 
-    const advancedText = `Agora que você entende o básico de ${theme.toLowerCase()}, explore aspectos avançados: analise casos complexos de ${theme}. Quando encontrar dificuldades em ${theme}, volte aos fundamentos. Teste: explique ${theme} para um colega. Conexão: veja como ${theme} se relaciona com outros temas de ${data.subject}. Dica profissional: crie mapas mentais específicos para ${theme}!`;
+    const advancedText = `Dominando ${theme} no nível avançado para ${data.schoolYear}: explore as aplicações complexas de ${theme} em situações desafiadoras. Para casos difíceis de ${theme}: use a abordagem sistemática dividindo o problema em partes menores. Exercício avançado de ${theme}: resolva problemas que combinam ${theme} com outros conceitos de ${data.subject}. Segredo profissional para ${theme}: a chave está em entender a lógica por trás, não apenas decorar fórmulas. Conexão avançada: ${theme} se relaciona diretamente com [conceitos específicos de ${data.subject}] e prepara você para [tópicos futuros]. Aplicação real: profissionais de [área específica] usam ${theme} para [aplicação prática específica]!`;
 
     return {
       title: data.theme || 'Conteúdo Educativo',

@@ -551,40 +551,56 @@ export async function generatePersonalizedPlan(
 
             if (quadroContent && quadroContent.cardContent) {
               console.log('✅ CONTEÚDO VÁLIDO GERADO - APLICANDO AOS DADOS DA ATIVIDADE');
+              console.log('🔥 CONTEÚDO ESPECÍFICO RECEBIDO DA IA:', {
+                titulo: quadroContent.cardContent.title,
+                textoPreview: quadroContent.cardContent.text?.substring(0, 150),
+                temAvancado: !!quadroContent.cardContent2,
+                tamanhoTexto: quadroContent.cardContent.text?.length
+              });
               
               // Aplicar o conteúdo gerado à atividade de forma CRÍTICA
               activityData = {
                 ...activityData,
-                // Campos de conteúdo diretos da IA
-                cardContent: quadroContent.cardContent,
-                cardContent2: quadroContent.cardContent2,
+                // CAMPOS PRIMÁRIOS - CONTEÚDO DA IA
+                cardContent: {
+                  title: quadroContent.cardContent.title,
+                  text: quadroContent.cardContent.text
+                },
+                cardContent2: quadroContent.cardContent2 ? {
+                  title: quadroContent.cardContent2.title,
+                  text: quadroContent.cardContent2.text
+                } : undefined,
+                // CAMPOS DIRETOS PARA COMPATIBILIDADE
                 title: quadroContent.cardContent.title,
                 text: quadroContent.cardContent.text,
+                description: quadroContent.cardContent.text,
                 advancedText: quadroContent.cardContent2?.text,
-                // Metadados de geração
+                // METADADOS CRÍTICOS
                 isGeneratedByAI: true,
                 generatedAt: new Date().toISOString(),
-                // Preservar campos personalizados e adicionar novos
+                // CUSTOM FIELDS COM DADOS DA IA
                 customFields: {
                   ...activityData.customFields,
+                  // Campos originais
                   'Disciplina / Área de conhecimento': extractedData.subject,
                   'Ano / Série': extractedData.schoolYear,
                   'Tema ou Assunto da aula': extractedData.theme,
                   'Objetivo de aprendizagem da aula': extractedData.objectives,
                   'Nível de Dificuldade': extractedData.difficultyLevel,
                   'Atividade mostrada': extractedData.quadroInterativoCampoEspecifico,
-                  // Campos específicos da IA
+                  // CAMPOS ESPECÍFICOS DA IA - CRÍTICOS
                   isAIGenerated: 'true',
                   aiGeneratedTitle: quadroContent.cardContent.title,
                   aiGeneratedText: quadroContent.cardContent.text,
                   aiGeneratedAdvancedText: quadroContent.cardContent2?.text || '',
-                  generatedAt: new Date().toISOString(),
-                  // Backup do conteúdo completo
+                  aiSourceTimestamp: new Date().toISOString(),
+                  // BACKUP COMPLETO DO CONTEÚDO
                   generatedContent: JSON.stringify({
                     cardContent: quadroContent.cardContent,
                     cardContent2: quadroContent.cardContent2,
                     generatedAt: new Date().toISOString(),
-                    extractedData
+                    extractedData,
+                    sourceType: 'gemini-ai'
                   })
                 }
               };

@@ -21,7 +21,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   const extractAIContent = () => {
     console.log('📥 SISTEMA DE EXTRAÇÃO ULTRA-ROBUSTO INICIADO');
     console.log('🔍 DADOS RECEBIDOS:', JSON.stringify(data, null, 2));
-    
+
     const debugInfo = {
       hasCardContent: !!data?.cardContent,
       cardContentValid: data?.cardContent?.title && data?.cardContent?.text && data.cardContent.text.length > 10,
@@ -75,7 +75,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
         console.log('🔍 MÉTODO 3: tentando parsear generatedContent...');
         const parsedContent = JSON.parse(data.customFields.generatedContent);
         console.log('📄 Conteúdo parseado:', parsedContent);
-        
+
         if (parsedContent?.cardContent?.title && parsedContent?.cardContent?.text) {
           const result = {
             card1: {
@@ -90,7 +90,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
           console.log('✅ MÉTODO 3: conteúdo válido extraído do JSON');
           return result;
         }
-        
+
       } catch (error) {
         console.error('❌ Erro no parsing do generatedContent:', error);
       }
@@ -117,7 +117,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     console.log('⚠️ MÉTODO 5: usando fallback inteligente');
     const tema = data?.customFields?.['Tema ou Assunto da aula'] || data?.theme || data?.title || 'Este Conteúdo';
     const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || data?.subject || 'Educação';
-    
+
     const fallbackResult = {
       card1: {
         title: `Como Dominar ${tema}`,
@@ -125,7 +125,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       },
       card2: null
     };
-    
+
     console.log('🎯 FALLBACK INTELIGENTE APLICADO:', fallbackResult);
     return fallbackResult;
   };
@@ -146,12 +146,57 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   );
 
   // Usar o conteúdo extraído da IA ou fallback
-  const displayContent = aiContent?.card1 || {
-    title: data?.customFields?.['Tema ou Assunto da aula'] || data?.theme || 'Aguardando conteúdo...',
-    text: 'Gerando conteúdo específico com a IA Gemini...'
-  };
+  let cardContent, cardContent2;
 
-  const displayContent2 = aiContent?.card2;
+  // 1. Tentar usar conteúdo da IA primeiro
+  if (data.isGeneratedByAI && data.cardContent) {
+    cardContent = data.cardContent;
+    cardContent2 = data.cardContent2;
+    console.log('✅ USANDO CONTEÚDO GERADO PELA IA:', cardContent);
+  }
+  // 2. Tentar extrair de customFields se disponível
+  else if (data.customFields?.generatedContent) {
+    try {
+      const parsedContent = JSON.parse(data.customFields.generatedContent);
+      cardContent = parsedContent.cardContent;
+      cardContent2 = parsedContent.cardContent2;
+      console.log('✅ USANDO CONTEÚDO DE CUSTOM FIELDS:', cardContent);
+    } catch (error) {
+      console.error('❌ Erro ao fazer parse do conteúdo:', error);
+    }
+  }
+  // 3. Verificar se tem texto da IA diretamente
+  else if (data.customFields?.aiGeneratedText) {
+    cardContent = {
+      title: data.customFields?.aiGeneratedTitle || data.title || 'Conteúdo do Quadro',
+      text: data.customFields.aiGeneratedText
+    };
+    if (data.customFields?.aiGeneratedAdvancedText) {
+      cardContent2 = {
+        title: `${cardContent.title} - Nível Avançado`,
+        text: data.customFields.aiGeneratedAdvancedText
+      };
+    }
+    console.log('✅ USANDO TEXTO DA IA DE CUSTOM FIELDS:', cardContent);
+  }
+  // 4. Fallback final
+  else {
+    cardContent = {
+      title: data.title || 'Conteúdo do Quadro',
+      text: data.description || 'Conteúdo educativo específico será gerado.'
+    };
+    console.log('⚠️ USANDO FALLBACK BÁSICO:', cardContent);
+  }
+
+  console.log('🎯 DADOS FINAIS PARA RENDERIZAÇÃO:', {
+    hasCardContent: !!cardContent,
+    cardTitle: cardContent?.title,
+    cardTextPreview: cardContent?.text?.substring(0, 100),
+    hasAdvancedContent: !!cardContent2,
+    isGeneratedByAI: data.isGeneratedByAI,
+    source: data.isGeneratedByAI ? 'IA' : 'FALLBACK',
+    fullCardContent: cardContent
+  });
 
 
   return (
@@ -178,7 +223,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                     <span className="text-blue-600 dark:text-blue-400 text-sm font-bold">1</span>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {displayContent.title}
+                    {cardContent.title}
                   </h3>
                   {/* Debug indicator */}
                   {isGeneratedByAI && (
@@ -193,13 +238,13 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                   )}
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {displayContent.text}
+                  {cardContent.text}
                 </p>
                 {/* Debug info detalhado */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
                     <div>Fonte: {aiContent ? 'IA Gemini' : 'Fallback'}</div>
-                    <div>Tamanho: {displayContent.text.length} chars</div>
+                    <div>Tamanho: {cardContent.text.length} chars</div>
                     <div>cardContent existe: {!!data?.cardContent}</div>
                     <div>isGeneratedByAI: {String(isGeneratedByAI)}</div>
                   </div>
@@ -207,14 +252,14 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
               </div>
 
               {/* Card 2 - Conteúdo Avançado (se disponível) */}
-              {displayContent2 && (
+              {cardContent2 && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
                       <span className="text-purple-600 dark:text-purple-400 text-sm font-bold">2</span>
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {displayContent2.title}
+                      {cardContent2.title}
                     </h3>
                     {/* Debug indicator */}
                     {isGeneratedByAI && (
@@ -224,13 +269,13 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                     )}
                   </div>
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {displayContent2.text}
+                    {cardContent2.text}
                   </p>
                   {/* Debug info detalhado */}
                   {process.env.NODE_ENV === 'development' && (
                     <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
                       <div>Fonte: IA Gemini (Nível Avançado)</div>
-                      <div>Tamanho: {displayContent2.text.length} chars</div>
+                      <div>Tamanho: {cardContent2.text.length} chars</div>
                       <div>cardContent2 existe: {!!data?.cardContent2}</div>
                     </div>
                   )}
