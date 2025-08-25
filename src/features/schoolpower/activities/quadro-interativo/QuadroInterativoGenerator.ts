@@ -97,8 +97,19 @@ export class QuadroInterativoGenerator {
         }
       };
 
+      // DEBUG INTENSIVO - VERIFICAR CONTEÚDO FINAL
+      console.log('🔥 CONTEÚDO ESPECÍFICO GERADO PELA IA GEMINI:', {
+        tema: data.theme,
+        tituloGerado: parsedContent.title,
+        textoGerado: parsedContent.text.substring(0, 100) + '...',
+        temaTituloContém: parsedContent.title?.toLowerCase().includes(data.theme.toLowerCase()),
+        temaTextoContém: parsedContent.text?.toLowerCase().includes(data.theme.toLowerCase()),
+        tamanhoTexto: parsedContent.text.length,
+        cardContentFinal: result.cardContent
+      });
+
       geminiLogger.logResponse(result, Date.now());
-      console.log('✅ Conteúdo COMPLETO do Quadro Interativo gerado:', result);
+      console.log('✅ RESULTADO FINAL ENVIADO PARA O PREVIEW:', result);
       return result;
       
     } catch (error) {
@@ -113,23 +124,27 @@ export class QuadroInterativoGenerator {
   }
 
   private buildEnhancedPrompt(data: QuadroInterativoData): string {
-    return `VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO QUE CRIA CONTEÚDO EDUCATIVO ESPECÍFICO.
+    return `VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO. CRIE CONTEÚDO EDUCATIVO ULTRA-ESPECÍFICO PARA O TEMA "${data.theme}".
 
-DADOS ESPECÍFICOS:
+DADOS OBRIGATÓRIOS:
 - Disciplina: ${data.subject}
 - Ano/Série: ${data.schoolYear}
-- Tema ESPECÍFICO: ${data.theme}
+- Tema EXATO: ${data.theme}
 - Objetivos: ${data.objectives}
 - Nível: ${data.difficultyLevel}
-- Atividade: ${data.quadroInterativoCampoEspecifico}
 
-MISSÃO: Crie conteúdo ESPECÍFICO para ensinar "${data.theme}" para alunos do ${data.schoolYear}. Seja EXTREMAMENTE ESPECÍFICO ao tema, não genérico.
+⚠️ REGRAS CRÍTICAS:
+1. NUNCA use textos genéricos como "Para você dominar este conteúdo"
+2. SEMPRE mencione "${data.theme}" especificamente no conteúdo
+3. SEMPRE forneça exemplos REAIS e CONCRETOS do tema
+4. SEMPRE use linguagem DIRETA ao aluno
+5. SEMPRE inclua passos ESPECÍFICOS e PRÁTICOS
 
-RESPONDA APENAS COM JSON VÁLIDO (sem texto antes ou depois):
+📝 FORMATO OBRIGATÓRIO - JSON VÁLIDO (sem markdown, sem explicações):
 {
-  "title": "Como [ação específica sobre ${data.theme}]",
-  "text": "Para você dominar ${data.theme.toLowerCase()}, siga estes passos específicos: 1) [passo específico do tema], 2) [outro passo específico], 3) [passo final específico]. Exemplo específico: [exemplo real do tema]. Dica específica: [dica sobre ${data.theme}]. Cuidado: [erro comum em ${data.theme}]. Macete: [truque para ${data.theme}].",
-  "advancedText": "Agora que você domina o básico de ${data.theme.toLowerCase()}, para casos avançados: [estratégia específica avançada]. Quando encontrar [situação complexa específica do tema], use [técnica específica]. Desafio: [exercício específico de ${data.theme}]. Conexão: ${data.theme} se liga com [temas relacionados]. Dica profissional: [segredo específico de ${data.theme}]."
+  "title": "Como [verbo específico] ${data.theme}",
+  "text": "Para você [ação específica com ${data.theme}]: 1) [passo prático específico], 2) [outro passo específico], 3) [passo final]. Exemplo real: [exemplo concreto de ${data.theme}]. Macete: [dica específica]. Cuidado: [erro comum específico de ${data.theme}].",
+  "advancedText": "Dominando ${data.theme} avançado: [técnica específica avançada]. Para casos complexos de ${data.theme}: [estratégia específica]. Teste: [exercício específico de ${data.theme}]. Dica pro: [segredo específico do tema]."
 }
 
 EXEMPLOS ESPECÍFICOS OBRIGATÓRIOS:
@@ -241,11 +256,32 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
         throw new Error(`Estrutura JSON inválida - Título: ${!!parsedContent.title}, Texto: ${!!parsedContent.text}`);
       }
 
-      // Verificar se o conteúdo não é genérico
-      if (parsedContent.text.includes('Texto direto ao aluno conforme solicitado') || 
-          parsedContent.text.length < 50) {
-        console.error('❌ Conteúdo muito genérico detectado:', parsedContent.text);
-        throw new Error('Conteúdo gerado pela IA é muito genérico');
+      // Verificar se o conteúdo não é genérico - VALIDAÇÃO RIGOROSA
+      const genericPhrases = [
+        'Texto direto ao aluno conforme solicitado',
+        'Para você dominar este conteúdo',
+        'este tema',
+        'este assunto',
+        'o conteúdo',
+        'seguindo estes passos',
+        'Para você dominar'
+      ];
+      
+      const isGeneric = genericPhrases.some(phrase => 
+        parsedContent.text.toLowerCase().includes(phrase.toLowerCase())
+      ) || parsedContent.text.length < 80;
+
+      // Verificar se o tema específico aparece no texto
+      const themeInText = parsedContent.text.toLowerCase().includes(data.theme.toLowerCase()) ||
+                         parsedContent.title.toLowerCase().includes(data.theme.toLowerCase());
+
+      if (isGeneric || !themeInText) {
+        console.error('❌ Conteúdo genérico ou sem tema específico:', {
+          isGeneric,
+          themeInText,
+          text: parsedContent.text
+        });
+        throw new Error('Conteúdo gerado é muito genérico ou não menciona o tema específico');
       }
 
       // Processar e limitar tamanhos

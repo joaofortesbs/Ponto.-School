@@ -17,16 +17,6 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   // Debug: Mostrar todos os dados recebidos
   console.log('🔍 DADOS COMPLETOS recebidos no Preview:', JSON.stringify(data, null, 2));
 
-  // Verificar se o conteúdo foi gerado pela IA
-  const isGeneratedByAI = data?.isGeneratedByAI || 
-                         data?.generatedAt || 
-                         data?.customFields?.isAIGenerated === 'true' ||
-                         data?.customFields?.generatedContent ||
-                         (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
-                         false;
-
-  console.log('🤖 Conteúdo foi gerado pela IA?', isGeneratedByAI);
-
   // Extrair conteúdo real da IA - PRIORIZAR SEMPRE O CONTEÚDO DA IA
   const extractAIContent = () => {
     console.log('📥 Extraindo conteúdo da IA...');
