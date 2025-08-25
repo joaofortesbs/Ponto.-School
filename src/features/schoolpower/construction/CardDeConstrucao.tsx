@@ -52,7 +52,6 @@ import { EditActivityModal } from './EditActivityModal';
 import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
 import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
 import { processQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
-import { toast } from "@/components/ui/use-toast";
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
@@ -168,7 +167,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-
+          
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -235,12 +234,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-
+                
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-
+                
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -775,20 +774,7 @@ export interface ActionPlanItem {
   customFields?: Record<string, string>;
   isManual?: boolean;
   isBuilt?: boolean;
-  builtAt?: string;
   originalData?: any;
-  cardContent?: { // Specific content for Quadro Interativo
-    title?: string;
-    text?: string;
-    instructions?: string;
-    customizations?: any[];
-    advancedContent?: any; // Placeholder for more complex data
-  };
-  cardContent2?: any; // For additional content parts
-  constructedWithAI?: boolean; // Flag to indicate if construction used AI
-  isGeneratedByAI?: boolean; // Flag to indicate if the original generation was by AI
-  requiresAIGeneration?: boolean; // Flag for activities that need AI generation
-  forceAIContent?: boolean; // Flag to force AI content regeneration
 }
 
 interface CardDeConstrucaoProps {
@@ -799,7 +785,6 @@ interface CardDeConstrucaoProps {
   onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
   onResetFlow: () => void;
   isLoading?: boolean;
-  onActivityUpdate?: (activityId: string, updatedActivity: Partial<ActionPlanItem>) => void; // Callback for activity updates
 }
 
 export function CardDeConstrucao({ 
@@ -809,8 +794,7 @@ export function CardDeConstrucao({
   onSubmitContextualization, 
   onApproveActionPlan, 
   onResetFlow,
-  isLoading,
-  onActivityUpdate
+  isLoading 
 }: CardDeConstrucaoProps) {
   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
     materias: '',
@@ -858,7 +842,6 @@ export function CardDeConstrucao({
 
   // State for activity building process
   const [isBuilding, setIsBuilding] = useState(false);
-  const [isConstructing, setIsConstructing] = useState(false); // State to track if construction is in progress
 
   // State for tracking building progress
   const [progress, setProgress] = useState<{
@@ -867,10 +850,6 @@ export function CardDeConstrucao({
     current: string;
     errors: string[];
   } | null>(null);
-
-  // State for auto-building progress
-  const [isAutoBuilding, setIsAutoBuilding] = useState(false);
-  const [autoBuildProgress, setAutoBuildProgress] = useState(0); // Progress for building all activities
 
   // Function to simulate activity building
   const buildActivities = async (activities: ActionPlanItem[], contextData?: any): Promise<boolean> => {
@@ -917,62 +896,6 @@ export function CardDeConstrucao({
     setIsBuilding(false);
     setProgress(prev => ({ ...prev, current: 'Finalizado!' }));
     return allSuccess;
-  };
-
-  // Function to build all activities (used for auto-build)
-  const buildAllActivities = async (
-    activities: ActionPlanItem[],
-    progressCallback?: (current: number, total: number) => void
-  ): Promise<boolean> => {
-    setIsAutoBuilding(true);
-    let allSuccessful = true;
-
-    for (let i = 0; i < activities.length; i++) {
-      const activity = activities[i];
-
-      try {
-        // Trigger AI generation for Quadro Interativo if needed
-        if (activity.id === 'quadro-interativo' && (activity.requiresAIGeneration || activity.forceAIContent)) {
-          console.log(`🤖 ATIVANDO IA PARA QUADRO INTERATIVO: ${activity.title}`);
-
-          // Passando customFields para a geração da IA
-          const generatedContent = await generateActivityContent(activity.id, activity.customFields || {});
-
-          if (generatedContent) {
-            // Update the activity with AI-generated content
-            Object.assign(activity, generatedContent);
-            activity.isBuilt = true;
-            activity.builtAt = new Date().toISOString();
-            activity.isGeneratedByAI = true; // Mark as generated by AI
-            activity.constructedWithAI = true; // Mark as constructed with AI
-            console.log(`✅ Conteúdo gerado pela IA para: ${activity.title}`);
-          } else {
-            throw new Error(`Falha ao gerar conteúdo para ${activity.title}`);
-          }
-        } else {
-          // For other activities, simulate or use existing build logic
-          console.log(`🔨 Construindo atividade padrão: ${activity.title}`);
-          // Simulate building process
-          await new Promise(resolve => setTimeout(resolve, 500));
-          activity.isBuilt = true; // Mark as built
-          activity.builtAt = new Date().toISOString();
-        }
-
-        // Update progress callback
-        if (progressCallback) {
-          progressCallback(i + 1, activities.length);
-        }
-
-      } catch (error: any) {
-        console.error(`❌ ERRO ao construir atividade ${activity.title}:`, error);
-        allSuccessful = false;
-        activity.isBuilt = false; // Mark as not built on error
-        // Potentially add error details to the activity if needed
-      }
-    }
-
-    setIsAutoBuilding(false);
-    return allSuccessful;
   };
 
   // Load existing data when component mounts
@@ -1604,242 +1527,6 @@ export function CardDeConstrucao({
   // Determine if we are on the Quiz page by checking the URL
   const isQuizMode = typeof window !== 'undefined' && window.location.pathname.includes('/quiz');
 
-  // Placeholder for generateActivityContent - replace with actual implementation
-  const generateActivityContent = async (activityId: string, customFields: Record<string, string>): Promise<Partial<ActionPlanItem> | null> => {
-    console.log(`🤖 Chamando IA para gerar conteúdo para: ${activityId}`);
-    console.log('🔬 Campos customizados recebidos:', customFields);
-
-    // Simulate AI content generation
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
-
-    // Example of generating content for Quadro Interativo
-    if (activityId === 'quadro-interativo') {
-      const aiGeneratedText = customFields['prompt'] || "Crie um quadro interativo sobre a Revolução Francesa com os seguintes pontos: Causas, Principais Eventos, Consequências.";
-      console.log('💬 Prompt para Quadro Interativo:', aiGeneratedText);
-
-      // Simulate generating different parts of the content
-      const generatedTitle = `Quadro Interativo: ${customFields['Título'] || 'Revolução Francesa'}`;
-      const generatedInstructions = customFields['Instruções Adicionais'] || 'Use este quadro para organizar informações chave.';
-      const generatedContent = {
-        title: generatedTitle,
-        description: aiGeneratedText, // Use aiGeneratedText as description for simplicity
-        cardContent: {
-          title: generatedTitle,
-          text: aiGeneratedText,
-          instructions: generatedInstructions,
-          customizations: [],
-          advancedContent: {
-            // Placeholder for more complex content structure
-            keyPoints: aiGeneratedText.split(/[,\n]/).map((part: string) => part.trim()).filter(Boolean).slice(0, 5),
-            visualTheme: customFields['Tema Visual'] || 'Histórico',
-          }
-        },
-        customFields: {
-          ...customFields,
-          aiGeneratedText: aiGeneratedText, // Store the generated text in customFields as well
-          prompt: aiGeneratedText // Store the prompt used
-        },
-        isGeneratedByAI: true, // Mark as generated by AI
-        constructedWithAI: true // Mark as constructed with AI
-      };
-      return generatedContent;
-    }
-
-    // Simulate generic content generation for other activities
-    return {
-      title: `${activityId} - Conteúdo Gerado pela IA`,
-      description: `Esta é uma descrição gerada pela IA para a atividade ${activityId}. Baseado nos campos: ${JSON.stringify(customFields)}`,
-      isGeneratedByAI: true,
-      constructedWithAI: true
-    };
-  };
-
-  const handleConstruct = useCallback(async (activityId: string) => {
-    if (isConstructing) return;
-
-    try {
-      setIsConstructing(true);
-      console.log(`🔨 INICIANDO CONSTRUÇÃO DA ATIVIDADE: ${activityId}`);
-
-      // Encontrar a atividade no plano de ação
-      const activity = actionPlanItems.find(item => item.id === activityId);
-      if (!activity) {
-        throw new Error(`Atividade não encontrada: ${activityId}`);
-      }
-
-      console.log('📋 Dados da atividade para construção:', {
-        id: activity.id,
-        title: activity.title,
-        hasCustomFields: !!activity.customFields,
-        hasCardContent: !!activity.cardContent,
-        isGeneratedByAI: activity.isGeneratedByAI,
-        customFieldsKeys: activity.customFields ? Object.keys(activity.customFields) : []
-      });
-
-      // TRATAMENTO ESPECIAL PARA QUADRO INTERATIVO
-      if (activityId === 'quadro-interativo') {
-        console.log('🎯 CONSTRUÇÃO ESPECIAL PARA QUADRO INTERATIVO');
-
-        // Verificar se já possui conteúdo REAL da IA
-        const hasRealAIContent = (
-          activity.isGeneratedByAI && 
-          activity.cardContent && 
-          activity.cardContent.text && 
-          activity.cardContent.text.length > 100 && // Garantir que não é fallback
-          !activity.cardContent.text.includes('Conteúdo educativo específico') && // Evitar texto genérico
-          !activity.cardContent.text.includes('será gerado')
-        ) || (
-          activity.customFields?.aiGeneratedText && 
-          activity.customFields.aiGeneratedText.length > 100 &&
-          !activity.customFields.aiGeneratedText.includes('será gerado')
-        );
-
-        if (hasRealAIContent) {
-          console.log('✅ QUADRO INTERATIVO JÁ POSSUI CONTEÚDO REAL DA IA - PRESERVANDO');
-
-          // Marcar como construída sem regerar conteúdo
-          activity.isBuilt = true;
-          activity.builtAt = new Date().toISOString();
-          activity.constructedWithAI = true;
-
-          console.log('🔥 CONTEÚDO REAL DA IA PRESERVADO:', {
-            cardContentTitle: activity.cardContent?.title,
-            cardContentTextLength: activity.cardContent?.text?.length,
-            textPreview: activity.cardContent?.text?.substring(0, 100),
-            hasAdvancedContent: !!activity.cardContent2,
-            customFieldsAI: !!activity.customFields?.aiGeneratedText,
-            isRealContent: true
-          });
-
-        } else {
-          console.log('⚠️ QUADRO INTERATIVO SEM CONTEÚDO DA IA - GERANDO AGORA');
-
-          // Gerar conteúdo usando o serviço de geração
-          const generatedContent = await generateActivityContent(activityId, activity.customFields || {});
-
-          if (generatedContent) {
-            // Aplicar o conteúdo gerado à atividade
-            Object.assign(activity, generatedContent);
-            activity.isBuilt = true;
-            activity.builtAt = new Date().toISOString();
-            activity.isGeneratedByAI = true;
-          }
-        }
-      } else {
-        // CONSTRUÇÃO PADRÃO PARA OUTRAS ATIVIDADES
-        const generatedContent = await generateActivityContent(activityId, activity.customFields || {});
-
-        if (generatedContent) {
-          // Marcar como construída com sucesso
-          activity.isBuilt = true;
-          activity.builtAt = new Date().toISOString();
-        }
-      }
-
-      console.log(`✅ ATIVIDADE ${activityId} CONSTRUÍDA COM SUCESSO`);
-
-      // Atualizar o estado local
-      onActivityUpdate?.(activityId, { ...activity, isBuilt: true });
-
-      // Mostrar sucesso
-      toast({
-        title: "Atividade Construída",
-        description: `${activity.title} foi construída com sucesso!`,
-      });
-
-    } catch (error) {
-      console.error(`❌ ERRO AO CONSTRUIR ATIVIDADE ${activityId}:`, error);
-      toast({
-        title: "Erro na Construção",
-        description: "Houve um problema ao construir a atividade. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsConstructing(false);
-    }
-  }, [actionPlanItems, isConstructing, onActivityUpdate, generateActivityContent]); // Ensure generateActivityContent is a dependency
-
-  // Function to build all pending activities, including AI generation for Quadro Interativo
-  const handleBuildAll = async () => {
-    const pendingActivities = (selectedActivities.length > 0 ? selectedActivities : selectedActivities2)
-      .filter(activity => !activity.isBuilt); // Filter activities that are not yet built
-
-    if (!pendingActivities.length) {
-      console.log('⚠️ Nenhuma atividade pendente para construir');
-      return;
-    }
-
-    console.log('🚀 INICIANDO CONSTRUÇÃO AUTOMÁTICA COM IA GEMINI...');
-    console.log('📋 Atividades a serem construídas:', pendingActivities.map(a => ({
-      id: a.id,
-      title: a.title,
-      hasCustomFields: !!a.customFields,
-      isQuadroInterativo: a.id === 'quadro-interativo'
-    })));
-
-    setIsAutoBuilding(true);
-    setAutoBuildProgress(0); // Reset progress
-
-    try {
-      // Prepare activities for AI generation if they are Quadro Interativo and need it
-      const activitiesToBuild = pendingActivities.map(activity => {
-        if (activity.id === 'quadro-interativo' && (activity.requiresAIGeneration || activity.forceAIContent)) {
-          console.log('🎯 PREPARANDO QUADRO INTERATIVO PARA IA:', activity.title);
-
-          // Ensure necessary fields are present for AI processing
-          const enhancedActivity = {
-            ...activity,
-            requiresAIGeneration: true, // Explicitly mark for AI generation
-            forceAIContent: true,       // Ensure content is regenerated if needed
-            customFields: {
-              ...activity.customFields,
-              needsAIGeneration: 'true', // Custom flag for AI processing
-              contentSource: 'pending-ai-generation' // Source indicator
-            }
-          };
-
-          console.log('✅ Quadro Interativo preparado para IA:', enhancedActivity);
-          return enhancedActivity;
-        }
-        return activity; // Return original activity if not Quadro Interativo or doesn't need AI
-      });
-
-      console.log('🤖 CHAMANDO buildAllActivities com atividades preparadas...');
-
-      // Call the buildAllActivities function with the prepared activities
-      await buildAllActivities(activitiesToBuild, (current, total) => {
-        const progressPercent = Math.round((current / total) * 100);
-        setAutoBuildProgress(progressPercent);
-        console.log(`📊 Progresso da construção: ${current}/${total} (${progressPercent}%)`);
-      });
-
-      setAutoBuildProgress(100);
-      console.log('✅ TODAS AS ATIVIDADES CONSTRUÍDAS COM SUCESSO (IA ACIONADA)');
-
-      // Aguardar um pouco para mostrar 100% antes de finalizar
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-    } catch (error) {
-      console.error('❌ ERRO CRÍTICO durante construção automática:', error);
-
-      // Log detalhado do erro para debug
-      if (error instanceof Error) {
-        console.error('📄 Detalhes do erro:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        });
-      }
-
-    } finally {
-      setIsAutoBuilding(false);
-      setAutoBuildProgress(0); // Reset progress
-      console.log('🏁 Processo de construção automática finalizado');
-    }
-  };
-
-
-  // Render logic
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
@@ -1999,8 +1686,8 @@ export function CardDeConstrucao({
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3">
             {step === "generating"
-              ? "Analizando com IA Gemini"
-              : "Gerando Atividades"}
+              ? "🤖 Analisando com IA Gemini"
+              : "🎯 Gerando Atividades"}
           </h3>
           <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-lg text-sm sm:text-base">
             {step === "generating"
@@ -2071,10 +1758,6 @@ export function CardDeConstrucao({
             <ConstructionInterface 
               approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
               handleEditActivity={handleEditActivity} 
-              handleConstruct={handleConstruct} // Pass handleConstruct here
-              handleBuildAll={handleBuildAll} // Pass handleBuildAll here
-              isAutoBuilding={isAutoBuilding}
-              autoBuildProgress={autoBuildProgress}
             />
 
             {/* Timer and Lifetime Access Button - Only on Quiz page */}

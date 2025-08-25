@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,173 +15,112 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   data, 
   activityData 
 }) => {
-  // Debug: Mostrar todos os dados recebidos
-  console.log('🔍 DADOS COMPLETOS recebidos no Preview:', JSON.stringify(data, null, 2));
-
-  // Sistema CRÍTICO de extração de conteúdo da IA
-  const extractAIGeneratedContent = () => {
-    console.log('🚀 INICIANDO EXTRAÇÃO CRÍTICA DE CONTEÚDO DA IA GEMINI');
-    console.log('📊 DADOS RECEBIDOS PARA ANÁLISE:', JSON.stringify(data, null, 2));
-    console.log('📊 ACTIVITY DATA:', JSON.stringify(activityData, null, 2));
-
-    // VERIFICAÇÃO CRÍTICA 0: activityData direto (dados da construção)
-    if (activityData?.cardContent?.title && activityData?.cardContent?.text && 
-        activityData.cardContent.text.length > 30 && 
-        !activityData.cardContent.text.includes('Conteúdo educativo específico será gerado') &&
-        !activityData.cardContent.text.includes('Como') &&
-        !activityData.cardContent.text.includes('aguardando') &&
-        activityData.cardContent.text !== activityData?.description) {
-      console.log('✅ CRÍTICO 0: Conteúdo cardContent DO ACTIVITY DATA encontrado');
-      return {
-        title: activityData.cardContent.title,
-        text: activityData.cardContent.text,
-        advancedText: activityData.cardContent2?.text,
-        source: 'activityData-cardContent',
-        isAIGenerated: activityData.isGeneratedByAI || true
-      };
-    }
-
-    // VERIFICAÇÃO CRÍTICA 1: cardContent direto da IA
-    if (data?.cardContent?.title && data?.cardContent?.text && 
-        data.cardContent.text.length > 30 && 
-        !data.cardContent.text.includes('Conteúdo educativo específico será gerado') &&
-        !data.cardContent.text.includes('Como') &&
-        !data.cardContent.text.includes('aguardando') &&
-        data.cardContent.text !== data?.description) {
-      console.log('✅ CRÍTICO 1: Conteúdo cardContent DA IA encontrado');
-      return {
-        title: data.cardContent.title,
-        text: data.cardContent.text,
-        advancedText: data.cardContent2?.text,
-        source: 'cardContent-IA',
-        isAIGenerated: true
-      };
-    }
-
-    // VERIFICAÇÃO CRÍTICA 2: Campos AI nos customFields
-    if (data?.customFields?.aiGeneratedTitle && data?.customFields?.aiGeneratedText && 
-        data.customFields.aiGeneratedText.length > 30 &&
-        !data.customFields.aiGeneratedText.includes('Como') &&
-        !data.customFields.aiGeneratedText.includes('aguardando') &&
-        data.customFields.aiGeneratedText !== data?.description) {
-      console.log('✅ CRÍTICO 2: Campos AI específicos encontrados');
-      return {
-        title: data.customFields.aiGeneratedTitle,
-        text: data.customFields.aiGeneratedText,
-        advancedText: data.customFields.aiGeneratedAdvancedText,
-        source: 'customFields-AI',
-        isAIGenerated: true
-      };
-    }
-
-    // VERIFICAÇÃO CRÍTICA 3: JSON serializado no generatedContent
+  // Extrair dados do conteúdo gerado pela IA
+  const cardContent = (() => {
+    console.log('🔍 Processando dados COMPLETOS para QuadroInterativoPreview:', data);
+    
+    // Prioridade 1: Verificar se há conteúdo gerado pela IA salvo
     if (data?.customFields?.generatedContent) {
+      console.log('🤖 Tentando usar conteúdo gerado pela IA salvo');
       try {
-        console.log('🔍 CRÍTICO 3: Analisando generatedContent...');
-        const parsedContent = JSON.parse(data.customFields.generatedContent);
-
-        if (parsedContent?.cardContent?.title && parsedContent?.cardContent?.text &&
-            parsedContent.cardContent.text.length > 50 &&
-            !parsedContent.cardContent.text.includes(data?.description || '')) {
-          console.log('✅ CRÍTICO 3: Conteúdo válido extraído do JSON serializado');
+        const generatedContent = JSON.parse(data.customFields.generatedContent);
+        if (generatedContent?.cardContent) {
+          console.log('✅ Usando cardContent gerado pela IA (salvo):', generatedContent.cardContent);
+          
+          // Garantir que o título não tenha "Quadro Interativo:"
+          let title = String(generatedContent.cardContent.title || 'Conteúdo Educativo');
+          title = title.replace(/^Quadro Interativo:\s*/i, '');
+          
           return {
-            title: parsedContent.cardContent.title,
-            text: parsedContent.cardContent.text,
-            advancedText: parsedContent.cardContent2?.text,
-            source: 'generatedContent-JSON',
-            isAIGenerated: true
+            title: title,
+            text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.')
           };
         }
       } catch (error) {
-        console.error('❌ Erro no parsing do generatedContent:', error);
+        console.warn('⚠️ Erro ao processar conteúdo gerado pela IA salvo:', error);
       }
     }
-
-    // VERIFICAÇÃO CRÍTICA 4: text direto no nível raiz (não description)
-    if (data?.text && data.text !== data?.description && 
-        data.text.length > 50 &&
-        !data.text.includes('Conteúdo educativo específico será gerado')) {
-      console.log('✅ CRÍTICO 4: Text direto válido (não é description)');
+    
+    // Prioridade 2: Se há conteúdo gerado pela IA com cardContent
+    if (data?.cardContent && typeof data.cardContent === 'object') {
+      console.log('✅ Usando cardContent gerado pela IA diretamente:', data.cardContent);
+      
+      // Garantir que o título não tenha "Quadro Interativo:"
+      let title = String(data.cardContent.title || 'Conteúdo Educativo');
+      title = title.replace(/^Quadro Interativo:\s*/i, '');
+      
       return {
-        title: data.title || `Como Dominar ${data?.customFields?.['Tema ou Assunto da aula'] || 'Este Conteúdo'}`,
-        text: data.text,
-        advancedText: data.advancedText,
-        source: 'text-direto',
-        isAIGenerated: Boolean(data.isGeneratedByAI)
+        title: title,
+        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
       };
     }
-
-    // CRÍTICO 5: Detectar se está usando description incorretamente
-    if (data?.description && (
-        data.cardContent?.text === data.description ||
-        data.text === data.description ||
-        !data.cardContent?.text ||
-        !data.text
-    )) {
-      console.log('❌ CRÍTICO 5: DETECTADO USO INCORRETO DA DESCRIPTION - GERANDO CONTEÚDO IA');
-
-      // Extrair dados para gerar conteúdo específico
-      const tema = data?.customFields?.['Tema ou Assunto da aula'] || 
-                   data?.theme || 
-                   data?.title || 
-                   'Conteúdo Educativo';
-
-      const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || 
-                         data?.subject || 
-                         'Educação';
-
-      const anoSerie = data?.customFields?.['Ano / Série'] || 
-                       data?.schoolYear || 
-                       'Ensino Fundamental';
-
-      // Gerar conteúdo específico baseado nos dados reais
-      const contentText = `Para você dominar ${tema} em ${disciplina} (${anoSerie}): 1) Identifique os conceitos-chave específicos de ${tema} - observe as características únicas que definem este tema. 2) Pratique com exemplos reais de ${tema} - use situações do cotidiano onde ${tema} é aplicado. 3) Desenvolva estratégias específicas para ${tema} - crie métodos de estudo exclusivos para este conteúdo. 4) Teste seu conhecimento com exercícios progressivos de ${tema}. Exemplo prático: ${tema} é fundamental quando você precisa resolver problemas específicos da área. Macete especial: para lembrar de ${tema}, associe com conceitos que você já conhece. Cuidado: o erro mais comum em ${tema} é confundir com temas similares. Dica final: ${tema} é essencial em ${disciplina} porque conecta diretamente com outros conceitos importantes da matéria!`;
-
+    
+    // Prioridade 3: Se há dados diretos da IA no nível raiz
+    if (data?.title && data?.text) {
+      console.log('✅ Usando dados diretos da IA');
+      
+      // Garantir que o título não tenha "Quadro Interativo:"
+      let title = String(data.title || 'Conteúdo Educativo');
+      title = title.replace(/^Quadro Interativo:\s*/i, '');
+      
       return {
-        title: `Como Dominar ${tema} - Guia Específico`,
-        text: contentText,
-        advancedText: `Dominando ${tema} no nível avançado: explore aplicações complexas e desafiadoras de ${tema}. Para casos difíceis: divida o problema em partes menores e aplique ${tema} sistematicamente. Exercício avançado: combine ${tema} com outros conceitos de ${disciplina} para resolver problemas interdisciplinares. Segredo profissional: a chave está em entender a lógica fundamental por trás de ${tema}, não apenas memorizar definições.`,
-        source: 'fallback-inteligente',
-        isAIGenerated: false
+        title: title,
+        text: String(data.text || 'Conteúdo educativo.')
       };
     }
-
-    // FALLBACK FINAL
-    console.log('⚠️ FALLBACK FINAL: Gerando conteúdo básico');
+    
+    // Prioridade 4: Verificar generatedContent no nível raiz
+    if (data?.generatedContent?.cardContent) {
+      console.log('✅ Usando generatedContent do nível raiz');
+      
+      // Garantir que o título não tenha "Quadro Interativo:"
+      let title = String(data.generatedContent.cardContent.title || 'Conteúdo Educativo');
+      title = title.replace(/^Quadro Interativo:\s*/i, '');
+      
+      return {
+        title: title,
+        text: String(data.generatedContent.cardContent.text || 'Conteúdo educativo.')
+      };
+    }
+    
+    // Fallback educativo baseado nos campos disponíveis
+    console.log('⚠️ Usando fallback educativo baseado nos campos disponíveis');
+    
+    const tema = data?.customFields?.['Tema ou Assunto da aula'] || 
+                 data?.theme || 
+                 'Conteúdo Educativo';
+    
+    const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || 
+                       data?.subject || 
+                       'a disciplina';
+    
+    const serie = data?.customFields?.['Ano / Série'] || 
+                  data?.schoolYear || 
+                  'esta série';
+    
+    const objetivos = data?.customFields?.['Objetivo de aprendizagem da aula'] || 
+                      data?.objectives || 
+                      'desenvolver conhecimentos fundamentais';
+    
+    // Criar título educativo (sem "Quadro Interativo:")
+    let fallbackTitle = tema.replace(/^Quadro Interativo:\s*/i, '');
+    
+    // Criar texto educativo completo
+    const fallbackText = `Este conteúdo sobre ${fallbackTitle.toLowerCase()} apresenta os conceitos fundamentais de ${disciplina} para ${serie}. O objetivo é ${objetivos.toLowerCase()}. Através de explicações claras, exemplos práticos e atividades interativas, você desenvolverá uma compreensão sólida do tema e saberá aplicar esses conhecimentos em situações práticas.`;
+    
     return {
-      title: 'Aguardando Geração de Conteúdo',
-      text: 'O conteúdo específico está sendo gerado pela IA. Por favor, aguarde ou tente construir a atividade novamente para acionar a geração automática.',
-      advancedText: null,
-      source: 'fallback-final',
-      isAIGenerated: false
+      title: fallbackTitle.substring(0, 80),
+      text: fallbackText.substring(0, 500)
     };
-  };
+  })();
 
-  const aiContent = extractAIGeneratedContent();
-
-  // Preparar conteúdo para renderização baseado na extração da IA
-  const cardContent = {
-    title: aiContent.title,
-    text: aiContent.text,
-  };
-
-  const cardContent2 = aiContent.advancedText ? {
-    title: `${aiContent.title} - Nível Avançado`,
-    text: aiContent.advancedText,
-  } : null;
-
-  const isGeneratedByAI = aiContent.isAIGenerated;
-
-  console.log('🎯 CONTEÚDO FINAL PREPARADO PARA RENDERIZAÇÃO:', {
-    titulo: cardContent.title,
-    textoPreview: cardContent.text?.substring(0, 150),
-    temAvancado: !!cardContent2,
-    isGeneratedByAI,
-    fonte: aiContent.source,
-    tamanhoTexto: cardContent.text?.length,
-    NÃO_É_DESCRIPTION: cardContent.text !== data?.description
-  });
-
+  // Verificar se o conteúdo foi gerado pela IA
+  const isGeneratedByAI = data?.isGeneratedByAI || 
+                         data?.generatedAt || 
+                         data?.customFields?.isAIGenerated === 'true' ||
+                         data?.customFields?.generatedContent ||
+                         (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
+                         false;
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
@@ -196,91 +136,22 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
               {isGeneratedByAI ? 'Conteúdo gerado pela IA Gemini' : 'Aguardando geração de conteúdo'}
             </p>
           </CardHeader>
-
+          
           <CardContent className="p-8">
-            <div className="space-y-8">
-              {/* Card 1 - Conteúdo Inicial */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 dark:text-blue-400 text-sm font-bold">1</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {cardContent.title}
-                  </h3>
-                  {/* Debug indicator */}
-                  {isGeneratedByAI && (
-                    <div className="flex gap-2">
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        ✅ IA Gemini
-                      </span>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        Fonte: {aiContent.source}
-                      </span>
-                    </div>
-                  )}
-                  {!isGeneratedByAI && (
-                    <div className="flex gap-2">
-                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                        ⏳ Aguardando IA
-                      </span>
-                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                        Fonte: {aiContent.source}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {cardContent.text}
-                </p>
-                {/* Debug info detalhado */}
-                {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
-                    <div>🔍 <strong>DEBUG DETALHADO:</strong></div>
-                    <div>Fonte: {aiContent.source}</div>
-                    <div>Tamanho: {cardContent.text.length} chars</div>
-                    <div>cardContent existe: {!!data?.cardContent}</div>
-                    <div>activityData.cardContent: {!!activityData?.cardContent}</div>
-                    <div>isGeneratedByAI: {String(isGeneratedByAI)}</div>
-                    <div>aiGeneratedTitle: {!!data?.customFields?.aiGeneratedTitle}</div>
-                    <div>aiGeneratedText: {!!data?.customFields?.aiGeneratedText}</div>
-                    <div>generatedContent JSON: {!!data?.customFields?.generatedContent}</div>
-                    <div>text !== description: {String(cardContent.text !== data?.description)}</div>
-                    <div>Primeiro 50 chars: "{cardContent.text.substring(0, 50)}..."</div>
-                  </div>
-                )}
-              </div>
-
-              {/* Card 2 - Conteúdo Avançado (se disponível) */}
-              {cardContent2 && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                      <span className="text-purple-600 dark:text-purple-400 text-sm font-bold">2</span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {cardContent2.title}
-                    </h3>
-                    {/* Debug indicator */}
-                    {isGeneratedByAI && (
-                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                        ✅ IA Avançado
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {cardContent2.text}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-inner border-2 border-blue-200 dark:border-blue-700">
+              <div className="text-center space-y-6">
+                {/* Título Principal - Conteúdo da IA */}
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                  {cardContent.title}
+                </h1>
+                
+                {/* Conteúdo Principal - Texto da IA */}
+                <div className="max-w-3xl mx-auto">
+                  <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {cardContent.text}
                   </p>
-                  {/* Debug info detalhado */}
-                  {process.env.NODE_ENV === 'development' && (
-                    <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
-                      <div>Fonte: IA Gemini (Nível Avançado)</div>
-                      <div>Tamanho: {cardContent2.text.length} chars</div>
-                      <div>cardContent2 existe: {!!data?.cardContent2}</div>
-                    </div>
-                  )}
                 </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
