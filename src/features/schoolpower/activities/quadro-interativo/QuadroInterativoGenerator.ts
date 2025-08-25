@@ -39,15 +39,21 @@ export class QuadroInterativoGenerator {
   }
 
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
+    console.log('🚀 INICIANDO GERAÇÃO CRÍTICA DE CONTEÚDO VIA IA GEMINI');
+    console.log('📊 DADOS DE ENTRADA PARA IA:', JSON.stringify(data, null, 2));
+    
     geminiLogger.logRequest('Gerando conteúdo específico de Quadro Interativo', data);
 
     try {
       const prompt = this.buildEnhancedPrompt(data);
-      console.log('📤 Enviando prompt para Gemini (tema:', data.theme, ')');
-      console.log('📝 Prompt preview:', prompt.substring(0, 300) + '...');
+      console.log('📤 ENVIANDO PROMPT PARA GEMINI API...');
+      console.log('🎯 TEMA ESPECÍFICO:', data.theme);
+      console.log('📚 DISCIPLINA:', data.subject);
+      console.log('📝 Preview do prompt (300 chars):', prompt.substring(0, 300) + '...');
 
+      console.log('🌐 CHAMANDO API GEMINI...');
       const response = await this.callGeminiAPI(prompt);
-      console.log('📥 Resposta bruta recebida do Gemini:', JSON.stringify(response, null, 2));
+      console.log('📥 RESPOSTA BRUTA RECEBIDA DA API GEMINI:', JSON.stringify(response, null, 2));
 
       const parsedContent = this.parseGeminiResponse(response);
       console.log('✅ Conteúdo FINAL processado pela IA:', parsedContent);
