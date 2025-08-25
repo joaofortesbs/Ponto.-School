@@ -123,28 +123,46 @@ export class QuadroInterativoGenerator {
   }
 
   private buildEnhancedPrompt(data: QuadroInterativoData): string {
-    return `VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO. CRIE CONTEÚDO EDUCATIVO ULTRA-ESPECÍFICO PARA O TEMA "${data.theme}".
+    return `VOCÊ É UM PROFESSOR ESPECIALISTA BRASILEIRO EM ${data.subject}. CRIE CONTEÚDO EDUCATIVO ULTRA-ESPECÍFICO E PRÁTICO PARA O TEMA "${data.theme}".
 
-DADOS OBRIGATÓRIOS:
+📚 CONTEXTO EDUCACIONAL:
 - Disciplina: ${data.subject}
 - Ano/Série: ${data.schoolYear}
-- Tema EXATO: ${data.theme}
+- Tema ESPECÍFICO: ${data.theme}
 - Objetivos: ${data.objectives}
 - Nível: ${data.difficultyLevel}
+- Atividade Alvo: ${data.quadroInterativoCampoEspecifico}
 
-⚠️ REGRAS CRÍTICAS:
-1. NUNCA use textos genéricos como "Para você dominar este conteúdo"
-2. SEMPRE mencione "${data.theme}" especificamente no conteúdo
-3. SEMPRE forneça exemplos REAIS e CONCRETOS do tema
-4. SEMPRE use linguagem DIRETA ao aluno
-5. SEMPRE inclua passos ESPECÍFICOS e PRÁTICOS
+🎯 MISSÃO CRÍTICA:
+Gerar conteúdo educativo EXTREMAMENTE ESPECÍFICO para "${data.theme}" que será usado em quadro interativo para alunos de ${data.schoolYear} em ${data.subject}.
 
-📝 FORMATO OBRIGATÓRIO - JSON VÁLIDO (sem markdown, sem explicações):
+⚠️ REGRAS OBRIGATÓRIAS:
+1. SEMPRE mencione "${data.theme}" pelo nome no conteúdo (mínimo 3 vezes)
+2. NUNCA use frases genéricas como "dominar este conteúdo" ou "este tema"
+3. SEMPRE forneça exemplos CONCRETOS específicos de ${data.theme}
+4. SEMPRE inclua passos NUMERADOS e PRÁTICOS
+5. SEMPRE use linguagem direta ao aluno ("Para você...")
+6. SEMPRE inclua dicas, macetes e alertas específicos
+7. SEMPRE contextualizar para ${data.schoolYear} de ${data.subject}
+
+📋 ESTRUTURA OBRIGATÓRIA - RESPONDA APENAS COM JSON VÁLIDO:
 {
-  "title": "Como [verbo específico] ${data.theme}",
-  "text": "Para você [ação específica com ${data.theme}]: 1) [passo prático específico], 2) [outro passo específico], 3) [passo final]. Exemplo real: [exemplo concreto de ${data.theme}]. Macete: [dica específica]. Cuidado: [erro comum específico de ${data.theme}].",
-  "advancedText": "Dominando ${data.theme} avançado: [técnica específica avançada]. Para casos complexos de ${data.theme}: [estratégia específica]. Teste: [exercício específico de ${data.theme}]. Dica pro: [segredo específico do tema]."
+  "title": "Como [ação específica] ${data.theme}",
+  "text": "Para você [objetivo específico com ${data.theme}]: 1) [passo prático específico do ${data.theme}], 2) [segundo passo específico], 3) [terceiro passo específico]. Exemplo real: [situação concreta onde ${data.theme} aparece]. Macete: [dica exclusiva para ${data.theme}]. Cuidado: [erro comum específico em ${data.theme}]. Lembre-se: [reforço específico sobre ${data.theme}].",
+  "advancedText": "Dominando ${data.theme} no nível avançado: [técnica específica avançada]. Para casos complexos de ${data.theme}: [estratégia específica]. Exercício desafiador: [problema específico de ${data.theme}]. Dica profissional: [segredo específico para ${data.theme}]. Conexão: [como ${data.theme} se relaciona com outros temas de ${data.subject}]."
 }
+
+🌟 EXEMPLOS DE QUALIDADE ESPERADA:
+
+Para "Teorema de Pitágoras":
+{
+  "title": "Como Aplicar o Teorema de Pitágoras",
+  "text": "Para você resolver problemas com Teorema de Pitágoras: 1) Identifique o triângulo retângulo no problema. 2) Localize a hipotenusa (lado mais longo, oposto ao ângulo reto). 3) Aplique a² + b² = c², onde c é a hipotenusa. Exemplo real: para calcular a diagonal de uma TV 32 polegadas, use a² + b² = 32². Macete: a hipotenusa é sempre o maior lado! Cuidado: só funciona em triângulos retângulos. Lembre-se: Teorema de Pitágoras é a base da geometria.",
+  "advancedText": "Dominando Teorema de Pitágoras no nível avançado: use para calcular distâncias em plano cartesiano. Para casos complexos: aplique em pirâmides e sólidos geométricos. Exercício desafiador: calcule a altura de um prédio usando Teorema de Pitágoras e sombra. Dica profissional: Teorema de Pitágoras aparece em física (velocidades) e programação (distâncias). Conexão: Teorema de Pitágoras se relaciona com trigonometria e funções quadráticas."
+}
+
+AGORA GERE CONTEÚDO ESPECÍFICO PARA "${data.theme}" EM ${data.subject}:`
+  }
 
 EXEMPLOS ESPECÍFICOS OBRIGATÓRIOS:
 

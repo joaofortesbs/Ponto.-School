@@ -504,104 +504,139 @@ export async function generatePersonalizedPlan(
           }
         }
 
-        // Processamento específico para Quadro Interativo
+        // Processamento específico para Quadro Interativo - SISTEMA MELHORADO
         if (activityData.id === 'quadro-interativo') {
-          console.log('🎯 Processando especificamente Quadro Interativo');
+          console.log('🎯 INICIANDO PROCESSAMENTO ESPECÍFICO DO QUADRO INTERATIVO');
+          console.log('📥 Dados recebidos da IA Gemini:', activityData);
 
           try {
-            // Extrair campos customizados da IA
-            const customFields = activityData.customFields || {};
-
-            // Garantir que todos os campos obrigatórios estejam presentes
-            const requiredFields = {
-              'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || customFields['Disciplina / Área de conhecimento'] || 'Matemática',
-              'Ano / Série': activityData['Ano / Série'] || customFields['Ano / Série'] || '6º Ano',
-              'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || customFields['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
-              'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || customFields['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
-              'Nível de Dificuldade': activityData['Nível de Dificuldade'] || customFields['Nível de Dificuldade'] || 'Intermediário',
-              'Atividade mostrada': activityData['Atividade mostrada'] || customFields['Atividade mostrada'] || 'Atividade interativa no quadro'
+            // Extrair campos da resposta da IA (mais robusto)
+            const extractedData = {
+              subject: activityData['Disciplina / Área de conhecimento'] || 
+                       activityData.customFields?.['Disciplina / Área de conhecimento'] || 
+                       activityData.subject || 
+                       'Matemática',
+              schoolYear: activityData['Ano / Série'] || 
+                         activityData.customFields?.['Ano / Série'] || 
+                         activityData.schoolYear || 
+                         '6º Ano',
+              theme: activityData['Tema ou Assunto da aula'] || 
+                    activityData.customFields?.['Tema ou Assunto da aula'] || 
+                    activityData.theme || 
+                    activityData.title || 
+                    'Tema da Aula',
+              objectives: activityData['Objetivo de aprendizagem da aula'] || 
+                         activityData.customFields?.['Objetivo de aprendizagem da aula'] || 
+                         activityData.objectives || 
+                         activityData.description || 
+                         'Desenvolver conhecimentos específicos',
+              difficultyLevel: activityData['Nível de Dificuldade'] || 
+                              activityData.customFields?.['Nível de Dificuldade'] || 
+                              activityData.difficultyLevel || 
+                              activityData.difficulty || 
+                              'Intermediário',
+              quadroInterativoCampoEspecifico: activityData['Atividade mostrada'] || 
+                                              activityData.customFields?.['Atividade mostrada'] || 
+                                              activityData.quadroInterativoCampoEspecifico || 
+                                              'Atividade interativa específica'
             };
 
-            // Gerar conteúdo específico do Quadro Interativo usando a IA APRIMORADA
+            console.log('🔍 DADOS EXTRAÍDOS PARA GERAÇÃO:', extractedData);
+
+            // Instanciar o gerador e gerar conteúdo específico
             const quadroGenerator = new QuadroInterativoGenerator();
-            const quadroContent = await quadroGenerator.generateQuadroInterativoContent({
-              subject: requiredFields['Disciplina / Área de conhecimento'],
-              schoolYear: requiredFields['Ano / Série'],
-              theme: requiredFields['Tema ou Assunto da aula'],
-              objectives: requiredFields['Objetivo de aprendizagem da aula'],
-              difficultyLevel: requiredFields['Nível de Dificuldade'],
-              quadroInterativoCampoEspecifico: requiredFields['Atividade mostrada']
-            });
+            const quadroContent = await quadroGenerator.generateQuadroInterativoContent(extractedData);
 
-            console.log('🤖 CONTEÚDO ESPECÍFICO GERADO PELA IA GEMINI:', quadroContent);
-            console.log('📋 Verificando estrutura do conteúdo:', {
-              hasCardContent: !!quadroContent?.cardContent,
-              cardTitle: quadroContent?.cardContent?.title,
-              cardTextLength: quadroContent?.cardContent?.text?.length,
-              hasAdvanced: !!quadroContent?.cardContent2
-            });
+            console.log('🤖 CONTEÚDO ESPECÍFICO RETORNADO PELA IA:', JSON.stringify(quadroContent, null, 2));
 
-            // Atualizar os dados da atividade com o conteúdo gerado - CRÍTICO: PRESERVAR ESTRUTURA COMPLETA
+            if (quadroContent && quadroContent.cardContent) {
+              console.log('✅ CONTEÚDO VÁLIDO GERADO - APLICANDO AOS DADOS DA ATIVIDADE');
+              
+              // Aplicar o conteúdo gerado à atividade de forma CRÍTICA
+              activityData = {
+                ...activityData,
+                // Campos de conteúdo diretos da IA
+                cardContent: quadroContent.cardContent,
+                cardContent2: quadroContent.cardContent2,
+                title: quadroContent.cardContent.title,
+                text: quadroContent.cardContent.text,
+                advancedText: quadroContent.cardContent2?.text,
+                // Metadados de geração
+                isGeneratedByAI: true,
+                generatedAt: new Date().toISOString(),
+                // Preservar campos personalizados e adicionar novos
+                customFields: {
+                  ...activityData.customFields,
+                  'Disciplina / Área de conhecimento': extractedData.subject,
+                  'Ano / Série': extractedData.schoolYear,
+                  'Tema ou Assunto da aula': extractedData.theme,
+                  'Objetivo de aprendizagem da aula': extractedData.objectives,
+                  'Nível de Dificuldade': extractedData.difficultyLevel,
+                  'Atividade mostrada': extractedData.quadroInterativoCampoEspecifico,
+                  // Campos específicos da IA
+                  isAIGenerated: 'true',
+                  aiGeneratedTitle: quadroContent.cardContent.title,
+                  aiGeneratedText: quadroContent.cardContent.text,
+                  aiGeneratedAdvancedText: quadroContent.cardContent2?.text || '',
+                  generatedAt: new Date().toISOString(),
+                  // Backup do conteúdo completo
+                  generatedContent: JSON.stringify({
+                    cardContent: quadroContent.cardContent,
+                    cardContent2: quadroContent.cardContent2,
+                    generatedAt: new Date().toISOString(),
+                    extractedData
+                  })
+                }
+              };
+
+              console.log('🔥 DADOS FINAIS DA ATIVIDADE COM CONTEÚDO DA IA:', {
+                id: activityData.id,
+                title: activityData.title,
+                hasCardContent: !!activityData.cardContent,
+                cardTitle: activityData.cardContent?.title,
+                cardTextLength: activityData.cardContent?.text?.length,
+                hasAdvancedContent: !!activityData.cardContent2,
+                isGeneratedByAI: activityData.isGeneratedByAI
+              });
+
+            } else {
+              console.error('❌ CONTEÚDO INVÁLIDO RETORNADO PELA IA - USANDO FALLBACK');
+              throw new Error('Conteúdo inválido gerado pela IA');
+            }
+
+          } catch (error) {
+            console.error('❌ ERRO CRÍTICO ao gerar conteúdo para Quadro Interativo:', error);
+
+            // Fallback robusto com conteúdo específico baseado no tema
+            const fallbackTitle = `Como Dominar ${extractedData?.theme || activityData.title || 'Este Conteúdo'}`;
+            const fallbackText = `Para você dominar ${extractedData?.theme || 'este conteúdo'}, siga estes passos essenciais: 1) Identifique os conceitos principais. 2) Pratique com exemplos específicos. 3) Aplique em exercícios direcionados. Exemplo prático: observe como este tema aparece em situações reais. Dica importante: foque nos detalhes específicos. Cuidado: não confunda com conceitos similares.`;
+
             activityData = {
               ...activityData,
-              // GARANTIR que TODOS os dados da IA sejam preservados no nível superior
-              cardContent: quadroContent?.cardContent,
-              cardContent2: quadroContent?.cardContent2,
-              isGeneratedByAI: true,
+              // Fallback com conteúdo específico
+              cardContent: {
+                title: fallbackTitle,
+                text: fallbackText
+              },
+              title: fallbackTitle,
+              text: fallbackText,
+              isGeneratedByAI: false,
               generatedAt: new Date().toISOString(),
-              // PRESERVAR título e texto diretos para compatibilidade
-              title: quadroContent?.cardContent?.title || activityData.title,
-              text: quadroContent?.cardContent?.text || activityData.description,
-              advancedText: quadroContent?.cardContent2?.text,
               customFields: {
-                ...requiredFields,
-                // Dados gerados pela IA preservados de múltiplas formas
-                generatedContent: JSON.stringify({
-                  cardContent: quadroContent?.cardContent,
-                  cardContent2: quadroContent?.cardContent2,
-                  title: quadroContent?.cardContent?.title,
-                  text: quadroContent?.cardContent?.text,
-                  advancedText: quadroContent?.cardContent2?.text,
-                  generatedAt: new Date().toISOString()
-                }),
-                isAIGenerated: 'true',
-                generatedAt: new Date().toISOString(),
-                // Campos individuais para acesso direto
-                aiGeneratedTitle: quadroContent?.cardContent?.title || '',
-                aiGeneratedText: quadroContent?.cardContent?.text || '',
-                aiGeneratedAdvancedText: quadroContent?.cardContent2?.text || ''
+                ...activityData.customFields,
+                'Disciplina / Área de conhecimento': extractedData?.subject || 'Matemática',
+                'Ano / Série': extractedData?.schoolYear || '6º Ano',
+                'Tema ou Assunto da aula': extractedData?.theme || activityData.title || 'Tema da Aula',
+                'Objetivo de aprendizagem da aula': extractedData?.objectives || 'Desenvolver conhecimentos',
+                'Nível de Dificuldade': extractedData?.difficultyLevel || 'Intermediário',
+                'Atividade mostrada': extractedData?.quadroInterativoCampoEspecifico || 'Atividade específica',
+                isAIGenerated: 'false',
+                fallbackReason: 'Erro na geração pela IA'
               }
             };
-
-            console.log('✅ DADOS FINAIS DA ATIVIDADE PREPARADOS:', {
-              hasCardContent: !!activityData.cardContent,
-              cardTitle: activityData.cardContent?.title,
-              cardTextPreview: activityData.cardContent?.text?.substring(0, 100),
-              isGeneratedByAI: activityData.isGeneratedByAI,
-              hasDirectText: !!activityData.text,
-              hasCustomFieldsGenerated: !!activityData.customFields?.generatedContent
-            });
-
-            console.log('✅ Quadro Interativo processado com conteúdo da IA');
-          } catch (error) {
-            console.error('❌ Erro ao gerar conteúdo para Quadro Interativo:', error);
-
-            // Fallback com estrutura mínima
-            const fallbackFields = {
-              'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || 'Matemática',
-              'Ano / Série': activityData['Ano / Série'] || '6º Ano',
-              'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
-              'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
-              'Nível de Dificuldade': activityData['Nível de Dificuldade'] || 'Intermediário',
-              'Atividade mostrada': activityData['Atividade mostrada'] || 'Atividade interativa no quadro'
-            };
-
-            activityData = {
-              ...activityData,
-              isGeneratedByAI: false,
-              customFields: fallbackFields
-            };
           }
+
+          console.log('✅ QUADRO INTERATIVO PROCESSADO COMPLETAMENTE');
         }
 
         // Extract custom fields (all fields except standard ones)

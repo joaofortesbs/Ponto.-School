@@ -17,111 +17,117 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   // Debug: Mostrar todos os dados recebidos
   console.log('🔍 DADOS COMPLETOS recebidos no Preview:', JSON.stringify(data, null, 2));
 
-  // Extrair conteúdo real da IA - PRIORIZAR SEMPRE O CONTEÚDO DA IA
+  // Extrair conteúdo real da IA com sistema ULTRA-ROBUSTO
   const extractAIContent = () => {
-    console.log('📥 INICIANDO EXTRAÇÃO DE CONTEÚDO DA IA...');
-    console.log('🔍 DADOS COMPLETOS RECEBIDOS:', JSON.stringify(data, null, 2));
-    console.log('🔍 Dados recebidos para extração:', {
+    console.log('📥 SISTEMA DE EXTRAÇÃO ULTRA-ROBUSTO INICIADO');
+    console.log('🔍 DADOS RECEBIDOS:', JSON.stringify(data, null, 2));
+    
+    const debugInfo = {
       hasCardContent: !!data?.cardContent,
-      cardContentKeys: data?.cardContent ? Object.keys(data.cardContent) : [],
+      cardContentValid: data?.cardContent?.title && data?.cardContent?.text && data.cardContent.text.length > 10,
       hasCustomFields: !!data?.customFields,
-      customFieldsKeys: data?.customFields ? Object.keys(data.customFields) : [],
       hasGeneratedContent: !!data?.customFields?.generatedContent,
-      hasDirectText: !!data?.text,
-      hasAIGeneratedFields: !!(data?.customFields?.aiGeneratedTitle || data?.customFields?.aiGeneratedText),
+      hasAIFields: !!(data?.customFields?.aiGeneratedTitle || data?.customFields?.aiGeneratedText),
+      hasDirectText: !!data?.text && data.text.length > 10,
+      hasAdvancedText: !!data?.advancedText,
+      isGeneratedByAI: data?.isGeneratedByAI,
       dataKeys: data ? Object.keys(data) : []
-    });
+    };
+    console.log('🔍 DEBUG EXTRAÇÃO:', debugInfo);
 
-    // 1. Verificar cardContent direto (mais comum)
-    if (data?.cardContent?.title && data?.cardContent?.text && data.cardContent.text.length > 20) {
-      console.log('✅ ENCONTRADO cardContent direto válido:', data.cardContent);
-      return {
+    // PRIORIDADE 1: cardContent direto (formato preferencial)
+    if (data?.cardContent?.title && data?.cardContent?.text && data.cardContent.text.length > 10) {
+      console.log('✅ MÉTODO 1: cardContent direto encontrado');
+      const result = {
         card1: {
           title: data.cardContent.title,
           text: data.cardContent.text
         },
-        card2: data?.cardContent2 ? {
+        card2: data?.cardContent2?.title && data?.cardContent2?.text ? {
           title: data.cardContent2.title,
           text: data.cardContent2.text
         } : null
       };
+      console.log('🎯 CONTEÚDO EXTRAÍDO (Método 1):', result);
+      return result;
     }
 
-    // 2. Verificar campos AI diretos nos customFields
-    if (data?.customFields?.aiGeneratedTitle && data?.customFields?.aiGeneratedText) {
-      console.log('✅ ENCONTRADO campos AI diretos nos customFields');
-      return {
+    // PRIORIDADE 2: Campos AI específicos nos customFields
+    if (data?.customFields?.aiGeneratedTitle && data?.customFields?.aiGeneratedText && data.customFields.aiGeneratedText.length > 10) {
+      console.log('✅ MÉTODO 2: campos AI específicos encontrados');
+      const result = {
         card1: {
           title: data.customFields.aiGeneratedTitle,
           text: data.customFields.aiGeneratedText
         },
-        card2: data?.customFields?.aiGeneratedAdvancedText ? {
+        card2: data?.customFields?.aiGeneratedAdvancedText && data.customFields.aiGeneratedAdvancedText.length > 10 ? {
           title: `${data.customFields.aiGeneratedTitle} - Nível Avançado`,
           text: data.customFields.aiGeneratedAdvancedText
         } : null
       };
+      console.log('🎯 CONTEÚDO EXTRAÍDO (Método 2):', result);
+      return result;
     }
 
-    // 3. Verificar nos customFields - PRIORIDADE ALTA
+    // PRIORIDADE 3: Dados serializados em generatedContent
     if (data?.customFields?.generatedContent) {
       try {
-        console.log('🔍 Tentando parsear customFields.generatedContent...');
+        console.log('🔍 MÉTODO 3: tentando parsear generatedContent...');
         const parsedContent = JSON.parse(data.customFields.generatedContent);
-        console.log('✅ CONTEÚDO PARSEADO DOS customFields:', parsedContent);
+        console.log('📄 Conteúdo parseado:', parsedContent);
         
-        // Verificar múltiplos formatos possíveis
         if (parsedContent?.cardContent?.title && parsedContent?.cardContent?.text) {
-          console.log('✅ Formato cardContent encontrado');
-          return {
+          const result = {
             card1: {
               title: parsedContent.cardContent.title,
               text: parsedContent.cardContent.text
             },
-            card2: parsedContent?.cardContent2 ? {
+            card2: parsedContent?.cardContent2?.title && parsedContent?.cardContent2?.text ? {
               title: parsedContent.cardContent2.title,
               text: parsedContent.cardContent2.text
             } : null
           };
-        }
-        
-        // Verificar formato direto
-        if (parsedContent?.title && parsedContent?.text) {
-          console.log('✅ Formato direto encontrado');
-          return {
-            card1: {
-              title: parsedContent.title,
-              text: parsedContent.text
-            },
-            card2: parsedContent?.advancedText ? {
-              title: `${parsedContent.title} - Avançado`,
-              text: parsedContent.advancedText
-            } : null
-          };
+          console.log('✅ MÉTODO 3: conteúdo válido extraído do JSON');
+          return result;
         }
         
       } catch (error) {
-        console.error('❌ Erro ao parsear customFields:', error);
-        console.log('📄 Conteúdo problemático:', data.customFields.generatedContent);
+        console.error('❌ Erro no parsing do generatedContent:', error);
       }
     }
 
-    // 4. Verificar se os dados estão no nível raiz
-    if (data?.text && data.text.length > 20) {
-      console.log('✅ Encontrado texto no nível raiz');
-      return {
+    // PRIORIDADE 4: Dados no nível raiz (title e text diretos)
+    if (data?.title && data?.text && data.text.length > 10) {
+      console.log('✅ MÉTODO 4: dados no nível raiz encontrados');
+      const result = {
         card1: {
-          title: data.title || data?.customFields?.['Tema ou Assunto da aula'] || 'Conteúdo da IA',
+          title: data.title,
           text: data.text
         },
-        card2: data?.advancedText ? {
-          title: `${data.title || 'Conteúdo'} - Nível Avançado`,
+        card2: data?.advancedText && data.advancedText.length > 10 ? {
+          title: `${data.title} - Nível Avançado`,
           text: data.advancedText
         } : null
       };
+      console.log('🎯 CONTEÚDO EXTRAÍDO (Método 4):', result);
+      return result;
     }
 
-    console.log('❌ Nenhum conteúdo da IA encontrado - usando fallback');
-    return null;
+    // PRIORIDADE 5: Fallback inteligente baseado no tema
+    console.log('⚠️ MÉTODO 5: usando fallback inteligente');
+    const tema = data?.customFields?.['Tema ou Assunto da aula'] || data?.theme || data?.title || 'Este Conteúdo';
+    const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || data?.subject || 'Educação';
+    
+    const fallbackResult = {
+      card1: {
+        title: `Como Dominar ${tema}`,
+        text: `Para você dominar ${tema.toLowerCase()}, siga estes passos: 1) Identifique os conceitos fundamentais de ${tema}. 2) Pratique com exemplos específicos de ${tema}. 3) Aplique o conhecimento em exercícios práticos. Exemplo: observe como ${tema} aparece em situações reais de ${disciplina}. Dica: foque nos detalhes específicos de ${tema}. Cuidado: não confunda ${tema} com conceitos similares.`
+      },
+      card2: null
+    };
+    
+    console.log('🎯 FALLBACK INTELIGENTE APLICADO:', fallbackResult);
+    return fallbackResult;
   };
 
   const aiContent = extractAIContent();
