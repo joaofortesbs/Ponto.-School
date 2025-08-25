@@ -161,26 +161,7 @@ Para "Teorema de Pitágoras":
   "advancedText": "Dominando Teorema de Pitágoras no nível avançado: use para calcular distâncias em plano cartesiano. Para casos complexos: aplique em pirâmides e sólidos geométricos. Exercício desafiador: calcule a altura de um prédio usando Teorema de Pitágoras e sombra. Dica profissional: Teorema de Pitágoras aparece em física (velocidades) e programação (distâncias). Conexão: Teorema de Pitágoras se relaciona com trigonometria e funções quadráticas."
 }
 
-AGORA GERE CONTEÚDO ESPECÍFICO PARA "${data.theme}" EM ${data.subject}:`
-  }
-
-EXEMPLOS ESPECÍFICOS OBRIGATÓRIOS:
-
-Para tema "Substantivos Próprios e Verbos":
-{
-  "title": "Como Identificar Substantivos Próprios e Verbos",
-  "text": "Para você identificar substantivos próprios, faça: 1) Procure nomes únicos (Maria, Brasil, Google). 2) Verifique se tem letra maiúscula inicial. 3) Teste: só existe um no mundo? É próprio! Para verbos: 1) Procure palavras de ação (correr, estudar, pensar). 2) Teste: 'Eu posso...' funciona? É verbo! Exemplo: 'Maria corre no parque' - Maria = próprio (nome único), corre = verbo (ação). Macete: próprio sempre maiúscula, verbo sempre expressa ação!",
-  "advancedText": "Agora domine casos complexos: verbos compostos como 'tinha corrido' = locução verbal. Substantivos próprios que viram comuns: xerox, band-aid. Teste avançado: em 'O João da esquina vendeu bicicletas', identifique: João = próprio, vendeu = verbo, bicicletas = comum. Desafio: crie 5 frases com substantivos próprios de diferentes tipos (pessoa, lugar, marca). Dica pro: verbos mudam conforme tempo (correr/correu/correria)!"
-}
-
-Para tema "Equações do 1º Grau":
-{
-  "title": "Como Resolver Equações do 1º Grau",
-  "text": "Para você resolver equações como 2x + 5 = 11, siga: 1) Isole o termo com x passando números para o outro lado: 2x = 11 - 5. 2) Calcule: 2x = 6. 3) Divida ambos os lados: x = 6÷2 = 3. 4) SEMPRE teste: 2(3) + 5 = 11 ✓. Regra de ouro: o que soma passa subtraindo, o que multiplica passa dividindo. Exemplo: 3x - 4 = 8 → 3x = 8 + 4 → 3x = 12 → x = 4. Cuidado: nunca esqueça de testar a resposta!",
-  "advancedText": "Agora domine equações complexas: com parênteses como 2(x + 3) = 10. Primeiro distribua: 2x + 6 = 10, depois resolva: 2x = 4, x = 2. Para frações: x/2 + x/3 = 5, encontre MMC(2,3)=6: 3x/6 + 2x/6 = 5, então 5x/6 = 5, logo 5x = 30, x = 6. Desafio: resolva (x-1)/2 + (x+1)/3 = 4. Dica profissional: sempre simplifique frações antes de calcular!"
-}
-
-AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
+AGORA GERE CONTEÚDO ESPECÍFICO PARA "${data.theme}" EM ${data.subject}:`;
   }
 
   private async callGeminiAPI(prompt: string): Promise<any> {
