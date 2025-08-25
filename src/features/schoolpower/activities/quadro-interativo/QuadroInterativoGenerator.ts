@@ -175,7 +175,7 @@ export class QuadroInterativoGenerator {
         advancedText: response.length > 500 ? response.substring(500, 1000) : undefined
       };
     }
-  }.stringify(response, null, 2));
+  }
 
       const parsedContent = this.parseGeminiResponse(response);
       console.log('✅ Conteúdo FINAL processado pela IA:', parsedContent);
