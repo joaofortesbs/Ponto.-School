@@ -21,6 +21,22 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   const extractAIGeneratedContent = () => {
     console.log('🚀 INICIANDO EXTRAÇÃO CRÍTICA DE CONTEÚDO DA IA GEMINI');
     console.log('📊 DADOS RECEBIDOS PARA ANÁLISE:', JSON.stringify(data, null, 2));
+    console.log('📊 ACTIVITY DATA:', JSON.stringify(activityData, null, 2));
+
+    // VERIFICAÇÃO CRÍTICA 0: activityData direto (dados da construção)
+    if (activityData?.cardContent?.title && activityData?.cardContent?.text && 
+        activityData.cardContent.text.length > 50 && 
+        !activityData.cardContent.text.includes('Conteúdo educativo específico será gerado') &&
+        !activityData.cardContent.text.includes(activityData?.description || '')) {
+      console.log('✅ CRÍTICO 0: Conteúdo cardContent DO ACTIVITY DATA encontrado');
+      return {
+        title: activityData.cardContent.title,
+        text: activityData.cardContent.text,
+        advancedText: activityData.cardContent2?.text,
+        source: 'activityData-cardContent',
+        isAIGenerated: activityData.isGeneratedByAI || true
+      };
+    }
 
     // VERIFICAÇÃO CRÍTICA 1: cardContent direto da IA
     if (data?.cardContent?.title && data?.cardContent?.text && 
@@ -188,14 +204,24 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                   </h3>
                   {/* Debug indicator */}
                   {isGeneratedByAI && (
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      ✅ IA Gemini
-                    </span>
+                    <div className="flex gap-2">
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        ✅ IA Gemini
+                      </span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        Fonte: {aiContent.source}
+                      </span>
+                    </div>
                   )}
                   {!isGeneratedByAI && (
-                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                      ⏳ Aguardando IA
-                    </span>
+                    <div className="flex gap-2">
+                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                        ⏳ Aguardando IA
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                        Fonte: {aiContent.source}
+                      </span>
+                    </div>
                   )}
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -204,10 +230,17 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                 {/* Debug info detalhado */}
                 {process.env.NODE_ENV === 'development' && (
                   <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
-                    <div>Fonte: {aiContent ? 'IA Gemini' : 'Fallback'}</div>
+                    <div>🔍 <strong>DEBUG DETALHADO:</strong></div>
+                    <div>Fonte: {aiContent.source}</div>
                     <div>Tamanho: {cardContent.text.length} chars</div>
                     <div>cardContent existe: {!!data?.cardContent}</div>
+                    <div>activityData.cardContent: {!!activityData?.cardContent}</div>
                     <div>isGeneratedByAI: {String(isGeneratedByAI)}</div>
+                    <div>aiGeneratedTitle: {!!data?.customFields?.aiGeneratedTitle}</div>
+                    <div>aiGeneratedText: {!!data?.customFields?.aiGeneratedText}</div>
+                    <div>generatedContent JSON: {!!data?.customFields?.generatedContent}</div>
+                    <div>text !== description: {String(cardContent.text !== data?.description)}</div>
+                    <div>Primeiro 50 chars: "{cardContent.text.substring(0, 50)}..."</div>
                   </div>
                 )}
               </div>

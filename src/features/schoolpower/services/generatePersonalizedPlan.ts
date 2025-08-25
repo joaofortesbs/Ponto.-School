@@ -725,7 +725,23 @@ export async function generatePersonalizedPlan(
           generatedAt: activityData.generatedAt,
           // Campos diretos da IA para compatibilidade
           text: activityData.text,
-          advancedText: activityData.advancedText
+          advancedText: activityData.advancedText,
+          // GARANTIR TÍTULO E TEXTO ESPECÍFICOS DA IA
+          personalizedTitle: activityData.cardContent?.title || activityData.personalizedTitle || activityData.title,
+          personalizedDescription: activityData.cardContent?.text || activityData.personalizedDescription || activityData.description,
+          // DADOS BRUTOS DA IA PARA DEBUG
+          originalAIData: activityData.id === 'quadro-interativo' ? {
+            cardContent: activityData.cardContent,
+            cardContent2: activityData.cardContent2,
+            text: activityData.text,
+            advancedText: activityData.advancedText,
+            isGeneratedByAI: activityData.isGeneratedByAI,
+            extractedData: {
+              subject: activityData['Disciplina / Área de conhecimento'] || activityData.customFields?.['Disciplina / Área de conhecimento'],
+              theme: activityData['Tema ou Assunto da aula'] || activityData.customFields?.['Tema ou Assunto da aula'],
+              objectives: activityData['Objetivo de aprendizagem da aula'] || activityData.customFields?.['Objetivo de aprendizagem da aula']
+            }
+          } : undefined
         };
 
         console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, activity);
