@@ -17,7 +17,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 }) => {
   // Extrair dados do conteúdo gerado pela IA
   const cardContent = (() => {
-    console.log('🔍 Processando dados COMPLETOS para QuadroInterativoPreview:', data);
+    console.log('🔍 Processando dados para QuadroInterativoPreview:', data);
     
     // Prioridade 1: Verificar se há conteúdo gerado pela IA salvo
     if (data?.customFields?.generatedContent) {
@@ -25,14 +25,9 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       try {
         const generatedContent = JSON.parse(data.customFields.generatedContent);
         if (generatedContent?.cardContent) {
-          console.log('✅ Usando cardContent gerado pela IA (salvo):', generatedContent.cardContent);
-          
-          // Garantir que o título não tenha "Quadro Interativo:"
-          let title = String(generatedContent.cardContent.title || 'Conteúdo Educativo');
-          title = title.replace(/^Quadro Interativo:\s*/i, '');
-          
+          console.log('✅ Usando cardContent gerado pela IA (salvo)');
           return {
-            title: title,
+            title: String(generatedContent.cardContent.title || 'Conteúdo do Quadro'),
             text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.')
           };
         }
@@ -43,74 +38,97 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     
     // Prioridade 2: Se há conteúdo gerado pela IA com cardContent
     if (data?.cardContent && typeof data.cardContent === 'object') {
-      console.log('✅ Usando cardContent gerado pela IA diretamente:', data.cardContent);
-      
-      // Garantir que o título não tenha "Quadro Interativo:"
-      let title = String(data.cardContent.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-      
+      console.log('✅ Usando cardContent gerado pela IA');
       return {
-        title: title,
+        title: String(data.cardContent.title || 'Conteúdo do Quadro'),
         text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
       };
     }
     
     // Prioridade 3: Se há dados diretos da IA no nível raiz
-    if (data?.title && data?.text) {
+    if (data?.title && data?.description) {
       console.log('✅ Usando dados diretos da IA');
-      
-      // Garantir que o título não tenha "Quadro Interativo:"
-      let title = String(data.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-      
       return {
-        title: title,
-        text: String(data.text || 'Conteúdo educativo.')
+        title: String(data.title),
+        text: String(data.description)
       };
     }
     
-    // Prioridade 4: Verificar generatedContent no nível raiz
-    if (data?.generatedContent?.cardContent) {
-      console.log('✅ Usando generatedContent do nível raiz');
+    // Prioridade 4: Buscar nos dados aninhados
+    if (data?.data && typeof data.data === 'object') {
+      if (data.data.cardContent) {
+        console.log('✅ Usando cardContent aninhado');
+        return {
+          title: String(data.data.cardContent.title || 'Conteúdo do Quadro'),
+          text: String(data.data.cardContent.text || 'Conteúdo educativo gerado pela IA.')
+        };
+      }
+      if (data.data.title && data.data.description) {
+        console.log('✅ Usando dados aninhados da IA');
+        return {
+          title: String(data.data.title),
+          text: String(data.data.description)
+        };
+      }
+    }
+    
+    // Prioridade 5: Se há dados nos campos personalizados
+    if (data?.customFields || (data?.data?.customFields)) {
+      const customFields = data.customFields || data.data?.customFields || {};
+      console.log('✅ Usando customFields:', customFields);
       
-      // Garantir que o título não tenha "Quadro Interativo:"
-      let title = String(data.generatedContent.cardContent.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
+      const theme = customFields['Tema ou Assunto da aula'] || 
+                   customFields['tema'] || 
+                   customFields['theme'] || 
+                   data?.theme ||
+                   'Conteúdo do Quadro';
+      
+      const objectives = customFields['Objetivo de aprendizagem da aula'] || 
+                        customFields['objetivos'] || 
+                        customFields['objectives'] || 
+                        data?.objectives ||
+                        data?.description ||
+                        'Conteúdo educativo será exibido aqui após a geração pela IA.';
       
       return {
-        title: title,
-        text: String(data.generatedContent.cardContent.text || 'Conteúdo educativo.')
+        title: String(theme),
+        text: String(objectives)
       };
     }
     
-    // Fallback educativo baseado nos campos disponíveis
-    console.log('⚠️ Usando fallback educativo baseado nos campos disponíveis');
+    // Prioridade 6: Se há dados de activityData
+    if (activityData?.customFields) {
+      console.log('✅ Usando dados do activityData');
+      const customFields = activityData.customFields;
+      
+      const theme = customFields['Tema ou Assunto da aula'] || 
+                   activityData.title ||
+                   'Conteúdo do Quadro';
+      
+      const objectives = customFields['Objetivo de aprendizagem da aula'] || 
+                        activityData.description ||
+                        'Conteúdo educativo será exibido aqui após a geração pela IA.';
+      
+      return {
+        title: String(theme),
+        text: String(objectives)
+      };
+    }
     
-    const tema = data?.customFields?.['Tema ou Assunto da aula'] || 
-                 data?.theme || 
-                 'Conteúdo Educativo';
+    // Prioridade 7: Usar dados básicos se disponíveis
+    if (data?.theme || data?.subject) {
+      console.log('✅ Usando dados básicos disponíveis');
+      return {
+        title: String(data.theme || data.subject || 'Conteúdo do Quadro'),
+        text: String(data.objectives || data.description || 'Conteúdo educativo será exibido aqui após a geração pela IA.')
+      };
+    }
     
-    const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || 
-                       data?.subject || 
-                       'a disciplina';
-    
-    const serie = data?.customFields?.['Ano / Série'] || 
-                  data?.schoolYear || 
-                  'esta série';
-    
-    const objetivos = data?.customFields?.['Objetivo de aprendizagem da aula'] || 
-                      data?.objectives || 
-                      'desenvolver conhecimentos fundamentais';
-    
-    // Criar título educativo (sem "Quadro Interativo:")
-    let fallbackTitle = tema.replace(/^Quadro Interativo:\s*/i, '');
-    
-    // Criar texto educativo completo
-    const fallbackText = `Este conteúdo sobre ${fallbackTitle.toLowerCase()} apresenta os conceitos fundamentais de ${disciplina} para ${serie}. O objetivo é ${objetivos.toLowerCase()}. Através de explicações claras, exemplos práticos e atividades interativas, você desenvolverá uma compreensão sólida do tema e saberá aplicar esses conhecimentos em situações práticas.`;
-    
+    // Fallback padrão
+    console.log('⚠️ Usando fallback padrão');
     return {
-      title: fallbackTitle.substring(0, 80),
-      text: fallbackText.substring(0, 500)
+      title: 'Conteúdo do Quadro',
+      text: 'Conteúdo educativo será exibido aqui após a geração pela IA.'
     };
   })();
 

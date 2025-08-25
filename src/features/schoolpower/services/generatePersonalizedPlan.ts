@@ -522,7 +522,7 @@ export async function generatePersonalizedPlan(
               'Atividade mostrada': activityData['Atividade mostrada'] || customFields['Atividade mostrada'] || 'Atividade interativa no quadro'
             };
 
-            // Gerar conteúdo específico do Quadro Interativo usando a IA APRIMORADA
+            // Gerar conteúdo específico do Quadro Interativo usando a IA
             const quadroGenerator = new QuadroInterativoGenerator();
             const quadroContent = await quadroGenerator.generateQuadroInterativoContent({
               subject: requiredFields['Disciplina / Área de conhecimento'],
@@ -533,7 +533,7 @@ export async function generatePersonalizedPlan(
               quadroInterativoCampoEspecifico: requiredFields['Atividade mostrada']
             });
 
-            console.log('🤖 Conteúdo COMPLETO e EDUCATIVO gerado pela IA para Quadro Interativo:', quadroContent);
+            console.log('🤖 Conteúdo gerado pela IA para Quadro Interativo:', quadroContent);
 
             // Atualizar os dados da atividade com o conteúdo gerado
             activityData = {
