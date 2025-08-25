@@ -14,109 +14,8 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   data, 
   activityData 
 }) => {
-  // Extrair dados do conteúdo gerado pela IA
-  const cardContent = (() => {
-    console.log('🔍 Processando dados COMPLETOS para QuadroInterativoPreview:', data);
-
-    // Prioridade 1: Verificar se há conteúdo gerado pela IA salvo
-    if (data?.customFields?.generatedContent) {
-      console.log('🤖 Tentando usar conteúdo gerado pela IA salvo');
-      try {
-        const generatedContent = JSON.parse(data.customFields.generatedContent);
-        if (generatedContent?.cardContent) {
-          console.log('✅ Usando cardContent gerado pela IA (salvo):', generatedContent.cardContent);
-
-          // Garantir que o título não tenha "Quadro Interativo:"
-          let title = String(generatedContent.cardContent.title || 'Conteúdo Educativo');
-          title = title.replace(/^Quadro Interativo:\s*/i, '');
-
-          return {
-            title: title,
-            text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.'),
-            advancedText: String(generatedContent.cardContent.advancedText || null)
-          };
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao processar conteúdo gerado pela IA salvo:', error);
-      }
-    }
-
-    // Prioridade 2: Se há conteúdo gerado pela IA com cardContent
-    if (data?.cardContent && typeof data.cardContent === 'object') {
-      console.log('✅ Usando cardContent gerado pela IA diretamente:', data.cardContent);
-
-      // Garantir que o título não tenha "Quadro Interativo:"
-      let title = String(data.cardContent.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-
-      return {
-        title: title,
-        text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.'),
-        advancedText: String(data.cardContent.advancedText || null)
-      };
-    }
-
-    // Prioridade 3: Se há dados diretos da IA no nível raiz
-    if (data?.title && data?.text) {
-      console.log('✅ Usando dados diretos da IA');
-
-      // Garantir que o título não tenha "Quadro Interativo:"
-      let title = String(data.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-
-      return {
-        title: title,
-        text: String(data.text || 'Conteúdo educativo.'),
-        advancedText: String(data.advancedText || null)
-      };
-    }
-
-    // Prioridade 4: Verificar generatedContent no nível raiz
-    if (data?.generatedContent?.cardContent) {
-      console.log('✅ Usando generatedContent do nível raiz');
-
-      // Garantir que o título não tenha "Quadro Interativo:"
-      let title = String(data.generatedContent.cardContent.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-
-      return {
-        title: title,
-        text: String(data.generatedContent.cardContent.text || 'Conteúdo educativo.'),
-        advancedText: String(data.generatedContent.cardContent.advancedText || null)
-      };
-    }
-
-    // Fallback educativo baseado nos campos disponíveis
-    console.log('⚠️ Usando fallback educativo baseado nos campos disponíveis');
-
-    const tema = data?.customFields?.['Tema ou Assunto da aula'] || 
-                 data?.theme || 
-                 'Conteúdo Educativo';
-
-    const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || 
-                       data?.subject || 
-                       'a disciplina';
-
-    const serie = data?.customFields?.['Ano / Série'] || 
-                  data?.schoolYear || 
-                  'esta série';
-
-    const objetivos = data?.customFields?.['Objetivo de aprendizagem da aula'] || 
-                      data?.objectives || 
-                      'desenvolver conhecimentos fundamentais';
-
-    // Criar título educativo (sem "Quadro Interativo:")
-    let fallbackTitle = tema.replace(/^Quadro Interativo:\s*/i, '');
-
-    // Criar texto educativo completo
-    const fallbackText = `Este conteúdo sobre ${fallbackTitle.toLowerCase()} apresenta os conceitos fundamentais de ${disciplina} para ${serie}. O objetivo é ${objetivos.toLowerCase()}. Através de explicações claras, exemplos práticos e atividades interativas, você desenvolverá uma compreensão sólida do tema e saberá aplicar esses conhecimentos em situações práticas.`;
-
-    return {
-      title: fallbackTitle.substring(0, 80),
-      text: fallbackText.substring(0, 500),
-      advancedText: `Expandindo os conhecimentos sobre ${fallbackTitle.toLowerCase()}, podemos explorar aspectos mais complexos e aplicações avançadas. Este nível de aprofundamento permite conexões interdisciplinares, análise crítica dos conceitos e desenvolvimento de habilidades mais sofisticadas relacionadas ao tema estudado.`.substring(0, 500)
-    };
-  })();
+  // Debug: Mostrar todos os dados recebidos
+  console.log('🔍 DADOS COMPLETOS recebidos no Preview:', JSON.stringify(data, null, 2));
 
   // Verificar se o conteúdo foi gerado pela IA
   const isGeneratedByAI = data?.isGeneratedByAI || 
@@ -126,97 +25,86 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                          (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
                          false;
 
-  // Usar o conteúdo gerado pela IA - SEMPRE priorizar o conteúdo real da IA
-  const displayContent = (() => {
-    if (data?.customFields?.generatedContent) {
-      try {
-        const generatedContent = JSON.parse(data.customFields.generatedContent);
-        if (generatedContent?.cardContent) {
-          let title = String(generatedContent.cardContent.title || 'Conteúdo Educativo');
-          title = title.replace(/^Quadro Interativo:\s*/i, '');
-          return {
-            title: title,
-            text: String(generatedContent.cardContent.text || 'Conteúdo educativo gerado pela IA.'),
-          };
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao processar conteúdo gerado pela IA salvo:', error);
-      }
-    }
-    if (data?.cardContent && typeof data.cardContent === 'object') {
-       let title = String(data.cardContent.title || 'Conteúdo Educativo');
-       title = title.replace(/^Quadro Interativo:\s*/i, '');
-       return {
-         title: title,
-         text: String(data.cardContent.text || 'Conteúdo educativo gerado pela IA.'),
-       };
-    }
-    if (data?.title && data?.text) {
-      let title = String(data.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-      return {
-        title: title,
-        text: String(data.text || 'Conteúdo educativo.'),
-      };
-    }
-     if (data?.generatedContent?.cardContent) {
-      let title = String(data.generatedContent.cardContent.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-      return {
-        title: title,
-        text: String(data.generatedContent.cardContent.text || 'Conteúdo educativo.'),
-      };
-    }
-    // Fallback
-    return {
-      title: activityData?.theme || 'Conteúdo do Quadro',
-      text: activityData?.objectives || 'Carregando conteúdo educativo...'
-    };
-  })();
+  console.log('🤖 Conteúdo foi gerado pela IA?', isGeneratedByAI);
 
-  const displayContent2 = (() => {
+  // Extrair conteúdo real da IA - PRIORIZAR SEMPRE O CONTEÚDO DA IA
+  const extractAIContent = () => {
+    console.log('📥 Extraindo conteúdo da IA...');
+
+    // 1. Verificar cardContent direto (mais comum)
+    if (data?.cardContent?.title && data?.cardContent?.text) {
+      console.log('✅ Encontrado cardContent direto:', data.cardContent);
+      return {
+        card1: {
+          title: data.cardContent.title,
+          text: data.cardContent.text
+        },
+        card2: data?.cardContent2 ? {
+          title: data.cardContent2.title,
+          text: data.cardContent2.text
+        } : null
+      };
+    }
+
+    // 2. Verificar nos customFields
     if (data?.customFields?.generatedContent) {
       try {
-        const generatedContent = JSON.parse(data.customFields.generatedContent);
-        if (generatedContent?.cardContent2) {
-          let title = String(generatedContent.cardContent2.title || 'Conteúdo Educativo');
-          title = title.replace(/^Quadro Interativo:\s*/i, '');
+        const parsedContent = JSON.parse(data.customFields.generatedContent);
+        console.log('✅ Encontrado conteúdo nos customFields:', parsedContent);
+        
+        if (parsedContent?.cardContent) {
           return {
-            title: title,
-            text: String(generatedContent.cardContent2.text || 'Conteúdo educativo gerado pela IA.'),
+            card1: {
+              title: parsedContent.cardContent.title,
+              text: parsedContent.cardContent.text
+            },
+            card2: parsedContent?.cardContent2 ? {
+              title: parsedContent.cardContent2.title,
+              text: parsedContent.cardContent2.text
+            } : null
           };
         }
       } catch (error) {
-        console.warn('⚠️ Erro ao processar conteúdo gerado pela IA salvo:', error);
+        console.error('❌ Erro ao parsear customFields:', error);
       }
     }
-    if (data?.cardContent2 && typeof data.cardContent2 === 'object') {
-       let title = String(data.cardContent2.title || 'Conteúdo Educativo');
-       title = title.replace(/^Quadro Interativo:\s*/i, '');
-       return {
-         title: title,
-         text: String(data.cardContent2.text || 'Conteúdo educativo gerado pela IA.'),
-       };
-    }
-    if (data?.title2 && data?.text2) {
-      let title = String(data.title2 || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
+
+    // 3. Verificar se os dados estão no nível raiz
+    if (data?.title && data?.text) {
+      console.log('✅ Encontrado no nível raiz');
       return {
-        title: title,
-        text: String(data.text2 || 'Conteúdo educativo.'),
+        card1: {
+          title: data.title,
+          text: data.text
+        },
+        card2: data?.advancedText ? {
+          title: `${data.title} - Nível Avançado`,
+          text: data.advancedText
+        } : null
       };
     }
-     if (data?.generatedContent?.cardContent2) {
-      let title = String(data.generatedContent.cardContent2.title || 'Conteúdo Educativo');
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-      return {
-        title: title,
-        text: String(data.generatedContent.cardContent2.text || 'Conteúdo educativo.'),
-      };
-    }
-    // Fallback para o segundo card, se não houver conteúdo específico
-    return null; 
-  })();
+
+    console.log('❌ Nenhum conteúdo da IA encontrado - usando fallback');
+    return null;
+  };
+
+  const aiContent = extractAIContent();
+
+  // Verificar se o conteúdo foi gerado pela IA
+  const isGeneratedByAI = data?.isGeneratedByAI || 
+                         data?.generatedAt || 
+                         data?.customFields?.isAIGenerated === 'true' ||
+                         data?.customFields?.generatedContent ||
+                         (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
+                         false;
+
+  // Usar o conteúdo extraído da IA ou fallback
+  const displayContent = aiContent?.card1 || {
+    title: data?.customFields?.['Tema ou Assunto da aula'] || data?.theme || 'Aguardando conteúdo...',
+    text: 'Gerando conteúdo específico com a IA Gemini...'
+  };
+
+  const displayContent2 = aiContent?.card2;
 
 
   return (
@@ -247,17 +135,26 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                   </h3>
                   {/* Debug indicator */}
                   {isGeneratedByAI && (
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">IA</span>
+                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                      ✅ IA Gemini
+                    </span>
+                  )}
+                  {!isGeneratedByAI && (
+                    <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
+                      ⏳ Aguardando IA
+                    </span>
                   )}
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   {displayContent.text}
                 </p>
-                {/* Debug info */}
+                {/* Debug info detalhado */}
                 {process.env.NODE_ENV === 'development' && (
-                  <div className="mt-2 text-xs text-gray-500 border-t pt-2">
-                    Fonte: {isGeneratedByAI ? 'IA Gemini' : 'Fallback'} | 
-                    Tamanho: {displayContent.text.length} chars
+                  <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
+                    <div>Fonte: {aiContent ? 'IA Gemini' : 'Fallback'}</div>
+                    <div>Tamanho: {displayContent.text.length} chars</div>
+                    <div>cardContent existe: {!!data?.cardContent}</div>
+                    <div>isGeneratedByAI: {String(isGeneratedByAI)}</div>
                   </div>
                 )}
               </div>
@@ -274,17 +171,20 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
                     </h3>
                     {/* Debug indicator */}
                     {isGeneratedByAI && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">IA</span>
+                      <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                        ✅ IA Avançado
+                      </span>
                     )}
                   </div>
                   <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                     {displayContent2.text}
                   </p>
-                  {/* Debug info */}
+                  {/* Debug info detalhado */}
                   {process.env.NODE_ENV === 'development' && (
-                    <div className="mt-2 text-xs text-gray-500 border-t pt-2">
-                      Fonte: {isGeneratedByAI ? 'IA Gemini (Avançado)' : 'Fallback'} | 
-                      Tamanho: {displayContent2.text.length} chars
+                    <div className="mt-2 text-xs text-gray-500 border-t pt-2 space-y-1">
+                      <div>Fonte: IA Gemini (Nível Avançado)</div>
+                      <div>Tamanho: {displayContent2.text.length} chars</div>
+                      <div>cardContent2 existe: {!!data?.cardContent2}</div>
                     </div>
                   )}
                 </div>

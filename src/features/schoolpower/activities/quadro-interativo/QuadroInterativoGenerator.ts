@@ -44,13 +44,15 @@ export class QuadroInterativoGenerator {
     
     try {
       const prompt = this.buildEnhancedPrompt(data);
-      console.log('📤 Enviando prompt para Gemini:', prompt.substring(0, 500) + '...');
+      console.log('📤 Enviando prompt para Gemini (tema:', data.theme, ')');
+      console.log('📝 Prompt preview:', prompt.substring(0, 300) + '...');
       
       const response = await this.callGeminiAPI(prompt);
-      console.log('📥 Resposta bruta recebida:', response);
+      console.log('📥 Resposta bruta recebida do Gemini:', JSON.stringify(response, null, 2));
       
       const parsedContent = this.parseGeminiResponse(response);
-      console.log('✅ Conteúdo processado pela IA:', parsedContent);
+      console.log('✅ Conteúdo FINAL processado pela IA:', parsedContent);
+      console.log('📊 Tamanhos - Título:', parsedContent.title?.length, 'Texto:', parsedContent.text?.length, 'Avançado:', parsedContent.advancedText?.length);
       
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
@@ -79,7 +81,19 @@ export class QuadroInterativoGenerator {
           'Tema ou Assunto da aula': data.theme,
           'Objetivo de aprendizagem da aula': data.objectives,
           'Nível de Dificuldade': data.difficultyLevel,
-          'Atividade mostrada': data.quadroInterativoCampoEspecifico
+          'Atividade mostrada': data.quadroInterativoCampoEspecifico,
+          'isAIGenerated': 'true',
+          'generatedContent': JSON.stringify({
+            cardContent: {
+              title: parsedContent.title,
+              text: parsedContent.text
+            },
+            cardContent2: parsedContent.advancedText ? {
+              title: `${parsedContent.title} - Nível Avançado`,
+              text: parsedContent.advancedText
+            } : undefined,
+            generatedAt: new Date().toISOString()
+          })
         }
       };
 
@@ -219,8 +233,19 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
       
       // Validar estrutura obrigatória
       if (!parsedContent.title || !parsedContent.text) {
-        console.error('❌ Estrutura JSON inválida:', parsedContent);
-        throw new Error('Estrutura JSON inválida - faltam campos obrigatórios');
+        console.error('❌ Estrutura JSON inválida - faltam campos obrigatórios:', {
+          hasTitle: !!parsedContent.title,
+          hasText: !!parsedContent.text,
+          content: parsedContent
+        });
+        throw new Error(`Estrutura JSON inválida - Título: ${!!parsedContent.title}, Texto: ${!!parsedContent.text}`);
+      }
+
+      // Verificar se o conteúdo não é genérico
+      if (parsedContent.text.includes('Texto direto ao aluno conforme solicitado') || 
+          parsedContent.text.length < 50) {
+        console.error('❌ Conteúdo muito genérico detectado:', parsedContent.text);
+        throw new Error('Conteúdo gerado pela IA é muito genérico');
       }
 
       // Processar e limitar tamanhos
