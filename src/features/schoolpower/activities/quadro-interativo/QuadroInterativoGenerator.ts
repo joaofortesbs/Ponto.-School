@@ -53,7 +53,129 @@ export class QuadroInterativoGenerator {
 
       console.log('🌐 CHAMANDO API GEMINI...');
       const response = await this.callGeminiAPI(prompt);
-      console.log('📥 RESPOSTA BRUTA RECEBIDA DA API GEMINI:', JSON.stringify(response, null, 2));
+      console.log('📥 RESPOSTA BRUTA RECEBIDA DA API GEMINI:', response);
+
+      // Processar resposta da IA
+      const parsedContent = this.parseGeminiResponse(response);
+      console.log('✅ CONTEÚDO PROCESSADO DA IA:', parsedContent);
+
+      if (!parsedContent || !parsedContent.title || !parsedContent.text) {
+        throw new Error('Conteúdo inválido retornado pela IA');
+      }
+
+      const result: QuadroInterativoContent = {
+        title: data.theme || parsedContent.title,
+        description: data.objectives || parsedContent.text,
+        cardContent: {
+          title: parsedContent.title,
+          text: parsedContent.text
+        },
+        cardContent2: parsedContent.advancedText ? {
+          title: `${parsedContent.title} - Nível Avançado`,
+          text: parsedContent.advancedText
+        } : undefined,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        subject: data.subject,
+        schoolYear: data.schoolYear,
+        theme: data.theme,
+        objectives: data.objectives,
+        difficultyLevel: data.difficultyLevel,
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico,
+        customFields: {
+          'Disciplina / Área de conhecimento': data.subject,
+          'Ano / Série': data.schoolYear,
+          'Tema ou Assunto da aula': data.theme,
+          'Objetivo de aprendizagem da aula': data.objectives,
+          'Nível de Dificuldade': data.difficultyLevel,
+          'Atividade mostrada': data.quadroInterativoCampoEspecifico,
+          'isAIGenerated': 'true',
+          'generatedContent': JSON.stringify({
+            cardContent: {
+              title: parsedContent.title,
+              text: parsedContent.text
+            },
+            cardContent2: parsedContent.advancedText ? {
+              title: `${parsedContent.title} - Nível Avançado`,
+              text: parsedContent.advancedText
+            } : undefined,
+            generatedAt: new Date().toISOString(),
+            sourceType: 'gemini-ai-api'
+          })
+        }
+      };
+
+      console.log('🎯 RESULTADO FINAL PREPARADO:', result);
+      return result;
+
+    } catch (error) {
+      console.error('❌ ERRO CRÍTICO na geração pela IA Gemini:', error);
+      
+      // Fallback com conteúdo específico baseado nos dados
+      const fallbackTitle = `Como Dominar ${data.theme || 'Este Conteúdo'} - Guia Específico`;
+      const fallbackText = `Para você dominar ${data.theme || 'este conteúdo'} em ${data.subject || 'sua disciplina'}: 1) Identifique os conceitos-chave específicos de ${data.theme || 'este tema'} - observe as características únicas que definem este assunto. 2) Pratique com exemplos reais de ${data.theme || 'este tema'} - use situações do cotidiano onde ${data.theme || 'este conteúdo'} é aplicado. 3) Desenvolva estratégias específicas para ${data.theme || 'este tema'} - crie métodos de estudo exclusivos para este conteúdo. 4) Teste seu conhecimento com exercícios progressivos. Exemplo prático: ${data.theme || 'este conteúdo'} é fundamental quando você precisa resolver problemas específicos da área. Macete especial: para lembrar de ${data.theme || 'este tema'}, associe com conceitos que você já conhece. Cuidado: o erro mais comum em ${data.theme || 'este tema'} é confundir com temas similares. Dica final: ${data.theme || 'este conteúdo'} é essencial porque conecta diretamente com outros conceitos importantes da matéria!`;
+
+      return {
+        title: data.theme || 'Conteúdo Educativo',
+        description: data.objectives || 'Atividade educativa interativa',
+        cardContent: {
+          title: fallbackTitle,
+          text: fallbackText
+        },
+        cardContent2: {
+          title: `${fallbackTitle} - Nível Avançado`,
+          text: `Dominando ${data.theme || 'este conteúdo'} no nível avançado: explore aplicações complexas e desafiadoras. Para casos difíceis: divida o problema em partes menores e aplique ${data.theme || 'este conteúdo'} sistematicamente. Exercício avançado: combine ${data.theme || 'este tema'} com outros conceitos para resolver problemas interdisciplinares. Segredo profissional: a chave está em entender a lógica fundamental por trás de ${data.theme || 'este conteúdo'}, não apenas memorizar definições.`
+        },
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: false,
+        subject: data.subject,
+        schoolYear: data.schoolYear,
+        theme: data.theme,
+        objectives: data.objectives,
+        difficultyLevel: data.difficultyLevel,
+        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico,
+        customFields: {
+          'Disciplina / Área de conhecimento': data.subject,
+          'Ano / Série': data.schoolYear,
+          'Tema ou Assunto da aula': data.theme,
+          'Objetivo de aprendizagem da aula': data.objectives,
+          'Nível de Dificuldade': data.difficultyLevel,
+          'Atividade mostrada': data.quadroInterativoCampoEspecifico,
+          'isAIGenerated': 'false',
+          'fallbackApplied': 'true'
+        }
+      };
+    }
+  }
+
+  private parseGeminiResponse(response: string): any {
+    try {
+      console.log('🔄 Processando resposta da IA Gemini...');
+      
+      // Limpar resposta
+      let cleanedResponse = response.trim();
+      cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      cleanedResponse = cleanedResponse.trim();
+
+      console.log('🧹 Resposta limpa:', cleanedResponse);
+
+      // Tentar parsear como JSON
+      const parsed = JSON.parse(cleanedResponse);
+      console.log('✅ JSON parseado com sucesso:', parsed);
+
+      return parsed;
+    } catch (error) {
+      console.error('❌ Erro ao parsear resposta da IA:', error);
+      console.log('📝 Resposta original:', response);
+      
+      // Fallback: extrair conteúdo manualmente
+      return {
+        title: 'Conteúdo Gerado pela IA',
+        text: response.substring(0, 500),
+        advancedText: response.length > 500 ? response.substring(500, 1000) : undefined
+      };
+    }
+  }.stringify(response, null, 2));
 
       const parsedContent = this.parseGeminiResponse(response);
       console.log('✅ Conteúdo FINAL processado pela IA:', parsedContent);

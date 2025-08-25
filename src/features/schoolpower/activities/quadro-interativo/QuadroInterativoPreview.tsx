@@ -25,9 +25,11 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 
     // VERIFICAÇÃO CRÍTICA 0: activityData direto (dados da construção)
     if (activityData?.cardContent?.title && activityData?.cardContent?.text && 
-        activityData.cardContent.text.length > 50 && 
+        activityData.cardContent.text.length > 30 && 
         !activityData.cardContent.text.includes('Conteúdo educativo específico será gerado') &&
-        !activityData.cardContent.text.includes(activityData?.description || '')) {
+        !activityData.cardContent.text.includes('Como') &&
+        !activityData.cardContent.text.includes('aguardando') &&
+        activityData.cardContent.text !== activityData?.description) {
       console.log('✅ CRÍTICO 0: Conteúdo cardContent DO ACTIVITY DATA encontrado');
       return {
         title: activityData.cardContent.title,
@@ -40,9 +42,11 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 
     // VERIFICAÇÃO CRÍTICA 1: cardContent direto da IA
     if (data?.cardContent?.title && data?.cardContent?.text && 
-        data.cardContent.text.length > 50 && 
+        data.cardContent.text.length > 30 && 
         !data.cardContent.text.includes('Conteúdo educativo específico será gerado') &&
-        !data.cardContent.text.includes(data?.description || '')) {
+        !data.cardContent.text.includes('Como') &&
+        !data.cardContent.text.includes('aguardando') &&
+        data.cardContent.text !== data?.description) {
       console.log('✅ CRÍTICO 1: Conteúdo cardContent DA IA encontrado');
       return {
         title: data.cardContent.title,
@@ -55,8 +59,10 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 
     // VERIFICAÇÃO CRÍTICA 2: Campos AI nos customFields
     if (data?.customFields?.aiGeneratedTitle && data?.customFields?.aiGeneratedText && 
-        data.customFields.aiGeneratedText.length > 50 &&
-        !data.customFields.aiGeneratedText.includes(data?.description || '')) {
+        data.customFields.aiGeneratedText.length > 30 &&
+        !data.customFields.aiGeneratedText.includes('Como') &&
+        !data.customFields.aiGeneratedText.includes('aguardando') &&
+        data.customFields.aiGeneratedText !== data?.description) {
       console.log('✅ CRÍTICO 2: Campos AI específicos encontrados');
       return {
         title: data.customFields.aiGeneratedTitle,
