@@ -251,15 +251,49 @@ export async function prepareQuadroInterativoData(params: {
       const { QuadroInterativoGenerator } = await import('./QuadroInterativoGenerator');
       const generator = new QuadroInterativoGenerator();
       
+      console.log('🚀 Iniciando geração de conteúdo com IA Gemini...');
       const generatedContent = await generator.generateQuadroInterativoContent(quadroData);
       
-      return {
+      console.log('✅ Conteúdo gerado pela IA recebido:', generatedContent);
+
+      // Garantir que o conteúdo da IA seja corretamente estruturado
+      const processedData = {
         ...quadroData,
+        // Dados principais da atividade
+        title: generatedContent.title || quadroData.theme,
+        description: generatedContent.description || quadroData.objectives,
+        
+        // Conteúdo gerado pela IA
         generatedContent,
         cardContent: generatedContent.cardContent,
+        cardContent2: generatedContent.cardContent2,
+        
+        // Flags de controle
         isGeneratedByAI: true,
-        generatedAt: new Date().toISOString()
+        constructedWithAI: true,
+        generatedAt: new Date().toISOString(),
+        
+        // Títulos e textos personalizados
+        personalizedTitle: generatedContent.cardContent?.title || generatedContent.title,
+        personalizedDescription: generatedContent.cardContent?.text || generatedContent.description,
+        text: generatedContent.cardContent?.text,
+        advancedText: generatedContent.cardContent2?.text,
+        
+        // Campos customizados atualizados
+        customFields: {
+          ...quadroData.customFields,
+          ...generatedContent.customFields,
+          'isAIGenerated': 'true',
+          'aiGeneratedTitle': generatedContent.cardContent?.title || '',
+          'aiGeneratedText': generatedContent.cardContent?.text || '',
+          'aiGeneratedAdvancedText': generatedContent.cardContent2?.text || '',
+          'generatedContent': JSON.stringify(generatedContent)
+        }
       };
+
+      console.log('🎯 Dados processados FINAIS:', processedData);
+      return processedData;
+      
     } catch (error) {
       console.warn('⚠️ Erro ao gerar conteúdo com IA, usando dados básicos:', error);
       
@@ -270,7 +304,9 @@ export async function prepareQuadroInterativoData(params: {
           title: quadroData.theme,
           text: quadroData.objectives
         },
-        isGeneratedByAI: false
+        isGeneratedByAI: false,
+        personalizedTitle: quadroData.theme,
+        personalizedDescription: quadroData.objectives
       };
     }
   } catch (error) {

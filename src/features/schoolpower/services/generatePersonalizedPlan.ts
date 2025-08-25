@@ -545,14 +545,19 @@ export async function generatePersonalizedPlan(
             console.log('✅ CONTEÚDO GERADO PELA IA RECEBIDO:', quadroContent);
 
             if (quadroContent && quadroContent.cardContent && quadroContent.cardContent.text) {
-              // Aplicar conteúdo gerado
+              // Aplicar conteúdo gerado COMPLETO
               activityData.cardContent = quadroContent.cardContent;
               activityData.cardContent2 = quadroContent.cardContent2;
-              activityData.title = quadroContent.cardContent.title;
+              
+              // Atualizar títulos e textos principais
+              activityData.title = quadroContent.cardContent.title || quadroContent.title;
               activityData.text = quadroContent.cardContent.text;
               activityData.personalizedTitle = quadroContent.cardContent.title;
               activityData.personalizedDescription = quadroContent.cardContent.text;
               activityData.advancedText = quadroContent.cardContent2?.text;
+              
+              // Garantir que o conteúdo seja preservado
+              activityData.generatedContent = quadroContent;
               activityData.isGeneratedByAI = true;
               activityData.isBuilt = true;
               activityData.builtAt = new Date().toISOString();

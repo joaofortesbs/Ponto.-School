@@ -78,7 +78,7 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       try {
         console.log('🔍 CRÍTICO 3: Analisando generatedContent...');
         const parsedContent = JSON.parse(data.customFields.generatedContent);
-        
+
         if (parsedContent?.cardContent?.title && parsedContent?.cardContent?.text &&
             parsedContent.cardContent.text.length > 50 &&
             !parsedContent.cardContent.text.includes(data?.description || '')) {
@@ -118,17 +118,17 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
         !data.text
     )) {
       console.log('❌ CRÍTICO 5: DETECTADO USO INCORRETO DA DESCRIPTION - GERANDO CONTEÚDO IA');
-      
+
       // Extrair dados para gerar conteúdo específico
       const tema = data?.customFields?.['Tema ou Assunto da aula'] || 
                    data?.theme || 
                    data?.title || 
                    'Conteúdo Educativo';
-      
+
       const disciplina = data?.customFields?.['Disciplina / Área de conhecimento'] || 
                          data?.subject || 
                          'Educação';
-      
+
       const anoSerie = data?.customFields?.['Ano / Série'] || 
                        data?.schoolYear || 
                        'Ensino Fundamental';
@@ -161,12 +161,12 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   // Preparar conteúdo para renderização baseado na extração da IA
   const cardContent = {
     title: aiContent.title,
-    text: aiContent.text
+    text: aiContent.text,
   };
 
   const cardContent2 = aiContent.advancedText ? {
     title: `${aiContent.title} - Nível Avançado`,
-    text: aiContent.advancedText
+    text: aiContent.advancedText,
   } : null;
 
   const isGeneratedByAI = aiContent.isAIGenerated;
