@@ -177,10 +177,6 @@ export class QuadroInterativoGenerator {
     }
   }
 
-      const parsedContent = this.parseGeminiResponse(response);
-      console.log('✅ Conteúdo FINAL processado pela IA:', parsedContent);
-      console.log('📊 Tamanhos - Título:', parsedContent.title?.length, 'Texto:', parsedContent.text?.length, 'Avançado:', parsedContent.advancedText?.length);
-
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
