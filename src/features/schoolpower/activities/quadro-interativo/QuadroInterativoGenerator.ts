@@ -1,4 +1,3 @@
-
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 
 interface QuadroInterativoData {
@@ -41,19 +40,19 @@ export class QuadroInterativoGenerator {
 
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
     geminiLogger.logRequest('Gerando conteúdo específico de Quadro Interativo', data);
-    
+
     try {
       const prompt = this.buildEnhancedPrompt(data);
       console.log('📤 Enviando prompt para Gemini (tema:', data.theme, ')');
       console.log('📝 Prompt preview:', prompt.substring(0, 300) + '...');
-      
+
       const response = await this.callGeminiAPI(prompt);
       console.log('📥 Resposta bruta recebida do Gemini:', JSON.stringify(response, null, 2));
-      
+
       const parsedContent = this.parseGeminiResponse(response);
       console.log('✅ Conteúdo FINAL processado pela IA:', parsedContent);
       console.log('📊 Tamanhos - Título:', parsedContent.title?.length, 'Texto:', parsedContent.text?.length, 'Avançado:', parsedContent.advancedText?.length);
-      
+
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
@@ -111,11 +110,11 @@ export class QuadroInterativoGenerator {
       geminiLogger.logResponse(result, Date.now());
       console.log('✅ RESULTADO FINAL ENVIADO PARA O PREVIEW:', result);
       return result;
-      
+
     } catch (error) {
       console.error('❌ ERRO na geração do conteúdo:', error);
       geminiLogger.logError(error as Error, { data });
-      
+
       // Se falhar, ainda tenta retornar algo específico baseado no tema
       const specificFallback = this.generateSpecificFallback(data);
       console.log('⚠️ Usando fallback específico para o tema:', specificFallback);
@@ -172,7 +171,7 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
     }
 
     const startTime = Date.now();
-    
+
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
         method: 'POST',
@@ -202,12 +201,12 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
 
       const data = await response.json();
       const executionTime = Date.now() - startTime;
-      
+
       console.log('📊 Tempo de execução da API:', executionTime + 'ms');
       geminiLogger.logResponse(data, executionTime);
-      
+
       return data;
-      
+
     } catch (error) {
       console.error('❌ Erro na chamada da API Gemini:', error);
       geminiLogger.logError(error as Error, { prompt: prompt.substring(0, 200) });
@@ -215,110 +214,129 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
     }
   }
 
-  private parseGeminiResponse(response: any): { title: string; text: string; advancedText?: string } {
+  private parseGeminiResponse(response: string): { title: string; text: string; advancedText?: string } {
+    console.log('🔄 Fazendo parse da resposta do Gemini...');
+    console.log('📄 Resposta COMPLETA recebida:', response);
+
     try {
-      const responseText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!responseText) {
-        console.error('❌ Resposta vazia da API Gemini');
-        throw new Error('Resposta vazia da API Gemini');
+      // Limpar resposta removendo caracteres indesejados
+      let cleanedResponse = response.trim();
+
+      // Remover markdown se presente
+      if (cleanedResponse.includes('```json')) {
+        const jsonMatch = cleanedResponse.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonMatch) {
+          cleanedResponse = jsonMatch[1];
+        }
+      } else if (cleanedResponse.includes('```')) {
+        cleanedResponse = cleanedResponse.replace(/```[^{]*/, '').replace(/```$/, '');
       }
 
-      console.log('🔍 Texto bruto da resposta:', responseText);
+      // Buscar JSON na resposta
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}') + 1;
 
-      // Limpar a resposta - remover markdown e textos extras
-      let cleanedResponse = responseText.trim();
-      
-      // Remover blocos de código markdown
-      cleanedResponse = cleanedResponse.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      
-      // Remover quebras de linha extras
-      cleanedResponse = cleanedResponse.replace(/^\s*[\r\n]/gm, '').trim();
-
-      // Tentar extrair apenas o JSON
-      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        cleanedResponse = jsonMatch[0];
+      if (jsonStart === -1 || jsonEnd === 0) {
+        console.error('❌ JSON não encontrado na resposta');
+        throw new Error('JSON não encontrado na resposta');
       }
 
-      console.log('🧹 JSON limpo extraído:', cleanedResponse);
+      const jsonString = cleanedResponse.substring(jsonStart, jsonEnd);
+      console.log('🔄 JSON EXTRAÍDO:', jsonString);
 
-      // Parse do JSON
-      const parsedContent = JSON.parse(cleanedResponse);
-      
-      // Validar estrutura obrigatória
-      if (!parsedContent.title || !parsedContent.text) {
-        console.error('❌ Estrutura JSON inválida - faltam campos obrigatórios:', {
-          hasTitle: !!parsedContent.title,
-          hasText: !!parsedContent.text,
-          content: parsedContent
-        });
-        throw new Error(`Estrutura JSON inválida - Título: ${!!parsedContent.title}, Texto: ${!!parsedContent.text}`);
-      }
+      const parsedContent = JSON.parse(jsonString);
+      console.log('✅ CONTEÚDO PARSEADO:', parsedContent);
 
-      // Verificar se o conteúdo não é genérico - VALIDAÇÃO RIGOROSA
-      const genericPhrases = [
-        'Texto direto ao aluno conforme solicitado',
-        'Para você dominar este conteúdo',
-        'este tema',
-        'este assunto',
-        'o conteúdo',
-        'seguindo estes passos',
-        'Para você dominar'
-      ];
-      
-      const isGeneric = genericPhrases.some(phrase => 
-        parsedContent.text.toLowerCase().includes(phrase.toLowerCase())
-      ) || parsedContent.text.length < 80;
+      const result = {
+        title: parsedContent.titulo || parsedContent.title || 'Conteúdo Educativo',
+        text: parsedContent.conteudo || parsedContent.content || parsedContent.text || 'Conteúdo gerado pela IA.',
+        advancedText: parsedContent.conteudoAvancado || parsedContent.advancedContent || parsedContent.advancedText
+      };
 
-      // Verificar se o tema específico aparece no texto
-      const themeInText = parsedContent.text.toLowerCase().includes(data.theme.toLowerCase()) ||
-                         parsedContent.title.toLowerCase().includes(data.theme.toLowerCase());
+      console.log('🎯 RESULTADO FINAL PARSEADO:', result);
+      return result;
 
-      if (isGeneric || !themeInText) {
-        console.error('❌ Conteúdo genérico ou sem tema específico:', {
-          isGeneric,
-          themeInText,
-          text: parsedContent.text
-        });
-        throw new Error('Conteúdo gerado é muito genérico ou não menciona o tema específico');
-      }
-
-      // Processar e limitar tamanhos
-      let title = parsedContent.title.toString().trim();
-      let text = parsedContent.text.toString().trim();
-      let advancedText = parsedContent.advancedText ? parsedContent.advancedText.toString().trim() : undefined;
-
-      // Remover prefixos desnecessários do título
-      title = title.replace(/^Quadro Interativo:\s*/i, '');
-      title = title.replace(/^Atividade de\s*/i, '');
-
-      // Limitar tamanhos
-      title = title.substring(0, 80);
-      text = text.substring(0, 500);
-      if (advancedText) {
-        advancedText = advancedText.substring(0, 500);
-      }
-
-      const finalResult = { title, text, advancedText };
-      console.log('✅ Conteúdo final processado:', finalResult);
-
-      geminiLogger.logValidation(finalResult, true);
-      
-      return finalResult;
-      
     } catch (error) {
-      console.error('❌ ERRO no parsing da resposta da IA:', error);
-      console.error('📝 Resposta original:', response);
-      geminiLogger.logValidation(response, false, [error.message]);
-      
-      throw error; // Re-throw para usar fallback específico
+      console.error('❌ Erro ao fazer parse da resposta:', error);
+      console.log('📄 Resposta problemática completa:', response);
+
+      // Tentar extrair conteúdo manualmente se JSON falhar
+      const manualContent = this.extractContentManually(response);
+      if (manualContent) {
+        console.log('✅ Conteúdo extraído manualmente:', manualContent);
+        return manualContent;
+      }
+
+      // Fallback final
+      console.log('⚠️ Usando fallback final');
+      return {
+        title: 'Erro no processamento',
+        text: 'Houve um problema ao processar o conteúdo gerado pela IA. Resposta original: ' + response.substring(0, 200),
+        advancedText: 'Tente novamente ou contate o suporte.'
+      };
+    }
+  }
+
+  private extractContentManually(response: string): { title: string; text: string; advancedText?: string } | null {
+    try {
+      console.log('🔧 Tentando extração manual do conteúdo...');
+
+      // Tentar encontrar padrões de conteúdo educativo
+      const lines = response.split('\n').filter(line => line.trim());
+
+      let title = '';
+      let text = '';
+      let advancedText = '';
+
+      // Procurar por títulos
+      for (const line of lines) {
+        if (line.includes('título') || line.includes('Title') || line.includes('#')) {
+          title = line.replace(/[#*"']/g, '').replace(/título:?/i, '').trim();
+          break;
+        }
+      }
+
+      // Se não encontrou título, usar primeira linha significativa
+      if (!title && lines.length > 0) {
+        title = lines[0].replace(/[#*"']/g, '').trim();
+      }
+
+      // Procurar por conteúdo
+      const contentLines = lines.filter(line => 
+        line.length > 50 && 
+        !line.includes('título') && 
+        !line.includes('Title') &&
+        !line.includes('```')
+      );
+
+      if (contentLines.length > 0) {
+        text = contentLines[0];
+        if (contentLines.length > 1) {
+          advancedText = contentLines[1];
+        }
+      }
+
+      if (title || text) {
+        const result = {
+          title: title || 'Conteúdo Educativo',
+          text: text || response.substring(0, 300),
+          advancedText: advancedText || undefined
+        };
+
+        console.log('✅ Extração manual bem-sucedida:', result);
+        return result;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ Erro na extração manual:', error);
+      return null;
     }
   }
 
   private generateSpecificFallback(data: QuadroInterativoData): QuadroInterativoContent {
     const theme = data.theme || 'este conteúdo';
-    
+
     // Título específico baseado no tema
     let specificTitle = `Como Dominar ${theme}`;
     if (theme.toLowerCase().includes('substantivo')) {

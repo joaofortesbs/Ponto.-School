@@ -533,11 +533,22 @@ export async function generatePersonalizedPlan(
               quadroInterativoCampoEspecifico: requiredFields['Atividade mostrada']
             });
 
-            console.log('🤖 Conteúdo COMPLETO e EDUCATIVO gerado pela IA para Quadro Interativo:', quadroContent);
+            console.log('🤖 CONTEÚDO ESPECÍFICO GERADO PELA IA GEMINI:', quadroContent);
+            console.log('📋 Verificando estrutura do conteúdo:', {
+              hasCardContent: !!quadroContent?.cardContent,
+              cardTitle: quadroContent?.cardContent?.title,
+              cardTextLength: quadroContent?.cardContent?.text?.length,
+              hasAdvanced: !!quadroContent?.cardContent2
+            });
 
             // Atualizar os dados da atividade com o conteúdo gerado
             activityData = {
               ...activityData,
+              // GARANTIR que o cardContent seja copiado diretamente para o nível superior
+              cardContent: quadroContent?.cardContent,
+              cardContent2: quadroContent?.cardContent2,
+              isGeneratedByAI: true,
+              generatedAt: new Date().toISOString(),
               customFields: {
                 ...requiredFields,
                 // Adicionar dados gerados pela IA
@@ -546,6 +557,13 @@ export async function generatePersonalizedPlan(
                 generatedAt: new Date().toISOString()
               }
             };
+
+            console.log('✅ DADOS FINAIS DA ATIVIDADE PREPARADOS:', {
+              hasCardContent: !!activityData.cardContent,
+              cardTitle: activityData.cardContent?.title,
+              cardTextPreview: activityData.cardContent?.text?.substring(0, 100),
+              isGeneratedByAI: activityData.isGeneratedByAI
+            });
 
             console.log('✅ Quadro Interativo processado com conteúdo da IA');
           } catch (error) {

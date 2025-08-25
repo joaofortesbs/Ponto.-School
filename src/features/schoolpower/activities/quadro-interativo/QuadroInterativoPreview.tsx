@@ -19,11 +19,19 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
 
   // Extrair conteúdo real da IA - PRIORIZAR SEMPRE O CONTEÚDO DA IA
   const extractAIContent = () => {
-    console.log('📥 Extraindo conteúdo da IA...');
+    console.log('📥 INICIANDO EXTRAÇÃO DE CONTEÚDO DA IA...');
+    console.log('🔍 Dados recebidos para extração:', {
+      hasCardContent: !!data?.cardContent,
+      cardContentKeys: data?.cardContent ? Object.keys(data.cardContent) : [],
+      hasCustomFields: !!data?.customFields,
+      customFieldsKeys: data?.customFields ? Object.keys(data.customFields) : [],
+      hasGeneratedContent: !!data?.customFields?.generatedContent,
+      dataKeys: data ? Object.keys(data) : []
+    });
 
     // 1. Verificar cardContent direto (mais comum)
-    if (data?.cardContent?.title && data?.cardContent?.text) {
-      console.log('✅ Encontrado cardContent direto:', data.cardContent);
+    if (data?.cardContent?.title && data?.cardContent?.text && data.cardContent.text.length > 20) {
+      console.log('✅ ENCONTRADO cardContent direto válido:', data.cardContent);
       return {
         card1: {
           title: data.cardContent.title,
@@ -36,13 +44,16 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       };
     }
 
-    // 2. Verificar nos customFields
+    // 2. Verificar nos customFields - PRIORIDADE ALTA
     if (data?.customFields?.generatedContent) {
       try {
+        console.log('🔍 Tentando parsear customFields.generatedContent...');
         const parsedContent = JSON.parse(data.customFields.generatedContent);
-        console.log('✅ Encontrado conteúdo nos customFields:', parsedContent);
+        console.log('✅ CONTEÚDO PARSEADO DOS customFields:', parsedContent);
         
-        if (parsedContent?.cardContent) {
+        // Verificar múltiplos formatos possíveis
+        if (parsedContent?.cardContent?.title && parsedContent?.cardContent?.text) {
+          console.log('✅ Formato cardContent encontrado');
           return {
             card1: {
               title: parsedContent.cardContent.title,
@@ -54,8 +65,25 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
             } : null
           };
         }
+        
+        // Verificar formato direto
+        if (parsedContent?.title && parsedContent?.text) {
+          console.log('✅ Formato direto encontrado');
+          return {
+            card1: {
+              title: parsedContent.title,
+              text: parsedContent.text
+            },
+            card2: parsedContent?.advancedText ? {
+              title: `${parsedContent.title} - Avançado`,
+              text: parsedContent.advancedText
+            } : null
+          };
+        }
+        
       } catch (error) {
         console.error('❌ Erro ao parsear customFields:', error);
+        console.log('📄 Conteúdo problemático:', data.customFields.generatedContent);
       }
     }
 
@@ -81,12 +109,17 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   const aiContent = extractAIContent();
 
   // Verificar se o conteúdo foi gerado pela IA
-  const isGeneratedByAI = data?.isGeneratedByAI || 
-                         data?.generatedAt || 
-                         data?.customFields?.isAIGenerated === 'true' ||
-                         data?.customFields?.generatedContent ||
-                         (data?.cardContent && Object.keys(data.cardContent).length > 0) ||
-                         false;
+  const isGeneratedByAI = Boolean(
+    aiContent?.card1?.text && 
+    aiContent.card1.text.length > 50 &&
+    !aiContent.card1.text.includes('Gerando conteúdo') &&
+    !aiContent.card1.text.includes('Aguardando') &&
+    (data?.isGeneratedByAI || 
+     data?.generatedAt || 
+     data?.customFields?.isAIGenerated === 'true' ||
+     data?.customFields?.generatedContent ||
+     (data?.cardContent && Object.keys(data.cardContent).length > 0))
+  );
 
   // Usar o conteúdo extraído da IA ou fallback
   const displayContent = aiContent?.card1 || {
