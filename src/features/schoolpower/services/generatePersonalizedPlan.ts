@@ -504,9 +504,9 @@ export async function generatePersonalizedPlan(
           }
         }
 
-        // Processamento CRÍTICO específico para Quadro Interativo - FORÇAR GERAÇÃO IA ESPECÍFICA
+        // Processamento CRÍTICO específico para Quadro Interativo - FORÇAR GERAÇÃO IA
         if (activityData.id === 'quadro-interativo') {
-          console.log('🚀 INICIANDO PROCESSAMENTO CRÍTICO DO QUADRO INTERATIVO COM IA ESPECÍFICA');
+          console.log('🚀 INICIANDO PROCESSAMENTO CRÍTICO DO QUADRO INTERATIVO');
           console.log('📥 Dados originais da IA Gemini:', activityData);
 
           try {
@@ -540,135 +540,106 @@ export async function generatePersonalizedPlan(
                                               'Atividade interativa educativa'
             };
 
-            console.log('🔥 DADOS CRÍTICOS EXTRAÍDOS PARA GERAÇÃO IA ESPECÍFICA:', extractedData);
+            console.log('🔥 DADOS CRÍTICOS EXTRAÍDOS PARA GERAÇÃO IA:', extractedData);
 
-            // VALIDAÇÃO CRÍTICA - só gerar se não tem conteúdo específico real
-            const hasRealAIContent = (
-              activityData.cardContent?.title && 
-              activityData.cardContent?.text && 
-              activityData.cardContent.text.length > 200 &&
-              activityData.isGeneratedByAI === true &&
-              !activityData.cardContent.text.includes('será gerado') &&
-              activityData.cardContent.text !== activityData.description
-            );
+            // FORÇAR geração do conteúdo pela IA Gemini
+            const quadroGenerator = new QuadroInterativoGenerator();
+            console.log('🤖 CHAMANDO IA GEMINI PARA GERAR CONTEÚDO ESPECÍFICO...');
+            
+            const quadroContent = await quadroGenerator.generateQuadroInterativoContent(extractedData);
 
-            if (hasRealAIContent) {
-              console.log('✅ JÁ POSSUI CONTEÚDO ESPECÍFICO REAL DA IA - PRESERVANDO');
-              activityData.preservedAIContent = true;
-            } else {
-              console.log('🤖 CHAMANDO IA GEMINI PARA GERAR CONTEÚDO ULTRA-ESPECÍFICO...');
+            console.log('🎯 RESPOSTA COMPLETA DA IA GEMINI:', JSON.stringify(quadroContent, null, 2));
+
+            // VERIFICAÇÃO CRÍTICA do conteúdo gerado
+            if (quadroContent && quadroContent.cardContent && 
+                quadroContent.cardContent.title && quadroContent.cardContent.text &&
+                quadroContent.cardContent.text.length > 50 &&
+                quadroContent.cardContent.text !== activityData.description) {
               
-              // FORÇAR geração do conteúdo específico pela IA Gemini
-              const quadroGenerator = new QuadroInterativoGenerator();
-              const quadroContent = await quadroGenerator.generateQuadroInterativoContent(extractedData);
-
-              console.log('🎯 RESPOSTA COMPLETA DA IA GEMINI ESPECÍFICA:', JSON.stringify(quadroContent, null, 2));
-
-              // VERIFICAÇÃO ULTRA-CRÍTICA do conteúdo específico gerado
-              if (quadroContent && quadroContent.cardContent && 
-                  quadroContent.cardContent.title && quadroContent.cardContent.text &&
-                  quadroContent.cardContent.text.length > 150 &&
-                  quadroContent.isGeneratedByAI === true &&
-                  quadroContent.cardContent.text.toLowerCase().includes(extractedData.theme.toLowerCase()) &&
-                  quadroContent.cardContent.text !== activityData.description) {
-                
-                console.log('✅ CONTEÚDO ESPECÍFICO VÁLIDO GERADO PELA IA - APLICANDO DADOS');
-                console.log('🎯 CONTEÚDO ULTRA-ESPECÍFICO DA IA RECEBIDO:', {
-                  titulo: quadroContent.cardContent.title,
-                  textoCompleto: quadroContent.cardContent.text,
-                  temAvancado: !!quadroContent.cardContent2,
-                  tamanhoTexto: quadroContent.cardContent.text?.length,
-                  contémTema: quadroContent.cardContent.text.toLowerCase().includes(extractedData.theme.toLowerCase()),
-                  diferenteDaDescricao: quadroContent.cardContent.text !== activityData.description
-                });
-                
-                // Aplicar o conteúdo específico gerado de forma DEFINITIVA
-                activityData = {
-                  ...activityData,
-                  // CAMPOS CRÍTICOS - CONTEÚDO REAL E ESPECÍFICO DA IA
-                  cardContent: {
-                    title: quadroContent.cardContent.title,
-                    text: quadroContent.cardContent.text
-                  },
-                  cardContent2: quadroContent.cardContent2 ? {
-                    title: quadroContent.cardContent2.title,
-                    text: quadroContent.cardContent2.text
-                  } : undefined,
-                  // SOBRESCREVER CAMPOS ORIGINAIS COM CONTEÚDO ESPECÍFICO DA IA
+              console.log('✅ CONTEÚDO VÁLIDO GERADO PELA IA - APLICANDO DADOS');
+              console.log('🎯 CONTEÚDO ESPECÍFICO DA IA RECEBIDO:', {
+                titulo: quadroContent.cardContent.title,
+                textoCompleto: quadroContent.cardContent.text,
+                temAvancado: !!quadroContent.cardContent2,
+                tamanhoTexto: quadroContent.cardContent.text?.length,
+                diferenteDaDescricao: quadroContent.cardContent.text !== activityData.description
+              });
+              
+              // Aplicar o conteúdo gerado de forma DEFINITIVA
+              activityData = {
+                ...activityData,
+                // CAMPOS CRÍTICOS - CONTEÚDO REAL DA IA
+                cardContent: {
                   title: quadroContent.cardContent.title,
-                  text: quadroContent.cardContent.text, // CONTEÚDO ESPECÍFICO DA IA
-                  personalizedTitle: quadroContent.cardContent.title,
-                  personalizedDescription: quadroContent.cardContent.text,
-                  advancedText: quadroContent.cardContent2?.text,
-                  // METADADOS CRÍTICOS DE ESPECIFICIDADE
-                  isGeneratedByAI: true,
-                  generatedAt: new Date().toISOString(),
-                  aiContentGenerated: true,
-                  specificAIContent: true,
-                  themeSpecific: true,
-                  // CUSTOM FIELDS ULTRA-ESPECÍFICOS ATUALIZADOS
-                  customFields: {
-                    ...activityData.customFields,
-                    // Campos de entrada preservados
-                    'Disciplina / Área de conhecimento': extractedData.subject,
-                    'Ano / Série': extractedData.schoolYear,
-                    'Tema ou Assunto da aula': extractedData.theme,
-                    'Objetivo de aprendizagem da aula': extractedData.objectives,
-                    'Nível de Dificuldade': extractedData.difficultyLevel,
-                    'Atividade mostrada': extractedData.quadroInterativoCampoEspecifico,
-                    // CAMPOS CRÍTICOS DA IA ESPECÍFICA
-                    isAIGenerated: 'true',
-                    aiGeneratedTitle: quadroContent.cardContent.title,
-                    aiGeneratedText: quadroContent.cardContent.text,
-                    aiGeneratedAdvancedText: quadroContent.cardContent2?.text || '',
-                    aiSourceTimestamp: new Date().toISOString(),
-                    aiContentSource: 'gemini-api-specific',
-                    specificForTheme: extractedData.theme,
-                    // BACKUP COMPLETO SERIALIZADO COM VALIDAÇÃO
-                    generatedContent: JSON.stringify({
-                      cardContent: quadroContent.cardContent,
-                      cardContent2: quadroContent.cardContent2,
-                      generatedAt: new Date().toISOString(),
-                      extractedData,
-                      sourceType: 'gemini-ai-api-specific',
-                      apiSuccess: true,
-                      isSpecific: true,
-                      themeValidated: true
-                    })
-                  }
-                };
+                  text: quadroContent.cardContent.text
+                },
+                cardContent2: quadroContent.cardContent2 ? {
+                  title: quadroContent.cardContent2.title,
+                  text: quadroContent.cardContent2.text
+                } : undefined,
+                // SOBRESCREVER CAMPOS ORIGINAIS COM CONTEÚDO DA IA
+                title: quadroContent.cardContent.title,
+                text: quadroContent.cardContent.text, // NUNCA usar description aqui
+                personalizedTitle: quadroContent.cardContent.title,
+                personalizedDescription: quadroContent.cardContent.text,
+                advancedText: quadroContent.cardContent2?.text,
+                // METADADOS OBRIGATÓRIOS
+                isGeneratedByAI: true,
+                generatedAt: new Date().toISOString(),
+                aiContentGenerated: true,
+                // CUSTOM FIELDS ATUALIZADOS
+                customFields: {
+                  ...activityData.customFields,
+                  // Campos de entrada preservados
+                  'Disciplina / Área de conhecimento': extractedData.subject,
+                  'Ano / Série': extractedData.schoolYear,
+                  'Tema ou Assunto da aula': extractedData.theme,
+                  'Objetivo de aprendizagem da aula': extractedData.objectives,
+                  'Nível de Dificuldade': extractedData.difficultyLevel,
+                  'Atividade mostrada': extractedData.quadroInterativoCampoEspecifico,
+                  // CAMPOS CRÍTICOS DA IA
+                  isAIGenerated: 'true',
+                  aiGeneratedTitle: quadroContent.cardContent.title,
+                  aiGeneratedText: quadroContent.cardContent.text,
+                  aiGeneratedAdvancedText: quadroContent.cardContent2?.text || '',
+                  aiSourceTimestamp: new Date().toISOString(),
+                  aiContentSource: 'gemini-api',
+                  // BACKUP COMPLETO SERIALIZADO
+                  generatedContent: JSON.stringify({
+                    cardContent: quadroContent.cardContent,
+                    cardContent2: quadroContent.cardContent2,
+                    generatedAt: new Date().toISOString(),
+                    extractedData,
+                    sourceType: 'gemini-ai-api',
+                    apiSuccess: true
+                  })
+                }
+              };
 
-                console.log('🔥 ATIVIDADE ATUALIZADA COM CONTEÚDO ESPECÍFICO DA IA:', {
-                  id: activityData.id,
-                  title: activityData.title,
-                  hasCardContent: !!activityData.cardContent,
-                  cardTitle: activityData.cardContent?.title,
-                  cardTextLength: activityData.cardContent?.text?.length,
-                  hasAdvancedContent: !!activityData.cardContent2,
-                  isGeneratedByAI: activityData.isGeneratedByAI,
-                  specificAIContent: activityData.specificAIContent,
-                  textNotDescription: activityData.text !== activityData.description,
-                  themeInContent: activityData.cardContent?.text?.toLowerCase().includes(extractedData.theme.toLowerCase())
-                });
+              console.log('🔥 ATIVIDADE ATUALIZADA COM SUCESSO - CONTEÚDO DA IA APLICADO:', {
+                id: activityData.id,
+                title: activityData.title,
+                hasCardContent: !!activityData.cardContent,
+                cardTitle: activityData.cardContent?.title,
+                cardTextLength: activityData.cardContent?.text?.length,
+                hasAdvancedContent: !!activityData.cardContent2,
+                isGeneratedByAI: activityData.isGeneratedByAI,
+                textNotDescription: activityData.text !== activityData.description
+              });
 
-              } else {
-                console.error('❌ CONTEÚDO DA IA NÃO É ESPECÍFICO SUFICIENTE - FORÇANDO REGENERAÇÃO');
-                throw new Error('Conteúdo da IA não específico para o tema');
-              }
+            } else {
+              console.error('❌ CONTEÚDO INVÁLIDO OU VAZIO DA IA - FORÇANDO REGENERAÇÃO');
+              throw new Error('Conteúdo da IA inválido ou vazio');
             }
 
           } catch (error) {
-            console.error('❌ ERRO CRÍTICO na geração IA específica - Aplicando fallback temático:', error);
+            console.error('❌ ERRO CRÍTICO na geração IA - Aplicando fallback inteligente:', error);
 
-            // Fallback ULTRA-ESPECÍFICO para o tema
             const tema = extractedData?.theme || activityData.title || 'Este Conteúdo';
             const disciplina = extractedData?.subject || 'Educação';
-            const anoSerie = extractedData?.schoolYear || 'Ensino Fundamental';
             
-            const fallbackTitle = `Como Dominar ${tema} - Guia Prático para ${anoSerie}`;
-            const fallbackText = `Para você dominar ${tema} em ${disciplina} (${anoSerie}): 1) Identifique os conceitos-chave específicos de ${tema} - observe as características únicas que definem ${tema}. 2) Pratique com exemplos reais de ${tema} - use situações do cotidiano onde ${tema} é aplicado. 3) Desenvolva estratégias específicas para ${tema} - crie métodos de estudo exclusivos para este conteúdo. 4) Teste seu conhecimento de ${tema} com exercícios progressivos. 5) Revise regularmente os pontos principais de ${tema}. Exemplo prático: ${tema} é fundamental quando você precisa resolver problemas específicos da área. Macete especial: para lembrar de ${tema}, associe com conceitos que você já conhece bem. Cuidado: o erro mais comum em ${tema} é confundir com temas similares. Aplicação real: profissionais usam ${tema} para resolver problemas práticos. Dica final: ${tema} é essencial em ${disciplina} porque conecta diretamente com outros conceitos importantes da matéria!`;
-
-            const fallbackAdvanced = `Dominando ${tema} no nível avançado para ${anoSerie}: explore aplicações complexas de ${tema} em situações desafiadoras. Para casos difíceis de ${tema}: divida o problema em partes menores e aplique ${tema} sistematicamente. Exercício avançado de ${tema}: combine ${tema} com outros conceitos de ${disciplina} para resolver problemas interdisciplinares. Segredo profissional para ${tema}: a chave está em entender a lógica fundamental por trás, não apenas memorizar definições. Conexão avançada: ${tema} se relaciona com conceitos específicos de ${disciplina}. Aplicação real: especialistas usam ${tema} para resolver problemas complexos da área. Truque de especialista: pratique ${tema} com variações crescentes de dificuldade!`;
+            const fallbackTitle = `Como Dominar ${tema} - Guia Específico`;
+            const fallbackText = `Para você dominar ${tema} em ${disciplina}: 1) Identifique os conceitos específicos de ${tema} - observe as características únicas que definem este tema. 2) Pratique com exemplos reais de ${tema} - use situações práticas onde ${tema} é aplicado. 3) Desenvolva estratégias específicas para ${tema} - crie métodos exclusivos de estudo. 4) Teste seu conhecimento com exercícios progressivos. Exemplo prático: ${tema} é usado quando você precisa resolver problemas específicos. Macete especial: associe ${tema} com conceitos que você já domina. Cuidado: não confunda ${tema} com temas similares. Dica final: ${tema} é fundamental porque conecta com outros conceitos importantes!`;
 
             activityData = {
               ...activityData,
@@ -676,19 +647,12 @@ export async function generatePersonalizedPlan(
                 title: fallbackTitle,
                 text: fallbackText
               },
-              cardContent2: {
-                title: `${fallbackTitle} - Nível Avançado`,
-                text: fallbackAdvanced
-              },
               title: fallbackTitle,
               text: fallbackText,
               personalizedTitle: fallbackTitle,
               personalizedDescription: fallbackText,
-              advancedText: fallbackAdvanced,
               isGeneratedByAI: false,
               generatedAt: new Date().toISOString(),
-              specificAIContent: false,
-              themeSpecific: true,
               customFields: {
                 ...activityData.customFields,
                 'Disciplina / Área de conhecimento': extractedData?.subject || 'Matemática',
@@ -698,14 +662,13 @@ export async function generatePersonalizedPlan(
                 'Nível de Dificuldade': extractedData?.difficultyLevel || 'Intermediário',
                 'Atividade mostrada': extractedData?.quadroInterativoCampoEspecifico || 'Atividade específica',
                 isAIGenerated: 'false',
-                fallbackReason: 'Erro na API da IA - fallback específico aplicado',
-                fallbackApplied: 'true',
-                themeSpecificFallback: 'true'
+                fallbackReason: 'Erro na API da IA',
+                fallbackApplied: 'true'
               }
             };
           }
 
-          console.log('✅ PROCESSAMENTO ESPECÍFICO DO QUADRO INTERATIVO FINALIZADO');
+          console.log('✅ PROCESSAMENTO DO QUADRO INTERATIVO FINALIZADO');
         }
 
         // Extract custom fields (all fields except standard ones)
