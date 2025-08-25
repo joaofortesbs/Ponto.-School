@@ -203,9 +203,15 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
       const executionTime = Date.now() - startTime;
 
       console.log('📊 Tempo de execução da API:', executionTime + 'ms');
+      console.log('📥 Resposta completa da API Gemini:', JSON.stringify(data, null, 2));
+      
+      // Extrair texto da resposta estruturada da API Gemini
+      const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      console.log('📄 Texto extraído da resposta:', generatedText);
+      
       geminiLogger.logResponse(data, executionTime);
 
-      return data;
+      return generatedText;
 
     } catch (error) {
       console.error('❌ Erro na chamada da API Gemini:', error);
@@ -214,7 +220,7 @@ AGORA GERE CONTEÚDO ESPECÍFICO PARA O TEMA "${data.theme}":`;
     }
   }
 
-  private parseGeminiResponse(response: string): { title: string; text: string; advancedText?: string } {
+  private parseGeminiResponse(response: any): { title: string; text: string; advancedText?: string } {
     console.log('🔄 Fazendo parse da resposta do Gemini...');
     console.log('📄 Resposta COMPLETA recebida:', response);
 

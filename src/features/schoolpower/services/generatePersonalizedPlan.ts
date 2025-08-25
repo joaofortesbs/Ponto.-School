@@ -541,20 +541,35 @@ export async function generatePersonalizedPlan(
               hasAdvanced: !!quadroContent?.cardContent2
             });
 
-            // Atualizar os dados da atividade com o conteúdo gerado
+            // Atualizar os dados da atividade com o conteúdo gerado - CRÍTICO: PRESERVAR ESTRUTURA COMPLETA
             activityData = {
               ...activityData,
-              // GARANTIR que o cardContent seja copiado diretamente para o nível superior
+              // GARANTIR que TODOS os dados da IA sejam preservados no nível superior
               cardContent: quadroContent?.cardContent,
               cardContent2: quadroContent?.cardContent2,
               isGeneratedByAI: true,
               generatedAt: new Date().toISOString(),
+              // PRESERVAR título e texto diretos para compatibilidade
+              title: quadroContent?.cardContent?.title || activityData.title,
+              text: quadroContent?.cardContent?.text || activityData.description,
+              advancedText: quadroContent?.cardContent2?.text,
               customFields: {
                 ...requiredFields,
-                // Adicionar dados gerados pela IA
-                generatedContent: JSON.stringify(quadroContent),
+                // Dados gerados pela IA preservados de múltiplas formas
+                generatedContent: JSON.stringify({
+                  cardContent: quadroContent?.cardContent,
+                  cardContent2: quadroContent?.cardContent2,
+                  title: quadroContent?.cardContent?.title,
+                  text: quadroContent?.cardContent?.text,
+                  advancedText: quadroContent?.cardContent2?.text,
+                  generatedAt: new Date().toISOString()
+                }),
                 isAIGenerated: 'true',
-                generatedAt: new Date().toISOString()
+                generatedAt: new Date().toISOString(),
+                // Campos individuais para acesso direto
+                aiGeneratedTitle: quadroContent?.cardContent?.title || '',
+                aiGeneratedText: quadroContent?.cardContent?.text || '',
+                aiGeneratedAdvancedText: quadroContent?.cardContent2?.text || ''
               }
             };
 
@@ -562,14 +577,16 @@ export async function generatePersonalizedPlan(
               hasCardContent: !!activityData.cardContent,
               cardTitle: activityData.cardContent?.title,
               cardTextPreview: activityData.cardContent?.text?.substring(0, 100),
-              isGeneratedByAI: activityData.isGeneratedByAI
+              isGeneratedByAI: activityData.isGeneratedByAI,
+              hasDirectText: !!activityData.text,
+              hasCustomFieldsGenerated: !!activityData.customFields?.generatedContent
             });
 
             console.log('✅ Quadro Interativo processado com conteúdo da IA');
           } catch (error) {
             console.error('❌ Erro ao gerar conteúdo para Quadro Interativo:', error);
 
-            // Fallback sem conteúdo da IA
+            // Fallback com estrutura mínima
             const fallbackFields = {
               'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || 'Matemática',
               'Ano / Série': activityData['Ano / Série'] || '6º Ano',
@@ -581,6 +598,7 @@ export async function generatePersonalizedPlan(
 
             activityData = {
               ...activityData,
+              isGeneratedByAI: false,
               customFields: fallbackFields
             };
           }
@@ -632,7 +650,15 @@ export async function generatePersonalizedPlan(
           approved: true,
           isTrilhasEligible: true,
           isBuilt: false, // Will be marked as true after automatic build
-          builtAt: null
+          builtAt: null,
+          // PRESERVAR TODOS OS DADOS DA IA NO NÍVEL SUPERIOR
+          cardContent: activityData.cardContent,
+          cardContent2: activityData.cardContent2,
+          isGeneratedByAI: activityData.isGeneratedByAI || false,
+          generatedAt: activityData.generatedAt,
+          // Campos diretos da IA para compatibilidade
+          text: activityData.text,
+          advancedText: activityData.advancedText
         };
 
         console.log(`✅ Complete ActionPlanItem created for ${activityData.id}:`, activity);

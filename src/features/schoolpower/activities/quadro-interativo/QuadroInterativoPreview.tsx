@@ -20,12 +20,15 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
   // Extrair conteúdo real da IA - PRIORIZAR SEMPRE O CONTEÚDO DA IA
   const extractAIContent = () => {
     console.log('📥 INICIANDO EXTRAÇÃO DE CONTEÚDO DA IA...');
+    console.log('🔍 DADOS COMPLETOS RECEBIDOS:', JSON.stringify(data, null, 2));
     console.log('🔍 Dados recebidos para extração:', {
       hasCardContent: !!data?.cardContent,
       cardContentKeys: data?.cardContent ? Object.keys(data.cardContent) : [],
       hasCustomFields: !!data?.customFields,
       customFieldsKeys: data?.customFields ? Object.keys(data.customFields) : [],
       hasGeneratedContent: !!data?.customFields?.generatedContent,
+      hasDirectText: !!data?.text,
+      hasAIGeneratedFields: !!(data?.customFields?.aiGeneratedTitle || data?.customFields?.aiGeneratedText),
       dataKeys: data ? Object.keys(data) : []
     });
 
@@ -44,7 +47,22 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       };
     }
 
-    // 2. Verificar nos customFields - PRIORIDADE ALTA
+    // 2. Verificar campos AI diretos nos customFields
+    if (data?.customFields?.aiGeneratedTitle && data?.customFields?.aiGeneratedText) {
+      console.log('✅ ENCONTRADO campos AI diretos nos customFields');
+      return {
+        card1: {
+          title: data.customFields.aiGeneratedTitle,
+          text: data.customFields.aiGeneratedText
+        },
+        card2: data?.customFields?.aiGeneratedAdvancedText ? {
+          title: `${data.customFields.aiGeneratedTitle} - Nível Avançado`,
+          text: data.customFields.aiGeneratedAdvancedText
+        } : null
+      };
+    }
+
+    // 3. Verificar nos customFields - PRIORIDADE ALTA
     if (data?.customFields?.generatedContent) {
       try {
         console.log('🔍 Tentando parsear customFields.generatedContent...');
@@ -87,16 +105,16 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       }
     }
 
-    // 3. Verificar se os dados estão no nível raiz
-    if (data?.title && data?.text) {
-      console.log('✅ Encontrado no nível raiz');
+    // 4. Verificar se os dados estão no nível raiz
+    if (data?.text && data.text.length > 20) {
+      console.log('✅ Encontrado texto no nível raiz');
       return {
         card1: {
-          title: data.title,
+          title: data.title || data?.customFields?.['Tema ou Assunto da aula'] || 'Conteúdo da IA',
           text: data.text
         },
         card2: data?.advancedText ? {
-          title: `${data.title} - Nível Avançado`,
+          title: `${data.title || 'Conteúdo'} - Nível Avançado`,
           text: data.advancedText
         } : null
       };
