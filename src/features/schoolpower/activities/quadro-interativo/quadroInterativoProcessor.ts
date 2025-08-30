@@ -1,94 +1,55 @@
 
-import { ActivityFormData } from '../../construction/types/ActivityTypes';
+import { quadroInterativoFieldMapping } from './fieldMapping';
 
-/**
- * Processa dados para o Quadro Interativo
- * Simplificado para trabalhar com o novo sistema baseado no Preview
- */
-export function prepareQuadroInterativoData(activityData: any): ActivityFormData {
-  console.log('📊 Processando dados do Quadro Interativo:', activityData);
-
-  // Função auxiliar para normalizar materiais
-  const normalizeMaterials = (materials: any): string => {
-    if (typeof materials === 'string') return materials;
-    if (Array.isArray(materials)) return materials.join(', ');
-    if (materials && typeof materials === 'object') {
-      return Object.values(materials).filter(Boolean).join(', ');
-    }
-    return '';
-  };
-
-  // Consolidar dados de diferentes fontes
-  const consolidatedData = {
-    title: activityData.title || activityData.personalizedTitle || '',
-    description: activityData.description || activityData.personalizedDescription || '',
-    ...activityData.customFields,
-    ...activityData
-  };
-
-  // Campos customizados seguros
-  const safeCustomFields = consolidatedData.customFields || {};
-
-  // Mapear para ActivityFormData
-  const formData: ActivityFormData = {
-    // Campos específicos do Quadro Interativo
-    subject: safeCustomFields['Disciplina / Área de conhecimento'] || consolidatedData.subject || '',
-    schoolYear: safeCustomFields['Ano / Série'] || consolidatedData.schoolYear || '',
-    theme: safeCustomFields['Tema ou Assunto da aula'] || consolidatedData.theme || '',
-    objectives: safeCustomFields['Objetivo de aprendizagem da aula'] || consolidatedData.objectives || '',
-    difficultyLevel: safeCustomFields['Nível de Dificuldade'] || consolidatedData.difficultyLevel || 'Médio',
-    quadroInterativoCampoEspecifico: safeCustomFields['Campo Específico do Quadro Interativo'] || '',
-
-    // Campos obrigatórios para ActivityFormData
-    title: consolidatedData.title || '',
-    description: consolidatedData.description || '',
-    numberOfQuestions: '1',
-    questionModel: '',
-    sources: '',
-    textType: '',
-    textGenre: '',
-    textLength: '',
-    associatedQuestions: '',
-    competencies: '',
-    readingStrategies: '',
-    visualResources: '',
-    practicalActivities: '',
-    wordsIncluded: '',
-    gridFormat: '',
-    providedHints: '',
-    vocabularyContext: '',
-    language: '',
-    associatedExercises: '',
-    knowledgeArea: '',
-    complexityLevel: '',
-    tituloTemaAssunto: '',
-    anoSerie: '',
-    disciplina: '',
-    materials: String(normalizeMaterials(consolidatedData.materials || '')),
-    instructions: '',
-    evaluation: '',
-    timeLimit: '',
-    context: '',
-
-    // Manter campos extras
-    ...safeCustomFields
-  };
-
-  console.log('✅ Dados do Quadro Interativo processados:', formData);
-  return formData;
+export interface QuadroInterativoProcessedData {
+  subject: string;
+  schoolYear: string;
+  theme: string;
+  objectives: string;
+  difficultyLevel: string;
+  quadroInterativoCampoEspecifico?: string;
+  customFields?: Record<string, any>;
 }
 
 /**
- * Processa dados gerados pela IA do Gemini para o preview
- * Agora é responsabilidade do Preview fazer a geração
+ * Prepara os dados do Quadro Interativo para o Preview processar
  */
-export function processQuadroInterativoAIData(generatedData: any): any {
-  console.log('🤖 Processando dados da IA para Preview:', generatedData);
+export function prepareQuadroInterativoData(activityData: any): QuadroInterativoProcessedData {
+  console.log('🔄 Preparando dados para Quadro Interativo:', activityData);
+
+  // Extrair dados dos customFields se disponível
+  const customFields = activityData.customFields || {};
   
-  // Simplesmente retorna os dados para o Preview processar
-  return {
-    ...generatedData,
-    processedAt: new Date().toISOString(),
-    processedBy: 'quadroInterativoProcessor'
+  // Mapear campos usando o fieldMapping
+  const mappedData: QuadroInterativoProcessedData = {
+    subject: customFields['Disciplina / Área de conhecimento'] || customFields['subject'] || activityData.subject || '',
+    schoolYear: customFields['Ano / Série'] || customFields['schoolYear'] || activityData.schoolYear || '',
+    theme: customFields['Tema ou Assunto da aula'] || customFields['theme'] || activityData.theme || '',
+    objectives: customFields['Objetivo de aprendizagem da aula'] || customFields['objectives'] || activityData.objectives || '',
+    difficultyLevel: customFields['Nível de Dificuldade'] || customFields['difficultyLevel'] || activityData.difficultyLevel || '',
+    quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] || customFields['quadroInterativoCampoEspecifico'] || activityData.quadroInterativoCampoEspecifico || '',
+    customFields: customFields
   };
+
+  console.log('✅ Dados preparados para Quadro Interativo:', mappedData);
+  return mappedData;
 }
+
+/**
+ * Valida se os dados do Quadro Interativo estão completos
+ */
+export function validateQuadroInterativoData(data: QuadroInterativoProcessedData): boolean {
+  const requiredFields = ['subject', 'schoolYear', 'theme', 'objectives'];
+  
+  for (const field of requiredFields) {
+    if (!data[field as keyof QuadroInterativoProcessedData]) {
+      console.warn(`❌ Campo obrigatório ausente: ${field}`);
+      return false;
+    }
+  }
+  
+  console.log('✅ Dados do Quadro Interativo validados com sucesso');
+  return true;
+}
+
+export default { prepareQuadroInterativoData, validateQuadroInterativoData };

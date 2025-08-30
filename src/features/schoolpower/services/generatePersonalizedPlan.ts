@@ -299,7 +299,7 @@ async function callGeminiAPI(prompt: string): Promise<string> {
     console.error('❌ Erro geral na API Gemini', {
       error: error instanceof Error ? error.message : error,
       prompt_length: prompt.length,
-      api_url: GEMINI_API_URLRL
+      api_url: GEMINI_API_URL
     });
 
     throw error;
