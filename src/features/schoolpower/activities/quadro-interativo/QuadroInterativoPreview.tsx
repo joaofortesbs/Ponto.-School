@@ -1,145 +1,90 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Lightbulb, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Lightbulb,
-  Loader2,
-  RefreshCw,
-  Sparkles,
-  AlertCircle
-} from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface QuadroInterativoPreviewProps {
-  data: any;
-  activityData?: any;
+// Configuração direta da API Gemini
+const GEMINI_API_KEY = "AIzaSyDTu9ZJo66-dGFQE0JUJfMBo0mNxf-TKg0";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+interface QuadroInterativoData {
+  subject: string;
+  schoolYear: string;
+  theme: string;
+  objectives: string;
+  difficultyLevel: string;
+  quadroInterativoCampoEspecifico?: string;
 }
 
-interface QuadroContent {
+interface QuadroInterativoContent {
   title: string;
   text: string;
-  generatedAt: string;
-  isGeneratedByAI: boolean;
+  isGenerating: boolean;
+  error?: string;
 }
 
-const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ 
-  data, 
-  activityData 
-}) => {
-  const [content, setContent] = useState<QuadroContent | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasGenerated, setHasGenerated] = useState(false);
+interface QuadroInterativoPreviewProps {
+  data: QuadroInterativoData;
+  onSave?: (content: QuadroInterativoContent) => void;
+}
 
-  // Extrair dados de forma simples e direta
-  const extractData = () => {
-    console.log('📊 [QUADRO INTERATIVO] Extraindo dados:', { data, activityData });
-    
-    // Coletar dados de várias fontes
-    const customFields = data?.customFields || activityData?.customFields || {};
-    
-    // Verificar localStorage para dados salvos
-    let savedData = {};
-    try {
-      const actionPlan = localStorage.getItem('schoolPowerActionPlan');
-      if (actionPlan) {
-        const parsed = JSON.parse(actionPlan);
-        if (Array.isArray(parsed)) {
-          const quadroActivity = parsed.find(activity => 
-            activity.id === 'quadro-interativo' || 
-            activity.type === 'quadro-interativo'
-          );
-          if (quadroActivity?.customFields) {
-            savedData = quadroActivity.customFields;
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('⚠️ Erro ao carregar dados salvos:', e);
+const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({ data, onSave }) => {
+  const [content, setContent] = useState<QuadroInterativoContent>({
+    title: '',
+    text: '',
+    isGenerating: false,
+    error: undefined
+  });
+
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Função para gerar conteúdo com a API Gemini
+  const generateContentWithGemini = async (activityData: QuadroInterativoData): Promise<{ title: string; text: string }> => {
+    console.log('🚀 [GEMINI] Iniciando geração de conteúdo para Quadro Interativo');
+    console.log('📊 [GEMINI] Dados da atividade:', activityData);
+
+    // Validar API Key
+    if (!GEMINI_API_KEY || GEMINI_API_KEY.trim() === '') {
+      throw new Error('Chave da API Gemini não configurada');
     }
 
-    const allData = { ...customFields, ...savedData };
-
-    return {
-      subject: allData['Disciplina / Área de conhecimento'] || 
-               allData['disciplina'] || 
-               data?.subject || 
-               'Matemática',
-      
-      schoolYear: allData['Ano / Série'] || 
-                  allData['anoSerie'] || 
-                  data?.schoolYear || 
-                  '6º Ano',
-      
-      theme: allData['Tema ou Assunto da aula'] || 
-             allData['tema'] || 
-             data?.title || 
-             data?.theme || 
-             'Conteúdo Educativo',
-      
-      objectives: allData['Objetivo de aprendizagem da aula'] || 
-                  allData['objetivos'] || 
-                  data?.description || 
-                  data?.objectives || 
-                  'Desenvolver competências através de atividades interativas'
-    };
-  };
-
-  // Gerar conteúdo usando API Gemini
-  const generateContent = async () => {
-    if (isLoading) return;
-
-    console.log('🚀 [QUADRO INTERATIVO] Iniciando geração de conteúdo');
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Verificar API Key
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error('VITE_GEMINI_API_KEY não configurada nas variáveis de ambiente');
-      }
-
-      if (apiKey.length < 20) {
-        throw new Error('API Key do Gemini inválida (muito curta)');
-      }
-
-      // Extrair dados
-      const extractedData = extractData();
-      console.log('📋 [QUADRO INTERATIVO] Dados extraídos:', extractedData);
-
-      // Criar prompt simples e direto
-      const prompt = `
-Você é uma IA especializada em educação que cria conteúdo educativo para quadros interativos.
+    // Criar prompt educativo específico
+    const prompt = `
+Você é uma IA especializada em educação que cria conteúdo didático para quadros interativos escolares.
 
 DADOS DA ATIVIDADE:
-- Disciplina: ${extractedData.subject}
-- Ano/Série: ${extractedData.schoolYear}
-- Tema: ${extractedData.theme}
-- Objetivos: ${extractedData.objectives}
+- Disciplina: ${activityData.subject || 'Não especificado'}
+- Ano/Série: ${activityData.schoolYear || 'Não especificado'}
+- Tema/Assunto: ${activityData.theme || 'Não especificado'}
+- Objetivos: ${activityData.objectives || 'Não especificado'}
+- Nível: ${activityData.difficultyLevel || 'Médio'}
+${activityData.quadroInterativoCampoEspecifico ? `- Campo Específico: ${activityData.quadroInterativoCampoEspecifico}` : ''}
 
-TAREFA: Criar um título educativo e um texto explicativo curto sobre o tema.
+TAREFA:
+Crie um título educativo e um texto explicativo para um quadro interativo escolar.
 
-INSTRUÇÕES:
-1. Título: Máximo 50 caracteres, claro e educativo
-2. Texto: Máximo 300 caracteres, explicação didática
-3. Foque no tema principal
-4. Use linguagem adequada para ${extractedData.schoolYear}
+REGRAS:
+1. Título: Máximo 60 caracteres, claro e educativo
+2. Texto: Máximo 400 caracteres, explicação didática completa
+3. Use linguagem adequada para ${activityData.schoolYear}
+4. Foque especificamente no tema: "${activityData.theme}"
+5. O conteúdo deve ser educativo e prático
+6. NÃO use dados genéricos ou fictícios
 
-FORMATO DE RESPOSTA (APENAS JSON):
+FORMATO DE RESPOSTA (APENAS JSON VÁLIDO):
 {
-  "title": "Título educativo sobre o tema",
-  "text": "Explicação clara e didática do conceito"
+  "title": "Título educativo específico sobre ${activityData.theme}",
+  "text": "Explicação didática completa e específica sobre ${activityData.theme}"
 }
 
-Gere o conteúdo agora:`;
+IMPORTANTE: Responda APENAS com o JSON, sem texto adicional, sem markdown, sem explicações.`;
 
-      console.log('📝 [QUADRO INTERATIVO] Enviando para API Gemini');
+    console.log('📝 [GEMINI] Prompt criado:', prompt.substring(0, 200) + '...');
 
+    try {
       // Fazer requisição para API Gemini
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -156,246 +101,237 @@ Gere o conteúdo agora:`;
             topP: 0.95,
             maxOutputTokens: 1024,
           }
-        })
+        }),
+        signal: AbortSignal.timeout(30000) // 30 segundos timeout
       });
+
+      console.log('📡 [GEMINI] Status da resposta:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ [QUADRO INTERATIVO] Erro HTTP:', response.status, errorText);
-        throw new Error(`Erro na API Gemini: ${response.status} - ${response.statusText}`);
+        console.error('❌ [GEMINI] Erro na API:', errorText);
+        throw new Error(`Erro na API Gemini: ${response.status} - ${errorText}`);
       }
 
-      const apiData = await response.json();
-      console.log('📦 [QUADRO INTERATIVO] Resposta da API:', apiData);
-      
-      const responseText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (!responseText) {
+      const responseData = await response.json();
+      console.log('📥 [GEMINI] Resposta recebida:', responseData);
+
+      // Extrair texto da resposta
+      const generatedText = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!generatedText) {
         throw new Error('Resposta vazia da API Gemini');
       }
 
-      // Processar resposta JSON
-      let cleanedResponse = responseText
+      console.log('📄 [GEMINI] Texto gerado:', generatedText);
+
+      // Limpar e parsear JSON
+      let cleanedResponse = generatedText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
+        .replace(/^\s*[\r\n]/gm, '')
         .trim();
 
-      // Se não começar com {, tentar encontrar o JSON
-      if (!cleanedResponse.startsWith('{')) {
-        const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          cleanedResponse = jsonMatch[0];
-        }
+      // Remover possível texto antes do JSON
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}') + 1;
+
+      if (jsonStart !== -1 && jsonEnd > jsonStart) {
+        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd);
       }
 
-      console.log('🧹 [QUADRO INTERATIVO] Resposta limpa:', cleanedResponse);
+      console.log('🧹 [GEMINI] JSON limpo:', cleanedResponse);
 
-      let parsedContent;
-      try {
-        parsedContent = JSON.parse(cleanedResponse);
-      } catch (parseError) {
-        console.error('❌ [QUADRO INTERATIVO] Erro no parse JSON:', parseError);
-        throw new Error('Formato JSON inválido na resposta da API');
-      }
-      
+      // Parsear JSON
+      const parsedContent = JSON.parse(cleanedResponse);
+
       // Validar estrutura
-      if (!parsedContent?.title || !parsedContent?.text) {
-        throw new Error('Estrutura JSON inválida - título ou texto ausente');
+      if (!parsedContent.title || !parsedContent.text) {
+        throw new Error('Estrutura JSON inválida na resposta');
       }
 
-      // Criar conteúdo final
-      const finalContent: QuadroContent = {
-        title: String(parsedContent.title).substring(0, 50).trim(),
-        text: String(parsedContent.text).substring(0, 300).trim(),
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true
+      // Limitar tamanhos
+      const finalTitle = parsedContent.title.substring(0, 60);
+      const finalText = parsedContent.text.substring(0, 400);
+
+      console.log('✅ [GEMINI] Conteúdo gerado com sucesso:', { title: finalTitle, text: finalText });
+
+      return {
+        title: finalTitle,
+        text: finalText
       };
 
-      console.log('✅ [QUADRO INTERATIVO] Conteúdo gerado:', finalContent);
-
-      // Salvar no localStorage
-      const storageKey = `quadro_interativo_content_${data?.id || 'default'}`;
-      localStorage.setItem(storageKey, JSON.stringify(finalContent));
-
-      setContent(finalContent);
-      setHasGenerated(true);
-      setError(null);
-      
     } catch (error) {
-      console.error('💥 [QUADRO INTERATIVO] Erro na geração:', error);
-      
-      // Fallback com dados extraídos
-      const extractedData = extractData();
-      
-      const fallbackContent: QuadroContent = {
-        title: extractedData.theme.length > 50 
-          ? extractedData.theme.substring(0, 47) + '...'
-          : extractedData.theme,
-        text: extractedData.objectives.length > 300
-          ? extractedData.objectives.substring(0, 297) + '...'
-          : extractedData.objectives,
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: false
-      };
-      
-      setContent(fallbackContent);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido na geração');
-      setHasGenerated(true);
-    } finally {
-      setIsLoading(false);
+      console.error('❌ [GEMINI] Erro na geração:', error);
+      throw error;
     }
   };
 
-  // Carregar conteúdo salvo na inicialização
-  useEffect(() => {
-    const loadSavedContent = () => {
-      console.log('📂 [QUADRO INTERATIVO] Verificando conteúdo salvo');
-      
-      const storageKey = `quadro_interativo_content_${data?.id || 'default'}`;
-      const savedContent = localStorage.getItem(storageKey);
-      
-      if (savedContent) {
-        try {
-          const parsedContent = JSON.parse(savedContent);
-          console.log('✅ [QUADRO INTERATIVO] Conteúdo encontrado no localStorage');
-          setContent(parsedContent);
-          setHasGenerated(true);
-          return;
-        } catch (error) {
-          console.warn('⚠️ [QUADRO INTERATIVO] Erro ao carregar conteúdo salvo:', error);
-        }
+  // Função para gerar conteúdo
+  const handleGenerateContent = async () => {
+    setContent(prev => ({ ...prev, isGenerating: true, error: undefined }));
+
+    try {
+      console.log('🎯 [QUADRO] Iniciando geração de conteúdo');
+      console.log('📋 [QUADRO] Dados recebidos:', data);
+
+      // Validar dados de entrada
+      if (!data.theme || data.theme.trim() === '') {
+        throw new Error('Tema é obrigatório para gerar conteúdo');
       }
 
-      console.log('📝 [QUADRO INTERATIVO] Nenhum conteúdo salvo encontrado');
-    };
+      if (!data.subject || data.subject.trim() === '') {
+        throw new Error('Disciplina é obrigatória para gerar conteúdo');
+      }
 
-    loadSavedContent();
-  }, [data?.id]);
+      // Gerar conteúdo com Gemini
+      const generatedContent = await generateContentWithGemini(data);
 
-  // Auto-geração quando componente carrega
+      // Atualizar estado
+      const finalContent: QuadroInterativoContent = {
+        title: generatedContent.title,
+        text: generatedContent.text,
+        isGenerating: false,
+        error: undefined
+      };
+
+      setContent(finalContent);
+
+      // Chamar callback se fornecido
+      if (onSave) {
+        onSave(finalContent);
+      }
+
+      console.log('✅ [QUADRO] Conteúdo gerado e salvo:', finalContent);
+
+    } catch (error) {
+      console.error('❌ [QUADRO] Erro na geração:', error);
+
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+
+      setContent(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: errorMessage
+      }));
+    }
+  };
+
+  // Gerar conteúdo automaticamente quando os dados mudarem
   useEffect(() => {
-    if (!hasGenerated && !isLoading && data?.id) {
-      console.log('🤖 [QUADRO INTERATIVO] Iniciando auto-geração');
-      setTimeout(() => {
-        generateContent();
-      }, 1000);
+    if (!isInitialized && data.theme && data.subject) {
+      setIsInitialized(true);
+      handleGenerateContent();
     }
-  }, [hasGenerated, isLoading, data?.id]);
+  }, [data.theme, data.subject, isInitialized]);
 
-  // Renderizar conteúdo do card
-  const renderCardContent = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-700">
-            Gerando Conteúdo Educativo...
-          </h1>
-          <p className="text-gray-600">
-            A IA Gemini está criando conteúdo personalizado
-          </p>
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="text-center space-y-4">
-          <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
-          <div className="text-red-600 font-semibold">
-            Erro ao gerar conteúdo
-          </div>
-          <p className="text-gray-600 text-sm max-w-md mx-auto">
-            {error}
-          </p>
-          <Button 
-            onClick={generateContent}
-            variant="outline"
-            size="sm"
-            className="mt-4"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Tentar Novamente
-          </Button>
-        </div>
-      );
-    }
-
-    if (content) {
-      return (
-        <div className="text-center space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-            {content.title}
-          </h1>
-          
-          <div className="max-w-3xl mx-auto">
-            <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              {content.text}
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    // Estado inicial - mostrar dados básicos enquanto não gera
-    const extractedData = extractData();
-    
-    return (
-      <div className="text-center space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
-          {extractedData.theme}
-        </h1>
-        
-        <div className="max-w-3xl mx-auto">
-          <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-            {extractedData.objectives}
-          </p>
-        </div>
-      </div>
-    );
+  // Função para regenerar conteúdo
+  const handleRegenerate = () => {
+    setIsInitialized(false);
+    handleGenerateContent();
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto p-6">
-        <Card className="shadow-xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="flex items-center justify-center gap-2 text-2xl text-blue-700 dark:text-blue-300 mb-2">
-              <Lightbulb className="h-7 w-7" />
-              Card de Quadro Visível
-            </CardTitle>
-            
-            <div className="flex items-center justify-center gap-2">
-              {content?.isGeneratedByAI ? (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Gerado pela IA Gemini
-                </Badge>
-              ) : isLoading ? (
-                <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  Gerando...
-                </Badge>
-              ) : error ? (
-                <Badge variant="destructive">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Erro na API
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
-                  Conteúdo educativo
-                </Badge>
-              )}
-            </div>
-          </CardHeader>
-          
-          <CardContent className="p-8">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-inner border-2 border-blue-200 dark:border-blue-700">
-              {renderCardContent()}
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <Lightbulb className="h-6 w-6 text-blue-400" />
+        <h2 className="text-xl font-semibold text-white">Card de Quadro Visível</h2>
+        <span className="text-sm text-blue-300 bg-blue-900/30 px-2 py-1 rounded">
+          Conteúdo educativo
+        </span>
       </div>
+
+      {/* Card Principal */}
+      <Card className="bg-gradient-to-br from-slate-800 to-slate-900 border-blue-500/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-blue-400" />
+              Quadro Interativo
+            </CardTitle>
+            <Button
+              onClick={handleRegenerate}
+              disabled={content.isGenerating}
+              variant="outline"
+              size="sm"
+              className="text-blue-300 border-blue-500/30 hover:bg-blue-900/20"
+            >
+              <RefreshCw className={`h-4 w-4 ${content.isGenerating ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Estado de carregamento */}
+          {content.isGenerating && (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+                <p className="text-blue-300 text-sm">Gerando conteúdo educativo com IA...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Estado de erro */}
+          {content.error && !content.isGenerating && (
+            <Alert className="border-red-500/20 bg-red-900/10">
+              <AlertCircle className="h-4 w-4 text-red-400" />
+              <AlertDescription className="text-red-300">
+                <strong>Erro:</strong> {content.error}
+                <br />
+                <Button 
+                  onClick={handleRegenerate} 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 text-red-300 border-red-500/30"
+                >
+                  Tentar novamente
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Conteúdo gerado */}
+          {!content.isGenerating && !content.error && content.title && content.text && (
+            <div className="bg-slate-700/30 rounded-lg p-6 border border-blue-500/20">
+              <h3 className="text-lg font-semibold text-white mb-3 leading-tight">
+                {content.title}
+              </h3>
+              <p className="text-blue-100 leading-relaxed">
+                {content.text}
+              </p>
+            </div>
+          )}
+
+          {/* Dados da atividade */}
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-600/30">
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wide">Disciplina</p>
+              <p className="text-white font-medium">{data.subject || 'Não especificado'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wide">Ano/Série</p>
+              <p className="text-white font-medium">{data.schoolYear || 'Não especificado'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wide">Tema</p>
+              <p className="text-white font-medium">{data.theme || 'Não especificado'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wide">Nível</p>
+              <p className="text-white font-medium">{data.difficultyLevel || 'Médio'}</p>
+            </div>
+          </div>
+
+          {/* Debug info */}
+          <div className="mt-4 p-3 bg-slate-800/50 rounded text-xs text-slate-400">
+            <p>Status: {content.isGenerating ? 'Gerando...' : content.error ? 'Erro' : 'Concluído'}</p>
+            <p>API: Gemini 1.5 Flash</p>
+            <p>Última atualização: {new Date().toLocaleTimeString()}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
