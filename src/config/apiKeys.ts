@@ -1,7 +1,8 @@
+
 // Configuração centralizada das chaves de API
 export const API_KEYS = {
-  GEMINI: import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '',
-  CLAUDE: import.meta.env.VITE_CLAUDE_API_KEY || process.env.VITE_CLAUDE_API_KEY || '',
+  GEMINI: 'AIzaSyCTFP7NXclzBjV5M2JzhealO_SQ8rDrzDg',
+  CLAUDE: '', // Adicionar quando disponível
 } as const;
 
 // URLs base das APIs
