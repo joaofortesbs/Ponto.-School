@@ -23,6 +23,8 @@ interface QuizInterativoPreviewProps {
     questions: QuizQuestion[];
     timePerQuestion: number;
     totalQuestions: number;
+    questionDistribution?: Record<string, number>;
+    topicsExplored?: string[];
   };
   isLoading?: boolean;
 }
