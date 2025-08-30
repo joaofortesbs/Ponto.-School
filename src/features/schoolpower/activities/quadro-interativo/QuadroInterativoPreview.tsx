@@ -48,49 +48,99 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     hasGenerated: false
   });
 
-  // Extrair dados dos campos customizados para geração
+  // Sistema exclusivo de extração de dados com múltiplas fontes
   const extractQuadroData = (): QuadroInterativoData => {
-    const customFields = data?.customFields || activityData?.customFields || {};
+    console.log('📊 Extraindo dados do Quadro Interativo de múltiplas fontes');
     
-    return {
-      subject: customFields['Disciplina / Área de conhecimento'] || 
-               customFields['Disciplina'] || 
-               customFields['disciplina'] || 
+    // Coletar dados de todas as fontes possíveis
+    const customFields = data?.customFields || activityData?.customFields || {};
+    const activityTitle = data?.title || data?.personalizedTitle || activityData?.title || '';
+    const activityDescription = data?.description || data?.personalizedDescription || activityData?.description || '';
+    
+    // Verificar dados salvos localmente
+    const constructedDataKey = `constructed_quadro-interativo_${data?.id || 'default'}`;
+    const autoDataKey = `auto_activity_data_${data?.id || 'default'}`;
+    
+    let constructedData = {};
+    let autoData = {};
+    
+    try {
+      const saved = localStorage.getItem(constructedDataKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        constructedData = parsed.data || parsed;
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar dados construídos:', e);
+    }
+    
+    try {
+      const autoSaved = localStorage.getItem(autoDataKey);
+      if (autoSaved) {
+        const parsed = JSON.parse(autoSaved);
+        autoData = parsed.customFields || {};
+      }
+    } catch (e) {
+      console.warn('Erro ao carregar dados automáticos:', e);
+    }
+    
+    // Consolidar dados com prioridade: autoData > constructedData > customFields > data
+    const consolidatedFields = {
+      ...customFields,
+      ...constructedData,
+      ...autoData
+    };
+    
+    console.log('🔄 Dados consolidados para extração:', {
+      customFields,
+      constructedData,
+      autoData,
+      consolidatedFields
+    });
+    
+    const extractedData = {
+      subject: consolidatedFields['Disciplina / Área de conhecimento'] || 
+               consolidatedFields['Disciplina'] || 
+               consolidatedFields['disciplina'] || 
                data?.subject || 
                'Matemática',
       
-      schoolYear: customFields['Ano / Série'] || 
-                  customFields['anoSerie'] || 
-                  customFields['Ano'] || 
+      schoolYear: consolidatedFields['Ano / Série'] || 
+                  consolidatedFields['anoSerie'] || 
+                  consolidatedFields['Ano'] || 
                   data?.schoolYear || 
                   '6º Ano',
       
-      theme: customFields['Tema ou Assunto da aula'] || 
-             customFields['tema'] || 
-             customFields['Tema'] || 
+      theme: consolidatedFields['Tema ou Assunto da aula'] || 
+             consolidatedFields['tema'] || 
+             consolidatedFields['Tema'] || 
+             activityTitle ||
              data?.theme || 
-             data?.title || 
              'Conteúdo Educativo',
       
-      objectives: customFields['Objetivo de aprendizagem da aula'] || 
-                  customFields['objetivos'] || 
-                  customFields['Objetivos'] || 
+      objectives: consolidatedFields['Objetivo de aprendizagem da aula'] || 
+                  consolidatedFields['objetivos'] || 
+                  consolidatedFields['Objetivos'] || 
+                  activityDescription ||
                   data?.objectives || 
-                  data?.description || 
                   'Objetivos de aprendizagem',
       
-      difficultyLevel: customFields['Nível de Dificuldade'] || 
-                       customFields['nivelDificuldade'] || 
-                       customFields['dificuldade'] || 
+      difficultyLevel: consolidatedFields['Nível de Dificuldade'] || 
+                       consolidatedFields['nivelDificuldade'] || 
+                       consolidatedFields['dificuldade'] || 
                        data?.difficultyLevel || 
                        'Intermediário',
       
-      quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] || 
-                                       customFields['atividadeMostrada'] || 
-                                       customFields['Tipo de Interação'] || 
+      quadroInterativoCampoEspecifico: consolidatedFields['Atividade mostrada'] || 
+                                       consolidatedFields['atividadeMostrada'] || 
+                                       consolidatedFields['quadroInterativoCampoEspecifico'] ||
+                                       consolidatedFields['Tipo de Interação'] || 
                                        data?.quadroInterativoCampoEspecifico || 
                                        'Atividade interativa no quadro'
     };
+    
+    console.log('✅ Dados extraídos para geração:', extractedData);
+    return extractedData;
   };
 
   // Gerador de conteúdo interno usando Gemini
@@ -322,19 +372,63 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
     loadSavedContent();
   }, [data?.id, data?.customFields?.generatedContent]);
 
-  // Auto-gerar conteúdo se for uma construção automática
+  // Sistema exclusivo de detecção e auto-geração para Quadro Interativo
   useEffect(() => {
-    const shouldAutoGenerate = !contentState.hasGenerated && 
-                              !contentState.isLoading && 
-                              !contentState.error &&
-                              data?.id &&
-                              (data?.isBuilt || data?.builtAt);
+    const checkAndGenerateContent = async () => {
+      // Verificar múltiplas fontes de dados para trigger de geração
+      const isBuiltActivity = data?.isBuilt || data?.builtAt;
+      const hasConstructedData = localStorage.getItem(`constructed_quadro-interativo_${data?.id || 'default'}`);
+      const hasActionPlanData = localStorage.getItem(`auto_activity_data_${data?.id || 'default'}`);
+      const hasFormData = data?.customFields && Object.keys(data.customFields).length > 0;
+      
+      // Condições para auto-geração
+      const shouldAutoGenerate = !contentState.hasGenerated && 
+                                !contentState.isLoading && 
+                                !contentState.error &&
+                                data?.id &&
+                                (isBuiltActivity || hasConstructedData || hasActionPlanData || hasFormData);
 
-    if (shouldAutoGenerate) {
-      console.log('🤖 Auto-gerando conteúdo para Quadro Interativo construído');
-      handleGenerateContent();
-    }
-  }, [data?.isBuilt, data?.builtAt, contentState.hasGenerated]);
+      console.log('🔍 Sistema de detecção Quadro Interativo:', {
+        shouldAutoGenerate,
+        isBuiltActivity,
+        hasConstructedData: !!hasConstructedData,
+        hasActionPlanData: !!hasActionPlanData,
+        hasFormData,
+        hasGenerated: contentState.hasGenerated,
+        dataId: data?.id
+      });
+
+      if (shouldAutoGenerate) {
+        console.log('🤖 Auto-gerando conteúdo para Quadro Interativo construído');
+        
+        // Aguardar um pouco para garantir que todos os dados estejam carregados
+        setTimeout(() => {
+          handleGenerateContent();
+        }, 500);
+      }
+    };
+
+    checkAndGenerateContent();
+  }, [data?.isBuilt, data?.builtAt, data?.id, data?.customFields, contentState.hasGenerated]);
+
+  // Monitor adicional para construção automática via "Construir Todas"
+  useEffect(() => {
+    const handleAutoBuildTrigger = () => {
+      console.log('🎯 Trigger de construção automática detectado para Quadro Interativo');
+      
+      if (!contentState.hasGenerated && !contentState.isLoading) {
+        console.log('🚀 Iniciando geração automática de conteúdo');
+        handleGenerateContent();
+      }
+    };
+
+    // Escutar eventos customizados de construção automática
+    window.addEventListener('quadro-interativo-auto-build', handleAutoBuildTrigger);
+    
+    return () => {
+      window.removeEventListener('quadro-interativo-auto-build', handleAutoBuildTrigger);
+    };
+  }, [contentState.hasGenerated, contentState.isLoading]);
 
   // Renderizar conteúdo do card
   const renderCardContent = () => {

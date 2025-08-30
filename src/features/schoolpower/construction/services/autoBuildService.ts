@@ -40,10 +40,13 @@ export class AutoBuildService {
   private prepareFormDataExactlyLikeModal(activity: ConstructionActivity): any {
     console.log(`🎯 Preparando formData EXATAMENTE como EditActivityModal para: ${activity.title}`);
 
-    try {
-      // Usar o mesmo processo do modal EditActivityModal
-      if (activity.id === 'quadro-interativo') {
-        console.log('📱 Processando Quadro Interativo especificamente');
+    // Sistema exclusivo para Quadro Interativo
+    if (activity.id === 'quadro-interativo') {
+      console.log('🎯 Sistema exclusivo de auto-build para Quadro Interativo');
+
+      try {
+        // Importar processador do Quadro Interativo
+        const { prepareQuadroInterativoDataForModal } = await import('../../activities/quadro-interativo/quadroInterativoProcessor');
 
         // Validar dados de entrada
         if (!activity.title || !activity.description) {
@@ -51,20 +54,43 @@ export class AutoBuildService {
           throw new Error('Dados insuficientes para Quadro Interativo');
         }
 
-        // Usar função específica do Quadro Interativo com tratamento de erro
-        const formData = prepareQuadroInterativoDataForModal(activity);
+        // Preparar dados com informações extras de contexto
+        const enhancedActivity = {
+          ...activity,
+          customFields: {
+            ...activity.customFields,
+            isAutoBuild: true,
+            buildTimestamp: new Date().toISOString()
+          }
+        };
+
+        // Usar função específica do Quadro Interativo
+        const formData = prepareQuadroInterativoDataForModal(enhancedActivity);
 
         // Validar resultado
         if (!formData || typeof formData !== 'object') {
           throw new Error('Falha na preparação dos dados do Quadro Interativo');
         }
 
-        console.log('✅ FormData do Quadro Interativo preparado com sucesso:', formData);
+        // Marcar como pronto para geração automática
+        formData.isQuadroInterativoAutoBuild = true;
+        formData.autoBuildId = activity.id;
+
+        console.log('✅ FormData do Quadro Interativo preparado para auto-build:', formData);
+
+        // Salvar dados para o preview acessar
+        const previewDataKey = `quadro_interativo_preview_${activity.id}`;
+        localStorage.setItem(previewDataKey, JSON.stringify({
+          formData,
+          activity: enhancedActivity,
+          timestamp: new Date().toISOString()
+        }));
+
         return formData;
+      } catch (error) {
+        console.error(`❌ Erro no sistema exclusivo do Quadro Interativo:`, error);
+        throw error;
       }
-    } catch (error) {
-      console.error(`❌ Erro ao preparar formData para ${activity.title}:`, error);
-      throw error; // Propaga o erro para ser tratado no buildActivityWithExactModalLogic
     }
 
     // Campos básicos obrigatórios

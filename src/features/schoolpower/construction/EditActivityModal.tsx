@@ -24,7 +24,7 @@ import { CheckCircle2 } from 'lucide-react';
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
-const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const DefaultEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <>
     <div>
       <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -73,7 +73,7 @@ const DefaultEditActivity = ({ formData, onFieldChange }: { formData: ActivityFo
 );
 
 // Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const QuadroInterativoEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -153,7 +153,7 @@ const QuadroInterativoEditActivity = ({ formData, onFieldChange }: { formData: A
 );
 
 // Componente específico para Sequência Didática
-const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: { formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -483,10 +483,10 @@ const EditActivityModal = ({
   // Função placeholder para gerar conteúdo
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-    
+
     if (type === 'quadro-interativo') {
       console.log('🖼️ Preparando dados para Quadro Interativo:', data);
-      
+
       // Para Quadro Interativo, apenas salvar os dados preparados
       // A geração de conteúdo será feita diretamente no Preview
       const finalData = {
@@ -494,16 +494,16 @@ const EditActivityModal = ({
         isBuilt: true,
         builtAt: new Date().toISOString()
       };
-      
+
       // Salvar dados básicos
       const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
       localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
         success: true,
         data: finalData
       }));
-      
+
       console.log('💾 Dados do Quadro Interativo preparados:', finalData);
-      
+
       return {
         success: true,
         data: finalData
@@ -835,66 +835,47 @@ const EditActivityModal = ({
             } else if (activity?.id === 'quadro-interativo') {
               console.log('🖼️ Processando dados específicos de Quadro Interativo');
 
-              try {
-                // Importar o processador específico do Quadro Interativo
-                const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
+              // Importar o processador específico do Quadro Interativo
+              const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
-                // Preparar dados consolidados para o processador
-                const activityForProcessor = {
-                  ...activity,
-                  ...consolidatedData,
-                  customFields: {
-                    ...activity.customFields,
-                    ...consolidatedCustomFields,
-                    ...autoCustomFields
-                  }
-                };
+              // Preparar dados consolidados para o processador
+              const activityForProcessor = {
+                ...activity,
+                ...consolidatedData,
+                customFields: {
+                  ...activity.customFields,
+                  ...consolidatedCustomFields,
+                  ...autoCustomFields
+                }
+              };
 
-                console.log('📋 Dados para processador do Quadro Interativo:', activityForProcessor);
+              console.log('📋 Dados para processador do Quadro Interativo:', activityForProcessor);
 
-                // Usar o processador específico para preparar os dados
-                const processedQuadroData = prepareQuadroInterativoDataForModal(activityForProcessor);
+              // Usar o processador específico para preparar os dados
+              const processedQuadroData = prepareQuadroInterativoDataForModal(activityForProcessor);
 
-                // Aplicar dados automáticos por cima se existirem
-                enrichedFormData = {
-                  ...processedQuadroData,
+              // Aplicar dados automáticos por cima se existirem
+              enrichedFormData = {
+                ...processedQuadroData,
 
-                  // Sobrescrever com dados automáticos se existirem e forem válidos
-                  ...(autoFormData.title && { title: autoFormData.title }),
-                  ...(autoFormData.description && { description: autoFormData.description }),
-                  ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
-                  ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
-                  ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
-                  ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                  ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
-                  ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
-                  ...(autoFormData.materials && { materials: autoFormData.materials }),
-                  ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
-                  ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
-                  ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
-                  ...(autoFormData.context && { context: autoFormData.context })
-                };
+                // Sobrescrever com dados automáticos se existirem e forem válidos
+                ...(autoFormData.title && { title: autoFormData.title }),
+                ...(autoFormData.description && { description: autoFormData.description }),
+                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
+                ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
+                ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
+                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
+                ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
+                ...(autoFormData.materials && { materials: autoFormData.materials }),
+                ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
+                ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
+                ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
+                ...(autoFormData.context && { context: autoFormData.context })
+              };
 
-                console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
+              console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-              } catch (error) {
-                console.error('❌ Erro ao processar dados do Quadro Interativo:', error);
-
-                // Fallback para dados básicos do Quadro Interativo
-                enrichedFormData = {
-                  ...formData,
-                  title: consolidatedData.title || autoFormData.title || activity.title || '',
-                  description: consolidatedData.description || autoFormData.description || activity.description || '',
-                  subject: consolidatedCustomFields['Disciplina / Área de conhecimento'] || 'Matemática',
-                  schoolYear: consolidatedCustomFields['Ano / Série'] || '6º Ano',
-                  theme: consolidatedCustomFields['Tema ou Assunto da aula'] || activity.title || 'Tema da Aula',
-                  objectives: consolidatedCustomFields['Objetivo de aprendizagem da aula'] || activity.description || 'Objetivos de aprendizagem',
-                  difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || 'Intermediário',
-                  quadroInterativoCampoEspecifico: consolidatedCustomFields['Atividade mostrada'] || 'Atividade interativa no quadro'
-                };
-
-                console.log('🔧 Usando dados fallback para Quadro Interativo:', enrichedFormData);
-              }
             } else {
               enrichedFormData = {
                 title: consolidatedData.title || autoFormData.title || '',
@@ -1329,19 +1310,32 @@ const EditActivityModal = ({
 
       console.log('✅ Atividade construída com sucesso:', result);
 
-      const storageKey = `schoolpower_${activityType}_content`;
+      // Salvar no localStorage para persistência
+      const storageKey = `constructed_${activityType}_${activity?.id}`;
       localStorage.setItem(storageKey, JSON.stringify(result));
+      console.log('💾 Dados da sequência didática salvos para visualização:', storageKey);
 
-      if (activityType === 'sequencia-didatica') {
-        const viewStorageKey = `constructed_sequencia-didatica_${activity.id}`;
-        localStorage.setItem(viewStorageKey, JSON.stringify(result));
-        console.log('💾 Dados da sequência didática salvos para visualização:', viewStorageKey);
-      }
+      // Trigger específico para Quadro Interativo
+      if (activityType === 'quadro-interativo') {
+        console.log('🎯 Disparando evento de construção para Quadro Interativo');
 
-      if (activityType === 'plano-aula') {
-        const viewStorageKey = `constructed_plano-aula_${activity.id}`;
-        localStorage.setItem(viewStorageKey, JSON.stringify(result));
-        console.log('💾 Dados do plano-aula salvos para visualização:', viewStorageKey);
+        // Salvar dados específicos do Quadro Interativo
+        const quadroData = {
+          ...result.data || result,
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          generatedByModal: true
+        };
+
+        localStorage.setItem(`quadro_interativo_data_${activity?.id}`, JSON.stringify(quadroData));
+
+        // Disparar evento customizado para notificar o Preview
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('quadro-interativo-auto-build', {
+            detail: { activityId: activity?.id, data: quadroData }
+          }));
+          console.log('📡 Evento de auto-build disparado para Quadro Interativo');
+        }, 100);
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');

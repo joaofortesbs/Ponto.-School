@@ -516,13 +516,15 @@ export async function generatePersonalizedPlan(
             'Atividade mostrada': activityData['Atividade mostrada'] || 'Atividade interativa no quadro'
           };
 
-          // Atualizar os dados da atividade (a geração de conteúdo será feita no Preview)
+          // Atualizar os dados da atividade
           activityData = {
             ...activityData,
-            customFields: requiredFields
+            customFields: requiredFields,
+            isQuadroInterativo: true,
+            readyForGeneration: true
           };
 
-          console.log('✅ Quadro Interativo processado (conteúdo será gerado no Preview)');
+          console.log('✅ Quadro Interativo processado com campos obrigatórios:', requiredFields);
         }
 
         // Extract custom fields (all fields except standard ones)
