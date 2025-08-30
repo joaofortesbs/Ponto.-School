@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap } from 'lucide-react';
+import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -399,6 +399,11 @@ interface EditActivityModalProps {
   onUpdateActivity?: (activity: any) => Promise<void>;
 }
 
+interface ActivityFieldsProps {
+  formData: ActivityFormData;
+  onFieldChange: (field: keyof ActivityFormData, value: string) => void;
+}
+
 // Função para obter ícone baseado no tipo de atividade
 const getActivityIcon = (activityId: string) => {
   if (activityId.includes('lista-exercicios')) return BookOpen;
@@ -471,11 +476,17 @@ const EditActivityModal = ({
     cronograma: '',
     // Campos específicos para quadro-interativo
     quadroInterativoCampoEspecifico: activity?.customFields?.quadroInterativoCampoEspecifico || '',
+    // Campos específicos para quiz-interativo
+    format: '',
+    timePerQuestion: '',
   });
 
   // Estado para conteúdo gerado
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   // Estado para controle de construção da atividade
   const [buildingStatus, setBuildingStatus] = useState({
@@ -497,11 +508,14 @@ const EditActivityModal = ({
     generateActivity,
     loadSavedContent,
     clearContent,
-    isGenerating,
+    isGenerating: isGeneratingDefault, // Renomeado para evitar conflito
   } = useGenerateActivity({
     activityId: activity?.id || '',
     activityType: activity?.id || ''
   });
+
+  // Use isGeneratingDefault for the generic generate activity call
+  const isGenerating = isGeneratingDefault;
 
   // Função para validar se o formulário está pronto para construção
   const isFormValidForBuild = useCallback(() => {
@@ -586,7 +600,9 @@ const EditActivityModal = ({
     }
   }, [formData, activity?.id]);
 
-  // Função placeholder para gerar conteúdo
+  // --- Geração de Conteúdo ---
+
+  // Função placeholder para gerar conteúdo genérico (usada por atividades não específicas)
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
 
@@ -732,6 +748,111 @@ const EditActivityModal = ({
     };
   };
 
+  // --- Funções de Geração Específicas ---
+
+  // Função para gerar conteúdo do Quiz Interativo
+  const handleGenerateQuizInterativo = async () => {
+    try {
+      setIsGeneratingQuiz(true);
+      setGenerationError(null);
+
+      // Placeholder for QuizInterativoGenerator logic
+      // This would typically involve an API call to a Gemini-powered service
+      // For now, we simulate content generation
+      const simulatedContent = {
+        title: formData.title || "Quiz Interativo Gerado",
+        description: formData.description || "Um quiz interativo gerado com base nas suas configurações.",
+        questions: [
+          { id: 1, text: "Qual a capital da França?", type: "multiple-choice", options: ["Londres", "Paris", "Berlim"], answer: "Paris" },
+          { id: 2, text: "O Sol gira em torno da Terra?", type: "true-false", answer: "Falso" },
+        ],
+        format: formData.questionModel || "Misto",
+        numberOfQuestions: formData.numberOfQuestions || 10,
+        timePerQuestion: formData.timePerQuestion || "1 minuto",
+        instructions: formData.instructions || "Responda às questões no tempo determinado.",
+        evaluation: formData.evaluation || "Pontuação baseada nas respostas corretas.",
+        generatedByAI: true,
+        generatedAt: new Date().toISOString(),
+      };
+
+      setQuizInterativoContent(simulatedContent);
+      setGeneratedContent(simulatedContent); // Also set general generatedContent for preview tab switching
+      setIsContentLoaded(true);
+
+      toast({
+        title: "Quiz Gerado!",
+        description: "Seu quiz interativo foi gerado com sucesso.",
+      });
+
+    } catch (error) {
+      console.error('Erro ao gerar Quiz Interativo:', error);
+      setGenerationError('Erro ao gerar o conteúdo do quiz. Tente novamente.');
+      toast({
+        title: "Erro na Geração",
+        description: "Não foi possível gerar o quiz interativo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
+
+  // Chamada genérica de geração (para outros tipos de atividade)
+  const handleGenerate = async () => {
+    if (!activity || isGenerating || !isFormValidForBuild()) return;
+
+    const activityType = activity.type || activity.id || activity.categoryId;
+    console.log(`🚀 Iniciando geração genérica para ${activityType}:`, formData);
+
+    try {
+      setIsGenerating(true);
+      setError(null);
+      setBuildProgress(0);
+
+      const progressTimer = setInterval(() => {
+        setBuildProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      const result = await generateActivityContent(activityType, formData);
+
+      clearInterval(progressTimer);
+      setBuildProgress(100);
+
+      console.log('✅ Geração genérica concluída:', result);
+
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity.id] = {
+        generatedContent: result,
+        timestamp: new Date().toISOString(),
+        activityType: activityType
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+      setGeneratedContent(result);
+      setBuiltContent(result);
+      setIsContentLoaded(true);
+      setActiveTab('preview');
+
+      toast({
+        title: "Atividade Gerada!",
+        description: "Sua atividade foi gerada com sucesso pela IA.",
+      });
+
+    } catch (error) {
+      console.error('❌ Erro na geração genérica:', error);
+      setError(`Erro ao gerar atividade: ${error.message}`);
+      toast({
+        title: "Erro na Geração",
+        description: "Houve um problema ao gerar sua atividade. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+      setBuildProgress(0);
+    }
+  };
+
+
   // Regenerar conteúdo específico para lista de exercícios
   const handleRegenerateContent = async () => {
     if (activity?.id === 'lista-exercicios') {
@@ -760,6 +881,7 @@ const EditActivityModal = ({
       const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
+      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`); // New: Load Quiz Interativo content
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
@@ -768,6 +890,7 @@ const EditActivityModal = ({
         hasSequenciaDidaticaSavedContent: !!sequenciaDidaticaSavedContent,
         hasQuadroInterativoSavedContent: !!quadroInterativoSavedContent,
         hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
+        hasQuizInterativoSavedContent: !!quizInterativoSavedContent,
         activityId: activity.id
       });
 
@@ -798,6 +921,14 @@ const EditActivityModal = ({
           }
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do Quadro Interativo:', error);
+        }
+      } else if (activity.id === 'quiz-interativo' && quizInterativoSavedContent) { // New: Check for Quiz Interativo content
+        try {
+          contentToLoad = JSON.parse(quizInterativoSavedContent);
+          console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`);
+          setQuizInterativoContent(contentToLoad); // Also set the specific state for Quiz Interativo
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
@@ -979,7 +1110,9 @@ const EditActivityModal = ({
                 instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || '',
                 evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
                 timeLimit: consolidatedCustomFields['Tempo Limite'] || autoFormData.timeLimit || '',
-                context: consolidatedCustomFields['Contexto'] || autoFormData.context || '',
+                context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
+                format: consolidatedCustomFields['Formato do Quiz'] || autoFormData.format || '', // New field
+                timePerQuestion: consolidatedCustomFields['Tempo por Questão'] || autoFormData.timePerQuestion || '', // New field
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
 
@@ -1144,6 +1277,8 @@ const EditActivityModal = ({
               quantidadeAvaliacoes: '',
               cronograma: '',
               quadroInterativoCampoEspecifico: '',
+              format: '', // Default for Quiz Interativo
+              timePerQuestion: '', // Default for Quiz Interativo
             };
 
             setFormData(fallbackData);
@@ -1285,6 +1420,8 @@ const EditActivityModal = ({
               evaluation: customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
               timeLimit: customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
               context: customFields['Contexto de Aplicação'] || customFields['contexto'] || '',
+              format: customFields['Formato do Quiz'] || '', // New field
+              timePerQuestion: customFields['Tempo por Questão'] || '', // New field
               quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
             };
 
@@ -1565,38 +1702,6 @@ const EditActivityModal = ({
     };
   }, [activity, formData, isGenerating, handleBuildActivity]);
 
-  const handleSaveChanges = () => {
-    const activityData = {
-      ...formData,
-      generatedContent
-    };
-    onSave(activityData);
-    onClose();
-  };
-
-  const handleCopyContent = () => {
-    navigator.clipboard.writeText(JSON.stringify(generatedContent, null, 2));
-    toast({
-      title: "Conteúdo copiado!",
-      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
-    });
-  };
-
-  const getActivityPreviewData = () => {
-    return {
-      title: formData.title,
-      description: formData.description,
-      difficulty: formData.difficultyLevel,
-      timeLimit: '45 minutos',
-      instructions: formData.instructions,
-      materials: formData.materials ? formData.materials.split('\n').filter(m => m.trim()) : [],
-      objective: formData.objectives,
-      targetAudience: formData.schoolYear,
-      rubric: formData.evaluation,
-      questions: []
-    };
-  };
-
   const handleSave = async () => {
     if (!activity) return;
 
@@ -1642,7 +1747,9 @@ const EditActivityModal = ({
             'Disciplina': formData.subject,
             'Ano de Escolaridade': formData.schoolYear,
             'Nível de Dificuldade': formData.difficultyLevel,
-            'Formato': formData.questionModel
+            'Formato': formData.questionModel,
+            'Formato do Quiz': formData.format, // Save new field
+            'Tempo por Questão': formData.timePerQuestion, // Save new field
           }),
           ...(activity?.id === 'quadro-interativo' && {
             'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
@@ -1706,6 +1813,19 @@ const EditActivityModal = ({
       (formData.quadroInterativoCampoEspecifico && formData.quadroInterativoCampoEspecifico !== '')
     );
 
+    // Verificação específica para Quiz Interativo
+    const isQuizInterativo = activity.id === 'quiz-interativo';
+    const hasQuizInterativoData = isQuizInterativo && (
+      (formData.subject && formData.subject !== 'Matemática') ||
+      (formData.schoolYear && formData.schoolYear !== '6º Ano - Ensino Fundamental') ||
+      (formData.theme && formData.theme !== '') ||
+      (formData.numberOfQuestions && formData.numberOfQuestions !== '10') ||
+      (formData.difficultyLevel && formData.difficultyLevel !== 'Médio') ||
+      (formData.questionModel && formData.questionModel !== 'Múltipla Escolha') ||
+      (formData.format && formData.format !== '') || // Check new fields
+      (formData.timePerQuestion && formData.timePerQuestion !== '') // Check new fields
+    );
+
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
       console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
 
@@ -1720,18 +1840,35 @@ const EditActivityModal = ({
           quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico,
           hasQuadroInterativoData
         });
+      } else if (isQuizInterativo) {
+        console.log('🎯 Processamento específico para Quiz Interativo detectado');
+        console.log('📊 Estado dos dados do Quiz Interativo:', {
+          subject: formData.subject,
+          schoolYear: formData.schoolYear,
+          theme: formData.theme,
+          numberOfQuestions: formData.numberOfQuestions,
+          difficultyLevel: formData.difficultyLevel,
+          questionModel: formData.questionModel,
+          format: formData.format,
+          timePerQuestion: formData.timePerQuestion,
+          hasQuizInterativoData
+        });
       }
 
       console.log('🎯 Acionando construção automática da atividade...');
 
       const timer = setTimeout(() => {
-        handleBuildActivity();
+        if (isQuizInterativo) {
+          handleGenerateQuizInterativo(); // Use the specific function for Quiz
+        } else {
+          handleBuildActivity(); // Use the generic build function
+        }
         console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuadroInterativo ? 500 : 300); // Mais tempo para Quadro Interativo
+      }, isQuizInterativo ? 500 : (isQuadroInterativo ? 500 : 300)); // Adjusted delays
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, handleBuildActivity, isFormValidForBuild]);
+  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, isFormValidForBuild]);
 
   if (!isOpen) return null;
 
@@ -2112,19 +2249,26 @@ const EditActivityModal = ({
                 <Button
                   id="build-activity-button"
                   data-testid="build-activity-button"
-                  onClick={handleBuildActivity}
-                  disabled={isBuilding || !isFormValidForBuild()}
+                  onClick={() => {
+                    const activityType = activity?.id || '';
+                    if (activityType === 'quiz-interativo') {
+                      handleGenerateQuizInterativo();
+                    } else {
+                      handleBuildActivity();
+                    }
+                  }}
+                  disabled={isBuilding || isGeneratingQuiz || !isFormValidForBuild()}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isBuilding ? (
+                  {isBuilding || isGeneratingQuiz ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {buildingStatus.currentStep || 'Gerando Atividade...'}
+                      {isGeneratingQuiz ? 'Gerando Quiz...' : (activity?.id === 'quiz-interativo' ? 'Gerando Quiz...' : 'Gerando Atividade...')}
                     </>
                   ) : (
                     <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Construir Atividade
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {activity?.id === 'quiz-interativo' ? 'Gerar Quiz com IA' : 'Construir Atividade'}
                     </>
                   )}
                 </Button>
@@ -2135,7 +2279,7 @@ const EditActivityModal = ({
             {activeTab === 'preview' && (
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                  {isContentLoaded && generatedContent ? (
+                  {isContentLoaded && (generatedContent || quizInterativoContent) ? (
                     activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
@@ -2156,6 +2300,11 @@ const EditActivityModal = ({
                       <QuadroInterativoPreview
                         data={generatedContent?.data || generatedContent || formData}
                         activityData={activity}
+                      />
+                    ) : activity?.id === 'quiz-interativo' ? (
+                      <QuizInterativoPreview // Use the specific preview component for Quiz Interativo
+                        content={quizInterativoContent}
+                        isLoading={isGeneratingQuiz}
                       />
                     ) : (
                       <ActivityPreview
@@ -2191,27 +2340,41 @@ const EditActivityModal = ({
           <Button
             variant="outline"
             onClick={onClose}
-            disabled={isGenerating}
+            disabled={isGenerating || isGeneratingQuiz}
             className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
-            {generatedContent && (
+            {(generatedContent || quizInterativoContent) && (
               <>
                 <Button
                   variant="outline"
-                  onClick={handleCopyContent}
+                  onClick={() => {
+                    navigator.clipboard.writeText(JSON.stringify(quizInterativoContent || generatedContent, null, 2));
+                    toast({
+                      title: "Conteúdo copiado!",
+                      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
+                    });
+                  }}
                   className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                 >
                   <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
                 </Button>
               </>
             )}
-             {generatedContent && (
+             {(generatedContent || quizInterativoContent) && (
               <Button
                 variant="outline"
-                onClick={clearContent}
+                onClick={() => {
+                  clearContent(); // Clear generic content
+                  setQuizInterativoContent(null); // Clear specific quiz content
+                  setIsContentLoaded(false); // Reset content loaded state
+                  toast({
+                    title: "Conteúdo Limpo",
+                    description: "Todo o conteúdo gerado foi removido.",
+                  });
+                }}
                 className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
               >
                 Limpar Conteúdo
