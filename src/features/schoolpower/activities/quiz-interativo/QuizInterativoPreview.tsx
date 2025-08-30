@@ -91,13 +91,15 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     setUserAnswers(newAnswers);
 
     if (currentQuestionIndex < content.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setSelectedAnswer('');
-      setTimeLeft(content.timePerQuestion || 60);
-    } else {
-      setIsQuizCompleted(true);
-      setShowResult(true);
-    }
+        setCurrentQuestionIndex(prev => prev + 1);
+        setSelectedAnswer('');
+        const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+          Number(content.timePerQuestion) : 60;
+        setTimeLeft(timePerQ);
+      } else {
+        setIsQuizCompleted(true);
+        setShowResult(true);
+      }
   };
 
   const handleResetQuiz = () => {

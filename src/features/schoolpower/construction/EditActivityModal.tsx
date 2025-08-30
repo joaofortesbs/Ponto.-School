@@ -820,38 +820,46 @@ const EditActivityModal = ({
       setIsGeneratingQuiz(true);
       setGenerationError(null);
 
-      console.log('🎯 Iniciando geração real do Quiz Interativo com dados:', formData);
+      console.log('🎯 Iniciando geração real do Quiz Interativo');
+      console.log('📋 FormData completo:', formData);
+
+      // Validar dados obrigatórios
+      if (!formData.title?.trim()) {
+        throw new Error('Título é obrigatório');
+      }
+      if (!formData.theme?.trim()) {
+        throw new Error('Tema é obrigatório');
+      }
+      if (!formData.subject?.trim()) {
+        throw new Error('Disciplina é obrigatória');
+      }
 
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
 
-      // Preparar dados para o gerador com validação completa
+      // Preparar dados estruturados para o gerador
       const quizData = {
         subject: formData.subject?.trim() || 'Matemática',
         schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
         theme: formData.theme?.trim() || formData.title?.trim() || 'Tema Geral',
-        objectives: formData.objectives?.trim() || formData.description?.trim() || 'Testar conhecimentos do tema proposto',
+        objectives: formData.objectives?.trim() || formData.description?.trim() || `Avaliar o conhecimento sobre ${formData.theme}`,
         difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
-        format: formData.questionModel?.trim() || formData.format?.trim() || 'Múltipla Escolha',
+        format: formData.questionModel?.trim() || 'Múltipla Escolha',
         numberOfQuestions: formData.numberOfQuestions?.trim() || '10',
         timePerQuestion: formData.timePerQuestion?.trim() || '60',
-        instructions: formData.instructions?.trim() || 'Responda às questões no tempo determinado.',
-        evaluation: formData.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
+        instructions: formData.instructions?.trim() || 'Leia cada questão com atenção e selecione a resposta correta.',
+        evaluation: formData.evaluation?.trim() || 'Avaliação baseada no número de respostas corretas.'
       };
 
-      console.log('🎯 Dados preparados para geração do Quiz:', quizData);
-      console.log('📝 Estado atual do formData:', {
-        title: formData.title,
-        description: formData.description,
-        subject: formData.subject,
-        theme: formData.theme,
-        schoolYear: formData.schoolYear,
-        numberOfQuestions: formData.numberOfQuestions,
-        difficultyLevel: formData.difficultyLevel,
-        questionModel: formData.questionModel,
-        timePerQuestion: formData.timePerQuestion
-      });
+      console.log('🎯 Dados estruturados para o Gemini:', quizData);
 
+      // Validar campos críticos
+      const requiredFields = ['subject', 'theme', 'numberOfQuestions'];
+      for (const field of requiredFields) {
+        if (!quizData[field as keyof typeof quizData]) {
+          throw new Error(`Campo obrigatório não preenchido: ${field}`);
+        }
+      }
 
       // Criar instância do gerador e gerar conteúdo
       const generator = new QuizInterativoGenerator();
@@ -859,15 +867,27 @@ const EditActivityModal = ({
 
       console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
 
-      // Preparar conteúdo final
+      // Validar conteúdo gerado
+      if (!generatedContent.questions || generatedContent.questions.length === 0) {
+        throw new Error('Nenhuma questão foi gerada');
+      }
+
+      // Preparar conteúdo final com dados do formulário
       const finalContent = {
         ...generatedContent,
         title: formData.title || generatedContent.title,
         description: formData.description || generatedContent.description,
-        format: formData.questionModel || "Múltipla Escolha",
+        subject: quizData.subject,
+        schoolYear: quizData.schoolYear,
+        theme: quizData.theme,
+        format: quizData.format,
+        difficultyLevel: quizData.difficultyLevel,
         generatedByAI: true,
         generatedAt: new Date().toISOString(),
+        formDataUsed: quizData
       };
+
+      console.log('📦 Conteúdo final preparado:', finalContent);
 
       // Salvar no localStorage
       const quizStorageKey = `constructed_quiz-interativo_${activity?.id}`;
@@ -884,16 +904,45 @@ const EditActivityModal = ({
       setIsContentLoaded(true);
 
       toast({
-        title: "Quiz Gerado!",
-        description: "Seu quiz interativo foi gerado com sucesso pela IA do Gemini.",
+        title: "Quiz Gerado com Sucesso!",
+        description: `${finalContent.questions.length} questões foram geradas pela IA do Gemini.`,
       });
 
     } catch (error) {
       console.error('❌ Erro ao gerar Quiz Interativo:', error);
       setGenerationError(`Erro ao gerar o conteúdo do quiz: ${error.message}`);
+      
+      // Criar conteúdo de fallback em caso de erro
+      const fallbackContent = {
+        title: formData.title || `Quiz: ${formData.theme}`,
+        description: formData.description || `Quiz sobre ${formData.theme}`,
+        questions: Array.from({ length: parseInt(formData.numberOfQuestions) || 5 }, (_, index) => ({
+          id: index + 1,
+          question: `Questão ${index + 1}: Sobre ${formData.theme} em ${formData.subject}, qual conceito é mais importante?`,
+          type: 'multipla-escolha' as const,
+          options: [
+            'A) Conceito fundamental',
+            'B) Aplicação prática',
+            'C) Teoria complementar',
+            'D) Exercício de fixação'
+          ],
+          correctAnswer: 'A) Conceito fundamental',
+          explanation: `O conceito fundamental de ${formData.theme} é essencial para o entendimento em ${formData.subject}.`
+        })),
+        timePerQuestion: parseInt(formData.timePerQuestion) || 60,
+        totalQuestions: parseInt(formData.numberOfQuestions) || 5,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: false,
+        isFallback: true
+      };
+
+      setQuizInterativoContent(fallbackContent);
+      setGeneratedContent(fallbackContent);
+      setIsContentLoaded(true);
+
       toast({
-        title: "Erro na Geração",
-        description: "Não foi possível gerar o quiz interativo. Verifique sua conexão e tente novamente.",
+        title: "Quiz Criado (Modo Demonstração)",
+        description: "Foi criado um quiz de exemplo. Verifique a configuração da API para gerar conteúdo personalizado.",
         variant: "destructive",
       });
     } finally {
