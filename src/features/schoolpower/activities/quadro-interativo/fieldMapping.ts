@@ -324,17 +324,6 @@ export const normalizeMaterials = (materials: any): string => {
 
   return String(materials);
 };
-/**
- * Mapeamento de campos para Quadro Interativo
- */
-export const quadroInterativoFieldMapping = {
-  'Disciplina / Área de conhecimento': 'subject',
-  'Ano / Série': 'schoolYear', 
-  'Tema ou Assunto da aula': 'theme',
-  'Objetivo de aprendizagem da aula': 'objectives',
-  'Nível de Dificuldade': 'difficultyLevel',
-  'Atividade mostrada': 'quadroInterativoCampoEspecifico'
-};
 
 /**
  * Mapeia campos customizados para campos padrão
