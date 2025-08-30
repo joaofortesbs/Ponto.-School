@@ -86,7 +86,6 @@ export const activityRegistry: ActivityRegistryType = {
   "quiz-interativo": {
     editor: lazy(() => import("./default/EditActivity")),
     preview: lazy(() => import("./quiz-interativo/QuizInterativoPreview")),
-  },view")),
   },
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,13 +113,13 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const calculateScore = () => {
     if (!content) return 0;
     let correctAnswers = 0;
-    
+
     content.questions.forEach((question, index) => {
       if (userAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
-    
+
     return Math.round((correctAnswers / content.questions.length) * 100);
   };
 
@@ -176,7 +175,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               </p>
             </div>
           </div>
-          
+
           <Button 
             onClick={handleStartQuiz}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg"
@@ -206,12 +205,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               answer === content.questions[index]?.correctAnswer
             ).length} de {content.questions.length} questões
           </p>
-          
+
           <div className="space-y-4">
             {content.questions.map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
-              
+
               return (
                 <div key={question.id} className="text-left p-4 border rounded-lg">
                   <div className="flex items-start space-x-2">
@@ -243,7 +242,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               );
             })}
           </div>
-          
+
           <Button 
             onClick={handleResetQuiz}
             variant="outline"

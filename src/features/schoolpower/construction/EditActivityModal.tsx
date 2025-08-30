@@ -608,28 +608,78 @@ const EditActivityModal = ({
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
 
     if (type === 'quiz-interativo') {
-      console.log('🎯 Preparando dados para Quiz Interativo:', data);
+      console.log('🎯 Gerando Quiz Interativo com API Gemini:', data);
 
-      const finalData = {
-        ...data,
-        isBuilt: true,
-        builtAt: new Date().toISOString(),
-        questions: [] // Será populado durante a geração do conteúdo
-      };
+      try {
+        // Importar o gerador do Quiz Interativo
+        const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
+        
+        // Preparar dados para o gerador
+        const quizData = {
+          subject: data.subject || 'Matemática',
+          schoolYear: data.schoolYear || '6º Ano - Ensino Fundamental',
+          theme: data.theme || 'Tema Geral',
+          objectives: data.objectives || 'Testar conhecimentos do tema proposto',
+          difficultyLevel: data.difficultyLevel || 'Médio',
+          format: data.questionModel || 'Múltipla Escolha',
+          numberOfQuestions: data.numberOfQuestions || '10',
+          timePerQuestion: data.timePerQuestion || '60',
+          instructions: data.instructions || 'Responda às questões no tempo determinado.',
+          evaluation: data.evaluation || 'Pontuação baseada nas respostas corretas.'
+        };
 
-      // Salvar dados do Quiz Interativo
-      const quizInterativoStorageKey = `constructed_quiz-interativo_${activity?.id}`;
-      localStorage.setItem(quizInterativoStorageKey, JSON.stringify({
-        success: true,
-        data: finalData
-      }));
+        // Criar instância do gerador e gerar conteúdo
+        const generator = new QuizInterativoGenerator();
+        const generatedContent = await generator.generateQuizContent(quizData);
 
-      console.log('💾 Dados do Quiz Interativo preparados:', finalData);
+        const finalData = {
+          ...data,
+          ...generatedContent,
+          title: data.title || generatedContent.title,
+          description: data.description || generatedContent.description,
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          generatedByAI: true
+        };
 
-      return {
-        success: true,
-        data: finalData
-      };
+        console.log('✅ Quiz Interativo gerado com sucesso:', finalData);
+
+        return {
+          success: true,
+          data: finalData
+        };
+
+      } catch (error) {
+        console.error('❌ Erro ao gerar Quiz Interativo via API:', error);
+        
+        // Fallback para dados simulados se a API falhar
+        const fallbackData = {
+          ...data,
+          title: data.title || "Quiz Interativo (Modo Demonstração)",
+          description: data.description || "Quiz gerado em modo demonstração",
+          questions: [
+            {
+              id: 1,
+              question: `Qual é o conceito principal de ${data.theme || 'matemática'}?`,
+              type: 'multipla-escolha',
+              options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
+              correctAnswer: 'Opção A',
+              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+            }
+          ],
+          timePerQuestion: parseInt(data.timePerQuestion) || 60,
+          totalQuestions: parseInt(data.numberOfQuestions) || 1,
+          isBuilt: true,
+          builtAt: new Date().toISOString(),
+          generatedByAI: false,
+          isFallback: true
+        };
+
+        return {
+          success: true,
+          data: fallbackData
+        };
+      }
     } else if (type === 'quadro-interativo') {
       console.log('🖼️ Preparando dados para Quadro Interativo:', data);
 
@@ -757,40 +807,68 @@ const EditActivityModal = ({
       setIsGeneratingQuiz(true);
       setGenerationError(null);
 
-      // Placeholder for QuizInterativoGenerator logic
-      // This would typically involve an API call to a Gemini-powered service
-      // For now, we simulate content generation
-      const simulatedContent = {
-        title: formData.title || "Quiz Interativo Gerado",
-        description: formData.description || "Um quiz interativo gerado com base nas suas configurações.",
-        questions: [
-          { id: 1, text: "Qual a capital da França?", type: "multiple-choice", options: ["Londres", "Paris", "Berlim"], answer: "Paris" },
-          { id: 2, text: "O Sol gira em torno da Terra?", type: "true-false", answer: "Falso" },
-        ],
-        format: formData.questionModel || "Misto",
-        numberOfQuestions: formData.numberOfQuestions || 10,
-        timePerQuestion: formData.timePerQuestion || "1 minuto",
-        instructions: formData.instructions || "Responda às questões no tempo determinado.",
-        evaluation: formData.evaluation || "Pontuação baseada nas respostas corretas.",
+      console.log('🎯 Iniciando geração real do Quiz Interativo com dados:', formData);
+
+      // Importar o gerador do Quiz Interativo
+      const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
+      
+      // Preparar dados para o gerador
+      const quizData = {
+        subject: formData.subject || 'Matemática',
+        schoolYear: formData.schoolYear || '6º Ano - Ensino Fundamental',
+        theme: formData.theme || 'Tema Geral',
+        objectives: formData.objectives || 'Testar conhecimentos do tema proposto',
+        difficultyLevel: formData.difficultyLevel || 'Médio',
+        format: formData.questionModel || 'Múltipla Escolha',
+        numberOfQuestions: formData.numberOfQuestions || '10',
+        timePerQuestion: formData.timePerQuestion || '60',
+        instructions: formData.instructions || 'Responda às questões no tempo determinado.',
+        evaluation: formData.evaluation || 'Pontuação baseada nas respostas corretas.'
+      };
+
+      console.log('📊 Dados preparados para o gerador:', quizData);
+
+      // Criar instância do gerador e gerar conteúdo
+      const generator = new QuizInterativoGenerator();
+      const generatedContent = await generator.generateQuizContent(quizData);
+
+      console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
+
+      // Preparar conteúdo final
+      const finalContent = {
+        ...generatedContent,
+        title: formData.title || generatedContent.title,
+        description: formData.description || generatedContent.description,
+        format: formData.questionModel || "Múltipla Escolha",
         generatedByAI: true,
         generatedAt: new Date().toISOString(),
       };
 
-      setQuizInterativoContent(simulatedContent);
-      setGeneratedContent(simulatedContent); // Also set general generatedContent for preview tab switching
+      // Salvar no localStorage
+      const quizStorageKey = `constructed_quiz-interativo_${activity?.id}`;
+      localStorage.setItem(quizStorageKey, JSON.stringify({
+        success: true,
+        data: finalContent
+      }));
+
+      console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
+
+      // Atualizar estados
+      setQuizInterativoContent(finalContent);
+      setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
       toast({
         title: "Quiz Gerado!",
-        description: "Seu quiz interativo foi gerado com sucesso.",
+        description: "Seu quiz interativo foi gerado com sucesso pela IA do Gemini.",
       });
 
     } catch (error) {
-      console.error('Erro ao gerar Quiz Interativo:', error);
-      setGenerationError('Erro ao gerar o conteúdo do quiz. Tente novamente.');
+      console.error('❌ Erro ao gerar Quiz Interativo:', error);
+      setGenerationError(`Erro ao gerar o conteúdo do quiz: ${error.message}`);
       toast({
         title: "Erro na Geração",
-        description: "Não foi possível gerar o quiz interativo.",
+        description: "Não foi possível gerar o quiz interativo. Verifique sua conexão e tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -925,8 +1003,9 @@ const EditActivityModal = ({
         }
       } else if (activity.id === 'quiz-interativo' && quizInterativoSavedContent) { // New: Check for Quiz Interativo content
         try {
-          contentToLoad = JSON.parse(quizInterativoSavedContent);
-          console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`);
+          const parsedContent = JSON.parse(quizInterativoSavedContent);
+          contentToLoad = parsedContent.data || parsedContent; // Handle both wrapped and direct data
+          console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`, contentToLoad);
           setQuizInterativoContent(contentToLoad); // Also set the specific state for Quiz Interativo
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
@@ -1652,6 +1731,17 @@ const EditActivityModal = ({
         }, 100);
       }
 
+      // Trigger específico para Quiz Interativo
+      if (activityType === 'quiz-interativo') {
+        console.log('🎯 Processamento específico concluído para Quiz Interativo');
+
+        // Garantir que o conteúdo específico também seja definido
+        const quizData = result.data || result;
+        setQuizInterativoContent(quizData);
+        
+        console.log('💾 Quiz Interativo processado e salvo:', quizData);
+      }
+
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
         generatedContent: result,
@@ -1858,14 +1948,16 @@ const EditActivityModal = ({
 
       console.log('🎯 Acionando construção automática da atividade...');
 
-      const timer = setTimeout(() => {
+      const timer = setTimeout(async () => {
         if (isQuizInterativo) {
-          handleGenerateQuizInterativo(); // Use the specific function for Quiz
+          console.log('🎯 Auto-build específico para Quiz Interativo');
+          await handleGenerateQuizInterativo(); // Use the specific function for Quiz
         } else {
-          handleBuildActivity(); // Use the generic build function
+          console.log('🏗️ Auto-build genérico para outras atividades');
+          await handleBuildActivity(); // Use the generic build function
         }
         console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuizInterativo ? 500 : (isQuadroInterativo ? 500 : 300)); // Adjusted delays
+      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : 300)); // Increased delay for Quiz for API call
 
       return () => clearTimeout(timer);
     }
@@ -2304,7 +2396,7 @@ const EditActivityModal = ({
                       />
                     ) : activity?.id === 'quiz-interativo' ? (
                       <QuizInterativoPreview // Use the specific preview component for Quiz Interativo
-                        content={quizInterativoContent}
+                        content={quizInterativoContent || generatedContent}
                         isLoading={isGeneratingQuiz}
                       />
                     ) : (
