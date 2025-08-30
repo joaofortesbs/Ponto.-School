@@ -36,6 +36,13 @@ export function prepareQuadroInterativoData(activityData: any): QuadroInterativo
 }
 
 /**
+ * Processa os dados do Quadro Interativo (alias para compatibilidade)
+ */
+export function processQuadroInterativoData(activityData: any): QuadroInterativoProcessedData {
+  return prepareQuadroInterativoData(activityData);
+}
+
+/**
  * Valida se os dados do Quadro Interativo estão completos
  */
 export function validateQuadroInterativoData(data: QuadroInterativoProcessedData): boolean {
@@ -52,4 +59,8 @@ export function validateQuadroInterativoData(data: QuadroInterativoProcessedData
   return true;
 }
 
-export default { prepareQuadroInterativoData, validateQuadroInterativoData };
+export default { 
+  prepareQuadroInterativoData, 
+  processQuadroInterativoData,
+  validateQuadroInterativoData 
+};

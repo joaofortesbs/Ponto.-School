@@ -324,3 +324,54 @@ export const normalizeMaterials = (materials: any): string => {
 
   return String(materials);
 };
+/**
+ * Mapeamento de campos para Quadro Interativo
+ */
+export const quadroInterativoFieldMapping = {
+  'Disciplina / Área de conhecimento': 'subject',
+  'Ano / Série': 'schoolYear', 
+  'Tema ou Assunto da aula': 'theme',
+  'Objetivo de aprendizagem da aula': 'objectives',
+  'Nível de Dificuldade': 'difficultyLevel',
+  'Atividade mostrada': 'quadroInterativoCampoEspecifico'
+};
+
+/**
+ * Mapeia campos customizados para campos padrão
+ */
+export function mapCustomFieldsToStandard(customFields: Record<string, any>): Record<string, any> {
+  const mapped: Record<string, any> = {};
+  
+  Object.entries(customFields).forEach(([key, value]) => {
+    const standardField = quadroInterativoFieldMapping[key as keyof typeof quadroInterativoFieldMapping];
+    if (standardField) {
+      mapped[standardField] = value;
+    } else {
+      mapped[key] = value; // Mantém campos que não têm mapeamento
+    }
+  });
+  
+  return mapped;
+}
+
+/**
+ * Mapeia campos padrão para campos customizados
+ */
+export function mapStandardFieldsToCustom(standardFields: Record<string, any>): Record<string, any> {
+  const mapped: Record<string, any> = {};
+  
+  Object.entries(standardFields).forEach(([key, value]) => {
+    const customField = Object.entries(quadroInterativoFieldMapping)
+      .find(([, standardKey]) => standardKey === key)?.[0];
+    
+    if (customField) {
+      mapped[customField] = value;
+    } else {
+      mapped[key] = value; // Mantém campos que não têm mapeamento
+    }
+  });
+  
+  return mapped;
+}
+
+export default quadroInterativoFieldMapping;

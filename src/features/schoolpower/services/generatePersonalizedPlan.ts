@@ -7,8 +7,8 @@ import { validateGeminiPlan } from './validateGeminiPlan';
 import { processAIGeneratedContent } from './exerciseListProcessor';
 import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
 import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
-import { prepareQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
-import { QuadroInterativoGenerator } from '../activities/quadro-interativo/QuadroInterativoGenerator';
+import { prepareQuadroInterativoData, processQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
+import quadroInterativoGenerator, { QuadroInterativoGenerator } from '../activities/quadro-interativo/QuadroInterativoGenerator';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';

@@ -33,7 +33,7 @@ export interface QuadroInterativoContent {
  * NOTA: A lógica principal foi movida para QuadroInterativoPreview.tsx
  * Esta classe mantém apenas compatibilidade com o sistema existente
  */
-class QuadroInterativoGenerator {
+export class QuadroInterativoGenerator {
 
   /**
    * Método de compatibilidade - redireciona para o Preview
@@ -66,4 +66,6 @@ class QuadroInterativoGenerator {
   }
 }
 
-export default QuadroInterativoGenerator;
+// Export default da instância
+const quadroInterativoGenerator = new QuadroInterativoGenerator();
+export default quadroInterativoGenerator;
