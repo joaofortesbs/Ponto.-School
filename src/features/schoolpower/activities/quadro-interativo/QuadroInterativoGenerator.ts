@@ -1,4 +1,3 @@
-import { geminiLogger } from '../../../utils/geminiDebugLogger';
 
 export interface QuadroInterativoData {
   subject: string;
@@ -40,7 +39,7 @@ export class QuadroInterativoGenerator {
    * Método de compatibilidade - redireciona para o Preview
    */
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
-    geminiLogger.logRequest('QuadroInterativoGenerator - Redirecionando para Preview', data);
+    console.log('QuadroInterativoGenerator - Redirecionando para Preview', data);
 
     // Retorna estrutura básica - o Preview que fará a geração real
     const result: QuadroInterativoContent = {
@@ -62,7 +61,7 @@ export class QuadroInterativoGenerator {
       customFields: data.customFields || {}
     };
 
-    geminiLogger.logResponse('QuadroInterativoGenerator - Estrutura básica criada', result);
+    console.log('QuadroInterativoGenerator - Estrutura básica criada', result);
     return result;
   }
 }
