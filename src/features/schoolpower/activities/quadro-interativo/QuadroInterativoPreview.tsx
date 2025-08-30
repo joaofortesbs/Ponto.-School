@@ -380,12 +380,14 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
       const hasConstructedData = localStorage.getItem(`constructed_quadro-interativo_${data?.id || 'default'}`);
       const hasActionPlanData = localStorage.getItem(`auto_activity_data_${data?.id || 'default'}`);
       const hasFormData = data?.customFields && Object.keys(data.customFields).length > 0;
+      const hasContentAlready = localStorage.getItem(`quadro_interativo_content_${data?.id || 'default'}`);
       
       // Condições para auto-geração
       const shouldAutoGenerate = !contentState.hasGenerated && 
                                 !contentState.isLoading && 
                                 !contentState.error &&
                                 data?.id &&
+                                !hasContentAlready &&
                                 (isBuiltActivity || hasConstructedData || hasActionPlanData || hasFormData);
 
       console.log('🔍 Sistema de detecção Quadro Interativo:', {
@@ -394,6 +396,7 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         hasConstructedData: !!hasConstructedData,
         hasActionPlanData: !!hasActionPlanData,
         hasFormData,
+        hasContentAlready: !!hasContentAlready,
         hasGenerated: contentState.hasGenerated,
         dataId: data?.id
       });
@@ -422,13 +425,37 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
       }
     };
 
+    const handleBuildAllCompleted = () => {
+      console.log('🏗️ Evento "Construir Todas" finalizado - verificando Quadro Interativo');
+      
+      setTimeout(() => {
+        if (!contentState.hasGenerated && !contentState.isLoading) {
+          console.log('🚀 Iniciando geração pós construção automática');
+          handleGenerateContent();
+        }
+      }, 2000);
+    };
+
+    const handleForceGeneration = (event: any) => {
+      const { activityId } = event.detail || {};
+      
+      if (activityId === data?.id || !activityId) {
+        console.log('💪 Força geração detectada para Quadro Interativo:', data?.id);
+        handleGenerateContent();
+      }
+    };
+
     // Escutar eventos customizados de construção automática
     window.addEventListener('quadro-interativo-auto-build', handleAutoBuildTrigger);
+    window.addEventListener('schoolpower-build-all-completed', handleBuildAllCompleted);
+    window.addEventListener('quadro-interativo-force-generation', handleForceGeneration);
     
     return () => {
       window.removeEventListener('quadro-interativo-auto-build', handleAutoBuildTrigger);
+      window.removeEventListener('schoolpower-build-all-completed', handleBuildAllCompleted);
+      window.removeEventListener('quadro-interativo-force-generation', handleForceGeneration);
     };
-  }, [contentState.hasGenerated, contentState.isLoading]);
+  }, [contentState.hasGenerated, contentState.isLoading, data?.id]);
 
   // Renderizar conteúdo do card
   const renderCardContent = () => {

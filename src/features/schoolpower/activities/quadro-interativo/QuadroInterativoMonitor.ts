@@ -31,6 +31,7 @@ export class QuadroInterativoMonitor {
 
     // Listener para eventos de construção automática
     window.addEventListener('schoolpower-build-all', this.handleBuildAllEvent.bind(this));
+    window.addEventListener('schoolpower-build-all-completed', this.handleBuildAllCompletedEvent.bind(this));
   }
 
   /**
@@ -44,6 +45,7 @@ export class QuadroInterativoMonitor {
     this.isMonitoring = false;
     
     window.removeEventListener('schoolpower-build-all', this.handleBuildAllEvent.bind(this));
+    window.removeEventListener('schoolpower-build-all-completed', this.handleBuildAllCompletedEvent.bind(this));
     console.log('🔍 Monitoramento do Quadro Interativo parado');
   }
 
@@ -113,6 +115,46 @@ export class QuadroInterativoMonitor {
       this.checkPendingActivities();
       this.forceGenerationCheck();
     }, 1000);
+  }
+
+  /**
+   * Manipula evento de "Construir Todas Finalizado"
+   */
+  private handleBuildAllCompletedEvent(event: any): void {
+    console.log('🎉 Evento "Construir Todas Finalizado" detectado, forçando verificação');
+    
+    setTimeout(() => {
+      this.forceGenerationCheck();
+      this.checkConstructedActivities();
+    }, 2000);
+  }
+
+  /**
+   * Verifica especificamente atividades já construídas
+   */
+  private checkConstructedActivities(): void {
+    console.log('🔍 Verificando atividades de Quadro Interativo já construídas');
+    
+    try {
+      const keys = Object.keys(localStorage);
+      const constructedKeys = keys.filter(key => key.startsWith('constructed_quadro-interativo_'));
+      
+      constructedKeys.forEach(key => {
+        try {
+          const data = JSON.parse(localStorage.getItem(key) || '{}');
+          const activityId = key.split('_').pop();
+          
+          if (data.isBuilt && activityId && !this.hasGeneratedContent(activityId)) {
+            console.log('🎯 Atividade construída sem conteúdo gerado detectada:', activityId);
+            this.triggerContentGeneration(activityId, data);
+          }
+        } catch (e) {
+          console.warn('Erro ao processar atividade construída:', key, e);
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao verificar atividades construídas:', error);
+    }
   }
 
   /**

@@ -321,6 +321,13 @@ export class AutoBuildService {
     console.log(`🎯 Construindo com EXATA MESMA LÓGICA do EditActivityModal: ${activity.title}`);
 
     try {
+      // SISTEMA EXCLUSIVO PARA QUADRO INTERATIVO
+      if (activity.id === 'quadro-interativo') {
+        console.log('🎯 SISTEMA EXCLUSIVO: Construindo Quadro Interativo');
+        await this.buildQuadroInterativoExclusively(activity);
+        return;
+      }
+
       // PASSO 1: Preparar formData EXATAMENTE como o modal faz
       const formData = await this.prepareFormDataExactlyLikeModal(activity);
 
@@ -390,6 +397,210 @@ export class AutoBuildService {
       activity.progress = 0;
 
       throw error;
+    }
+  }
+
+  /**
+   * Sistema exclusivo para construção de Quadro Interativo
+   */
+  private async buildQuadroInterativoExclusively(activity: ConstructionActivity): Promise<void> {
+    console.log('🎯 SISTEMA EXCLUSIVO: Iniciando construção do Quadro Interativo');
+    
+    try {
+      // ETAPA 1: Preparar dados específicos do Quadro Interativo
+      const quadroData = this.prepareQuadroInterativoData(activity);
+      console.log('📊 Dados do Quadro Interativo preparados:', quadroData);
+
+      // ETAPA 2: Gerar conteúdo usando API Gemini diretamente
+      const generatedContent = await this.generateQuadroInterativoContent(quadroData);
+      console.log('✅ Conteúdo do Quadro Interativo gerado:', generatedContent);
+
+      // ETAPA 3: Salvar dados de construção
+      const constructedKey = `constructed_quadro-interativo_${activity.id}`;
+      const constructedData = {
+        isBuilt: true,
+        builtAt: new Date().toISOString(),
+        activityId: activity.id,
+        formData: quadroData,
+        generatedContent: generatedContent,
+        status: 'completed'
+      };
+      localStorage.setItem(constructedKey, JSON.stringify(constructedData));
+
+      // ETAPA 4: Salvar conteúdo para o preview
+      const contentKey = `quadro_interativo_content_${activity.id}`;
+      localStorage.setItem(contentKey, JSON.stringify(generatedContent));
+
+      // ETAPA 5: Atualizar status da atividade
+      activity.isBuilt = true;
+      activity.builtAt = new Date().toISOString();
+      activity.progress = 100;
+      activity.status = 'completed';
+
+      // ETAPA 6: Disparar evento para auto-geração
+      window.dispatchEvent(new CustomEvent('quadro-interativo-auto-build', {
+        detail: { 
+          activityId: activity.id, 
+          data: constructedData,
+          generatedContent: generatedContent 
+        }
+      }));
+
+      // ETAPA 7: Callback de atividade construída
+      if (this.onActivityBuilt) {
+        this.onActivityBuilt(activity.id);
+      }
+
+      console.log('🎉 SISTEMA EXCLUSIVO: Quadro Interativo construído com sucesso!');
+
+    } catch (error) {
+      console.error('❌ SISTEMA EXCLUSIVO: Erro na construção do Quadro Interativo:', error);
+      
+      // Marcar com erro
+      activity.status = 'error';
+      activity.progress = 0;
+      
+      throw error;
+    }
+  }
+
+  /**
+   * Preparar dados específicos para Quadro Interativo
+   */
+  private prepareQuadroInterativoData(activity: ConstructionActivity): any {
+    const customFields = activity.customFields || {};
+    
+    return {
+      subject: customFields['Disciplina / Área de conhecimento'] || 'Português',
+      schoolYear: customFields['Ano / Série'] || '6º Ano',
+      theme: customFields['Tema ou Assunto da aula'] || activity.title || 'Tema da Aula',
+      objectives: customFields['Objetivo de aprendizagem da aula'] || activity.description || 'Objetivos de aprendizagem',
+      difficultyLevel: customFields['Nível de Dificuldade'] || 'Intermediário',
+      quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] || 'Atividade interativa no quadro',
+      title: activity.title,
+      description: activity.description,
+      activityId: activity.id
+    };
+  }
+
+  /**
+   * Gerar conteúdo do Quadro Interativo usando API Gemini
+   */
+  private async generateQuadroInterativoContent(quadroData: any): Promise<any> {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('API Key do Gemini não configurada');
+    }
+
+    const prompt = `
+Você é uma IA especializada em educação brasileira que cria conteúdo educativo COMPLETO e DIDÁTICO para quadros interativos em sala de aula.
+
+DADOS DA AULA:
+- Disciplina: ${quadroData.subject}
+- Ano/Série: ${quadroData.schoolYear}
+- Tema: ${quadroData.theme}
+- Objetivos: ${quadroData.objectives}
+- Nível de Dificuldade: ${quadroData.difficultyLevel}
+- Atividade Mostrada: ${quadroData.quadroInterativoCampoEspecifico}
+
+MISSÃO: Criar um conteúdo que ENSINE o conceito de forma clara e completa, como se fosse uma mini-aula explicativa.
+
+FORMATO DE RESPOSTA (JSON apenas):
+{
+  "title": "Título educativo direto sobre o conceito (máximo 60 caracteres)",
+  "text": "Explicação COMPLETA do conceito com definição, características principais, exemplos práticos e dicas para identificação/aplicação. Deve ser uma mini-aula textual que ensina efetivamente o tema (máximo 400 caracteres)",
+  "generatedAt": "${new Date().toISOString()}",
+  "isGeneratedByAI": true
+}
+
+DIRETRIZES OBRIGATÓRIAS:
+
+TÍTULO:
+- Seja direto e educativo sobre o conceito
+- Use terminologia adequada para ${quadroData.schoolYear}
+- Exemplos: "Substantivos Próprios e Comuns", "Função do 1º Grau", "Fotossíntese das Plantas"
+- NÃO use "Quadro Interativo" ou "Atividade de"
+
+TEXTO:
+- INICIE com uma definição clara do conceito
+- INCLUA as características principais
+- ADICIONE exemplos práticos e concretos
+- FORNEÇA dicas para identificação ou aplicação
+- Use linguagem didática apropriada para ${quadroData.schoolYear}
+- Seja EDUCATIVO, não apenas descritivo
+- Foque em ENSINAR o conceito de forma completa
+
+AGORA GERE O CONTEÚDO EDUCATIVO:`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.8,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+      }
+
+      const apiData = await response.json();
+      const responseText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!responseText) {
+        throw new Error('Resposta vazia da API Gemini');
+      }
+
+      // Limpar a resposta removendo markdown e extraindo JSON
+      let cleanedResponse = responseText
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .replace(/^\s*[\r\n]/gm, '')
+        .trim();
+
+      // Tentar fazer parse do JSON
+      const parsedContent = JSON.parse(cleanedResponse);
+      
+      // Validar estrutura
+      if (!parsedContent.title || !parsedContent.text) {
+        throw new Error('Estrutura JSON inválida na resposta');
+      }
+
+      // Limitar tamanhos conforme especificado no prompt
+      const title = parsedContent.title.substring(0, 70);
+      const text = parsedContent.text.substring(0, 450);
+
+      return {
+        title,
+        text,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro na API Gemini para Quadro Interativo:', error);
+      
+      // Fallback com conteúdo educativo
+      return {
+        title: quadroData.theme || 'Conteúdo Educativo',
+        text: quadroData.objectives || 'Explore este conceito através de atividades interativas que facilitam o aprendizado e compreensão do tema.',
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: false
+      };
     }
   }
 
@@ -488,6 +699,33 @@ export class AutoBuildService {
 
     console.log('🎉 Construção automática finalizada');
     console.log(`📊 Resultado: ${activities.length - errors.length}/${activities.length} atividades construídas`);
+
+    // TRIGGER EXCLUSIVO PARA QUADRO INTERATIVO APÓS CONSTRUIR TODAS
+    setTimeout(() => {
+      console.log('🎯 Disparando trigger exclusivo para Quadro Interativo após construção');
+      
+      // Disparar evento global de construção finalizada
+      window.dispatchEvent(new CustomEvent('schoolpower-build-all-completed', {
+        detail: { 
+          totalActivities: activities.length,
+          successCount: activities.length - errors.length,
+          errorCount: errors.length
+        }
+      }));
+
+      // Verificar e forçar geração de Quadro Interativo construídos
+      const quadroActivities = activities.filter(a => a.id === 'quadro-interativo' && a.isBuilt);
+      quadroActivities.forEach(activity => {
+        console.log('🚀 Forçando geração de conteúdo para Quadro Interativo:', activity.title);
+        
+        window.dispatchEvent(new CustomEvent('quadro-interativo-force-generation', {
+          detail: { 
+            activityId: activity.id,
+            activity: activity 
+          }
+        }));
+      });
+    }, 1000);
 
     if (errors.length > 0) {
       console.warn('⚠️ Alguns erros ocorreram:', errors);
