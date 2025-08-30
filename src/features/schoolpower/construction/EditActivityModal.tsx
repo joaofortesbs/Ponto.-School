@@ -19,7 +19,6 @@ import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercic
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
-import QuadroInterativoGenerator from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoGenerator';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -486,35 +485,24 @@ const EditActivityModal = ({
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
     
     if (type === 'quadro-interativo') {
-      console.log('🖼️ Gerando conteúdo específico para Quadro Interativo:', data);
+      console.log('🖼️ Preparando dados para Quadro Interativo:', data);
       
-      const generator = new QuadroInterativoGenerator();
-      const result = await generator.generateQuadroInterativoContent({
-        subject: data.subject,
-        schoolYear: data.schoolYear,
-        theme: data.theme,
-        objectives: data.objectives,
-        difficultyLevel: data.difficultyLevel,
-        quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
-      });
-      
-      // Estrutura final dos dados
+      // Para Quadro Interativo, apenas salvar os dados preparados
+      // A geração de conteúdo será feita diretamente no Preview
       const finalData = {
         ...data,
-        ...result,
-        cardContent: result.cardContent,
-        generatedAt: result.generatedAt,
-        isGeneratedByAI: result.isGeneratedByAI
+        isBuilt: true,
+        builtAt: new Date().toISOString()
       };
       
-      // Salvar conteúdo gerado
+      // Salvar dados básicos
       const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
       localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
         success: true,
         data: finalData
       }));
       
-      console.log('💾 Dados do Quadro Interativo salvos:', finalData);
+      console.log('💾 Dados do Quadro Interativo preparados:', finalData);
       
       return {
         success: true,

@@ -8,8 +8,6 @@ import { processAIGeneratedContent } from './exerciseListProcessor';
 import { sequenciaDidaticaPrompt } from '../prompts/sequenciaDidaticaPrompt';
 import { validateSequenciaDidaticaData } from './sequenciaDidaticaValidator';
 import { geminiLogger } from '../../../utils/geminiDebugLogger';
-import { prepareQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
-import { QuadroInterativoGenerator } from '../activities/quadro-interativo/QuadroInterativoGenerator';
 
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
@@ -508,64 +506,23 @@ export async function generatePersonalizedPlan(
         if (activityData.id === 'quadro-interativo') {
           console.log('🎯 Processando especificamente Quadro Interativo');
 
-          try {
-            // Extrair campos customizados da IA
-            const customFields = activityData.customFields || {};
+          // Garantir que todos os campos obrigatórios estejam presentes
+          const requiredFields = {
+            'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || 'Matemática',
+            'Ano / Série': activityData['Ano / Série'] || '6º Ano',
+            'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
+            'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
+            'Nível de Dificuldade': activityData['Nível de Dificuldade'] || 'Intermediário',
+            'Atividade mostrada': activityData['Atividade mostrada'] || 'Atividade interativa no quadro'
+          };
 
-            // Garantir que todos os campos obrigatórios estejam presentes
-            const requiredFields = {
-              'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || customFields['Disciplina / Área de conhecimento'] || 'Matemática',
-              'Ano / Série': activityData['Ano / Série'] || customFields['Ano / Série'] || '6º Ano',
-              'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || customFields['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
-              'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || customFields['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
-              'Nível de Dificuldade': activityData['Nível de Dificuldade'] || customFields['Nível de Dificuldade'] || 'Intermediário',
-              'Atividade mostrada': activityData['Atividade mostrada'] || customFields['Atividade mostrada'] || 'Atividade interativa no quadro'
-            };
+          // Atualizar os dados da atividade (a geração de conteúdo será feita no Preview)
+          activityData = {
+            ...activityData,
+            customFields: requiredFields
+          };
 
-            // Gerar conteúdo específico do Quadro Interativo usando a IA
-            const quadroGenerator = new QuadroInterativoGenerator();
-            const quadroContent = await quadroGenerator.generateQuadroInterativoContent({
-              subject: requiredFields['Disciplina / Área de conhecimento'],
-              schoolYear: requiredFields['Ano / Série'],
-              theme: requiredFields['Tema ou Assunto da aula'],
-              objectives: requiredFields['Objetivo de aprendizagem da aula'],
-              difficultyLevel: requiredFields['Nível de Dificuldade'],
-              quadroInterativoCampoEspecifico: requiredFields['Atividade mostrada']
-            });
-
-            console.log('🤖 Conteúdo gerado pela IA para Quadro Interativo:', quadroContent);
-
-            // Atualizar os dados da atividade com o conteúdo gerado
-            activityData = {
-              ...activityData,
-              customFields: {
-                ...requiredFields,
-                // Adicionar dados gerados pela IA
-                generatedContent: JSON.stringify(quadroContent),
-                isAIGenerated: 'true',
-                generatedAt: new Date().toISOString()
-              }
-            };
-
-            console.log('✅ Quadro Interativo processado com conteúdo da IA');
-          } catch (error) {
-            console.error('❌ Erro ao gerar conteúdo para Quadro Interativo:', error);
-
-            // Fallback sem conteúdo da IA
-            const fallbackFields = {
-              'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || 'Matemática',
-              'Ano / Série': activityData['Ano / Série'] || '6º Ano',
-              'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
-              'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
-              'Nível de Dificuldade': activityData['Nível de Dificuldade'] || 'Intermediário',
-              'Atividade mostrada': activityData['Atividade mostrada'] || 'Atividade interativa no quadro'
-            };
-
-            activityData = {
-              ...activityData,
-              customFields: fallbackFields
-            };
-          }
+          console.log('✅ Quadro Interativo processado (conteúdo será gerado no Preview)');
         }
 
         // Extract custom fields (all fields except standard ones)
