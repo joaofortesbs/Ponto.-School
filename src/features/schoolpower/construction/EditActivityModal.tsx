@@ -72,6 +72,121 @@ const DefaultEditActivity = ({ formData, onFieldChange }: {formData: ActivityFor
   </>
 );
 
+// Componente específico para Quiz Interativo
+const QuizInterativoEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="numberOfQuestions">Número de Questões *</Label>
+        <Input
+          id="numberOfQuestions"
+          type="number"
+          value={formData.numberOfQuestions || ''}
+          onChange={(e) => onFieldChange('numberOfQuestions', e.target.value)}
+          placeholder="Ex: 10, 15, 20"
+          min="1"
+          max="50"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+      <div>
+        <Label htmlFor="theme">Tema *</Label>
+        <Input
+          id="theme"
+          value={formData.theme || ''}
+          onChange={(e) => onFieldChange('theme', e.target.value)}
+          placeholder="Ex: Teorema de Pitágoras, Revolução Francesa"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="subject">Disciplina *</Label>
+        <Select value={formData.subject || ''} onValueChange={(value) => onFieldChange('subject', value)}>
+          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+            <SelectValue placeholder="Selecione a disciplina" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Matemática">Matemática</SelectItem>
+            <SelectItem value="Português">Português</SelectItem>
+            <SelectItem value="História">História</SelectItem>
+            <SelectItem value="Geografia">Geografia</SelectItem>
+            <SelectItem value="Ciências">Ciências</SelectItem>
+            <SelectItem value="Física">Física</SelectItem>
+            <SelectItem value="Química">Química</SelectItem>
+            <SelectItem value="Biologia">Biologia</SelectItem>
+            <SelectItem value="Inglês">Inglês</SelectItem>
+            <SelectItem value="Educação Física">Educação Física</SelectItem>
+            <SelectItem value="Arte">Arte</SelectItem>
+            <SelectItem value="Filosofia">Filosofia</SelectItem>
+            <SelectItem value="Sociologia">Sociologia</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="schoolYear">Ano de Escolaridade *</Label>
+        <Select value={formData.schoolYear || ''} onValueChange={(value) => onFieldChange('schoolYear', value)}>
+          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+            <SelectValue placeholder="Selecione o ano" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1º Ano - Ensino Fundamental">1º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="2º Ano - Ensino Fundamental">2º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="3º Ano - Ensino Fundamental">3º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="4º Ano - Ensino Fundamental">4º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="5º Ano - Ensino Fundamental">5º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="6º Ano - Ensino Fundamental">6º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="7º Ano - Ensino Fundamental">7º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="8º Ano - Ensino Fundamental">8º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="9º Ano - Ensino Fundamental">9º Ano - Ensino Fundamental</SelectItem>
+            <SelectItem value="1º Ano - Ensino Médio">1º Ano - Ensino Médio</SelectItem>
+            <SelectItem value="2º Ano - Ensino Médio">2º Ano - Ensino Médio</SelectItem>
+            <SelectItem value="3º Ano - Ensino Médio">3º Ano - Ensino Médio</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
+        <Select value={formData.difficultyLevel || ''} onValueChange={(value) => onFieldChange('difficultyLevel', value)}>
+          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+            <SelectValue placeholder="Selecione o nível" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Muito Fácil">Muito Fácil</SelectItem>
+            <SelectItem value="Fácil">Fácil</SelectItem>
+            <SelectItem value="Médio">Médio</SelectItem>
+            <SelectItem value="Difícil">Difícil</SelectItem>
+            <SelectItem value="Muito Difícil">Muito Difícil</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="questionModel">Formato *</Label>
+        <Select value={formData.questionModel || ''} onValueChange={(value) => onFieldChange('questionModel', value)}>
+          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+            <SelectValue placeholder="Selecione o formato" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Múltipla Escolha">Múltipla Escolha</SelectItem>
+            <SelectItem value="Verdadeiro ou Falso">Verdadeiro ou Falso</SelectItem>
+            <SelectItem value="Misto (Múltipla Escolha + V/F)">Misto (Múltipla Escolha + V/F)</SelectItem>
+            <SelectItem value="Questões Abertas">Questões Abertas</SelectItem>
+            <SelectItem value="Associação/Correspondência">Associação/Correspondência</SelectItem>
+            <SelectItem value="Completar Lacunas">Completar Lacunas</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  </div>
+);
+
 // Componente específico para Quadro Interativo
 const QuadroInterativoEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
@@ -450,6 +565,29 @@ const EditActivityModal = ({
              formData.quantidadeAulas?.trim() &&
              formData.quantidadeDiagnosticos?.trim() &&
              formData.quantidadeAvaliacoes?.trim();
+    } else if (activityType === 'quiz-interativo') {
+      const isValid = formData.title.trim() &&
+                     formData.description.trim() &&
+                     formData.numberOfQuestions?.trim() &&
+                     formData.theme?.trim() &&
+                     formData.subject?.trim() &&
+                     formData.schoolYear?.trim() &&
+                     formData.difficultyLevel?.trim() &&
+                     formData.questionModel?.trim();
+
+      console.log('🔍 Validação do Quiz Interativo:', {
+        title: !!formData.title.trim(),
+        description: !!formData.description.trim(),
+        numberOfQuestions: !!formData.numberOfQuestions?.trim(),
+        theme: !!formData.theme?.trim(),
+        subject: !!formData.subject?.trim(),
+        schoolYear: !!formData.schoolYear?.trim(),
+        difficultyLevel: !!formData.difficultyLevel?.trim(),
+        questionModel: !!formData.questionModel?.trim(),
+        isValid
+      });
+
+      return isValid;
     } else if (activityType === 'quadro-interativo') {
       const isValid = formData.title.trim() &&
                      formData.description.trim() &&
@@ -484,7 +622,30 @@ const EditActivityModal = ({
   const generateActivityContent = async (type: string, data: any) => {
     console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
 
-    if (type === 'quadro-interativo') {
+    if (type === 'quiz-interativo') {
+      console.log('🎯 Preparando dados para Quiz Interativo:', data);
+
+      const finalData = {
+        ...data,
+        isBuilt: true,
+        builtAt: new Date().toISOString(),
+        questions: [] // Será populado durante a geração do conteúdo
+      };
+
+      // Salvar dados do Quiz Interativo
+      const quizInterativoStorageKey = `constructed_quiz-interativo_${activity?.id}`;
+      localStorage.setItem(quizInterativoStorageKey, JSON.stringify({
+        success: true,
+        data: finalData
+      }));
+
+      console.log('💾 Dados do Quiz Interativo preparados:', finalData);
+
+      return {
+        success: true,
+        data: finalData
+      };
+    } else if (type === 'quadro-interativo') {
       console.log('🖼️ Preparando dados para Quadro Interativo:', data);
 
       // Para Quadro Interativo, apenas salvar os dados preparados
@@ -832,6 +993,30 @@ const EditActivityModal = ({
               };
 
               console.log('✅ Dados da Sequência Didática processados:', enrichedFormData);
+            } else if (activity?.id === 'quiz-interativo') {
+              console.log('🎯 Processando dados específicos de Quiz Interativo');
+
+              enrichedFormData = {
+                ...formData,
+                title: consolidatedData.title || autoFormData.title || activity.title || '',
+                description: consolidatedData.description || autoFormData.description || activity.description || '',
+                numberOfQuestions: consolidatedCustomFields['Número de Questões'] || autoFormData.numberOfQuestions || '10',
+                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity.theme || '',
+                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || 'Matemática',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || '6º Ano - Ensino Fundamental',
+                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
+                questionModel: consolidatedCustomFields['Formato'] || autoFormData.questionModel || 'Múltipla Escolha',
+                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || '',
+                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || '',
+                instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || '',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+                timeLimit: consolidatedCustomFields['Tempo Limite'] || autoFormData.timeLimit || '',
+                context: consolidatedCustomFields['Contexto'] || autoFormData.context || '',
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
+              };
+
+              console.log('🎯 Dados finais do Quiz Interativo processados:', enrichedFormData);
+
             } else if (activity?.id === 'quadro-interativo') {
               console.log('🖼️ Processando dados específicos de Quadro Interativo');
 
@@ -1113,6 +1298,29 @@ const EditActivityModal = ({
             };
 
             console.log('✅ Dados da Sequência Didática processados:', directFormData);
+          } else if (activity?.id === 'quiz-interativo') {
+            console.log('🎯 Processando dados diretos de Quiz Interativo');
+
+            directFormData = {
+              ...formData,
+              title: activityData.title || '',
+              description: activityData.description || '',
+              numberOfQuestions: customFields['Número de Questões'] || customFields['quantidadeQuestoes'] || '10',
+              theme: customFields['Tema'] || customFields['tema'] || '',
+              subject: customFields['Disciplina'] || customFields['disciplina'] || 'Matemática',
+              schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '6º Ano - Ensino Fundamental',
+              difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+              questionModel: customFields['Formato'] || customFields['formato'] || customFields['Modelo de Questões'] || 'Múltipla Escolha',
+              objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
+              materials: customFields['Materiais'] || customFields['materiais'] || '',
+              instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
+              evaluation: customFields['Critérios de Avaliação'] || customFields['criteriosAvaliacao'] || '',
+              timeLimit: customFields['Tempo Limite'] || customFields['tempoLimite'] || '',
+              context: customFields['Contexto de Aplicação'] || customFields['contexto'] || '',
+              quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
+            };
+
+            console.log('🎯 Dados diretos do Quiz Interativo processados:', directFormData);
           } else if (activity?.id === 'quadro-interativo') {
             console.log('🖼️ Processando dados diretos de Quadro Interativo');
 
@@ -1460,6 +1668,14 @@ const EditActivityModal = ({
             'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
             'Cronograma': formData.cronograma
           }),
+          ...(activity?.id === 'quiz-interativo' && {
+            'Número de Questões': formData.numberOfQuestions,
+            'Tema': formData.theme,
+            'Disciplina': formData.subject,
+            'Ano de Escolaridade': formData.schoolYear,
+            'Nível de Dificuldade': formData.difficultyLevel,
+            'Formato': formData.questionModel
+          }),
           ...(activity?.id === 'quadro-interativo' && {
             'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
           })
@@ -1800,6 +2016,11 @@ const EditActivityModal = ({
                                   />
                                 </div>
                               </div>
+                            )}
+
+                            {/* Campos Específicos Quiz Interativo */}
+                            {activityType === 'quiz-interativo' && (
+                              <QuizInterativoEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
                             {/* Campos Específicos Quadro Interativo */}

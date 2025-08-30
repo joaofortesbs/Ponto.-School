@@ -62,7 +62,7 @@
   { "id": "tarefa-adaptada", "name": "Tarefa Adaptada", "description": "Adapta tarefas para necessidades específicas.", "tags": ["tarefa", "adaptação"], "apiType": "gemini", "enabled": true },
   { "id": "resumo-texto", "name": "Resumo de Texto", "description": "Resume textos longos em pontos principais.", "tags": ["resumo", "síntese"], "apiType": "gemini", "enabled": true },
   { "id": "instrucoes-claras", "name": "Instruções Claras", "description": "Reescreve enunciados para maior clareza.", "tags": ["clareza", "instruções"], "apiType": "gemini", "enabled": true },
-  { "id": "desenvolvimento-caligrafia", "name": "Desenvolvimento da Caligrafia", "description": "Gera atividades para melhorar caligrafia.", "tags": ["caligrafia", "escrita"], "apiType": "gemini", "enabled": true },
+  { "id": "desenvolvimento-caligrafia", "name": "Desenvolvimento da Caligrafia", "description": "Gera atividades de caligrafia e letras tracejadas.", "tags": ["caligrafia", "escrita"], "apiType": "gemini", "enabled": true },
   { "id": "reflexao-incidente", "name": "Reflexão sobre um Incidente", "description": "Cria textos reflexivos sobre situações escolares.", "tags": ["reflexão", "comportamento"], "apiType": "gemini", "enabled": true },
   { "id": "sugestoes-intervencao", "name": "Sugestões de Intervenção", "description": "Propõe ações para reforçar conteúdos.", "tags": ["intervenção", "apoio"], "apiType": "gemini", "enabled": true },
   { "id": "erros-comuns", "name": "Erros Comuns", "description": "Identifica e explica erros comuns de alunos.", "tags": ["erros", "diagnóstico"], "apiType": "gemini", "enabled": true },
