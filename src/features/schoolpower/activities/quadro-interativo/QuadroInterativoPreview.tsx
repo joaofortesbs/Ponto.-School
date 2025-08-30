@@ -9,7 +9,6 @@ import {
   RefreshCw,
   Sparkles
 } from 'lucide-react';
-import { geminiLogger } from '@/utils/geminiDebugLogger';
 
 interface QuadroInterativoPreviewProps {
   data: any;
@@ -65,7 +64,6 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       `quadro_interativo_preview_${data?.id || 'default'}`
     ];
     
-    let constructedData = {};
     let autoData = {};
     
     // Tentar carregar de todas as chaves possíveis
@@ -83,10 +81,9 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
       }
     });
     
-    // Consolidar dados com prioridade: autoData > constructedData > customFields > data
+    // Consolidar dados com prioridade: autoData > customFields > data
     const consolidatedFields = {
       ...customFields,
-      ...constructedData,
       ...autoData
     };
     
@@ -147,14 +144,22 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     return extractedData;
   };
 
-  // Gerador de conteúdo interno usando Gemini com prompt otimizado
+  // Gerador de conteúdo interno usando Gemini com configuração completa
   const generateQuadroContent = async (quadroData: QuadroInterativoData): Promise<QuadroInterativoContent> => {
+    console.log('🚀 [QUADRO INTERATIVO - GEMINI] Iniciando geração de conteúdo');
+    console.log('📋 [QUADRO INTERATIVO - GEMINI] Dados recebidos:', quadroData);
+
+    // Obter API Key do Gemini
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     
     if (!apiKey) {
-      throw new Error('API Key do Gemini não configurada');
+      console.error('❌ [QUADRO INTERATIVO - GEMINI] API Key não configurada');
+      throw new Error('API Key do Gemini não configurada. Verifique VITE_GEMINI_API_KEY');
     }
 
+    console.log('✅ [QUADRO INTERATIVO - GEMINI] API Key encontrada');
+
+    // Prompt otimizado para o Gemini
     const prompt = `
 Você é uma IA especializada em educação brasileira que cria conteúdo educativo COMPLETO e DIDÁTICO para quadros interativos em sala de aula.
 
@@ -168,34 +173,32 @@ DADOS DA AULA:
 
 MISSÃO: Criar um conteúdo que ENSINE o conceito de forma clara e completa, como se fosse uma mini-aula explicativa.
 
+INSTRUÇÕES ESPECÍFICAS:
+1. O título deve ser educativo e direto sobre o conceito (máximo 60 caracteres)
+2. O texto deve ser uma explicação COMPLETA com definição, características, exemplos e dicas (máximo 400 caracteres)
+3. Use linguagem adequada para ${quadroData.schoolYear}
+4. Seja EDUCATIVO, não apenas descritivo
+5. Foque em ENSINAR o conceito de forma completa
+
 FORMATO DE RESPOSTA (JSON apenas):
 {
-  "title": "Título educativo direto sobre o conceito (máximo 60 caracteres)",
-  "text": "Explicação COMPLETA do conceito com definição, características principais, exemplos práticos e dicas para identificação/aplicação. Deve ser uma mini-aula textual que ensina efetivamente o tema (máximo 400 caracteres)"
+  "title": "Título educativo direto sobre o conceito",
+  "text": "Explicação COMPLETA do conceito com definição, características principais, exemplos práticos e dicas para identificação/aplicação"
 }
 
-DIRETRIZES OBRIGATÓRIAS:
+EXEMPLOS DE TÍTULOS CORRETOS:
+- "Substantivos Próprios e Comuns"
+- "Função do 1º Grau"
+- "Fotossíntese das Plantas"
 
-TÍTULO:
-- Seja direto e educativo sobre o conceito
-- Use terminologia adequada para ${quadroData.schoolYear}
-- Exemplos: "Substantivos Próprios e Comuns", "Função do 1º Grau", "Fotossíntese das Plantas"
-- NÃO use "Quadro Interativo" ou "Atividade de"
-
-TEXTO:
-- INICIE com uma definição clara do conceito
-- INCLUA as características principais
-- ADICIONE exemplos práticos e concretos
-- FORNEÇA dicas para identificação ou aplicação
-- Use linguagem didática apropriada para ${quadroData.schoolYear}
-- Seja EDUCATIVO, não apenas descritivo
-- Foque em ENSINAR o conceito de forma completa
+NÃO use "Quadro Interativo" ou "Atividade de" no título.
 
 AGORA GERE O CONTEÚDO EDUCATIVO:`;
 
+    console.log('📝 [QUADRO INTERATIVO - GEMINI] Prompt preparado');
+
     try {
-      console.log('🤖 [QUADRO INTERATIVO] Iniciando chamada para API Gemini');
-      geminiLogger.logRequest('Gerando conteúdo de Quadro Interativo', quadroData);
+      console.log('🌐 [QUADRO INTERATIVO - GEMINI] Fazendo requisição para API Gemini');
       
       const startTime = Date.now();
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -218,21 +221,25 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         })
       });
 
+      const executionTime = Date.now() - startTime;
+      console.log(`⏱️ [QUADRO INTERATIVO - GEMINI] Tempo de resposta: ${executionTime}ms`);
+
       if (!response.ok) {
+        console.error('❌ [QUADRO INTERATIVO - GEMINI] Erro na resposta da API:', response.status, response.statusText);
         throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
       }
 
       const apiData = await response.json();
-      const executionTime = Date.now() - startTime;
-      
-      console.log('✅ [QUADRO INTERATIVO] Resposta da API Gemini recebida em', executionTime, 'ms');
-      geminiLogger.logResponse(apiData, executionTime);
+      console.log('📦 [QUADRO INTERATIVO - GEMINI] Resposta da API recebida:', apiData);
       
       const responseText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (!responseText) {
+        console.error('❌ [QUADRO INTERATIVO - GEMINI] Resposta vazia da API');
         throw new Error('Resposta vazia da API Gemini');
       }
+
+      console.log('📄 [QUADRO INTERATIVO - GEMINI] Texto da resposta:', responseText);
 
       // Limpar a resposta removendo markdown e extraindo JSON
       let cleanedResponse = responseText
@@ -241,11 +248,21 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         .replace(/^\s*[\r\n]/gm, '')
         .trim();
 
+      console.log('🧹 [QUADRO INTERATIVO - GEMINI] Resposta limpa:', cleanedResponse);
+
       // Tentar fazer parse do JSON
-      const parsedContent = JSON.parse(cleanedResponse);
+      let parsedContent;
+      try {
+        parsedContent = JSON.parse(cleanedResponse);
+        console.log('✅ [QUADRO INTERATIVO - GEMINI] JSON parseado com sucesso:', parsedContent);
+      } catch (parseError) {
+        console.error('❌ [QUADRO INTERATIVO - GEMINI] Erro ao fazer parse do JSON:', parseError);
+        throw new Error('Formato JSON inválido na resposta da API');
+      }
       
       // Validar estrutura
       if (!parsedContent.title || !parsedContent.text) {
+        console.error('❌ [QUADRO INTERATIVO - GEMINI] Estrutura JSON inválida:', parsedContent);
         throw new Error('Estrutura JSON inválida na resposta');
       }
 
@@ -253,7 +270,7 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
       const title = parsedContent.title.substring(0, 70);
       const text = parsedContent.text.substring(0, 450);
 
-      geminiLogger.logValidation({ title, text }, true);
+      console.log('📏 [QUADRO INTERATIVO - GEMINI] Conteúdo ajustado:', { title, text });
       
       const result: QuadroInterativoContent = {
         title,
@@ -262,12 +279,11 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         isGeneratedByAI: true
       };
 
-      console.log('✅ [QUADRO INTERATIVO] Conteúdo gerado com sucesso:', result);
+      console.log('🎉 [QUADRO INTERATIVO - GEMINI] Conteúdo gerado com sucesso:', result);
       return result;
       
     } catch (error) {
-      console.error('❌ [QUADRO INTERATIVO] Erro na API Gemini:', error);
-      geminiLogger.logError(error as Error, { quadroData });
+      console.error('💥 [QUADRO INTERATIVO - GEMINI] Erro na geração:', error);
       
       // Fallback com conteúdo educativo melhorado
       const educationalTitle = quadroData.theme || 'Conteúdo Educativo';
@@ -282,14 +298,17 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         isGeneratedByAI: false
       };
       
-      console.log('⚠️ [QUADRO INTERATIVO] Usando conteúdo fallback:', fallbackResult);
+      console.log('🔄 [QUADRO INTERATIVO - GEMINI] Usando conteúdo fallback:', fallbackResult);
       return fallbackResult;
     }
   };
 
   // Função para gerar conteúdo
   const handleGenerateContent = async () => {
-    if (contentState.isLoading) return;
+    if (contentState.isLoading) {
+      console.log('⏳ [QUADRO INTERATIVO] Geração já em andamento, ignorando');
+      return;
+    }
 
     console.log('🚀 [QUADRO INTERATIVO] Iniciando geração de conteúdo');
     setContentState(prev => ({ 
@@ -300,7 +319,10 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
 
     try {
       const quadroData = extractQuadroData();
+      console.log('📊 [QUADRO INTERATIVO] Dados extraídos para geração:', quadroData);
+      
       const generatedContent = await generateQuadroContent(quadroData);
+      console.log('✅ [QUADRO INTERATIVO] Conteúdo gerado:', generatedContent);
       
       // Salvar no localStorage para persistência
       const storageKey = `quadro_interativo_content_${data?.id || 'default'}`;
