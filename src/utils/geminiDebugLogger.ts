@@ -158,6 +158,10 @@ class GeminiDebugLogger {
   logProcessing(step: string, data?: any): void {
     this.debug('processing', `Processamento: ${step}`, data);
   }
+
+  logSuccess(message: string, data?: any): void {
+    this.info('response', message, data);
+  }
 }
 
 export const geminiLogger = GeminiDebugLogger.getInstance();

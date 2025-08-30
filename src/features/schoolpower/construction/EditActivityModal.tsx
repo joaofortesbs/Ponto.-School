@@ -25,7 +25,7 @@ import { CheckCircle2 } from 'lucide-react';
 // --- Componentes de Edição Específicos ---
 
 // Componente genérico para campos comuns
-const DefaultEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const DefaultEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <>
     <div>
       <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
@@ -74,7 +74,7 @@ const DefaultEditActivity = ({ formData, onFieldChange }: {formData: ActivityFor
 );
 
 // Componente específico para Quiz Interativo
-const QuizInterativoEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const QuizInterativoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -157,7 +157,7 @@ const QuizInterativoEditActivity = ({ formData, onFieldChange }: {formData: Acti
 );
 
 // Componente específico para Quadro Interativo
-const QuadroInterativoEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const QuadroInterativoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -237,7 +237,7 @@ const QuadroInterativoEditActivity = ({ formData, onFieldChange }: {formData: Ac
 );
 
 // Componente específico para Sequência Didática
-const SequenciaDidaticaEditActivity = ({ formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+const SequenciaDidaticaEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
@@ -613,20 +613,33 @@ const EditActivityModal = ({
       try {
         // Importar o gerador do Quiz Interativo
         const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
-        
-        // Preparar dados para o gerador
+
+        // Preparar dados para o gerador com validação completa
         const quizData = {
-          subject: data.subject || 'Matemática',
-          schoolYear: data.schoolYear || '6º Ano - Ensino Fundamental',
-          theme: data.theme || 'Tema Geral',
-          objectives: data.objectives || 'Testar conhecimentos do tema proposto',
-          difficultyLevel: data.difficultyLevel || 'Médio',
-          format: data.questionModel || 'Múltipla Escolha',
-          numberOfQuestions: data.numberOfQuestions || '10',
-          timePerQuestion: data.timePerQuestion || '60',
-          instructions: data.instructions || 'Responda às questões no tempo determinado.',
-          evaluation: data.evaluation || 'Pontuação baseada nas respostas corretas.'
+          subject: data.subject?.trim() || 'Matemática',
+          schoolYear: data.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
+          theme: data.theme?.trim() || data.title?.trim() || 'Tema Geral',
+          objectives: data.objectives?.trim() || data.description?.trim() || 'Testar conhecimentos do tema proposto',
+          difficultyLevel: data.difficultyLevel?.trim() || 'Médio',
+          format: data.questionModel?.trim() || data.format?.trim() || 'Múltipla Escolha',
+          numberOfQuestions: data.numberOfQuestions?.trim() || '10',
+          timePerQuestion: data.timePerQuestion?.trim() || '60',
+          instructions: data.instructions?.trim() || 'Responda às questões no tempo determinado.',
+          evaluation: data.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
         };
+
+        console.log('🎯 Dados preparados para geração do Quiz:', quizData);
+        console.log('📝 Estado atual do formData:', {
+          title: data.title,
+          description: data.description,
+          subject: data.subject,
+          theme: data.theme,
+          schoolYear: data.schoolYear,
+          numberOfQuestions: data.numberOfQuestions,
+          difficultyLevel: data.difficultyLevel,
+          questionModel: data.questionModel,
+          timePerQuestion: data.timePerQuestion
+        });
 
         // Criar instância do gerador e gerar conteúdo
         const generator = new QuizInterativoGenerator();
@@ -651,7 +664,7 @@ const EditActivityModal = ({
 
       } catch (error) {
         console.error('❌ Erro ao gerar Quiz Interativo via API:', error);
-        
+
         // Fallback para dados simulados se a API falhar
         const fallbackData = {
           ...data,
@@ -811,22 +824,34 @@ const EditActivityModal = ({
 
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
-      
-      // Preparar dados para o gerador
+
+      // Preparar dados para o gerador com validação completa
       const quizData = {
-        subject: formData.subject || 'Matemática',
-        schoolYear: formData.schoolYear || '6º Ano - Ensino Fundamental',
-        theme: formData.theme || 'Tema Geral',
-        objectives: formData.objectives || 'Testar conhecimentos do tema proposto',
-        difficultyLevel: formData.difficultyLevel || 'Médio',
-        format: formData.questionModel || 'Múltipla Escolha',
-        numberOfQuestions: formData.numberOfQuestions || '10',
-        timePerQuestion: formData.timePerQuestion || '60',
-        instructions: formData.instructions || 'Responda às questões no tempo determinado.',
-        evaluation: formData.evaluation || 'Pontuação baseada nas respostas corretas.'
+        subject: formData.subject?.trim() || 'Matemática',
+        schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
+        theme: formData.theme?.trim() || formData.title?.trim() || 'Tema Geral',
+        objectives: formData.objectives?.trim() || formData.description?.trim() || 'Testar conhecimentos do tema proposto',
+        difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
+        format: formData.questionModel?.trim() || formData.format?.trim() || 'Múltipla Escolha',
+        numberOfQuestions: formData.numberOfQuestions?.trim() || '10',
+        timePerQuestion: formData.timePerQuestion?.trim() || '60',
+        instructions: formData.instructions?.trim() || 'Responda às questões no tempo determinado.',
+        evaluation: formData.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
       };
 
-      console.log('📊 Dados preparados para o gerador:', quizData);
+      console.log('🎯 Dados preparados para geração do Quiz:', quizData);
+      console.log('📝 Estado atual do formData:', {
+        title: formData.title,
+        description: formData.description,
+        subject: formData.subject,
+        theme: formData.theme,
+        schoolYear: formData.schoolYear,
+        numberOfQuestions: formData.numberOfQuestions,
+        difficultyLevel: formData.difficultyLevel,
+        questionModel: formData.questionModel,
+        timePerQuestion: formData.timePerQuestion
+      });
+
 
       // Criar instância do gerador e gerar conteúdo
       const generator = new QuizInterativoGenerator();
@@ -1738,7 +1763,7 @@ const EditActivityModal = ({
         // Garantir que o conteúdo específico também seja definido
         const quizData = result.data || result;
         setQuizInterativoContent(quizData);
-        
+
         console.log('💾 Quiz Interativo processado e salvo:', quizData);
       }
 

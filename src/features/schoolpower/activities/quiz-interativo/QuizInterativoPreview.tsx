@@ -141,11 +141,23 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  if (!content) {
+  if (!content || !content.questions || content.questions.length === 0) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardContent className="p-8 text-center">
-          <p className="text-gray-500">Nenhum conteúdo de quiz disponível. Configure os campos e gere o conteúdo.</p>
+          <p className="text-gray-500">
+            {!content ? 
+              'Nenhum conteúdo de quiz disponível. Configure os campos e gere o conteúdo.' :
+              'Quiz em processamento ou sem questões. Aguarde a geração completa.'
+            }
+          </p>
+          {content && (
+            <div className="mt-4 text-sm text-gray-400">
+              <p>Título: {content.title || 'Não definido'}</p>
+              <p>Questões: {content.questions?.length || 0}</p>
+              <p>Tempo por questão: {content.timePerQuestion || 'Não definido'}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -162,16 +174,20 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="p-4 bg-blue-50 rounded-lg">
               <span className="font-semibold">Total de Questões:</span>
-              <p className="text-2xl font-bold text-blue-600">{content.totalQuestions}</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {content.totalQuestions || content.questions?.length || 0}
+              </p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg">
               <span className="font-semibold">Tempo por Questão:</span>
-              <p className="text-2xl font-bold text-green-600">{formatTime(content.timePerQuestion)}</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatTime(Number(content.timePerQuestion) || 60)}
+              </p>
             </div>
             <div className="p-4 bg-purple-50 rounded-lg">
               <span className="font-semibold">Tempo Total:</span>
               <p className="text-2xl font-bold text-purple-600">
-                {formatTime(content.timePerQuestion * content.totalQuestions)}
+                {formatTime((Number(content.timePerQuestion) || 60) * (content.totalQuestions || content.questions?.length || 0))}
               </p>
             </div>
           </div>
