@@ -106,82 +106,50 @@ const QuizInterativoEditActivity = ({ formData, onFieldChange }: {formData: Acti
     <div className="grid grid-cols-2 gap-4">
       <div>
         <Label htmlFor="subject">Disciplina *</Label>
-        <Select value={formData.subject || ''} onValueChange={(value) => onFieldChange('subject', value)}>
-          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-            <SelectValue placeholder="Selecione a disciplina" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Matemática">Matemática</SelectItem>
-            <SelectItem value="Português">Português</SelectItem>
-            <SelectItem value="História">História</SelectItem>
-            <SelectItem value="Geografia">Geografia</SelectItem>
-            <SelectItem value="Ciências">Ciências</SelectItem>
-            <SelectItem value="Física">Física</SelectItem>
-            <SelectItem value="Química">Química</SelectItem>
-            <SelectItem value="Biologia">Biologia</SelectItem>
-            <SelectItem value="Inglês">Inglês</SelectItem>
-            <SelectItem value="Educação Física">Educação Física</SelectItem>
-            <SelectItem value="Arte">Arte</SelectItem>
-            <SelectItem value="Filosofia">Filosofia</SelectItem>
-            <SelectItem value="Sociologia">Sociologia</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          id="subject"
+          value={formData.subject || ''}
+          onChange={(e) => onFieldChange('subject', e.target.value)}
+          placeholder="Ex: Matemática, Português, História"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
       <div>
         <Label htmlFor="schoolYear">Ano de Escolaridade *</Label>
-        <Select value={formData.schoolYear || ''} onValueChange={(value) => onFieldChange('schoolYear', value)}>
-          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-            <SelectValue placeholder="Selecione o ano" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1º Ano - Ensino Fundamental">1º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="2º Ano - Ensino Fundamental">2º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="3º Ano - Ensino Fundamental">3º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="4º Ano - Ensino Fundamental">4º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="5º Ano - Ensino Fundamental">5º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="6º Ano - Ensino Fundamental">6º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="7º Ano - Ensino Fundamental">7º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="8º Ano - Ensino Fundamental">8º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="9º Ano - Ensino Fundamental">9º Ano - Ensino Fundamental</SelectItem>
-            <SelectItem value="1º Ano - Ensino Médio">1º Ano - Ensino Médio</SelectItem>
-            <SelectItem value="2º Ano - Ensino Médio">2º Ano - Ensino Médio</SelectItem>
-            <SelectItem value="3º Ano - Ensino Médio">3º Ano - Ensino Médio</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          id="schoolYear"
+          value={formData.schoolYear || ''}
+          onChange={(e) => onFieldChange('schoolYear', e.target.value)}
+          placeholder="Ex: 6º Ano - Ensino Fundamental"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
     </div>
 
     <div className="grid grid-cols-2 gap-4">
       <div>
         <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
-        <Select value={formData.difficultyLevel || ''} onValueChange={(value) => onFieldChange('difficultyLevel', value)}>
-          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-            <SelectValue placeholder="Selecione o nível" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Muito Fácil">Muito Fácil</SelectItem>
-            <SelectItem value="Fácil">Fácil</SelectItem>
-            <SelectItem value="Médio">Médio</SelectItem>
-            <SelectItem value="Difícil">Difícil</SelectItem>
-            <SelectItem value="Muito Difícil">Muito Difícil</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          id="difficultyLevel"
+          value={formData.difficultyLevel || ''}
+          onChange={(e) => onFieldChange('difficultyLevel', e.target.value)}
+          placeholder="Ex: Fácil, Médio, Difícil"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
       <div>
         <Label htmlFor="questionModel">Formato *</Label>
-        <Select value={formData.questionModel || ''} onValueChange={(value) => onFieldChange('questionModel', value)}>
-          <SelectTrigger className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-            <SelectValue placeholder="Selecione o formato" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Múltipla Escolha">Múltipla Escolha</SelectItem>
-            <SelectItem value="Verdadeiro ou Falso">Verdadeiro ou Falso</SelectItem>
-            <SelectItem value="Misto (Múltipla Escolha + V/F)">Misto (Múltipla Escolha + V/F)</SelectItem>
-            <SelectItem value="Questões Abertas">Questões Abertas</SelectItem>
-            <SelectItem value="Associação/Correspondência">Associação/Correspondência</SelectItem>
-            <SelectItem value="Completar Lacunas">Completar Lacunas</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input
+          id="questionModel"
+          value={formData.questionModel || ''}
+          onChange={(e) => onFieldChange('questionModel', e.target.value)}
+          placeholder="Ex: Múltipla Escolha, Verdadeiro ou Falso"
+          required
+          className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+        />
       </div>
     </div>
   </div>
@@ -1876,7 +1844,7 @@ const EditActivityModal = ({
                         return (
                           <>
                             {/* Campos Genéricos */}
-                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo') && (
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo') && (
                               <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
