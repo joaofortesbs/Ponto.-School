@@ -7,7 +7,8 @@ import {
   Lightbulb,
   Loader2,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 
 interface QuadroInterativoPreviewProps {
@@ -40,165 +41,212 @@ const QuadroInterativoPreview: React.FC<QuadroInterativoPreviewProps> = ({
     isLoading: boolean;
     error: string | null;
     hasGenerated: boolean;
+    apiKeyStatus: 'checking' | 'valid' | 'invalid' | 'missing';
   }>({
     content: null,
     isLoading: false,
     error: null,
-    hasGenerated: false
+    hasGenerated: false,
+    apiKeyStatus: 'checking'
   });
 
-  // Sistema exclusivo de extração de dados com múltiplas fontes
+  // Verificar API Key do Gemini na inicialização
+  useEffect(() => {
+    const checkGeminiApiKey = () => {
+      console.log('🔐 [QUADRO INTERATIVO] Verificando API Key do Gemini');
+      
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        console.error('❌ [QUADRO INTERATIVO] VITE_GEMINI_API_KEY não encontrada');
+        setContentState(prev => ({ 
+          ...prev, 
+          apiKeyStatus: 'missing',
+          error: 'API Key do Gemini não configurada. Verifique VITE_GEMINI_API_KEY nas variáveis de ambiente.'
+        }));
+        return;
+      }
+      
+      if (apiKey.length < 20) {
+        console.error('❌ [QUADRO INTERATIVO] API Key inválida (muito curta)');
+        setContentState(prev => ({ 
+          ...prev, 
+          apiKeyStatus: 'invalid',
+          error: 'API Key do Gemini inválida. Verifique se está configurada corretamente.'
+        }));
+        return;
+      }
+      
+      console.log('✅ [QUADRO INTERATIVO] API Key encontrada e válida');
+      setContentState(prev => ({ ...prev, apiKeyStatus: 'valid' }));
+    };
+    
+    checkGeminiApiKey();
+  }, []);
+
+  // Sistema consolidado de extração de dados
   const extractQuadroData = (): QuadroInterativoData => {
-    console.log('📊 [QUADRO INTERATIVO] Extraindo dados de múltiplas fontes');
+    console.log('📊 [QUADRO INTERATIVO] Extraindo dados consolidados');
     
     // Coletar dados de todas as fontes possíveis
     const customFields = data?.customFields || activityData?.customFields || {};
     const activityTitle = data?.title || data?.personalizedTitle || activityData?.title || '';
     const activityDescription = data?.description || data?.personalizedDescription || activityData?.description || '';
     
-    // Verificar dados salvos localmente com múltiplas chaves
-    const possibleKeys = [
+    // Verificar localStorage com múltiplas chaves
+    const storageKeys = [
       `constructed_quadro-interativo_${data?.id || 'default'}`,
       `auto_activity_data_${data?.id || 'default'}`,
       `activity_quadro-interativo`,
-      `quadro_interativo_preview_${data?.id || 'default'}`
+      `quadro_interativo_preview_${data?.id || 'default'}`,
+      'schoolPowerActionPlan'
     ];
     
-    let autoData = {};
+    let consolidatedData = {};
     
-    // Tentar carregar de todas as chaves possíveis
-    possibleKeys.forEach(key => {
+    storageKeys.forEach(key => {
       try {
         const saved = localStorage.getItem(key);
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.formData || parsed.data || parsed.customFields) {
-            autoData = { ...autoData, ...(parsed.formData || parsed.data || parsed.customFields || parsed) };
+          if (key === 'schoolPowerActionPlan' && Array.isArray(parsed)) {
+            // Buscar dados específicos do quadro interativo no action plan
+            const quadroActivity = parsed.find(activity => 
+              activity.id === 'quadro-interativo' || 
+              activity.type === 'quadro-interativo'
+            );
+            if (quadroActivity?.customFields || quadroActivity?.formData) {
+              consolidatedData = { 
+                ...consolidatedData, 
+                ...(quadroActivity.customFields || quadroActivity.formData || {})
+              };
+            }
+          } else if (parsed.formData || parsed.data || parsed.customFields) {
+            consolidatedData = { 
+              ...consolidatedData, 
+              ...(parsed.formData || parsed.data || parsed.customFields || parsed) 
+            };
           }
         }
       } catch (e) {
-        console.warn(`Erro ao carregar ${key}:`, e);
+        console.warn(`⚠️ Erro ao carregar ${key}:`, e);
       }
     });
     
-    // Consolidar dados com prioridade: autoData > customFields > data
-    const consolidatedFields = {
-      ...customFields,
-      ...autoData
-    };
+    // Mesclar com customFields
+    const allData = { ...customFields, ...consolidatedData };
     
-    console.log('🔄 [QUADRO INTERATIVO] Dados consolidados:', {
+    console.log('🔄 [QUADRO INTERATIVO] Dados coletados:', {
       customFields,
-      autoData,
-      consolidatedFields
+      consolidatedData,
+      allData,
+      activityTitle,
+      activityDescription
     });
     
     const extractedData = {
-      subject: consolidatedFields['Disciplina / Área de conhecimento'] || 
-               consolidatedFields['Disciplina'] || 
-               consolidatedFields['disciplina'] || 
-               consolidatedFields['subject'] ||
+      subject: allData['Disciplina / Área de conhecimento'] || 
+               allData['Disciplina'] || 
+               allData['disciplina'] || 
+               allData['subject'] ||
                data?.subject || 
                'Matemática',
       
-      schoolYear: consolidatedFields['Ano / Série'] || 
-                  consolidatedFields['anoSerie'] || 
-                  consolidatedFields['Ano'] || 
-                  consolidatedFields['schoolYear'] ||
+      schoolYear: allData['Ano / Série'] || 
+                  allData['anoSerie'] || 
+                  allData['Ano'] || 
+                  allData['schoolYear'] ||
                   data?.schoolYear || 
                   '6º Ano',
       
-      theme: consolidatedFields['Tema ou Assunto da aula'] || 
-             consolidatedFields['tema'] || 
-             consolidatedFields['Tema'] || 
-             consolidatedFields['theme'] ||
+      theme: allData['Tema ou Assunto da aula'] || 
+             allData['tema'] || 
+             allData['Tema'] || 
+             allData['theme'] ||
              activityTitle ||
              data?.theme || 
-             'Conteúdo Educativo',
+             'Conteúdo Educativo Interativo',
       
-      objectives: consolidatedFields['Objetivo de aprendizagem da aula'] || 
-                  consolidatedFields['objetivos'] || 
-                  consolidatedFields['Objetivos'] || 
-                  consolidatedFields['objectives'] ||
+      objectives: allData['Objetivo de aprendizagem da aula'] || 
+                  allData['objetivos'] || 
+                  allData['Objetivos'] || 
+                  allData['objectives'] ||
                   activityDescription ||
                   data?.objectives || 
-                  'Objetivos de aprendizagem',
+                  'Desenvolver competências através de atividades interativas',
       
-      difficultyLevel: consolidatedFields['Nível de Dificuldade'] || 
-                       consolidatedFields['nivelDificuldade'] || 
-                       consolidatedFields['dificuldade'] || 
-                       consolidatedFields['difficultyLevel'] ||
+      difficultyLevel: allData['Nível de Dificuldade'] || 
+                       allData['nivelDificuldade'] || 
+                       allData['dificuldade'] || 
+                       allData['difficultyLevel'] ||
                        data?.difficultyLevel || 
                        'Intermediário',
       
-      quadroInterativoCampoEspecifico: consolidatedFields['Atividade mostrada'] || 
-                                       consolidatedFields['atividadeMostrada'] || 
-                                       consolidatedFields['quadroInterativoCampoEspecifico'] ||
-                                       consolidatedFields['Tipo de Interação'] || 
-                                       consolidatedFields['Campo Específico'] ||
+      quadroInterativoCampoEspecifico: allData['Atividade mostrada'] || 
+                                       allData['atividadeMostrada'] || 
+                                       allData['quadroInterativoCampoEspecifico'] ||
+                                       allData['Tipo de Interação'] || 
+                                       allData['Campo Específico'] ||
                                        data?.quadroInterativoCampoEspecifico || 
-                                       'Atividade interativa no quadro'
+                                       'Quadro interativo educacional'
     };
     
-    console.log('✅ [QUADRO INTERATIVO] Dados extraídos:', extractedData);
+    console.log('✅ [QUADRO INTERATIVO] Dados extraídos e processados:', extractedData);
     return extractedData;
   };
 
-  // Gerador de conteúdo interno usando Gemini com configuração completa
+  // Gerador consolidado usando API Gemini
   const generateQuadroContent = async (quadroData: QuadroInterativoData): Promise<QuadroInterativoContent> => {
-    console.log('🚀 [QUADRO INTERATIVO - GEMINI] Iniciando geração de conteúdo');
-    console.log('📋 [QUADRO INTERATIVO - GEMINI] Dados recebidos:', quadroData);
+    console.log('🚀 [QUADRO INTERATIVO - GEMINI API] Iniciando geração');
+    console.log('📋 [QUADRO INTERATIVO - GEMINI API] Dados de entrada:', quadroData);
 
-    // Obter API Key do Gemini
+    // Verificar API Key
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     
     if (!apiKey) {
-      console.error('❌ [QUADRO INTERATIVO - GEMINI] API Key não configurada');
-      throw new Error('API Key do Gemini não configurada. Verifique VITE_GEMINI_API_KEY');
+      throw new Error('API Key do Gemini não configurada. Configure VITE_GEMINI_API_KEY nas variáveis de ambiente.');
     }
 
-    console.log('✅ [QUADRO INTERATIVO - GEMINI] API Key encontrada');
-
-    // Prompt otimizado para o Gemini
+    // Prompt educativo otimizado
     const prompt = `
-Você é uma IA especializada em educação brasileira que cria conteúdo educativo COMPLETO e DIDÁTICO para quadros interativos em sala de aula.
+Você é uma IA especializada em educação brasileira que cria conteúdo educativo COMPLETO para quadros interativos.
 
-DADOS DA AULA:
+DADOS DA ATIVIDADE:
 - Disciplina: ${quadroData.subject}
 - Ano/Série: ${quadroData.schoolYear}
 - Tema: ${quadroData.theme}
 - Objetivos: ${quadroData.objectives}
-- Nível de Dificuldade: ${quadroData.difficultyLevel}
-- Atividade Mostrada: ${quadroData.quadroInterativoCampoEspecifico}
+- Nível: ${quadroData.difficultyLevel}
+- Tipo de Atividade: ${quadroData.quadroInterativoCampoEspecifico}
 
-MISSÃO: Criar um conteúdo que ENSINE o conceito de forma clara e completa, como se fosse uma mini-aula explicativa.
+OBJETIVO: Criar conteúdo educativo que ENSINE o conceito de forma clara, didática e adequada para ${quadroData.schoolYear}.
 
-INSTRUÇÕES ESPECÍFICAS:
-1. O título deve ser educativo e direto sobre o conceito (máximo 60 caracteres)
-2. O texto deve ser uma explicação COMPLETA com definição, características, exemplos e dicas (máximo 400 caracteres)
+INSTRUÇÕES RIGOROSAS:
+1. Título: Claro, educativo e direto sobre o tema (máximo 60 caracteres)
+2. Texto: Explicação COMPLETA e didática (máximo 400 caracteres)
 3. Use linguagem adequada para ${quadroData.schoolYear}
-4. Seja EDUCATIVO, não apenas descritivo
-5. Foque em ENSINAR o conceito de forma completa
+4. Seja EDUCATIVO e DIDÁTICO
+5. Foque em ENSINAR o conceito principal
 
-FORMATO DE RESPOSTA (JSON apenas):
+FORMATO DE RESPOSTA (SOMENTE JSON):
 {
-  "title": "Título educativo direto sobre o conceito",
-  "text": "Explicação COMPLETA do conceito com definição, características principais, exemplos práticos e dicas para identificação/aplicação"
+  "title": "Título educativo sobre o tema",
+  "text": "Explicação didática completa com conceitos, características e exemplos práticos para facilitar o aprendizado"
 }
 
-EXEMPLOS DE TÍTULOS CORRETOS:
-- "Substantivos Próprios e Comuns"
-- "Função do 1º Grau"
-- "Fotossíntese das Plantas"
+EXEMPLOS DE TÍTULOS ADEQUADOS:
+- "Função do 1º Grau: Conceitos e Aplicações"
+- "Substantivos: Classificação e Uso"
+- "Fotossíntese: Processo Vital das Plantas"
 
-NÃO use "Quadro Interativo" ou "Atividade de" no título.
+NÃO use "Quadro Interativo" ou "Atividade" no título.
 
-AGORA GERE O CONTEÚDO EDUCATIVO:`;
+GERE O CONTEÚDO EDUCATIVO AGORA:`;
 
-    console.log('📝 [QUADRO INTERATIVO - GEMINI] Prompt preparado');
+    console.log('📝 [QUADRO INTERATIVO - GEMINI API] Prompt preparado');
 
     try {
-      console.log('🌐 [QUADRO INTERATIVO - GEMINI] Fazendo requisição para API Gemini');
+      console.log('🌐 [QUADRO INTERATIVO - GEMINI API] Enviando requisição');
       
       const startTime = Date.now();
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -213,65 +261,81 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
             }]
           }],
           generationConfig: {
-            temperature: 0.8,
+            temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048,
-          }
+            maxOutputTokens: 1024,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
         })
       });
 
       const executionTime = Date.now() - startTime;
-      console.log(`⏱️ [QUADRO INTERATIVO - GEMINI] Tempo de resposta: ${executionTime}ms`);
+      console.log(`⏱️ [QUADRO INTERATIVO - GEMINI API] Tempo de resposta: ${executionTime}ms`);
 
       if (!response.ok) {
-        console.error('❌ [QUADRO INTERATIVO - GEMINI] Erro na resposta da API:', response.status, response.statusText);
-        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('❌ [QUADRO INTERATIVO - GEMINI API] Erro HTTP:', response.status, errorText);
+        throw new Error(`Erro na API Gemini: ${response.status} - ${response.statusText}`);
       }
 
       const apiData = await response.json();
-      console.log('📦 [QUADRO INTERATIVO - GEMINI] Resposta da API recebida:', apiData);
+      console.log('📦 [QUADRO INTERATIVO - GEMINI API] Resposta recebida:', apiData);
       
       const responseText = apiData?.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (!responseText) {
-        console.error('❌ [QUADRO INTERATIVO - GEMINI] Resposta vazia da API');
+        console.error('❌ [QUADRO INTERATIVO - GEMINI API] Resposta vazia');
         throw new Error('Resposta vazia da API Gemini');
       }
 
-      console.log('📄 [QUADRO INTERATIVO - GEMINI] Texto da resposta:', responseText);
+      console.log('📄 [QUADRO INTERATIVO - GEMINI API] Texto bruto:', responseText);
 
-      // Limpar a resposta removendo markdown e extraindo JSON
+      // Limpar e processar resposta
       let cleanedResponse = responseText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
         .replace(/^\s*[\r\n]/gm, '')
         .trim();
 
-      console.log('🧹 [QUADRO INTERATIVO - GEMINI] Resposta limpa:', cleanedResponse);
+      // Se não começar com {, tentar encontrar o JSON
+      if (!cleanedResponse.startsWith('{')) {
+        const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanedResponse = jsonMatch[0];
+        }
+      }
 
-      // Tentar fazer parse do JSON
+      console.log('🧹 [QUADRO INTERATIVO - GEMINI API] Resposta limpa:', cleanedResponse);
+
       let parsedContent;
       try {
         parsedContent = JSON.parse(cleanedResponse);
-        console.log('✅ [QUADRO INTERATIVO - GEMINI] JSON parseado com sucesso:', parsedContent);
+        console.log('✅ [QUADRO INTERATIVO - GEMINI API] JSON parseado:', parsedContent);
       } catch (parseError) {
-        console.error('❌ [QUADRO INTERATIVO - GEMINI] Erro ao fazer parse do JSON:', parseError);
+        console.error('❌ [QUADRO INTERATIVO - GEMINI API] Erro no parse:', parseError);
         throw new Error('Formato JSON inválido na resposta da API');
       }
       
       // Validar estrutura
-      if (!parsedContent.title || !parsedContent.text) {
-        console.error('❌ [QUADRO INTERATIVO - GEMINI] Estrutura JSON inválida:', parsedContent);
-        throw new Error('Estrutura JSON inválida na resposta');
+      if (!parsedContent?.title || !parsedContent?.text) {
+        console.error('❌ [QUADRO INTERATIVO - GEMINI API] Estrutura inválida:', parsedContent);
+        throw new Error('Estrutura JSON inválida - título ou texto ausente');
       }
 
-      // Limitar tamanhos conforme especificado no prompt
-      const title = parsedContent.title.substring(0, 70);
-      const text = parsedContent.text.substring(0, 450);
+      // Processar e limitar conteúdo
+      const title = String(parsedContent.title).substring(0, 60).trim();
+      const text = String(parsedContent.text).substring(0, 400).trim();
 
-      console.log('📏 [QUADRO INTERATIVO - GEMINI] Conteúdo ajustado:', { title, text });
-      
       const result: QuadroInterativoContent = {
         title,
         text,
@@ -279,34 +343,46 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         isGeneratedByAI: true
       };
 
-      console.log('🎉 [QUADRO INTERATIVO - GEMINI] Conteúdo gerado com sucesso:', result);
+      console.log('🎉 [QUADRO INTERATIVO - GEMINI API] Conteúdo gerado com sucesso:', result);
       return result;
       
     } catch (error) {
-      console.error('💥 [QUADRO INTERATIVO - GEMINI] Erro na geração:', error);
+      console.error('💥 [QUADRO INTERATIVO - GEMINI API] Erro na geração:', error);
       
-      // Fallback com conteúdo educativo melhorado
-      const educationalTitle = quadroData.theme || 'Conteúdo Educativo';
-      const educationalText = quadroData.objectives 
-        ? `${quadroData.objectives} - Explore este conceito através de atividades interativas que facilitam o aprendizado e compreensão do tema.`
-        : `Explore o tema "${quadroData.theme}" de forma interativa. Este conteúdo foi desenvolvido para facilitar a compreensão e aplicação dos conceitos fundamentais da disciplina.`;
+      // Fallback educativo melhorado
+      const fallbackTitle = quadroData.theme.length > 60 
+        ? quadroData.theme.substring(0, 57) + '...'
+        : quadroData.theme;
+      
+      const fallbackText = quadroData.objectives.length > 400
+        ? quadroData.objectives.substring(0, 397) + '...'
+        : quadroData.objectives || `Explore ${quadroData.theme} através de atividades interativas desenvolvidas para ${quadroData.schoolYear}. Conteúdo educativo que facilita a compreensão e aplicação dos conceitos fundamentais.`;
       
       const fallbackResult: QuadroInterativoContent = {
-        title: educationalTitle.substring(0, 70),
-        text: educationalText.substring(0, 450),
+        title: fallbackTitle || 'Conteúdo Educativo',
+        text: fallbackText,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: false
       };
       
-      console.log('🔄 [QUADRO INTERATIVO - GEMINI] Usando conteúdo fallback:', fallbackResult);
+      console.log('🔄 [QUADRO INTERATIVO - GEMINI API] Usando fallback:', fallbackResult);
       return fallbackResult;
     }
   };
 
-  // Função para gerar conteúdo
+  // Função principal de geração
   const handleGenerateContent = async () => {
     if (contentState.isLoading) {
-      console.log('⏳ [QUADRO INTERATIVO] Geração já em andamento, ignorando');
+      console.log('⏳ [QUADRO INTERATIVO] Geração em andamento');
+      return;
+    }
+
+    if (contentState.apiKeyStatus !== 'valid') {
+      console.error('❌ [QUADRO INTERATIVO] API Key inválida');
+      setContentState(prev => ({
+        ...prev,
+        error: 'API Key do Gemini não configurada corretamente'
+      }));
       return;
     }
 
@@ -319,30 +395,30 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
 
     try {
       const quadroData = extractQuadroData();
-      console.log('📊 [QUADRO INTERATIVO] Dados extraídos para geração:', quadroData);
+      console.log('📊 [QUADRO INTERATIVO] Dados para geração:', quadroData);
       
       const generatedContent = await generateQuadroContent(quadroData);
       console.log('✅ [QUADRO INTERATIVO] Conteúdo gerado:', generatedContent);
       
-      // Salvar no localStorage para persistência
+      // Salvar no localStorage
       const storageKey = `quadro_interativo_content_${data?.id || 'default'}`;
       localStorage.setItem(storageKey, JSON.stringify(generatedContent));
-      
-      console.log('💾 [QUADRO INTERATIVO] Conteúdo salvo no localStorage:', storageKey);
       
       setContentState({
         content: generatedContent,
         isLoading: false,
         error: null,
-        hasGenerated: true
+        hasGenerated: true,
+        apiKeyStatus: 'valid'
       });
       
     } catch (error) {
-      console.error('❌ [QUADRO INTERATIVO] Erro ao gerar conteúdo:', error);
+      console.error('❌ [QUADRO INTERATIVO] Erro na geração:', error);
       setContentState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
+        error: error instanceof Error ? error.message : 'Erro desconhecido na geração de conteúdo',
+        hasGenerated: false
       }));
     }
   };
@@ -350,9 +426,8 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
   // Carregar conteúdo salvo na inicialização
   useEffect(() => {
     const loadSavedContent = () => {
-      console.log('📂 [QUADRO INTERATIVO] Carregando conteúdo salvo');
+      console.log('📂 [QUADRO INTERATIVO] Verificando conteúdo salvo');
       
-      // Verificar se já existe conteúdo salvo
       const storageKey = `quadro_interativo_content_${data?.id || 'default'}`;
       const savedContent = localStorage.getItem(storageKey);
       
@@ -360,157 +435,43 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
         try {
           const parsedContent = JSON.parse(savedContent);
           console.log('✅ [QUADRO INTERATIVO] Conteúdo encontrado no localStorage');
-          setContentState({
+          setContentState(prev => ({
+            ...prev,
             content: parsedContent,
-            isLoading: false,
-            error: null,
             hasGenerated: true
-          });
+          }));
           return;
         } catch (error) {
           console.warn('⚠️ [QUADRO INTERATIVO] Erro ao carregar conteúdo salvo:', error);
         }
       }
 
-      // Verificar se há conteúdo gerado nos dados
-      if (data?.customFields?.generatedContent) {
-        try {
-          const generatedContent = JSON.parse(data.customFields.generatedContent);
-          if (generatedContent?.cardContent) {
-            console.log('✅ [QUADRO INTERATIVO] Conteúdo encontrado nos dados');
-            setContentState({
-              content: {
-                title: generatedContent.cardContent.title,
-                text: generatedContent.cardContent.text,
-                generatedAt: generatedContent.generatedAt || new Date().toISOString(),
-                isGeneratedByAI: true
-              },
-              isLoading: false,
-              error: null,
-              hasGenerated: true
-            });
-            return;
-          }
-        } catch (error) {
-          console.warn('⚠️ [QUADRO INTERATIVO] Erro ao processar conteúdo gerado:', error);
-        }
-      }
-
-      // Se não há conteúdo, definir estado inicial
-      console.log('📝 [QUADRO INTERATIVO] Nenhum conteúdo encontrado - estado inicial');
-      setContentState({
-        content: null,
-        isLoading: false,
-        error: null,
-        hasGenerated: false
-      });
+      console.log('📝 [QUADRO INTERATIVO] Nenhum conteúdo salvo encontrado');
     };
 
     loadSavedContent();
-  }, [data?.id, data?.customFields?.generatedContent]);
+  }, [data?.id]);
 
-  // Sistema exclusivo de detecção e auto-geração para Quadro Interativo
+  // Auto-geração quando API Key está válida e há dados
   useEffect(() => {
-    const checkAndGenerateContent = async () => {
-      console.log('🔍 [QUADRO INTERATIVO] Verificando necessidade de auto-geração');
-      
-      // Verificar múltiplas fontes de dados para trigger de geração
-      const isBuiltActivity = data?.isBuilt || data?.builtAt;
-      const hasConstructedData = localStorage.getItem(`constructed_quadro-interativo_${data?.id || 'default'}`);
-      const hasActionPlanData = localStorage.getItem(`auto_activity_data_${data?.id || 'default'}`);
-      const hasFormData = data?.customFields && Object.keys(data.customFields).length > 0;
-      const hasContentAlready = localStorage.getItem(`quadro_interativo_content_${data?.id || 'default'}`);
-      
-      // Verificar se atividade está no action plan
-      let isInActionPlan = false;
-      try {
-        const actionPlan = JSON.parse(localStorage.getItem('schoolPowerActionPlan') || '[]');
-        isInActionPlan = actionPlan.some((activity: any) => 
-          activity.id === 'quadro-interativo' && 
-          (activity.approved || activity.isBuilt)
-        );
-      } catch (e) {
-        console.warn('Erro ao verificar action plan:', e);
-      }
-      
-      // Condições para auto-geração
-      const shouldAutoGenerate = !contentState.hasGenerated && 
-                                !contentState.isLoading && 
-                                !contentState.error &&
-                                data?.id &&
-                                !hasContentAlready &&
-                                (isBuiltActivity || hasConstructedData || hasActionPlanData || hasFormData || isInActionPlan);
-
-      console.log('🎯 [QUADRO INTERATIVO] Sistema de detecção:', {
-        shouldAutoGenerate,
-        isBuiltActivity: !!isBuiltActivity,
-        hasConstructedData: !!hasConstructedData,
-        hasActionPlanData: !!hasActionPlanData,
-        hasFormData: !!hasFormData,
-        isInActionPlan,
-        hasContentAlready: !!hasContentAlready,
-        hasGenerated: contentState.hasGenerated,
-        dataId: data?.id
-      });
-
-      if (shouldAutoGenerate) {
-        console.log('🤖 [QUADRO INTERATIVO] Iniciando auto-geração de conteúdo');
+    const checkAutoGeneration = () => {
+      if (contentState.apiKeyStatus === 'valid' && 
+          !contentState.hasGenerated && 
+          !contentState.isLoading && 
+          !contentState.error &&
+          data?.id) {
         
-        // Aguardar um pouco para garantir que todos os dados estejam carregados
+        console.log('🤖 [QUADRO INTERATIVO] Iniciando auto-geração');
         setTimeout(() => {
           handleGenerateContent();
         }, 1000);
       }
     };
 
-    checkAndGenerateContent();
-  }, [data?.isBuilt, data?.builtAt, data?.id, data?.customFields, contentState.hasGenerated]);
+    checkAutoGeneration();
+  }, [contentState.apiKeyStatus, contentState.hasGenerated, data?.id]);
 
-  // Monitor para construção automática via "Construir Todas"
-  useEffect(() => {
-    const handleAutoBuildEvents = () => {
-      console.log('🎯 [QUADRO INTERATIVO] Evento de construção automática detectado');
-      
-      if (!contentState.hasGenerated && !contentState.isLoading) {
-        console.log('🚀 [QUADRO INTERATIVO] Iniciando geração por evento de construção');
-        setTimeout(() => {
-          handleGenerateContent();
-        }, 2000);
-      }
-    };
-
-    const handleForceGeneration = (event: any) => {
-      const { activityId } = event.detail || {};
-      
-      if (activityId === data?.id || !activityId) {
-        console.log('💪 [QUADRO INTERATIVO] Força geração detectada:', data?.id);
-        handleGenerateContent();
-      }
-    };
-
-    // Escutar eventos customizados de construção automática
-    const events = [
-      'quadro-interativo-auto-build',
-      'schoolpower-build-all-completed',
-      'quadro-interativo-force-generation',
-      'quadro-interativo-build-trigger'
-    ];
-
-    events.forEach(eventName => {
-      window.addEventListener(eventName, handleAutoBuildEvents);
-    });
-    
-    window.addEventListener('quadro-interativo-force-generation', handleForceGeneration);
-    
-    return () => {
-      events.forEach(eventName => {
-        window.removeEventListener(eventName, handleAutoBuildEvents);
-      });
-      window.removeEventListener('quadro-interativo-force-generation', handleForceGeneration);
-    };
-  }, [contentState.hasGenerated, contentState.isLoading, data?.id]);
-
-  // Renderizar conteúdo do card
+  // Renderizar conteúdo
   const renderCardContent = () => {
     if (contentState.isLoading) {
       return (
@@ -520,7 +481,7 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
             Gerando Conteúdo Educativo...
           </h1>
           <p className="text-gray-600">
-            A IA Gemini está criando um conteúdo personalizado para sua aula
+            A IA Gemini está criando conteúdo personalizado para sua aula
           </p>
         </div>
       );
@@ -529,21 +490,24 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
     if (contentState.error) {
       return (
         <div className="text-center space-y-4">
-          <div className="text-red-500 text-lg font-semibold">
+          <AlertCircle className="h-8 w-8 mx-auto text-red-500" />
+          <div className="text-red-600 font-semibold">
             Erro ao gerar conteúdo
           </div>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm max-w-md mx-auto">
             {contentState.error}
           </p>
-          <Button 
-            onClick={handleGenerateContent}
-            variant="outline"
-            size="sm"
-            className="mt-2"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Tentar Novamente
-          </Button>
+          {contentState.apiKeyStatus === 'valid' && (
+            <Button 
+              onClick={handleGenerateContent}
+              variant="outline"
+              size="sm"
+              className="mt-4"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar Novamente
+            </Button>
+          )}
         </div>
       );
     }
@@ -564,16 +528,8 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
       );
     }
 
-    // Estado inicial - tentar gerar automaticamente
+    // Estado inicial
     const quadroData = extractQuadroData();
-    
-    // Auto-gerar se temos dados suficientes
-    if (quadroData.theme && quadroData.objectives && !contentState.hasGenerated) {
-      setTimeout(() => {
-        console.log('🔄 [QUADRO INTERATIVO] Auto-geração no estado inicial');
-        handleGenerateContent();
-      }, 500);
-    }
     
     return (
       <div className="text-center space-y-6">
@@ -586,10 +542,12 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
             {quadroData.objectives}
           </p>
           
-          <div className="flex justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-600">Gerando conteúdo automaticamente...</span>
-          </div>
+          {contentState.apiKeyStatus === 'valid' && (
+            <div className="flex justify-center items-center">
+              <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Preparando geração automática...</span>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -598,7 +556,6 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
   return (
     <div className="h-full overflow-y-auto bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto p-6">
-        {/* Card de Quadro Visível - ÚNICO CARD */}
         <Card className="shadow-xl border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
           <CardHeader className="text-center pb-4">
             <CardTitle className="flex items-center justify-center gap-2 text-2xl text-blue-700 dark:text-blue-300 mb-2">
@@ -610,12 +567,17 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
               {contentState.content?.isGeneratedByAI ? (
                 <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
                   <Sparkles className="h-3 w-3 mr-1" />
-                  Conteúdo gerado pela IA Gemini
+                  Gerado pela IA Gemini
                 </Badge>
               ) : contentState.isLoading ? (
                 <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  Gerando conteúdo...
+                  Gerando...
+                </Badge>
+              ) : contentState.apiKeyStatus === 'missing' || contentState.apiKeyStatus === 'invalid' ? (
+                <Badge variant="destructive">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  API Key inválida
                 </Badge>
               ) : (
                 <Badge variant="outline" className="text-blue-600 dark:text-blue-400">
