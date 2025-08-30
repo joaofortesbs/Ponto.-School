@@ -53,10 +53,10 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
   // Reset timer when question changes
   useEffect(() => {
-    if (content && isQuizStarted) {
-      setTimeLeft(content.timePerQuestion || 60);
+    if (validatedContent && isQuizStarted) {
+      setTimeLeft(validatedContent.timePerQuestion || 60);
     }
-  }, [currentQuestionIndex, content]);
+  }, [currentQuestionIndex, validatedContent]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -81,7 +81,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleNextQuestion = () => {
-    if (!content) return;
+    if (!validatedContent) return;
 
     // Save current answer
     const newAnswers = { 
@@ -90,10 +90,10 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     };
     setUserAnswers(newAnswers);
 
-    if (currentQuestionIndex < content.questions.length - 1) {
+    if (currentQuestionIndex < validatedContent.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswer('');
-      setTimeLeft(content.timePerQuestion || 60);
+      setTimeLeft(validatedContent.timePerQuestion || 60);
     } else {
       setIsQuizCompleted(true);
       setShowResult(true);
@@ -111,21 +111,21 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const calculateScore = () => {
-    if (!content) return 0;
+    if (!validatedContent || !validatedContent.questions.length) return 0;
     let correctAnswers = 0;
 
-    content.questions.forEach((question, index) => {
+    validatedContent.questions.forEach((question, index) => {
       if (userAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
 
-    return Math.round((correctAnswers / content.questions.length) * 100);
+    return Math.round((correctAnswers / validatedContent.questions.length) * 100);
   };
 
   const getProgressPercentage = () => {
-    if (!content) return 0;
-    return ((currentQuestionIndex + 1) / content.questions.length) * 100;
+    if (!validatedContent || !validatedContent.questions.length) return 0;
+    return ((currentQuestionIndex + 1) / validatedContent.questions.length) * 100;
   };
 
   if (isLoading) {
@@ -151,6 +151,16 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
+  // Validar dados para evitar NaN
+  const validatedContent = {
+    ...content,
+    totalQuestions: content.totalQuestions || content.questions?.length || 0,
+    timePerQuestion: content.timePerQuestion && !isNaN(content.timePerQuestion) ? content.timePerQuestion : 60,
+    questions: content.questions || []
+  };
+
+  console.log('📊 Conteúdo validado do quiz:', validatedContent);
+
   if (!isQuizStarted) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
@@ -162,16 +172,16 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="p-4 bg-blue-50 rounded-lg">
               <span className="font-semibold">Total de Questões:</span>
-              <p className="text-2xl font-bold text-blue-600">{content.totalQuestions}</p>
+              <p className="text-2xl font-bold text-blue-600">{validatedContent.totalQuestions}</p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg">
               <span className="font-semibold">Tempo por Questão:</span>
-              <p className="text-2xl font-bold text-green-600">{formatTime(content.timePerQuestion)}</p>
+              <p className="text-2xl font-bold text-green-600">{formatTime(validatedContent.timePerQuestion)}</p>
             </div>
             <div className="p-4 bg-purple-50 rounded-lg">
               <span className="font-semibold">Tempo Total:</span>
               <p className="text-2xl font-bold text-purple-600">
-                {formatTime(content.timePerQuestion * content.totalQuestions)}
+                {formatTime(validatedContent.timePerQuestion * validatedContent.totalQuestions)}
               </p>
             </div>
           </div>
@@ -202,12 +212,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           </div>
           <p className="text-xl text-gray-600">
             Você acertou {Object.values(userAnswers).filter((answer, index) => 
-              answer === content.questions[index]?.correctAnswer
-            ).length} de {content.questions.length} questões
+              answer === validatedContent.questions[index]?.correctAnswer
+            ).length} de {validatedContent.questions.length} questões
           </p>
 
           <div className="space-y-4">
-            {content.questions.map((question, index) => {
+            {validatedContent.questions.map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
@@ -256,7 +266,17 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  const currentQuestion = content.questions[currentQuestionIndex];
+  const currentQuestion = validatedContent.questions[currentQuestionIndex];
+
+  if (!currentQuestion) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardContent className="p-8 text-center">
+          <p className="text-gray-500">Questão não encontrada. Verifique o conteúdo do quiz.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <motion.div
@@ -269,7 +289,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Questão {currentQuestionIndex + 1} de {content.questions.length}</span>
+              <span>Questão {currentQuestionIndex + 1} de {validatedContent.questions.length}</span>
               <span>{Math.round(getProgressPercentage())}% concluído</span>
             </div>
             <Progress value={getProgressPercentage()} className="h-3" />
@@ -334,7 +354,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   disabled={!selectedAnswer}
                   className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2"
                 >
-                  {currentQuestionIndex < content.questions.length - 1 ? 'Próxima' : 'Finalizar'}
+                  {currentQuestionIndex < validatedContent.questions.length - 1 ? 'Próxima' : 'Finalizar'}
                 </Button>
               </div>
             </motion.div>

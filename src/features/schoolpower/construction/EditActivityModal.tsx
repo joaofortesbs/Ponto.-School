@@ -807,32 +807,37 @@ const EditActivityModal = ({
       setIsGeneratingQuiz(true);
       setGenerationError(null);
 
-      console.log('🎯 Iniciando geração real do Quiz Interativo com dados:', formData);
+      console.log('🎯 Iniciando geração real do Quiz Interativo com dados completos:', formData);
 
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
       
-      // Preparar dados para o gerador
+      // Validar dados obrigatórios
+      if (!formData.theme?.trim() || !formData.subject?.trim() || !formData.numberOfQuestions?.trim()) {
+        throw new Error('Dados obrigatórios não preenchidos: tema, disciplina e número de questões são necessários');
+      }
+
+      // Preparar dados para o gerador com validação
       const quizData = {
-        subject: formData.subject || 'Matemática',
-        schoolYear: formData.schoolYear || '6º Ano - Ensino Fundamental',
-        theme: formData.theme || 'Tema Geral',
-        objectives: formData.objectives || 'Testar conhecimentos do tema proposto',
-        difficultyLevel: formData.difficultyLevel || 'Médio',
-        format: formData.questionModel || 'Múltipla Escolha',
-        numberOfQuestions: formData.numberOfQuestions || '10',
-        timePerQuestion: formData.timePerQuestion || '60',
-        instructions: formData.instructions || 'Responda às questões no tempo determinado.',
-        evaluation: formData.evaluation || 'Pontuação baseada nas respostas corretas.'
+        subject: formData.subject?.trim() || 'Matemática',
+        schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
+        theme: formData.theme?.trim() || 'Tema Geral',
+        objectives: formData.objectives?.trim() || formData.description?.trim() || 'Testar conhecimentos do tema proposto',
+        difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
+        format: formData.questionModel?.trim() || 'Múltipla Escolha',
+        numberOfQuestions: formData.numberOfQuestions?.trim() || '10',
+        timePerQuestion: formData.timePerQuestion?.trim() || '60',
+        instructions: formData.instructions?.trim() || `Responda às questões sobre ${formData.theme} no tempo determinado.`,
+        evaluation: formData.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
       };
 
-      console.log('📊 Dados preparados para o gerador:', quizData);
+      console.log('📊 Dados validados preparados para o gerador:', quizData);
 
       // Criar instância do gerador e gerar conteúdo
       const generator = new QuizInterativoGenerator();
       const generatedContent = await generator.generateQuizContent(quizData);
 
-      console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
+      console.log('✅ Conteúdo gerado pela API Gemini/Fallback:', generatedContent);
 
       // Preparar conteúdo final
       const finalContent = {

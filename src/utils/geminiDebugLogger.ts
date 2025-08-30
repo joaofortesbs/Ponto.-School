@@ -147,6 +147,15 @@ class GeminiDebugLogger {
     });
   }
 
+  // Métodos de conveniência
+  logInfo(message: string, data?: any): void {
+    this.info('processing', message, data);
+  }
+
+  logSuccess(message: string, data?: any): void {
+    this.info('response', message, data);
+  }
+
   logValidation(data: any, isValid: boolean, errors?: string[]): void {
     this.debug('validation', 'Validação de dados', {
       is_valid: isValid,
