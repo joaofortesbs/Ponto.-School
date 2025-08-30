@@ -37,89 +37,28 @@ export class QuizInterativoGenerator {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   }
 
   async generateQuizContent(data: QuizInterativoData): Promise<QuizInterativoContent> {
     try {
-      console.log('🎯 Iniciando geração de Quiz Interativo com dados:', data);
-      geminiLogger.info('request', '🎯 Iniciando geração de Quiz Interativo', data);
+      geminiLogger.logInfo('🎯 Iniciando geração de Quiz Interativo', data);
 
-      // Validar dados de entrada
-      this.validateInputData(data);
-
-      if (!this.apiKey || this.apiKey === 'AIzaSyDummy-Key-For-Development-Replace-Me') {
-        console.warn('⚠️ API Key não configurada, usando conteúdo de fallback');
-        return this.generateFallbackContent(data);
+      if (!this.apiKey) {
+        throw new Error('API Key do Gemini não configurada');
       }
 
       const prompt = this.buildPrompt(data);
       const response = await this.callGeminiAPI(prompt);
       const content = this.parseResponse(response, data);
 
-      console.log('✅ Quiz Interativo gerado com sucesso:', content);
-      geminiLogger.info('response', '✅ Quiz Interativo gerado com sucesso', content);
+      geminiLogger.logSuccess('✅ Quiz Interativo gerado com sucesso', content);
       return content;
 
     } catch (error) {
-      console.error('❌ Erro ao gerar Quiz Interativo:', error);
-      geminiLogger.error('error', '❌ Erro ao gerar Quiz Interativo', error);
-      
-      // Fallback em caso de erro
-      console.log('🔄 Usando conteúdo de fallback devido ao erro');
-      return this.generateFallbackContent(data);
+      geminiLogger.logError('❌ Erro ao gerar Quiz Interativo', error);
+      throw error;
     }
-  }
-
-  private validateInputData(data: QuizInterativoData): void {
-    if (!data.subject || !data.theme || !data.numberOfQuestions) {
-      throw new Error('Dados obrigatórios não fornecidos');
-    }
-  }
-
-  private generateFallbackContent(data: QuizInterativoData): QuizInterativoContent {
-    const numQuestions = parseInt(data.numberOfQuestions) || 5;
-    const timePerQuestion = parseInt(data.timePerQuestion) || 60;
-    
-    console.log('📝 Gerando conteúdo de fallback com:', { numQuestions, timePerQuestion });
-    
-    const questions: QuizQuestion[] = [];
-    
-    for (let i = 1; i <= numQuestions; i++) {
-      if (data.format === 'Verdadeiro ou Falso') {
-        questions.push({
-          id: i,
-          question: `Pergunta ${i}: O conceito de ${data.theme} é fundamental para ${data.subject}?`,
-          type: 'verdadeiro-falso',
-          correctAnswer: 'Verdadeiro',
-          explanation: `Esta afirmação é verdadeira porque ${data.theme} é um conceito básico em ${data.subject}.`
-        });
-      } else {
-        questions.push({
-          id: i,
-          question: `Pergunta ${i}: Qual é a principal aplicação do ${data.theme} em ${data.subject}?`,
-          type: 'multipla-escolha',
-          options: [
-            `A) Aplicação básica de ${data.theme}`,
-            `B) Conceito avançado de ${data.theme}`,
-            `C) Método prático de ${data.theme}`,
-            `D) Teoria fundamental de ${data.theme}`
-          ],
-          correctAnswer: `A) Aplicação básica de ${data.theme}`,
-          explanation: `A resposta correta é A, pois representa a aplicação mais direta do conceito de ${data.theme}.`
-        });
-      }
-    }
-
-    return {
-      title: `Quiz Interativo: ${data.theme}`,
-      description: `Teste seus conhecimentos sobre ${data.theme} com este quiz interativo! Descubra se você domina os conceitos e aplicações deste importante tema de ${data.subject}.`,
-      questions,
-      timePerQuestion,
-      totalQuestions: numQuestions,
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false
-    };
   }
 
   private buildPrompt(data: QuizInterativoData): string {
