@@ -81,5 +81,6 @@
   { "id": "chatbot-bncc", "name": "Chatbot com a BNCC", "description": "Responde perguntas sobre a BNCC em formato de chat.", "tags": ["BNCC", "chatbot"], "apiType": "gemini", "enabled": true },
   { "id": "apresentacao-slides", "name": "Crie apresentações inteiras com Slides", "description": "Construa apresentações completas em formato de Slides.", "tags": ["Apresentações", "Slides"], "apiType": "gemini", "enabled": true },
   { "id": "quadro-interativo", "name": "Quadro de Aula Interativo", "description": "Cria um formato de 1 à 3 quadros interativos para apresentar na aula, pegando anotações e mostrando atividades", "tags": ["IA", "interação"], "apiType": "gemini", "enabled": true },
-  { "id": "gerar-questoes", "name": "Gerador de questões personalizadas completas e super didaticas", "description": "Gere questões que testam perfeitamente o seu público, de uma maneira engajada e única.", "tags": ["Questões", "Gerador"], "apiType": "gemini", "enabled": true }
+  { "id": "gerar-questoes", "name": "Gerador de questões personalizadas completas e super didaticas", "description": "Gere questões que testam perfeitamente o seu público, de uma maneira engajada e única.", "tags": ["Questões", "Gerador"], "apiType": "gemini", "enabled": true },
+  { "id": "quiz-interativo", "name": "Gerar Quiz interativo e gamificado sobre o tema", "description": "Gere um quiz que faça sua turma entender o conteúdo de uma maneira divertida", "tags": ["Quiz", "Perguntas"], "apiType": "gemini", "enabled": true }
 ]
