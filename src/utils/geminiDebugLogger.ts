@@ -1,4 +1,3 @@
-
 interface GeminiDebugLog {
   id: string;
   timestamp: string;
@@ -37,7 +36,7 @@ class GeminiDebugLogger {
     };
 
     this.logs.push(log);
-    
+
     // Manter apenas os logs mais recentes
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);
@@ -121,17 +120,19 @@ class GeminiDebugLogger {
   }
 
   // Métodos específicos para debug Gemini
-  logRequest(prompt: string, config: any): void {
-    this.info('request', 'Enviando requisição para API Gemini', {
+  logRequest(prompt: string, config?: any) {
+    this.log('info', 'request', 'Enviando requisição para API Gemini', {
       prompt_length: prompt.length,
       prompt_preview: prompt.substring(0, 200) + (prompt.length > 200 ? '...' : ''),
-      config
+      config,
+      timestamp: new Date().toISOString(),
+      hasApiKey: !!import.meta.env.VITE_GEMINI_API_KEY
     });
   }
 
-  logResponse(response: any, executionTime: number): void {
+  logResponse(response: any, executionTime: number) {
     const responseText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
-    this.info('response', 'Resposta recebida da API Gemini', {
+    this.log('info', 'response', 'Resposta recebida da API Gemini', {
       execution_time: executionTime,
       response_length: responseText?.length || 0,
       response_preview: responseText?.substring(0, 200) + (responseText?.length > 200 ? '...' : ''),
@@ -140,7 +141,7 @@ class GeminiDebugLogger {
   }
 
   logError(error: Error | string, context?: any): void {
-    this.error('error', 'Erro na API Gemini', {
+    this.log('error', 'error', 'Erro na API Gemini', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       context
@@ -148,7 +149,7 @@ class GeminiDebugLogger {
   }
 
   logValidation(data: any, isValid: boolean, errors?: string[]): void {
-    this.debug('validation', 'Validação de dados', {
+    this.log('debug', 'validation', 'Validação de dados', {
       is_valid: isValid,
       errors: errors || [],
       data_preview: JSON.stringify(data).substring(0, 300)
@@ -156,11 +157,34 @@ class GeminiDebugLogger {
   }
 
   logProcessing(step: string, data?: any): void {
-    this.debug('processing', `Processamento: ${step}`, data);
+    this.log('debug', 'processing', `Processamento: ${step}`, data);
   }
 
   logSuccess(message: string, data?: any): void {
-    this.info('response', message, data);
+    this.log('info', 'response', message, data);
+  }
+
+  // Métodos adicionais para o quiz
+  logApiResponse(response: any, executionTime: number) {
+    this.log('info', 'response', 'API Gemini Response', {
+      hasCandidates: !!response.candidates,
+      candidatesCount: response.candidates?.length || 0,
+      hasContent: !!response.candidates?.[0]?.content,
+      responseSize: JSON.stringify(response).length,
+      executionTime: `${executionTime}ms`,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  logQuestionGeneration(questionData: any, questionIndex: number) {
+    this.log('info', 'processing', `QUESTÃO ${questionIndex + 1} GERADA`, {
+      hasQuestion: !!questionData.question,
+      hasOptions: !!questionData.options,
+      optionsCount: questionData.options?.length || 0,
+      hasCorrectAnswer: !!questionData.correctAnswer,
+      hasExplanation: !!questionData.explanation,
+      questionType: questionData.type || 'não definido'
+    });
   }
 }
 

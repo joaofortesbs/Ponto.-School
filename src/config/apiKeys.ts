@@ -1,9 +1,26 @@
-
 // Configuração centralizada das chaves de API
+
+// Função para validar API Keys
+const validateApiKey = (key: string, serviceName: string): string => {
+  if (!key) {
+    console.warn(`⚠️ API Key para ${serviceName} não configurada`);
+    return '';
+  }
+
+  if (key.length < 10) {
+    console.warn(`⚠️ API Key para ${serviceName} parece inválida (muito curta)`);
+  } else {
+    console.log(`✅ API Key para ${serviceName} configurada`);
+  }
+
+  return key;
+};
+
 export const API_KEYS = {
-  GEMINI: 'AIzaSyCTFP7NXclzBjV5M2JzhealO_SQ8rDrzDg',
-  CLAUDE: '', // Adicionar quando disponível
-} as const;
+  GEMINI: validateApiKey(import.meta.env.VITE_GEMINI_API_KEY || '', 'Gemini'),
+  CLAUDE: validateApiKey(import.meta.env.VITE_CLAUDE_API_KEY || '', 'Claude'),
+  OPENAI: validateApiKey(import.meta.env.VITE_OPENAI_API_KEY || '', 'OpenAI')
+};
 
 // URLs base das APIs
 export const API_URLS = {

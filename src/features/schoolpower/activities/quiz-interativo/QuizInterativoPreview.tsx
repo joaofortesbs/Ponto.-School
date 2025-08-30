@@ -173,7 +173,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           <p className="text-gray-600">{content.description}</p>
         </CardHeader>
         <CardContent className="p-8 text-center space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
             <div className="p-4 bg-blue-50 rounded-lg">
               <span className="font-semibold">Total de Questões:</span>
               <p className="text-2xl font-bold text-blue-600">
@@ -192,7 +192,41 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                 {formatTime((Number(content.timePerQuestion) || 60) * (content.totalQuestions || content.questions?.length || 0))}
               </p>
             </div>
+            <div className="p-4 bg-orange-50 rounded-lg">
+              <span className="font-semibold">Áreas Exploradas:</span>
+              <p className="text-lg font-bold text-orange-600">
+                {content.topicsExplored?.length || 'Várias'}
+              </p>
+            </div>
           </div>
+
+          {/* Mostrar distribuição de tipos de questão */}
+          {content.questionDistribution && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-semibold mb-2">Distribuição das Questões:</h4>
+              <div className="flex justify-center gap-4 text-sm">
+                {Object.entries(content.questionDistribution).map(([type, count]) => (
+                  <span key={type} className="px-3 py-1 bg-white rounded-full border">
+                    {type === 'multipla-escolha' ? 'Múltipla Escolha' : 'Verdadeiro/Falso'}: {count}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mostrar áreas exploradas */}
+          {content.topicsExplored && content.topicsExplored.length > 0 && (
+            <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
+              <h4 className="font-semibold mb-2">Áreas do Tema Exploradas:</h4>
+              <div className="flex flex-wrap justify-center gap-2">
+                {content.topicsExplored.map((topic, index) => (
+                  <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <Button 
             onClick={handleStartQuiz}
