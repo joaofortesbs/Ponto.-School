@@ -37,7 +37,7 @@ export class AutoBuildService {
     }
   }
 
-  private prepareFormDataExactlyLikeModal(activity: ConstructionActivity): any {
+  private async prepareFormDataExactlyLikeModal(activity: ConstructionActivity): Promise<any> {
     console.log(`🎯 Preparando formData EXATAMENTE como EditActivityModal para: ${activity.title}`);
 
     // Sistema exclusivo para Quadro Interativo
@@ -322,7 +322,7 @@ export class AutoBuildService {
 
     try {
       // PASSO 1: Preparar formData EXATAMENTE como o modal faz
-      const formData = this.prepareFormDataExactlyLikeModal(activity);
+      const formData = await this.prepareFormDataExactlyLikeModal(activity);
 
       // PASSO 2: Preparar contextData EXATAMENTE como o hook useGenerateActivity faz
       const contextData = this.prepareContextDataExactlyLikeHook(formData);
