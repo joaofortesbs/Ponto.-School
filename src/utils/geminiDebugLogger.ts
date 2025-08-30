@@ -1,4 +1,3 @@
-
 interface GeminiDebugLog {
   id: string;
   timestamp: string;
@@ -37,7 +36,7 @@ class GeminiDebugLogger {
     };
 
     this.logs.push(log);
-    
+
     // Manter apenas os logs mais recentes
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);
@@ -157,6 +156,19 @@ class GeminiDebugLogger {
 
   logProcessing(step: string, data?: any): void {
     this.debug('processing', `Processamento: ${step}`, data);
+  }
+
+  logInfo(message: string, data?: any): void {
+    console.log(`🔍 [GEMINI DEBUG] ${message}`, data || '');
+
+    // Log adicional para Quiz Interativo
+    if (message.includes('Quiz') || data?.theme) {
+      console.log(`📋 [QUIZ DEBUG] Detalhes:`, {
+        timestamp: new Date().toISOString(),
+        message,
+        data: data ? JSON.stringify(data, null, 2) : 'No data'
+      });
+    }
   }
 }
 

@@ -613,45 +613,84 @@ const EditActivityModal = ({
       try {
         // Importar o gerador do Quiz Interativo
         const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
-        
-        // Preparar dados para o gerador
-        const quizData = {
-          subject: data.subject || 'Matemática',
-          schoolYear: data.schoolYear || '6º Ano - Ensino Fundamental',
-          theme: data.theme || 'Tema Geral',
-          objectives: data.objectives || 'Testar conhecimentos do tema proposto',
-          difficultyLevel: data.difficultyLevel || 'Médio',
-          format: data.questionModel || 'Múltipla Escolha',
-          numberOfQuestions: data.numberOfQuestions || '10',
-          timePerQuestion: data.timePerQuestion || '60',
-          instructions: data.instructions || 'Responda às questões no tempo determinado.',
-          evaluation: data.evaluation || 'Pontuação baseada nas respostas corretas.'
-        };
 
-        // Criar instância do gerador e gerar conteúdo
-        const generator = new QuizInterativoGenerator();
-        const generatedContent = await generator.generateQuizContent(quizData);
+        // Preparar dados específicos para Quiz Interativo com validação
+      const quizData = {
+        title: formData.title || activity.title || 'Quiz Interativo',
+        description: formData.description || activity.description || 'Quiz educativo interativo',
+        theme: formData.theme || activity.theme || 'Tema Geral',
+        schoolYear: formData.schoolYear || activity.schoolYear || 'Ensino Médio',
+        subject: formData.subject || activity.subject || 'Disciplina',
+        numberOfQuestions: formData.numberOfQuestions || '5',
+        questionModel: formData.questionModel || 'Múltipla Escolha',
+        timePerQuestion: formData.timePerQuestion || '60',
+        objectives: formData.objectives || 'Avaliar conhecimentos sobre o tema estudado no tempo determinado.',
+        materials: formData.materials || 'Computador ou dispositivo móvel com acesso à internet.',
+        instructions: formData.instructions || 'Leia cada pergunta com atenção e selecione a resposta correta no tempo determinado.',
+        evaluation: formData.evaluation || 'Pontuação baseada nas respostas corretas.'
+      };
 
-        const finalData = {
-          ...data,
-          ...generatedContent,
-          title: data.title || generatedContent.title,
-          description: data.description || generatedContent.description,
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          generatedByAI: true
-        };
+      console.log('📊 [QUIZ CONSTRUCTION] Dados preparados para o gerador:', quizData);
 
-        console.log('✅ Quiz Interativo gerado com sucesso:', finalData);
+      // Validar dados obrigatórios
+      if (!quizData.theme || !quizData.subject || !quizData.schoolYear) {
+        throw new Error('Dados obrigatórios ausentes para geração do quiz');
+      }
+
+      // Criar instância do gerador e gerar conteúdo
+      const generator = new QuizInterativoGenerator();
+      console.log('🚀 [QUIZ CONSTRUCTION] Iniciando geração com API Gemini...');
+
+      const generatedContent = await generator.generateQuizContent(quizData);
+      console.log('✅ [QUIZ CONSTRUCTION] Conteúdo gerado pela API Gemini:', generatedContent);
+
+      // Validar conteúdo gerado
+      if (!generatedContent.questions || generatedContent.questions.length === 0) {
+        throw new Error('Nenhuma questão foi gerada');
+      }
+
+      // Preparar conteúdo final com validação
+      const finalContent = {
+        ...generatedContent,
+        title: quizData.title,
+        description: quizData.description,
+        format: quizData.questionModel,
+        theme: quizData.theme,
+        subject: quizData.subject,
+        schoolYear: quizData.schoolYear,
+        timePerQuestion: parseInt(quizData.timePerQuestion) || 60,
+        totalQuestions: generatedContent.questions.length,
+        generatedByAI: generatedContent.isGeneratedByAI,
+        generatedAt: new Date().toISOString(),
+        isBuilt: true,
+        builtAt: new Date().toISOString()
+      };
+
+      // Salvar no localStorage com chave consistente
+      const quizStorageKey = `constructed_quiz-interativo_${activity?.id}`;
+      const dataToStore = {
+        success: true,
+        data: finalContent,
+        timestamp: new Date().toISOString()
+      };
+
+      localStorage.setItem(quizStorageKey, JSON.stringify(dataToStore));
+      console.log('💾 [QUIZ CONSTRUCTION] Quiz Interativo salvo no localStorage:', quizStorageKey, dataToStore);
+
+      // Atualizar estados
+      setQuizInterativoContent(finalContent);
+      setGeneratedContent(finalContent);
+      setIsContentLoaded(true);
+
 
         return {
           success: true,
-          data: finalData
+          data: finalContent
         };
 
       } catch (error) {
         console.error('❌ Erro ao gerar Quiz Interativo via API:', error);
-        
+
         // Fallback para dados simulados se a API falhar
         const fallbackData = {
           ...data,
@@ -811,47 +850,69 @@ const EditActivityModal = ({
 
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
-      
-      // Preparar dados para o gerador
+
+      // Preparar dados específicos para Quiz Interativo com validação
       const quizData = {
-        subject: formData.subject || 'Matemática',
-        schoolYear: formData.schoolYear || '6º Ano - Ensino Fundamental',
-        theme: formData.theme || 'Tema Geral',
-        objectives: formData.objectives || 'Testar conhecimentos do tema proposto',
-        difficultyLevel: formData.difficultyLevel || 'Médio',
-        format: formData.questionModel || 'Múltipla Escolha',
-        numberOfQuestions: formData.numberOfQuestions || '10',
+        title: formData.title || activity.title || 'Quiz Interativo',
+        description: formData.description || activity.description || 'Quiz educativo interativo',
+        theme: formData.theme || activity.theme || 'Tema Geral',
+        schoolYear: formData.schoolYear || activity.schoolYear || 'Ensino Médio',
+        subject: formData.subject || activity.subject || 'Disciplina',
+        numberOfQuestions: formData.numberOfQuestions || '5',
+        questionModel: formData.questionModel || 'Múltipla Escolha',
         timePerQuestion: formData.timePerQuestion || '60',
-        instructions: formData.instructions || 'Responda às questões no tempo determinado.',
+        objectives: formData.objectives || 'Avaliar conhecimentos sobre o tema estudado no tempo determinado.',
+        materials: formData.materials || 'Computador ou dispositivo móvel com acesso à internet.',
+        instructions: formData.instructions || 'Leia cada pergunta com atenção e selecione a resposta correta no tempo determinado.',
         evaluation: formData.evaluation || 'Pontuação baseada nas respostas corretas.'
       };
 
-      console.log('📊 Dados preparados para o gerador:', quizData);
+      console.log('📊 [QUIZ CONSTRUCTION] Dados preparados para o gerador:', quizData);
+
+      // Validar dados obrigatórios
+      if (!quizData.theme || !quizData.subject || !quizData.schoolYear) {
+        throw new Error('Dados obrigatórios ausentes para geração do quiz');
+      }
 
       // Criar instância do gerador e gerar conteúdo
       const generator = new QuizInterativoGenerator();
+      console.log('🚀 [QUIZ CONSTRUCTION] Iniciando geração com API Gemini...');
+
       const generatedContent = await generator.generateQuizContent(quizData);
+      console.log('✅ [QUIZ CONSTRUCTION] Conteúdo gerado pela API Gemini:', generatedContent);
 
-      console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
+      // Validar conteúdo gerado
+      if (!generatedContent.questions || generatedContent.questions.length === 0) {
+        throw new Error('Nenhuma questão foi gerada');
+      }
 
-      // Preparar conteúdo final
+      // Preparar conteúdo final com validação
       const finalContent = {
         ...generatedContent,
-        title: formData.title || generatedContent.title,
-        description: formData.description || generatedContent.description,
-        format: formData.questionModel || "Múltipla Escolha",
-        generatedByAI: true,
+        title: quizData.title,
+        description: quizData.description,
+        format: quizData.questionModel,
+        theme: quizData.theme,
+        subject: quizData.subject,
+        schoolYear: quizData.schoolYear,
+        timePerQuestion: parseInt(quizData.timePerQuestion) || 60,
+        totalQuestions: generatedContent.questions.length,
+        generatedByAI: generatedContent.isGeneratedByAI,
         generatedAt: new Date().toISOString(),
+        isBuilt: true,
+        builtAt: new Date().toISOString()
       };
 
-      // Salvar no localStorage
+      // Salvar no localStorage com chave consistente
       const quizStorageKey = `constructed_quiz-interativo_${activity?.id}`;
-      localStorage.setItem(quizStorageKey, JSON.stringify({
+      const dataToStore = {
         success: true,
-        data: finalContent
-      }));
+        data: finalContent,
+        timestamp: new Date().toISOString()
+      };
 
-      console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
+      localStorage.setItem(quizStorageKey, JSON.stringify(dataToStore));
+      console.log('💾 [QUIZ CONSTRUCTION] Quiz Interativo salvo no localStorage:', quizStorageKey, dataToStore);
 
       // Atualizar estados
       setQuizInterativoContent(finalContent);
@@ -1201,91 +1262,156 @@ const EditActivityModal = ({
             } else if (activity?.id === 'quadro-interativo') {
               console.log('🖼️ Processando dados específicos de Quadro Interativo');
 
-              // Importar o processador específico do Quadro Interativo
+              // Usar o processador específico para dados diretos também
               const { prepareQuadroInterativoDataForModal } = await import('../activities/quadro-interativo/quadroInterativoProcessor');
 
-              // Preparar dados consolidados para o processador
-              const activityForProcessor = {
-                ...activity,
-                ...consolidatedData,
-                customFields: {
-                  ...activity.customFields,
-                  ...consolidatedCustomFields,
-                  ...autoCustomFields
-                }
-              };
+              const processedDirectData = prepareQuadroInterativoDataForModal({
+                ...activityData,
+                customFields: customFields
+              });
 
-              console.log('📋 Dados para processador do Quadro Interativo:', activityForProcessor);
-
-              // Usar o processador específico para preparar os dados
-              const processedQuadroData = prepareQuadroInterativoDataForModal(activityForProcessor);
-
-              // Aplicar dados automáticos por cima se existirem
               enrichedFormData = {
-                ...processedQuadroData,
+                ...processedDirectData,
+                // Garantir mapeamento completo dos custom fields
+                title: activityData.personalizedTitle || activityData.title || processedDirectData.title,
+                description: activityData.personalizedDescription || activityData.description || processedDirectData.description,
 
-                // Sobrescrever com dados automáticos se existirem e forem válidos
-                ...(autoFormData.title && { title: autoFormData.title }),
-                ...(autoFormData.description && { description: autoFormData.description }),
-                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
-                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
-                ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
-                ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
-                ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
-                ...(autoFormData.materials && { materials: autoFormData.materials }),
-                ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
-                ...(autoFormData.evaluation && { evaluation: autoFormData.evaluation }),
-                ...(autoFormData.timeLimit && { timeLimit: autoFormData.timeLimit }),
-                ...(autoFormData.context && { context: autoFormData.context })
+                subject: customFields['Disciplina / Área de conhecimento'] ||
+                         customFields['disciplina'] ||
+                         customFields['Disciplina'] ||
+                         customFields['Componente Curricular'] ||
+                         customFields['Matéria'] ||
+                         processedDirectData.subject ||
+                         'Matemática',
+
+                schoolYear: customFields['Ano / Série'] ||
+                           customFields['anoSerie'] ||
+                           customFields['Ano de Escolaridade'] ||
+                           customFields['Público-Alvo'] ||
+                           customFields['Ano'] ||
+                           customFields['Série'] ||
+                           processedDirectData.schoolYear ||
+                           '6º Ano',
+
+                theme: customFields['Tema ou Assunto da aula'] ||
+                       customFields['tema'] ||
+                       customFields['Tema'] ||
+                       customFields['Assunto'] ||
+                       customFields['Tópico'] ||
+                       customFields['Tema Central'] ||
+                       processedDirectData.theme ||
+                       activityData.title ||
+                       'Tema da Aula',
+
+                objectives: customFields['Objetivo de aprendizagem da aula'] ||
+                            customFields['objetivos'] ||
+                            customFields['Objetivos'] ||
+                            customFields['Objetivo'] ||
+                            customFields['Objetivo Principal'] ||
+                            customFields['Objetivos de Aprendizagem'] ||
+                            processedDirectData.objectives ||
+                            activityData.description ||
+                            'Objetivos de aprendizagem',
+
+                difficultyLevel: customFields['Nível de Dificuldade'] ||
+                                customFields['nivelDificuldade'] ||
+                                customFields['dificuldade'] ||
+                                customFields['Dificuldade'] ||
+                                customFields['Nível'] ||
+                                customFields['Complexidade'] ||
+                                processedDirectData.difficultyLevel ||
+                                'Intermediário',
+
+                quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
+                                                  customFields['atividadeMostrada'] ||
+                                                  customFields['quadroInterativoCampoEspecifico'] ||
+                                                  customFields['Campo Específico do Quadro Interativo'] ||
+                                                  customFields['Atividade'] ||
+                                                  customFields['Atividades'] ||
+                                                  customFields['Tipo de Atividade'] ||
+                                                  customFields['Interatividade'] ||
+                                                  customFields['Campo Específico'] ||
+                                                  processedDirectData.quadroInterativoCampoEspecifico ||
+                                                  'Atividade interativa no quadro',
+
+                materials: customFields['Materiais'] ||
+                          customFields['Materiais Necessários'] ||
+                          customFields['Recursos'] ||
+                          customFields['materials'] ||
+                          processedDirectData.materials ||
+                          '',
+
+                instructions: customFields['Instruções'] ||
+                             customFields['Metodologia'] ||
+                             customFields['instructions'] ||
+                             processedDirectData.instructions ||
+                             '',
+
+                evaluation: customFields['Avaliação'] ||
+                           customFields['Critérios de Avaliação'] ||
+                           customFields['evaluation'] ||
+                           processedDirectData.evaluation ||
+                           '',
+
+                timeLimit: customFields['Tempo Estimado'] ||
+                          customFields['Duração'] ||
+                          customFields['timeLimit'] ||
+                          processedDirectData.timeLimit ||
+                          '',
+
+                context: customFields['Contexto'] ||
+                        customFields['Aplicação'] ||
+                        customFields['context'] ||
+                        processedDirectData.context ||
+                        ''
               };
 
-              console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
+              console.log('🖼️ Dados diretos do Quadro Interativo processados:', enrichedFormData);
 
             } else {
               enrichedFormData = {
-                title: consolidatedData.title || autoFormData.title || '',
-                description: consolidatedData.description || autoFormData.description || '',
-                subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Português',
-                theme: consolidatedCustomFields['Tema'] || consolidatedCustomFields['tema'] || consolidatedCustomFields['Tema das Palavras'] || consolidatedCustomFields['Tema do Vocabulário'] || autoFormData.theme || '',
-                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || consolidatedCustomFields['ano'] || autoFormData.schoolYear || '',
-                numberOfQuestions: consolidatedCustomFields['Quantidade de Questões'] || consolidatedCustomFields['quantidadeQuestoes'] || consolidatedCustomFields['Quantidade de Palavras'] || autoFormData.numberOfQuestions || '10',
-                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || consolidatedCustomFields['nivelDificuldade'] || consolidatedCustomFields['dificuldade'] || autoFormData.difficultyLevel || 'Médio',
-                questionModel: consolidatedCustomFields['Modelo de Questões'] || consolidatedCustomFields['modeloQuestoes'] || consolidatedCustomFields['Tipo de Avaliação'] || autoFormData.questionModel || '',
-                sources: consolidatedCustomFields['Fontes'] || consolidatedCustomFields['fontes'] || consolidatedCustomFields['Referencias'] || autoFormData.sources || '',
-                objectives: consolidatedCustomFields['Objetivos'] || consolidatedCustomFields['objetivos'] || consolidatedCustomFields['Competências Trabalhadas'] || autoFormData.objectives || '',
-                materials: consolidatedCustomFields['Materiais'] || consolidatedCustomFields['materiais'] || consolidatedCustomFields['Recursos Visuais'] || autoFormData.materials || '',
-                instructions: consolidatedCustomFields['Instruções'] || consolidatedCustomFields['instrucoes'] || consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['Atividades Práticas'] || autoFormData.instructions || '',
-                evaluation: consolidatedCustomFields['Critérios de Correção'] || consolidatedCustomFields['Critérios de Avaliação'] || consolidatedCustomFields['criteriosAvaliacao'] || autoFormData.evaluation || '',
-                timeLimit: consolidatedCustomFields['Tempo de Prova'] || consolidatedCustomFields['Tempo Limite'] || consolidatedCustomFields['tempoLimite'] || autoFormData.timeLimit || '',
-                context: consolidatedCustomFields['Contexto de Aplicação'] || consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contexto'] || autoFormData.context || '',
-                textType: consolidatedCustomFields['Tipo de Texto'] || consolidatedCustomFields['tipoTexto'] || '',
-                textGenre: consolidatedCustomFields['Gênero Textual'] || consolidatedCustomFields['generoTextual'] || '',
-                textLength: consolidatedCustomFields['Extensão do Texto'] || consolidatedCustomFields['extensaoTexto'] || '',
-                associatedQuestions: consolidatedCustomFields['Questões Associadas'] || consolidatedCustomFields['questoesAssociadas'] || '',
-                competencies: consolidatedCustomFields['Competências Trabalhadas'] || consolidatedCustomFields['competencias'] || '',
-                readingStrategies: consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['estrategiasLeitura'] || '',
-                visualResources: consolidatedCustomFields['Recursos Visuais'] || consolidatedCustomFields['recursosVisuais'] || '',
-                practicalActivities: consolidatedCustomFields['Atividades Práticas'] || consolidatedCustomFields['atividadesPraticas'] || '',
-                wordsIncluded: consolidatedCustomFields['Palavras Incluídas'] || consolidatedCustomFields['palavrasIncluidas'] || '',
-                gridFormat: consolidatedCustomFields['Formato da Grade'] || consolidatedCustomFields['formatoGrade'] || '',
-                providedHints: consolidatedCustomFields['Dicas Fornecidas'] || consolidatedCustomFields['dicasFornecidas'] || '',
-                vocabularyContext: consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contextoUso'] || '',
-                language: consolidatedCustomFields['Idioma'] || consolidatedCustomFields['idioma'] || '',
-                associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
-                knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
-                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || '',
-                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || '',
-                anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || '',
-                disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || '',
-                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || autoFormData.bnccCompetencias || '',
-                publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
-                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
-                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
-                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
-                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
-                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
-                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
+                title: activityData.title || '',
+                description: activityData.description || '',
+                subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
+                theme: customFields['Tema'] || customFields['tema'] || '',
+                schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '',
+                numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || '10',
+                difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
+                questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || '',
+                sources: customFields['Fontes'] || customFields['fontes'] || '',
+                objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
+                materials: customFields['Materiais'] || customFields['materiais'] || '',
+                instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
+                evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || '',
+                timeLimit: customFields['Tempo Limite'] || '',
+                context: customFields['Contexto de Aplicação'] || '',
+                textType: '',
+                textGenre: '',
+                textLength: '',
+                associatedQuestions: '',
+                competencies: '',
+                readingStrategies: '',
+                visualResources: '',
+                practicalActivities: '',
+                wordsIncluded: '',
+                gridFormat: '',
+                providedHints: '',
+                vocabularyContext: '',
+                language: '',
+                associatedExercises: '',
+                knowledgeArea: '',
+                complexityLevel: '',
+                tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
+                anoSerie: customFields['Ano / Série'] || '',
+                disciplina: customFields['Disciplina'] || '',
+                bnccCompetencias: customFields['BNCC / Competências'] || '',
+                publicoAlvo: customFields['Público-alvo'] || '',
+                objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
+                quantidadeAulas: customFields['Quantidade de Aulas'] || '',
+                quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
+                quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
+                cronograma: customFields['Cronograma'] || '',
+                quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
               };
             }
 
@@ -1357,8 +1483,6 @@ const EditActivityModal = ({
               quantidadeAvaliacoes: '',
               cronograma: '',
               quadroInterativoCampoEspecifico: '',
-              format: '', // Default for Quiz Interativo
-              timePerQuestion: '', // Default for Quiz Interativo
             };
 
             setFormData(fallbackData);
@@ -1570,16 +1694,16 @@ const EditActivityModal = ({
                               'Intermediário',
 
               quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
-                                              customFields['atividadeMostrada'] ||
-                                              customFields['quadroInterativoCampoEspecifico'] ||
-                                              customFields['Campo Específico do Quadro Interativo'] ||
-                                              customFields['Atividade'] ||
-                                              customFields['Atividades'] ||
-                                              customFields['Tipo de Atividade'] ||
-                                              customFields['Interatividade'] ||
-                                              customFields['Campo Específico'] ||
-                                              processedDirectData.quadroInterativoCampoEspecifico ||
-                                              'Atividade interativa no quadro',
+                                                customFields['atividadeMostrada'] ||
+                                                customFields['quadroInterativoCampoEspecifico'] ||
+                                                customFields['Campo Específico do Quadro Interativo'] ||
+                                                customFields['Atividade'] ||
+                                                customFields['Atividades'] ||
+                                                customFields['Tipo de Atividade'] ||
+                                                customFields['Interatividade'] ||
+                                                customFields['Campo Específico'] ||
+                                                processedDirectData.quadroInterativoCampoEspecifico ||
+                                                'Atividade interativa no quadro',
 
               materials: customFields['Materiais'] ||
                         customFields['Materiais Necessários'] ||
@@ -1738,7 +1862,7 @@ const EditActivityModal = ({
         // Garantir que o conteúdo específico também seja definido
         const quizData = result.data || result;
         setQuizInterativoContent(quizData);
-        
+
         console.log('💾 Quiz Interativo processado e salvo:', quizData);
       }
 

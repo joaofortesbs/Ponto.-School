@@ -1,142 +1,142 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Clock, Play, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Play, CheckCircle, XCircle } from 'lucide-react';
 
 interface QuizQuestion {
   id: number;
   question: string;
   type: 'multipla-escolha' | 'verdadeiro-falso';
-  options?: string[];
+  options: string[];
   correctAnswer: string;
-  explanation?: string;
+  explanation: string;
+}
+
+interface QuizInterativoContent {
+  title: string;
+  description: string;
+  questions: QuizQuestion[];
+  timePerQuestion: number;
+  totalQuestions: number;
+  generatedAt: string;
+  isGeneratedByAI: boolean;
 }
 
 interface QuizInterativoPreviewProps {
-  content?: {
-    title: string;
-    description: string;
-    questions: QuizQuestion[];
-    timePerQuestion: number;
-    totalQuestions: number;
-  };
-  isLoading?: boolean;
+  activity: any;
 }
 
-const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({ 
-  content, 
-  isLoading = false 
-}) => {
+export const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({ activity }) => {
+  const [content, setContent] = useState<QuizInterativoContent | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [isQuizStarted, setIsQuizStarted] = useState(false);
-  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
-  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
-  const [showResult, setShowResult] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [score, setScore] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
-  // Timer effect
   useEffect(() => {
-    if (isQuizStarted && !isQuizCompleted && !showResult && timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !showResult) {
-      handleNextQuestion();
-    }
-  }, [timeLeft, isQuizStarted, isQuizCompleted, showResult]);
+    loadQuizContent();
+  }, [activity]);
 
-  // Reset timer when question changes
-  useEffect(() => {
-    if (content && isQuizStarted) {
-      setTimeLeft(content.timePerQuestion || 60);
-    }
-  }, [currentQuestionIndex, content]);
+  const loadQuizContent = () => {
+    console.log('🔍 [QUIZ PREVIEW] Carregando conteúdo do quiz para atividade:', activity?.id);
+    setIsLoading(true);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    try {
+      // Tentar carregar do localStorage primeiro
+      const storageKey = `constructed_quiz-interativo_${activity?.id}`;
+      const storedData = localStorage.getItem(storageKey);
+
+      if (storedData) {
+        console.log('📦 [QUIZ PREVIEW] Dados encontrados no localStorage:', storageKey);
+        const parsedData = JSON.parse(storedData);
+        
+        if (parsedData.success && parsedData.data) {
+          console.log('✅ [QUIZ PREVIEW] Conteúdo carregado com sucesso:', parsedData.data);
+          setContent(parsedData.data);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Se não encontrou no localStorage, usar dados básicos da atividade
+      console.log('⚠️ [QUIZ PREVIEW] Dados não encontrados no localStorage, usando dados da atividade');
+      
+      if (activity) {
+        const basicContent: QuizInterativoContent = {
+          title: activity.title || 'Quiz Interativo',
+          description: activity.description || 'Quiz educativo interativo',
+          questions: [
+            {
+              id: 1,
+              question: `Questão sobre ${activity.theme || 'o tema estudado'}`,
+              type: 'multipla-escolha',
+              options: ['A) Opção 1', 'B) Opção 2', 'C) Opção 3', 'D) Opção 4'],
+              correctAnswer: 'A) Opção 1',
+              explanation: 'Explicação da resposta correta.'
+            }
+          ],
+          timePerQuestion: 60,
+          totalQuestions: 1,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: false
+        };
+
+        setContent(basicContent);
+      }
+
+    } catch (error) {
+      console.error('❌ [QUIZ PREVIEW] Erro ao carregar conteúdo:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleStartQuiz = () => {
-    setIsQuizStarted(true);
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer('');
-    setUserAnswers({});
-    setIsQuizCompleted(false);
-    setShowResult(false);
-    if (content) {
-      setTimeLeft(content.timePerQuestion || 60);
-    }
+  const handleAnswerSelect = (answer: string) => {
+    setSelectedAnswer(answer);
   };
 
-  const handleAnswerSelect = (value: string) => {
-    setSelectedAnswer(value);
+  const handleSubmitAnswer = () => {
+    if (!selectedAnswer || !content) return;
+
+    const currentQuestion = content.questions[currentQuestionIndex];
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    
+    if (isCorrect) {
+      setScore(score + 1);
+    }
+
+    setShowExplanation(true);
   };
 
   const handleNextQuestion = () => {
-    if (!content) return;
-
-    // Save current answer
-    const newAnswers = { 
-      ...userAnswers, 
-      [currentQuestionIndex]: selectedAnswer 
-    };
-    setUserAnswers(newAnswers);
-
-    if (currentQuestionIndex < content.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+    if (currentQuestionIndex < content!.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer('');
-      setTimeLeft(content.timePerQuestion || 60);
+      setShowExplanation(false);
     } else {
-      setIsQuizCompleted(true);
-      setShowResult(true);
+      setQuizCompleted(true);
     }
   };
 
-  const handleResetQuiz = () => {
-    setIsQuizStarted(false);
+  const resetQuiz = () => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer('');
-    setUserAnswers({});
-    setIsQuizCompleted(false);
-    setShowResult(false);
-    setTimeLeft(60);
-  };
-
-  const calculateScore = () => {
-    if (!content) return 0;
-    let correctAnswers = 0;
-
-    content.questions.forEach((question, index) => {
-      if (userAnswers[index] === question.correctAnswer) {
-        correctAnswers++;
-      }
-    });
-
-    return Math.round((correctAnswers / content.questions.length) * 100);
-  };
-
-  const getProgressPercentage = () => {
-    if (!content) return 0;
-    return ((currentQuestionIndex + 1) / content.questions.length) * 100;
+    setShowExplanation(false);
+    setScore(0);
+    setQuizCompleted(false);
   };
 
   if (isLoading) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
-        <CardContent className="p-8">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-            <span className="text-lg">Gerando Quiz Interativo...</span>
-          </div>
-        </CardContent>
+        <CardHeader className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+          <CardTitle className="text-xl text-gray-600">Carregando Quiz...</CardTitle>
+        </CardHeader>
       </Card>
     );
   }
@@ -144,111 +144,30 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   if (!content) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
-        <CardContent className="p-8 text-center">
-          <p className="text-gray-500">Nenhum conteúdo de quiz disponível. Configure os campos e gere o conteúdo.</p>
-        </CardContent>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl text-red-600">Erro ao Carregar Quiz</CardTitle>
+          <p className="text-gray-600">Não foi possível carregar o conteúdo do quiz.</p>
+        </CardHeader>
       </Card>
     );
   }
 
-  if (!isQuizStarted) {
+  if (quizCompleted) {
+    const percentage = Math.round((score / content.totalQuestions) * 100);
+    
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl text-orange-600">{content.title}</CardTitle>
           <p className="text-gray-600">{content.description}</p>
         </CardHeader>
-        <CardContent className="p-8 text-center space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <span className="font-semibold">Total de Questões:</span>
-              <p className="text-2xl font-bold text-blue-600">{content.totalQuestions}</p>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <span className="font-semibold">Tempo por Questão:</span>
-              <p className="text-2xl font-bold text-green-600">{formatTime(content.timePerQuestion)}</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <span className="font-semibold">Tempo Total:</span>
-              <p className="text-2xl font-bold text-purple-600">
-                {formatTime(content.timePerQuestion * content.totalQuestions)}
-              </p>
-            </div>
+        <CardContent className="text-center space-y-6">
+          <div className="text-6xl mb-4">🎉</div>
+          <h3 className="text-xl font-bold">Quiz Concluído!</h3>
+          <div className="text-3xl font-bold text-green-600">
+            {score}/{content.totalQuestions} ({percentage}%)
           </div>
-
-          <Button 
-            onClick={handleStartQuiz}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg"
-            size="lg"
-          >
-            <Play className="mr-2 h-5 w-5" />
-            Iniciar Quiz
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (showResult) {
-    const score = calculateScore();
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Resultado do Quiz</CardTitle>
-        </CardHeader>
-        <CardContent className="p-8 text-center space-y-6">
-          <div className="text-6xl font-bold text-orange-500">
-            {score}%
-          </div>
-          <p className="text-xl text-gray-600">
-            Você acertou {Object.values(userAnswers).filter((answer, index) => 
-              answer === content.questions[index]?.correctAnswer
-            ).length} de {content.questions.length} questões
-          </p>
-
-          <div className="space-y-4">
-            {content.questions.map((question, index) => {
-              const userAnswer = userAnswers[index];
-              const isCorrect = userAnswer === question.correctAnswer;
-
-              return (
-                <div key={question.id} className="text-left p-4 border rounded-lg">
-                  <div className="flex items-start space-x-2">
-                    {isCorrect ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mt-1" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-500 mt-1" />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-semibold">{question.question}</p>
-                      <p className="text-sm text-gray-600">
-                        Sua resposta: <span className={isCorrect ? 'text-green-600' : 'text-red-600'}>
-                          {userAnswer || 'Não respondida'}
-                        </span>
-                      </p>
-                      {!isCorrect && (
-                        <p className="text-sm text-green-600">
-                          Resposta correta: {question.correctAnswer}
-                        </p>
-                      )}
-                      {question.explanation && (
-                        <p className="text-sm text-blue-600 mt-1">
-                          {question.explanation}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <Button 
-            onClick={handleResetQuiz}
-            variant="outline"
-            className="border-orange-500 text-orange-500 hover:bg-orange-50"
-          >
-            <RotateCcw className="mr-2 h-4 w-4" />
+          <Button onClick={resetQuiz} className="bg-orange-500 hover:bg-orange-600 text-white">
             Refazer Quiz
           </Button>
         </CardContent>
@@ -257,93 +176,126 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   }
 
   const currentQuestion = content.questions[currentQuestionIndex];
+  const totalTime = content.timePerQuestion * content.totalQuestions;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-4xl mx-auto"
-    >
-      <Card className="shadow-lg border-2 border-orange-200">
-        <CardContent className="p-6">
-          {/* Progress Bar */}
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Questão {currentQuestionIndex + 1} de {content.questions.length}</span>
-              <span>{Math.round(getProgressPercentage())}% concluído</span>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader className="text-center bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-t-lg">
+        <CardTitle className="text-2xl">{content.title}</CardTitle>
+        <p className="text-orange-100">{content.description}</p>
+      </CardHeader>
+
+      <CardContent className="p-6">
+        {/* Estatísticas do Quiz */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <p className="text-sm text-gray-600">Total de Questões:</p>
+            <p className="text-2xl font-bold text-blue-600">{content.totalQuestions}</p>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <p className="text-sm text-gray-600">Tempo por Questão:</p>
+            <p className="text-2xl font-bold text-green-600">{content.timePerQuestion}s</p>
+          </div>
+          <div className="text-center p-4 bg-purple-50 rounded-lg">
+            <p className="text-sm text-gray-600">Tempo Total:</p>
+            <p className="text-2xl font-bold text-purple-600">{Math.round(totalTime / 60)}min</p>
+          </div>
+        </div>
+
+        {/* Pergunta Atual */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <Badge variant="outline" className="text-sm">
+              Questão {currentQuestionIndex + 1} de {content.totalQuestions}
+            </Badge>
+            <div className="flex items-center text-gray-600">
+              <Clock className="w-4 h-4 mr-1" />
+              <span>{content.timePerQuestion}s</span>
             </div>
-            <Progress value={getProgressPercentage()} className="h-3" />
           </div>
 
-          {/* Timer */}
-          <div className="flex items-center justify-center mb-6 p-4 bg-gray-50 rounded-lg">
-            <Clock className="mr-2 h-6 w-6 text-orange-500" />
-            <span className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-gray-700'}`}>
-              {formatTime(timeLeft)}
-            </span>
-          </div>
+          <h3 className="text-lg font-semibold mb-4">{currentQuestion.question}</h3>
 
-          {/* Question */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentQuestionIndex}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <h3 className="text-xl font-semibold text-gray-800 leading-relaxed">
-                {currentQuestion.question}
-              </h3>
-
-              {/* Answer Options */}
-              <div className="space-y-3">
-                {currentQuestion.type === 'multipla-escolha' ? (
-                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                    {currentQuestion.options?.map((option, index) => (
-                      <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                        <RadioGroupItem value={option} id={`option-${index}`} />
-                        <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                ) : (
-                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value="Verdadeiro" id="verdadeiro" />
-                      <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer">
-                        Verdadeiro
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value="Falso" id="falso" />
-                      <Label htmlFor="falso" className="flex-1 cursor-pointer">
-                        Falso
-                      </Label>
-                    </div>
-                  </RadioGroup>
+          {/* Opções de Resposta */}
+          <div className="space-y-3">
+            {currentQuestion.options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleAnswerSelect(option)}
+                disabled={showExplanation}
+                className={`w-full p-4 text-left border rounded-lg transition-colors ${
+                  selectedAnswer === option
+                    ? 'border-orange-500 bg-orange-50'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                } ${showExplanation ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span className="font-medium">{option}</span>
+                {showExplanation && option === currentQuestion.correctAnswer && (
+                  <CheckCircle className="inline-block w-5 h-5 text-green-500 ml-2" />
                 )}
-              </div>
+                {showExplanation && selectedAnswer === option && option !== currentQuestion.correctAnswer && (
+                  <XCircle className="inline-block w-5 h-5 text-red-500 ml-2" />
+                )}
+              </button>
+            ))}
+          </div>
 
-              {/* Next Button */}
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={handleNextQuestion}
-                  disabled={!selectedAnswer}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2"
-                >
-                  {currentQuestionIndex < content.questions.length - 1 ? 'Próxima' : 'Finalizar'}
-                </Button>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </CardContent>
-      </Card>
-    </motion.div>
+          {/* Explicação */}
+          {showExplanation && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">Explicação:</h4>
+              <p className="text-blue-700">{currentQuestion.explanation}</p>
+              <p className="text-sm text-blue-600 mt-2">
+                Resposta correta: <strong>{currentQuestion.correctAnswer}</strong>
+              </p>
+            </div>
+          )}
+
+          {/* Botões de Ação */}
+          <div className="flex justify-center mt-6 space-x-4">
+            {!showExplanation ? (
+              <Button 
+                onClick={handleSubmitAnswer}
+                disabled={!selectedAnswer}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8"
+              >
+                Confirmar Resposta
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleNextQuestion}
+                className="bg-green-500 hover:bg-green-600 text-white px-8"
+              >
+                {currentQuestionIndex < content.totalQuestions - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Progresso */}
+        <div className="mt-6">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progresso</span>
+            <span>{currentQuestionIndex + 1}/{content.totalQuestions}</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${((currentQuestionIndex + 1) / content.totalQuestions) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Informações Adicionais */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-500">
+            {content.isGeneratedByAI ? '🤖 Gerado por IA' : '📝 Modo Demonstração'} • 
+            Gerado em {new Date(content.generatedAt).toLocaleString('pt-BR')}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
 export default QuizInterativoPreview;
-export { QuizInterativoPreview };
