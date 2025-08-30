@@ -504,66 +504,70 @@ export async function generatePersonalizedPlan(
           }
         }
 
-        // Processamento específico para Quadro Interativo
+        // Processar Quadro Interativo se necessário
         if (activityData.id === 'quadro-interativo') {
-          console.log('🎯 Processando especificamente Quadro Interativo');
+          console.log('🎯 Processando Quadro Interativo...');
 
           try {
-            // Extrair campos customizados da IA
-            const customFields = activityData.customFields || {};
+            const quadroData = prepareQuadroInterativoData(activityData);
 
-            // Garantir que todos os campos obrigatórios estejam presentes
-            const requiredFields = {
-              'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || customFields['Disciplina / Área de conhecimento'] || 'Matemática',
-              'Ano / Série': activityData['Ano / Série'] || customFields['Ano / Série'] || '6º Ano',
-              'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || customFields['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
-              'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || customFields['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
-              'Nível de Dificuldade': activityData['Nível de Dificuldade'] || customFields['Nível de Dificuldade'] || 'Intermediário',
-              'Atividade mostrada': activityData['Atividade mostrada'] || customFields['Atividade mostrada'] || 'Atividade interativa no quadro'
+            // Preparar dados para o Preview gerar o conteúdo
+            const quadroStructure = {
+              subject: quadroData.subject,
+              schoolYear: quadroData.schoolYear,
+              theme: quadroData.theme,
+              objectives: quadroData.objectives,
+              difficultyLevel: quadroData.difficultyLevel,
+              quadroInterativoCampoEspecifico: quadroData.quadroInterativoCampoEspecifico,
+              customFields: quadroData,
+              isGeneratedByAI: false, // Será true quando o Preview gerar
+              createdAt: new Date().toISOString()
             };
 
-            // Gerar conteúdo específico do Quadro Interativo usando a IA
-            const quadroGenerator = new QuadroInterativoGenerator();
-            const quadroContent = await quadroGenerator.generateQuadroInterativoContent({
-              subject: requiredFields['Disciplina / Área de conhecimento'],
-              schoolYear: requiredFields['Ano / Série'],
-              theme: requiredFields['Tema ou Assunto da aula'],
-              objectives: requiredFields['Objetivo de aprendizagem da aula'],
-              difficultyLevel: requiredFields['Nível de Dificuldade'],
-              quadroInterativoCampoEspecifico: requiredFields['Atividade mostrada']
-            });
+            // Salvar estrutura para o Preview processar
+            const storageKey = `constructed_quadro-interativo_${activityData.id}`;
+            localStorage.setItem(storageKey, JSON.stringify(quadroStructure));
+            console.log('💾 Estrutura do Quadro Interativo salva para Preview:', storageKey);
 
-            console.log('🤖 Conteúdo gerado pela IA para Quadro Interativo:', quadroContent);
-
-            // Atualizar os dados da atividade com o conteúdo gerado
-            activityData = {
-              ...activityData,
+            // A ideia aqui é que o Preview vai pegar esses dados e gerar o conteúdo via IA
+            // Para manter a compatibilidade com ActionPlanItem, vamos adicionar um placeholder
+            // O Preview será o responsável por popular 'generatedContent' com a resposta da IA
+            const actionPlanItemPlaceholder = {
+              id: activityData.id,
+              title: activityData.title || quadroStructure.theme,
+              description: activityData.description || quadroStructure.objectives,
+              duration: activityData.duration,
+              difficulty: activityData.difficulty,
+              category: activityData.category,
+              type: activityData.type,
               customFields: {
-                ...requiredFields,
-                // Adicionar dados gerados pela IA
-                generatedContent: JSON.stringify(quadroContent),
-                isAIGenerated: 'true',
-                generatedAt: new Date().toISOString()
-              }
+                ...activityData.customFields,
+                ...quadroStructure // Inclui os dados preparados para o Preview
+              },
+              approved: true,
+              isTrilhasEligible: true,
+              isBuilt: false,
+              builtAt: null
             };
+            // Retorna o placeholder, que será manipulado pelo Preview
+            return actionPlanItemPlaceholder;
 
-            console.log('✅ Quadro Interativo processado com conteúdo da IA');
           } catch (error) {
-            console.error('❌ Erro ao gerar conteúdo para Quadro Interativo:', error);
-
-            // Fallback sem conteúdo da IA
-            const fallbackFields = {
-              'Disciplina / Área de conhecimento': activityData['Disciplina / Área de conhecimento'] || 'Matemática',
-              'Ano / Série': activityData['Ano / Série'] || '6º Ano',
-              'Tema ou Assunto da aula': activityData['Tema ou Assunto da aula'] || activityData.title || 'Tema da Aula',
-              'Objetivo de aprendizagem da aula': activityData['Objetivo de aprendizagem da aula'] || activityData.description || 'Objetivos de aprendizagem',
-              'Nível de Dificuldade': activityData['Nível de Dificuldade'] || 'Intermediário',
-              'Atividade mostrada': activityData['Atividade mostrada'] || 'Atividade interativa no quadro'
-            };
-
-            activityData = {
-              ...activityData,
-              customFields: fallbackFields
+            console.error('❌ Erro ao processar Quadro Interativo:', error);
+            // Continuar sem falhar, retornando um item padrão
+            return {
+              id: activityData.id,
+              title: activityData.title || 'Quadro Interativo Padrão',
+              description: activityData.description || 'Descrição padrão do Quadro Interativo',
+              duration: activityData.duration,
+              difficulty: activityData.difficulty,
+              category: activityData.category,
+              type: activityData.type,
+              customFields: activityData.customFields || {},
+              approved: true,
+              isTrilhasEligible: true,
+              isBuilt: false,
+              builtAt: null
             };
           }
         }
