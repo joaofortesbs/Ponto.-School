@@ -347,3 +347,4 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 };
 
 export default QuizInterativoPreview;
+export { QuizInterativoPreview };

@@ -1,7 +1,7 @@
 
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 
-interface QuizInterativoData {
+export interface QuizInterativoData {
   subject: string;
   schoolYear: string;
   theme: string;
@@ -14,7 +14,7 @@ interface QuizInterativoData {
   evaluation: string;
 }
 
-interface QuizQuestion {
+export interface QuizQuestion {
   id: number;
   question: string;
   type: 'multipla-escolha' | 'verdadeiro-falso';
