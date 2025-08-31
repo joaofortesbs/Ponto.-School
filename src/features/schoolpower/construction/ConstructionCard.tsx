@@ -234,10 +234,10 @@ export function ConstructionCard({
       className={`
         relative overflow-hidden rounded-2xl border-2 ${cardTheme.borderColor}
         ${cardTheme.bgColor} p-6 transition-all duration-300
-        hover:shadow-lg dark:hover:shadow-2xl cursor-pointer group
+        hover:shadow-lg dark:hover:shadow-2xl ${isCompleted ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'} group
         bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm
       `}
-    onClick={() => onView()}
+    onClick={() => isCompleted && onView()}
     >
       {/* Botão de edição - só aparece quando construído */}
       {isCompleted && (
@@ -261,13 +261,15 @@ export function ConstructionCard({
         <div className={`
           relative w-16 h-16 rounded-2xl ${cardTheme.iconBg} 
           flex items-center justify-center shadow-lg
-          group-hover:scale-110 transition-all duration-300
+          ${isCompleted ? 'group-hover:scale-110' : ''} transition-all duration-300
         `}>
           {/* Ícone original */}
-          <ActivityIcon className={`h-8 w-8 ${cardTheme.iconColor} group-hover:opacity-0 transition-opacity duration-300`} />
+          <ActivityIcon className={`h-8 w-8 ${cardTheme.iconColor} ${isCompleted ? 'group-hover:opacity-0 transition-opacity duration-0' : ''}`} />
           
-          {/* Ícone de visualizar no hover */}
-          <Eye className={`h-8 w-8 ${cardTheme.iconColor} absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+          {/* Ícone de visualizar no hover - só para atividades construídas */}
+          {isCompleted && (
+            <Eye className={`h-8 w-8 ${cardTheme.iconColor} absolute opacity-0 group-hover:opacity-100 transition-opacity duration-0`} />
+          )}
 
           {/* Indicador de progresso no ícone */}
           {!isCompleted && progress > 0 && (
