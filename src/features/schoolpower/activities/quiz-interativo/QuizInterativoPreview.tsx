@@ -305,8 +305,20 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
+              // Extrair texto da questão de forma segura
+              let questionText = '';
+              if (typeof question.question === 'string') {
+                questionText = question.question;
+              } else if (typeof question.question === 'object' && question.question?.text) {
+                questionText = String(question.question.text);
+              } else if (question.text) {
+                questionText = String(question.text);
+              } else {
+                questionText = `Questão ${index + 1}`;
+              }
+
               return (
-                <div key={question.id} className="text-left p-4 border rounded-lg bg-gray-50">
+                <div key={question.id || index} className="text-left p-4 border rounded-lg bg-gray-50">
                   <div className="flex items-start space-x-2">
                     {isCorrect ? (
                       <CheckCircle2 className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
@@ -314,7 +326,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                       <XCircle className="h-5 w-5 text-red-500 mt-1 flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 mb-2">{question.question}</p>
+                      <p className="font-semibold text-gray-800 mb-2">{questionText}</p>
                       <p className="text-sm text-gray-600 mb-1">
                         Sua resposta: <span className={isCorrect ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                           {userAnswer || 'Não respondida'}
@@ -322,12 +334,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                       </p>
                       {!isCorrect && (
                         <p className="text-sm text-green-600 mb-1">
-                          Resposta correta: <span className="font-medium">{question.correctAnswer}</span>
+                          Resposta correta: <span className="font-medium">{String(question.correctAnswer || 'N/A')}</span>
                         </p>
                       )}
                       {question.explanation && (
                         <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded mt-2">
-                          💡 {question.explanation}
+                          💡 {String(question.explanation)}
                         </p>
                       )}
                     </div>
@@ -404,12 +416,23 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                     const questaoAtual = finalContent.questions?.[currentQuestionIndex];
                     console.log('📝 Renderizando questão:', questaoAtual);
                     
-                    if (questaoAtual?.question) {
+                    // Garantir que sempre retornamos uma string
+                    if (questaoAtual?.question && typeof questaoAtual.question === 'string') {
                       return questaoAtual.question;
                     }
                     
-                    if (questaoAtual?.text) {
+                    if (questaoAtual?.text && typeof questaoAtual.text === 'string') {
                       return questaoAtual.text;
+                    }
+                    
+                    // Se questaoAtual.question for um objeto, extrair o texto
+                    if (questaoAtual?.question && typeof questaoAtual.question === 'object') {
+                      if (questaoAtual.question.text) {
+                        return String(questaoAtual.question.text);
+                      }
+                      if (questaoAtual.question.id) {
+                        return `Questão ${questaoAtual.question.id}`;
+                      }
                     }
                     
                     return 'Carregando questão...';
@@ -428,14 +451,34 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                     // Se a questão tem opções válidas, renderizar elas
                     if (questaoAtual?.options && Array.isArray(questaoAtual.options) && questaoAtual.options.length > 0) {
                       console.log('✅ Renderizando opções reais da IA:', questaoAtual.options);
-                      return questaoAtual.options.map((option, index) => (
-                        <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
-                          <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
-                          <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
-                            {option}
-                          </Label>
-                        </div>
-                      ));
+                      return questaoAtual.options.map((option, index) => {
+                        // Garantir que a opção seja sempre uma string
+                        let optionText = '';
+                        
+                        if (typeof option === 'string') {
+                          optionText = option;
+                        } else if (typeof option === 'object' && option !== null) {
+                          // Se a opção é um objeto, extrair o texto
+                          if (option.text) {
+                            optionText = String(option.text);
+                          } else if (option.id && option.text) {
+                            optionText = String(option.text);
+                          } else {
+                            optionText = `Opção ${index + 1}`;
+                          }
+                        } else {
+                          optionText = String(option || `Opção ${index + 1}`);
+                        }
+                        
+                        return (
+                          <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
+                            <RadioGroupItem value={optionText} id={`option-${index}`} className="border-2" />
+                            <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
+                              {optionText}
+                            </Label>
+                          </div>
+                        );
+                      });
                     }
                     
                     // Se for verdadeiro/falso
