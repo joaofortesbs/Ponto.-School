@@ -186,8 +186,8 @@ const getActivityNameById = (activityId: string): string => {
   return activity ? activity.name : activityId;
 };
 
-// Função para truncar descrição em até 10 palavras
-const truncateDescription = (description: string, maxWords: number = 10): string => {
+// Função para truncar descrição em até 7 palavras
+const truncateDescription = (description: string, maxWords: number = 7): string => {
   const words = description.split(' ');
   if (words.length <= maxWords) return description;
   return words.slice(0, maxWords).join(' ') + '...';
@@ -294,12 +294,12 @@ export function ConstructionCard({
           {activityName}
         </h3>
 
-        {/* Descrição limitada a 10 palavras */}
+        {/* Descrição limitada a 7 palavras */}
         <p className={`
           text-sm ${cardTheme.descColor} 
           leading-relaxed min-h-[2.5rem] flex items-center
         `}>
-          {truncateDescription(description, 10)}
+          {truncateDescription(description, 7)}
         </p>
 
         {/* Status badge - apenas para não construídas */}
