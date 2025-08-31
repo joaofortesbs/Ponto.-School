@@ -42,7 +42,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
 
-  // Log detalhado para debug
+  // Log detalhado para debug e validação de dados
   useEffect(() => {
     console.log('🎯 QuizInterativoPreview - Conteúdo atualizado:', {
       content,
@@ -52,8 +52,28 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       isLoading,
       title: content?.title,
       isGeneratedByAI: content?.isGeneratedByAI,
-      isFallback: content?.isFallback
+      isFallback: content?.isFallback,
+      questionsStructure: content?.questions?.map(q => ({
+        id: q.id,
+        hasQuestion: !!q.question,
+        hasOptions: !!q.options,
+        optionsCount: q.options?.length || 0,
+        hasCorrectAnswer: !!q.correctAnswer
+      }))
     });
+
+    // Validação crítica de estrutura de dados
+    if (content?.questions) {
+      const invalidQuestions = content.questions.filter(q => 
+        !q.question || !q.options || q.options.length === 0 || !q.correctAnswer
+      );
+      
+      if (invalidQuestions.length > 0) {
+        console.error('❌ Questões com estrutura inválida encontradas:', invalidQuestions);
+      } else {
+        console.log('✅ Todas as questões têm estrutura válida');
+      }
+    }
   }, [content, isLoading]);
 
   // Timer effect
@@ -179,12 +199,14 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
         <CardContent className="p-8 text-center">
           <AlertCircle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Quiz em Preparação
+            {isLoading ? 'Gerando Quiz com IA...' : 'Quiz em Preparação'}
           </h3>
           <p className="text-gray-500 mb-4">
-            {!content ? 
-              'Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.' :
-              'As questões estão sendo geradas pela IA. Aguarde a conclusão do processo.'
+            {isLoading ? 
+              'Aguarde enquanto a IA do Gemini gera questões personalizadas para você.' :
+              !content ? 
+                'Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.' :
+                'As questões estão sendo processadas. Se demorar muito, tente gerar novamente.'
             }
           </p>
           
@@ -197,7 +219,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Questões:</span>
-                  <p className="text-gray-800">{content.questions?.length || 0}</p>
+                  <p className="text-gray-800 font-medium">
+                    {content.questions?.length || 0}
+                    {content.questions?.length === 0 && (
+                      <span className="text-red-500 ml-1">⚠️ Nenhuma questão encontrada</span>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Tempo/Questão:</span>
@@ -214,16 +241,33 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   ⚠️ Modo demonstração ativo. Configure a API do Gemini para gerar conteúdo personalizado.
                 </div>
               )}
+
+              {content.questions?.length === 0 && content.isGeneratedByAI && (
+                <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-xs text-red-800">
+                  ❌ API retornou dados, mas nenhuma questão válida foi encontrada. Verifique o formato da resposta.
+                </div>
+              )}
             </div>
           )}
 
-          <Button
-            variant="outline"
-            onClick={() => window.location.reload()}
-            className="text-orange-600 border-orange-300 hover:bg-orange-50"
-          >
-            Recarregar Página
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="text-orange-600 border-orange-300 hover:bg-orange-50"
+            >
+              Recarregar Página
+            </Button>
+            {content && !isLoading && (
+              <Button
+                variant="outline"
+                onClick={() => console.log('Dados para debug:', content)}
+                className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              >
+                Debug Console
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );

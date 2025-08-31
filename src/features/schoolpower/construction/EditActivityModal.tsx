@@ -914,21 +914,40 @@ const EditActivityModal = ({
       setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
-      // Validação adicional de sincronização
+      // Validação detalhada da estrutura
+      const validation = {
+        hasQuestions: !!(finalContent.questions && finalContent.questions.length > 0),
+        questionsCount: finalContent.questions?.length || 0,
+        allQuestionsValid: finalContent.questions?.every(q => 
+          q.question && q.options && q.options.length > 0 && q.correctAnswer
+        ) || false,
+        hasTitle: !!finalContent.title,
+        hasTimePerQuestion: !!finalContent.timePerQuestion
+      };
+
+      console.log('🔍 Validação da estrutura final:', validation);
+
+      if (!validation.hasQuestions || !validation.allQuestionsValid) {
+        console.error('❌ Estrutura de dados inválida detectada:', finalContent);
+        throw new Error('Dados gerados pela API estão incompletos ou malformados');
+      }
+
+      // Force update para garantir sincronização
       setTimeout(() => {
         console.log('🔄 Verificação de sincronização:', {
           quizInterativoContent: !!quizInterativoContent,
           generatedContent: !!generatedContent,
-          questionsCount: finalContent.questions.length
+          questionsCount: finalContent.questions.length,
+          validation
         });
         
-        // Force update para garantir sincronização
-        setQuizInterativoContent({ ...finalContent });
-        setGeneratedContent({ ...finalContent });
+        // Force update com deep clone para garantir reatividade
+        setQuizInterativoContent(JSON.parse(JSON.stringify(finalContent)));
+        setGeneratedContent(JSON.parse(JSON.stringify(finalContent)));
         
         // Atualizar aba para mostrar preview
         setActiveTab('preview');
-      }, 200);
+      }, 100);
 
       toast({
         title: "Quiz Gerado com Sucesso!",

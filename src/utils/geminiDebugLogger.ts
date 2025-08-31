@@ -161,6 +161,56 @@ class GeminiDebugLogger {
   logSuccess(message: string, data?: any): void {
     this.info('response', message, data);
   }
+
+  // Métodos específicos para Quiz Interativo
+  logQuizGeneration(data: any): void {
+    this.info('processing', 'Iniciando geração de Quiz Interativo', {
+      numberOfQuestions: data.numberOfQuestions,
+      theme: data.theme,
+      subject: data.subject,
+      schoolYear: data.schoolYear,
+      format: data.format,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  logQuizParsing(rawResponse: string, parsedData: any): void {
+    this.debug('processing', 'Parseando resposta do Quiz', {
+      raw_response_length: rawResponse.length,
+      raw_response_preview: rawResponse.substring(0, 300),
+      parsed_questions_count: parsedData.questions?.length || 0,
+      parsed_title: parsedData.title,
+      has_valid_structure: !!(parsedData.questions && parsedData.questions.length > 0)
+    });
+  }
+
+  logQuizValidation(content: any, isValid: boolean, errors?: string[]): void {
+    this.debug('validation', 'Validação do conteúdo do Quiz', {
+      is_valid: isValid,
+      questions_count: content.questions?.length || 0,
+      has_title: !!content.title,
+      has_time_per_question: !!content.timePerQuestion,
+      validation_errors: errors || [],
+      content_preview: {
+        title: content.title,
+        questionsStructure: content.questions?.map((q: any) => ({
+          hasQuestion: !!q.question,
+          hasOptions: !!q.options,
+          optionsCount: q.options?.length || 0
+        }))
+      }
+    });
+  }
+
+  logQuizSyncronization(quizContent: any, generatedContent: any): void {
+    this.debug('processing', 'Sincronização de estados do Quiz', {
+      quiz_content_exists: !!quizContent,
+      generated_content_exists: !!generatedContent,
+      quiz_questions_count: quizContent?.questions?.length || 0,
+      generated_questions_count: generatedContent?.questions?.length || 0,
+      states_match: JSON.stringify(quizContent) === JSON.stringify(generatedContent)
+    });
+  }
 }
 
 export const geminiLogger = GeminiDebugLogger.getInstance();
