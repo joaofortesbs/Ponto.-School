@@ -1314,24 +1314,27 @@ const EditActivityModal = ({
               console.log('🎯 Processando dados específicos de Quiz Interativo');
 
               enrichedFormData = {
-                ...formData,
-                title: consolidatedData.title || autoFormData.title || activity.title || '',
-                description: consolidatedData.description || autoFormData.description || activity.description || '',
-                numberOfQuestions: consolidatedCustomFields['Número de Questões'] || autoFormData.numberOfQuestions || '10',
-                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity.theme || '',
-                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || 'Matemática',
-                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || '6º Ano - Ensino Fundamental',
-                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
-                questionModel: consolidatedCustomFields['Formato'] || autoFormData.questionModel || 'Múltipla Escolha',
-                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || '',
-                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || '',
+                ...autoFormData,
+                title: consolidatedCustomFields['Título'] || autoFormData.title || '',
+                description: consolidatedCustomFields['Descrição'] || autoFormData.description || '',
+                numberOfQuestions: consolidatedCustomFields['Número de Questões'] || autoFormData.numberOfQuestions || '',
+                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || '',
+                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || '',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || '',
+                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || '',
+                questionModel: consolidatedCustomFields['Modelo de Questões'] || autoFormData.questionModel || '',
+                sources: consolidatedCustomFields['Fontes'] || autoFormData.sources || '',
                 instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || '',
                 evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
                 timeLimit: consolidatedCustomFields['Tempo Limite'] || autoFormData.timeLimit || '',
                 context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
-                format: consolidatedCustomFields['Formato do Quiz'] || autoFormData.format || '', // New field
-                timePerQuestion: consolidatedCustomFields['Tempo por Questão'] || autoFormData.timePerQuestion || '', // New field
+                format: consolidatedCustomFields['Formato do Quiz'] || autoFormData.format || '',
+                timePerQuestion: consolidatedCustomFields['Tempo por Questão'] || autoFormData.timePerQuestion || '',
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
+                // Garantir que as questões geradas sejam preservadas
+                questions: autoFormData.questions || [],
+                totalQuestions: autoFormData.totalQuestions || autoFormData.numberOfQuestions || '',
+                isGeneratedByAI: autoFormData.isGeneratedByAI || false,
               };
 
               console.log('🎯 Dados finais do Quiz Interativo processados:', enrichedFormData);
@@ -1495,8 +1498,6 @@ const EditActivityModal = ({
               quantidadeAvaliacoes: '',
               cronograma: '',
               quadroInterativoCampoEspecifico: '',
-              format: '', // Default for Quiz Interativo
-              timePerQuestion: '', // Default for Quiz Interativo
             };
 
             setFormData(fallbackData);

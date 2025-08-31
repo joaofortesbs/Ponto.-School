@@ -85,7 +85,7 @@ export const activityRegistry: ActivityRegistryType = {
   // Adicionar quiz-interativo à atividade
   "quiz-interativo": {
     editor: lazy(() => import("./default/EditActivity")),
-    preview: lazy(() => import("./quiz-interativo/QuizInterativoPreview")),
+    preview: lazy(() => import("./quiz-interativo/QuizInterativoPreview"))eview")),
   },
 };
 

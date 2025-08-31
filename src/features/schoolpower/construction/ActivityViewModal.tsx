@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
+import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -39,6 +41,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  // Estado para carregar dados específicos da atividade, se necessário
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
 
   // Função específica para carregar dados do Plano de Aula
@@ -217,6 +222,75 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
+  // Preparar conteúdo baseado no tipo de atividade
+  const processedContent = useMemo(() => {
+    if (!activity || !activity.customFields) {
+      return null;
+    }
+
+    const customFields = activity.customFields;
+
+    // Para Quiz Interativo
+    if (activity.id === 'quiz-interativo') {
+      return {
+        title: customFields['Título'] || activity.personalizedTitle || activity.title || '',
+        description: customFields['Descrição'] || activity.personalizedDescription || activity.description || '',
+        subject: customFields['Disciplina'] || '',
+        schoolYear: customFields['Ano de Escolaridade'] || '',
+        theme: customFields['Tema'] || '',
+        numberOfQuestions: customFields['Número de Questões'] || '',
+        difficultyLevel: customFields['Nível de Dificuldade'] || '',
+        questionModel: customFields['Modelo de Questões'] || '',
+        format: customFields['Formato do Quiz'] || '',
+        timePerQuestion: customFields['Tempo por Questão'] || '',
+        instructions: customFields['Instruções'] || '',
+        evaluation: customFields['Critérios de Avaliação'] || '',
+        timeLimit: customFields['Tempo Limite'] || '',
+        context: customFields['Contexto de Aplicação'] || '',
+        sources: customFields['Fontes'] || '',
+        questions: activity.questions || customFields['questions'] || [],
+        totalQuestions: activity.totalQuestions || customFields['totalQuestions'] || customFields['Número de Questões'] || '',
+        isGeneratedByAI: activity.isGeneratedByAI || false,
+      };
+    }
+
+    // Para Quadro Interativo
+    if (activity.id === 'quadro-interativo') {
+      return {
+        title: customFields['Título'] || activity.personalizedTitle || activity.title || '',
+        description: customFields['Descrição'] || activity.personalizedDescription || activity.description || '',
+        subject: customFields['Disciplina'] || '',
+        schoolYear: customFields['Ano de Escolaridade'] || '',
+        theme: customFields['Tema'] || '',
+        objectives: customFields['Objetivos de Aprendizagem'] || '',
+        difficultyLevel: customFields['Nível de Dificuldade'] || '',
+        materials: customFields['Materiais Necessários'] || '',
+        methodology: customFields['Metodologia'] || '',
+        evaluation: customFields['Critérios de Avaliação'] || '',
+        timeLimit: customFields['Tempo Limite'] || '',
+        quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
+        isGeneratedByAI: activity.isGeneratedByAI || false,
+      };
+    }
+
+    // Para outros tipos de atividade
+    return {
+      title: customFields['Título'] || activity.personalizedTitle || activity.title || '',
+      description: customFields['Descrição'] || activity.personalizedDescription || activity.description || '',
+      content: customFields['Conteúdo'] || '',
+      subject: customFields['Disciplina'] || '',
+      schoolYear: customFields['Ano de Escolaridade'] || '',
+      theme: customFields['Tema'] || '',
+      objectives: customFields['Objetivos de Aprendizagem'] || '',
+      materials: customFields['Materiais Necessários'] || '',
+      methodology: customFields['Metodologia'] || '',
+      evaluation: customFields['Critérios de Avaliação'] || '',
+      timeLimit: customFields['Tempo Limite'] || '',
+      isGeneratedByAI: activity.isGeneratedByAI || false,
+    };
+  }, [activity]);
+
+
   const renderActivityPreview = () => {
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
@@ -317,12 +391,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         if (sequenciaContent) {
           // Processar dados de acordo com a estrutura encontrada
           let processedData = sequenciaContent;
-          
+
           // Se os dados estão dentro de 'data' (resultado da API)
           if (sequenciaContent.data) {
             processedData = sequenciaContent.data;
           }
-          
+
           // Se tem sucesso e dados estruturados
           if (sequenciaContent.success && sequenciaContent.data) {
             processedData = sequenciaContent.data;
@@ -405,6 +479,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityData={activity}
           />
         );
+        
+        case 'quiz-interativo':
+          console.log('💬 Renderizando QuizInterativoPreview com dados:', previewData);
+          return (
+            <QuizInterativoPreview 
+              content={processedContent || {}}
+              isLoading={isLoading}
+            />
+          );
 
       default:
         return (
@@ -494,7 +577,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                     {activity?.originalData?.tema && (
                       <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2v4a2 2 0 012 2h10a2 2 0 012-2V7a2 2 0 00-2-2H9zM7 17v1a2 2 0 002 2h10a2 2 0 002-2v-1M7 7h10M7 11h10" />
                         </svg>
                         {activity.originalData.tema}
                       </Badge>
@@ -660,6 +743,20 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             <div className="flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto max-h-[calc(95vh-240px)] bg-white dark:bg-gray-900" ref={contentRef}>
                 {renderActivityPreview()}
+
+        {activity.id === 'quadro-interativo' && (
+          <QuadroInterativoPreview 
+            content={processedContent || {}}
+            isLoading={isLoading}
+          />
+        )}
+
+        {activity.id === 'quiz-interativo' && (
+          <QuizInterativoPreview 
+            content={processedContent || {}}
+            isLoading={isLoading}
+          />
+        )}
               </div>
             </div>
           </div>

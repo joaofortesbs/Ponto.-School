@@ -58,8 +58,16 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
         hasOptions: !!q.options,
         optionsCount: q.options?.length || 0,
         hasCorrectAnswer: !!q.correctAnswer
-      }))
+      })),
+      calledFromModal: window.location.pathname.includes('school-power') || document.querySelector('[data-quiz-modal]') !== null
     });
+
+    // Log específico para identificar se está sendo chamado do modal de visualização
+    if (content && content.questions && content.questions.length > 0) {
+      console.log('✅ QuizInterativoPreview - Questões válidas encontradas para renderização:', content.questions.length);
+    } else {
+      console.log('⚠️ QuizInterativoPreview - Nenhuma questão válida encontrada');
+    }
 
     // Validação crítica de estrutura de dados
     if (content?.questions) {
