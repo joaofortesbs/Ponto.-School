@@ -89,12 +89,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
   // Reset timer when question changes
   useEffect(() => {
-    if (content && isQuizStarted) { // Changed from finalContent to content
-      const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
-        Number(content.timePerQuestion) : 60;
+    if (finalContent && isQuizStarted) {
+      const timePerQ = finalContent.timePerQuestion && !isNaN(Number(finalContent.timePerQuestion)) ? 
+        Number(finalContent.timePerQuestion) : 60;
       setTimeLeft(timePerQ);
     }
-  }, [currentQuestionIndex, content]); // Changed from finalContent to content
+  }, [currentQuestionIndex, finalContent]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -103,20 +103,20 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleStartQuiz = () => {
-    if (!content.questions || content.questions.length === 0) { // Changed from finalContent to content
+    if (!finalContent.questions || finalContent.questions.length === 0) {
       console.error('❌ Tentativa de iniciar quiz sem questões válidas');
       return;
     }
 
-    console.log('🎯 Iniciando quiz com', content.questions.length, 'questões'); // Changed from finalContent to content
+    console.log('🎯 Iniciando quiz com', finalContent.questions.length, 'questões');
     setIsQuizStarted(true);
     setCurrentQuestionIndex(0);
     setSelectedAnswer('');
     setUserAnswers({});
     setIsQuizCompleted(false);
     setShowResult(false);
-    const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
-      Number(content.timePerQuestion) : 60;
+    const timePerQ = finalContent.timePerQuestion && !isNaN(Number(finalContent.timePerQuestion)) ? 
+      Number(finalContent.timePerQuestion) : 60;
     setTimeLeft(timePerQ);
   };
 
@@ -125,7 +125,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleNextQuestion = () => {
-    if (!content.questions) return; // Changed from finalContent to content
+    if (!finalContent.questions) return;
 
     // Save current answer
     const newAnswers = { 
@@ -134,11 +134,11 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     };
     setUserAnswers(newAnswers);
 
-    if (currentQuestionIndex < content.questions.length - 1) { // Changed from finalContent to content
+    if (currentQuestionIndex < finalContent.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswer('');
-      const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
-        Number(content.timePerQuestion) : 60;
+      const timePerQ = finalContent.timePerQuestion && !isNaN(Number(finalContent.timePerQuestion)) ? 
+        Number(finalContent.timePerQuestion) : 60;
       setTimeLeft(timePerQ);
     } else {
       setIsQuizCompleted(true);
@@ -157,21 +157,21 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const calculateScore = () => {
-    if (!content.questions) return 0; // Changed from finalContent to content
+    if (!finalContent.questions) return 0;
     let correctAnswers = 0;
 
-    content.questions.forEach((question, index) => { // Changed from finalContent to content
+    finalContent.questions.forEach((question, index) => {
       if (userAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
 
-    return Math.round((correctAnswers / content.questions.length) * 100); // Changed from finalContent to content
+    return Math.round((correctAnswers / finalContent.questions.length) * 100);
   };
 
   const getProgressPercentage = () => {
-    if (!content.questions) return 0; // Changed from finalContent to content
-    return ((currentQuestionIndex + 1) / content.questions.length) * 100; // Changed from finalContent to content
+    if (!finalContent.questions) return 0;
+    return ((currentQuestionIndex + 1) / finalContent.questions.length) * 100;
   };
 
   // Loading state
@@ -209,36 +209,35 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   }
 
   // Garantir que sempre tenhamos questões válidas para renderizar
-  let finalContent = { ...content };
-  
-  if (!finalContent.questions || finalContent.questions.length === 0) {
-    const fallbackQuestions: QuizQuestion[] = [
-      {
-        id: 1,
-        question: `Questão sobre ${finalContent.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-        type: 'multipla-escolha',
-        options: [
-          'A) Primeira alternativa sobre o tema',
-          'B) Segunda alternativa sobre o tema', 
-          'C) Terceira alternativa sobre o tema',
-          'D) Quarta alternativa sobre o tema'
+  const finalContent = content && content.questions && content.questions.length > 0 
+    ? content 
+    : {
+        ...content,
+        questions: [
+          {
+            id: 1,
+            question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+            type: 'multipla-escolha' as const,
+            options: [
+              'A) Primeira alternativa sobre o tema',
+              'B) Segunda alternativa sobre o tema', 
+              'C) Terceira alternativa sobre o tema',
+              'D) Quarta alternativa sobre o tema'
+            ],
+            correctAnswer: 'A) Primeira alternativa sobre o tema',
+            explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+          },
+          {
+            id: 2,
+            question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
+            type: 'verdadeiro-falso' as const,
+            options: ['Verdadeiro', 'Falso'],
+            correctAnswer: 'Verdadeiro',
+            explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+          }
         ],
-        correctAnswer: 'A) Primeira alternativa sobre o tema',
-        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-      },
-      {
-        id: 2,
-        question: `Segunda questão sobre ${finalContent.title || 'o tema'}: Este conceito é importante?`,
-        type: 'verdadeiro-falso',
-        options: ['Verdadeiro', 'Falso'],
-        correctAnswer: 'Verdadeiro',
-        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-      }
-    ];
-
-    finalContent.questions = fallbackQuestions;
-    finalContent.totalQuestions = fallbackQuestions.length;
-  }
+        totalQuestions: 2
+      };
 
   // Quiz intro screen
   if (!isQuizStarted) {
