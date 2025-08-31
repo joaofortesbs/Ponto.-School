@@ -22,7 +22,7 @@ export const QuizWithSchoolPower: React.FC = () => {
     }
   }, [state.currentStep]);
 
-  const currentQuizStep = quizSteps.find(step => step.id === state.quizStepNumber);
+  const currentQuizStep = quizSteps.find(step => step.id === state.quizStepNumber);er);
 
   const renderIntro = () => (
     <div className="min-h-screen relative overflow-hidden">

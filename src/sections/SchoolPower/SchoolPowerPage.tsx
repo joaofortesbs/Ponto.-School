@@ -37,12 +37,18 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
     isLoading
   } = useSchoolPowerFlow();
 
-  // Log apenas mudanças importantes de estado
+  // Log apenas mudanças importantes de estado e validar consistência
   React.useEffect(() => {
-    if (flowState !== 'idle') {
+    if (flowState && flowState !== 'idle') {
       console.log('🔄 School Power - Estado alterado:', flowState);
     }
-  }, [flowState]);
+    
+    // Validar se o estado é consistente
+    if (!flowState) {
+      console.warn('⚠️ Estado do fluxo undefined, resetando para idle');
+      handleResetFlowHook();
+    }
+  }, [flowState, handleResetFlowHook]);
 
   const handleCentralExpandedChange = (expanded: boolean) => {
     setIsCentralExpanded(expanded);

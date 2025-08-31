@@ -299,21 +299,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     console.log('💾 ActivityViewModal: Dados armazenados:', storedData);
     console.log('🗂️ ActivityViewModal: Campos armazenados:', storedFields);
 
-    // Preparar dados para o preview EXATAMENTE como no modal de edição
+    // Preparar dados para o preview com validação segura
     let previewData = {
       ...activity.originalData,
       ...storedData,
-      title: activity.personalizedTitle || activity.title || storedData.title,
-      description: activity.personalizedDescription || activity.description || storedData.description,
+      id: activity.id,
+      title: activity.personalizedTitle || activity.title || storedData.title || 'Atividade',
+      description: activity.personalizedDescription || activity.description || storedData.description || '',
       customFields: {
         ...activity.customFields,
         ...storedFields
       },
       type: activityType,
-      // Incluir todos os campos que podem estar no originalData
-      exercicios: activity.originalData?.exercicios || storedData.exercicios,
-      questions: activity.originalData?.questions || storedData.questions,
-      content: activity.originalData?.content || storedData.content
+      // Incluir todos os campos que podem estar no originalData com fallbacks seguros
+      exercicios: activity.originalData?.exercicios || storedData.exercicios || [],
+      questions: activity.originalData?.questions || storedData.questions || [],
+      content: activity.originalData?.content || storedData.content || {},
+      // Garantir que questões existam para lista de exercícios
+      questoes: activity.originalData?.questoes || storedData.questoes || []
     };
 
     // Para lista de exercícios, aplicar filtros de exclusão
@@ -520,15 +523,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               console.log('📝 Quiz Interativo carregado do localStorage:', quizContent);
             } catch (error) {
               console.warn('⚠️ Erro ao parsear dados do Quiz Interativo:', error);
+              quizContent = processedContent || {};
             }
           }
           
-          return (
-            <QuizInterativoPreview 
-              content={quizContent}
-              isLoading={isLoading}
-            />
-          );
+          return React.createElement(QuizInterativoPreview, {
+            content: quizContent,
+            isLoading: isLoading,
+            key: `quiz-${activity.id}`
+          });
 
       default:
         return (
