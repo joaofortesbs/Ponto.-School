@@ -39,6 +39,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
 
 
   // Função específica para carregar dados do Plano de Aula
@@ -76,6 +77,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
+      setQuizInterativoContent(null); // Reset Quiz Interativo content
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -242,139 +244,192 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       content: activity.originalData?.content || storedData.content
     };
 
-    // Para lista de exercícios, aplicar filtros de exclusão
-      if (activityType === 'lista-exercicios') {
+    let contentToLoad = null;
+
+    // --- Carregamento de Conteúdo Específico por Tipo de Atividade ---
+
+    // 1. Quiz Interativo
+    if (activityType === 'quiz-interativo') {
+      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
+      console.log(`🔍 Quiz Interativo: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!quizInterativoSavedContent);
+
+      if (quizInterativoSavedContent) {
         try {
-          const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
-          if (deletedQuestionsJson) {
-            const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
-            console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
+          const parsedContent = JSON.parse(quizInterativoSavedContent);
+          contentToLoad = parsedContent.data || parsedContent;
 
-            // Filtrar questões excluídas em todas as possíveis localizações
-            if (previewData.questoes && Array.isArray(previewData.questoes)) {
-              previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
+          // Validar estrutura das questões
+          if (contentToLoad && contentToLoad.questions && Array.isArray(contentToLoad.questions) && contentToLoad.questions.length > 0) {
+            // Validar cada questão individualmente
+            const validQuestions = contentToLoad.questions.filter(q =>
+              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
+            );
+
+            if (validQuestions.length > 0) {
+              contentToLoad.questions = validQuestions;
+              console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
+              setQuizInterativoContent(contentToLoad); // Define o estado específico para Quiz Interativo
+            } else {
+              console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
+              contentToLoad = null;
             }
-
-            if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
-              previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
-            }
-
-            if (previewData.questions && Array.isArray(previewData.questions)) {
-              previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
-            }
-
-            if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
-              previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-              console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
-            }
-
-            // Adicionar os IDs excluídos aos dados para referência
-            previewData.deletedQuestionIds = deletedQuestionIds;
+          } else {
+            console.warn('⚠️ Estrutura de dados inválida para Quiz Interativo');
+            contentToLoad = null;
           }
         } catch (error) {
-          console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+          console.error('❌ Erro ao processar conteúdo do Quiz Interativo:', error);
+          contentToLoad = null;
+        }
+      } else {
+        console.log('ℹ️ Nenhum conteúdo específico encontrado para Quiz Interativo. Usando dados gerais.');
+      }
+    }
+    // 2. Lista de Exercícios (com filtro de exclusão)
+    else if (activityType === 'lista-exercicios') {
+      try {
+        const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
+        if (deletedQuestionsJson) {
+          const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
+          console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
+
+          // Filtrar questões excluídas em todas as possíveis localizações
+          if (previewData.questoes && Array.isArray(previewData.questoes)) {
+            previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
+          }
+
+          if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
+            previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
+          }
+
+          if (previewData.questions && Array.isArray(previewData.questions)) {
+            previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
+          }
+
+          if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
+            previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
+            console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
+          }
+
+          // Adicionar os IDs excluídos aos dados para referência
+          previewData.deletedQuestionIds = deletedQuestionIds;
+        }
+      } catch (error) {
+        console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+      }
+    }
+    // 3. Sequência Didática (com carregamento de dados da IA)
+    else if (activityType === 'sequencia-didatica') {
+      console.log('📚 ActivityViewModal: Processando Sequência Didática');
+
+      // Verificar múltiplas fontes de dados em ordem de prioridade
+      const sequenciaCacheKeys = [
+        `constructed_sequencia-didatica_${activity.id}`,
+        `schoolpower_sequencia-didatica_content`,
+        `activity_${activity.id}`,
+        `activity_fields_${activity.id}`
+      ];
+
+      let sequenciaContent = null;
+      for (const key of sequenciaCacheKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsedData = JSON.parse(data);
+            // Verificar se tem estrutura válida de sequência didática
+            if (parsedData.sequenciaDidatica ||
+                parsedData.aulas ||
+                parsedData.diagnosticos ||
+                parsedData.avaliacoes ||
+                parsedData.data?.sequenciaDidatica ||
+                parsedData.success) {
+              sequenciaContent = parsedData;
+              console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
+              break;
+            }
+          } catch (error) {
+            console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
+          }
         }
       }
 
-      // Para Sequência Didática, carregar dados específicos da IA
-      if (activityType === 'sequencia-didatica') {
-        console.log('📚 ActivityViewModal: Processando Sequência Didática');
+      if (sequenciaContent) {
+        // Processar dados de acordo com a estrutura encontrada
+        let processedData = sequenciaContent;
 
-        // Verificar múltiplas fontes de dados em ordem de prioridade
-        const sequenciaCacheKeys = [
-          `constructed_sequencia-didatica_${activity.id}`,
-          `schoolpower_sequencia-didatica_content`,
-          `activity_${activity.id}`,
-          `activity_fields_${activity.id}`
-        ];
-
-        let sequenciaContent = null;
-        for (const key of sequenciaCacheKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            try {
-              const parsedData = JSON.parse(data);
-              // Verificar se tem estrutura válida de sequência didática
-              if (parsedData.sequenciaDidatica || 
-                  parsedData.aulas || 
-                  parsedData.diagnosticos || 
-                  parsedData.avaliacoes ||
-                  parsedData.data?.sequenciaDidatica ||
-                  parsedData.success) {
-                sequenciaContent = parsedData;
-                console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
-                break;
-              }
-            } catch (error) {
-              console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
-            }
-          }
+        // Se os dados estão dentro de 'data' (resultado da API)
+        if (sequenciaContent.data) {
+          processedData = sequenciaContent.data;
         }
 
-        if (sequenciaContent) {
-          // Processar dados de acordo com a estrutura encontrada
-          let processedData = sequenciaContent;
-          
-          // Se os dados estão dentro de 'data' (resultado da API)
-          if (sequenciaContent.data) {
-            processedData = sequenciaContent.data;
-          }
-          
-          // Se tem sucesso e dados estruturados
-          if (sequenciaContent.success && sequenciaContent.data) {
-            processedData = sequenciaContent.data;
-          }
-
-          // Mesclar dados da sequência didática com dados existentes
-          previewData = {
-            ...previewData,
-            ...processedData,
-            id: activity.id,
-            type: activityType,
-            title: processedData.sequenciaDidatica?.titulo || 
-                   processedData.titulo || 
-                   processedData.title || 
-                   previewData.title,
-            description: processedData.sequenciaDidatica?.descricaoGeral || 
-                        processedData.descricaoGeral || 
-                        processedData.description || 
-                        previewData.description,
-            // Garantir estrutura completa para visualização
-            sequenciaDidatica: processedData.sequenciaDidatica || processedData,
-            metadados: processedData.metadados || {
-              totalAulas: processedData.aulas?.length || 0,
-              totalDiagnosticos: processedData.diagnosticos?.length || 0,
-              totalAvaliacoes: processedData.avaliacoes?.length || 0,
-              isGeneratedByAI: true,
-              generatedAt: processedData.generatedAt || new Date().toISOString()
-            }
-          };
-          console.log('📚 Dados da Sequência Didática processados para visualização:', previewData);
-        } else {
-          console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
-          // Criar estrutura básica a partir dos dados do formulário
-          previewData = {
-            ...previewData,
-            sequenciaDidatica: {
-              titulo: previewData.title || 'Sequência Didática',
-              descricaoGeral: previewData.description || 'Descrição da sequência didática',
-              aulas: [],
-              diagnosticos: [],
-              avaliacoes: []
-            },
-            metadados: {
-              totalAulas: 0,
-              totalDiagnosticos: 0,
-              totalAvaliacoes: 0,
-              isGeneratedByAI: false,
-              generatedAt: new Date().toISOString()
-            }
-          };
+        // Se tem sucesso e dados estruturados
+        if (sequenciaContent.success && sequenciaContent.data) {
+          processedData = sequenciaContent.data;
         }
+
+        // Mesclar dados da sequência didática com dados existentes
+        contentToLoad = {
+          ...previewData,
+          ...processedData,
+          id: activity.id,
+          type: activityType,
+          title: processedData.sequenciaDidatica?.titulo ||
+                 processedData.titulo ||
+                 processedData.title ||
+                 previewData.title,
+          description: processedData.sequenciaDidatica?.descricaoGeral ||
+                      processedData.descricaoGeral ||
+                      processedData.description ||
+                      previewData.description,
+          // Garantir estrutura completa para visualização
+          sequenciaDidatica: processedData.sequenciaDidatica || processedData,
+          metadados: processedData.metadados || {
+            totalAulas: processedData.aulas?.length || 0,
+            totalDiagnosticos: processedData.diagnosticos?.length || 0,
+            totalAvaliacoes: processedData.avaliacoes?.length || 0,
+            isGeneratedByAI: true,
+            generatedAt: processedData.generatedAt || new Date().toISOString()
+          }
+        };
+        console.log('📚 Dados da Sequência Didática processados para visualização:', contentToLoad);
+      } else {
+        console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
+        // Criar estrutura básica a partir dos dados do formulário
+        contentToLoad = {
+          ...previewData,
+          sequenciaDidatica: {
+            titulo: previewData.title || 'Sequência Didática',
+            descricaoGeral: previewData.description || 'Descrição da sequência didática',
+            aulas: [],
+            diagnosticos: [],
+            avaliacoes: []
+          },
+          metadados: {
+            totalAulas: 0,
+            totalDiagnosticos: 0,
+            totalAvaliacoes: 0,
+            isGeneratedByAI: false,
+            generatedAt: new Date().toISOString()
+          }
+        };
       }
+    }
+
+    // Atualizar previewData com o conteúdo carregado, se aplicável
+    if (contentToLoad) {
+      if (activityType === 'quiz-interativo') {
+        previewData = { ...previewData, ...contentToLoad };
+      } else if (activityType === 'sequencia-didatica') {
+        previewData = contentToLoad; // Sequência didática substitui tudo
+      } else {
+        // Para outros tipos, mesclar campos relevantes
+        previewData = { ...previewData, ...contentToLoad };
+      }
+    }
+
 
     console.log('📊 ActivityViewModal: Dados finais para preview:', previewData);
 
@@ -403,6 +458,20 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <SequenciaDidaticaPreview
             data={previewData}
             activityData={activity}
+          />
+        );
+
+      case 'quiz-interativo':
+        console.log('📚 Renderizando QuizInterativoPreview com dados:', previewData);
+        // Certifique-se de que QuizInterativoPreview está importado e configurado corretamente
+        // Para este exemplo, vamos usar ActivityPreview como fallback, mas idealmente você teria um componente específico
+        return (
+          <ActivityPreview
+            data={previewData}
+            activityType={activityType}
+            customFields={previewData.customFields}
+            // Passar quizInterativoContent se necessário para o componente genérico
+            // quizContent={quizInterativoContent}
           />
         );
 
@@ -658,7 +727,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
-              <div className="p-6 overflow-y-auto max-h-[calc(95vh-240px)] bg-white dark:bg-gray-900" ref={contentRef}>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] bg-white dark:bg-gray-900" ref={contentRef}>
                 {renderActivityPreview()}
               </div>
             </div>

@@ -104,16 +104,16 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
   const handleStartQuiz = () => {
     // Verificar se há questões válidas antes de iniciar
-    const questoesValidas = finalContent.questions && Array.isArray(finalContent.questions) && finalContent.questions.length > 0;
+    const questoesValidas = finalContent?.questions && Array.isArray(finalContent.questions) && finalContent.questions.length > 0;
     
     if (!questoesValidas) {
       console.error('❌ Tentativa de iniciar quiz sem questões válidas');
       console.error('📊 Estado atual:', {
         hasContent: !!finalContent,
-        hasQuestions: !!finalContent.questions,
-        questionsIsArray: Array.isArray(finalContent.questions),
-        questionsLength: finalContent.questions?.length || 0,
-        firstQuestion: finalContent.questions?.[0]
+        hasQuestions: !!finalContent?.questions,
+        questionsIsArray: Array.isArray(finalContent?.questions),
+        questionsLength: finalContent?.questions?.length || 0,
+        firstQuestion: finalContent?.questions?.[0]
       });
       return;
     }
@@ -137,7 +137,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleNextQuestion = () => {
-    if (!finalContent.questions) return;
+    if (!finalContent?.questions) return;
 
     // Save current answer
     const newAnswers = { 
@@ -169,7 +169,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const calculateScore = () => {
-    if (!finalContent.questions) return 0;
+    if (!finalContent?.questions || finalContent.questions.length === 0) return 0;
     let correctAnswers = 0;
 
     finalContent.questions.forEach((question, index) => {
@@ -182,7 +182,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const getProgressPercentage = () => {
-    if (!finalContent.questions) return 0;
+    if (!finalContent?.questions || finalContent.questions.length === 0) return 0;
     return ((currentQuestionIndex + 1) / finalContent.questions.length) * 100;
   };
 
@@ -203,8 +203,28 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  // Só mostra mensagem de "sem conteúdo" se realmente não há nada
-  if (!content) {
+  // CORREÇÃO CRÍTICA: Preparar dados de forma consistente
+  const finalContent = React.useMemo(() => {
+    if (!content) {
+      return null;
+    }
+
+    // Processar dados de forma consistente
+    const processedContent = {
+      ...content,
+      questions: content.questions || [],
+      totalQuestions: content.questions?.length || content.totalQuestions || 0,
+      timePerQuestion: content.timePerQuestion || 60,
+      title: content.title || 'Quiz Interativo',
+      description: content.description || 'Teste seus conhecimentos!'
+    };
+
+    console.log('🎯 QuizInterativoPreview - Conteúdo processado:', processedContent);
+    return processedContent;
+  }, [content]);
+
+  // Early return para evitar problemas de hooks
+  if (!finalContent) {
     return (
       <Card className="w-full max-w-4xl mx-auto border-orange-200">
         <CardContent className="p-8 text-center">
@@ -219,14 +239,6 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       </Card>
     );
   }
-
-  // CORREÇÃO CRÍTICA: Usar diretamente as questões do content sem sobrescrever
-  const finalContent = {
-    ...content,
-    // Garantir que as questões da IA sejam sempre preservadas
-    questions: content.questions || [],
-    totalQuestions: content.questions?.length || content.totalQuestions || 0
-  };
 
   // Quiz intro screen
   if (!isQuizStarted) {
@@ -296,12 +308,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           </div>
           <p className="text-xl text-gray-600">
             Você acertou {Object.values(userAnswers).filter((answer, index) => {
-              return answer === finalContent.questions![index]?.correctAnswer;
-            }).length} de {finalContent.questions!.length} questões
+              return answer === finalContent?.questions?.[index]?.correctAnswer;
+            }).length} de {finalContent?.questions?.length || 0} questões
           </p>
 
           <div className="space-y-4 max-h-96 overflow-y-auto">
-            {finalContent.questions!.map((question, index) => {
+            {finalContent?.questions?.map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
@@ -362,16 +374,33 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
+  // Validação final antes de acessar questões
+  if (!finalContent?.questions || !Array.isArray(finalContent.questions) || finalContent.questions.length === 0) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto border-orange-200">
+        <CardContent className="p-8 text-center">
+          <AlertCircle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            Questões não encontradas
+          </h3>
+          <p className="text-gray-500 mb-4">
+            Não foi possível carregar as questões do quiz. Tente gerar novamente.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Quiz question screen - CORREÇÃO CRÍTICA: Acessar questão atual com validação
-  const currentQuestion = finalContent.questions?.[currentQuestionIndex];
+  const currentQuestion = finalContent.questions[currentQuestionIndex];
   
   // Debug para verificar se as questões estão sendo acessadas corretamente
   console.log('🔍 Debug da questão atual:', {
     currentQuestionIndex,
-    totalQuestions: finalContent.questions?.length || 0,
+    totalQuestions: finalContent.questions.length,
     currentQuestion: currentQuestion,
-    hasQuestions: !!(finalContent.questions && finalContent.questions.length > 0),
-    allQuestions: finalContent.questions
+    hasQuestions: true,
+    questionsValidation: finalContent.questions.every(q => q && (q.question || q.text))
   });
 
   return (
@@ -385,7 +414,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Questão {currentQuestionIndex + 1} de {finalContent.questions.length}</span>
+              <span>Questão {currentQuestionIndex + 1} de {finalContent?.questions?.length || 0}</span>
               <span>{Math.round(getProgressPercentage())}% concluído</span>
             </div>
             <Progress value={getProgressPercentage()} className="h-3" />
@@ -520,7 +549,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   disabled={!selectedAnswer}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  {currentQuestionIndex < finalContent.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
+                  {currentQuestionIndex < (finalContent?.questions?.length || 0) - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
                 </Button>
               </div>
             </motion.div>

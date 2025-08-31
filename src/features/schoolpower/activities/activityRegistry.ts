@@ -82,7 +82,7 @@ export const activityRegistry: ActivityRegistryType = {
     editor: lazy(() => import("./quadro-interativo/EditActivity")),
     preview: lazy(() => import("./quadro-interativo/QuadroInterativoPreview")),
   },
-  // Adicionar quiz-interativo à atividade
+  // Quiz Interativo - Atividade de questionários dinâmicos
   "quiz-interativo": {
     editor: lazy(() => import("./default/EditActivity")),
     preview: lazy(() => import("./quiz-interativo/QuizInterativoPreview")),
