@@ -239,19 +239,9 @@ export function ConstructionCard({
       `}
     onClick={() => onView()}
     >
-      {/* Botões de ação - só aparecem quando construído */}
+      {/* Botão de edição - só aparece quando construído */}
       {isCompleted && (
         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <Button
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onView();
-            }}
-            className="h-8 w-8 p-0 rounded-lg border-2 border-green-500 dark:border-green-400 bg-transparent hover:bg-green-50 dark:hover:bg-green-950/30 text-green-600 dark:text-green-400 shadow-md hover:shadow-lg transition-all"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
           <Button
             size="sm"
             onClick={(e) => {
@@ -271,9 +261,13 @@ export function ConstructionCard({
         <div className={`
           relative w-16 h-16 rounded-2xl ${cardTheme.iconBg} 
           flex items-center justify-center shadow-lg
-          group-hover:scale-110 transition-transform duration-300
+          group-hover:scale-110 transition-all duration-300
         `}>
-          <ActivityIcon className={`h-8 w-8 ${cardTheme.iconColor}`} />
+          {/* Ícone original */}
+          <ActivityIcon className={`h-8 w-8 ${cardTheme.iconColor} group-hover:opacity-0 transition-opacity duration-300`} />
+          
+          {/* Ícone de visualizar no hover */}
+          <Eye className={`h-8 w-8 ${cardTheme.iconColor} absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
           {/* Indicador de progresso no ícone */}
           {!isCompleted && progress > 0 && (
@@ -306,25 +300,22 @@ export function ConstructionCard({
           {truncateDescription(description, 10)}
         </p>
 
-        {/* Status badge - para todas as atividades */}
-        <div className="w-full flex justify-center">
-          {isCompleted ? (
-            <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 text-xs font-medium">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Construída
-            </Badge>
-          ) : progress > 0 ? (
-            <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700">
-              <Clock className="h-3 w-3 mr-1" />
-              Em Progresso
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="border-orange-200 dark:border-orange-600 text-orange-700 dark:text-orange-300">
-              <Clock className="h-3 w-3 mr-1" />
-              Pendente
-            </Badge>
-          )}
-        </div>
+        {/* Status badge - apenas para não construídas */}
+        {!isCompleted && (
+          <div className="w-full flex justify-center">
+            {progress > 0 ? (
+              <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700">
+                <Clock className="h-3 w-3 mr-1" />
+                Em Progresso
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="border-orange-200 dark:border-orange-600 text-orange-700 dark:text-orange-300">
+                <Clock className="h-3 w-3 mr-1" />
+                Pendente
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Efeito de brilho no hover */}
