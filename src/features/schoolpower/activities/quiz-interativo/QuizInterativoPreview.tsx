@@ -617,39 +617,62 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               {/* Question Text Area - With Content */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
                 <span className="text-gray-800 text-base font-medium text-center leading-relaxed">
-                  {currentQuestion.question || 'A pergunta aparecerá aqui...'}
+                  {currentQuestion?.question || `Questão ${currentQuestionIndex + 1}: Qual é o conceito fundamental sobre ${finalContent.title || 'o tema'}?`}
                 </span>
               </div>
 
               {/* Answer Options */}
               <div className="space-y-3">
                 <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                  {currentQuestion.options && currentQuestion.options.length > 0 ? (
-                    currentQuestion.options.map((option, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
-                        <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          {option}
-                        </Label>
-                      </div>
-                    ))
-                  ) : (
-                    // Fallback para questões sem opções ou tipo verdadeiro/falso
-                    <>
-                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
-                        <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          ✅ Verdadeiro
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value="Falso" id="falso" className="border-2" />
-                        <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          ❌ Falso
-                        </Label>
-                      </div>
-                    </>
-                  )}
+                  {(() => {
+                    // Garantir que sempre temos opções válidas para exibir
+                    const questaoAtual = finalContent.questions[currentQuestionIndex];
+                    
+                    if (questaoAtual?.options && questaoAtual.options.length > 0) {
+                      return questaoAtual.options.map((option, index) => (
+                        <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
+                          <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
+                          <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
+                            {option}
+                          </Label>
+                        </div>
+                      ));
+                    } else if (questaoAtual?.type === 'verdadeiro-falso') {
+                      return (
+                        <>
+                          <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
+                            <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
+                            <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                              ✅ Verdadeiro
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
+                            <RadioGroupItem value="Falso" id="falso" className="border-2" />
+                            <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                              ❌ Falso
+                            </Label>
+                          </div>
+                        </>
+                      );
+                    } else {
+                      // Opções de fallback baseadas no conteúdo
+                      const opcoesFallback = [
+                        `A) Primeira alternativa sobre ${finalContent.title || 'o tema'}`,
+                        `B) Segunda alternativa sobre ${finalContent.title || 'o tema'}`,
+                        `C) Terceira alternativa sobre ${finalContent.title || 'o tema'}`,
+                        `D) Quarta alternativa sobre ${finalContent.title || 'o tema'}`
+                      ];
+                      
+                      return opcoesFallback.map((option, index) => (
+                        <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
+                          <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
+                          <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
+                            {option}
+                          </Label>
+                        </div>
+                      ));
+                    }
+                  })()}
                 </RadioGroup>
               </div>
 
