@@ -7,65 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Clock, Play, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Mock class for demonstration purposes. Replace with actual API integration.
-class QuizInterativoGenerator {
-  async generateQuizContent(data) {
-    console.log('Mock generator called with:', data);
-    // Simulate API call and response
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-
-    const questions = [];
-    const topics = data.theme ? data.theme.split(',').map(t => t.trim()) : ['Geral'];
-    const questionTypes = data.format === 'misturado' ? ['multipla-escolha', 'verdadeiro-falso'] : [data.format];
-
-    for (let i = 0; i < (data.numberOfQuestions || 5); i++) {
-      const type = questionTypes[i % questionTypes.length];
-      const topic = topics[i % topics.length];
-      const difficulty = data.difficultyLevel || 'médio';
-      let options = [];
-      let correctAnswer = '';
-      let explanation = '';
-
-      if (type === 'multipla-escolha') {
-        options = ['Opção A', 'Opção B', 'Opção C', 'Opção D'].map((opt, idx) => ` ${opt} de ${topic}`);
-        correctAnswer = options[Math.floor(Math.random() * options.length)];
-        explanation = `Esta é a explicação para a ${correctAnswer} sobre ${topic}.`;
-      } else {
-        options = ['Verdadeiro', 'Falso'];
-        correctAnswer = options[Math.floor(Math.random() * options.length)];
-        explanation = `A afirmação sobre ${topic} é ${correctAnswer}.`;
-      }
-
-      questions.push({
-        id: i + 1,
-        question: `Qual a resposta correta sobre ${topic}? (Questão ${i + 1})`,
-        type: type,
-        options: options,
-        correctAnswer: correctAnswer,
-        explanation: explanation,
-        topic: topic,
-        difficulty: difficulty
-      });
-    }
-
-    return {
-      title: `Quiz Interativo: ${data.subject || 'Assunto Aleatório'}`,
-      description: `Um quiz dinâmico sobre ${data.theme || 'temas variados'} para o ${data.schoolYear || 'Ensino Fundamental'}.`,
-      questions: questions,
-      timePerQuestion: data.timePerQuestion || 60,
-      totalQuestions: data.numberOfQuestions || 5,
-      questionDistribution: {
-        'multipla-escolha': questions.filter(q => q.type === 'multipla-escolha').length,
-        'verdadeiro-falso': questions.filter(q => q.type === 'verdadeiro-falso').length,
-      },
-      topicsExplored: topics,
-      isGeneratedByAI: true,
-      generatedAt: new Date().toISOString(),
-    };
-  }
-}
-
-
 interface QuizQuestion {
   id: number;
   question: string;
@@ -73,49 +14,25 @@ interface QuizQuestion {
   options?: string[];
   correctAnswer: string;
   explanation?: string;
-  topic?: string; // Added topic for better logging
-  difficulty?: string; // Added difficulty for better logging
 }
 
 interface QuizInterativoPreviewProps {
-  data?: { // Renamed from content to data for clarity on input
-    subject: string;
-    schoolYear: string;
-    theme: string;
-    objectives: string;
-    numberOfQuestions: number;
+  content?: {
+    title: string;
+    description: string;
+    questions: QuizQuestion[];
     timePerQuestion: number;
-    format: 'multipla-escolha' | 'verdadeiro-falso' | 'misturado';
-    difficultyLevel: 'fácil' | 'médio' | 'difícil';
-  };
-  previewData?: { // For pre-generated content
-    content: {
-      title: string;
-      description: string;
-      questions: QuizQuestion[];
-      timePerQuestion: number;
-      totalQuestions: number;
-      questionDistribution?: Record<string, number>;
-      topicsExplored?: string[];
-      isGeneratedByAI?: boolean;
-      generatedAt?: string;
-    };
+    totalQuestions: number;
+    questionDistribution?: Record<string, number>;
+    topicsExplored?: string[];
   };
   isLoading?: boolean;
-  error?: string | null;
-  setError: (error: string | null) => void;
 }
 
 const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({ 
-  data, 
-  previewData,
-  isLoading: propIsLoading = false, // Use propIsLoading to avoid conflict
-  error: propError,
-  setError
+  content, 
+  isLoading = false 
 }) => {
-  const [quizContent, setQuizContent] = useState<QuizQuestion[] | null>(null); // Renamed state for clarity
-  const [isLoading, setIsLoading] = useState(propIsLoading);
-  const [error, setLocalError] = useState<string | null>(propError); // Local error state
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState(60);
@@ -124,39 +41,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
 
-  // Effect to handle prop-based loading and error states, and to trigger quiz generation
-  useEffect(() => {
-    console.log('🎯 QuizInterativoPreview mounted:', {
-      hasData: !!data,
-      hasPreviewData: !!previewData,
-      previewContent: !!previewData?.content,
-      dataKeys: data ? Object.keys(data) : []
-    });
-
-    if (previewData?.content) {
-      console.log('📊 Using existing preview data:', {
-        title: previewData.content.title,
-        questionsCount: previewData.content.questions?.length || 0,
-        isAIGenerated: previewData.content.isGeneratedByAI
-      });
-      setQuizContent(previewData.content);
-      setIsLoading(false);
-    } else if (data) {
-      console.log('🚀 Initiating new quiz content generation with data:', {
-        subject: data.subject,
-        theme: data.theme,
-        numberOfQuestions: data.numberOfQuestions,
-        format: data.format
-      });
-      generateQuizContent();
-    } else {
-      console.warn('⚠️ Insufficient data to generate quiz. Received data:', data);
-      setLocalError('Dados insuficientes para gerar o quiz. Verifique se todos os campos obrigatórios foram preenchidos.');
-      setIsLoading(false);
-    }
-  }, [data, previewData]); // Depend on data and previewData to re-evaluate if they change
-
-  // Effect for the timer
+  // Timer effect
   useEffect(() => {
     if (isQuizStarted && !isQuizCompleted && !showResult && timeLeft > 0) {
       const timer = setTimeout(() => {
@@ -168,12 +53,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     }
   }, [timeLeft, isQuizStarted, isQuizCompleted, showResult]);
 
-  // Reset timer when question changes and quiz is active
+  // Reset timer when question changes
   useEffect(() => {
-    if (quizContent && isQuizStarted) {
-      setTimeLeft(quizContent.timePerQuestion || 60);
+    if (content && isQuizStarted) {
+      setTimeLeft(content.timePerQuestion || 60);
     }
-  }, [currentQuestionIndex, quizContent, isQuizStarted]); // Added isQuizStarted dependency
+  }, [currentQuestionIndex, content]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -188,8 +73,8 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     setUserAnswers({});
     setIsQuizCompleted(false);
     setShowResult(false);
-    if (quizContent) {
-      setTimeLeft(quizContent.timePerQuestion || 60);
+    if (content) {
+      setTimeLeft(content.timePerQuestion || 60);
     }
   };
 
@@ -198,7 +83,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleNextQuestion = () => {
-    if (!quizContent) return;
+    if (!content) return;
 
     // Save current answer
     const newAnswers = { 
@@ -207,11 +92,11 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     };
     setUserAnswers(newAnswers);
 
-    if (currentQuestionIndex < quizContent.questions.length - 1) {
+    if (currentQuestionIndex < content.questions.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer('');
-        const timePerQ = quizContent.timePerQuestion && !isNaN(Number(quizContent.timePerQuestion)) ? 
-          Number(quizContent.timePerQuestion) : 60;
+        const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+          Number(content.timePerQuestion) : 60;
         setTimeLeft(timePerQ);
       } else {
         setIsQuizCompleted(true);
@@ -227,26 +112,24 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     setIsQuizCompleted(false);
     setShowResult(false);
     setTimeLeft(60);
-    setQuizContent(null); // Clear content to allow regeneration if needed
-    setLocalError(null);
   };
 
   const calculateScore = () => {
-    if (!quizContent) return 0;
+    if (!content) return 0;
     let correctAnswers = 0;
 
-    quizContent.questions.forEach((question, index) => {
+    content.questions.forEach((question, index) => {
       if (userAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
 
-    return Math.round((correctAnswers / quizContent.questions.length) * 100);
+    return Math.round((correctAnswers / content.questions.length) * 100);
   };
 
   const getProgressPercentage = () => {
-    if (!quizContent) return 0;
-    return ((currentQuestionIndex + 1) / quizContent.questions.length) * 100;
+    if (!content) return 0;
+    return ((currentQuestionIndex + 1) / content.questions.length) * 100;
   };
 
   if (isLoading) {
@@ -262,34 +145,21 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  if (error) { // Display error if any
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardContent className="p-8 text-center text-red-500">
-          <p>{error}</p>
-          <Button onClick={handleResetQuiz} className="mt-4">
-            Tentar Novamente
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!quizContent || !quizContent.questions || quizContent.questions.length === 0) {
+  if (!content || !content.questions || content.questions.length === 0) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardContent className="p-8 text-center">
           <p className="text-gray-500">
-            {!quizContent ? 
+            {!content ? 
               'Nenhum conteúdo de quiz disponível. Configure os campos e gere o conteúdo.' :
               'Quiz em processamento ou sem questões. Aguarde a geração completa.'
             }
           </p>
-          {quizContent && (
+          {content && (
             <div className="mt-4 text-sm text-gray-400">
-              <p>Título: {quizContent.title || 'Não definido'}</p>
-              <p>Questões: {quizContent.questions?.length || 0}</p>
-              <p>Tempo por questão: {quizContent.timePerQuestion || 'Não definido'}</p>
+              <p>Título: {content.title || 'Não definido'}</p>
+              <p>Questões: {content.questions?.length || 0}</p>
+              <p>Tempo por questão: {content.timePerQuestion || 'Não definido'}</p>
             </div>
           )}
         </CardContent>
@@ -301,45 +171,45 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-orange-600">{quizContent.title}</CardTitle>
-          <p className="text-gray-600">{quizContent.description}</p>
+          <CardTitle className="text-2xl text-orange-600">{content.title}</CardTitle>
+          <p className="text-gray-600">{content.description}</p>
         </CardHeader>
         <CardContent className="p-8 text-center space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
             <div className="p-4 bg-blue-50 rounded-lg">
               <span className="font-semibold">Total de Questões:</span>
               <p className="text-2xl font-bold text-blue-600">
-                {quizContent.totalQuestions || quizContent.questions?.length || 0}
+                {content.totalQuestions || content.questions?.length || 0}
               </p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg">
               <span className="font-semibold">Tempo por Questão:</span>
               <p className="text-2xl font-bold text-green-600">
-                {formatTime(Number(quizContent.timePerQuestion) || 60)}
+                {formatTime(Number(content.timePerQuestion) || 60)}
               </p>
             </div>
             <div className="p-4 bg-purple-50 rounded-lg">
               <span className="font-semibold">Tempo Total:</span>
               <p className="text-2xl font-bold text-purple-600">
-                {formatTime((Number(quizContent.timePerQuestion) || 60) * (quizContent.totalQuestions || quizContent.questions?.length || 0))}
+                {formatTime((Number(content.timePerQuestion) || 60) * (content.totalQuestions || content.questions?.length || 0))}
               </p>
             </div>
             <div className="p-4 bg-orange-50 rounded-lg">
               <span className="font-semibold">Áreas Exploradas:</span>
               <p className="text-lg font-bold text-orange-600">
-                {quizContent.topicsExplored?.length || 'Várias'}
+                {content.topicsExplored?.length || 'Várias'}
               </p>
             </div>
           </div>
 
           {/* Mostrar distribuição de tipos de questão */}
-          {quizContent.questionDistribution && Object.keys(quizContent.questionDistribution).length > 0 && (
+          {content.questionDistribution && (
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <h4 className="font-semibold mb-2">Distribuição das Questões:</h4>
-              <div className="flex flex-wrap justify-center gap-4 text-sm">
-                {Object.entries(quizContent.questionDistribution).map(([type, count]) => (
+              <div className="flex justify-center gap-4 text-sm">
+                {Object.entries(content.questionDistribution).map(([type, count]) => (
                   <span key={type} className="px-3 py-1 bg-white rounded-full border">
-                    {type === 'multipla-escolha' ? 'Múltipla Escolha' : type === 'verdadeiro-falso' ? 'Verdadeiro/Falso' : type}: {count}
+                    {type === 'multipla-escolha' ? 'Múltipla Escolha' : 'Verdadeiro/Falso'}: {count}
                   </span>
                 ))}
               </div>
@@ -347,11 +217,11 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           )}
 
           {/* Mostrar áreas exploradas */}
-          {quizContent.topicsExplored && quizContent.topicsExplored.length > 0 && (
+          {content.topicsExplored && content.topicsExplored.length > 0 && (
             <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
               <h4 className="font-semibold mb-2">Áreas do Tema Exploradas:</h4>
               <div className="flex flex-wrap justify-center gap-2">
-                {quizContent.topicsExplored.map((topic, index) => (
+                {content.topicsExplored.map((topic, index) => (
                   <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
                     {topic}
                   </span>
@@ -386,12 +256,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           </div>
           <p className="text-xl text-gray-600">
             Você acertou {Object.values(userAnswers).filter((answer, index) => 
-              answer === quizContent.questions[index]?.correctAnswer
-            ).length} de {quizContent.questions.length} questões
+              answer === content.questions[index]?.correctAnswer
+            ).length} de {content.questions.length} questões
           </p>
 
           <div className="space-y-4">
-            {quizContent.questions.map((question, index) => {
+            {content.questions.map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
@@ -440,7 +310,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  const currentQuestion = quizContent.questions[currentQuestionIndex];
+  const currentQuestion = content.questions[currentQuestionIndex];
 
   return (
     <motion.div
@@ -453,7 +323,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Questão {currentQuestionIndex + 1} de {quizContent.questions.length}</span>
+              <span>Questão {currentQuestionIndex + 1} de {content.questions.length}</span>
               <span>{Math.round(getProgressPercentage())}% concluído</span>
             </div>
             <Progress value={getProgressPercentage()} className="h-3" />
@@ -518,7 +388,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   disabled={!selectedAnswer}
                   className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2"
                 >
-                  {currentQuestionIndex < quizContent.questions.length - 1 ? 'Próxima' : 'Finalizar'}
+                  {currentQuestionIndex < content.questions.length - 1 ? 'Próxima' : 'Finalizar'}
                 </Button>
               </div>
             </motion.div>

@@ -2,7 +2,7 @@ interface GeminiDebugLog {
   id: string;
   timestamp: string;
   level: 'info' | 'warn' | 'error' | 'debug';
-  category: 'request' | 'response' | 'error' | 'validation' | 'processing' | 'api_call';
+  category: 'request' | 'response' | 'error' | 'validation' | 'processing';
   message: string;
   data?: any;
   stack?: string;
@@ -185,34 +185,6 @@ class GeminiDebugLogger {
       hasExplanation: !!questionData.explanation,
       questionType: questionData.type || 'não definido'
     });
-  }
-
-  logApiCall(prompt: string, response: string, executionTime: number) {
-    this.log('info', 'api_call', 'CHAMADA API GEMINI CONCLUÍDA', {
-      promptLength: prompt.length,
-      responseLength: response.length,
-      executionTime: `${executionTime}ms`,
-      timestamp: new Date().toISOString(),
-      promptPreview: prompt.substring(0, 200) + '...',
-      responsePreview: response.substring(0, 300) + '...',
-      hasValidJson: this.isValidJson(response)
-    });
-  }
-
-  private isValidJson(text: string): boolean {
-    try {
-      // Tentar encontrar JSON na resposta
-      const jsonStart = text.indexOf('{');
-      const jsonEnd = text.lastIndexOf('}');
-
-      if (jsonStart === -1 || jsonEnd === -1) return false;
-
-      const jsonText = text.substring(jsonStart, jsonEnd + 1);
-      JSON.parse(jsonText);
-      return true;
-    } catch {
-      return false;
-    }
   }
 }
 
