@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,7 +66,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       const invalidQuestions = content.questions.filter(q => 
         !q.question || !q.options || q.options.length === 0 || !q.correctAnswer
       );
-      
+
       if (invalidQuestions.length > 0) {
         console.error('❌ Questões com estrutura inválida encontradas:', invalidQuestions);
       } else {
@@ -209,7 +208,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                 'As questões estão sendo processadas. Se demorar muito, tente gerar novamente.'
             }
           </p>
-          
+
           {content && (
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -235,7 +234,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   <p className="text-gray-800">{content.isGeneratedByAI ? 'Sim' : 'Não'}</p>
                 </div>
               </div>
-              
+
               {content.isFallback && (
                 <div className="mt-3 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
                   ⚠️ Modo demonstração ativo. Configure a API do Gemini para gerar conteúdo personalizado.
@@ -284,7 +283,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           <p className="text-gray-600 mt-2">
             {content.description || 'Teste seus conhecimentos com este quiz interativo!'}
           </p>
-          
+
           {content.isFallback && (
             <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-sm text-yellow-800">
               <AlertCircle className="inline h-4 w-4 mr-1" />
@@ -432,9 +431,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h3 className="text-xl font-semibold text-gray-800 leading-relaxed p-4 bg-orange-50 rounded-lg border border-orange-200">
-                {currentQuestion.question}
-              </h3>
+              {/* Question Text Area - With Content */}
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
+                <span className="text-gray-800 text-base font-medium text-center leading-relaxed">
+                  {currentQuestion.question || 'A pergunta aparecerá aqui...'}
+                </span>
+              </div>
 
               {/* Answer Options */}
               <div className="space-y-3">
