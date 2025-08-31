@@ -103,51 +103,20 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleStartQuiz = () => {
-    // Usar content diretamente até finalContent ser declarado
-    const currentContent = content && content.questions && content.questions.length > 0 
-      ? content 
-      : {
-          ...content,
-          questions: [
-            {
-              id: 1,
-              question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-              type: 'multipla-escolha' as const,
-              options: [
-                'A) Primeira alternativa sobre o tema',
-                'B) Segunda alternativa sobre o tema', 
-                'C) Terceira alternativa sobre o tema',
-                'D) Quarta alternativa sobre o tema'
-              ],
-              correctAnswer: 'A) Primeira alternativa sobre o tema',
-              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-            },
-            {
-              id: 2,
-              question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-              type: 'verdadeiro-falso' as const,
-              options: ['Verdadeiro', 'Falso'],
-              correctAnswer: 'Verdadeiro',
-              explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-            }
-          ],
-          totalQuestions: 2
-        };
-
-    if (!currentContent.questions || currentContent.questions.length === 0) {
+    if (!content?.questions || content.questions.length === 0) {
       console.error('❌ Tentativa de iniciar quiz sem questões válidas');
       return;
     }
 
-    console.log('🎯 Iniciando quiz com', currentContent.questions.length, 'questões');
+    console.log('🎯 Iniciando quiz com', content.questions.length, 'questões');
     setIsQuizStarted(true);
     setCurrentQuestionIndex(0);
     setSelectedAnswer('');
     setUserAnswers({});
     setIsQuizCompleted(false);
     setShowResult(false);
-    const timePerQ = currentContent.timePerQuestion && !isNaN(Number(currentContent.timePerQuestion)) ? 
-      Number(currentContent.timePerQuestion) : 60;
+    const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+      Number(content.timePerQuestion) : 60;
     setTimeLeft(timePerQ);
   };
 
@@ -156,38 +125,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleNextQuestion = () => {
-    // Usar content diretamente até finalContent ser declarado
-    const currentContent = content && content.questions && content.questions.length > 0 
-      ? content 
-      : {
-          ...content,
-          questions: [
-            {
-              id: 1,
-              question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-              type: 'multipla-escolha' as const,
-              options: [
-                'A) Primeira alternativa sobre o tema',
-                'B) Segunda alternativa sobre o tema', 
-                'C) Terceira alternativa sobre o tema',
-                'D) Quarta alternativa sobre o tema'
-              ],
-              correctAnswer: 'A) Primeira alternativa sobre o tema',
-              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-            },
-            {
-              id: 2,
-              question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-              type: 'verdadeiro-falso' as const,
-              options: ['Verdadeiro', 'Falso'],
-              correctAnswer: 'Verdadeiro',
-              explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-            }
-          ],
-          totalQuestions: 2
-        };
-
-    if (!currentContent.questions) return;
+    if (!content?.questions) return;
 
     // Save current answer
     const newAnswers = { 
@@ -196,11 +134,11 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     };
     setUserAnswers(newAnswers);
 
-    if (currentQuestionIndex < currentContent.questions.length - 1) {
+    if (currentQuestionIndex < content.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswer('');
-      const timePerQ = currentContent.timePerQuestion && !isNaN(Number(currentContent.timePerQuestion)) ? 
-        Number(currentContent.timePerQuestion) : 60;
+      const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+        Number(content.timePerQuestion) : 60;
       setTimeLeft(timePerQ);
     } else {
       setIsQuizCompleted(true);
@@ -219,83 +157,21 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const calculateScore = () => {
-    // Usar content diretamente até finalContent ser declarado
-    const currentContent = content && content.questions && content.questions.length > 0 
-      ? content 
-      : {
-          ...content,
-          questions: [
-            {
-              id: 1,
-              question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-              type: 'multipla-escolha' as const,
-              options: [
-                'A) Primeira alternativa sobre o tema',
-                'B) Segunda alternativa sobre o tema', 
-                'C) Terceira alternativa sobre o tema',
-                'D) Quarta alternativa sobre o tema'
-              ],
-              correctAnswer: 'A) Primeira alternativa sobre o tema',
-              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-            },
-            {
-              id: 2,
-              question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-              type: 'verdadeiro-falso' as const,
-              options: ['Verdadeiro', 'Falso'],
-              correctAnswer: 'Verdadeiro',
-              explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-            }
-          ],
-          totalQuestions: 2
-        };
-
-    if (!currentContent.questions) return 0;
+    if (!content?.questions) return 0;
     let correctAnswers = 0;
 
-    currentContent.questions.forEach((question, index) => {
+    content.questions.forEach((question, index) => {
       if (userAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
 
-    return Math.round((correctAnswers / currentContent.questions.length) * 100);
+    return Math.round((correctAnswers / content.questions.length) * 100);
   };
 
   const getProgressPercentage = () => {
-    // Usar content diretamente até finalContent ser declarado
-    const currentContent = content && content.questions && content.questions.length > 0 
-      ? content 
-      : {
-          ...content,
-          questions: [
-            {
-              id: 1,
-              question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-              type: 'multipla-escolha' as const,
-              options: [
-                'A) Primeira alternativa sobre o tema',
-                'B) Segunda alternativa sobre o tema', 
-                'C) Terceira alternativa sobre o tema',
-                'D) Quarta alternativa sobre o tema'
-              ],
-              correctAnswer: 'A) Primeira alternativa sobre o tema',
-              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-            },
-            {
-              id: 2,
-              question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-              type: 'verdadeiro-falso' as const,
-              options: ['Verdadeiro', 'Falso'],
-              correctAnswer: 'Verdadeiro',
-              explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-            }
-          ],
-          totalQuestions: 2
-        };
-
-    if (!currentContent.questions) return 0;
-    return ((currentQuestionIndex + 1) / currentContent.questions.length) * 100;
+    if (!content?.questions) return 0;
+    return ((currentQuestionIndex + 1) / content.questions.length) * 100;
   };
 
   // Loading state
@@ -315,53 +191,86 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  // Só mostra mensagem de "sem conteúdo" se realmente não há nada
-  if (!content) {
+  // No content or no questions state
+  if (!content || !content.questions || content.questions.length === 0) {
     return (
       <Card className="w-full max-w-4xl mx-auto border-orange-200">
         <CardContent className="p-8 text-center">
           <AlertCircle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Quiz em Preparação
+            {isLoading ? 'Gerando Quiz com IA...' : 'Quiz em Preparação'}
           </h3>
           <p className="text-gray-500 mb-4">
-            Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.
+            {isLoading ? 
+              'Aguarde enquanto a IA do Gemini gera questões personalizadas para você.' :
+              !content ? 
+                'Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.' :
+                'As questões estão sendo processadas. Se demorar muito, tente gerar novamente.'
+            }
           </p>
+
+          {content && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">Título:</span>
+                  <p className="text-gray-800">{content.title || 'Não definido'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Questões:</span>
+                  <p className="text-gray-800 font-medium">
+                    {content.questions?.length || 0}
+                    {content.questions?.length === 0 && (
+                      <span className="text-red-500 ml-1">⚠️ Nenhuma questão encontrada</span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Tempo/Questão:</span>
+                  <p className="text-gray-800">{content.timePerQuestion || 'Não definido'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Gerado por IA:</span>
+                  <p className="text-gray-800">{content.isGeneratedByAI ? 'Sim' : 'Não'}</p>
+                </div>
+              </div>
+
+              {content.isFallback && (
+                <div className="mt-3 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
+                  ⚠️ Modo demonstração ativo. Configure a API do Gemini para gerar conteúdo personalizado.
+                </div>
+              )}
+
+              {content.questions?.length === 0 && content.isGeneratedByAI && (
+                <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-xs text-red-800">
+                  ❌ API retornou dados, mas nenhuma questão válida foi encontrada. Verifique o formato da resposta.
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-2 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="text-orange-600 border-orange-300 hover:bg-orange-50"
+            >
+              Recarregar Página
+            </Button>
+            {content && !isLoading && (
+              <Button
+                variant="outline"
+                onClick={() => console.log('Dados para debug:', content)}
+                className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              >
+                Debug Console
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
   }
-
-  // Garantir que sempre tenhamos questões válidas para renderizar
-  const finalContent = content && content.questions && content.questions.length > 0 
-    ? content 
-    : {
-        ...content,
-        questions: [
-          {
-            id: 1,
-            question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-            type: 'multipla-escolha' as const,
-            options: [
-              'A) Primeira alternativa sobre o tema',
-              'B) Segunda alternativa sobre o tema', 
-              'C) Terceira alternativa sobre o tema',
-              'D) Quarta alternativa sobre o tema'
-            ],
-            correctAnswer: 'A) Primeira alternativa sobre o tema',
-            explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-          },
-          {
-            id: 2,
-            question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-            type: 'verdadeiro-falso' as const,
-            options: ['Verdadeiro', 'Falso'],
-            correctAnswer: 'Verdadeiro',
-            explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-          }
-        ],
-        totalQuestions: 2
-      };
 
   // Quiz intro screen
   if (!isQuizStarted) {
@@ -369,13 +278,13 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       <Card className="w-full max-w-4xl mx-auto shadow-lg border-orange-200">
         <CardHeader className="text-center bg-gradient-to-r from-orange-50 to-orange-100">
           <CardTitle className="text-2xl text-orange-700">
-            {finalContent.title || 'Quiz Interativo'}
+            {content.title || 'Quiz Interativo'}
           </CardTitle>
           <p className="text-gray-600 mt-2">
-            {finalContent.description || 'Teste seus conhecimentos com este quiz interativo!'}
+            {content.description || 'Teste seus conhecimentos com este quiz interativo!'}
           </p>
 
-          {finalContent.isFallback && (
+          {content.isFallback && (
             <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-sm text-yellow-800">
               <AlertCircle className="inline h-4 w-4 mr-1" />
               Este é um quiz de demonstração. Configure a API do Gemini para gerar conteúdo personalizado.
@@ -387,19 +296,19 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <span className="font-semibold text-blue-700">Total de Questões:</span>
               <p className="text-2xl font-bold text-blue-600 mt-1">
-                {finalContent.totalQuestions || finalContent.questions?.length || 0}
+                {content.totalQuestions || content.questions?.length || 0}
               </p>
             </div>
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
               <span className="font-semibold text-green-700">Tempo por Questão:</span>
               <p className="text-2xl font-bold text-green-600 mt-1">
-                {formatTime(Number(finalContent.timePerQuestion) || 60)}
+                {formatTime(Number(content.timePerQuestion) || 60)}
               </p>
             </div>
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
               <span className="font-semibold text-purple-700">Tempo Total:</span>
               <p className="text-2xl font-bold text-purple-600 mt-1">
-                {formatTime((Number(finalContent.timePerQuestion) || 60) * (finalContent.totalQuestions || finalContent.questions?.length || 0))}
+                {formatTime((Number(content.timePerQuestion) || 60) * (content.totalQuestions || content.questions?.length || 0))}
               </p>
             </div>
           </div>
@@ -430,105 +339,13 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
             {score}%
           </div>
           <p className="text-xl text-gray-600">
-            Você acertou {Object.values(userAnswers).filter((answer, index) => {
-              // Usar content diretamente até finalContent ser declarado
-              const currentContent = content && content.questions && content.questions.length > 0 
-                ? content 
-                : {
-                    ...content,
-                    questions: [
-                      {
-                        id: 1,
-                        question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-                        type: 'multipla-escolha' as const,
-                        options: [
-                          'A) Primeira alternativa sobre o tema',
-                          'B) Segunda alternativa sobre o tema', 
-                          'C) Terceira alternativa sobre o tema',
-                          'D) Quarta alternativa sobre o tema'
-                        ],
-                        correctAnswer: 'A) Primeira alternativa sobre o tema',
-                        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-                      },
-                      {
-                        id: 2,
-                        question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-                        type: 'verdadeiro-falso' as const,
-                        options: ['Verdadeiro', 'Falso'],
-                        correctAnswer: 'Verdadeiro',
-                        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-                      }
-                    ],
-                    totalQuestions: 2
-                  };
-              return answer === currentContent.questions![index]?.correctAnswer;
-            }).length} de {(() => {
-              const currentContent = content && content.questions && content.questions.length > 0 
-                ? content 
-                : {
-                    ...content,
-                    questions: [
-                      {
-                        id: 1,
-                        question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-                        type: 'multipla-escolha' as const,
-                        options: [
-                          'A) Primeira alternativa sobre o tema',
-                          'B) Segunda alternativa sobre o tema', 
-                          'C) Terceira alternativa sobre o tema',
-                          'D) Quarta alternativa sobre o tema'
-                        ],
-                        correctAnswer: 'A) Primeira alternativa sobre o tema',
-                        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-                      },
-                      {
-                        id: 2,
-                        question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-                        type: 'verdadeiro-falso' as const,
-                        options: ['Verdadeiro', 'Falso'],
-                        correctAnswer: 'Verdadeiro',
-                        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-                      }
-                    ],
-                    totalQuestions: 2
-                  };
-              return currentContent.questions!.length;
-            })()} questões
+            Você acertou {Object.values(userAnswers).filter((answer, index) => 
+              answer === content.questions![index]?.correctAnswer
+            ).length} de {content.questions!.length} questões
           </p>
 
           <div className="space-y-4 max-h-96 overflow-y-auto">
-            {(() => {
-              const currentContent = content && content.questions && content.questions.length > 0 
-                ? content 
-                : {
-                    ...content,
-                    questions: [
-                      {
-                        id: 1,
-                        question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
-                        type: 'multipla-escolha' as const,
-                        options: [
-                          'A) Primeira alternativa sobre o tema',
-                          'B) Segunda alternativa sobre o tema', 
-                          'C) Terceira alternativa sobre o tema',
-                          'D) Quarta alternativa sobre o tema'
-                        ],
-                        correctAnswer: 'A) Primeira alternativa sobre o tema',
-                        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-                      },
-                      {
-                        id: 2,
-                        question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
-                        type: 'verdadeiro-falso' as const,
-                        options: ['Verdadeiro', 'Falso'],
-                        correctAnswer: 'Verdadeiro',
-                        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
-                      }
-                    ],
-                    totalQuestions: 2
-                  };
-              return currentContent.questions!;
-            })().map((question, index) => {
+            {content.questions!.map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
@@ -578,7 +395,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   }
 
   // Quiz question screen
-  const currentQuestion = finalContent.questions[currentQuestionIndex];
+  const currentQuestion = content.questions[currentQuestionIndex];
 
   return (
     <motion.div
@@ -591,7 +408,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Questão {currentQuestionIndex + 1} de {finalContent.questions.length}</span>
+              <span>Questão {currentQuestionIndex + 1} de {content.questions.length}</span>
               <span>{Math.round(getProgressPercentage())}% concluído</span>
             </div>
             <Progress value={getProgressPercentage()} className="h-3" />
@@ -623,34 +440,33 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
               {/* Answer Options */}
               <div className="space-y-3">
-                <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                  {currentQuestion.options && currentQuestion.options.length > 0 ? (
-                    currentQuestion.options.map((option, index) => (
+                {currentQuestion.type === 'multipla-escolha' ? (
+                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
+                    {currentQuestion.options?.map((option, index) => (
                       <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
                         <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
                         <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
                           {option}
                         </Label>
                       </div>
-                    ))
-                  ) : (
-                    // Fallback para questões sem opções ou tipo verdadeiro/falso
-                    <>
-                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
-                        <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          ✅ Verdadeiro
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value="Falso" id="falso" className="border-2" />
-                        <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          ❌ Falso
-                        </Label>
-                      </div>
-                    </>
-                  )}
-                </RadioGroup>
+                    ))}
+                  </RadioGroup>
+                ) : (
+                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
+                    <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
+                      <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
+                      <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                        ✅ Verdadeiro
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
+                      <RadioGroupItem value="Falso" id="falso" className="border-2" />
+                      <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                        ❌ Falso
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
               </div>
 
               {/* Next Button */}
@@ -660,7 +476,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   disabled={!selectedAnswer}
                   className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  {currentQuestionIndex < finalContent.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
+                  {currentQuestionIndex < content.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
                 </Button>
               </div>
             </motion.div>
