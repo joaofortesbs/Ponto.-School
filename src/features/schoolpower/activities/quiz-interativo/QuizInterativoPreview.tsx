@@ -25,6 +25,10 @@ interface QuizInterativoPreviewProps {
     totalQuestions?: number;
     isGeneratedByAI?: boolean;
     isFallback?: boolean;
+    // Campos adicionais que podem vir do modal de visualização
+    customFields?: any;
+    type?: string;
+    data?: any;
   };
   isLoading?: boolean;
 }
@@ -209,17 +213,33 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       return null;
     }
 
+    // Extrair dados de diferentes estruturas possíveis (modal de edição vs modal de visualização)
+    let extractedData = content;
+
+    // Se os dados vêm do modal de visualização
+    if (content.data && typeof content.data === 'object') {
+      extractedData = content.data;
+    }
+
+    // Se há customFields, pode conter dados do quiz
+    if (content.customFields && typeof content.customFields === 'object') {
+      extractedData = { ...extractedData, ...content.customFields };
+    }
+
     // Processar dados de forma consistente
     const processedContent = {
-      ...content,
-      questions: content.questions || [],
-      totalQuestions: content.questions?.length || content.totalQuestions || 0,
-      timePerQuestion: content.timePerQuestion || 60,
-      title: content.title || 'Quiz Interativo',
-      description: content.description || 'Teste seus conhecimentos!'
+      ...extractedData,
+      questions: extractedData.questions || content.questions || [],
+      totalQuestions: (extractedData.questions || content.questions || []).length || extractedData.totalQuestions || content.totalQuestions || 0,
+      timePerQuestion: extractedData.timePerQuestion || content.timePerQuestion || 60,
+      title: extractedData.title || content.title || 'Quiz Interativo',
+      description: extractedData.description || content.description || 'Teste seus conhecimentos!',
+      isGeneratedByAI: extractedData.isGeneratedByAI || content.isGeneratedByAI || false,
+      isFallback: extractedData.isFallback || content.isFallback || false
     };
 
     console.log('🎯 QuizInterativoPreview - Conteúdo processado:', processedContent);
+    console.log('🎯 QuizInterativoPreview - Dados originais:', content);
     return processedContent;
   }, [content]);
 

@@ -10,6 +10,7 @@ import ActivityPreview from '@/features/schoolpower/activities/default/ActivityP
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -463,15 +464,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
       case 'quiz-interativo':
         console.log('📚 Renderizando QuizInterativoPreview com dados:', previewData);
-        // Certifique-se de que QuizInterativoPreview está importado e configurado corretamente
-        // Para este exemplo, vamos usar ActivityPreview como fallback, mas idealmente você teria um componente específico
         return (
-          <ActivityPreview
-            data={previewData}
-            activityType={activityType}
-            customFields={previewData.customFields}
-            // Passar quizInterativoContent se necessário para o componente genérico
-            // quizContent={quizInterativoContent}
+          <QuizInterativoPreview
+            content={previewData}
+            isLoading={false}
           />
         );
 
