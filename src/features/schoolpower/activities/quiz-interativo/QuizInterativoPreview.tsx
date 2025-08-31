@@ -219,21 +219,83 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const calculateScore = () => {
-    if (!finalContent.questions) return 0;
+    // Usar content diretamente até finalContent ser declarado
+    const currentContent = content && content.questions && content.questions.length > 0 
+      ? content 
+      : {
+          ...content,
+          questions: [
+            {
+              id: 1,
+              question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+              type: 'multipla-escolha' as const,
+              options: [
+                'A) Primeira alternativa sobre o tema',
+                'B) Segunda alternativa sobre o tema', 
+                'C) Terceira alternativa sobre o tema',
+                'D) Quarta alternativa sobre o tema'
+              ],
+              correctAnswer: 'A) Primeira alternativa sobre o tema',
+              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+            },
+            {
+              id: 2,
+              question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
+              type: 'verdadeiro-falso' as const,
+              options: ['Verdadeiro', 'Falso'],
+              correctAnswer: 'Verdadeiro',
+              explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+            }
+          ],
+          totalQuestions: 2
+        };
+
+    if (!currentContent.questions) return 0;
     let correctAnswers = 0;
 
-    finalContent.questions.forEach((question, index) => {
+    currentContent.questions.forEach((question, index) => {
       if (userAnswers[index] === question.correctAnswer) {
         correctAnswers++;
       }
     });
 
-    return Math.round((correctAnswers / finalContent.questions.length) * 100);
+    return Math.round((correctAnswers / currentContent.questions.length) * 100);
   };
 
   const getProgressPercentage = () => {
-    if (!finalContent.questions) return 0;
-    return ((currentQuestionIndex + 1) / finalContent.questions.length) * 100;
+    // Usar content diretamente até finalContent ser declarado
+    const currentContent = content && content.questions && content.questions.length > 0 
+      ? content 
+      : {
+          ...content,
+          questions: [
+            {
+              id: 1,
+              question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+              type: 'multipla-escolha' as const,
+              options: [
+                'A) Primeira alternativa sobre o tema',
+                'B) Segunda alternativa sobre o tema', 
+                'C) Terceira alternativa sobre o tema',
+                'D) Quarta alternativa sobre o tema'
+              ],
+              correctAnswer: 'A) Primeira alternativa sobre o tema',
+              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+            },
+            {
+              id: 2,
+              question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
+              type: 'verdadeiro-falso' as const,
+              options: ['Verdadeiro', 'Falso'],
+              correctAnswer: 'Verdadeiro',
+              explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+            }
+          ],
+          totalQuestions: 2
+        };
+
+    if (!currentContent.questions) return 0;
+    return ((currentQuestionIndex + 1) / currentContent.questions.length) * 100;
   };
 
   // Loading state
@@ -368,13 +430,105 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
             {score}%
           </div>
           <p className="text-xl text-gray-600">
-            Você acertou {Object.values(userAnswers).filter((answer, index) => 
-              answer === finalContent.questions![index]?.correctAnswer
-            ).length} de {finalContent.questions!.length} questões
+            Você acertou {Object.values(userAnswers).filter((answer, index) => {
+              // Usar content diretamente até finalContent ser declarado
+              const currentContent = content && content.questions && content.questions.length > 0 
+                ? content 
+                : {
+                    ...content,
+                    questions: [
+                      {
+                        id: 1,
+                        question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+                        type: 'multipla-escolha' as const,
+                        options: [
+                          'A) Primeira alternativa sobre o tema',
+                          'B) Segunda alternativa sobre o tema', 
+                          'C) Terceira alternativa sobre o tema',
+                          'D) Quarta alternativa sobre o tema'
+                        ],
+                        correctAnswer: 'A) Primeira alternativa sobre o tema',
+                        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+                      },
+                      {
+                        id: 2,
+                        question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
+                        type: 'verdadeiro-falso' as const,
+                        options: ['Verdadeiro', 'Falso'],
+                        correctAnswer: 'Verdadeiro',
+                        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+                      }
+                    ],
+                    totalQuestions: 2
+                  };
+              return answer === currentContent.questions![index]?.correctAnswer;
+            }).length} de {(() => {
+              const currentContent = content && content.questions && content.questions.length > 0 
+                ? content 
+                : {
+                    ...content,
+                    questions: [
+                      {
+                        id: 1,
+                        question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+                        type: 'multipla-escolha' as const,
+                        options: [
+                          'A) Primeira alternativa sobre o tema',
+                          'B) Segunda alternativa sobre o tema', 
+                          'C) Terceira alternativa sobre o tema',
+                          'D) Quarta alternativa sobre o tema'
+                        ],
+                        correctAnswer: 'A) Primeira alternativa sobre o tema',
+                        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+                      },
+                      {
+                        id: 2,
+                        question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
+                        type: 'verdadeiro-falso' as const,
+                        options: ['Verdadeiro', 'Falso'],
+                        correctAnswer: 'Verdadeiro',
+                        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+                      }
+                    ],
+                    totalQuestions: 2
+                  };
+              return currentContent.questions!.length;
+            })()} questões
           </p>
 
           <div className="space-y-4 max-h-96 overflow-y-auto">
-            {finalContent.questions!.map((question, index) => {
+            {(() => {
+              const currentContent = content && content.questions && content.questions.length > 0 
+                ? content 
+                : {
+                    ...content,
+                    questions: [
+                      {
+                        id: 1,
+                        question: `Questão sobre ${content?.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+                        type: 'multipla-escolha' as const,
+                        options: [
+                          'A) Primeira alternativa sobre o tema',
+                          'B) Segunda alternativa sobre o tema', 
+                          'C) Terceira alternativa sobre o tema',
+                          'D) Quarta alternativa sobre o tema'
+                        ],
+                        correctAnswer: 'A) Primeira alternativa sobre o tema',
+                        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+                      },
+                      {
+                        id: 2,
+                        question: `Segunda questão sobre ${content?.title || 'o tema'}: Este conceito é importante?`,
+                        type: 'verdadeiro-falso' as const,
+                        options: ['Verdadeiro', 'Falso'],
+                        correctAnswer: 'Verdadeiro',
+                        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+                      }
+                    ],
+                    totalQuestions: 2
+                  };
+              return currentContent.questions!;
+            })().map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
