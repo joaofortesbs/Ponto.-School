@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Clock, Play, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
+import { Clock, Play, RotateCcw, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface QuizQuestion {
@@ -18,11 +19,13 @@ interface QuizQuestion {
 
 interface QuizInterativoPreviewProps {
   content?: {
-    title: string;
-    description: string;
-    questions: QuizQuestion[];
-    timePerQuestion: number;
-    totalQuestions: number;
+    title?: string;
+    description?: string;
+    questions?: QuizQuestion[];
+    timePerQuestion?: number;
+    totalQuestions?: number;
+    isGeneratedByAI?: boolean;
+    isFallback?: boolean;
   };
   isLoading?: boolean;
 }
@@ -39,6 +42,20 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
 
+  // Log detalhado para debug
+  useEffect(() => {
+    console.log('🎯 QuizInterativoPreview - Conteúdo atualizado:', {
+      content,
+      hasContent: !!content,
+      hasQuestions: !!(content?.questions),
+      questionsCount: content?.questions?.length || 0,
+      isLoading,
+      title: content?.title,
+      isGeneratedByAI: content?.isGeneratedByAI,
+      isFallback: content?.isFallback
+    });
+  }, [content, isLoading]);
+
   // Timer effect
   useEffect(() => {
     if (isQuizStarted && !isQuizCompleted && !showResult && timeLeft > 0) {
@@ -54,7 +71,9 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   // Reset timer when question changes
   useEffect(() => {
     if (content && isQuizStarted) {
-      setTimeLeft(content.timePerQuestion || 60);
+      const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+        Number(content.timePerQuestion) : 60;
+      setTimeLeft(timePerQ);
     }
   }, [currentQuestionIndex, content]);
 
@@ -65,15 +84,21 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleStartQuiz = () => {
+    if (!content?.questions || content.questions.length === 0) {
+      console.error('❌ Tentativa de iniciar quiz sem questões válidas');
+      return;
+    }
+
+    console.log('🎯 Iniciando quiz com', content.questions.length, 'questões');
     setIsQuizStarted(true);
     setCurrentQuestionIndex(0);
     setSelectedAnswer('');
     setUserAnswers({});
     setIsQuizCompleted(false);
     setShowResult(false);
-    if (content) {
-      setTimeLeft(content.timePerQuestion || 60);
-    }
+    const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+      Number(content.timePerQuestion) : 60;
+    setTimeLeft(timePerQ);
   };
 
   const handleAnswerSelect = (value: string) => {
@@ -81,7 +106,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleNextQuestion = () => {
-    if (!content) return;
+    if (!content?.questions) return;
 
     // Save current answer
     const newAnswers = { 
@@ -91,15 +116,15 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     setUserAnswers(newAnswers);
 
     if (currentQuestionIndex < content.questions.length - 1) {
-        setCurrentQuestionIndex(prev => prev + 1);
-        setSelectedAnswer('');
-        const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
-          Number(content.timePerQuestion) : 60;
-        setTimeLeft(timePerQ);
-      } else {
-        setIsQuizCompleted(true);
-        setShowResult(true);
-      }
+      setCurrentQuestionIndex(prev => prev + 1);
+      setSelectedAnswer('');
+      const timePerQ = content.timePerQuestion && !isNaN(Number(content.timePerQuestion)) ? 
+        Number(content.timePerQuestion) : 60;
+      setTimeLeft(timePerQ);
+    } else {
+      setIsQuizCompleted(true);
+      setShowResult(true);
+    }
   };
 
   const handleResetQuiz = () => {
@@ -113,7 +138,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const calculateScore = () => {
-    if (!content) return 0;
+    if (!content?.questions) return 0;
     let correctAnswers = 0;
 
     content.questions.forEach((question, index) => {
@@ -126,81 +151,120 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const getProgressPercentage = () => {
-    if (!content) return 0;
+    if (!content?.questions) return 0;
     return ((currentQuestionIndex + 1) / content.questions.length) * 100;
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardContent className="p-8">
           <div className="flex items-center justify-center space-x-2">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-            <span className="text-lg">Gerando Quiz Interativo...</span>
+            <span className="text-lg">Gerando Quiz Interativo com IA do Gemini...</span>
           </div>
+          <p className="text-center text-sm text-gray-500 mt-2">
+            Aguarde enquanto criamos questões personalizadas para você
+          </p>
         </CardContent>
       </Card>
     );
   }
 
-  // Debug log para verificar conteúdo recebido
-  console.log('🎯 QuizInterativoPreview - Conteúdo recebido:', content);
-  console.log('🎯 QuizInterativoPreview - Questões:', content?.questions);
-  console.log('🎯 QuizInterativoPreview - IsLoading:', isLoading);
-
+  // No content or no questions state
   if (!content || !content.questions || content.questions.length === 0) {
     return (
-      <Card className="w-full max-w-4xl mx-auto">
+      <Card className="w-full max-w-4xl mx-auto border-orange-200">
         <CardContent className="p-8 text-center">
-          <p className="text-gray-500">
+          <AlertCircle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            Quiz em Preparação
+          </h3>
+          <p className="text-gray-500 mb-4">
             {!content ? 
-              'Nenhum conteúdo de quiz disponível. Configure os campos e gere o conteúdo.' :
-              'Quiz em processamento ou sem questões. Aguarde a geração completa.'
+              'Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.' :
+              'As questões estão sendo geradas pela IA. Aguarde a conclusão do processo.'
             }
           </p>
+          
           {content && (
-            <div className="mt-4 text-sm text-gray-400">
-              <p>Título: {content.title || 'Não definido'}</p>
-              <p>Questões: {content.questions?.length || 0}</p>
-              <p>Tempo por questão: {content.timePerQuestion || 'Não definido'}</p>
-              <p>Gerado por IA: {content.isGeneratedByAI ? 'Sim' : 'Não'}</p>
-              <details className="mt-2">
-                <summary className="cursor-pointer text-xs">Debug Info</summary>
-                <pre className="text-xs mt-2 text-left overflow-auto max-h-20">
-                  {JSON.stringify(content, null, 2)}
-                </pre>
-              </details>
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">Título:</span>
+                  <p className="text-gray-800">{content.title || 'Não definido'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Questões:</span>
+                  <p className="text-gray-800">{content.questions?.length || 0}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Tempo/Questão:</span>
+                  <p className="text-gray-800">{content.timePerQuestion || 'Não definido'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Gerado por IA:</span>
+                  <p className="text-gray-800">{content.isGeneratedByAI ? 'Sim' : 'Não'}</p>
+                </div>
+              </div>
+              
+              {content.isFallback && (
+                <div className="mt-3 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800">
+                  ⚠️ Modo demonstração ativo. Configure a API do Gemini para gerar conteúdo personalizado.
+                </div>
+              )}
             </div>
           )}
+
+          <Button
+            variant="outline"
+            onClick={() => window.location.reload()}
+            className="text-orange-600 border-orange-300 hover:bg-orange-50"
+          >
+            Recarregar Página
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
+  // Quiz intro screen
   if (!isQuizStarted) {
     return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-orange-600">{content.title}</CardTitle>
-          <p className="text-gray-600">{content.description}</p>
+      <Card className="w-full max-w-4xl mx-auto shadow-lg border-orange-200">
+        <CardHeader className="text-center bg-gradient-to-r from-orange-50 to-orange-100">
+          <CardTitle className="text-2xl text-orange-700">
+            {content.title || 'Quiz Interativo'}
+          </CardTitle>
+          <p className="text-gray-600 mt-2">
+            {content.description || 'Teste seus conhecimentos com este quiz interativo!'}
+          </p>
+          
+          {content.isFallback && (
+            <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-lg text-sm text-yellow-800">
+              <AlertCircle className="inline h-4 w-4 mr-1" />
+              Este é um quiz de demonstração. Configure a API do Gemini para gerar conteúdo personalizado.
+            </div>
+          )}
         </CardHeader>
         <CardContent className="p-8 text-center space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <span className="font-semibold">Total de Questões:</span>
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="font-semibold text-blue-700">Total de Questões:</span>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
                 {content.totalQuestions || content.questions?.length || 0}
               </p>
             </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <span className="font-semibold">Tempo por Questão:</span>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <span className="font-semibold text-green-700">Tempo por Questão:</span>
+              <p className="text-2xl font-bold text-green-600 mt-1">
                 {formatTime(Number(content.timePerQuestion) || 60)}
               </p>
             </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <span className="font-semibold">Tempo Total:</span>
-              <p className="text-2xl font-bold text-purple-600">
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <span className="font-semibold text-purple-700">Tempo Total:</span>
+              <p className="text-2xl font-bold text-purple-600 mt-1">
                 {formatTime((Number(content.timePerQuestion) || 60) * (content.totalQuestions || content.questions?.length || 0))}
               </p>
             </div>
@@ -208,7 +272,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
           <Button 
             onClick={handleStartQuiz}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 text-lg"
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
           >
             <Play className="mr-2 h-5 w-5" />
@@ -219,12 +283,13 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
+  // Quiz results screen
   if (showResult) {
     const score = calculateScore();
     return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Resultado do Quiz</CardTitle>
+      <Card className="w-full max-w-4xl mx-auto shadow-lg">
+        <CardHeader className="text-center bg-gradient-to-r from-green-50 to-blue-50">
+          <CardTitle className="text-2xl text-gray-800">Resultado do Quiz</CardTitle>
         </CardHeader>
         <CardContent className="p-8 text-center space-y-6">
           <div className="text-6xl font-bold text-orange-500">
@@ -232,38 +297,38 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           </div>
           <p className="text-xl text-gray-600">
             Você acertou {Object.values(userAnswers).filter((answer, index) => 
-              answer === content.questions[index]?.correctAnswer
-            ).length} de {content.questions.length} questões
+              answer === content.questions![index]?.correctAnswer
+            ).length} de {content.questions!.length} questões
           </p>
 
-          <div className="space-y-4">
-            {content.questions.map((question, index) => {
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {content.questions!.map((question, index) => {
               const userAnswer = userAnswers[index];
               const isCorrect = userAnswer === question.correctAnswer;
 
               return (
-                <div key={question.id} className="text-left p-4 border rounded-lg">
+                <div key={question.id} className="text-left p-4 border rounded-lg bg-gray-50">
                   <div className="flex items-start space-x-2">
                     {isCorrect ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 mt-1" />
+                      <CheckCircle2 className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-red-500 mt-1" />
+                      <XCircle className="h-5 w-5 text-red-500 mt-1 flex-shrink-0" />
                     )}
-                    <div className="flex-1">
-                      <p className="font-semibold">{question.question}</p>
-                      <p className="text-sm text-gray-600">
-                        Sua resposta: <span className={isCorrect ? 'text-green-600' : 'text-red-600'}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 mb-2">{question.question}</p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Sua resposta: <span className={isCorrect ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                           {userAnswer || 'Não respondida'}
                         </span>
                       </p>
                       {!isCorrect && (
-                        <p className="text-sm text-green-600">
-                          Resposta correta: {question.correctAnswer}
+                        <p className="text-sm text-green-600 mb-1">
+                          Resposta correta: <span className="font-medium">{question.correctAnswer}</span>
                         </p>
                       )}
                       {question.explanation && (
-                        <p className="text-sm text-blue-600 mt-1">
-                          {question.explanation}
+                        <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded mt-2">
+                          💡 {question.explanation}
                         </p>
                       )}
                     </div>
@@ -276,7 +341,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           <Button 
             onClick={handleResetQuiz}
             variant="outline"
-            className="border-orange-500 text-orange-500 hover:bg-orange-50"
+            className="border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Refazer Quiz
@@ -286,6 +351,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
+  // Quiz question screen
   const currentQuestion = content.questions[currentQuestionIndex];
 
   return (
@@ -294,7 +360,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-4xl mx-auto"
     >
-      <Card className="shadow-lg border-2 border-orange-200">
+      <Card className="shadow-xl border-2 border-orange-200">
         <CardContent className="p-6">
           {/* Progress Bar */}
           <div className="mb-6">
@@ -306,9 +372,9 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
           </div>
 
           {/* Timer */}
-          <div className="flex items-center justify-center mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-center mb-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border">
             <Clock className="mr-2 h-6 w-6 text-orange-500" />
-            <span className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-gray-700'}`}>
+            <span className={`text-2xl font-bold ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-700'}`}>
               {formatTime(timeLeft)}
             </span>
           </div>
@@ -322,7 +388,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h3 className="text-xl font-semibold text-gray-800 leading-relaxed">
+              <h3 className="text-xl font-semibold text-gray-800 leading-relaxed p-4 bg-orange-50 rounded-lg border border-orange-200">
                 {currentQuestion.question}
               </h3>
 
@@ -331,9 +397,9 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                 {currentQuestion.type === 'multipla-escolha' ? (
                   <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
                     {currentQuestion.options?.map((option, index) => (
-                      <div key={index} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                        <RadioGroupItem value={option} id={`option-${index}`} />
-                        <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                      <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
+                        <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
+                        <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
                           {option}
                         </Label>
                       </div>
@@ -341,16 +407,16 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                   </RadioGroup>
                 ) : (
                   <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value="Verdadeiro" id="verdadeiro" />
-                      <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer">
-                        Verdadeiro
+                    <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
+                      <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
+                      <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                        ✅ Verdadeiro
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50">
-                      <RadioGroupItem value="Falso" id="falso" />
-                      <Label htmlFor="falso" className="flex-1 cursor-pointer">
-                        Falso
+                    <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
+                      <RadioGroupItem value="Falso" id="falso" className="border-2" />
+                      <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                        ❌ Falso
                       </Label>
                     </div>
                   </RadioGroup>
@@ -362,9 +428,9 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                 <Button 
                   onClick={handleNextQuestion}
                   disabled={!selectedAnswer}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  {currentQuestionIndex < content.questions.length - 1 ? 'Próxima' : 'Finalizar'}
+                  {currentQuestionIndex < content.questions.length - 1 ? 'Próxima Questão' : 'Finalizar Quiz'}
                 </Button>
               </div>
             </motion.div>
@@ -376,4 +442,3 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 };
 
 export default QuizInterativoPreview;
-export { QuizInterativoPreview };

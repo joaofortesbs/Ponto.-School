@@ -1,4 +1,3 @@
-
 interface GeminiDebugLog {
   id: string;
   timestamp: string;
@@ -37,7 +36,7 @@ class GeminiDebugLogger {
     };
 
     this.logs.push(log);
-    
+
     // Manter apenas os logs mais recentes
     if (this.logs.length > this.maxLogs) {
       this.logs = this.logs.slice(-this.maxLogs);

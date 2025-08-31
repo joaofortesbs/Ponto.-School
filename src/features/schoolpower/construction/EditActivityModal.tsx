@@ -869,20 +869,15 @@ const EditActivityModal = ({
 
       // Validar conteúdo gerado
       if (!generatedContent.questions || generatedContent.questions.length === 0) {
-        throw new Error('Nenhuma questão foi gerada');
-      }
-
-      // Validar conteúdo gerado
-      if (!generatedContent.questions || generatedContent.questions.length === 0) {
         console.warn('⚠️ Conteúdo gerado sem questões, usando fallback');
         throw new Error('Nenhuma questão foi gerada pela API');
       }
 
-      // Preparar conteúdo final com dados do formulário
+      // Preparar conteúdo final com dados do formulário - ESTRUTURA CORRIGIDA
       const finalContent = {
         title: formData.title || generatedContent.title,
         description: formData.description || generatedContent.description,
-        questions: generatedContent.questions, // Garantir que as questões sejam transferidas
+        questions: generatedContent.questions, // CRÍTICO: Garantir que as questões sejam transferidas
         timePerQuestion: generatedContent.timePerQuestion || parseInt(quizData.timePerQuestion) || 60,
         totalQuestions: generatedContent.questions.length,
         subject: quizData.subject,
@@ -890,33 +885,50 @@ const EditActivityModal = ({
         theme: quizData.theme,
         format: quizData.format,
         difficultyLevel: quizData.difficultyLevel,
+        objectives: quizData.objectives,
+        instructions: quizData.instructions,
+        evaluation: quizData.evaluation,
         generatedByAI: true,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: generatedContent.isGeneratedByAI || true,
+        isFallback: false,
         formDataUsed: quizData
       };
 
       console.log('📦 Conteúdo final preparado:', finalContent);
-      console.log('📝 Questões incluídas:', finalContent.questions);
+      console.log('📝 Questões incluídas (CRÍTICO):', finalContent.questions);
+      console.log('🔢 Total de questões:', finalContent.questions.length);
 
-      // Salvar no localStorage
+      // Salvar no localStorage com estrutura consistente
       const quizStorageKey = `constructed_quiz-interativo_${activity?.id}`;
-      localStorage.setItem(quizStorageKey, JSON.stringify({
+      const storageData = {
         success: true,
         data: finalContent
-      }));
-
+      };
+      
+      localStorage.setItem(quizStorageKey, JSON.stringify(storageData));
       console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
 
-      // Atualizar estados de forma sincronizada
+      // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
       setQuizInterativoContent(finalContent);
       setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
-      // Force re-render do preview
+      // Validação adicional de sincronização
       setTimeout(() => {
-        setQuizInterativoContent(prev => ({ ...finalContent }));
-      }, 100);
+        console.log('🔄 Verificação de sincronização:', {
+          quizInterativoContent: !!quizInterativoContent,
+          generatedContent: !!generatedContent,
+          questionsCount: finalContent.questions.length
+        });
+        
+        // Force update para garantir sincronização
+        setQuizInterativoContent({ ...finalContent });
+        setGeneratedContent({ ...finalContent });
+        
+        // Atualizar aba para mostrar preview
+        setActiveTab('preview');
+      }, 200);
 
       toast({
         title: "Quiz Gerado com Sucesso!",
@@ -930,30 +942,38 @@ const EditActivityModal = ({
       // Criar conteúdo de fallback em caso de erro
       const fallbackContent = {
         title: formData.title || `Quiz: ${formData.theme}`,
-        description: formData.description || `Quiz sobre ${formData.theme}`,
+        description: formData.description || `Quiz sobre ${formData.theme} (Modo Demonstração)`,
         questions: Array.from({ length: parseInt(formData.numberOfQuestions) || 5 }, (_, index) => ({
           id: index + 1,
-          question: `Questão ${index + 1}: Sobre ${formData.theme} em ${formData.subject}, qual conceito é mais importante?`,
+          question: `Questão ${index + 1}: Sobre ${formData.theme} em ${formData.subject}, qual conceito é mais importante para o ${formData.schoolYear}?`,
           type: 'multipla-escolha' as const,
           options: [
-            'A) Conceito fundamental',
-            'B) Aplicação prática',
-            'C) Teoria complementar',
-            'D) Exercício de fixação'
+            `A) Conceito básico de ${formData.theme}`,
+            `B) Aplicação prática de ${formData.theme}`,
+            `C) Teoria avançada de ${formData.theme}`,
+            `D) Exercícios sobre ${formData.theme}`
           ],
-          correctAnswer: 'A) Conceito fundamental',
-          explanation: `O conceito fundamental de ${formData.theme} é essencial para o entendimento em ${formData.subject}.`
+          correctAnswer: `A) Conceito básico de ${formData.theme}`,
+          explanation: `O conceito básico de ${formData.theme} é essencial para o entendimento em ${formData.subject} no ${formData.schoolYear}.`
         })),
         timePerQuestion: parseInt(formData.timePerQuestion) || 60,
         totalQuestions: parseInt(formData.numberOfQuestions) || 5,
+        subject: formData.subject,
+        schoolYear: formData.schoolYear,
+        theme: formData.theme,
+        format: formData.questionModel,
+        difficultyLevel: formData.difficultyLevel,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: false,
         isFallback: true
       };
 
+      console.log('🛡️ Usando conteúdo de fallback:', fallbackContent);
+
       setQuizInterativoContent(fallbackContent);
       setGeneratedContent(fallbackContent);
       setIsContentLoaded(true);
+      setActiveTab('preview');
 
       toast({
         title: "Quiz Criado (Modo Demonstração)",
