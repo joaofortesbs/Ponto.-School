@@ -479,12 +479,53 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             activityData={activity}
           />
         );
+
+      case 'quadro-interativo':
+        console.log('🖼️ Renderizando QuadroInterativoPreview com dados:', previewData);
+        
+        // Carregar dados específicos do Quadro Interativo do localStorage
+        const quadroStorageKey = `constructed_quadro-interativo_${activity.id}`;
+        const quadroData = localStorage.getItem(quadroStorageKey);
+        let quadroContent = processedContent || {};
+        
+        if (quadroData) {
+          try {
+            const parsedQuadroData = JSON.parse(quadroData);
+            quadroContent = parsedQuadroData.data || parsedQuadroData;
+            console.log('🖼️ Quadro Interativo carregado do localStorage:', quadroContent);
+          } catch (error) {
+            console.warn('⚠️ Erro ao parsear dados do Quadro Interativo:', error);
+          }
+        }
+        
+        return (
+          <QuadroInterativoPreview 
+            data={quadroContent}
+            activityData={activity}
+          />
+        );
         
         case 'quiz-interativo':
           console.log('💬 Renderizando QuizInterativoPreview com dados:', previewData);
+          
+          // Carregar dados específicos do Quiz Interativo do localStorage
+          const quizStorageKey = `constructed_quiz-interativo_${activity.id}`;
+          const quizData = localStorage.getItem(quizStorageKey);
+          let quizContent = processedContent || {};
+          
+          if (quizData) {
+            try {
+              const parsedQuizData = JSON.parse(quizData);
+              quizContent = parsedQuizData.data || parsedQuizData;
+              console.log('📝 Quiz Interativo carregado do localStorage:', quizContent);
+            } catch (error) {
+              console.warn('⚠️ Erro ao parsear dados do Quiz Interativo:', error);
+            }
+          }
+          
           return (
             <QuizInterativoPreview 
-              content={processedContent || {}}
+              content={quizContent}
               isLoading={isLoading}
             />
           );
@@ -743,20 +784,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             <div className="flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto max-h-[calc(95vh-240px)] bg-white dark:bg-gray-900" ref={contentRef}>
                 {renderActivityPreview()}
-
-        {activity.id === 'quadro-interativo' && (
-          <QuadroInterativoPreview 
-            content={processedContent || {}}
-            isLoading={isLoading}
-          />
-        )}
-
-        {activity.id === 'quiz-interativo' && (
-          <QuizInterativoPreview 
-            content={processedContent || {}}
-            isLoading={isLoading}
-          />
-        )}
               </div>
             </div>
           </div>
