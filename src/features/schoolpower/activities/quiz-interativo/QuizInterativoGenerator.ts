@@ -17,12 +17,13 @@ export interface QuizInterativoData {
 export interface QuizQuestion {
   id: number;
   question: string;
-  type: 'multipla-escolha' | 'verdadeiro-falso';
+  type: 'multipla-escolha' | 'verdadeiro-falso' | 'lacuna'; // Adicionado 'lacuna'
   options?: string[];
-  correctAnswer: string;
+  correctAnswer: string | number; // Permitindo string ou número para índice
   explanation?: string;
   area?: string; // Nova: área específica do tema
   difficulty?: string; // Nova: dificuldade específica da questão
+  topic?: string; // Adicionado para refletir a estrutura do prompt
 }
 
 interface QuizInterativoContent {
@@ -74,20 +75,34 @@ export class QuizInterativoGenerator {
         return this.createFallbackContent(validatedData);
       }
 
-      const prompt = this.buildPrompt(validatedData);
+      const prompt = this.createPrompt(validatedData); // Renomeado de buildPrompt para createPrompt
       geminiLogger.logInfo('📝 Prompt construído', { promptLength: prompt.length });
 
-      const response = await this.callGeminiAPI(prompt);
-      geminiLogger.logInfo('📥 Resposta recebida da API', { responseLength: response.length });
+      const responseText = await this.callGeminiAPI(prompt);
+      geminiLogger.logInfo('📥 Resposta recebida da API', { responseLength: responseText.length });
 
-      const content = this.parseResponse(response, validatedData);
+      const content = this.parseAndValidateResponse(responseText); // Renomeado de parseResponse
 
-      geminiLogger.logSuccess('✅ Quiz Interativo gerado com sucesso', content);
-      return content;
+      // Mesclar dados originais com os gerados, se necessário
+      const finalContent: QuizInterativoContent = {
+        ...content,
+        title: content.title || `Quiz Interativo: ${validatedData.theme}`,
+        description: content.description || `Explore diferentes aspectos de ${validatedData.theme} com questões variadas.`,
+        timePerQuestion: parseInt(validatedData.timePerQuestion) || content.timePerQuestion,
+        totalQuestions: content.questions.length,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        questionDistribution: content.questionDistribution || this.calculateDistribution(content.questions)
+      };
+
+      geminiLogger.logSuccess('✅ Quiz Interativo gerado com sucesso', finalContent);
+      return finalContent;
 
     } catch (error) {
-      geminiLogger.logError('❌ Erro ao gerar Quiz Interativo', error);
-      return this.createFallbackContent(data);
+      geminiLogger.logError('❌ Erro ao gerar Quiz Interativo', { error: error.message, stack: error.stack });
+      // Se ocorrer um erro durante a geração, retornar conteúdo de fallback
+      const fallbackData = this.validateInputData(data); // Usar os dados validados para o fallback
+      return this.createFallbackContent(fallbackData);
     }
   }
 
@@ -122,7 +137,8 @@ export class QuizInterativoGenerator {
       'Conceitos fundamentais',
       'Aplicações práticas',
       'Resolução de problemas',
-      'Análise e interpretação'
+      'Análise e interpretação',
+      'Relações e conexões' // Adicionada mais uma área
     ];
 
     const fallbackQuestions: QuizQuestion[] = Array.from({ length: numQuestions }, (_, index) => {
@@ -131,10 +147,9 @@ export class QuizInterativoGenerator {
       const subarea = subareas[subareaIndex];
 
       // Alternar entre tipos de questão de forma inteligente
-      const isMultipleChoice = data.format !== 'Verdadeiro/Falso' &&
-        (data.format === 'Múltipla Escolha' || index % 3 !== 2);
+      const questionType = index % 3 === 0 ? 'multipla-escolha' : index % 3 === 1 ? 'verdadeiro-falso' : 'lacuna';
 
-      if (isMultipleChoice) {
+      if (questionType === 'multipla-escolha') {
         const questionTemplates = [
           `Qual é o conceito principal de ${data.theme} relacionado a ${subarea.toLowerCase()}?`,
           `Como ${data.theme} se aplica em situações práticas de ${subarea.toLowerCase()}?`,
@@ -154,12 +169,13 @@ export class QuizInterativoGenerator {
             `C) Relação com outros conceitos da disciplina`,
             `D) Exemplos específicos de ${subarea.toLowerCase()}`
           ],
-          correctAnswer: `A) Definição básica e estrutural de ${data.theme}`,
+          correctAnswer: 0, // Índice da resposta correta
           explanation: `A definição básica é fundamental para compreender ${data.theme} em ${data.subject}, especialmente no contexto de ${subarea.toLowerCase()}.`,
           area: subarea,
-          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado'
+          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado',
+          topic: subarea // Adicionando topic
         };
-      } else {
+      } else if (questionType === 'verdadeiro-falso') {
         const truthStatements = [
           `${data.theme} é um conceito fundamental em ${data.subject}`,
           `A aplicação de ${data.theme} é essencial para o ${data.schoolYear}`,
@@ -177,405 +193,447 @@ export class QuizInterativoGenerator {
           correctAnswer: 'Verdadeiro',
           explanation: `Correto! ${data.theme} é realmente importante em ${data.subject}, especialmente para compreender ${subarea.toLowerCase()}.`,
           area: subarea,
-          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado'
+          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado',
+          topic: subarea // Adicionando topic
+        };
+      } else {
+        const fillInTheBlankTemplates = [
+          `A principal característica de ${data.theme} no contexto de ${subarea.toLowerCase()} é __________.`,
+          `Para resolver problemas em ${data.subject} relacionados a ${data.theme}, é crucial entender __________.`,
+          `A aplicação prática de ${data.theme} no ${data.schoolYear} envolve principalmente __________.`
+        ];
+        const questionText = fillInTheBlankTemplates[questionNumber % fillInTheBlankTemplates.length];
+        return {
+          id: questionNumber,
+          question: `Questão ${questionNumber}: ${questionText}`,
+          type: 'lacuna',
+          options: [], // Lacunas não têm opções pré-definidas
+          correctAnswer: `Conceito chave de ${data.theme}`, // Resposta esperada
+          explanation: `Compreender ${data.theme} é essencial para ${data.subject}. A resposta correta é o conceito central relacionado a ${subarea.toLowerCase()}.`,
+          area: subarea,
+          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado',
+          topic: subarea // Adicionando topic
         };
       }
     });
 
-    // Calcular distribuições para o fallback
-    const typeDistribution = fallbackQuestions.reduce((acc, q) => {
-      acc[q.type] = (acc[q.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
     const result: QuizInterativoContent = {
-      title: `Quiz Interativo: ${data.theme}`,
-      description: `Explore diferentes aspectos de ${data.theme} com questões variadas que testam desde conceitos básicos até aplicações práticas em ${data.subject}. Este quiz foi gerado em modo demonstração.`,
+      title: `Quiz Interativo: ${data.theme} (Modo Demonstração)`,
+      description: `Explore diferentes aspectos de ${data.theme} com questões variadas que testam desde conceitos básicos até aplicações práticas em ${data.subject}. Este quiz foi gerado em modo demonstração devido a falha na API.`,
       questions: fallbackQuestions,
       timePerQuestion,
       totalQuestions: numQuestions,
       generatedAt: new Date().toISOString(),
       isGeneratedByAI: false,
       topicsExplored: subareas.slice(0, Math.min(4, numQuestions)),
-      questionDistribution: typeDistribution
+      questionDistribution: this.calculateDistribution(fallbackQuestions)
     };
 
     geminiLogger.logInfo('✅ Conteúdo de fallback criado', {
       totalQuestions: result.totalQuestions,
-      typeDistribution,
+      questionDistribution: result.questionDistribution,
       topicsExplored: result.topicsExplored
     });
 
     return result;
   }
 
-  private buildPrompt(data: QuizInterativoData): string {
-    const numQuestions = parseInt(data.numberOfQuestions) || 10;
-
-    // Calcular distribuição de questões por subárea
-    const questoesPorArea = Math.ceil(numQuestions / 4); // Dividir em 4 áreas principais
+  private createPrompt(data: QuizInterativoData): string {
+    const questionCount = parseInt(data.numberOfQuestions) || 10;
+    const multipleChoice = Math.ceil(questionCount * 0.6);
+    const trueFalse = Math.ceil(questionCount * 0.25);
+    const fillBlanks = questionCount - multipleChoice - trueFalse;
 
     return `
-Você é um especialista em educação brasileira e criação de conteúdo educacional diversificado.
+Você é um especialista em educação criando um quiz interativo educacional DIVERSIFICADO e ABRANGENTE.
 
-**MISSÃO:** Criar ${numQuestions} questões VARIADAS e ABRANGENTES sobre "${data.theme}" explorando DIFERENTES SUBÁREAS e ASPECTOS do tema.
-
-**CONTEXTO EDUCACIONAL:**
+DADOS EDUCACIONAIS:
 - Disciplina: ${data.subject}
 - Ano/Série: ${data.schoolYear}
-- Tema Central: ${data.theme}
+- Tema Principal: ${data.theme}
 - Objetivos: ${data.objectives}
-- Nível: ${data.difficultyLevel}
-- Formato: ${data.format}
+- Nível de Dificuldade: ${data.difficultyLevel}
+- Total de Questões: ${questionCount}
+- Tempo por Questão: ${data.timePerQuestion} segundos
 
-**ESTRATÉGIA DE DIVERSIFICAÇÃO:**
-1. **EXPLORE 4 SUBÁREAS DIFERENTES** do tema "${data.theme}":
-   - Conceitos fundamentais e definições
-   - Aplicações práticas e exemplos do cotidiano
-   - Resolução de problemas e cálculos
-   - Análise crítica e interpretação
+MANDATÓRIO - EXPLORAÇÃO DIVERSIFICADA:
 
-2. **VARIE OS NÍVEIS DE COMPLEXIDADE:**
-   - 30% questões básicas (conhecimento)
-   - 40% questões médias (compreensão/aplicação)
-   - 30% questões avançadas (análise/síntese)
+1. **MAPEAMENTO DE SUBTEMAS (Obrigatório)**:
+   - Identifique 5-6 áreas distintas dentro do tema "${data.theme}"
+   - Cada área deve abordar aspectos únicos e complementares
+   - Distribua as questões equitativamente entre as áreas
+   - Exemplos de diversificação:
+     * Conceitos básicos e definições
+     * Aplicações práticas e exemplos
+     * Relações e conexões interdisciplinares
+     * Análise crítica e interpretação
+     * Resolução de problemas reais
+     * História e evolução do conceito
 
-3. **DIVERSIFIQUE OS CONTEXTOS:**
-   - Situações do dia a dia
-   - Problemas matemáticos/científicos
-   - Análise de texto/imagem (quando aplicável)
-   - Comparações e relações
+2. **DISTRIBUIÇÃO OBRIGATÓRIA DE TIPOS**:
+   - ${multipleChoice} questões de Múltipla Escolha (4-5 alternativas cada)
+   - ${trueFalse} questões de Verdadeiro/Falso (com justificativa)
+   - ${fillBlanks} questões de Completar Lacunas
 
-**ESPECIFICAÇÕES DAS QUESTÕES:**
+3. **CRITÉRIOS DE QUALIDADE RIGOROSOS**:
+   - Questões contextualizadas com situações reais
+   - Alternativas plausíveis e educativas
+   - Explicações detalhadas (mínimo 50 palavras por explicação)
+   - Progressão de dificuldade: 30% fácil, 50% médio, 20% difícil
+   - Linguagem adequada ao ${data.schoolYear}
 
-${data.format === 'Múltipla Escolha' ? `
-Crie ${numQuestions} questões de múltipla escolha com:
-- EXATAMENTE 4 alternativas por questão (A, B, C, D)
-- Apenas 1 alternativa correta
-- Alternativas plausíveis mas claramente distintas
-- Explicação educativa detalhada para cada resposta
-- Varie os contextos e subáreas do tema
-` : data.format === 'Verdadeiro/Falso' ? `
-Crie ${numQuestions} questões verdadeiro/falso sobre ${data.theme}:
-- Afirmações claras sobre conceitos específicos
-- Explore diferentes aspectos do tema
-- Explicação completa do porquê é verdadeiro ou falso
-- Varie entre conceitos básicos e aplicações práticas
-` : `
-Crie ${numQuestions} questões MISTAS explorando todo o tema:
-- 60% múltipla escolha (4 alternativas A,B,C,D)
-- 40% verdadeiro/falso
-- Varie os tipos de forma inteligente
-- Explore todas as subáreas do tema
-- Misture diferentes níveis de dificuldade
-`}
+4. **REQUISITOS ESPECÍFICOS POR TIPO**:
 
-**DIRETRIZES PEDAGÓGICAS ESPECÍFICAS:**
-- Use linguagem ADEQUADA para ${data.schoolYear}
-- EXPLORE PROFUNDAMENTE o tema "${data.theme}"
-- Nível ${data.difficultyLevel} como base, mas VARIE a complexidade
-- Desenvolva competências: ${data.objectives}
-- Cada questão deve abordar um ASPECTO DIFERENTE do tema
-- Inclua situações práticas e exemplos reais
-- Evite repetição de conceitos entre questões
+   **Múltipla Escolha:**
+   - 4-5 alternativas por questão
+   - Apenas 1 resposta correta
+   - Alternativas incorretas pedagogicamente úteis
+   - Evitar "todas as alternativas" ou "nenhuma das alternativas"
 
-**FORMATO DE RESPOSTA OBRIGATÓRIO (APENAS JSON, SEM TEXTO ADICIONAL):**
+   **Verdadeiro/Falso:**
+   - Afirmações claras e específicas
+   - Evitar generalizações absolutas
+   - Incluir justificativa na explicação
 
+   **Completar Lacunas:**
+   - Sentenças com 1-2 lacunas estratégicas
+   - Resposta deve ser palavra-chave ou conceito central
+   - Contexto suficiente para dedução lógica
+
+FORMATO JSON ESTRITO (sem markdown, sem comentários):
 {
   "title": "Quiz Interativo: ${data.theme}",
-  "description": "Explore diferentes aspectos de ${data.theme} com questões variadas que testam desde conceitos básicos até aplicações práticas",
-  "topicsExplored": ["subárea 1", "subárea 2", "subárea 3", "subárea 4"],
+  "description": "Avaliação abrangente explorando múltiplas dimensões do tema ${data.theme}, adequada para ${data.schoolYear}",
   "questions": [
     {
       "id": 1,
-      "question": "Pergunta específica sobre conceitos fundamentais",
       "type": "multipla-escolha",
-      "options": ["A) Primeira alternativa", "B) Segunda alternativa", "C) Terceira alternativa", "D) Quarta alternativa"],
-      "correctAnswer": "A) Primeira alternativa",
-      "explanation": "Explicação clara e educativa",
-      "area": "Conceitos fundamentais",
-      "difficulty": "básico"
-    },
-    {
-      "id": 2,
-      "question": "Pergunta sobre aplicação prática",
-      "type": "verdadeiro-falso",
-      "options": ["Verdadeiro", "Falso"],
-      "correctAnswer": "Verdadeiro",
-      "explanation": "Explicação detalhada",
-      "area": "Aplicações práticas",
-      "difficulty": "médio"
+      "topic": "Nome específico do subtema abordado",
+      "question": "Pergunta contextualizada e clara sobre o subtema?",
+      "options": ["Alternativa A detalhada", "Alternativa B detalhada", "Alternativa C detalhada", "Alternativa D detalhada"],
+      "correctAnswer": 0,
+      "explanation": "Explicação educativa completa justificando a resposta correta e explicando por que as outras alternativas estão incorretas. Deve ter pelo menos 50 palavras e ser pedagogicamente rica.",
+      "difficulty": "facil"
     }
-  ]
+  ],
+  "timePerQuestion": ${data.timePerQuestion},
+  "totalQuestions": ${questionCount},
+  "generatedAt": "${new Date().toISOString()}",
+  "isGeneratedByAI": true,
+  "topicsExplored": ["Lista de todos os subtemas abordados"],
+  "questionDistribution": {
+    "multipla-escolha": ${multipleChoice},
+    "verdadeiro-falso": ${trueFalse},
+    "lacuna": ${fillBlanks}
+  }
 }
 
-**IMPORTANTE:**
-- RETORNE APENAS O JSON, sem explicações extras
-- GARANTA que cada questão explore um aspecto diferente
-- DIVERSIFIQUE os contextos e situações
-- USE exemplos práticos e relevantes para a faixa etária`;
+CRÍTICO: Gere exatamente ${questionCount} questões explorando diferentes aspectos de "${data.theme}". Cada questão deve abordar um subtema distinto para máxima diversidade educacional.`;
   }
 
   private async callGeminiAPI(prompt: string): Promise<string> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`;
-
-    const payload = {
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      generationConfig: {
-        temperature: 0.8, // Aumentado para mais criatividade
-        topK: 50, // Aumentado para mais variedade
-        topP: 0.95,
-        maxOutputTokens: 16384, // Aumentado para respostas mais completas
-      }
-    };
-
-    geminiLogger.logInfo('🚀 Fazendo chamada para API Gemini', {
-      url,
-      hasApiKey: !!this.apiKey,
-      promptLength: prompt.length,
-      payload: payload.generationConfig
-    });
-
     const startTime = Date.now();
 
     try {
-      const response = await fetch(url, {
+      geminiLogger.logInfo('🚀 Iniciando chamada para API Gemini', {
+        promptLength: prompt.length,
+        apiKeyAvailable: !!this.apiKey,
+        promptPreview: prompt.substring(0, 200) + '...'
+      });
+
+      const requestBody = {
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.4, // Mais criatividade para diversidade
+          topK: 30,
+          topP: 0.9,
+          maxOutputTokens: 16384, // Aumentado para questões mais elaboradas
+          candidateCount: 1
+        },
+        safetySettings: [
+          {
+            category: "HARM_CATEGORY_HARASSMENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_HATE_SPEECH",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      };
+
+      console.log('📤 Enviando requisição para Gemini API:', {
+        url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`,
+        bodyPreview: JSON.stringify(requestBody).substring(0, 300)
+      });
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(30000) // 30 segundos timeout
+        body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(30000) // Adiciona timeout de 30 segundos
       });
 
       const executionTime = Date.now() - startTime;
-
-      geminiLogger.logInfo('📥 Resposta da API recebida', {
-        status: response.status,
-        statusText: response.statusText,
-        executionTime: `${executionTime}ms`
-      });
 
       if (!response.ok) {
         const errorText = await response.text();
-        geminiLogger.logError('❌ Erro na API do Gemini', {
+        console.error('❌ Erro HTTP na API Gemini:', {
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorText
+          error: errorText
         });
-        throw new Error(`Erro na API do Gemini: ${response.status} - ${errorText}`);
+
+        geminiLogger.logError(`Erro HTTP ${response.status}`, {
+          status: response.status,
+          error: errorText,
+          executionTime
+        });
+        throw new Error(`Erro na API Gemini: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-
-      geminiLogger.logInfo('🔍 Estrutura da resposta da API', {
-        hasCandidates: !!data.candidates,
-        candidatesLength: data.candidates?.length || 0,
+      console.log('📥 Resposta bruta da API:', {
+        candidates: data.candidates?.length || 0,
         hasContent: !!data.candidates?.[0]?.content,
-        hasParts: !!data.candidates?.[0]?.content?.parts,
-        partsLength: data.candidates?.[0]?.content?.parts?.length || 0
+        hasParts: !!data.candidates?.[0]?.content?.parts
       });
 
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        geminiLogger.logError('❌ Estrutura de resposta inválida', data);
-        throw new Error('Resposta inválida da API do Gemini - estrutura malformada');
+      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      if (!resultText) {
+        console.error('❌ Resposta vazia ou malformada da API Gemini:', data);
+        geminiLogger.logError('❌ Resposta vazia ou malformada da API Gemini', { data: JSON.stringify(data) });
+        throw new Error('Resposta vazia ou malformada da API Gemini');
       }
 
-      const responseText = data.candidates[0].content.parts[0].text;
-
-      geminiLogger.logInfo('✅ Texto da resposta extraído com sucesso', {
-        responseLength: responseText.length,
-        responsePreview: responseText.substring(0, 200)
+      console.log('✅ Texto extraído da resposta:', {
+        length: resultText.length,
+        preview: resultText.substring(0, 500) + '...'
       });
 
-      return responseText;
+      geminiLogger.logSuccess('✅ Resposta recebida com sucesso', {
+        responseLength: resultText.length,
+        executionTime,
+        hasValidResponse: !!resultText
+      });
+
+      return resultText;
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      geminiLogger.logError('❌ Erro crítico na chamada da API', {
+      console.error('❌ Erro na chamada da API Gemini:', error);
+
+      geminiLogger.logError('❌ Erro na chamada da API', {
         error: error.message,
-        executionTime: `${executionTime}ms`
+        executionTime,
+        stack: error.stack
       });
       throw error;
     }
   }
 
-  private parseResponse(response: string, originalData: QuizInterativoData): QuizInterativoContent {
+  private parseAndValidateResponse(responseText: string): QuizInterativoContent {
     try {
-      geminiLogger.logInfo('🔍 Processando resposta do Gemini', {
-        responseLength: response.length,
-        responsePreview: response.substring(0, 300),
-        originalData
+      console.log('🔍 Iniciando processamento da resposta:', {
+        originalLength: responseText.length,
+        preview: responseText.substring(0, 200) + '...'
       });
 
       // Limpeza mais robusta da resposta
-      let cleanResponse = response.trim();
+      let cleanedResponse = responseText.trim();
 
-      // Remover markdown code blocks e outros padrões
-      cleanResponse = cleanResponse.replace(/^```json\s*/gi, '').replace(/\s*```$/g, '');
-      cleanResponse = cleanResponse.replace(/^```\s*/g, '').replace(/\s*```$/g, '');
-      cleanResponse = cleanResponse.replace(/^.*?(?=\{)/s, ''); // Remove tudo antes do primeiro {
-      cleanResponse = cleanResponse.replace(/\}[^}]*$/s, '}'); // Remove tudo depois do último }
+      // Remover blocos de código markdown e texto explicativo
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/gi, '').replace(/\s*```$/g, '');
+      cleanedResponse = cleanedResponse.replace(/^```\s*/g, '').replace(/\s*```$/g, '');
+      cleanedResponse = cleanedResponse.replace(/```/gi, ''); // Remover quaisquer outros ```
 
-      geminiLogger.logInfo('🧹 Resposta limpa para parsing', {
-        cleanResponse: cleanResponse.substring(0, 500) + '...',
-        length: cleanResponse.length
+      // Encontrar o bloco JSON mais provável
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}');
+
+      if (jsonStart === -1 || jsonEnd === -1 || jsonEnd <= jsonStart) {
+        console.error('❌ JSON não encontrado. Resposta completa:', responseText);
+        geminiLogger.logError('Formato JSON não encontrado na resposta', { response: responseText });
+        throw new Error('Formato JSON não encontrado na resposta da IA');
+      }
+
+      cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
+
+      console.log('🧹 JSON extraído e limpo:', {
+        length: cleanedResponse.length,
+        startsCorrectly: cleanedResponse.startsWith('{'),
+        endsCorrectly: cleanedResponse.endsWith('}'),
+        preview: cleanedResponse.substring(0, 300) + '...'
       });
 
-      let parsed;
+      // Parse do JSON
+      let parsedContent;
       try {
-        parsed = JSON.parse(cleanResponse);
+        parsedContent = JSON.parse(cleanedResponse);
       } catch (parseError) {
-        geminiLogger.logError('❌ Erro de JSON parsing, tentando limpeza adicional', parseError);
-
-        // Tentativa de limpeza adicional
-        cleanResponse = cleanResponse.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-        parsed = JSON.parse(cleanResponse);
+        console.error('❌ Erro de JSON.parse, tentando limpeza adicional:', parseError);
+        geminiLogger.logError('Erro de JSON.parse', { error: parseError.message, cleanedResponse });
+        // Tentativa de limpeza adicional para vírgulas extras no final de arrays/objetos
+        cleanedResponse = cleanedResponse.replace(/,\s*([}\]])/g, '$1');
+        try {
+          parsedContent = JSON.parse(cleanedResponse);
+        } catch (finalParseError) {
+          console.error('❌ Falha final no parsing JSON após limpeza:', finalParseError);
+          throw new Error(`Falha ao parsear JSON mesmo após limpeza: ${finalParseError.message}`);
+        }
       }
 
-      // Validar estrutura básica com logs detalhados
-      geminiLogger.logInfo('📊 Estrutura da resposta parseada', {
-        hasQuestions: !!parsed.questions,
-        isQuestionsArray: Array.isArray(parsed.questions),
-        questionsLength: parsed.questions?.length || 0,
-        hasTitle: !!parsed.title,
-        hasDescription: !!parsed.description,
-        hasTopicsExplored: !!parsed.topicsExplored
+      console.log('📊 Conteúdo parseado:', {
+        hasTitle: !!parsedContent.title,
+        hasDescription: !!parsedContent.description,
+        hasQuestions: !!parsedContent.questions,
+        questionsType: Array.isArray(parsedContent.questions) ? 'array' : typeof parsedContent.questions,
+        questionsCount: parsedContent.questions?.length || 0
       });
 
-      if (!parsed.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-        geminiLogger.logError('❌ Estrutura de resposta inválida ou sem questões', parsed);
-        throw new Error('Resposta não contém questões válidas');
+      // Validações rigorosas
+      if (!parsedContent.questions || !Array.isArray(parsedContent.questions)) {
+        throw new Error('Campo "questions" não encontrado ou não é um array');
       }
 
-      // Processar questões com validação mais rigorosa
-      const questions: QuizQuestion[] = parsed.questions.map((q: any, index: number) => {
-        const questionId = index + 1;
+      if (parsedContent.questions.length === 0) {
+        throw new Error('Nenhuma questão foi gerada pela IA');
+      }
 
-        geminiLogger.logInfo(`🔍 Processando questão ${questionId}`, q);
+      // Validar estrutura detalhada de cada questão
+      const validationErrors = [];
 
-        // Determinar tipo da questão com lógica melhorada
-        let questionType: 'multipla-escolha' | 'verdadeiro-falso' = 'multipla-escolha';
+      parsedContent.questions.forEach((question: any, index: number) => {
+        const questionNum = index + 1;
 
-        if (q.type === 'verdadeiro-falso' || q.tipo === 'verdadeiro-falso' ||
-          (q.options && q.options.length === 2 &&
-            q.options.some((opt: string) => opt?.toLowerCase().includes('verdadeiro')) &&
-            q.options.some((opt: string) => opt?.toLowerCase().includes('falso')))) {
-          questionType = 'verdadeiro-falso';
+        if (!question.question || typeof question.question !== 'string' || question.question.trim() === '') {
+          validationErrors.push(`Questão ${questionNum}: campo "question" ausente, inválido ou vazio`);
         }
 
-        // Processar opções com validação
-        let processedOptions: string[] = [];
-        if (questionType === 'multipla-escolha') {
-          const rawOptions = q.options || q.opcoes || q.alternativas;
-          if (rawOptions && Array.isArray(rawOptions) && rawOptions.length >= 4) {
-            processedOptions = rawOptions.slice(0, 4); // Garantir exatamente 4 opções
+        if (!question.type || typeof question.type !== 'string' || !['multipla-escolha', 'verdadeiro-falso', 'lacuna'].includes(question.type)) {
+          validationErrors.push(`Questão ${questionNum}: campo "type" ausente ou inválido (deve ser 'multipla-escolha', 'verdadeiro-falso' ou 'lacuna')`);
+        }
+
+        if (!question.explanation || typeof question.explanation !== 'string' || question.explanation.trim().length < 20) { // Mínimo de 20 caracteres para explicação
+          validationErrors.push(`Questão ${questionNum}: campo "explanation" ausente, inválido ou muito curto`);
+        }
+
+        // Validação específica para Múltipla Escolha
+        if (question.type === 'multipla-escolha') {
+          if (!question.options || !Array.isArray(question.options) || question.options.length < 2) {
+            validationErrors.push(`Questão ${questionNum}: campo "options" ausente, inválido ou com menos de 2 opções para múltipla escolha`);
           } else {
-            // Fallback com opções baseadas no tema
-            processedOptions = [
-              `A) Conceito fundamental de ${originalData.theme}`,
-              `B) Aplicação prática de ${originalData.theme}`,
-              `C) Exemplo específico de ${originalData.theme}`,
-              `D) Teoria complementar de ${originalData.theme}`
-            ];
-          }
-        } else {
-          processedOptions = ['Verdadeiro', 'Falso'];
-        }
-
-        // Validar resposta correta
-        let correctAnswer = q.correctAnswer || q.respostaCorreta || q.resposta || processedOptions[0];
-
-        // Para múltipla escolha, garantir que a resposta correta existe nas opções
-        if (questionType === 'multipla-escolha') {
-          const isValidAnswer = processedOptions.some(option =>
-            option.toLowerCase().includes(correctAnswer.toLowerCase()) ||
-            correctAnswer.toLowerCase().includes(option.toLowerCase())
-          );
-
-          if (!isValidAnswer) {
-            correctAnswer = processedOptions[0]; // Usar primeira opção como fallback
-            geminiLogger.logWarning(`⚠️ Resposta correta ajustada para questão ${questionId}`, {
-              originalAnswer: q.correctAnswer,
-              newAnswer: correctAnswer
-            });
+            if (typeof question.correctAnswer !== 'number' || !Number.isInteger(question.correctAnswer) || question.correctAnswer < 0 || question.correctAnswer >= question.options.length) {
+              validationErrors.push(`Questão ${questionNum}: "correctAnswer" (índice) inválido ou fora do intervalo para múltipla escolha`);
+            }
           }
         }
 
-        const processedQuestion: QuizQuestion = {
-          id: questionId,
-          question: q.question || q.pergunta || q.enunciado || `Questão ${questionId}: Sobre ${originalData.theme} em ${originalData.subject}, qual aspecto é mais relevante?`,
-          type: questionType,
-          options: processedOptions,
-          correctAnswer,
-          explanation: q.explanation || q.explicacao || q.justificativa || `Explicação para a questão ${questionId} sobre ${originalData.theme}`,
-          area: q.area || q.topico || q.subtema || 'Área geral',
-          difficulty: q.difficulty || q.dificuldade || originalData.difficultyLevel
-        };
+        // Validação específica para Verdadeiro/Falso
+        if (question.type === 'verdadeiro-falso') {
+          if (!question.options || !Array.isArray(question.options) || question.options.length !== 2 || !question.options.includes('Verdadeiro') || !question.options.includes('Falso')) {
+            validationErrors.push(`Questão ${questionNum}: campo "options" inválido para verdadeiro/falso (deve ser ['Verdadeiro', 'Falso'])`);
+          }
+          if (typeof question.correctAnswer !== 'string' || (question.correctAnswer !== 'Verdadeiro' && question.correctAnswer !== 'Falso')) {
+            validationErrors.push(`Questão ${questionNum}: "correctAnswer" inválido para verdadeiro/falso (deve ser 'Verdadeiro' ou 'Falso')`);
+          }
+        }
 
-        geminiLogger.logInfo(`✅ Questão ${questionId} processada com sucesso`, {
-          type: processedQuestion.type,
-          optionsCount: processedQuestion.options?.length,
-          hasExplanation: !!processedQuestion.explanation,
-          area: processedQuestion.area
-        });
-
-        return processedQuestion;
+        // Validação específica para Lacuna
+        if (question.type === 'lacuna') {
+          if (question.options && question.options.length > 0) {
+            console.warn(`Questão ${questionNum}: Campo "options" não é esperado para tipo 'lacuna'. Sendo ignorado.`);
+          }
+          if (typeof question.correctAnswer !== 'string' || question.correctAnswer.trim() === '') {
+            validationErrors.push(`Questão ${questionNum}: campo "correctAnswer" (a palavra/conceito a ser preenchido) é obrigatório e não pode estar vazio para tipo 'lacuna'`);
+          }
+        }
       });
 
-      // Validar distribuição das questões
-      const typeDistribution = questions.reduce((acc, q) => {
-        acc[q.type] = (acc[q.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const areaDistribution = questions.reduce((acc, q) => {
-        const area = q.area || 'Não definida';
-        acc[area] = (acc[area] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Processar tempo por questão
-      let timePerQuestion = 60; // padrão
-      const timeInput = originalData.timePerQuestion?.toString().replace(/\D/g, '');
-      if (timeInput && !isNaN(parseInt(timeInput))) {
-        timePerQuestion = parseInt(timeInput);
+      if (validationErrors.length > 0) {
+        console.error('❌ Erros de validação encontrados:', validationErrors);
+        geminiLogger.logError('Questões inválidas geradas pela IA', { errors: validationErrors });
+        throw new Error(`Questões inválidas geradas pela IA:\n${validationErrors.join('\n')}`);
       }
 
-      const result: QuizInterativoContent = {
-        title: parsed.title || `Quiz Interativo: ${originalData.theme}`,
-        description: parsed.description || `Explore diferentes aspectos de ${originalData.theme} com questões variadas que testam desde conceitos básicos até aplicações práticas em ${originalData.subject}.`,
-        questions,
-        timePerQuestion,
-        totalQuestions: questions.length,
+      // Garantir campos obrigatórios com valores padrão consistentes
+      const validatedContent: QuizInterativoContent = {
+        title: parsedContent.title && typeof parsedContent.title === 'string' ? parsedContent.title.trim() : 'Quiz Interativo',
+        description: parsedContent.description && typeof parsedContent.description === 'string' ? parsedContent.description.trim() : 'Quiz educativo gerado automaticamente',
+        questions: parsedContent.questions.map((q: any, index: number) => ({
+          ...q,
+          id: index + 1, // Reindexar para garantir IDs sequenciais
+          question: q.question.trim(),
+          explanation: q.explanation.trim(),
+          topic: q.topic?.trim() || q.area?.trim() || 'Geral', // Usar topic ou area como fallback
+          area: q.area?.trim() || q.topic?.trim() || 'Geral', // Usar area ou topic como fallback
+          difficulty: q.difficulty?.trim().toLowerCase() || 'médio', // Default para médio e lowercase
+          options: q.type === 'multipla-escolha' ? (q.options || []).map((opt: string) => opt?.trim()).filter((opt: string) => opt !== '') : q.type === 'verdadeiro-falso' ? ['Verdadeiro', 'Falso'] : [],
+          correctAnswer: q.type === 'lacuna' ? q.correctAnswer.toString().trim() : q.correctAnswer, // Garantir que correctAnswer seja string para lacuna
+        })),
+        timePerQuestion: parsedContent.timePerQuestion && !isNaN(parseInt(parsedContent.timePerQuestion)) ? parseInt(parsedContent.timePerQuestion) : 60,
+        totalQuestions: parsedContent.questions.length,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: true,
-        topicsExplored: parsed.topicsExplored || Object.keys(areaDistribution),
-        questionDistribution: typeDistribution
+        topicsExplored: (parsedContent.topicsExplored && Array.isArray(parsedContent.topicsExplored)) ? parsedContent.topicsExplored.map((t: string) => t?.trim()).filter((t: string) => t !== '') : [],
+        questionDistribution: this.calculateDistribution(parsedContent.questions)
       };
 
-      geminiLogger.logSuccess('✅ Conteúdo final processado com sucesso', {
-        title: result.title,
-        totalQuestions: result.totalQuestions,
-        timePerQuestion: result.timePerQuestion,
-        typeDistribution,
-        areaDistribution,
-        topicsExplored: result.topicsExplored
+      // Se topicsExplored estiver vazio, preencher com base nas áreas das questões
+      if (validatedContent.topicsExplored.length === 0 && validatedContent.questions.length > 0) {
+        validatedContent.topicsExplored = Array.from(new Set(validatedContent.questions.map(q => q.area || 'Geral'))).slice(0, 4);
+      }
+
+      console.log('✅ Conteúdo completamente validado e processado:', {
+        title: validatedContent.title,
+        totalQuestions: validatedContent.totalQuestions,
+        topicsCount: validatedContent.topicsExplored.length,
+        questionTypes: validatedContent.questions.map(q => q.type)
       });
 
-      return result;
+      return validatedContent;
 
     } catch (error) {
-      geminiLogger.logError('❌ Erro crítico no parsing da resposta', {
+      console.error('❌ Erro crítico no processamento da resposta da IA:', {
         error: error.message,
-        response: response.substring(0, 500),
-        stack: error.stack
+        stack: error.stack,
+        originalResponse: responseText
       });
-      return this.createFallbackContent(originalData);
+
+      geminiLogger.logError('Erro crítico no processamento da resposta da IA', {
+        error: error.message,
+        responseLength: responseText.length,
+        responsePreview: responseText.substring(0, 500)
+      });
+
+      // Retornar fallback se o processamento falhar
+      throw new Error(`Falha no processamento da resposta da IA: ${error.message}`);
     }
   }
+
+  private calculateDistribution(questions: QuizQuestion[]): { [key: string]: number } {
+    const distribution: { [key: string]: number } = {};
+    questions.forEach(q => {
+      distribution[q.type] = (distribution[q.type] || 0) + 1;
+    });
+    return distribution;
+  }
 }
+```json\s*/gi, '').replace(/\s*```$/g, '');
+      cleanedResponse = cleanedResponse.replace(/^```\s*/g, '').replace(/\s*```$/g, '');
+      cleanedResponse = cleanedResponse.replace(/```/gi, ''); // Remover quaisquer outros
