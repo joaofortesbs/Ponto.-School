@@ -4,27 +4,20 @@
 const validateApiKey = (key: string, serviceName: string): string => {
   if (!key) {
     console.warn(`⚠️ API Key para ${serviceName} não configurada`);
-    console.warn(`💡 Para configurar: vá em Tools > Secrets e adicione VITE_${serviceName.toUpperCase()}_API_KEY`);
     return '';
   }
 
   if (key.length < 10) {
-    console.warn(`⚠️ API Key para ${serviceName} parece inválida (muito curta: ${key.length} caracteres)`);
+    console.warn(`⚠️ API Key para ${serviceName} parece inválida (muito curta)`);
   } else {
-    console.log(`✅ API Key para ${serviceName} configurada (${key.length} caracteres)`);
+    console.log(`✅ API Key para ${serviceName} configurada`);
   }
 
   return key;
 };
 
 export const API_KEYS = {
-  GEMINI: validateApiKey(
-    import.meta.env.VITE_GEMINI_API_KEY || 
-    import.meta.env.VITE_GOOGLE_GEMINI_API_KEY || 
-    process.env.VITE_GEMINI_API_KEY || 
-    '', 
-    'Gemini'
-  ),
+  GEMINI: validateApiKey(import.meta.env.VITE_GEMINI_API_KEY || '', 'Gemini'),
   CLAUDE: validateApiKey(import.meta.env.VITE_CLAUDE_API_KEY || '', 'Claude'),
   OPENAI: validateApiKey(import.meta.env.VITE_OPENAI_API_KEY || '', 'OpenAI')
 };

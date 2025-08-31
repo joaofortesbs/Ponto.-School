@@ -1,3 +1,4 @@
+
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 import { API_KEYS } from '@/config/apiKeys';
 
@@ -41,24 +42,12 @@ export class QuizInterativoGenerator {
   private apiKey: string;
 
   constructor() {
-    // Tentar múltiplas fontes para a chave da API
-    this.apiKey = API_KEYS?.GEMINI || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GOOGLE_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
-
-    if (!this.apiKey) {
-      console.error('⚠️ ERRO: Chave da API Gemini não configurada');
-      console.error('📋 Variáveis disponíveis:', Object.keys(import.meta.env));
-      geminiLogger.logError('API Key não configurada', {
-        hasKey: !!this.apiKey,
-        envVars: Object.keys(import.meta.env).filter(key => key.includes('GEMINI') || key.includes('GOOGLE'))
-      });
-      throw new Error('API Gemini não configurada. Adicione VITE_GEMINI_API_KEY nas Secrets.');
-    } else {
-      console.log('✅ API Gemini configurada corretamente');
-      geminiLogger.logInfo('API Gemini configurada', {
-        keyLength: this.apiKey.length,
-        keyPreview: this.apiKey.substring(0, 10) + '...'
-      });
-    }
+    // Priorizar API_KEYS centralizada, depois env
+    this.apiKey = API_KEYS?.GEMINI || import.meta.env.VITE_GEMINI_API_KEY || '';
+    geminiLogger.logInfo('🔑 QuizInterativoGenerator inicializado', { 
+      hasApiKey: !!this.apiKey,
+      keySource: API_KEYS?.GEMINI ? 'API_KEYS' : 'ENV'
+    });
   }
 
   async generateQuizContent(data: QuizInterativoData): Promise<QuizInterativoContent> {
@@ -110,7 +99,7 @@ export class QuizInterativoGenerator {
     const numQuestions = parseInt(data.numberOfQuestions) || 5;
     const timePerQuestion = parseInt(data.timePerQuestion) || 60;
 
-    geminiLogger.logWarning('⚠️ Criando conteúdo de fallback', {
+    geminiLogger.logWarning('⚠️ Criando conteúdo de fallback', { 
       reason: 'API falhou ou resposta inválida',
       numQuestions,
       theme: data.theme,
@@ -129,9 +118,9 @@ export class QuizInterativoGenerator {
       const questionNumber = index + 1;
       const subareaIndex = index % subareas.length;
       const subarea = subareas[subareaIndex];
-
+      
       // Alternar entre tipos de questão de forma inteligente
-      const isMultipleChoice = data.format !== 'Verdadeiro/Falso' &&
+      const isMultipleChoice = data.format !== 'Verdadeiro/Falso' && 
         (data.format === 'Múltipla Escolha' || index % 3 !== 2);
 
       if (isMultipleChoice) {
@@ -157,7 +146,7 @@ export class QuizInterativoGenerator {
           correctAnswer: `A) Definição básica e estrutural de ${data.theme}`,
           explanation: `A definição básica é fundamental para compreender ${data.theme} em ${data.subject}, especialmente no contexto de ${subarea.toLowerCase()}.`,
           area: subarea,
-          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado'
+          difficulty: index < numQuestions/3 ? 'básico' : index < 2*numQuestions/3 ? 'médio' : 'avançado'
         };
       } else {
         const truthStatements = [
@@ -177,7 +166,7 @@ export class QuizInterativoGenerator {
           correctAnswer: 'Verdadeiro',
           explanation: `Correto! ${data.theme} é realmente importante em ${data.subject}, especialmente para compreender ${subarea.toLowerCase()}.`,
           area: subarea,
-          difficulty: index < numQuestions / 3 ? 'básico' : index < 2 * numQuestions / 3 ? 'médio' : 'avançado'
+          difficulty: index < numQuestions/3 ? 'básico' : index < 2*numQuestions/3 ? 'médio' : 'avançado'
         };
       }
     });
@@ -211,12 +200,12 @@ export class QuizInterativoGenerator {
 
   private buildPrompt(data: QuizInterativoData): string {
     const numQuestions = parseInt(data.numberOfQuestions) || 10;
-
+    
     // Calcular distribuição de questões por subárea
     const questoesPorArea = Math.ceil(numQuestions / 4); // Dividir em 4 áreas principais
-
+    
     return `
-Você é um especialista em educação brasileira e criação de conteúdo educacional diversificado.
+Você é um especialista em educação brasileira e criação de conteúdo educacional diversificado. 
 
 **MISSÃO:** Criar ${numQuestions} questões VARIADAS e ABRANGENTES sobre "${data.theme}" explorando DIFERENTES SUBÁREAS e ASPECTOS do tema.
 
@@ -309,7 +298,7 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
   ]
 }
 
-**IMPORTANTE:**
+**IMPORTANTE:** 
 - RETORNE APENAS O JSON, sem explicações extras
 - GARANTA que cada questão explore um aspecto diferente
 - DIVERSIFIQUE os contextos e situações
@@ -318,7 +307,7 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
 
   private async callGeminiAPI(prompt: string): Promise<string> {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${this.apiKey}`;
-
+    
     const payload = {
       contents: [{
         parts: [{
@@ -333,8 +322,8 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
       }
     };
 
-    geminiLogger.logInfo('🚀 Fazendo chamada para API Gemini', {
-      url,
+    geminiLogger.logInfo('🚀 Fazendo chamada para API Gemini', { 
+      url, 
       hasApiKey: !!this.apiKey,
       promptLength: prompt.length,
       payload: payload.generationConfig
@@ -353,8 +342,8 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
       });
 
       const executionTime = Date.now() - startTime;
-
-      geminiLogger.logInfo('📥 Resposta da API recebida', {
+      
+      geminiLogger.logInfo('📥 Resposta da API recebida', { 
         status: response.status,
         statusText: response.statusText,
         executionTime: `${executionTime}ms`
@@ -362,17 +351,17 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
 
       if (!response.ok) {
         const errorText = await response.text();
-        geminiLogger.logError('❌ Erro na API do Gemini', {
+        geminiLogger.logError('❌ Erro na API do Gemini', { 
           status: response.status,
           statusText: response.statusText,
-          errorBody: errorText
+          errorBody: errorText 
         });
         throw new Error(`Erro na API do Gemini: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-
-      geminiLogger.logInfo('🔍 Estrutura da resposta da API', {
+      
+      geminiLogger.logInfo('🔍 Estrutura da resposta da API', { 
         hasCandidates: !!data.candidates,
         candidatesLength: data.candidates?.length || 0,
         hasContent: !!data.candidates?.[0]?.content,
@@ -386,8 +375,8 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
       }
 
       const responseText = data.candidates[0].content.parts[0].text;
-
-      geminiLogger.logInfo('✅ Texto da resposta extraído com sucesso', {
+      
+      geminiLogger.logInfo('✅ Texto da resposta extraído com sucesso', { 
         responseLength: responseText.length,
         responsePreview: responseText.substring(0, 200)
       });
@@ -396,7 +385,7 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      geminiLogger.logError('❌ Erro crítico na chamada da API', {
+      geminiLogger.logError('❌ Erro crítico na chamada da API', { 
         error: error.message,
         executionTime: `${executionTime}ms`
       });
@@ -406,24 +395,24 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
 
   private parseResponse(response: string, originalData: QuizInterativoData): QuizInterativoContent {
     try {
-      geminiLogger.logInfo('🔍 Processando resposta do Gemini', {
+      geminiLogger.logInfo('🔍 Processando resposta do Gemini', { 
         responseLength: response.length,
         responsePreview: response.substring(0, 300),
-        originalData
+        originalData 
       });
 
       // Limpeza mais robusta da resposta
       let cleanResponse = response.trim();
-
+      
       // Remover markdown code blocks e outros padrões
       cleanResponse = cleanResponse.replace(/^```json\s*/gi, '').replace(/\s*```$/g, '');
       cleanResponse = cleanResponse.replace(/^```\s*/g, '').replace(/\s*```$/g, '');
       cleanResponse = cleanResponse.replace(/^.*?(?=\{)/s, ''); // Remove tudo antes do primeiro {
       cleanResponse = cleanResponse.replace(/\}[^}]*$/s, '}'); // Remove tudo depois do último }
-
-      geminiLogger.logInfo('🧹 Resposta limpa para parsing', {
+      
+      geminiLogger.logInfo('🧹 Resposta limpa para parsing', { 
         cleanResponse: cleanResponse.substring(0, 500) + '...',
-        length: cleanResponse.length
+        length: cleanResponse.length 
       });
 
       let parsed;
@@ -431,14 +420,14 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
         parsed = JSON.parse(cleanResponse);
       } catch (parseError) {
         geminiLogger.logError('❌ Erro de JSON parsing, tentando limpeza adicional', parseError);
-
+        
         // Tentativa de limpeza adicional
         cleanResponse = cleanResponse.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
         parsed = JSON.parse(cleanResponse);
       }
 
       // Validar estrutura básica com logs detalhados
-      geminiLogger.logInfo('📊 Estrutura da resposta parseada', {
+      geminiLogger.logInfo('📊 Estrutura da resposta parseada', { 
         hasQuestions: !!parsed.questions,
         isQuestionsArray: Array.isArray(parsed.questions),
         questionsLength: parsed.questions?.length || 0,
@@ -455,16 +444,16 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
       // Processar questões com validação mais rigorosa
       const questions: QuizQuestion[] = parsed.questions.map((q: any, index: number) => {
         const questionId = index + 1;
-
+        
         geminiLogger.logInfo(`🔍 Processando questão ${questionId}`, q);
-
+        
         // Determinar tipo da questão com lógica melhorada
         let questionType: 'multipla-escolha' | 'verdadeiro-falso' = 'multipla-escolha';
-
-        if (q.type === 'verdadeiro-falso' || q.tipo === 'verdadeiro-falso' ||
-          (q.options && q.options.length === 2 &&
-            q.options.some((opt: string) => opt?.toLowerCase().includes('verdadeiro')) &&
-            q.options.some((opt: string) => opt?.toLowerCase().includes('falso')))) {
+        
+        if (q.type === 'verdadeiro-falso' || q.tipo === 'verdadeiro-falso' || 
+            (q.options && q.options.length === 2 && 
+             q.options.some((opt: string) => opt?.toLowerCase().includes('verdadeiro')) &&
+             q.options.some((opt: string) => opt?.toLowerCase().includes('falso')))) {
           questionType = 'verdadeiro-falso';
         }
 
@@ -489,14 +478,14 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
 
         // Validar resposta correta
         let correctAnswer = q.correctAnswer || q.respostaCorreta || q.resposta || processedOptions[0];
-
+        
         // Para múltipla escolha, garantir que a resposta correta existe nas opções
         if (questionType === 'multipla-escolha') {
-          const isValidAnswer = processedOptions.some(option =>
+          const isValidAnswer = processedOptions.some(option => 
             option.toLowerCase().includes(correctAnswer.toLowerCase()) ||
             correctAnswer.toLowerCase().includes(option.toLowerCase())
           );
-
+          
           if (!isValidAnswer) {
             correctAnswer = processedOptions[0]; // Usar primeira opção como fallback
             geminiLogger.logWarning(`⚠️ Resposta correta ajustada para questão ${questionId}`, {
@@ -523,7 +512,7 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
           hasExplanation: !!processedQuestion.explanation,
           area: processedQuestion.area
         });
-
+        
         return processedQuestion;
       });
 
@@ -566,14 +555,14 @@ Crie ${numQuestions} questões MISTAS explorando todo o tema:
         areaDistribution,
         topicsExplored: result.topicsExplored
       });
-
+      
       return result;
 
     } catch (error) {
-      geminiLogger.logError('❌ Erro crítico no parsing da resposta', {
-        error: error.message,
+      geminiLogger.logError('❌ Erro crítico no parsing da resposta', { 
+        error: error.message, 
         response: response.substring(0, 500),
-        stack: error.stack
+        stack: error.stack 
       });
       return this.createFallbackContent(originalData);
     }
