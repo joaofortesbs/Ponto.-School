@@ -33,7 +33,6 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
-  // Sempre declarar todos os hooks no início, independentemente das condições
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState(60);
@@ -41,40 +40,6 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
-
-  // Renderização condicional após os hooks
-  if (isLoading) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardContent className="p-8">
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-            <span className="text-lg">Gerando Quiz Interativo com IA do Gemini...</span>
-          </div>
-          <p className="text-center text-sm text-gray-500 mt-2">
-            Aguarde enquanto criamos questões personalizadas para você
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Só mostra mensagem de "sem conteúdo" se realmente não há nada
-  if (!content) {
-    return (
-      <Card className="w-full max-w-4xl mx-auto border-orange-200">
-        <CardContent className="p-8 text-center">
-          <AlertCircle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Quiz em Preparação
-          </h3>
-          <p className="text-gray-500 mb-4">
-            Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   // Log detalhado para debug e validação de dados
   useEffect(() => {
@@ -93,16 +58,8 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
         hasOptions: !!q.options,
         optionsCount: q.options?.length || 0,
         hasCorrectAnswer: !!q.correctAnswer
-      })),
-      calledFromModal: window.location.pathname.includes('school-power') || document.querySelector('[data-quiz-modal]') !== null
+      }))
     });
-
-    // Log específico para identificar se está sendo chamado do modal de visualização
-    if (content && content.questions && content.questions.length > 0) {
-      console.log('✅ QuizInterativoPreview - Questões válidas encontradas para renderização:', content.questions.length);
-    } else {
-      console.log('⚠️ QuizInterativoPreview - Nenhuma questão válida encontrada');
-    }
 
     // Validação crítica de estrutura de dados
     if (content?.questions) {
@@ -148,7 +105,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const handleStartQuiz = () => {
     // Verificar se há questões válidas antes de iniciar
     const questoesValidas = finalContent.questions && Array.isArray(finalContent.questions) && finalContent.questions.length > 0;
-
+    
     if (!questoesValidas) {
       console.error('❌ Tentativa de iniciar quiz sem questões válidas');
       console.error('📊 Estado atual:', {
@@ -163,7 +120,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
     console.log('🎯 Iniciando quiz com questões reais:', finalContent.questions);
     console.log('📊 Total de questões disponíveis:', finalContent.questions.length);
-
+    
     setIsQuizStarted(true);
     setCurrentQuestionIndex(0);
     setSelectedAnswer('');
@@ -228,6 +185,40 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     if (!finalContent.questions) return 0;
     return ((currentQuestionIndex + 1) / finalContent.questions.length) * 100;
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+            <span className="text-lg">Gerando Quiz Interativo com IA do Gemini...</span>
+          </div>
+          <p className="text-center text-sm text-gray-500 mt-2">
+            Aguarde enquanto criamos questões personalizadas para você
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Só mostra mensagem de "sem conteúdo" se realmente não há nada
+  if (!content) {
+    return (
+      <Card className="w-full max-w-4xl mx-auto border-orange-200">
+        <CardContent className="p-8 text-center">
+          <AlertCircle className="h-16 w-16 text-orange-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            Quiz em Preparação
+          </h3>
+          <p className="text-gray-500 mb-4">
+            Configure os campos obrigatórios na aba "Editar" e clique em "Gerar Quiz com IA" para criar o conteúdo.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // CORREÇÃO CRÍTICA: Usar diretamente as questões do content sem sobrescrever
   const finalContent = {
@@ -373,7 +364,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
   // Quiz question screen - CORREÇÃO CRÍTICA: Acessar questão atual com validação
   const currentQuestion = finalContent.questions?.[currentQuestionIndex];
-
+  
   // Debug para verificar se as questões estão sendo acessadas corretamente
   console.log('🔍 Debug da questão atual:', {
     currentQuestionIndex,
@@ -424,16 +415,16 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                     // Acessar questão atual com múltiplas verificações
                     const questaoAtual = finalContent.questions?.[currentQuestionIndex];
                     console.log('📝 Renderizando questão:', questaoAtual);
-
+                    
                     // Garantir que sempre retornamos uma string
                     if (questaoAtual?.question && typeof questaoAtual.question === 'string') {
                       return questaoAtual.question;
                     }
-
+                    
                     if (questaoAtual?.text && typeof questaoAtual.text === 'string') {
                       return questaoAtual.text;
                     }
-
+                    
                     // Se questaoAtual.question for um objeto, extrair o texto
                     if (questaoAtual?.question && typeof questaoAtual.question === 'object') {
                       if (questaoAtual.question.text) {
@@ -443,7 +434,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                         return `Questão ${questaoAtual.question.id}`;
                       }
                     }
-
+                    
                     return 'Carregando questão...';
                   })()}
                 </span>
@@ -456,14 +447,14 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                     // Acessar questão atual com verificação robusta
                     const questaoAtual = finalContent.questions?.[currentQuestionIndex];
                     console.log('🎯 Renderizando opções para questão:', questaoAtual);
-
+                    
                     // Se a questão tem opções válidas, renderizar elas
                     if (questaoAtual?.options && Array.isArray(questaoAtual.options) && questaoAtual.options.length > 0) {
                       console.log('✅ Renderizando opções reais da IA:', questaoAtual.options);
                       return questaoAtual.options.map((option, index) => {
                         // Garantir que a opção seja sempre uma string
                         let optionText = '';
-
+                        
                         if (typeof option === 'string') {
                           optionText = option;
                         } else if (typeof option === 'object' && option !== null) {
@@ -478,7 +469,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                         } else {
                           optionText = String(option || `Opção ${index + 1}`);
                         }
-
+                        
                         return (
                           <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
                             <RadioGroupItem value={optionText} id={`option-${index}`} className="border-2" />
@@ -489,7 +480,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                         );
                       });
                     }
-
+                    
                     // Se for verdadeiro/falso
                     if (questaoAtual?.type === 'verdadeiro-falso') {
                       console.log('✅ Renderizando questão verdadeiro/falso');
@@ -510,7 +501,7 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
                         </>
                       );
                     }
-
+                    
                     // Mensagem de carregamento se não há opções
                     console.log('⚠️ Nenhuma opção válida encontrada para a questão atual');
                     return (
