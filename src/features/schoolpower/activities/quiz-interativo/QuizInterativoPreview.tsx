@@ -103,12 +103,24 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   };
 
   const handleStartQuiz = () => {
-    if (!finalContent.questions || finalContent.questions.length === 0) {
+    // Verificar se há questões válidas antes de iniciar
+    const questoesValidas = finalContent.questions && Array.isArray(finalContent.questions) && finalContent.questions.length > 0;
+    
+    if (!questoesValidas) {
       console.error('❌ Tentativa de iniciar quiz sem questões válidas');
+      console.error('📊 Estado atual:', {
+        hasContent: !!finalContent,
+        hasQuestions: !!finalContent.questions,
+        questionsIsArray: Array.isArray(finalContent.questions),
+        questionsLength: finalContent.questions?.length || 0,
+        firstQuestion: finalContent.questions?.[0]
+      });
       return;
     }
 
     console.log('🎯 Iniciando quiz com questões reais:', finalContent.questions);
+    console.log('📊 Total de questões disponíveis:', finalContent.questions.length);
+    
     setIsQuizStarted(true);
     setCurrentQuestionIndex(0);
     setSelectedAnswer('');
@@ -208,12 +220,12 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  // Usar diretamente as questões geradas pela IA, sem fallbacks que sobrescrevem os dados reais
-  const finalContent = content || {
-    title: 'Quiz Interativo',
-    description: 'Carregando questões...',
-    questions: [],
-    totalQuestions: 0
+  // CORREÇÃO CRÍTICA: Usar diretamente as questões do content sem sobrescrever
+  const finalContent = {
+    ...content,
+    // Garantir que as questões da IA sejam sempre preservadas
+    questions: content.questions || [],
+    totalQuestions: content.questions?.length || content.totalQuestions || 0
   };
 
   // Quiz intro screen
@@ -338,8 +350,17 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  // Quiz question screen
-  const currentQuestion = finalContent.questions[currentQuestionIndex];
+  // Quiz question screen - CORREÇÃO CRÍTICA: Acessar questão atual com validação
+  const currentQuestion = finalContent.questions?.[currentQuestionIndex];
+  
+  // Debug para verificar se as questões estão sendo acessadas corretamente
+  console.log('🔍 Debug da questão atual:', {
+    currentQuestionIndex,
+    totalQuestions: finalContent.questions?.length || 0,
+    currentQuestion: currentQuestion,
+    hasQuestions: !!(finalContent.questions && finalContent.questions.length > 0),
+    allQuestions: finalContent.questions
+  });
 
   return (
     <motion.div
@@ -375,45 +396,77 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              {/* Question Text Area - With Content */}
+              {/* Question Text Area - Com questões reais da IA */}
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 min-h-[100px] flex items-center justify-center">
                 <span className="text-gray-800 text-base font-medium text-center leading-relaxed">
-                  {currentQuestion?.question || 'Carregando questão...'}
+                  {(() => {
+                    // Acessar questão atual com múltiplas verificações
+                    const questaoAtual = finalContent.questions?.[currentQuestionIndex];
+                    console.log('📝 Renderizando questão:', questaoAtual);
+                    
+                    if (questaoAtual?.question) {
+                      return questaoAtual.question;
+                    }
+                    
+                    if (questaoAtual?.text) {
+                      return questaoAtual.text;
+                    }
+                    
+                    return 'Carregando questão...';
+                  })()}
                 </span>
               </div>
 
-              {/* Answer Options */}
+              {/* Answer Options - Com opções reais da IA */}
               <div className="space-y-3">
                 <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                  {currentQuestion?.options && currentQuestion.options.length > 0 ? (
-                    currentQuestion.options.map((option, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
-                        <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          {option}
-                        </Label>
+                  {(() => {
+                    // Acessar questão atual com verificação robusta
+                    const questaoAtual = finalContent.questions?.[currentQuestionIndex];
+                    console.log('🎯 Renderizando opções para questão:', questaoAtual);
+                    
+                    // Se a questão tem opções válidas, renderizar elas
+                    if (questaoAtual?.options && Array.isArray(questaoAtual.options) && questaoAtual.options.length > 0) {
+                      console.log('✅ Renderizando opções reais da IA:', questaoAtual.options);
+                      return questaoAtual.options.map((option, index) => (
+                        <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
+                          <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
+                          <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
+                            {option}
+                          </Label>
+                        </div>
+                      ));
+                    }
+                    
+                    // Se for verdadeiro/falso
+                    if (questaoAtual?.type === 'verdadeiro-falso') {
+                      console.log('✅ Renderizando questão verdadeiro/falso');
+                      return (
+                        <>
+                          <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
+                            <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
+                            <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                              ✅ Verdadeiro
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
+                            <RadioGroupItem value="Falso" id="falso" className="border-2" />
+                            <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                              ❌ Falso
+                            </Label>
+                          </div>
+                        </>
+                      );
+                    }
+                    
+                    // Mensagem de carregamento se não há opções
+                    console.log('⚠️ Nenhuma opção válida encontrada para a questão atual');
+                    return (
+                      <div className="text-center text-gray-500 p-4">
+                        {questaoAtual ? 'Carregando opções de resposta...' : 'Questão não encontrada...'}
                       </div>
-                    ))
-                  ) : currentQuestion?.type === 'verdadeiro-falso' ? (
-                    <>
-                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
-                        <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          ✅ Verdadeiro
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
-                        <RadioGroupItem value="Falso" id="falso" className="border-2" />
-                        <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                          ❌ Falso
-                        </Label>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center text-gray-500 p-4">
-                      Carregando opções de resposta...
-                    </div>
-                  )}
+                    );
+                  })()}
                 </RadioGroup>
               </div>
 
