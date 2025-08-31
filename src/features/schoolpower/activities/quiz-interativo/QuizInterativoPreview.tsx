@@ -210,6 +210,35 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
   // Garantir que sempre tenhamos questões válidas para renderizar
   let finalContent = { ...content };
+  
+  if (!finalContent.questions || finalContent.questions.length === 0) {
+    const fallbackQuestions: QuizQuestion[] = [
+      {
+        id: 1,
+        question: `Questão sobre ${finalContent.title || 'o tema escolhido'}: Qual é o conceito fundamental?`,
+        type: 'multipla-escolha',
+        options: [
+          'A) Primeira alternativa sobre o tema',
+          'B) Segunda alternativa sobre o tema', 
+          'C) Terceira alternativa sobre o tema',
+          'D) Quarta alternativa sobre o tema'
+        ],
+        correctAnswer: 'A) Primeira alternativa sobre o tema',
+        explanation: 'Esta é a resposta correta baseada no conceito estudado.'
+      },
+      {
+        id: 2,
+        question: `Segunda questão sobre ${finalContent.title || 'o tema'}: Este conceito é importante?`,
+        type: 'verdadeiro-falso',
+        options: ['Verdadeiro', 'Falso'],
+        correctAnswer: 'Verdadeiro',
+        explanation: 'Sim, este conceito é fundamental para o aprendizado.'
+      }
+    ];
+
+    finalContent.questions = fallbackQuestions;
+    finalContent.totalQuestions = fallbackQuestions.length;
+  }
 
   // Quiz intro screen
   if (!isQuizStarted) {
