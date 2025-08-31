@@ -905,7 +905,7 @@ const EditActivityModal = ({
         success: true,
         data: finalContent
       };
-
+      
       localStorage.setItem(quizStorageKey, JSON.stringify(storageData));
       console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
 
@@ -918,7 +918,7 @@ const EditActivityModal = ({
       const validation = {
         hasQuestions: !!(finalContent.questions && finalContent.questions.length > 0),
         questionsCount: finalContent.questions?.length || 0,
-        allQuestionsValid: finalContent.questions?.every(q =>
+        allQuestionsValid: finalContent.questions?.every(q => 
           q.question && q.options && q.options.length > 0 && q.correctAnswer
         ) || false,
         hasTitle: !!finalContent.title,
@@ -938,14 +938,13 @@ const EditActivityModal = ({
           quizInterativoContent: !!quizInterativoContent,
           generatedContent: !!generatedContent,
           questionsCount: finalContent.questions.length,
-          validation,
-          actualQuestions: finalContent.questions
+          validation
         });
-
+        
         // Force update com deep clone para garantir reatividade
         setQuizInterativoContent(JSON.parse(JSON.stringify(finalContent)));
         setGeneratedContent(JSON.parse(JSON.stringify(finalContent)));
-
+        
         // Atualizar aba para mostrar preview
         setActiveTab('preview');
       }, 100);
@@ -958,7 +957,7 @@ const EditActivityModal = ({
     } catch (error) {
       console.error('❌ Erro ao gerar Quiz Interativo:', error);
       setGenerationError(`Erro ao gerar o conteúdo do quiz: ${error.message}`);
-
+      
       // Criar conteúdo de fallback em caso de erro
       const fallbackContent = {
         title: formData.title || `Quiz: ${formData.theme}`,
@@ -1134,7 +1133,7 @@ const EditActivityModal = ({
         try {
           const parsedContent = JSON.parse(quizInterativoSavedContent);
           contentToLoad = parsedContent.data || parsedContent; // Handle both wrapped and direct data
-
+          
           // Validar se o conteúdo tem questões
           if (contentToLoad && contentToLoad.questions && contentToLoad.questions.length > 0) {
             console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`, contentToLoad);
@@ -1913,7 +1912,7 @@ const EditActivityModal = ({
     }
   }, [activity, formData, isBuilding, toast]);
 
-  // Automação da Construção de Atividades - será chamada externamente
+  // Função para automação - será chamada externamente
   useEffect(() => {
     const handleAutoBuild = () => {
       if (activity && formData.title && formData.description && !isGenerating) {
