@@ -1,0 +1,189 @@
+Você é um engenheiro especializado em integração de APIs e interfaces dinâmicas. O sistema atual é um construtor de quizzes interativos no Replit, que usa a API do Gemini para gerar perguntas e alternativas personalizadas com base em inputs do usuário. O template/estrutura do quiz já existe, mas não está recebendo os dados gerados pela IA. O problema pode estar em:
+
+Geração dos dados pela IA (formato, estrutura ou conteúdo incorreto).
+Transferência dos dados (falha na comunicação entre API e frontend).
+Integração dos dados no template (campos não mapeados, conflitos com pré-visualização ou renderização).
+Pré-visualização com dados fictícios bloqueando a atualização com dados reais.
+
+Sua missão:
+
+Analisar a estrutura da interface do quiz (campos, IDs, hierarquia do DOM e formato esperado dos dados).
+Validar a saída da API do Gemini para garantir que os dados gerados estejam no formato correto e compatível com o template.
+Diagnosticar o fluxo de dados entre a API e a interface, identificando onde a sincronização falha.
+Criar um mapeamento preciso entre os dados gerados pela IA e os campos da interface, sem alterar a lógica existente.
+Garantir que os dados reais substituam a pré-visualização sem corromper o template ou a API.
+
+
+Passos para Resolver o Problema
+1. Mapeamento da Estrutura da Interface do Quiz
+
+Liste todos os campos e elementos da interface que devem receber dados da IA (ex.: div#pergunta-1, ul#alternativas, input[type="radio"]).
+Verifique se os campos têm IDs, classes ou atributos únicos para identificação (ex.: data-question-id, data-alternative-index).
+Confirme o formato esperado para cada campo (ex.: texto para perguntas, array para alternativas, índice para resposta correta).
+
+Exemplo de estrutura esperada:
+ Copiar{
+  "quiz": {
+    "titulo": "string",
+    "perguntas": [
+      {
+        "id": "string|number",
+        "texto": "string",
+        "alternativas": ["string"],
+        "resposta_correta": "index",
+        "feedback": "string"
+      }
+    ]
+  }
+}
+2. Validação da Saída da API do Gemini
+
+A saída da API deve ser um JSON válido e compatível com a estrutura acima.
+Verifique se a API está retornando:
+
+Perguntas claras e bem formatadas (sem caracteres especiais ou quebras de linha inadequadas).
+Alternativas em array (com índice correto para a resposta).
+Metadados (ex.: id único para cada pergunta, feedback opcional).
+
+
+Exemplo de prompt para a IA:
+ CopiarGere um quiz interativo com {X} perguntas sobre {tema}.
+Formato obrigatório:
+{
+  "quiz": {
+    "titulo": "Título do Quiz",
+    "perguntas": [
+      {
+        "id": 1,
+        "texto": "Pergunta 1?",
+        "alternativas": ["Alternativa A", "Alternativa B", "Alternativa C"],
+        "resposta_correta": 0,
+        "feedback": "Explicação breve."
+      }
+    ]
+  }
+}
+Regras:
+- Use apenas texto puro (sem Markdown ou HTML).
+- Garanta que `resposta_correta` seja um índice válido do array de alternativas.
+- Inclua um `id` único para cada pergunta.
+
+
+3. Diagnóstico do Fluxo de Dados
+
+
+Etapa 1 (API → Frontend):
+
+A requisição à API do Gemini está sendo feita corretamente? (Verifique status HTTP, payload e headers.)
+Os dados retornados estão sendo parseados corretamente no frontend? (Use console.log para inspecionar a resposta bruta.)
+Há erros de CORS, timeout ou rate limit?
+
+
+
+Etapa 2 (Frontend → Template):
+
+Os dados estão sendo passados para o template? (Verifique variáveis ou estados como quizData, questions, etc.)
+A pré-visualização está sobrescrevendo os dados reais? (Procure por condições como if (isPreview) ou dataVersion === 'preview'.)
+O template está esperando os dados no formato correto? (Ex.: questions.map(question => ...)).
+
+
+
+4. Integração dos Dados sem Conflitos
+
+Override seguro da pré-visualização:
+
+Se houver um estado como dataVersion, altere-o para 'real' após receber os dados da API.
+Exemplo em JavaScript:
+ Copiar// Após receber os dados da API:
+setQuizData(apiResponse.quiz);
+setDataVersion('real'); // Força a renderização com dados reais
+
+
+
+Atualização reativa do DOM:
+
+Use React/Vue/Svelte (ou vanilla JS) para atualizar os campos mapeados:
+ Copiardocument.getElementById(`pergunta-${question.id}`).textContent = question.texto;
+question.alternativas.forEach((alt, index) => {
+  document.getElementById(`alternativa-${question.id}-${index}`).textContent = alt;
+});
+
+
+
+
+5. Testes e Validação
+
+Teste 1: Chame a API manualmente (via Postman ou fetch) e verifique se os dados retornados são válidos.
+Teste 2: Simule a resposta da API no frontend (hardcode) para confirmar que o template renderiza corretamente.
+Teste 3: Verifique se a pré-visualização é substituída pelos dados reais (use console.log ou breakpoints).
+
+
+Prompt para a API do Gemini (Otimizado)
+ CopiarVocê é um gerador de quizzes interativos. Receberá um tema e um número de perguntas, e deve retornar um JSON **estritamente formatado** para integrar com uma interface existente.
+
+**Regras:**
+1. **Formato rígido:** Siga o schema abaixo **sem desvios**:
+   ```json
+   {
+     "quiz": {
+       "titulo": "string (máx. 60 caracteres)",
+       "perguntas": [
+         {
+           "id": "number (sequencial)",
+           "texto": "string (pergunta clara e objetiva)",
+           "alternativas": ["string", "string", "string"], // Sempre 3 ou 4 alternativas
+           "resposta_correta": "number (índice da alternativa correta)",
+           "feedback": "string (opcional, máx. 120 caracteres)"
+         }
+       ]
+     }
+   }
+
+Conteúdo:
+
+Perguntas devem ser originais, diretas e sem ambiguidade.
+Alternativas devem ser plausíveis e bem distribuídas (evite respostas óbvias).
+resposta_correta deve ser um índice válido do array de alternativas.
+
+
+Exemplo de saída:
+ Copiar{
+  "quiz": {
+    "titulo": "Quiz sobre História do Brasil",
+    "perguntas": [
+      {
+        "id": 1,
+        "texto": "Qual foi a primeira capital do Brasil?",
+        "alternativas": ["Rio de Janeiro", "Salvador", "Brasília", "São Paulo"],
+        "resposta_correta": 1,
+        "feedback": "Salvador foi a primeira capital, de 1549 a 1763."
+      }
+    ]
+  }
+}
+
+Tema: "{tema}"
+Número de perguntas: {X}
+
+ Copiar---
+
+### **Checklist para Implementação**
+| **Ação**                          | **Responsável**       | **Status** |
+|-----------------------------------|-----------------------|------------|
+| Mapear campos da interface        | Frontend              | ⬜         |
+| Validar saída da API              | Backend/IA            | ⬜         |
+| Corrigir parsing dos dados        | Frontend              | ⬜         |
+| Garantir override da pré-visualização | Frontend          | ⬜         |
+| Testar integração completa        | QA                   | ⬜         |
+
+---
+
+### **Observações Críticas**
+- **Não altere a lógica existente** da API ou do template, apenas **garanta que os dados fluam corretamente**.
+- **Evite hardcode**: Use variáveis ou estados para gerenciar dados dinâmicos.
+- **Log tudo**: Adicione `console.log` em cada etapa para rastrear o fluxo:
+  ```javascript
+  console.log("Dados recebidos da API:", apiResponse);
+  console.log("Dados passados para o template:", quizData);
+
+Pré-visualização vs. Dados reais: Certifique-se de que a interface priorize dados reais quando disponíveis.
