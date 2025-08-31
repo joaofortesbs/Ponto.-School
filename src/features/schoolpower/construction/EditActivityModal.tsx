@@ -614,18 +614,18 @@ const EditActivityModal = ({
         // Importar o gerador do Quiz Interativo
         const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
 
-        // Preparar dados estruturados para o gerador com validação robusta
+        // Preparar dados para o gerador com validação completa
         const quizData = {
           subject: data.subject?.trim() || 'Matemática',
           schoolYear: data.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
           theme: data.theme?.trim() || data.title?.trim() || 'Tema Geral',
-          objectives: data.objectives?.trim() || data.description?.trim() || `Desenvolver compreensão profunda sobre ${data.theme?.trim() || 'o tema'}, explorando conceitos fundamentais, aplicações práticas e análise crítica`,
+          objectives: data.objectives?.trim() || data.description?.trim() || 'Testar conhecimentos do tema proposto',
           difficultyLevel: data.difficultyLevel?.trim() || 'Médio',
           format: data.questionModel?.trim() || data.format?.trim() || 'Múltipla Escolha',
           numberOfQuestions: data.numberOfQuestions?.trim() || '10',
           timePerQuestion: data.timePerQuestion?.trim() || '60',
-          instructions: data.instructions?.trim() || 'Leia cada questão atentamente. Para múltipla escolha, selecione a alternativa correta. Para verdadeiro/falso, analise a afirmação cuidadosamente.',
-          evaluation: data.evaluation?.trim() || 'Pontuação baseada no número de respostas corretas. Cada questão vale pontos iguais, com feedback educativo para cada resposta.'
+          instructions: data.instructions?.trim() || 'Responda às questões no tempo determinado.',
+          evaluation: data.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
         };
 
         console.log('🎯 Dados preparados para geração do Quiz:', quizData);
@@ -837,18 +837,18 @@ const EditActivityModal = ({
       // Importar o gerador do Quiz Interativo
       const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
 
-      // Preparar dados estruturados para o gerador com validação robusta
+      // Preparar dados estruturados para o gerador
       const quizData = {
         subject: formData.subject?.trim() || 'Matemática',
         schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
         theme: formData.theme?.trim() || formData.title?.trim() || 'Tema Geral',
-        objectives: formData.objectives?.trim() || formData.description?.trim() || `Desenvolver compreensão profunda sobre ${formData.theme?.trim() || 'o tema'}, explorando conceitos fundamentais, aplicações práticas e análise crítica`,
+        objectives: formData.objectives?.trim() || formData.description?.trim() || `Avaliar o conhecimento sobre ${formData.theme}`,
         difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
-        format: formData.questionModel?.trim() || formData.format?.trim() || 'Múltipla Escolha',
+        format: formData.questionModel?.trim() || 'Múltipla Escolha',
         numberOfQuestions: formData.numberOfQuestions?.trim() || '10',
         timePerQuestion: formData.timePerQuestion?.trim() || '60',
-        instructions: formData.instructions?.trim() || 'Leia cada questão atentamente. Para múltipla escolha, selecione a alternativa correta. Para verdadeiro/falso, analise a afirmação cuidadosamente.',
-        evaluation: formData.evaluation?.trim() || 'Pontuação baseada no número de respostas corretas. Cada questão vale pontos iguais, com feedback educativo para cada resposta.'
+        instructions: formData.instructions?.trim() || 'Leia cada questão com atenção e selecione a resposta correta.',
+        evaluation: formData.evaluation?.trim() || 'Avaliação baseada no número de respostas corretas.'
       };
 
       console.log('🎯 Dados estruturados para o Gemini:', quizData);
@@ -911,7 +911,7 @@ const EditActivityModal = ({
     } catch (error) {
       console.error('❌ Erro ao gerar Quiz Interativo:', error);
       setGenerationError(`Erro ao gerar o conteúdo do quiz: ${error.message}`);
-
+      
       // Criar conteúdo de fallback em caso de erro
       const fallbackContent = {
         title: formData.title || `Quiz: ${formData.theme}`,
@@ -1431,6 +1431,8 @@ const EditActivityModal = ({
               quantidadeAvaliacoes: '',
               cronograma: '',
               quadroInterativoCampoEspecifico: '',
+              format: '', // Default for Quiz Interativo
+              timePerQuestion: '', // Default for Quiz Interativo
             };
 
             setFormData(fallbackData);
