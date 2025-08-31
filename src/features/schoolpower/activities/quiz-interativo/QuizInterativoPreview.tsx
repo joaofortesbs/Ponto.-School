@@ -440,33 +440,37 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
 
               {/* Answer Options */}
               <div className="space-y-3">
-                {currentQuestion.type === 'multipla-escolha' ? (
-                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                    {currentQuestion.options?.map((option, index) => (
+                <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
+                  {currentQuestion.type === 'multipla-escolha' && currentQuestion.options ? (
+                    currentQuestion.options.map((option, index) => (
                       <div key={index} className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-orange-200 transition-all duration-200 cursor-pointer">
                         <RadioGroupItem value={option} id={`option-${index}`} className="border-2" />
                         <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-gray-700 font-medium">
                           {option}
                         </Label>
                       </div>
-                    ))}
-                  </RadioGroup>
-                ) : (
-                  <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect}>
-                    <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
-                      <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
-                      <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                        ✅ Verdadeiro
-                      </Label>
+                    ))
+                  ) : currentQuestion.type === 'verdadeiro-falso' ? (
+                    <>
+                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-green-200 transition-all duration-200 cursor-pointer">
+                        <RadioGroupItem value="Verdadeiro" id="verdadeiro" className="border-2" />
+                        <Label htmlFor="verdadeiro" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                          ✅ Verdadeiro
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
+                        <RadioGroupItem value="Falso" id="falso" className="border-2" />
+                        <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
+                          ❌ Falso
+                        </Label>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                      Tipo de questão não reconhecido: {currentQuestion.type}
                     </div>
-                    <div className="flex items-center space-x-3 p-4 border-2 rounded-lg hover:bg-gray-50 hover:border-red-200 transition-all duration-200 cursor-pointer">
-                      <RadioGroupItem value="Falso" id="falso" className="border-2" />
-                      <Label htmlFor="falso" className="flex-1 cursor-pointer text-gray-700 font-medium">
-                        ❌ Falso
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                )}
+                  )}
+                </RadioGroup>
               </div>
 
               {/* Next Button */}
