@@ -279,22 +279,28 @@ Crie ${numQuestions} questões mistas:
         let processedOptions: string[] = [];
         if (questionType === 'multipla-escolha') {
           processedOptions = q.options || q.opcoes || q.alternativas || [
-            'A) Opção padrão 1',
-            'B) Opção padrão 2', 
-            'C) Opção padrão 3',
-            'D) Opção padrão 4'
+            `A) Conceito básico de ${originalData.theme}`,
+            `B) Aplicação prática de ${originalData.theme}`,
+            `C) Teoria avançada de ${originalData.theme}`,
+            `D) Exercícios sobre ${originalData.theme}`
           ];
         } else {
           processedOptions = ['Verdadeiro', 'Falso'];
         }
 
+        // Garantir resposta correta válida
+        let correctAnswer = q.correctAnswer || q.respostaCorreta || q.resposta;
+        if (!correctAnswer || !processedOptions.includes(correctAnswer)) {
+          correctAnswer = processedOptions[0];
+        }
+
         const processedQuestion: QuizQuestion = {
           id: questionId,
-          question: q.question || q.pergunta || q.enunciado || `Questão ${questionId} sobre ${originalData.theme}`,
+          question: q.question || q.pergunta || q.enunciado || `Questão ${questionId}: Sobre ${originalData.theme} em ${originalData.subject}, qual conceito é fundamental para o ${originalData.schoolYear}?`,
           type: questionType,
           options: processedOptions,
-          correctAnswer: q.correctAnswer || q.respostaCorreta || q.resposta || processedOptions[0],
-          explanation: q.explanation || q.explicacao || q.justificativa || `Explicação para a questão ${questionId}`
+          correctAnswer: correctAnswer,
+          explanation: q.explanation || q.explicacao || q.justificativa || `O conceito correto de ${originalData.theme} é fundamental para compreender o assunto em ${originalData.subject}.`
         };
 
         geminiLogger.logInfo(`✅ Questão ${questionId} processada`, processedQuestion);
@@ -318,11 +324,13 @@ Crie ${numQuestions} questões mistas:
         isGeneratedByAI: true
       };
 
+      // Log final para debug
       geminiLogger.logSuccess('✅ Conteúdo final processado com sucesso', {
         title: result.title,
         totalQuestions: result.totalQuestions,
         timePerQuestion: result.timePerQuestion,
-        questionsTypes: result.questions.map(q => q.type)
+        questionsTypes: result.questions.map(q => q.type),
+        firstQuestionPreview: result.questions[0]
       });
       
       return result;

@@ -143,6 +143,11 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
+  // Debug log para verificar conteúdo recebido
+  console.log('🎯 QuizInterativoPreview - Conteúdo recebido:', content);
+  console.log('🎯 QuizInterativoPreview - Questões:', content?.questions);
+  console.log('🎯 QuizInterativoPreview - IsLoading:', isLoading);
+
   if (!content || !content.questions || content.questions.length === 0) {
     return (
       <Card className="w-full max-w-4xl mx-auto">
@@ -158,6 +163,13 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
               <p>Título: {content.title || 'Não definido'}</p>
               <p>Questões: {content.questions?.length || 0}</p>
               <p>Tempo por questão: {content.timePerQuestion || 'Não definido'}</p>
+              <p>Gerado por IA: {content.isGeneratedByAI ? 'Sim' : 'Não'}</p>
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs">Debug Info</summary>
+                <pre className="text-xs mt-2 text-left overflow-auto max-h-20">
+                  {JSON.stringify(content, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </CardContent>

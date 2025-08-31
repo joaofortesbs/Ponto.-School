@@ -872,11 +872,19 @@ const EditActivityModal = ({
         throw new Error('Nenhuma questão foi gerada');
       }
 
+      // Validar conteúdo gerado
+      if (!generatedContent.questions || generatedContent.questions.length === 0) {
+        console.warn('⚠️ Conteúdo gerado sem questões, usando fallback');
+        throw new Error('Nenhuma questão foi gerada pela API');
+      }
+
       // Preparar conteúdo final com dados do formulário
       const finalContent = {
-        ...generatedContent,
         title: formData.title || generatedContent.title,
         description: formData.description || generatedContent.description,
+        questions: generatedContent.questions, // Garantir que as questões sejam transferidas
+        timePerQuestion: generatedContent.timePerQuestion || parseInt(quizData.timePerQuestion) || 60,
+        totalQuestions: generatedContent.questions.length,
         subject: quizData.subject,
         schoolYear: quizData.schoolYear,
         theme: quizData.theme,
@@ -884,10 +892,12 @@ const EditActivityModal = ({
         difficultyLevel: quizData.difficultyLevel,
         generatedByAI: true,
         generatedAt: new Date().toISOString(),
+        isGeneratedByAI: generatedContent.isGeneratedByAI || true,
         formDataUsed: quizData
       };
 
       console.log('📦 Conteúdo final preparado:', finalContent);
+      console.log('📝 Questões incluídas:', finalContent.questions);
 
       // Salvar no localStorage
       const quizStorageKey = `constructed_quiz-interativo_${activity?.id}`;
@@ -898,10 +908,15 @@ const EditActivityModal = ({
 
       console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
 
-      // Atualizar estados
+      // Atualizar estados de forma sincronizada
       setQuizInterativoContent(finalContent);
       setGeneratedContent(finalContent);
       setIsContentLoaded(true);
+
+      // Force re-render do preview
+      setTimeout(() => {
+        setQuizInterativoContent(prev => ({ ...finalContent }));
+      }, 100);
 
       toast({
         title: "Quiz Gerado com Sucesso!",
@@ -1075,14 +1090,23 @@ const EditActivityModal = ({
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do Quadro Interativo:', error);
         }
-      } else if (activity.id === 'quiz-interativo' && quizInterativoSavedContent) { // New: Check for Quiz Interativo content
+      } else if (activity.id === 'quiz-interativo' && quizInterativoSavedContent) { // Check for Quiz Interativo content
         try {
           const parsedContent = JSON.parse(quizInterativoSavedContent);
           contentToLoad = parsedContent.data || parsedContent; // Handle both wrapped and direct data
-          console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`, contentToLoad);
-          setQuizInterativoContent(contentToLoad); // Also set the specific state for Quiz Interativo
+          
+          // Validar se o conteúdo tem questões
+          if (contentToLoad && contentToLoad.questions && contentToLoad.questions.length > 0) {
+            console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`, contentToLoad);
+            console.log(`📝 ${contentToLoad.questions.length} questões carregadas`);
+            setQuizInterativoContent(contentToLoad); // Set the specific state for Quiz Interativo
+          } else {
+            console.warn('⚠️ Conteúdo do Quiz encontrado mas sem questões válidas');
+            contentToLoad = null;
+          }
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
+          contentToLoad = null;
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
