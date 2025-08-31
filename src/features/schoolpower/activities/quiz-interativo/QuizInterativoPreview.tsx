@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,80 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
+
+  // Garantir que sempre temos questões válidas - MOVIDO PARA O INÍCIO
+  const ensureValidQuestions = (contentData: any) => {
+    if (!contentData) return null;
+
+    // Se não há questões ou questões inválidas, criar fallback
+    if (!contentData.questions || contentData.questions.length === 0) {
+      const fallbackQuestions: QuizQuestion[] = [
+        {
+          id: 1,
+          question: `Questão sobre ${contentData.title || 'o tema escolhido'}: Qual é o conceito fundamental que deve ser compreendido?`,
+          type: 'multipla-escolha',
+          options: [
+            'A) É um conceito básico e essencial',
+            'B) É uma aplicação prática secundária',
+            'C) É apenas uma teoria sem aplicação',
+            'D) É um conceito avançado opcional'
+          ],
+          correctAnswer: 'A) É um conceito básico e essencial',
+          explanation: 'Este conceito é fundamental para o entendimento da matéria.'
+        },
+        {
+          id: 2,
+          question: `O estudo de ${contentData.title || 'este tema'} é importante para o aprendizado?`,
+          type: 'verdadeiro-falso',
+          options: ['Verdadeiro', 'Falso'],
+          correctAnswer: 'Verdadeiro',
+          explanation: 'Sim, este conceito é fundamental para o desenvolvimento acadêmico.'
+        },
+        {
+          id: 3,
+          question: `Sobre ${contentData.title || 'o tema estudado'}: Qual é a melhor estratégia de aprendizado?`,
+          type: 'multipla-escolha',
+          options: [
+            'A) Prática constante e revisão',
+            'B) Memorização sem compreensão',
+            'C) Leitura única do material',
+            'D) Apenas exercícios práticos'
+          ],
+          correctAnswer: 'A) Prática constante e revisão',
+          explanation: 'A combinação de prática e revisão é a melhor estratégia.'
+        }
+      ];
+
+      return {
+        ...contentData,
+        questions: fallbackQuestions,
+        totalQuestions: fallbackQuestions.length,
+        isFallback: true
+      };
+    }
+
+    // Validar questões existentes
+    const validQuestions = contentData.questions.filter((q: QuizQuestion) => 
+      q.question && q.options && q.options.length > 0 && q.correctAnswer
+    );
+
+    if (validQuestions.length === 0) {
+      // Se nenhuma questão é válida, usar fallback
+      return ensureValidQuestions({ ...contentData, questions: [] });
+    }
+
+    return {
+      ...contentData,
+      questions: validQuestions,
+      totalQuestions: validQuestions.length
+    };
+  };
+
+  // Processar content para garantir questões válidas - DEFINIDO AQUI
+  const processedContent = ensureValidQuestions(content);
+  
+  // Usar o conteúdo processado como finalContent - DEFINIDO APÓS processedContent
+  const finalContent = processedContent;
 
   // Log detalhado para debug e validação de dados
   useEffect(() => {
@@ -191,79 +266,8 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
     );
   }
 
-  // Garantir que sempre temos questões válidas
-  const ensureValidQuestions = (contentData: any) => {
-    if (!contentData) return null;
-
-    // Se não há questões ou questões inválidas, criar fallback
-    if (!contentData.questions || contentData.questions.length === 0) {
-      const fallbackQuestions: QuizQuestion[] = [
-        {
-          id: 1,
-          question: `Questão sobre ${contentData.title || 'o tema escolhido'}: Qual é o conceito fundamental que deve ser compreendido?`,
-          type: 'multipla-escolha',
-          options: [
-            'A) É um conceito básico e essencial',
-            'B) É uma aplicação prática secundária',
-            'C) É apenas uma teoria sem aplicação',
-            'D) É um conceito avançado opcional'
-          ],
-          correctAnswer: 'A) É um conceito básico e essencial',
-          explanation: 'Este conceito é fundamental para o entendimento da matéria.'
-        },
-        {
-          id: 2,
-          question: `O estudo de ${contentData.title || 'este tema'} é importante para o aprendizado?`,
-          type: 'verdadeiro-falso',
-          options: ['Verdadeiro', 'Falso'],
-          correctAnswer: 'Verdadeiro',
-          explanation: 'Sim, este conceito é fundamental para o desenvolvimento acadêmico.'
-        },
-        {
-          id: 3,
-          question: `Sobre ${contentData.title || 'o tema estudado'}: Qual é a melhor estratégia de aprendizado?`,
-          type: 'multipla-escolha',
-          options: [
-            'A) Prática constante e revisão',
-            'B) Memorização sem compreensão',
-            'C) Leitura única do material',
-            'D) Apenas exercícios práticos'
-          ],
-          correctAnswer: 'A) Prática constante e revisão',
-          explanation: 'A combinação de prática e revisão é a melhor estratégia.'
-        }
-      ];
-
-      return {
-        ...contentData,
-        questions: fallbackQuestions,
-        totalQuestions: fallbackQuestions.length,
-        isFallback: true
-      };
-    }
-
-    // Validar questões existentes
-    const validQuestions = contentData.questions.filter((q: QuizQuestion) => 
-      q.question && q.options && q.options.length > 0 && q.correctAnswer
-    );
-
-    if (validQuestions.length === 0) {
-      // Se nenhuma questão é válida, usar fallback
-      return ensureValidQuestions({ ...contentData, questions: [] });
-    }
-
-    return {
-      ...contentData,
-      questions: validQuestions,
-      totalQuestions: validQuestions.length
-    };
-  };
-
-  // Processar content para garantir questões válidas
-  const processedContent = ensureValidQuestions(content);
-
   // Se não conseguiu processar o conteúdo, mostrar estado de erro
-  if (!processedContent) {
+  if (!finalContent) {
     return (
       <Card className="w-full max-w-4xl mx-auto border-orange-200">
         <CardContent className="p-8 text-center">
@@ -281,9 +285,6 @@ const QuizInterativoPreview: React.FC<QuizInterativoPreviewProps> = ({
       </Card>
     );
   }
-
-  // Usar o conteúdo processado daqui em diante
-  const finalContent = processedContent;
 
   // Quiz intro screen
   if (!isQuizStarted) {
