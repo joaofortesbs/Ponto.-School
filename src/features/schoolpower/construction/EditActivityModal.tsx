@@ -963,6 +963,16 @@ const EditActivityModal = ({
         setGenerationError(`Falha na geração do quiz: ${generationError.message}`);
         throw new Error(`Falha na geração do quiz: ${generationError.message}`);
       }
+    } catch (error) {
+      console.error('❌ Erro na geração do Quiz Interativo:', error);
+      setGenerationError(`Erro ao gerar Quiz Interativo: ${error.message}`);
+      toast({
+        title: "Erro na Geração",
+        description: "Houve um problema ao gerar o quiz. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingQuiz(false);
     }
   };
 
@@ -1649,7 +1659,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customFields['nivelDificuldade'] ||
+                              customCustomFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
