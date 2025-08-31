@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -14,7 +15,35 @@ import {
   Presentation,
   Brain,
   Target,
-  Zap
+  Zap,
+  Search,
+  MessageSquare,
+  ThumbsUp,
+  Heart,
+  Wrench,
+  Star,
+  Compass,
+  Trophy,
+  Award,
+  Microscope,
+  Palette,
+  Camera,
+  Video,
+  Headphones,
+  Lightbulb,
+  Flag,
+  Key,
+  Shield,
+  TreePine,
+  Sun,
+  Cloud,
+  Home,
+  Car,
+  MapPin,
+  Music,
+  Globe,
+  Puzzle,
+  CheckSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,26 +62,122 @@ interface ConstructionActivityProps {
   onShare: (activityId: string) => void;
 }
 
-// Mapeamento de ícones por tipo de atividade
-const getActivityIcon = (activityId: string) => {
-  const iconMap: { [key: string]: any } = {
-    'lista-exercicios': Calculator,
-    'plano-aula': BookOpen,
-    'sequencia-didatica': Presentation,
-    'quiz-interativo': Gamepad2,
-    'quadro-interativo': Brain,
-    'atividade-criterios-avaliacao': Target,
-    'atividade-exemplos-contextualizados': FileText,
-    'atividade-jogos-educativos': Gamepad2,
-    'atividade-mapa-mental': Brain,
-    'atividade-proposta-redacao': PenTool,
-    'atividade-prova': FileText,
-    'atividade-resumo': BookOpen,
-    'atividade-texto-apoio': FileText,
-    'default': Zap
+// Mapeamento de ícones idêntico ao CardDeConstrucao.tsx
+const getIconByActivityId = (activityId: string) => {
+  // 100% unique mapping system - cada ID tem seu ícone específico
+  const uniqueIconMapping: { [key: string]: any } = {
+    "atividade-adaptada": Heart,
+    "atividades-contos-infantis": BookOpen,
+    "atividades-ia": Brain,
+    "atividades-matematica": Target,
+    "atividades-ortografia-alfabeto": PenTool,
+    "aulas-eletivas": Star,
+    "bncc-descomplicada": BookOpen,
+    "caca-palavras": Puzzle,
+    "capitulo-livro": BookOpen,
+    "charadas": Puzzle,
+    "chatbot-bncc": MessageSquare,
+    "consulta-video": Video,
+    "corretor-gramatical": CheckSquare,
+    "corretor-provas-feedback": CheckSquare,
+    "corretor-provas-papel": FileText,
+    "corretor-questoes": PenTool,
+    "corretor-redacao": PenTool,
+    "criterios-avaliacao": CheckSquare,
+    "desenho-simetrico": Puzzle,
+    "desenvolvimento-caligrafia": PenTool,
+    "dinamicas-sala-aula": Users,
+    "emails-escolares": MessageSquare,
+    "erros-comuns": Search,
+    "exemplos-contextualizados": BookOpen,
+    "experimento-cientifico": Microscope,
+    "fichamento-obra-literaria": BookOpen,
+    "gerador-tracejados": PenTool,
+    "historias-sociais": Heart,
+    "ideias-atividades": Lightbulb,
+    "ideias-aulas-acessiveis": Heart,
+    "ideias-avaliacoes-adaptadas": Heart,
+    "ideias-brincadeiras-infantis": Users,
+    "ideias-confraternizacoes": Users,
+    "ideias-datas-comemorativas": Calendar,
+    "imagem-para-colorir": Palette,
+    "instrucoes-claras": FileText,
+    "jogos-educacionais-interativos": Gamepad2,
+    "jogos-educativos": Puzzle,
+    "lista-exercicios": FileText,
+    "lista-vocabulario": BookOpen,
+    "maquete": Wrench,
+    "mapa-mental": Brain,
+    "mensagens-agradecimento": Heart,
+    "musica-engajar": Music,
+    "niveador-textos": BookOpen,
+    "objetivos-aprendizagem": Target,
+    "palavras-cruzadas": Puzzle,
+    "pei-pdi": Heart,
+    "perguntas-taxonomia-bloom": MessageSquare,
+    "pergunte-texto": MessageSquare,
+    "plano-aula": BookOpen,
+    "plano-ensino": BookOpen,
+    "plano-recuperacao": Heart,
+    "projeto": Wrench,
+    "projeto-vida": Star,
+    "proposta-redacao": PenTool,
+    "prova": CheckSquare,
+    "questoes-pdf": FileText,
+    "questoes-site": Globe,
+    "questoes-texto": FileText,
+    "questoes-video": Video,
+    "redacao": PenTool,
+    "reescritor-texto": PenTool,
+    "reflexao-incidente": MessageSquare,
+    "relatorio": FileText,
+    "relatorio-desempenho": Trophy,
+    "resposta-email": MessageSquare,
+    "revisor-gramatical": CheckSquare,
+    "revisao-guiada": BookOpen,
+    "resumo": FileText,
+    "resumo-texto": FileText,
+    "resumo-video": Video,
+    "sequencia-didatica": BookOpen,
+    "simulado": CheckSquare,
+    "sugestoes-intervencao": Lightbulb,
+    "tabela-apoio": Puzzle,
+    "tarefa-adaptada": Heart,
+    "texto-apoio": BookOpen,
+    "gerar-questoes": PenTool,
+    "apresentacao-slides": Target,
+    "tornar-relevante": Star,
+    "quiz-interativo": Gamepad2,
+    "quadro-interativo": Brain
   };
 
-  return iconMap[activityId] || iconMap['default'];
+  // Verificar se existe mapeamento direto para o ID
+  if (uniqueIconMapping[activityId]) {
+    return uniqueIconMapping[activityId];
+  }
+
+  // Sistema de fallback com hash consistente para IDs não mapeados
+  const fallbackIcons = [
+    BookOpen, FileText, PenTool, Search, Brain,
+    Users, MessageSquare, Presentation, ThumbsUp, Heart,
+    Wrench, Target, Compass, Trophy, Edit3,
+    Calendar, Clock, CheckSquare, Star, Award,
+    Microscope, Calculator, Eye, Globe, MapPin,
+    Music, Palette, Camera, Video, Headphones,
+    Lightbulb, Zap, Flag, Key, Shield,
+    TreePine, Sun, Cloud, Home, Car
+  ];
+
+  // Gerar hash consistente baseado no ID
+  let hash = 0;
+  for (let i = 0; i < activityId.length; i++) {
+    const char = activityId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+
+  const iconIndex = Math.abs(hash) % fallbackIcons.length;
+  return fallbackIcons[iconIndex];
 };
 
 const getActivityNameById = (activityId: string): string => {
@@ -60,8 +185,8 @@ const getActivityNameById = (activityId: string): string => {
   return activity ? activity.name : activityId;
 };
 
-// Função para truncar descrição em até 5 palavras
-const truncateDescription = (description: string, maxWords: number = 5): string => {
+// Função para truncar descrição em até 10 palavras
+const truncateDescription = (description: string, maxWords: number = 10): string => {
   const words = description.split(' ');
   if (words.length <= maxWords) return description;
   return words.slice(0, maxWords).join(' ') + '...';
@@ -79,26 +204,26 @@ export function ConstructionCard({
   onEdit
 }: ConstructionActivityProps) {
   const isCompleted = status === 'completed' || progress >= 100;
-  const ActivityIcon = getActivityIcon(id);
+  const ActivityIcon = getIconByActivityId(id);
   const activityName = getActivityNameById(id);
 
-  // Cores baseadas no status
+  // Cores baseadas no status - otimizado para modo claro e escuro
   const cardTheme = isCompleted ? {
-    borderColor: 'border-green-200',
-    bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50',
-    iconBg: 'bg-green-500',
+    borderColor: 'border-green-300 dark:border-green-600',
+    bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30',
+    iconBg: 'bg-green-500 dark:bg-green-600',
     iconColor: 'text-white',
-    titleColor: 'text-green-800',
-    descColor: 'text-green-600',
-    buttonStyle: 'bg-green-500 hover:bg-green-600 text-white'
+    titleColor: 'text-green-800 dark:text-green-200',
+    descColor: 'text-green-600 dark:text-green-300',
+    buttonStyle: 'bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white'
   } : {
-    borderColor: 'border-orange-200',
-    bgColor: 'bg-gradient-to-br from-orange-50 to-amber-50',
-    iconBg: 'bg-orange-500',
+    borderColor: 'border-orange-300 dark:border-orange-600',
+    bgColor: 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30',
+    iconBg: 'bg-orange-500 dark:bg-orange-600',
     iconColor: 'text-white',
-    titleColor: 'text-orange-800',
-    descColor: 'text-orange-600',
-    buttonStyle: 'bg-orange-500 hover:bg-orange-600 text-white'
+    titleColor: 'text-orange-800 dark:text-orange-200',
+    descColor: 'text-orange-600 dark:text-orange-300',
+    buttonStyle: 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white'
   };
 
   return (
@@ -108,12 +233,23 @@ export function ConstructionCard({
       className={`
         relative overflow-hidden rounded-2xl border-2 ${cardTheme.borderColor}
         ${cardTheme.bgColor} p-6 transition-all duration-300
-        hover:shadow-lg cursor-pointer group
+        hover:shadow-lg dark:hover:shadow-2xl cursor-pointer group
+        bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm
       `}
     >
+      {/* Tag "Construída" no canto superior esquerdo */}
+      {isCompleted && (
+        <div className="absolute top-4 left-4 z-10">
+          <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 text-xs font-medium">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            Construída
+          </Badge>
+        </div>
+      )}
+
       {/* Botões de ação - só aparecem quando construído */}
       {isCompleted && (
-        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <Button
             size="sm"
             onClick={(e) => {
@@ -156,8 +292,8 @@ export function ConstructionCard({
 
           {/* Indicador de conclusão */}
           {isCompleted && (
-            <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
-              <CheckCircle2 className="h-3 w-3 text-green-500" />
+            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-1">
+              <CheckCircle2 className="h-3 w-3 text-green-500 dark:text-green-400" />
             </div>
           )}
         </div>
@@ -170,37 +306,34 @@ export function ConstructionCard({
           {activityName}
         </h3>
 
-        {/* Descrição limitada */}
+        {/* Descrição limitada a 10 palavras */}
         <p className={`
           text-sm ${cardTheme.descColor} 
           leading-relaxed min-h-[2.5rem] flex items-center
         `}>
-          {truncateDescription(description)}
+          {truncateDescription(description, 10)}
         </p>
 
-        {/* Status badge */}
-        <div className="w-full flex justify-center">
-          {isCompleted ? (
-            <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Construída
-            </Badge>
-          ) : progress > 0 ? (
-            <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
-              <Clock className="h-3 w-3 mr-1" />
-              Em Progresso
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="border-orange-200 text-orange-700">
-              <Clock className="h-3 w-3 mr-1" />
-              Pendente
-            </Badge>
-          )}
-        </div>
+        {/* Status badge - apenas para não construídas */}
+        {!isCompleted && (
+          <div className="w-full flex justify-center">
+            {progress > 0 ? (
+              <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700">
+                <Clock className="h-3 w-3 mr-1" />
+                Em Progresso
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="border-orange-200 dark:border-orange-600 text-orange-700 dark:text-orange-300">
+                <Clock className="h-3 w-3 mr-1" />
+                Pendente
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Efeito de brilho no hover */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white dark:via-white/10 to-transparent opacity-0 group-hover:opacity-10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
     </motion.div>
   );
 }
