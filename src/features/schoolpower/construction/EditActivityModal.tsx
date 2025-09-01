@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -415,7 +415,6 @@ const getActivityIcon = (activityId: string) => {
   if (activityId.includes('matematica')) return Calculator;
   if (activityId.includes('ciencias')) return Beaker;
   if (activityId.includes('quadro-interativo')) return Settings;
-  if (activityId.includes('mapa-mental')) return Sparkles; // Ícone para Mapa Mental
   return GraduationCap;
 };
 
@@ -432,29 +431,28 @@ const EditActivityModal = ({
   // Estado para controlar qual aba está ativa
   const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
 
-  // Define initialFormData outside the component scope if it doesn't depend on props that change
-  // However, since it depends on `activity`, it must be inside or derived from props.
+  // Estados do formulário
   const [formData, setFormData] = useState<ActivityFormData>({
     title: activity?.title || activity?.personalizedTitle || '',
     description: activity?.description || activity?.personalizedDescription || '',
-    subject: activity?.customFields?.disciplina || activity?.customFields?.['Disciplina'] || '',
-    theme: activity?.customFields?.tema || activity?.customFields?.['Tema'] || activity?.personalizedTitle || activity?.title || '',
-    schoolYear: activity?.customFields?.anoEscolaridade || activity?.customFields?.['Ano de Escolaridade'] || '',
-    numberOfQuestions: activity?.customFields?.quantidadeQuestoes || activity?.customFields?.['Número de Questões'] || '10',
-    difficultyLevel: activity?.customFields?.nivelDificuldade || activity?.customFields?.['Nível de Dificuldade'] || 'Médio',
-    questionModel: activity?.customFields?.modeloQuestoes || activity?.customFields?.['Modelo de Questões'] || '',
-    sources: activity?.customFields?.fontes || activity?.customFields?.['Fontes'] || '',
-    objectives: activity?.customFields?.objetivos || activity?.customFields?.['Objetivos de Aprendizagem'] || activity?.description || activity?.personalizedDescription || '',
-    materials: activity?.customFields?.materiais || activity?.customFields?.['Materiais Necessários'] || '',
-    instructions: activity?.customFields?.instrucoes || activity?.customFields?.['Instruções'] || '',
-    evaluation: activity?.customFields?.criteriosAvaliacao || activity?.customFields?.['Critérios de Avaliação'] || '',
-    timeLimit: activity?.customFields?.tempoLimite || activity?.customFields?.['Tempo Limite'] || '',
-    context: activity?.customFields?.contexto || activity?.customFields?.['Contexto de Aplicação'] || '',
+    subject: activity?.customFields?.disciplina || '',
+    theme: activity?.customFields?.tema || activity?.personalizedTitle || activity?.title || '',
+    schoolYear: activity?.customFields?.anoEscolaridade || '',
+    numberOfQuestions: activity?.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
+    difficultyLevel: activity?.customFields?.tempoLimite || '',
+    questionModel: '',
+    sources: '',
+    objectives: activity?.description || activity?.personalizedDescription || '',
+    materials: activity?.customFields?.fontes || '',
+    instructions: activity?.customFields?.contextoAplicacao || '',
+    evaluation: activity?.customFields?.modeloQuestoes || '',
+    timeLimit: '',
+    context: '',
     textType: '',
     textGenre: '',
     textLength: '',
     associatedQuestions: '',
-    competencies: activity?.customFields?.competencias || activity?.customFields?.['Habilidades BNCC'] || '',
+    competencies: '',
     readingStrategies: '',
     visualResources: '',
     practicalActivities: '',
@@ -467,26 +465,21 @@ const EditActivityModal = ({
     knowledgeArea: '',
     complexityLevel: '',
     // Campos específicos para sequencia-didatica
-    tituloTemaAssunto: activity?.customFields?.['Título do Tema / Assunto'] || '',
-    anoSerie: activity?.customFields?.['Ano / Série'] || '',
-    disciplina: activity?.customFields?.['Disciplina'] || '',
-    bnccCompetencias: activity?.customFields?.['BNCC / Competências'] || '',
-    publicoAlvo: activity?.customFields?.['Público-alvo'] || '',
-    objetivosAprendizagem: activity?.customFields?.['Objetivos de Aprendizagem'] || '',
-    quantidadeAulas: activity?.customFields?.['Quantidade de Aulas'] || '',
-    quantidadeDiagnosticos: activity?.customFields?.['Quantidade de Diagnósticos'] || '',
-    quantidadeAvaliacoes: activity?.customFields?.['Quantidade de Avaliações'] || '',
-    cronograma: activity?.customFields?.['Cronograma'] || '',
+    tituloTemaAssunto: '',
+    anoSerie: '',
+    disciplina: '',
+    bnccCompetencias: '',
+    publicoAlvo: '',
+    objetivosAprendizagem: '',
+    quantidadeAulas: '',
+    quantidadeDiagnosticos: '',
+    quantidadeAvaliacoes: '',
+    cronograma: '',
     // Campos específicos para quadro-interativo
-    quadroInterativoCampoEspecifico: activity?.customFields?.['Atividade mostrada'] || activity?.customFields?.['quadroInterativoCampoEspecifico'] || '',
+    quadroInterativoCampoEspecifico: activity?.customFields?.quadroInterativoCampoEspecifico || '',
     // Campos específicos para quiz-interativo
-    format: activity?.customFields?.['Formato do Quiz'] || '',
-    timePerQuestion: activity?.customFields?.['Tempo por Questão'] || '',
-    // Campos específicos para Mapa Mental
-    centralTheme: activity?.customFields?.['Tema Central'] || activity?.centralTheme || '',
-    mainCategories: activity?.customFields?.['Categorias Principais'] || activity?.mainCategories || '',
-    generalObjective: activity?.customFields?.['Objetivo Geral'] || activity?.generalObjective || activity?.objectives || '',
-    evaluationCriteria: activity?.customFields?.['Critérios de Avaliação'] || activity?.evaluationCriteria || ''
+    format: '',
+    timePerQuestion: '',
   });
 
   // Estado para conteúdo gerado
@@ -601,13 +594,7 @@ const EditActivityModal = ({
       });
 
       return isValid;
-    } else if (activityType === 'mapa-mental') {
-      return formData.title.trim() !== '' &&
-             formData.description.trim() !== '' &&
-             formData.centralTheme?.trim() !== '' &&
-             formData.generalObjective?.trim() !== '';
-    }
-    else {
+    } else {
       return formData.title.trim() &&
              formData.description.trim() &&
              formData.objectives.trim();
@@ -809,23 +796,6 @@ const EditActivityModal = ({
           ...data,
           title: data.title || "Quadro Interativo Exemplo",
           description: data.description || "Descrição do quadro interativo...",
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'mapa-mental') {
-      // Lógica de geração para Mapa Mental (se houver)
-      // Por enquanto, apenas retorna os dados do formulário
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || `Mapa Mental: ${data.centralTheme}`,
-          description: data.description || `Mapa mental sobre ${data.centralTheme}`,
-          centralTheme: data.centralTheme,
-          mainCategories: data.mainCategories,
-          generalObjective: data.generalObjective,
-          evaluationCriteria: data.evaluationCriteria, // Assuming this is relevant for Mapas Mentais too
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
@@ -1120,7 +1090,6 @@ const EditActivityModal = ({
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
       const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`); // New: Load Quiz Interativo content
-      const mapaMentalSavedContent = localStorage.getItem(`constructed_mapa-mental_${activity.id}`); // Load Mapa Mental content
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
@@ -1130,7 +1099,6 @@ const EditActivityModal = ({
         hasQuadroInterativoSavedContent: !!quadroInterativoSavedContent,
         hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
         hasQuizInterativoSavedContent: !!quizInterativoSavedContent,
-        hasMapaMentalSavedContent: !!mapaMentalSavedContent,
         activityId: activity.id
       });
 
@@ -1180,22 +1148,7 @@ const EditActivityModal = ({
           console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
           contentToLoad = null;
         }
-      } else if (activity.id === 'mapa-mental' && mapaMentalSavedContent) { // Check for Mapa Mental content
-        try {
-          const parsedContent = JSON.parse(mapaMentalSavedContent);
-          contentToLoad = parsedContent.data || parsedContent;
-          if (contentToLoad) {
-            console.log(`✅ Conteúdo específico do Mapa Mental encontrado para: ${activity.id}`, contentToLoad);
-            // Set the specific state if you have one, or just use generatedContent
-            setGeneratedContent(contentToLoad);
-            setIsContentLoaded(true);
-          }
-        } catch (error) {
-          console.error('❌ Erro ao parsear conteúdo específico do Mapa Mental:', error);
-          contentToLoad = null;
-        }
-      }
-       else if (constructedActivities[activity.id]?.generatedContent) {
+      } else if (constructedActivities[activity.id]?.generatedContent) {
         console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
         contentToLoad = constructedActivities[activity.id].generatedContent;
       } else if (savedContent) {
@@ -1412,11 +1365,11 @@ const EditActivityModal = ({
                 // Sobrescrever com dados automáticos se existirem e forem válidos
                 ...(autoFormData.title && { title: autoFormData.title }),
                 ...(autoFormData.description && { description: autoFormData.description }),
-                ...(autoFormData.subject && autoFormData.subject !== 'Matemática' && { subject: autoFormData.subject }),
+                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
                 ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                 ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                 ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Intermediário' && { difficultyLevel: autoFormData.difficultyLevel }),
+                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
                 ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
                 ...(autoFormData.materials && { materials: autoFormData.materials }),
                 ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
@@ -1427,66 +1380,50 @@ const EditActivityModal = ({
 
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-            } else if (activity?.id === 'mapa-mental') {
-              console.log('🧠 Processando dados específicos de Mapa Mental');
-
+            } else {
               enrichedFormData = {
-                ...formData,
-                title: activityData.title || autoFormData.title || activity.title || '',
-                description: activityData.description || autoFormData.description || activity.description || '',
-                centralTheme: customFields['Tema Central'] || autoFormData.centralTheme || activity.customFields?.['Tema Central'] || '',
-                mainCategories: customFields['Categorias Principais'] || autoFormData.mainCategories || activity.customFields?.['Categorias Principais'] || '',
-                generalObjective: customFields['Objetivo Geral'] || autoFormData.generalObjective || activity.customFields?.['Objetivo Geral'] || activity.description || '',
-                evaluationCriteria: customFields['Critérios de Avaliação'] || autoFormData.evaluationCriteria || activity.customFields?.['Critérios de Avaliação'] || ''
-              };
-
-              console.log('🧠 Dados finais do Mapa Mental processados:', enrichedFormData);
-
-            }
-            else {
-              enrichedFormData = {
-                title: activityData.title || '',
-                description: activityData.description || '',
-                subject: customFields['Disciplina'] || customFields['disciplina'] || 'Português',
-                theme: customFields['Tema'] || customFields['tema'] || '',
-                schoolYear: customFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || '',
-                numberOfQuestions: customFields['Quantidade de Questões'] || customFields['quantidadeQuestoes'] || '10',
-                difficultyLevel: customFields['Nível de Dificuldade'] || customFields['nivelDificuldade'] || 'Médio',
-                questionModel: customFields['Modelo de Questões'] || customFields['modeloQuestoes'] || '',
-                sources: customFields['Fontes'] || customFields['fontes'] || '',
-                objectives: customFields['Objetivos'] || customFields['objetivos'] || '',
-                materials: customFields['Materiais'] || customFields['materiais'] || '',
-                instructions: customFields['Instruções'] || customFields['instrucoes'] || '',
-                evaluation: customFields['Critérios de Correção'] || customFields['Critérios de Avaliação'] || '',
-                timeLimit: customFields['Tempo de Prova'] || customFields['Tempo Limite'] || '',
-                context: customFields['Contexto de Aplicação'] || '',
-                textType: '',
-                textGenre: '',
-                textLength: '',
-                associatedQuestions: '',
-                competencies: customFields['Competências Trabalhadas'] || '',
-                readingStrategies: '',
-                visualResources: '',
-                practicalActivities: '',
-                wordsIncluded: '',
-                gridFormat: '',
-                providedHints: '',
-                vocabularyContext: '',
-                language: '',
-                associatedExercises: '',
-                knowledgeArea: '',
-                complexityLevel: '',
-                tituloTemaAssunto: customFields['Título do Tema / Assunto'] || '',
-                anoSerie: customFields['Ano / Série'] || '',
-                disciplina: customFields['Disciplina'] || '',
-                bnccCompetencias: customFields['BNCC / Competências'] || '',
-                publicoAlvo: customFields['Público-alvo'] || '',
-                objetivosAprendizagem: customFields['Objetivos de Aprendizagem'] || '',
-                quantidadeAulas: customFields['Quantidade de Aulas'] || '',
-                quantidadeDiagnosticos: customFields['Quantidade de Diagnósticos'] || '',
-                quantidadeAvaliacoes: customFields['Quantidade de Avaliações'] || '',
-                cronograma: customFields['Cronograma'] || '',
-                quadroInterativoCampoEspecifico: customFields['quadroInterativoCampoEspecifico'] || '',
+                title: consolidatedData.title || autoFormData.title || '',
+                description: consolidatedData.description || autoFormData.description || '',
+                subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Português',
+                theme: consolidatedCustomFields['Tema'] || consolidatedCustomFields['tema'] || consolidatedCustomFields['Tema das Palavras'] || consolidatedCustomFields['Tema do Vocabulário'] || autoFormData.theme || '',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || consolidatedCustomFields['ano'] || autoFormData.schoolYear || '',
+                numberOfQuestions: consolidatedCustomFields['Quantidade de Questões'] || consolidatedCustomFields['quantidadeQuestoes'] || consolidatedCustomFields['Quantidade de Palavras'] || autoFormData.numberOfQuestions || '10',
+                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || consolidatedCustomFields['nivelDificuldade'] || consolidatedCustomFields['dificuldade'] || autoFormData.difficultyLevel || 'Médio',
+                questionModel: consolidatedCustomFields['Modelo de Questões'] || consolidatedCustomFields['modeloQuestoes'] || consolidatedCustomFields['Tipo de Avaliação'] || autoFormData.questionModel || '',
+                sources: consolidatedCustomFields['Fontes'] || consolidatedCustomFields['fontes'] || consolidatedCustomFields['Referencias'] || autoFormData.sources || '',
+                objectives: consolidatedCustomFields['Objetivos'] || consolidatedCustomFields['objetivos'] || consolidatedCustomFields['Competências Trabalhadas'] || autoFormData.objectives || '',
+                materials: consolidatedCustomFields['Materiais'] || consolidatedCustomFields['materiais'] || consolidatedCustomFields['Recursos Visuais'] || autoFormData.materials || '',
+                instructions: consolidatedCustomFields['Instruções'] || consolidatedCustomFields['instrucoes'] || consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['Atividades Práticas'] || autoFormData.instructions || '',
+                evaluation: consolidatedCustomFields['Critérios de Correção'] || consolidatedCustomFields['Critérios de Avaliação'] || consolidatedCustomFields['criteriosAvaliacao'] || autoFormData.evaluation || '',
+                timeLimit: consolidatedCustomFields['Tempo de Prova'] || consolidatedCustomFields['Tempo Limite'] || consolidatedCustomFields['tempoLimite'] || autoFormData.timeLimit || '',
+                context: consolidatedCustomFields['Contexto de Aplicação'] || consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contexto'] || autoFormData.context || '',
+                textType: consolidatedCustomFields['Tipo de Texto'] || consolidatedCustomFields['tipoTexto'] || '',
+                textGenre: consolidatedCustomFields['Gênero Textual'] || consolidatedCustomFields['generoTextual'] || '',
+                textLength: consolidatedCustomFields['Extensão do Texto'] || consolidatedCustomFields['extensaoTexto'] || '',
+                associatedQuestions: consolidatedCustomFields['Questões Associadas'] || consolidatedCustomFields['questoesAssociadas'] || '',
+                competencies: consolidatedCustomFields['Competências Trabalhadas'] || consolidatedCustomFields['competencias'] || '',
+                readingStrategies: consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['estrategiasLeitura'] || '',
+                visualResources: consolidatedCustomFields['Recursos Visuais'] || consolidatedCustomFields['recursosVisuais'] || '',
+                practicalActivities: consolidatedCustomFields['Atividades Práticas'] || consolidatedCustomFields['atividadesPraticas'] || '',
+                wordsIncluded: consolidatedCustomFields['Palavras Incluídas'] || consolidatedCustomFields['palavrasIncluidas'] || '',
+                gridFormat: consolidatedCustomFields['Formato da Grade'] || consolidatedCustomFields['formatoGrade'] || '',
+                providedHints: consolidatedCustomFields['Dicas Fornecidas'] || consolidatedCustomFields['dicasFornecidas'] || '',
+                vocabularyContext: consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contextoUso'] || '',
+                language: consolidatedCustomFields['Idioma'] || consolidatedCustomFields['idioma'] || '',
+                associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
+                knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
+                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || '',
+                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || '',
+                anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || '',
+                disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || '',
+                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || autoFormData.bnccCompetencias || '',
+                publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
+                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
+                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
+                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
             }
 
@@ -1815,22 +1752,7 @@ const EditActivityModal = ({
             };
 
             console.log('🖼️ Dados diretos do Quadro Interativo processados:', directFormData);
-          } else if (activity?.id === 'mapa-mental') {
-            console.log('🧠 Processando dados diretos de Mapa Mental');
-
-            directFormData = {
-              ...formData, // Start with existing formData to merge
-              title: activityData.title || autoFormData?.title || activity.title || '',
-              description: activityData.description || autoFormData?.description || activity.description || '',
-              centralTheme: customFields['Tema Central'] || autoFormData?.centralTheme || activity.customFields?.['Tema Central'] || '',
-              mainCategories: customFields['Categorias Principais'] || autoFormData?.mainCategories || activity.customFields?.['Categorias Principais'] || '',
-              generalObjective: customFields['Objetivo Geral'] || autoFormData?.generalObjective || activity.customFields?.['Objetivo Geral'] || activity.description || '',
-              evaluationCriteria: customFields['Critérios de Avaliação'] || autoFormData?.evaluationCriteria || activity.customFields?.['Critérios de Avaliação'] || ''
-            };
-
-            console.log('🧠 Dados diretos do Mapa Mental processados:', directFormData);
-          }
-          else {
+          } else {
             directFormData = {
               title: activityData.title || '',
               description: activityData.description || '',
@@ -1958,14 +1880,6 @@ const EditActivityModal = ({
         console.log('💾 Quiz Interativo processado e salvo:', quizData);
       }
 
-      // Handle Mapa Mental generation if needed
-      if (activityType === 'mapa-mental') {
-        console.log('🧠 Processamento específico concluído para Mapa Mental');
-        // Save Mapa Mental specific data if necessary
-        localStorage.setItem(`constructed_mapa-mental_${activity?.id}`, JSON.stringify(result));
-      }
-
-
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
         generatedContent: result,
@@ -2001,6 +1915,113 @@ const EditActivityModal = ({
 
   // Automação da Construção de Atividades - será chamada externamente
   useEffect(() => {
+    const handleAutoBuild = () => {
+      if (activity && formData.title && formData.description && !isGenerating) {
+        console.log('🤖 Construção automática iniciada para:', activity.title);
+        handleBuildActivity();
+      }
+    };
+
+    if (activity) {
+      (window as any).autoBuildCurrentActivity = handleAutoBuild;
+    }
+
+    return () => {
+      delete (window as any).autoBuildCurrentActivity;
+    };
+  }, [activity, formData, isGenerating, handleBuildActivity]);
+
+  const handleSave = async () => {
+    if (!activity) return;
+
+    try {
+      const customFields = activity.customFields || {};
+
+      const updatedActivity = {
+        ...activity,
+        ...formData,
+        customFields: {
+          ...customFields,
+          'Disciplina': formData.subject,
+          'Tema': formData.theme,
+          'Ano de Escolaridade': formData.schoolYear,
+          'Tempo Limite': formData.timeLimit,
+          'Competências': formData.competencies,
+          'Objetivos': formData.objectives,
+          'Materiais': formData.materials,
+          'Contexto': formData.context,
+          'Nível de Dificuldade': formData.difficultyLevel,
+          'Critérios de Avaliação': formData.evaluation,
+          ...(activity?.id === 'lista-exercicios' && {
+            'Quantidade de Questões': formData.numberOfQuestions,
+            'Modelo de Questões': formData.questionModel,
+            'Fontes': formData.sources,
+            'Instruções': formData.instructions
+          }),
+          ...(activity?.id === 'sequencia-didatica' && {
+            'Título do Tema / Assunto': formData.tituloTemaAssunto,
+            'Ano / Série': formData.anoSerie,
+            'Disciplina': formData.disciplina,
+            'BNCC / Competências': formData.bnccCompetencias,
+            'Público-alvo': formData.publicoAlvo,
+            'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
+            'Quantidade de Aulas': formData.quantidadeAulas,
+            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
+            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
+            'Cronograma': formData.cronograma
+          }),
+          ...(activity?.id === 'quiz-interativo' && {
+            'Número de Questões': formData.numberOfQuestions,
+            'Tema': formData.theme,
+            'Disciplina': formData.subject,
+            'Ano de Escolaridade': formData.schoolYear,
+            'Nível de Dificuldade': formData.difficultyLevel,
+            'Formato': formData.questionModel,
+            'Formato do Quiz': formData.format, // Save new field
+            'Tempo por Questão': formData.timePerQuestion, // Save new field
+          }),
+          ...(activity?.id === 'quadro-interativo' && {
+            'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
+          })
+        }
+      };
+
+      if (onUpdateActivity) {
+        await onUpdateActivity(updatedActivity);
+      }
+
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updatedActivity));
+      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields));
+
+      if (activity.categoryId === 'sequencia-didatica' || activity.type === 'sequencia-didatica') {
+        const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
+        localStorage.setItem(constructedKey, JSON.stringify(updatedActivity));
+        console.log('📚 Sequência Didática salva como atividade construída');
+      }
+
+      console.log('💾 Dados salvos no localStorage:', {
+        activity: updatedActivity,
+        fields: customFields
+      });
+
+      toast({
+        title: "Atividade atualizada",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar atividade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações.",
+      });
+    }
+  };
+
+  // Agente Interno de Execução - Automação da Construção de Atividades
+  useEffect(() => {
     if (!activity || !isOpen) return;
 
     const customFields = activity.customFields || {};
@@ -2034,14 +2055,6 @@ const EditActivityModal = ({
       (formData.timePerQuestion && formData.timePerQuestion !== '') // Check new fields
     );
 
-    // Verificação específica para Mapa Mental
-    const isMapaMental = activity.id === 'mapa-mental';
-    const hasMapaMentalData = isMapaMental && (
-      (formData.centralTheme && formData.centralTheme !== '') ||
-      (formData.generalObjective && formData.generalObjective !== '') ||
-      (formData.mainCategories && formData.mainCategories !== '')
-    );
-
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
       console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
 
@@ -2069,14 +2082,6 @@ const EditActivityModal = ({
           timePerQuestion: formData.timePerQuestion,
           hasQuizInterativoData
         });
-      } else if (isMapaMental) {
-        console.log('🧠 Processamento específico para Mapa Mental detectado');
-        console.log('📊 Estado dos dados do Mapa Mental:', {
-          centralTheme: formData.centralTheme,
-          generalObjective: formData.generalObjective,
-          mainCategories: formData.mainCategories,
-          hasMapaMentalData
-        });
       }
 
       console.log('🎯 Acionando construção automática da atividade...');
@@ -2085,16 +2090,12 @@ const EditActivityModal = ({
         if (isQuizInterativo) {
           console.log('🎯 Auto-build específico para Quiz Interativo');
           await handleGenerateQuizInterativo(); // Use the specific function for Quiz
-        } else if (isMapaMental) {
-          console.log('🧠 Auto-build específico para Mapa Mental');
-          await handleBuildActivity(); // Use the generic build function for Mapa Mental
-        }
-        else {
+        } else {
           console.log('🏗️ Auto-build genérico para outras atividades');
           await handleBuildActivity(); // Use the generic build function
         }
         console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 500 : 300))); // Increased delay for Quiz/MapaMental for API call
+      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : 300)); // Increased delay for Quiz for API call
 
       return () => clearTimeout(timer);
     }
@@ -2211,7 +2212,7 @@ const EditActivityModal = ({
                         return (
                           <>
                             {/* Campos Genéricos */}
-                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental') && (
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo') && (
                               <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
@@ -2463,66 +2464,6 @@ const EditActivityModal = ({
                                 </div>
                               </div>
                             )}
-
-                            {/* Campos Específicos Mapa Mental */}
-                            {activityType === 'mapa-mental' && (
-                              <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="tema-central">Tema Central</Label>
-                                    <Input
-                                      id="tema-central"
-                                      name="central_theme"
-                                      data-field="central_theme"
-                                      value={formData.centralTheme || ''}
-                                      onChange={(e) => handleInputChange('centralTheme', e.target.value)}
-                                      placeholder="Ex: Revolução Francesa"
-                                      className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <Label htmlFor="categorias-principais">Categorias Principais</Label>
-                                    <Textarea
-                                      id="categorias-principais"
-                                      name="branches"
-                                      data-field="branches"
-                                      value={formData.mainCategories || ''}
-                                      onChange={(e) => handleInputChange('mainCategories', e.target.value)}
-                                      placeholder="Ex: Causas, Fases, Consequências"
-                                      rows={3}
-                                      className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <Label htmlFor="objetivo-geral">Objetivo Geral</Label>
-                                    <Textarea
-                                      id="objetivo-geral"
-                                      name="objectives"
-                                      data-field="objectives"
-                                      value={formData.generalObjective || ''}
-                                      onChange={(e) => handleInputChange('generalObjective', e.target.value)}
-                                      placeholder="Descreva o objetivo geral do mapa mental..."
-                                      rows={3}
-                                      className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <Label htmlFor="criterios-avaliacao">Critérios de Avaliação</Label>
-                                    <Textarea
-                                      id="criterios-avaliacao"
-                                      name="evaluation_criteria"
-                                      data-field="evaluation_criteria"
-                                      value={formData.evaluationCriteria || ''}
-                                      onChange={(e) => handleInputChange('evaluationCriteria', e.target.value)}
-                                      placeholder="Descreva os critérios de avaliação..."
-                                      rows={3}
-                                      className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                </>
-                            )}
                           </>
                         );
                       })()}
@@ -2569,7 +2510,7 @@ const EditActivityModal = ({
             {activeTab === 'preview' && (
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                  {isContentLoaded && (generatedContent || quizInterativoContent || (activity?.id === 'mapa-mental' && formData)) ? ( // Check for Mapa Mental specific data
+                  {isContentLoaded && (generatedContent || quizInterativoContent) ? (
                     activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
@@ -2596,22 +2537,6 @@ const EditActivityModal = ({
                         content={quizInterativoContent || generatedContent}
                         isLoading={isGeneratingQuiz}
                       />
-                    ) : activity?.id === 'mapa-mental' ? ( // Preview for Mapa Mental
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold mb-4">Visualização do Mapa Mental</h3>
-                        <p className="text-gray-700 dark:text-gray-300 mb-2"><strong>Título:</strong> {formData.title}</p>
-                        <p className="text-gray-700 dark:text-gray-300 mb-2"><strong>Descrição:</strong> {formData.description}</p>
-                        <p className="text-gray-700 dark:text-gray-300 mb-2"><strong>Tema Central:</strong> {formData.centralTheme}</p>
-                        <p className="text-gray-700 dark:text-gray-300 mb-2"><strong>Categorias Principais:</strong> {formData.mainCategories}</p>
-                        <p className="text-gray-700 dark:text-gray-300 mb-2"><strong>Objetivo Geral:</strong> {formData.generalObjective}</p>
-                        <p className="text-gray-700 dark:text-gray-300 mb-2"><strong>Critérios de Avaliação:</strong> {formData.evaluationCriteria}</p>
-                        {/* Add a placeholder or actual rendering for the mind map itself if available */}
-                        <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-md">
-                          <p className="text-gray-600 dark:text-gray-400 italic">
-                            (Aqui seria renderizado o mapa mental visualmente. Este é um placeholder.)
-                          </p>
-                        </div>
-                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
@@ -2652,22 +2577,16 @@ const EditActivityModal = ({
             <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
-            {(generatedContent || quizInterativoContent || (activity?.id === 'mapa-mental' && formData)) && ( // Include condition for Mapa Mental
+            {(generatedContent || quizInterativoContent) && (
               <>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    // Determine which content to copy
-                    const contentToCopy = activity?.id === 'quiz-interativo' ? quizInterativoContent :
-                                          activity?.id === 'mapa-mental' ? formData : // Copy form data for Mapa Mental
-                                          generatedContent;
-                    if (contentToCopy) {
-                      navigator.clipboard.writeText(JSON.stringify(contentToCopy, null, 2));
-                      toast({
-                        title: "Conteúdo copiado!",
-                        description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
-                      });
-                    }
+                    navigator.clipboard.writeText(JSON.stringify(quizInterativoContent || generatedContent, null, 2));
+                    toast({
+                      title: "Conteúdo copiado!",
+                      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
+                    });
                   }}
                   className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
                 >
@@ -2675,22 +2594,12 @@ const EditActivityModal = ({
                 </Button>
               </>
             )}
-             {(generatedContent || quizInterativoContent || (activity?.id === 'mapa-mental' && formData)) && ( // Include condition for Mapa Mental
+             {(generatedContent || quizInterativoContent) && (
               <Button
                 variant="outline"
                 onClick={() => {
                   clearContent(); // Clear generic content
                   setQuizInterativoContent(null); // Clear specific quiz content
-                  // Clear specific content for Mapa Mental if any state is used
-                  if (activity?.id === 'mapa-mental') {
-                     setFormData(prev => ({
-                       ...prev,
-                       centralTheme: '',
-                       mainCategories: '',
-                       generalObjective: '',
-                       evaluationCriteria: ''
-                     }));
-                  }
                   setIsContentLoaded(false); // Reset content loaded state
                   toast({
                     title: "Conteúdo Limpo",
