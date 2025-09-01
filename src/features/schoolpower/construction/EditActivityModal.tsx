@@ -480,6 +480,11 @@ const EditActivityModal = ({
     // Campos específicos para quiz-interativo
     format: '',
     timePerQuestion: '',
+    // Campos específicos para mapa-mental
+    centralTheme: '',
+    mainCategories: '',
+    generalObjective: '',
+    evaluationCriteria: '',
   });
 
   // Estado para conteúdo gerado
@@ -594,7 +599,14 @@ const EditActivityModal = ({
       });
 
       return isValid;
-    } else {
+    } else if (activityType === 'mapa-mental') { // Validar campos específicos do Mapa Mental
+      return formData.title.trim() &&
+             formData.centralTheme?.trim() &&
+             formData.mainCategories?.trim() &&
+             formData.generalObjective?.trim() &&
+             formData.evaluationCriteria?.trim();
+    }
+    else {
       return formData.title.trim() &&
              formData.description.trim() &&
              formData.objectives.trim();
@@ -800,6 +812,22 @@ const EditActivityModal = ({
           isGeneratedByAI: true,
         }
       };
+    } else if (type === 'mapa-mental') { // Nova lógica para Mapa Mental
+      console.log('🧠 Gerando conteúdo para Mapa Mental:', data);
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || `Mapa Mental: ${data.centralTheme || 'Tema Principal'}`,
+          description: data.description || data.generalObjective || 'Um mapa mental detalhado sobre o tema.',
+          centralTheme: data.centralTheme,
+          mainCategories: data.mainCategories,
+          generalObjective: data.generalObjective,
+          evaluationCriteria: data.evaluationCriteria,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
     }
 
     return {
@@ -932,7 +960,7 @@ const EditActivityModal = ({
         throw new Error('Dados gerados pela API estão incompletos ou malformados');
       }
 
-      // Force update para garantir sincronização
+      // Force update para garantir reatividade
       setTimeout(() => {
         console.log('🔄 Verificação de sincronização:', {
           quizInterativoContent: !!quizInterativoContent,
@@ -1380,7 +1408,20 @@ const EditActivityModal = ({
 
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-            } else {
+            } else if (activity?.id === 'mapa-mental') { // Processamento para Mapa Mental
+              console.log('🧠 Processando dados específicos de Mapa Mental');
+              enrichedFormData = {
+                ...formData,
+                title: activityData.title || autoFormData.title || customFields['Título'] || 'Mapa Mental',
+                description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
+                centralTheme: customFields['Tema Central'] || autoFormData.centralTheme || '',
+                mainCategories: customFields['Categorias Principais'] || autoFormData.mainCategories || '',
+                generalObjective: customFields['Objetivo Geral'] || autoFormData.generalObjective || '',
+                evaluationCriteria: customFields['Critérios de Avaliação'] || autoFormData.evaluationCriteria || '',
+              };
+              console.log('🧠 Dados do Mapa Mental processados:', enrichedFormData);
+            }
+            else {
               enrichedFormData = {
                 title: consolidatedData.title || autoFormData.title || '',
                 description: consolidatedData.description || autoFormData.description || '',
@@ -1752,7 +1793,21 @@ const EditActivityModal = ({
             };
 
             console.log('🖼️ Dados diretos do Quadro Interativo processados:', directFormData);
-          } else {
+          }
+          else if (activity?.id === 'mapa-mental') { // Preenchimento direto para Mapa Mental
+            console.log('🧠 Processando dados diretos de Mapa Mental');
+            directFormData = {
+              ...formData,
+              title: activityData.title || customFields['Título'] || 'Mapa Mental',
+              description: activityData.description || customFields['Descrição'] || '',
+              centralTheme: customFields['Tema Central'] || '',
+              mainCategories: customFields['Categorias Principais'] || '',
+              generalObjective: customFields['Objetivo Geral'] || '',
+              evaluationCriteria: customFields['Critérios de Avaliação'] || '',
+            };
+            console.log('🧠 Dados diretos do Mapa Mental processados:', directFormData);
+          }
+          else {
             directFormData = {
               title: activityData.title || '',
               description: activityData.description || '',
@@ -1982,7 +2037,15 @@ const EditActivityModal = ({
           }),
           ...(activity?.id === 'quadro-interativo' && {
             'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
-          })
+          }),
+          ...(activity?.id === 'mapa-mental' && { // Salvar campos específicos do Mapa Mental
+            'Título': formData.title,
+            'Descrição': formData.description,
+            'Tema Central': formData.centralTheme,
+            'Categorias Principais': formData.mainCategories,
+            'Objetivo Geral': formData.generalObjective,
+            'Critérios de Avaliação': formData.evaluationCriteria,
+          }),
         }
       };
 
@@ -2055,6 +2118,15 @@ const EditActivityModal = ({
       (formData.timePerQuestion && formData.timePerQuestion !== '') // Check new fields
     );
 
+    // Verificação específica para Mapa Mental
+    const isMapaMental = activity.id === 'mapa-mental';
+    const hasMapaMentalData = isMapaMental && (
+      (formData.centralTheme && formData.centralTheme !== '') ||
+      (formData.mainCategories && formData.mainCategories !== '') ||
+      (formData.generalObjective && formData.generalObjective !== '') ||
+      (formData.evaluationCriteria && formData.evaluationCriteria !== '')
+    );
+
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
       console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
 
@@ -2082,6 +2154,15 @@ const EditActivityModal = ({
           timePerQuestion: formData.timePerQuestion,
           hasQuizInterativoData
         });
+      } else if (isMapaMental) {
+        console.log('🧠 Processamento específico para Mapa Mental detectado');
+        console.log('📊 Estado dos dados do Mapa Mental:', {
+          centralTheme: formData.centralTheme,
+          mainCategories: formData.mainCategories,
+          generalObjective: formData.generalObjective,
+          evaluationCriteria: formData.evaluationCriteria,
+          hasMapaMentalData
+        });
       }
 
       console.log('🎯 Acionando construção automática da atividade...');
@@ -2090,12 +2171,18 @@ const EditActivityModal = ({
         if (isQuizInterativo) {
           console.log('🎯 Auto-build específico para Quiz Interativo');
           await handleGenerateQuizInterativo(); // Use the specific function for Quiz
-        } else {
+        } else if (isMapaMental) {
+          console.log('🧠 Auto-build específico para Mapa Mental');
+          // Para Mapa Mental, a construção é mais um salvamento dos dados inseridos
+          // Chama handleBuildActivity que por sua vez chama generateActivityContent
+          await handleBuildActivity();
+        }
+        else {
           console.log('🏗️ Auto-build genérico para outras atividades');
           await handleBuildActivity(); // Use the generic build function
         }
         console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : 300)); // Increased delay for Quiz for API call
+      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : 300))); // Increased delay for Quiz for API call
 
       return () => clearTimeout(timer);
     }
@@ -2212,7 +2299,7 @@ const EditActivityModal = ({
                         return (
                           <>
                             {/* Campos Genéricos */}
-                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo') && (
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental') && (
                               <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
@@ -2464,6 +2551,59 @@ const EditActivityModal = ({
                                 </div>
                               </div>
                             )}
+
+                            {/* Campos Específicos Mapa Mental */}
+                            {activityType === 'mapa-mental' && (
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="centralTheme" className="text-sm">Tema Central *</Label>
+                                  <Input
+                                    id="centralTheme"
+                                    value={formData.centralTheme}
+                                    onChange={(e) => handleInputChange('centralTheme', e.target.value)}
+                                    placeholder="Digite o tema central do mapa mental"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="mainCategories" className="text-sm">Categorias Principais *</Label>
+                                  <Textarea
+                                    id="mainCategories"
+                                    value={formData.mainCategories}
+                                    onChange={(e) => handleInputChange('mainCategories', e.target.value)}
+                                    placeholder="Liste as categorias principais (uma por linha)..."
+                                    rows={3}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="generalObjective" className="text-sm">Objetivo Geral *</Label>
+                                  <Textarea
+                                    id="generalObjective"
+                                    value={formData.generalObjective}
+                                    onChange={(e) => handleInputChange('generalObjective', e.target.value)}
+                                    placeholder="Descreva o objetivo geral do mapa mental..."
+                                    rows={2}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="evaluationCriteria" className="text-sm">Critérios de Avaliação *</Label>
+                                  <Textarea
+                                    id="evaluationCriteria"
+                                    value={formData.evaluationCriteria}
+                                    onChange={(e) => handleInputChange('evaluationCriteria', e.target.value)}
+                                    placeholder="Como o mapa mental será avaliado..."
+                                    rows={2}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </>
                         );
                       })()}
@@ -2537,6 +2677,24 @@ const EditActivityModal = ({
                         content={quizInterativoContent || generatedContent}
                         isLoading={isGeneratingQuiz}
                       />
+                    ) : activity?.id === 'mapa-mental' ? ( // Preview para Mapa Mental
+                      <div className="p-6 flex flex-col items-center justify-center h-full text-center">
+                        <FileText className="h-16 w-16 text-gray-400 mb-4" />
+                        <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                          Mapa Mental Gerado
+                        </h4>
+                        <div className="text-left space-y-2 text-gray-700 dark:text-gray-300">
+                          <p><strong>Título:</strong> {generatedContent?.title || formData.title}</p>
+                          <p><strong>Descrição:</strong> {generatedContent?.description || formData.description}</p>
+                          <p><strong>Tema Central:</strong> {generatedContent?.centralTheme || formData.centralTheme}</p>
+                          <p><strong>Categorias Principais:</strong> {generatedContent?.mainCategories.split('\n').map((line: string, i: number) => <span key={i}>{line}<br/></span>)}</p>
+                          <p><strong>Objetivo Geral:</strong> {generatedContent?.generalObjective || formData.generalObjective}</p>
+                          <p><strong>Critérios de Avaliação:</strong> {generatedContent?.evaluationCriteria || formData.evaluationCriteria}</p>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-4">
+                          Esta é uma pré-visualização textual. A representação visual do Mapa Mental será gerada em uma ferramenta específica.
+                        </p>
+                      </div>
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
