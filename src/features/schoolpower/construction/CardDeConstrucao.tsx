@@ -167,7 +167,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-          
+
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -234,12 +234,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                
+
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-                
+
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -473,7 +473,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 }`}
                 style={{
                   left: `${8 + (0 / 4) * 84}%`,
-                  top: `${100 - (22 / 78) * 60}%`,
+                  top: `${100 - (22 / 88) * 60}%`,
                   transitionDelay: '1800ms'
                 }}
               >
@@ -491,7 +491,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
                 }`}
                 style={{
                   left: `${8 + (4 / 4) * 84}%`,
-                  top: `${100 - (88 / 88) * 60}%`,
+                  top: `${100 - (78 / 88) * 60}%`,
                   transitionDelay: '2200ms'
                 }}
               >
@@ -1174,6 +1174,37 @@ export function CardDeConstrucao({
         )}
       </div>
     );
+  };
+
+  // Helper function to format field names for display
+  const formatFieldName = (key: string): string => {
+    // Convert camelCase or snake_case to Title Case
+    const result = key
+      .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .trim();
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  };
+
+  // Helper function to format field values for display
+  const formatFieldValue = (value: any): string => {
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    }
+    // Handle complex objects if necessary, e.g., extract a 'name' or 'title' property
+    if (typeof value === 'object' && value !== null) {
+      if (value.name) return value.name;
+      if (value.title) return value.title;
+      if (value.description) return value.description;
+      return JSON.stringify(value); // Fallback for unknown object structures
+    }
+    return ''; // Return empty string for null, undefined, etc.
   };
 
   // Handle filter actions
@@ -2148,35 +2179,46 @@ export function CardDeConstrucao({
                                       </div>
 
                                       {/* Display customFields as tags/badges */}
-                                      {activity.customFields && Object.keys(activity.customFields).length > 0 && (
-                                        <div className="mt-3 flex flex-wrap gap-2">
-                                          {Object.entries(activity.customFields).map(([key, value]) => {
-                                            // Function to ensure safe rendering
-                                            const safeValue = (val: any): string => {
-                                              if (val === null || val === undefined) return '';
-                                              if (typeof val === 'object') {
-                                                // If it's an object, try to extract common properties
-                                                if (val.nome) return String(val.nome);
-                                                if (val.title) return String(val.title);
-                                                if (val.descricao) return String(val.descricao);
-                                                if (val.description) return String(val.description);
-                                                return '[Complex Data]';
-                                              }
-                                              return String(val);
-                                            };
+                                      {Object.keys(activity.customFields || {}).length > 0 && (
+                                        <div className="mt-3 space-y-2">
+                                          {activity.id === 'mapa-mental' ? (
+                                            // Exibição específica para Mapa Mental
+                                            <div className="space-y-2">
+                                              {activity.customFields.temaCentral && (
+                                                <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
+                                                  Tema Central: {activity.customFields.temaCentral}
+                                                </Badge>
+                                              )}
+                                              {activity.customFields.categoriasPrincipais && (
+                                                <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                                  Categorias Principais: {activity.customFields.categoriasPrincipais}
+                                                </Badge>
+                                              )}
+                                              {activity.customFields.objetivoGeral && (
+                                                <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
+                                                  Objetivo Geral: {activity.customFields.objetivoGeral}
+                                                </Badge>
+                                              )}
+                                              {activity.customFields.criteriosAvaliacao && (
+                                                <Badge variant="outline" className="text-xs bg-purple-50 border-purple-200 text-purple-700">
+                                                  Critérios de Avaliação: {activity.customFields.criteriosAvaliacao}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          ) : (
+                                            // Exibição padrão para outras atividades
+                                            Object.entries(activity.customFields || {}).map(([key, value]) => {
+                                              if (!value || value === '') return null;
 
-                                            const displayValue = safeValue(value);
-
-                                            return (
-                                              <div 
-                                                key={key} 
-                                                className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 transition-all duration-200"
-                                              >
-                                                <span className="font-semibold">{key}:</span>
-                                                <span className="ml-1 truncate max-w-[150px]">{displayValue}</span>
-                                              </div>
-                                            );
-                                          })}
+                                              return (
+                                                <div key={key} className="flex flex-wrap gap-1">
+                                                  <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                                                    {formatFieldName(key)}: {formatFieldValue(value)}
+                                                  </Badge>
+                                                </div>
+                                              );
+                                            })
+                                          )}
                                         </div>
                                       )}
 
@@ -2234,7 +2276,7 @@ export function CardDeConstrucao({
                   <Button
                     onClick={handleApproveActionPlan}
                     disabled={selectedActivities2.length === 0 || isLoading}
-                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                    className="px-4 sm:px-6 py-2 sm:py-3 bg-[#FF6B00] hover:bg-[#D65A00] text-white font-semibold rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
                     <Target className="w-4 h-4 sm:w-5 sm:h-5" />
                     {isLoading

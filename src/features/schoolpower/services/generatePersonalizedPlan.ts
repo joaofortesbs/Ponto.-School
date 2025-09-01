@@ -195,6 +195,23 @@ IMPORTANT:
           "Nível de Dificuldade": "Intermediário",
           "Atividade mostrada": "Jogo interativo de arrastar e soltar para montar frações"
         }
+
+        Para cada atividade, você deve retornar um JSON com os seguintes campos obrigatórios:
+        - id: string (ID da atividade escolhida da lista)
+        - title: string (título personalizado da atividade)
+        - description: string (descrição personalizada)
+        - duration: string (duração estimada)
+        - difficulty: string (nível de dificuldade)
+        - category: string (categoria da atividade)
+        - type: string (tipo de atividade)
+
+        CAMPOS ESPECÍFICOS POR TIPO DE ATIVIDADE:
+
+        Para atividade "mapa-mental", adicione também:
+        - temaCentral: string (tema central do mapa mental, ex: "Revolução Francesa")
+        - categoriasPrincipais: array de strings (categorias principais, ex: ["Causas", "Fases", "Consequências"])
+        - objetivoGeral: string (objetivo geral da atividade)
+        - criteriosAvaliacao: array de strings (critérios de avaliação)
 `;
 
   return prompt;
