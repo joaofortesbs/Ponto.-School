@@ -19,6 +19,9 @@ export interface MapaMentalFormData {
   schoolYear: string;
   duration: string;
   difficulty: string;
+  objectives?: string;
+  materials?: string;
+  instructions?: string;
 }
 
 export class MapaMentalProcessor {
