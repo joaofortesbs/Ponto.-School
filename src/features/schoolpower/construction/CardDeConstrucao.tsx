@@ -52,6 +52,7 @@ import { EditActivityModal } from './EditActivityModal';
 import { PlanoAulaProcessor } from '../activities/plano-aula/planoAulaProcessor';
 import { processSequenciaDidaticaData, sequenciaDidaticaFieldMapping } from '../activities/sequencia-didatica';
 import { processQuadroInterativoData } from '../activities/quadro-interativo/quadroInterativoProcessor';
+import { processMapaMentalData } from '../activities/mapa-mental/mapaMentalProcessor';
 
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({

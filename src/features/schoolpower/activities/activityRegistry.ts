@@ -67,7 +67,7 @@ export const activityRegistry: ActivityRegistryType = {
   },
   "mapa-mental": {
     editor: lazy(() => import("./default/EditActivity")),
-    preview: lazy(() => import("./default/ActivityPreview")),
+    preview: lazy(() => import("./mapa-mental/MapaMentalPreview")),
   },
   "proposta-redacao": {
     editor: lazy(() => import("./default/EditActivity")),
@@ -93,7 +93,8 @@ export const activityProcessors = {
   'lista-exercicios': null, // Implementar se necessário
   'plano-aula': PlanoAulaProcessor.processData,
   'sequencia-didatica': processSequenciaDidaticaData,
-  'quadro-interativo': processQuadroInterativoData
+  'quadro-interativo': processQuadroInterativoData,
+  'mapa-mental': (data: any) => import('./mapa-mental/mapaMentalProcessor').then(m => m.processMapaMentalData(data))
 };
 
 // Função para verificar se uma atividade existe no registro

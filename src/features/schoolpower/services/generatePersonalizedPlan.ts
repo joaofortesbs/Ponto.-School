@@ -179,6 +179,14 @@ IMPORTANT:
         - "Nível de Dificuldade": string (Básico/Intermediário/Avançado)
         - "Atividade mostrada": string descrevendo a atividade interativa
 
+        IMPORTANTE: Para atividades do tipo "mapa-mental", use OBRIGATORIAMENTE estes campos específicos:
+        - "Título": string com o título do mapa mental
+        - "Descrição": string com descrição detalhada da atividade
+        - "Tema Central": string com o tema central do mapa (ex: "Revolução Francesa")
+        - "Categorias Principais": string com as categorias principais (ex: "Causas, Fases, Consequências")
+        - "Objetivo Geral": string com objetivo geral da atividade
+        - "Critérios de Avaliação": string com critérios de avaliação
+
         EXEMPLO para quadro-interativo:
         {
           "id": "quadro-interativo",
@@ -194,6 +202,23 @@ IMPORTANT:
           "Objetivo de aprendizagem da aula": "Compreender o conceito de frações e suas representações visuais",
           "Nível de Dificuldade": "Intermediário",
           "Atividade mostrada": "Jogo interativo de arrastar e soltar para montar frações"
+        }
+
+        EXEMPLO para mapa-mental:
+        {
+          "id": "mapa-mental",
+          "title": "Mapa Mental: Teorema de Pitágoras",
+          "description": "Criação de um mapa mental para organizar visualmente os conceitos e aplicações do Teorema de Pitágoras",
+          "duration": "40 min",
+          "difficulty": "Médio",
+          "category": "Matemática",
+          "type": "activity",
+          "Título": "Mapa Mental: Teorema de Pitágoras",
+          "Descrição": "Criação de um mapa mental para organizar visualmente os conceitos e aplicações do Teorema de Pitágoras",
+          "Tema Central": "Teorema de Pitágoras",
+          "Categorias Principais": "Conceitos Principais, Fórmulas, Aplicações Práticas, Demonstrações",
+          "Objetivo Geral": "Organizar e compreender os conceitos fundamentais do Teorema de Pitágoras através de representação visual",
+          "Critérios de Avaliação": "Clareza na organização, correção dos conceitos, criatividade na apresentação, completude das informações"
         }
 `;
 
@@ -525,6 +550,31 @@ export async function generatePersonalizedPlan(
           };
 
           console.log('✅ Quadro Interativo processado com campos obrigatórios:', requiredFields);
+        }
+
+        // Processamento específico para Mapa Mental
+        if (activityData.id === 'mapa-mental') {
+          console.log('🧠 Processando especificamente Mapa Mental');
+
+          // Garantir que todos os campos obrigatórios estejam presentes
+          const requiredFields = {
+            'Título': activityData['Título'] || activityData.title || 'Mapa Mental',
+            'Descrição': activityData['Descrição'] || activityData.description || 'Criação de um mapa mental para organizar conhecimentos',
+            'Tema Central': activityData['Tema Central'] || 'Tema a ser definido',
+            'Categorias Principais': activityData['Categorias Principais'] || 'Categorias a serem definidas',
+            'Objetivo Geral': activityData['Objetivo Geral'] || 'Organizar e visualizar conhecimentos de forma estruturada',
+            'Critérios de Avaliação': activityData['Critérios de Avaliação'] || 'Clareza, organização, completude e criatividade'
+          };
+
+          // Atualizar os dados da atividade
+          activityData = {
+            ...activityData,
+            customFields: requiredFields,
+            isMapaMental: true,
+            readyForGeneration: true
+          };
+
+          console.log('✅ Mapa Mental processado com campos obrigatórios:', requiredFields);
         }
 
         // Extract custom fields (all fields except standard ones)
