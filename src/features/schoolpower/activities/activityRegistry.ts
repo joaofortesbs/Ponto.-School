@@ -2,8 +2,6 @@ import { lazy, LazyExoticComponent, FC } from 'react';
 import { processSequenciaDidaticaData } from './sequencia-didatica';
 import { PlanoAulaProcessor } from './plano-aula/planoAulaProcessor';
 import { processQuadroInterativoData } from './quadro-interativo/quadroInterativoProcessor';
-// Importação específica para Mapa Mental
-import { mapaMentalProcessor } from './mapa-mental';
 
 export interface ActivityComponentSet {
   editor: LazyExoticComponent<FC<any>>;
@@ -67,10 +65,9 @@ export const activityRegistry: ActivityRegistryType = {
     editor: lazy(() => import("./default/EditActivity")),
     preview: lazy(() => import("./default/ActivityPreview")),
   },
-  // Mapa Mental - Nova atividade com campos personalizados
   "mapa-mental": {
-    editor: lazy(() => import("./mapa-mental/EditActivity")), // Importação específica para Mapa Mental
-    preview: lazy(() => import("./mapa-mental/ActivityPreview")), // Importação específica para Mapa Mental
+    editor: lazy(() => import("./default/EditActivity")),
+    preview: lazy(() => import("./default/ActivityPreview")),
   },
   "proposta-redacao": {
     editor: lazy(() => import("./default/EditActivity")),
@@ -96,9 +93,7 @@ export const activityProcessors = {
   'lista-exercicios': null, // Implementar se necessário
   'plano-aula': PlanoAulaProcessor.processData,
   'sequencia-didatica': processSequenciaDidaticaData,
-  'quadro-interativo': processQuadroInterativoData,
-  // Registrar processador do Mapa Mental
-  'mapa-mental': mapaMentalProcessor,
+  'quadro-interativo': processQuadroInterativoData
 };
 
 // Função para verificar se uma atividade existe no registro
