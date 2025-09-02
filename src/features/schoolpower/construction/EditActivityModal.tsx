@@ -73,88 +73,6 @@ const DefaultEditActivity = ({formData, onFieldChange }: {formData: ActivityForm
   </>
 );
 
-// Componente específico para Flash Cards
-const FlashCardsEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
-  <div className="space-y-4">
-    <div>
-      <Label htmlFor="title">Título *</Label>
-      <Input
-        id="title"
-        value={formData.title || ''}
-        onChange={(e) => onFieldChange('title', e.target.value)}
-        placeholder="Ex: Conceitos de Biologia Celular"
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="description">Descrição</Label>
-      <Textarea
-        id="description"
-        value={formData.description || ''}
-        onChange={(e) => onFieldChange('description', e.target.value)}
-        placeholder="Breve descrição sobre o que os flash cards abordarão..."
-        rows={3}
-        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="theme">Tema *</Label>
-      <Input
-        id="theme"
-        value={formData.theme || ''}
-        onChange={(e) => onFieldChange('theme', e.target.value)}
-        placeholder="Ex: Funções do 1º Grau, Conceitos básicos de matemática"
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="topicos">Tópicos *</Label>
-      <Textarea
-        id="topicos"
-        value={formData.topicos || ''}
-        onChange={(e) => onFieldChange('topicos', e.target.value)}
-        placeholder="Liste os tópicos principais que serão abordados nos flash cards..."
-        rows={3}
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="numberOfFlashcards">Número de flashcards *</Label>
-      <Input
-        id="numberOfFlashcards"
-        type="number"
-        value={formData.numberOfFlashcards || ''}
-        onChange={(e) => onFieldChange('numberOfFlashcards', e.target.value)}
-        placeholder="Ex: 10, 15, 20"
-        min="1"
-        max="50"
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-
-    <div>
-      <Label htmlFor="context">Contexto *</Label>
-      <Textarea
-        id="context"
-        value={formData.context || ''}
-        onChange={(e) => onFieldChange('context', e.target.value)}
-        placeholder="Descreva o contexto de aplicação dos flash cards..."
-        rows={3}
-        required
-        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-      />
-    </div>
-  </div>
-);
-
 // Componente específico para Quiz Interativo
 const QuizInterativoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
@@ -567,9 +485,6 @@ const EditActivityModal = ({
     mainCategories: '',
     generalObjective: '',
     evaluationCriteria: '',
-    // Campos específicos para flash-cards
-    topicos: '',
-    numberOfFlashcards: '',
   });
 
   // Estado para conteúdo gerado
@@ -612,13 +527,7 @@ const EditActivityModal = ({
   const isFormValidForBuild = useCallback(() => {
     const activityType = activity?.id || '';
 
-    if (activityType === 'flash-cards') {
-      return formData.title.trim() &&
-             formData.theme.trim() &&
-             formData.topicos?.trim() &&
-             formData.numberOfFlashcards?.trim() &&
-             formData.context?.trim();
-    } else if (activityType === 'lista-exercicios') {
+    if (activityType === 'lista-exercicios') {
       return formData.title.trim() &&
              formData.description.trim() &&
              formData.subject.trim() &&
@@ -1499,28 +1408,16 @@ const EditActivityModal = ({
 
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-            } else if (activity?.id === 'flash-cards') { // Processamento para Flash Cards
-              console.log('📝 Processando dados diretos de Flash Cards');
-              enrichedFormData = {
-                ...formData,
-                title: activityData.title || customFields['Título'] || 'Flash Cards',
-                description: activityData.description || customFields['Descrição'] || '',
-                theme: customFields['Tema'] || '',
-                topicos: customFields['Tópicos'] || '',
-                numberOfFlashcards: customFields['Número de flashcards'] || '10',
-                context: customFields['Contexto'] || '',
-              };
-              console.log('📝 Dados do Flash Cards processados:', enrichedFormData);
             } else if (activity?.id === 'mapa-mental') { // Processamento para Mapa Mental
-              console.log('🧠 Processando dados diretos de Mapa Mental');
+              console.log('🧠 Processando dados específicos de Mapa Mental');
               enrichedFormData = {
                 ...formData,
-                title: activityData.title || customFields['Título'] || 'Mapa Mental',
-                description: activityData.description || customFields['Descrição'] || '',
-                centralTheme: customFields['Tema Central'] || '',
-                mainCategories: customFields['Categorias Principais'] || '',
-                generalObjective: customFields['Objetivo Geral'] || '',
-                evaluationCriteria: customFields['Critérios de Avaliação'] || '',
+                title: activityData.title || autoFormData.title || customFields['Título'] || 'Mapa Mental',
+                description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
+                centralTheme: customFields['Tema Central'] || autoFormData.centralTheme || '',
+                mainCategories: customFields['Categorias Principais'] || autoFormData.mainCategories || '',
+                generalObjective: customFields['Objetivo Geral'] || autoFormData.generalObjective || '',
+                evaluationCriteria: customFields['Critérios de Avaliação'] || autoFormData.evaluationCriteria || '',
               };
               console.log('🧠 Dados do Mapa Mental processados:', enrichedFormData);
             }
@@ -1843,7 +1740,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customCustomFields['nivelDificuldade'] ||
+                              customFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||
@@ -1973,43 +1870,6 @@ const EditActivityModal = ({
     }));
   };
 
-  // Função para salvar as alterações da atividade
-  const handleSave = useCallback(() => {
-    if (!activity) return;
-
-    console.log('💾 Salvando alterações da atividade:', activity.id);
-    
-    // Preparar dados para salvar
-    const updatedActivity = {
-      ...activity,
-      ...formData,
-      lastModified: new Date().toISOString(),
-      modifiedFields: Object.keys(formData).filter(key => 
-        formData[key as keyof ActivityFormData] !== ''
-      )
-    };
-
-    // Chamar função de callback se fornecida
-    if (onSave) {
-      onSave(updatedActivity);
-    }
-
-    // Salvar no localStorage também
-    const storageKey = `activity_${activity.id}`;
-    localStorage.setItem(storageKey, JSON.stringify(updatedActivity));
-
-    // Salvar formData específico
-    const formDataKey = `form_data_${activity.id}`;
-    localStorage.setItem(formDataKey, JSON.stringify(formData));
-
-    toast({
-      title: "Alterações Salvas!",
-      description: "As alterações da atividade foram salvas com sucesso.",
-    });
-
-    console.log('✅ Atividade salva:', updatedActivity);
-  }, [activity, formData, onSave, toast]);
-
   // Função para construir a atividade
   const handleBuildActivity = useCallback(async () => {
     if (!activity || isBuilding) return;
@@ -2109,6 +1969,121 @@ const EditActivityModal = ({
   }, [activity, formData, isBuilding, toast]);
 
   // Automação da Construção de Atividades - será chamada externamente
+  useEffect(() => {
+    const handleAutoBuild = () => {
+      if (activity && formData.title && formData.description && !isGenerating) {
+        console.log('🤖 Construção automática iniciada para:', activity.title);
+        handleBuildActivity();
+      }
+    };
+
+    if (activity) {
+      (window as any).autoBuildCurrentActivity = handleAutoBuild;
+    }
+
+    return () => {
+      delete (window as any).autoBuildCurrentActivity;
+    };
+  }, [activity, formData, isGenerating, handleBuildActivity]);
+
+  const handleSave = async () => {
+    if (!activity) return;
+
+    try {
+      const customFields = activity.customFields || {};
+
+      const updatedActivity = {
+        ...activity,
+        ...formData,
+        customFields: {
+          ...customFields,
+          'Disciplina': formData.subject,
+          'Tema': formData.theme,
+          'Ano de Escolaridade': formData.schoolYear,
+          'Tempo Limite': formData.timeLimit,
+          'Competências': formData.competencies,
+          'Objetivos': formData.objectives,
+          'Materiais': formData.materials,
+          'Contexto': formData.context,
+          'Nível de Dificuldade': formData.difficultyLevel,
+          'Critérios de Avaliação': formData.evaluation,
+          ...(activity?.id === 'lista-exercicios' && {
+            'Quantidade de Questões': formData.numberOfQuestions,
+            'Modelo de Questões': formData.questionModel,
+            'Fontes': formData.sources,
+            'Instruções': formData.instructions
+          }),
+          ...(activity?.id === 'sequencia-didatica' && {
+            'Título do Tema / Assunto': formData.tituloTemaAssunto,
+            'Ano / Série': formData.anoSerie,
+            'Disciplina': formData.disciplina,
+            'BNCC / Competências': formData.bnccCompetencias,
+            'Público-alvo': formData.publicoAlvo,
+            'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
+            'Quantidade de Aulas': formData.quantidadeAulas,
+            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
+            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
+            'Cronograma': formData.cronograma
+          }),
+          ...(activity?.id === 'quiz-interativo' && {
+            'Número de Questões': formData.numberOfQuestions,
+            'Tema': formData.theme,
+            'Disciplina': formData.subject,
+            'Ano de Escolaridade': formData.schoolYear,
+            'Nível de Dificuldade': formData.difficultyLevel,
+            'Formato': formData.questionModel,
+            'Formato do Quiz': formData.format, // Save new field
+            'Tempo por Questão': formData.timePerQuestion, // Save new field
+          }),
+          ...(activity?.id === 'quadro-interativo' && {
+            'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
+          }),
+          ...(activity?.id === 'mapa-mental' && { // Salvar campos específicos do Mapa Mental
+            'Título': formData.title,
+            'Descrição': formData.description,
+            'Tema Central': formData.centralTheme,
+            'Categorias Principais': formData.mainCategories,
+            'Objetivo Geral': formData.generalObjective,
+            'Critérios de Avaliação': formData.evaluationCriteria,
+          }),
+        }
+      };
+
+      if (onUpdateActivity) {
+        await onUpdateActivity(updatedActivity);
+      }
+
+      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updatedActivity));
+      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields));
+
+      if (activity.categoryId === 'sequencia-didatica' || activity.type === 'sequencia-didatica') {
+        const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
+        localStorage.setItem(constructedKey, JSON.stringify(updatedActivity));
+        console.log('📚 Sequência Didática salva como atividade construída');
+      }
+
+      console.log('💾 Dados salvos no localStorage:', {
+        activity: updatedActivity,
+        fields: customFields
+      });
+
+      toast({
+        title: "Atividade atualizada",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar atividade:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações.",
+      });
+    }
+  };
+
+  // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
     if (!activity || !isOpen) return;
 
@@ -2464,11 +2439,6 @@ const EditActivityModal = ({
                                   />
                                 </div>
                               </div>
-                            )}
-
-                            {/* Campos Específicos Flash Cards */}
-                            {activityType === 'flash-cards' && (
-                              <FlashCardsEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
                             {/* Campos Específicos Quiz Interativo */}
