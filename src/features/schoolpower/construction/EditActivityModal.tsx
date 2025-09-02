@@ -2787,7 +2787,18 @@ const EditActivityModal = ({
                       </div>
                     ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
                       <FlashCardsPreview 
-                        content={flashCardsContent || generatedContent}
+                        content={flashCardsContent || generatedContent || {
+                          title: formData.title || 'Flash Cards',
+                          description: formData.description || 'Descrição dos flash cards',
+                          theme: formData.theme || 'Tema',
+                          topicos: formData.topicos || 'Tópicos',
+                          numberOfFlashcards: parseInt(formData.numberOfFlashcards) || 0,
+                          context: formData.context || 'Contexto',
+                          cards: [],
+                          totalCards: 0,
+                          isGeneratedByAI: false,
+                          isFallback: true
+                        }}
                         isLoading={isGeneratingFlashCards}
                       />
                     ) : (

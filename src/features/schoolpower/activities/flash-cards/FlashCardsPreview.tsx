@@ -190,6 +190,18 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     return false;
   };
 
+  // Função para obter cards válidos ou fallback
+  const getValidCards = () => {
+    if (!content) return [];
+    
+    if (content.cards && Array.isArray(content.cards) && content.cards.length > 0) {
+      return content.cards.filter(card => card && card.question && card.answer);
+    }
+    
+    // Retornar array vazio se não há cards válidos
+    return [];
+  };
+
   // Função para verificar se deve mostrar loading
   const shouldShowLoading = () => {
     return isLoading || (!hasValidContent() && contentLoaded);
@@ -261,8 +273,10 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  const currentCard = content.cards[currentCardIndex];
-  const progress = ((currentCardIndex + (showAnswer ? 1 : 0)) / content.totalCards) * 100;
+  const validCards = getValidCards();
+  const currentCard = validCards.length > 0 ? validCards[currentCardIndex] : null;
+  const totalCards = validCards.length || content?.totalCards || 0;
+  const progress = totalCards > 0 ? ((currentCardIndex + (showAnswer ? 1 : 0)) / totalCards) * 100 : 0;
   const completedCards = responses.length;
 
   const handleCardClick = () => {
@@ -276,6 +290,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   };
 
   const handleResponse = (responseType: 'almost' | 'correct') => {
+    if (!currentCard) return;
+    
     const newResponse: CardResponse = {
       cardId: currentCard.id,
       response: responseType
@@ -283,7 +299,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
 
     setResponses(prev => [...prev, newResponse]);
 
-    if (currentCardIndex < content.cards.length - 1) {
+    const validCards = getValidCards();
+    if (currentCardIndex < validCards.length - 1) {
       // Próximo card
       setCurrentCardIndex(prev => prev + 1);
       setShowAnswer(false);
@@ -319,7 +336,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
             Parabéns! 🎉
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Você completou todos os {content.totalCards} flash cards!
+            Você completou todos os {totalCards} flash cards!
           </p>
         </motion.div>
 
@@ -367,7 +384,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
             {content.theme}
           </Badge>
           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-            {currentCardIndex + 1} de {content.totalCards}
+            {currentCardIndex + 1} de {totalCards}
           </Badge>
           {content.isGeneratedByAI && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -396,48 +413,62 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
           className="w-full max-w-2xl"
           layout
         >
-          <Card 
-            className={`min-h-[300px] cursor-pointer transition-all duration-300 ${
-              !showAnswer ? 'hover:shadow-lg border-2 border-[#FF6B00]/20 hover:border-[#FF6B00]/40' : ''
-            }`}
-            onClick={handleCardClick}
-          >
-            <CardContent className="p-8 h-full flex flex-col items-center justify-center text-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={showAnswer ? 'answer' : 'question'}
-                  initial={{ rotateY: isFlipped ? -90 : 0, opacity: isFlipped ? 0 : 1 }}
-                  animate={{ rotateY: 0, opacity: 1 }}
-                  exit={{ rotateY: 90, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full"
-                >
-                  {!showAnswer ? (
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                        Pergunta {currentCard.id}
-                      </h4>
-                      <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
-                        {currentCard.question}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-6">
-                        Clique no card para ver a resposta
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <h4 className="text-lg font-semibold text-green-600 mb-4">
-                        Resposta
-                      </h4>
-                      <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
-                        {currentCard.answer}
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </CardContent>
-          </Card>
+          {currentCard ? (
+            <Card 
+              className={`min-h-[300px] cursor-pointer transition-all duration-300 ${
+                !showAnswer ? 'hover:shadow-lg border-2 border-[#FF6B00]/20 hover:border-[#FF6B00]/40' : ''
+              }`}
+              onClick={handleCardClick}
+            >
+              <CardContent className="p-8 h-full flex flex-col items-center justify-center text-center">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={showAnswer ? 'answer' : 'question'}
+                    initial={{ rotateY: isFlipped ? -90 : 0, opacity: isFlipped ? 0 : 1 }}
+                    animate={{ rotateY: 0, opacity: 1 }}
+                    exit={{ rotateY: 90, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full"
+                  >
+                    {!showAnswer ? (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                          Pergunta {currentCard.id}
+                        </h4>
+                        <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {currentCard.question}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-6">
+                          Clique no card para ver a resposta
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <h4 className="text-lg font-semibold text-green-600 mb-4">
+                          Resposta
+                        </h4>
+                        <p className="text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {currentCard.answer}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="min-h-[300px] flex items-center justify-center">
+              <CardContent className="p-8 text-center">
+                <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                  Nenhum flash card disponível
+                </h4>
+                <p className="text-gray-500 dark:text-gray-500">
+                  Configure os campos e gere os flash cards primeiro
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
 
         {/* Botões de Resposta */}
@@ -470,7 +501,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       {/* Contador de Cards Completados */}
       <div className="mt-4 text-center">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {completedCards} de {content.totalCards} cards completados
+          {completedCards} de {totalCards} cards completados
         </p>
       </div>
     </div>
