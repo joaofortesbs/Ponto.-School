@@ -219,3 +219,6 @@ args = "npm run dev"
 [auth]
 pageEnabled = false
 buttonEnabled = false
+
+[agent]
+expertMode = true
