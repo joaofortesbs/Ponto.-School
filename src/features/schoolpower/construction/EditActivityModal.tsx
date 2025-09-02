@@ -632,7 +632,7 @@ const EditActivityModal = ({
   const handleGenerateFlashCards = async () => {
     console.log('🃏 Iniciando geração de Flash Cards...');
     console.log('📋 Dados do formulário:', formData);
-    
+
     try {
       setIsGeneratingFlashCards(true);
       setGenerationError(null);
@@ -703,65 +703,80 @@ const EditActivityModal = ({
         isFallback: false
       };
 
-      // Múltiplo armazenamento para garantir sincronização
-      const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
-      const storageData = {
-        success: true,
-        data: finalContent
-      };
+      // Salvar em múltiplas chaves para garantir acesso
+        const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
+        const genericFlashCardsKey = 'constructed_flash-cards_flash-cards';
 
-      // Salvar em múltiplas chaves para garantir compatibilidade
-      localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
-      localStorage.setItem('constructed_flash-cards_flash-cards', JSON.stringify(storageData));
-      
-      // Também salvar no storage genérico
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      constructedActivities[activity?.id || 'flash-cards'] = {
-        generatedContent: finalContent,
-        timestamp: new Date().toISOString(),
-        activityType: 'flash-cards'
-      };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        // Salvar dados em múltiplas localizações
+        localStorage.setItem(flashCardsStorageKey, JSON.stringify({
+          success: true,
+          data: finalContent
+        }));
+        localStorage.setItem(genericFlashCardsKey, JSON.stringify({
+          success: true,
+          data: finalContent
+        }));
 
-      console.log('💾 Flash Cards salvos em múltiplas chaves:', {
-        flashCardsStorageKey,
-        genericKey: 'constructed_flash-cards_flash-cards',
-        constructedActivities: 'constructedActivities'
-      });
+        // Salvar também em constructedActivities
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[`flash-cards_${Date.now()}`] = {
+          activityType: 'flash-cards',
+          generatedContent: finalContent,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-      // Sincronização de estados com delay para garantir persistência
-      setFlashCardsContent(finalContent);
-      setGeneratedContent(finalContent);
-      setIsContentLoaded(true);
+        console.log('💾 Flash Cards salvo em múltiplas localizações:', {
+          specificKey: flashCardsStorageKey,
+          genericKey: genericFlashCardsKey,
+          data: finalContent
+        });
 
-      // Disparar múltiplos eventos para garantir sincronização
-      setTimeout(() => {
+        // Aplicar dados IMEDIATAMENTE no estado local
+        setFlashCardsContent(finalContent);
+        setGeneratedContent(finalContent);
+        setIsContentLoaded(true);
+
+        console.log('🎯 Estado local atualizado com dados:', finalContent);
+
+        // Disparar eventos síncronos E assíncronos
         const eventDetail = { 
           activityId: activity?.id, 
           data: finalContent,
           source: 'EditActivityModal-Generate',
           timestamp: new Date().toISOString()
         };
-        
-        // Disparar múltiplos eventos
+
+        // Disparar eventos IMEDIATAMENTE
         window.dispatchEvent(new CustomEvent('flash-cards-auto-build', { detail: eventDetail }));
         window.dispatchEvent(new CustomEvent('activity-auto-built', { detail: eventDetail }));
         window.dispatchEvent(new CustomEvent('flash-cards-generated', { detail: eventDetail }));
-        
-        console.log('📡 Múltiplos eventos disparados para Flash Cards:', eventDetail);
-      }, 100);
+        window.dispatchEvent(new CustomEvent('flash-cards-content-ready', { detail: eventDetail }));
 
-      // Forçar atualização do localStorage após um delay
-      setTimeout(() => {
-        console.log('🔄 Verificação final do localStorage:', {
-          flashCardsKey: !!localStorage.getItem(flashCardsStorageKey),
-          genericKey: !!localStorage.getItem('constructed_flash-cards_flash-cards'),
-          constructedActivities: !!localStorage.getItem('constructedActivities')
-        });
-      }, 500);
+        console.log('📡 Eventos imediatos disparados para Flash Cards:', eventDetail);
 
-      // Atualizar aba para mostrar preview
-      setActiveTab('preview');
+        // Também disparar com delay como backup
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('flash-cards-auto-build', { detail: eventDetail }));
+          window.dispatchEvent(new CustomEvent('activity-auto-built', { detail: eventDetail }));
+          window.dispatchEvent(new CustomEvent('flash-cards-generated', { detail: eventDetail }));
+          window.dispatchEvent(new CustomEvent('flash-cards-content-ready', { detail: eventDetail }));
+          console.log('📡 Eventos de backup disparados para Flash Cards');
+        }, 100);
+
+        // Forçar renderização do preview
+        setTimeout(() => {
+          console.log('🔄 Verificação final - dados disponíveis:', {
+            flashCardsKey: !!localStorage.getItem(flashCardsStorageKey),
+            genericKey: !!localStorage.getItem(genericFlashCardsKey),
+            constructedActivities: !!localStorage.getItem('constructedActivities'),
+            stateContent: !!flashCardsContent,
+            generatedContent: !!generatedContent
+          });
+        }, 200);
+
+        // Atualizar aba para mostrar preview
+        setActiveTab('preview');
 
       toast({
         title: "Flash Cards Gerados com Sucesso!",
@@ -1162,18 +1177,18 @@ const EditActivityModal = ({
           if (contentToLoad && contentToLoad.cards && contentToLoad.cards.length > 0) {
             console.log(`✅ Conteúdo específico do Flash Cards encontrado para: ${activity.id}`, contentToLoad);
             console.log(`🃏 ${contentToLoad.cards.length} cards carregados`);
-            
+
             // CRITICAL: Garantir sincronização imediata
             const flashContentClone = JSON.parse(JSON.stringify(contentToLoad));
             setFlashCardsContent(flashContentClone);
             setGeneratedContent(flashContentClone);
             setIsContentLoaded(true);
-            
+
             // Force update para garantir que o Preview receba os dados
             setTimeout(() => {
               setFlashCardsContent(prev => prev ? {...prev} : flashContentClone);
             }, 50);
-            
+
           } else {
             console.warn('⚠️ Conteúdo do Flash Cards encontrado mas sem cards válidos');
             contentToLoad = null;
@@ -1370,7 +1385,8 @@ const EditActivityModal = ({
 
               console.log('🎯 Dados finais do Quiz Interativo processados:', enrichedFormData);
 
-            } else if (activity?.id === 'quadro-interativo') {
+            }
+            else if (activity?.id === 'quadro-interativo') {
               console.log('🖼️ Processando dados específicos de Quadro Interativo');
 
               // Importar o processador específico do Quadro Interativo
