@@ -45,21 +45,31 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   const [responses, setResponses] = useState<CardResponse[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // Logging otimizado para debug
+  // Debugging detalhado sempre ativo
   useEffect(() => {
+    console.log('🔍 FlashCardsPreview - Estado atual:', {
+      hasContent: !!content,
+      hasCards: !!(content?.cards),
+      cardsLength: content?.cards?.length || 0,
+      hasInternalData: !!internalFlashCardsData,
+      internalCardsLength: internalFlashCardsData?.cards?.length || 0,
+      isLoading,
+      hasCheckedStorage,
+      isContentLoaded
+    });
+    
     if (content && content.cards) {
       const validCardsCount = Array.isArray(content.cards) ? 
         content.cards.filter(card => card && card.question && card.answer).length : 0;
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🃏 FlashCards:', {
-          totalCards: content.cards?.length || 0,
-          validCards: validCardsCount,
-          isGeneratedByAI: content.isGeneratedByAI
-        });
-      }
+      console.log('🃏 FlashCards detalhes:', {
+        totalCards: content.cards?.length || 0,
+        validCards: validCardsCount,
+        isGeneratedByAI: content.isGeneratedByAI,
+        cardsSample: content.cards?.slice(0, 2)
+      });
     }
-  }, [content]);
+  }, [content, internalFlashCardsData, isLoading, hasCheckedStorage, isContentLoaded]);
 
   // Reset quando o conteúdo mudar
   useEffect(() => {
@@ -72,6 +82,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
 
   // Estado interno para gerenciar dados dos Flash Cards
   const [internalFlashCardsData, setInternalFlashCardsData] = useState<any>(null);
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
+  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
 
   // Listener para dados construídos automaticamente via AutoBuild
   useEffect(() => {
@@ -118,9 +130,54 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   // Monitorar localStorage para Flash Cards construídos
   useEffect(() => {
     const checkForBuiltFlashCards = () => {
-      // Verificar chave específica do Flash Cards
-      const flashCardsStorageKey = `constructed_flash-cards_${window.location.pathname.split('/').pop()}`;
-      const flashCardsData = localStorage.getItem(flashCardsStorageKey);
+      console.log('🔍 Verificando localStorage para Flash Cards...');
+      
+      // Múltiplas tentativas de encontrar dados
+      const possibleKeys = [
+        `constructed_flash-cards_flash-cards`,
+        'constructed_flash-cards_',
+        'activity_flash-cards',
+        'constructedActivities'
+      ];
+      
+      let foundData = null;
+      let usedKey = '';
+      
+      for (const key of possibleKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const parsed = JSON.parse(data);
+            if (key === 'constructedActivities') {
+              // Procurar atividade de flash cards no objeto
+              const flashCardsActivity = Object.values(parsed).find((activity: any) => 
+                activity.activityType === 'flash-cards' && activity.generatedContent?.cards
+              );
+              if (flashCardsActivity) {
+                foundData = (flashCardsActivity as any).generatedContent;
+                usedKey = key;
+                break;
+              }
+            } else if (parsed.data || parsed.cards) {
+              foundData = parsed.data || parsed;
+              usedKey = key;
+              break;
+            }
+          } catch (error) {
+            console.warn(`❌ Erro ao parsear ${key}:`, error);
+          }
+        }
+      }
+      
+      console.log('🔍 Resultado da busca:', { foundData: !!foundData, usedKey });
+      
+      if (foundData && foundData.cards && foundData.cards.length > 0) {
+        console.log('✅ Flash Cards encontrados:', foundData);
+        setInternalFlashCardsData(foundData);
+        setIsContentLoaded(true);
+      }
+      
+      setHasCheckedStorage(true);
       
       if (flashCardsData) {
         try {
@@ -216,9 +273,16 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     return [];
   };
 
-  // Função para verificar se deve mostrar loading
+  // Função melhorada para verificar se deve mostrar loading
   const shouldShowLoading = () => {
-    return isLoading || (!getValidCards().length && !internalFlashCardsData && contentLoaded);
+    // Se explicitamente está carregando, mostrar loading
+    if (isLoading) return true;
+    
+    // Se ainda não verificou storage e não tem dados, mostrar loading
+    if (!hasCheckedStorage && !internalFlashCardsData && !getValidCards().length) return true;
+    
+    // Se verificou storage, tem dados carregados mas não tem cards válidos, NÃO mostrar loading
+    return false;
   };
 
   // Se está carregando, mostrar loading
@@ -227,7 +291,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       <div className="flex flex-col items-center justify-center h-full p-6">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
         <p className="text-gray-600 dark:text-gray-400">
-          {isLoading ? 'Gerando Flash Cards...' : 'Carregando Flash Cards...'}
+          {isLoading ? 'Gerando Flash Cards...' : 'Verificando dados...'}
         </p>
       </div>
     );

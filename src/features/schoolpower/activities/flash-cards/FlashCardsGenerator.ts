@@ -30,25 +30,38 @@ export class FlashCardsGenerator {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+    // Usar a API key centralizada do sistema
+    this.apiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+    console.log('🔑 FlashCardsGenerator inicializado com API key:', this.apiKey ? 'Presente' : 'Ausente');
   }
 
   async generateFlashCardsContent(data: FlashCardData): Promise<FlashCardsResponse> {
+    console.log('🚀 Iniciando geração de Flash Cards:', data);
+    
     try {
       // Validar entrada
       if (!data.theme || !data.topicos) {
-        throw new Error('Tema e tópicos são obrigatórios para gerar flash cards');
+        console.warn('⚠️ Dados incompletos, criando fallback');
+        return this.createFallbackContent(data);
       }
 
       if (!this.apiKey) {
+        console.warn('⚠️ API key não encontrada, usando fallback');
         return this.createFallbackContent(data);
       }
+
+      console.log('✅ Dados validados, prosseguindo com API Gemini');
 
       // Preparar prompt para o Gemini
       const prompt = this.buildPrompt(data);
 
-      // Fazer chamada para a API Gemini
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`, {
+      // Fazer chamada para a API Gemini com timeout
+      console.log('📡 Enviando requisição para API Gemini...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,8 +78,11 @@ export class FlashCardsGenerator {
             topP: 0.95,
             maxOutputTokens: 4096,
           }
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);

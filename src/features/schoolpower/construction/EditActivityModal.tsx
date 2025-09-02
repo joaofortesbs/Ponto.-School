@@ -630,6 +630,9 @@ const EditActivityModal = ({
 
   // Função para gerar conteúdo do Flash Cards
   const handleGenerateFlashCards = async () => {
+    console.log('🃏 Iniciando geração de Flash Cards...');
+    console.log('📋 Dados do formulário:', formData);
+    
     try {
       setIsGeneratingFlashCards(true);
       setGenerationError(null);
@@ -644,6 +647,8 @@ const EditActivityModal = ({
       if (!formData.topicos?.trim()) {
         throw new Error('Tópicos são obrigatórios');
       }
+
+      console.log('✅ Validação passou, preparando dados para API...');
 
       // Importar o gerador do Flash Cards
       const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
@@ -698,31 +703,62 @@ const EditActivityModal = ({
         isFallback: false
       };
 
-      // Salvar no localStorage com chave consistente
+      // Múltiplo armazenamento para garantir sincronização
       const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
       const storageData = {
         success: true,
         data: finalContent
       };
 
+      // Salvar em múltiplas chaves para garantir compatibilidade
       localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+      localStorage.setItem('constructed_flash-cards_flash-cards', JSON.stringify(storageData));
+      
+      // Também salvar no storage genérico
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity?.id || 'flash-cards'] = {
+        generatedContent: finalContent,
+        timestamp: new Date().toISOString(),
+        activityType: 'flash-cards'
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-      // Sincronização de estados
+      console.log('💾 Flash Cards salvos em múltiplas chaves:', {
+        flashCardsStorageKey,
+        genericKey: 'constructed_flash-cards_flash-cards',
+        constructedActivities: 'constructedActivities'
+      });
+
+      // Sincronização de estados com delay para garantir persistência
       setFlashCardsContent(finalContent);
       setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
-      // Disparar evento customizado para notificar o Preview
+      // Disparar múltiplos eventos para garantir sincronização
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
-          detail: { 
-            activityId: activity?.id, 
-            data: finalContent,
-            source: 'EditActivityModal-Generate'
-          }
-        }));
-        console.log('📡 Evento flash-cards-auto-build disparado com dados:', finalContent);
+        const eventDetail = { 
+          activityId: activity?.id, 
+          data: finalContent,
+          source: 'EditActivityModal-Generate',
+          timestamp: new Date().toISOString()
+        };
+        
+        // Disparar múltiplos eventos
+        window.dispatchEvent(new CustomEvent('flash-cards-auto-build', { detail: eventDetail }));
+        window.dispatchEvent(new CustomEvent('activity-auto-built', { detail: eventDetail }));
+        window.dispatchEvent(new CustomEvent('flash-cards-generated', { detail: eventDetail }));
+        
+        console.log('📡 Múltiplos eventos disparados para Flash Cards:', eventDetail);
       }, 100);
+
+      // Forçar atualização do localStorage após um delay
+      setTimeout(() => {
+        console.log('🔄 Verificação final do localStorage:', {
+          flashCardsKey: !!localStorage.getItem(flashCardsStorageKey),
+          genericKey: !!localStorage.getItem('constructed_flash-cards_flash-cards'),
+          constructedActivities: !!localStorage.getItem('constructedActivities')
+        });
+      }, 500);
 
       // Atualizar aba para mostrar preview
       setActiveTab('preview');
