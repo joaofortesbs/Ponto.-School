@@ -1973,6 +1973,43 @@ const EditActivityModal = ({
     }));
   };
 
+  // Função para salvar as alterações da atividade
+  const handleSave = useCallback(() => {
+    if (!activity) return;
+
+    console.log('💾 Salvando alterações da atividade:', activity.id);
+    
+    // Preparar dados para salvar
+    const updatedActivity = {
+      ...activity,
+      ...formData,
+      lastModified: new Date().toISOString(),
+      modifiedFields: Object.keys(formData).filter(key => 
+        formData[key as keyof ActivityFormData] !== ''
+      )
+    };
+
+    // Chamar função de callback se fornecida
+    if (onSave) {
+      onSave(updatedActivity);
+    }
+
+    // Salvar no localStorage também
+    const storageKey = `activity_${activity.id}`;
+    localStorage.setItem(storageKey, JSON.stringify(updatedActivity));
+
+    // Salvar formData específico
+    const formDataKey = `form_data_${activity.id}`;
+    localStorage.setItem(formDataKey, JSON.stringify(formData));
+
+    toast({
+      title: "Alterações Salvas!",
+      description: "As alterações da atividade foram salvas com sucesso.",
+    });
+
+    console.log('✅ Atividade salva:', updatedActivity);
+  }, [activity, formData, onSave, toast]);
+
   // Função para construir a atividade
   const handleBuildActivity = useCallback(async () => {
     if (!activity || isBuilding) return;
