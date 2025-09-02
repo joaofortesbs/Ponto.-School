@@ -1,0 +1,342 @@
+[plugin:vite:react-swc] × the name `Card` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+    ·          ──┬─
+    ·            ╰── previous definition of `Card` here
+  4 │ import { Badge } from "@/components/ui/badge";
+  5 │ 
+  6 │ interface FlashCardsPreviewProps {
+  7 │   data: {
+  8 │     titulo?: string;
+  9 │     descricao?: string;
+ 10 │     tema?: string;
+ 11 │     topicos?: string;
+ 12 │     numeroFlashcards?: string;
+ 13 │     contexto?: string;
+ 14 │   };
+ 15 │ }
+ 16 │ 
+ 17 │ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ data }) => {
+ 18 │   return (
+ 19 │     <Card className="w-full">
+ 20 │       <CardHeader>
+ 21 │         <CardTitle className="text-lg font-semibold">
+ 22 │           {data.titulo || 'Flash Cards'}
+ 23 │         </CardTitle>
+ 24 │       </CardHeader>
+ 25 │       <CardContent className="space-y-3">
+ 26 │         {data.descricao && (
+ 27 │           <div>
+ 28 │             <span className="text-sm font-medium text-gray-600">Descrição:</span>
+ 29 │             <p className="text-sm mt-1">{data.descricao}</p>
+ 30 │           </div>
+ 31 │         )}
+ 32 │         
+ 33 │         {data.tema && (
+ 34 │           <div>
+ 35 │             <span className="text-sm font-medium text-gray-600">Tema:</span>
+ 36 │             <Badge variant="outline" className="ml-2">{data.tema}</Badge>
+ 37 │           </div>
+ 38 │         )}
+ 39 │         
+ 40 │         {data.topicos && (
+ 41 │           <div>
+ 42 │             <span className="text-sm font-medium text-gray-600">Tópicos:</span>
+ 43 │             <p className="text-sm mt-1">{data.topicos}</p>
+ 44 │           </div>
+ 45 │         )}
+ 46 │         
+ 47 │         {data.numeroFlashcards && (
+ 48 │           <div>
+ 49 │             <span className="text-sm font-medium text-gray-600">Número de flashcards:</span>
+ 50 │             <Badge variant="secondary" className="ml-2">{data.numeroFlashcards}</Badge>
+ 51 │           </div>
+ 52 │         )}
+ 53 │         
+ 54 │         {data.contexto && (
+ 55 │           <div>
+ 56 │             <span className="text-sm font-medium text-gray-600">Contexto:</span>
+ 57 │             <p className="text-sm mt-1">{data.contexto}</p>
+ 58 │           </div>
+ 59 │         )}
+ 60 │       </CardContent>
+ 61 │     </Card>
+ 62 │   );
+ 63 │ };
+ 64 │ import React, { useState, useEffect } from 'react';
+ 65 │ import { motion, AnimatePresence } from 'framer-motion';
+ 66 │ import { RotateCcw, CheckCircle2, AlertCircle, TrendingUp, Trophy } from 'lucide-react';
+ 67 │ import { Button } from '@/components/ui/button';
+ 68 │ import { Progress } from '@/components/ui/progress';
+ 69 │ import { Card, CardContent } from '@/components/ui/card';
+    ·          ──┬─
+    ·            ╰── `Card` redefined here
+ 70 │ import { Badge } from '@/components/ui/badge';
+ 71 │ 
+ 72 │ interface FlashCard {
+    ╰────
+
+  × the name `CardContent` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+    ·                ─────┬─────
+    ·                     ╰── previous definition of `CardContent` here
+  4 │ import { Badge } from "@/components/ui/badge";
+  5 │ 
+  6 │ interface FlashCardsPreviewProps {
+  7 │   data: {
+  8 │     titulo?: string;
+  9 │     descricao?: string;
+ 10 │     tema?: string;
+ 11 │     topicos?: string;
+ 12 │     numeroFlashcards?: string;
+ 13 │     contexto?: string;
+ 14 │   };
+ 15 │ }
+ 16 │ 
+ 17 │ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ data }) => {
+ 18 │   return (
+ 19 │     <Card className="w-full">
+ 20 │       <CardHeader>
+ 21 │         <CardTitle className="text-lg font-semibold">
+ 22 │           {data.titulo || 'Flash Cards'}
+ 23 │         </CardTitle>
+ 24 │       </CardHeader>
+ 25 │       <CardContent className="space-y-3">
+ 26 │         {data.descricao && (
+ 27 │           <div>
+ 28 │             <span className="text-sm font-medium text-gray-600">Descrição:</span>
+ 29 │             <p className="text-sm mt-1">{data.descricao}</p>
+ 30 │           </div>
+ 31 │         )}
+ 32 │         
+ 33 │         {data.tema && (
+ 34 │           <div>
+ 35 │             <span className="text-sm font-medium text-gray-600">Tema:</span>
+ 36 │             <Badge variant="outline" className="ml-2">{data.tema}</Badge>
+ 37 │           </div>
+ 38 │         )}
+ 39 │         
+ 40 │         {data.topicos && (
+ 41 │           <div>
+ 42 │             <span className="text-sm font-medium text-gray-600">Tópicos:</span>
+ 43 │             <p className="text-sm mt-1">{data.topicos}</p>
+ 44 │           </div>
+ 45 │         )}
+ 46 │         
+ 47 │         {data.numeroFlashcards && (
+ 48 │           <div>
+ 49 │             <span className="text-sm font-medium text-gray-600">Número de flashcards:</span>
+ 50 │             <Badge variant="secondary" className="ml-2">{data.numeroFlashcards}</Badge>
+ 51 │           </div>
+ 52 │         )}
+ 53 │         
+ 54 │         {data.contexto && (
+ 55 │           <div>
+ 56 │             <span className="text-sm font-medium text-gray-600">Contexto:</span>
+ 57 │             <p className="text-sm mt-1">{data.contexto}</p>
+ 58 │           </div>
+ 59 │         )}
+ 60 │       </CardContent>
+ 61 │     </Card>
+ 62 │   );
+ 63 │ };
+ 64 │ import React, { useState, useEffect } from 'react';
+ 65 │ import { motion, AnimatePresence } from 'framer-motion';
+ 66 │ import { RotateCcw, CheckCircle2, AlertCircle, TrendingUp, Trophy } from 'lucide-react';
+ 67 │ import { Button } from '@/components/ui/button';
+ 68 │ import { Progress } from '@/components/ui/progress';
+ 69 │ import { Card, CardContent } from '@/components/ui/card';
+    ·                ─────┬─────
+    ·                     ╰── `CardContent` redefined here
+ 70 │ import { Badge } from '@/components/ui/badge';
+ 71 │ 
+ 72 │ interface FlashCard {
+    ╰────
+
+  × the name `Badge` is defined multiple times
+    ╭─[/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:1:1]
+  1 │ 
+  2 │ import React from 'react';
+  3 │ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  4 │ import { Badge } from "@/components/ui/badge";
+    ·          ──┬──
+    ·            ╰── previous definition of `Badge` here
+  5 │ 
+  6 │ interface FlashCardsPreviewProps {
+  7 │   data: {
+  8 │     titulo?: string;
+  9 │     descricao?: string;
+ 10 │     tema?: string;
+ 11 │     topicos?: string;
+ 12 │     numeroFlashcards?: string;
+ 13 │     contexto?: string;
+ 14 │   };
+ 15 │ }
+ 16 │ 
+ 17 │ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ data }) => {
+ 18 │   return (
+ 19 │     <Card className="w-full">
+ 20 │       <CardHeader>
+ 21 │         <CardTitle className="text-lg font-semibold">
+ 22 │           {data.titulo || 'Flash Cards'}
+ 23 │         </CardTitle>
+ 24 │       </CardHeader>
+ 25 │       <CardContent className="space-y-3">
+ 26 │         {data.descricao && (
+ 27 │           <div>
+ 28 │             <span className="text-sm font-medium text-gray-600">Descrição:</span>
+ 29 │             <p className="text-sm mt-1">{data.descricao}</p>
+ 30 │           </div>
+ 31 │         )}
+ 32 │         
+ 33 │         {data.tema && (
+ 34 │           <div>
+ 35 │             <span className="text-sm font-medium text-gray-600">Tema:</span>
+ 36 │             <Badge variant="outline" className="ml-2">{data.tema}</Badge>
+ 37 │           </div>
+ 38 │         )}
+ 39 │         
+ 40 │         {data.topicos && (
+ 41 │           <div>
+ 42 │             <span className="text-sm font-medium text-gray-600">Tópicos:</span>
+ 43 │             <p className="text-sm mt-1">{data.topicos}</p>
+ 44 │           </div>
+ 45 │         )}
+ 46 │         
+ 47 │         {data.numeroFlashcards && (
+ 48 │           <div>
+ 49 │             <span className="text-sm font-medium text-gray-600">Número de flashcards:</span>
+ 50 │             <Badge variant="secondary" className="ml-2">{data.numeroFlashcards}</Badge>
+ 51 │           </div>
+ 52 │         )}
+ 53 │         
+ 54 │         {data.contexto && (
+ 55 │           <div>
+ 56 │             <span className="text-sm font-medium text-gray-600">Contexto:</span>
+ 57 │             <p className="text-sm mt-1">{data.contexto}</p>
+ 58 │           </div>
+ 59 │         )}
+ 60 │       </CardContent>
+ 61 │     </Card>
+ 62 │   );
+ 63 │ };
+ 64 │ import React, { useState, useEffect } from 'react';
+ 65 │ import { motion, AnimatePresence } from 'framer-motion';
+ 66 │ import { RotateCcw, CheckCircle2, AlertCircle, TrendingUp, Trophy } from 'lucide-react';
+ 67 │ import { Button } from '@/components/ui/button';
+ 68 │ import { Progress } from '@/components/ui/progress';
+ 69 │ import { Card, CardContent } from '@/components/ui/card';
+ 70 │ import { Badge } from '@/components/ui/badge';
+    ·          ──┬──
+    ·            ╰── `Badge` redefined here
+ 71 │ 
+ 72 │ interface FlashCard {
+ 73 │   id: number;
+    ╰────
+
+  × the name `FlashCardsPreview` is defined multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:14:1]
+  14 │   };
+  15 │ }
+  16 │ 
+  17 │ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ data }) => {
+     ·              ────────┬────────
+     ·                      ╰── previous definition of `FlashCardsPreview` here
+  18 │   return (
+  19 │     <Card className="w-full">
+  20 │       <CardHeader>
+  21 │         <CardTitle className="text-lg font-semibold">
+  22 │           {data.titulo || 'Flash Cards'}
+  23 │         </CardTitle>
+  24 │       </CardHeader>
+  25 │       <CardContent className="space-y-3">
+  26 │         {data.descricao && (
+  27 │           <div>
+  28 │             <span className="text-sm font-medium text-gray-600">Descrição:</span>
+  29 │             <p className="text-sm mt-1">{data.descricao}</p>
+  30 │           </div>
+  31 │         )}
+  32 │         
+  33 │         {data.tema && (
+  34 │           <div>
+  35 │             <span className="text-sm font-medium text-gray-600">Tema:</span>
+  36 │             <Badge variant="outline" className="ml-2">{data.tema}</Badge>
+  37 │           </div>
+  38 │         )}
+  39 │         
+  40 │         {data.topicos && (
+  41 │           <div>
+  42 │             <span className="text-sm font-medium text-gray-600">Tópicos:</span>
+  43 │             <p className="text-sm mt-1">{data.topicos}</p>
+  44 │           </div>
+  45 │         )}
+  46 │         
+  47 │         {data.numeroFlashcards && (
+  48 │           <div>
+  49 │             <span className="text-sm font-medium text-gray-600">Número de flashcards:</span>
+  50 │             <Badge variant="secondary" className="ml-2">{data.numeroFlashcards}</Badge>
+  51 │           </div>
+  52 │         )}
+  53 │         
+  54 │         {data.contexto && (
+  55 │           <div>
+  56 │             <span className="text-sm font-medium text-gray-600">Contexto:</span>
+  57 │             <p className="text-sm mt-1">{data.contexto}</p>
+  58 │           </div>
+  59 │         )}
+  60 │       </CardContent>
+  61 │     </Card>
+  62 │   );
+  63 │ };
+  64 │ import React, { useState, useEffect } from 'react';
+  65 │ import { motion, AnimatePresence } from 'framer-motion';
+  66 │ import { RotateCcw, CheckCircle2, AlertCircle, TrendingUp, Trophy } from 'lucide-react';
+  67 │ import { Button } from '@/components/ui/button';
+  68 │ import { Progress } from '@/components/ui/progress';
+  69 │ import { Card, CardContent } from '@/components/ui/card';
+  70 │ import { Badge } from '@/components/ui/badge';
+  71 │ 
+  72 │ interface FlashCard {
+  73 │   id: number;
+  74 │   question: string;
+  75 │   answer: string;
+  76 │   category?: string;
+  77 │ }
+  78 │ 
+  79 │ interface FlashCardsContent {
+  80 │   title: string;
+  81 │   description: string;
+  82 │   theme: string;
+  83 │   cards: FlashCard[];
+  84 │   totalCards: number;
+  85 │   isGeneratedByAI?: boolean;
+  86 │ }
+  87 │ 
+  88 │ interface FlashCardsPreviewProps {
+  89 │   content: FlashCardsContent;
+  90 │   isLoading?: boolean;
+  91 │ }
+  92 │ 
+  93 │ interface CardResponse {
+  94 │   cardId: number;
+  95 │   response: 'almost' | 'correct';
+  96 │ }
+  97 │ 
+  98 │ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoading = false }) => {
+     ·       ────────┬────────
+     ·               ╰── `FlashCardsPreview` redefined here
+  99 │   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+ 100 │   const [isFlipped, setIsFlipped] = useState(false);
+ 101 │   const [showAnswer, setShowAnswer] = useState(false);
+     ╰────
+/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:1:1
+1  |  
+2  |  import React from 'react';
+   |  ^
+3  |  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+4  |  import { Badge } from "@/components/ui/badge";
