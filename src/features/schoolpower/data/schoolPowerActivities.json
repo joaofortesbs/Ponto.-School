@@ -82,5 +82,6 @@
   { "id": "apresentacao-slides", "name": "Crie apresentações inteiras com Slides", "description": "Construa apresentações completas em formato de Slides.", "tags": ["Apresentações", "Slides"], "apiType": "gemini", "enabled": true },
   { "id": "quadro-interativo", "name": "Quadro de Aula Interativo", "description": "Cria um formato de 1 à 3 quadros interativos para apresentar na aula, pegando anotações e mostrando atividades", "tags": ["IA", "interação"], "apiType": "gemini", "enabled": true },
   { "id": "gerar-questoes", "name": "Gerador de questões personalizadas completas e super didaticas", "description": "Gere questões que testam perfeitamente o seu público, de uma maneira engajada e única.", "tags": ["Questões", "Gerador"], "apiType": "gemini", "enabled": true },
-  { "id": "quiz-interativo", "name": "Quiz Interativo", "description": "Gere um Quiz Interativo para testar a capacidade de seus alunos de uma maneira divertida e gamificada!!!!!!!", "tags": ["Quiz", "Perguntas"], "apiType": "gemini", "enabled": true }
+  { "id": "quiz-interativo", "name": "Quiz Interativo", "description": "Gere um Quiz Interativo para testar a capacidade de seus alunos de uma maneira divertida e gamificada!!!!!!!", "tags": ["Quiz", "Perguntas"], "apiType": "gemini", "enabled": true },
+  { "id": "flash-cards", "name": "Flash Cards", "description": "Gere Flash Cards gamificados que vão testar o seu conhecimento!", "tags": ["Cards", "Perguntas"], "apiType": "gemini", "enabled": true }
 ]
