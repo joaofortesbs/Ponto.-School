@@ -45,7 +45,12 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   const [responses, setResponses] = useState<CardResponse[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // Debugging detalhado sempre ativo
+  // Estado interno para gerenciar dados dos Flash Cards - MOVIDO PARA O INÍCIO
+  const [internalFlashCardsData, setInternalFlashCardsData] = useState<any>(null);
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
+  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
+
+  // Debugging detalhado sempre ativo - AGORA APÓS A DECLARAÇÃO DOS ESTADOS
   useEffect(() => {
     console.log('🔍 FlashCardsPreview - Estado atual:', {
       hasContent: !!content,
@@ -79,11 +84,6 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setResponses([]);
     setIsCompleted(false);
   }, [content]);
-
-  // Estado interno para gerenciar dados dos Flash Cards
-  const [internalFlashCardsData, setInternalFlashCardsData] = useState<any>(null);
-  const [isContentLoaded, setIsContentLoaded] = useState(false);
-  const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
 
   // Listener para dados construídos automaticamente via AutoBuild
   useEffect(() => {
@@ -179,22 +179,6 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       
       setHasCheckedStorage(true);
       
-      if (flashCardsData) {
-        try {
-          const parsedData = JSON.parse(flashCardsData);
-          const flashContent = parsedData.data || parsedData;
-          
-          if (flashContent.cards && flashContent.cards.length > 0) {
-            console.log('🎯 Flash Cards encontrado no localStorage:', flashContent);
-            setInternalFlashCardsData(flashContent);
-            setIsContentLoaded(true);
-            return;
-          }
-        } catch (error) {
-          console.error('❌ Erro ao parsear dados do localStorage:', error);
-        }
-      }
-      
       // Verificar storage genérico como fallback
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const flashCardsActivity = Object.values(constructedActivities).find((activity: any) => 
@@ -203,9 +187,9 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         activity.generatedContent.cards
       );
 
-      if (flashCardsActivity && flashCardsActivity.generatedContent) {
-        console.log('🔄 Flash Cards encontrado no storage genérico:', flashCardsActivity.generatedContent);
-        setInternalFlashCardsData(flashCardsActivity.generatedContent);
+      if (flashCardsActivity && (flashCardsActivity as any).generatedContent) {
+        console.log('🔄 Flash Cards encontrado no storage genérico:', (flashCardsActivity as any).generatedContent);
+        setInternalFlashCardsData((flashCardsActivity as any).generatedContent);
         setIsContentLoaded(true);
       }
     };
@@ -235,6 +219,24 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
+  // Função para obter dados efetivos (priorizar dados internos)
+  const getEffectiveContent = () => {
+    return internalFlashCardsData || content;
+  };
+
+  // Função para obter cards válidos
+  const getValidCards = () => {
+    const effectiveContent = getEffectiveContent();
+    
+    if (!effectiveContent) return [];
+    
+    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
+      return effectiveContent.cards.filter(card => card && card.question && card.answer);
+    }
+    
+    return [];
+  };
+
   // Validação usando dados efetivos
   const hasValidContent = () => {
     const effectiveContent = getEffectiveContent();
@@ -253,24 +255,6 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     }
     
     return false;
-  };
-
-  // Função para obter dados efetivos (priorizar dados internos)
-  const getEffectiveContent = () => {
-    return internalFlashCardsData || content;
-  };
-
-  // Função para obter cards válidos
-  const getValidCards = () => {
-    const effectiveContent = getEffectiveContent();
-    
-    if (!effectiveContent) return [];
-    
-    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
-      return effectiveContent.cards.filter(card => card && card.question && card.answer);
-    }
-    
-    return [];
   };
 
   // Função melhorada para verificar se deve mostrar loading
