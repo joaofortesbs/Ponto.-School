@@ -12,24 +12,24 @@ export interface ActivityFormData {
   materials: string;
   instructions: string;
   evaluation: string;
-  timeLimit?: string;
-  context?: string;
-  textType?: string;
-  textGenre?: string;
-  textLength?: string;
-  associatedQuestions?: string;
-  competencies?: string;
-  readingStrategies?: string;
-  visualResources?: string;
-  practicalActivities?: string;
-  wordsIncluded?: string;
-  gridFormat?: string;
-  providedHints?: string;
-  vocabularyContext?: string;
-  language?: string;
-  associatedExercises?: string;
-  knowledgeArea?: string;
-  complexityLevel?: string;
+  timeLimit: string;
+  context: string;
+  textType: string;
+  textGenre: string;
+  textLength: string;
+  associatedQuestions: string;
+  competencies: string;
+  readingStrategies: string;
+  visualResources: string;
+  practicalActivities: string;
+  wordsIncluded: string;
+  gridFormat: string;
+  providedHints: string;
+  vocabularyContext: string;
+  language: string;
+  associatedExercises: string;
+  knowledgeArea: string;
+  complexityLevel: string;
   // Campos específicos para Plano de Aula
   tema?: string;
   anoSerie?: string;
@@ -52,6 +52,19 @@ export interface ActivityFormData {
   quantidadeDiagnosticos?: string;
   quantidadeAvaliacoes?: string;
   cronograma?: string;
+  // Campos específicos para quadro-interativo
+  quadroInterativoCampoEspecifico?: string;
+  // Campos específicos para quiz-interativo
+  format?: string;
+  timePerQuestion?: string;
+  // Campos específicos para mapa-mental
+  centralTheme?: string;
+  mainCategories?: string;
+  generalObjective?: string;
+  evaluationCriteria?: string;
+  // Campos específicos para flash-cards
+  topicos?: string;
+  numberOfFlashcards?: string;
 }
 
 export interface GeneratedActivity {

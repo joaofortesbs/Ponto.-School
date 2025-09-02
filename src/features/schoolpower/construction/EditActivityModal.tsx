@@ -73,6 +73,64 @@ const DefaultEditActivity = ({formData, onFieldChange }: {formData: ActivityForm
   </>
 );
 
+// Componente específico para Flash Cards
+const FlashCardsEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+  <div className="space-y-4">
+    <div>
+      <Label htmlFor="theme">Tema *</Label>
+      <Input
+        id="theme"
+        value={formData.theme || ''}
+        onChange={(e) => onFieldChange('theme', e.target.value)}
+        placeholder="Ex: Funções do 1º Grau, Conceitos básicos de matemática"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="topicos">Tópicos *</Label>
+      <Textarea
+        id="topicos"
+        value={formData.topicos || ''}
+        onChange={(e) => onFieldChange('topicos', e.target.value)}
+        placeholder="Liste os tópicos principais que serão abordados nos flash cards..."
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="numberOfFlashcards">Número de flashcards *</Label>
+      <Input
+        id="numberOfFlashcards"
+        type="number"
+        value={formData.numberOfFlashcards || ''}
+        onChange={(e) => onFieldChange('numberOfFlashcards', e.target.value)}
+        placeholder="Ex: 10, 15, 20"
+        min="1"
+        max="50"
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+
+    <div>
+      <Label htmlFor="context">Contexto *</Label>
+      <Textarea
+        id="context"
+        value={formData.context || ''}
+        onChange={(e) => onFieldChange('context', e.target.value)}
+        placeholder="Descreva o contexto de aplicação dos flash cards..."
+        rows={3}
+        required
+        className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+      />
+    </div>
+  </div>
+);
+
 // Componente específico para Quiz Interativo
 const QuizInterativoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
   <div className="space-y-4">
@@ -485,6 +543,9 @@ const EditActivityModal = ({
     mainCategories: '',
     generalObjective: '',
     evaluationCriteria: '',
+    // Campos específicos para flash-cards
+    topicos: '',
+    numberOfFlashcards: '',
   });
 
   // Estado para conteúdo gerado
@@ -527,7 +588,14 @@ const EditActivityModal = ({
   const isFormValidForBuild = useCallback(() => {
     const activityType = activity?.id || '';
 
-    if (activityType === 'lista-exercicios') {
+    if (activityType === 'flash-cards') {
+      return formData.title.trim() &&
+             formData.description.trim() &&
+             formData.theme.trim() &&
+             formData.topicos?.trim() &&
+             formData.numberOfFlashcards?.trim() &&
+             formData.context?.trim();
+    } else if (activityType === 'lista-exercicios') {
       return formData.title.trim() &&
              formData.description.trim() &&
              formData.subject.trim() &&
@@ -1408,6 +1476,18 @@ const EditActivityModal = ({
 
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
+            } else if (activity?.id === 'flash-cards') { // Processamento para Flash Cards
+              console.log('📝 Processando dados específicos de Flash Cards');
+              enrichedFormData = {
+                ...formData,
+                title: activityData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
+                description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
+                theme: customFields['Tema'] || autoFormData.theme || '',
+                topicos: customFields['Tópicos'] || autoFormData.topicos || '',
+                numberOfFlashcards: customFields['Número de flashcards'] || autoFormData.numberOfFlashcards || '10',
+                context: customFields['Contexto'] || autoFormData.context || '',
+              };
+              console.log('📝 Dados do Flash Cards processados:', enrichedFormData);
             } else if (activity?.id === 'mapa-mental') { // Processamento para Mapa Mental
               console.log('🧠 Processando dados específicos de Mapa Mental');
               enrichedFormData = {
@@ -2038,6 +2118,14 @@ const EditActivityModal = ({
           ...(activity?.id === 'quadro-interativo' && {
             'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
           }),
+          ...(activity?.id === 'flash-cards' && { // Salvar campos específicos do Flash Cards
+            'Título': formData.title,
+            'Descrição': formData.description,
+            'Tema': formData.theme,
+            'Tópicos': formData.topicos,
+            'Número de flashcards': formData.numberOfFlashcards,
+            'Contexto': formData.context,
+          }),
           ...(activity?.id === 'mapa-mental' && { // Salvar campos específicos do Mapa Mental
             'Título': formData.title,
             'Descrição': formData.description,
@@ -2439,6 +2527,11 @@ const EditActivityModal = ({
                                   />
                                 </div>
                               </div>
+                            )}
+
+                            {/* Campos Específicos Flash Cards */}
+                            {activityType === 'flash-cards' && (
+                              <FlashCardsEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
                             {/* Campos Específicos Quiz Interativo */}
