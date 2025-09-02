@@ -589,7 +589,7 @@ export async function generatePersonalizedPlan(
         });
 
         // Garantir que customFields seja um objeto válido
-        const finalCustomFields = activityData.customFields || customFields || {};
+        let finalCustomFields = activityData.customFields || customFields || {};
 
         // Para Sequência Didática, garantir que todos os valores sejam strings
         if (activityData.id === 'sequencia-didatica') {
