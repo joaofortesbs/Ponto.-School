@@ -70,22 +70,98 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setIsCompleted(false);
   }, [content]);
 
-  // Listener para dados construídos automaticamente
+  // Listener para dados construídos automaticamente via AutoBuild
   useEffect(() => {
     const handleFlashCardsUpdate = (event: CustomEvent) => {
-      console.log('📡 FlashCardsPreview recebeu evento de atualização:', event.detail);
+      console.log('📡 FlashCardsPreview recebeu evento de atualização via AutoBuild:', event.detail);
+      
       if (event.detail && event.detail.data) {
-        // Forçar atualização do componente
-        console.log('🔄 Forçando atualização do Preview com novos dados');
+        const updatedContent = event.detail.data;
+        console.log('🔄 Aplicando novos dados do AutoBuild:', updatedContent);
+        
+        // Forçar atualização imediata do estado
+        setCurrentCardIndex(0);
+        setIsFlipped(false);
+        setShowAnswer(false);
+        setResponses([]);
+        setIsCompleted(false);
+        
+        // Aguardar um ciclo de renderização antes de aplicar os novos dados
+        setTimeout(() => {
+          // Criar deep clone para garantir reatividade
+          const newContent = JSON.parse(JSON.stringify(updatedContent));
+          console.log('✅ Aplicando conteúdo clonado:', newContent);
+          
+          // Se o conteúdo for do tipo esperado para FlashCards, aplicar diretamente
+          if (newContent.cards && Array.isArray(newContent.cards) && newContent.cards.length > 0) {
+            // Force update do prop content através de callback se disponível
+            if (typeof content === 'object' && content !== null) {
+              Object.assign(content, newContent);
+            }
+            
+            // Disparar re-render forçado
+            setIsContentLoaded(false);
+            setTimeout(() => setIsContentLoaded(true), 50);
+          }
+        }, 100);
       }
     };
 
+    // Escutar tanto o evento específico quanto o genérico
     window.addEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
+    window.addEventListener('activity-auto-built', handleFlashCardsUpdate as EventListener);
     
     return () => {
       window.removeEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
+      window.removeEventListener('activity-auto-built', handleFlashCardsUpdate as EventListener);
     };
-  }, []);
+  }, [content]);
+
+  // Monitorar mudanças no localStorage para Flash Cards construídos
+  useEffect(() => {
+    const checkForBuiltFlashCards = () => {
+      const storageKey = 'constructedActivities';
+      const constructedActivities = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      
+      // Verificar se existe uma atividade flash-cards construída
+      const flashCardsActivity = Object.values(constructedActivities).find((activity: any) => 
+        activity.activityType === 'flash-cards' && 
+        activity.generatedContent && 
+        activity.generatedContent.cards
+      );
+
+      if (flashCardsActivity && flashCardsActivity.generatedContent) {
+        console.log('🎯 Flash Cards encontrado no storage construído:', flashCardsActivity.generatedContent);
+        
+        const flashContent = flashCardsActivity.generatedContent;
+        if (flashContent.cards && flashContent.cards.length > 0) {
+          console.log('✅ Aplicando Flash Cards do storage construído');
+          
+          // Aplicar o conteúdo encontrado
+          if (typeof content === 'object' && content !== null) {
+            Object.assign(content, flashContent);
+          }
+          
+          setIsContentLoaded(true);
+        }
+      }
+    };
+
+    // Verificar imediatamente
+    checkForBuiltFlashCards();
+    
+    // Verificar periodicamente por mudanças
+    const interval = setInterval(checkForBuiltFlashCards, 1000);
+    
+    return () => clearInterval(interval);
+  }, [content]);
+
+  // Estado para forçar re-renderização
+  const [contentLoaded, setContentLoaded] = useState(false);
+  
+  useEffect(() => {
+    setContentLoaded(!!content);
+  }, [content]);
 
   if (isLoading) {
     return (
@@ -96,24 +172,73 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  // Validação otimizada
-  const hasValidContent = content && 
-    content.cards && 
-    Array.isArray(content.cards) && 
-    content.cards.length > 0 && 
-    content.cards.some(card => card && card.question && card.answer);
+  // Validação otimizada com multiple checks
+  const hasValidContent = () => {
+    if (!content) return false;
+    
+    // Verificar se tem cards válidos
+    if (content.cards && Array.isArray(content.cards) && content.cards.length > 0) {
+      const validCards = content.cards.some(card => card && card.question && card.answer);
+      if (validCards) return true;
+    }
+    
+    // Verificar se tem dados mínimos para fallback
+    if (content.title || content.theme || content.topicos) {
+      return true;
+    }
+    
+    return false;
+  };
 
-  // Se não há conteúdo válido mas está carregando, mostrar loading
-  if (isLoading) {
+  // Função para verificar se deve mostrar loading
+  const shouldShowLoading = () => {
+    return isLoading || (!hasValidContent() && contentLoaded);
+  };
+
+  // Se está carregando, mostrar loading
+  if (shouldShowLoading()) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-400">Gerando Flash Cards...</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          {isLoading ? 'Gerando Flash Cards...' : 'Carregando Flash Cards...'}
+        </p>
       </div>
     );
   }
 
-  if (!hasValidContent) {
+  // Se não há conteúdo válido após verificar todas as fontes
+  if (!hasValidContent()) {
+    // Última tentativa: verificar localStorage diretamente
+    const storageData = localStorage.getItem('constructedActivities');
+    if (storageData) {
+      try {
+        const parsed = JSON.parse(storageData);
+        const flashCardsData = Object.values(parsed).find((item: any) => 
+          item?.activityType === 'flash-cards' && item?.generatedContent?.cards
+        );
+        
+        if (flashCardsData) {
+          console.log('🔄 Dados encontrados no localStorage, forçando atualização...');
+          // Forçar aplicação dos dados encontrados
+          setTimeout(() => {
+            if (typeof content === 'object' && content !== null) {
+              Object.assign(content, (flashCardsData as any).generatedContent);
+              setContentLoaded(prev => !prev); // Toggle para forçar re-render
+            }
+          }, 100);
+          
+          return (
+            <div className="flex flex-col items-center justify-center h-full p-6">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Sincronizando Flash Cards...</p>
+            </div>
+          );
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar localStorage:', error);
+      }
+    }
     
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
@@ -121,9 +246,17 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
           Aguardando Flash Cards...
         </h4>
-        <p className="text-gray-500 dark:text-gray-500">
+        <p className="text-gray-500 dark:text-gray-500 mb-4">
           Configure os campos e gere os flash cards para começar
         </p>
+        <div className="text-xs text-gray-400">
+          Dados disponíveis: {JSON.stringify({
+            hasContent: !!content,
+            hasCards: !!(content?.cards),
+            cardsLength: content?.cards?.length || 0,
+            contentKeys: content ? Object.keys(content) : []
+          })}
+        </div>
       </div>
     );
   }

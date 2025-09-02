@@ -1918,6 +1918,25 @@ const EditActivityModal = ({
         const flashCardsData = result.data || result;
         setFlashCardsContent(flashCardsData);
 
+        // Salvar na chave específica para Flash Cards
+        const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
+        localStorage.setItem(flashCardsStorageKey, JSON.stringify({
+          success: true,
+          data: flashCardsData
+        }));
+
+        // Disparar evento customizado para notificar o Preview
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
+            detail: { 
+              activityId: activity?.id, 
+              data: flashCardsData,
+              source: 'EditActivityModal-BuildActivity'
+            }
+          }));
+          console.log('📡 Evento de auto-build disparado para Flash Cards');
+        }, 100);
+
         console.log('💾 Flash Cards processado e salvo:', flashCardsData);
       }
 
