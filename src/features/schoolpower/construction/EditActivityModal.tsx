@@ -747,54 +747,52 @@ const EditActivityModal = ({
         dataStructure: finalContent
       });
 
-      // APLICAR DADOS IMEDIATAMENTE nos estados locais
+      // USAR A MESMA LÓGICA DO "CONSTRUIR TODAS" - salvar como activity_${id}
+      const saveKey = `activity_${activity.id}`;
+      const savedContent = {
+        ...finalContent,
+        generatedAt: new Date().toISOString(),
+        activityId: activity.id,
+        activityType: 'flash-cards',
+        formData: formData
+      };
+
+      localStorage.setItem(saveKey, JSON.stringify(savedContent));
+
+      // Salvar em constructedActivities IGUAL ao sistema que funciona  
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity.id] = {
+        isBuilt: true,
+        builtAt: new Date().toISOString(),
+        formData: formData,
+        generatedContent: finalContent
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+      // Marcar atividade como construída (igual ao sistema que funciona)
+      activity.isBuilt = true;
+      activity.builtAt = new Date().toISOString();
+      activity.progress = 100;
+      activity.status = 'completed';
+
+      // APLICAR DADOS IMEDIATAMENTE nos estados locais  
       setFlashCardsContent(finalContent);
       setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
-      // Forçar atualização com deep clone para garantir reatividade
-      setTimeout(() => {
-        const clonedContent = JSON.parse(JSON.stringify(finalContent));
-        setFlashCardsContent(clonedContent);
-        setGeneratedContent(clonedContent);
-        console.log('🔄 Estados atualizados com clone:', clonedContent);
-      }, 50);
-
-      console.log('🎯 Estados locais atualizados:', {
-        flashCardsContent: !!flashCardsContent,
-        generatedContent: !!generatedContent,
-        isContentLoaded,
-        finalContent
+      console.log('🎯 Flash Cards salvo IGUAL sistema Construir Todas:', {
+        saveKey,
+        constructedActivities: !!localStorage.getItem('constructedActivities'),
+        finalContent,
+        activityStatus: activity.status
       });
 
-      // Disparar eventos para notificar outros componentes
-      const eventDetail = { 
-        activityId: activity?.id || 'flash-cards', 
-        data: finalContent,
-        source: 'EditActivityModal-Generate',
-        timestamp: new Date().toISOString()
-      };
-
-      const eventTypes = [
-        'flash-cards-auto-build',
-        'activity-auto-built', 
-        'flash-cards-generated',
-        'flash-cards-content-ready'
-      ];
-
-      // Disparar eventos IMEDIATAMENTE
-      eventTypes.forEach(eventType => {
-        window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
-      });
-
-      console.log('📡 Eventos imediatos disparados:', eventTypes);
-
-      // Backup de eventos com delay
+      // Disparar evento IGUAL ao sistema "Construir Todas" que funciona
       setTimeout(() => {
-        eventTypes.forEach(eventType => {
-          window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
-        });
-        console.log('📡 Eventos de backup disparados');
+        window.dispatchEvent(new CustomEvent('activity-built', {
+          detail: { activityId: activity.id }
+        }));
+        console.log('📡 Evento activity-built disparado (igual sistema que funciona)');
       }, 100);
 
       // Verificação final após delay

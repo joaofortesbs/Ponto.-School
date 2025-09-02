@@ -441,9 +441,10 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   if (!hasValidContent() && currentValidCards.length === 0) {
     console.log('🔍 Não há conteúdo válido, fazendo busca final no localStorage...');
     
-    // Busca final no localStorage
+    // Busca final no localStorage - INCLUIR FORMATO DO SISTEMA QUE FUNCIONA
     const storageKeys = [
       'constructedActivities',
+      `activity_${activity?.id}`, // CHAVE CRÍTICA DO SISTEMA QUE FUNCIONA
       'constructed_flash-cards_flash-cards',
       `constructed_flash-cards_${activity?.id || 'flash-cards'}`,
       'flash-cards-data'
