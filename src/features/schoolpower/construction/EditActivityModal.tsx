@@ -2899,6 +2899,7 @@ const EditActivityModal = ({
                           isFallback: true
                         }}
                         isLoading={isGeneratingFlashCards}
+                        activity={activity}
                       />
                     ) : (
                       <ActivityPreview

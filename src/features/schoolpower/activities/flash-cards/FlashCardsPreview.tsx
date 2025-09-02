@@ -31,6 +31,7 @@ interface FlashCardsContent {
 interface FlashCardsPreviewProps {
   content: FlashCardsContent;
   isLoading?: boolean;
+  activity?: { id: string; [key: string]: any };
 }
 
 interface CardResponse {
@@ -38,7 +39,7 @@ interface CardResponse {
   response: 'almost' | 'correct';
 }
 
-const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoading = false }) => {
+const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoading = false, activity }) => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -432,12 +433,12 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  // Verificação final de conteúdo válido
-  const validCards = getValidCards();
-  const effectiveContent = getEffectiveContent();
+  // Verificação final de conteúdo válido usando dados já obtidos
+  const currentValidCards = getValidCards();
+  const currentEffectiveContent = getEffectiveContent();
   
   // Se não há conteúdo válido após verificar todas as fontes
-  if (!hasValidContent() && validCards.length === 0) {
+  if (!hasValidContent() && currentValidCards.length === 0) {
     console.log('🔍 Não há conteúdo válido, fazendo busca final no localStorage...');
     
     // Busca final no localStorage
@@ -518,8 +519,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         </p>
         <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded mt-4">
           <strong>Debug - Cards Disponíveis:</strong><br/>
-          Total Valid Cards: {validCards.length}<br/>
-          Has Effective Content: {!!effectiveContent ? 'Sim' : 'Não'}<br/>
+          Total Valid Cards: {currentValidCards.length}<br/>
+          Has Effective Content: {!!currentEffectiveContent ? 'Sim' : 'Não'}<br/>
           Internal Data: {!!internalFlashCardsData ? 'Sim' : 'Não'}<br/>
           Content Prop: {!!content ? 'Sim' : 'Não'}<br/>
           Has Checked Storage: {hasCheckedStorage ? 'Sim' : 'Não'}
@@ -528,8 +529,9 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  const effectiveContent = getEffectiveContent();
-  const validCards = getValidCards();
+  // Usar os dados já obtidos para evitar redeclaração
+  const effectiveContent = currentEffectiveContent;
+  const validCards = currentValidCards;
   const currentCard = validCards.length > 0 ? validCards[currentCardIndex] : null;
   const totalCards = validCards.length || effectiveContent?.totalCards || 0;
   const progress = totalCards > 0 ? ((currentCardIndex + (showAnswer ? 1 : 0)) / totalCards) * 100 : 0;
