@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { flashCardsMonitor } from './FlashCardsMonitor';
 
 interface FlashCard {
   id: number;
@@ -122,22 +123,42 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setIsCompleted(false);
   }, [content]);
 
-  // Listener para dados construídos automaticamente
+  // Sistema de monitoramento global integrado
   useEffect(() => {
-    const handleFlashCardsUpdate = (event: CustomEvent) => {
-      console.log('📡 FlashCardsPreview recebeu evento de atualização:', event.detail);
-      if (event.detail && event.detail.data) {
-        // Forçar atualização do componente
-        console.log('🔄 Forçando atualização do Preview com novos dados');
+    // Extrair ID da atividade das props ou contexto
+    const activityId = window.location.pathname.includes('school-power') ? 
+      'flash-cards' : 'flash-cards'; // Fallback para flash-cards
+
+    console.log('🔧 Configurando monitoramento para Flash Cards:', activityId);
+
+    // Verificar dados existentes primeiro
+    const existingData = flashCardsMonitor.checkSavedData(activityId);
+    if (existingData && (!content || !content.cards || content.cards.length === 0)) {
+      console.log('📦 Dados existentes encontrados pelo monitor:', existingData);
+      // Se o componente não tem dados mas o monitor encontrou, isso é um bug de sincronização
+      console.warn('⚠️ DETECTADO: Componente sem dados mas monitor tem dados salvos');
+    }
+
+    // Callback para receber atualizações do monitor
+    const handleMonitorUpdate = (newData: any) => {
+      console.log('📡 FlashCardsPreview: Recebendo atualização do monitor:', newData);
+      
+      if (newData && newData.cards && Array.isArray(newData.cards) && newData.cards.length > 0) {
+        console.log('🔄 Aplicando dados do monitor no Preview');
+        // Os dados serão aplicados através da prop content que será atualizada pelo componente pai
+      } else {
+        console.warn('⚠️ Monitor enviou dados inválidos:', newData);
       }
     };
 
-    window.addEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
-    
+    // Registrar listener no monitor
+    flashCardsMonitor.registerListener(activityId, handleMonitorUpdate);
+
+    // Cleanup
     return () => {
-      window.removeEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
+      flashCardsMonitor.unregisterListener(activityId, handleMonitorUpdate);
     };
-  }, []);
+  }, [content]);
 
   if (isLoading) {
     return (
