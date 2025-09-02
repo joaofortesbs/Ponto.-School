@@ -625,249 +625,7 @@ const EditActivityModal = ({
     }
   }, [formData, activity?.id]);
 
-  // --- Geração de Conteúdo ---
-
-  // Função placeholder para gerar conteúdo genérico (usada por atividades não específicas)
-  const generateActivityContent = async (type: string, data: any) => {
-    console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-
-    if (type === 'quiz-interativo') {
-      console.log('🎯 Gerando Quiz Interativo com API Gemini:', data);
-
-      try {
-        // Importar o gerador do Quiz Interativo
-        const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
-
-        // Preparar dados para o gerador com validação completa
-        const quizData = {
-          subject: data.subject?.trim() || 'Matemática',
-          schoolYear: data.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
-          theme: data.theme?.trim() || data.title?.trim() || 'Tema Geral',
-          objectives: data.objectives?.trim() || data.description?.trim() || 'Testar conhecimentos do tema proposto',
-          difficultyLevel: data.difficultyLevel?.trim() || 'Médio',
-          format: data.questionModel?.trim() || data.format?.trim() || 'Múltipla Escolha',
-          numberOfQuestions: data.numberOfQuestions?.trim() || '10',
-          timePerQuestion: data.timePerQuestion?.trim() || '60',
-          instructions: data.instructions?.trim() || 'Responda às questões no tempo determinado.',
-          evaluation: data.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
-        };
-
-        console.log('🎯 Dados preparados para geração do Quiz:', quizData);
-        console.log('📝 Estado atual do formData:', {
-          title: data.title,
-          description: data.description,
-          subject: data.subject,
-          theme: data.theme,
-          schoolYear: data.schoolYear,
-          numberOfQuestions: data.numberOfQuestions,
-          difficultyLevel: data.difficultyLevel,
-          questionModel: data.questionModel,
-          timePerQuestion: data.timePerQuestion
-        });
-
-        // Criar instância do gerador e gerar conteúdo
-        const generator = new QuizInterativoGenerator();
-        const generatedContent = await generator.generateQuizContent(quizData);
-
-        const finalData = {
-          ...data,
-          ...generatedContent,
-          title: data.title || generatedContent.title,
-          description: data.description || generatedContent.description,
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          generatedByAI: true
-        };
-
-        console.log('✅ Quiz Interativo gerado com sucesso:', finalData);
-
-        return {
-          success: true,
-          data: finalData
-        };
-
-      } catch (error) {
-        console.error('❌ Erro ao gerar Quiz Interativo via API:', error);
-
-        // Fallback para dados simulados se a API falhar
-        const fallbackData = {
-          ...data,
-          title: data.title || "Quiz Interativo (Modo Demonstração)",
-          description: data.description || "Quiz gerado em modo demonstração",
-          questions: [
-            {
-              id: 1,
-              question: `Qual é o conceito principal de ${data.theme || 'matemática'}?`,
-              type: 'multipla-escolha',
-              options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
-              correctAnswer: 'Opção A',
-              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-            }
-          ],
-          timePerQuestion: parseInt(data.timePerQuestion) || 60,
-          totalQuestions: parseInt(data.numberOfQuestions) || 1,
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          generatedByAI: false,
-          isFallback: true
-        };
-
-        return {
-          success: true,
-          data: fallbackData
-        };
-      }
-    } else if (type === 'quadro-interativo') {
-      console.log('🖼️ Preparando dados para Quadro Interativo:', data);
-
-      // Para Quadro Interativo, apenas salvar os dados preparados
-      // A geração de conteúdo será feita diretamente no Preview
-      const finalData = {
-        ...data,
-        isBuilt: true,
-        builtAt: new Date().toISOString()
-      };
-
-      // Salvar dados básicos
-      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
-      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
-        success: true,
-        data: finalData
-      }));
-
-      console.log('💾 Dados do Quadro Interativo preparados:', finalData);
-
-      return {
-        success: true,
-        data: finalData
-      };
-    } else if (type === 'plano-aula') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Plano de Aula Exemplo",
-          description: data.description || "Descrição do plano de aula...",
-          content: {
-            objetivos: data.objectives,
-            materiais: data.materials,
-            avaliacao: data.evaluation,
-            tempoEstimado: data.timeLimit,
-            componenteCurricular: data.subject,
-            tema: data.theme,
-            anoSerie: data.schoolYear,
-            habilidadesBNCC: data.competencies,
-            perfilTurma: data.context,
-            tipoAula: data.difficultyLevel,
-            observacoes: data.evaluation,
-          },
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'lista-exercicios') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Lista de Exercícios Exemplo",
-          description: data.description || "Descrição da lista de exercícios...",
-          questoes: [
-            { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
-            { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
-          ],
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'sequencia-didatica') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.tituloTemaAssunto || "Sequência Didática Exemplo",
-          description: data.objetivosAprendizagem || "Descrição da sequência didática...",
-          content: {
-            tituloTemaAssunto: data.tituloTemaAssunto,
-            anoSerie: data.anoSerie,
-            disciplina: data.disciplina,
-            bnccCompetencias: data.bnccCompetencias,
-            publicoAlvo: data.publicoAlvo,
-            objetivosAprendizagem: data.objetivosAprendizagem,
-            quantidadeAulas: data.quantidadeAulas,
-            quantidadeDiagnosticos: data.quantidadeDiagnosticos,
-            quantidadeAvaliacoes: data.quantidadeAvaliacoes,
-            cronograma: data.cronograma,
-            subject: data.subject,
-            theme: data.theme,
-            schoolYear: data.schoolYear,
-            competencies: data.competencies,
-            objectives: data.objectives,
-            materials: data.materials,
-            instructions: data.instructions,
-            evaluation: data.evaluation,
-            timeLimit: data.timeLimit,
-            context: data.context,
-          },
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'quadro-interativo') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Quadro Interativo Exemplo",
-          description: data.description || "Descrição do quadro interativo...",
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'mapa-mental') { // Nova lógica para Mapa Mental
-      console.log('🧠 Gerando conteúdo para Mapa Mental:', data);
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || `Mapa Mental: ${data.centralTheme || 'Tema Principal'}`,
-          description: data.description || data.generalObjective || 'Um mapa mental detalhado sobre o tema.',
-          centralTheme: data.centralTheme,
-          mainCategories: data.mainCategories,
-          generalObjective: data.generalObjective,
-          evaluationCriteria: data.evaluationCriteria,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'flash-cards') { // Lógica para Flash Cards
-      console.log('🃏 Gerando conteúdo para Flash Cards:', data);
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || `Flash Cards: ${data.theme || 'Tema Principal'}`,
-          description: data.description || data.topicos || 'Flash cards sobre o tema.',
-          theme: data.theme,
-          topicos: data.topicos,
-          numberOfFlashcards: parseInt(data.numberOfFlashcards) || 10,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        ...data,
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true,
-      }
-    };
-  };
-
-  // --- Funções de Geração Específicas ---
+  // --- Funções de Geração Específica ---
 
   // Função para gerar conteúdo do Flash Cards
   const handleGenerateFlashCards = async () => {
@@ -1607,7 +1365,7 @@ const EditActivityModal = ({
                 ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                 ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                 ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
+                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Intermediário' && { difficultyLevel: autoFormData.difficultyLevel }),
                 ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
                 ...(autoFormData.materials && { materials: autoFormData.materials }),
                 ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
@@ -2155,6 +1913,93 @@ const EditActivityModal = ({
         setQuizInterativoContent(quizData);
 
         console.log('💾 Quiz Interativo processado e salvo:', quizData);
+      }
+
+      // Trigger específico para Flash Cards
+      if (activityType === 'flash-cards') {
+        console.log('🃏 Processamento específico para Flash Cards - Iniciando geração com Gemini');
+
+        // Para Flash Cards, precisamos gerar conteúdo real via API
+        try {
+          const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
+
+          const flashCardsData = {
+            title: formData.title?.trim() || 'Flash Cards',
+            description: formData.description?.trim() || `Flash Cards sobre ${formData.theme}`,
+            theme: formData.theme?.trim() || 'Tema Geral',
+            topicos: formData.topicos?.trim() || 'Tópicos gerais',
+            numberOfFlashcards: formData.numberOfFlashcards?.trim() || '10',
+            context: formData.context?.trim() || 'Contexto educacional geral'
+          };
+
+          console.log('🃏 Dados estruturados para geração automática:', flashCardsData);
+
+          const generator = new FlashCardsGenerator();
+          const generatedFlashContent = await generator.generateFlashCardsContent(flashCardsData);
+
+          console.log('✅ Flash Cards gerados automaticamente via Gemini:', generatedFlashContent);
+
+          // Preparar conteúdo final
+          const finalFlashContent = {
+            title: formData.title,
+            description: formData.description || generatedFlashContent.description,
+            theme: formData.theme,
+            topicos: formData.topicos,
+            numberOfFlashcards: generatedFlashContent.cards.length,
+            context: formData.context,
+            cards: generatedFlashContent.cards,
+            totalCards: generatedFlashContent.cards.length,
+            generatedAt: new Date().toISOString(),
+            isGeneratedByAI: true,
+            isFallback: false
+          };
+
+          // Salvar com chave consistente
+          const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
+          localStorage.setItem(flashCardsStorageKey, JSON.stringify({
+            success: true,
+            data: finalFlashContent
+          }));
+
+          setFlashCardsContent(finalFlashContent);
+          setGeneratedContent(finalFlashContent);
+
+          console.log('💾 Flash Cards processado e salvo automaticamente:', finalFlashContent);
+
+        } catch (error) {
+          console.error('❌ Erro na geração automática de Flash Cards:', error);
+
+          // Usar fallback robusto
+          const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
+          const topicsList = formData.topicos ? formData.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
+
+          const fallbackContent = {
+            title: formData.title || `Flash Cards: ${formData.theme}`,
+            description: formData.description || `Flash Cards sobre ${formData.theme} (Modo Demonstração)`,
+            theme: formData.theme || 'Tema Geral',
+            topicos: formData.topicos || 'Tópicos gerais',
+            numberOfFlashcards: numberOfCards,
+            context: formData.context || 'Contexto educacional',
+            cards: Array.from({ length: numberOfCards }, (_, index) => {
+              const topic = topicsList[index % topicsList.length];
+              return {
+                id: index + 1,
+                question: `O que você sabe sobre ${topic} em ${formData.theme}?`,
+                answer: `${topic} é um conceito importante em ${formData.theme}. ${formData.context ? `No contexto: ${formData.context}` : 'É fundamental para o entendimento do tema.'}`,
+                category: formData.theme || 'Geral'
+              };
+            }),
+            totalCards: numberOfCards,
+            generatedAt: new Date().toISOString(),
+            isGeneratedByAI: false,
+            isFallback: true
+          };
+
+          setFlashCardsContent(fallbackContent);
+          setGeneratedContent(fallbackContent);
+
+          console.log('🛡️ Flash Cards fallback aplicado automaticamente:', fallbackContent);
+        }
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -2822,8 +2667,7 @@ const EditActivityModal = ({
                                     id="mainCategories"
                                     value={formData.mainCategories}
                                     onChange={(e) => handleInputChange('mainCategories', e.target.value)}
-                                    placeholder="Liste as categorias principais (uma por linha)..."
-                                    rows={3}
+                                    placeholder="Liste as principais categorias (separadas por vírgula)"
                                     required
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
@@ -2834,8 +2678,7 @@ const EditActivityModal = ({
                                     id="generalObjective"
                                     value={formData.generalObjective}
                                     onChange={(e) => handleInputChange('generalObjective', e.target.value)}
-                                    placeholder="Descreva o objetivo geral do mapa mental..."
-                                    rows={2}
+                                    placeholder="Qual o objetivo principal do mapa mental?"
                                     required
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
@@ -2846,8 +2689,7 @@ const EditActivityModal = ({
                                     id="evaluationCriteria"
                                     value={formData.evaluationCriteria}
                                     onChange={(e) => handleInputChange('evaluationCriteria', e.target.value)}
-                                    placeholder="Como o mapa mental será avaliado..."
-                                    rows={2}
+                                    placeholder="Como será avaliado o uso do mapa mental?"
                                     required
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
@@ -2858,57 +2700,53 @@ const EditActivityModal = ({
                             {/* Campos Específicos Flash Cards */}
                             {activityType === 'flash-cards' && (
                               <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="theme" className="text-sm">Tema dos Flash Cards *</Label>
+                                  <Input
+                                    id="theme"
+                                    value={formData.theme}
+                                    onChange={(e) => handleInputChange('theme', e.target.value)}
+                                    placeholder="Ex: Matemática Básica, História do Brasil"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="topicos" className="text-sm">Tópicos Principais *</Label>
+                                  <Textarea
+                                    id="topicos"
+                                    value={formData.topicos}
+                                    onChange={(e) => handleInputChange('topicos', e.target.value)}
+                                    placeholder="Liste os tópicos principais (separados por vírgula): adição, subtração, multiplicação"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <Label htmlFor="theme">Tema *</Label>
-                                    <Input
-                                      id="theme"
-                                      value={formData.theme || ''}
-                                      onChange={(e) => handleInputChange('theme', e.target.value)}
-                                      placeholder="Ex: Funções do 1º Grau"
-                                      required
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="numberOfFlashcards">Número de Flash Cards *</Label>
+                                    <Label htmlFor="numberOfFlashcards" className="text-sm">Número de Flash Cards *</Label>
                                     <Input
                                       id="numberOfFlashcards"
                                       type="number"
-                                      value={formData.numberOfFlashcards || '10'}
+                                      value={formData.numberOfFlashcards}
                                       onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
-                                      placeholder="10"
-                                      min="5"
+                                      placeholder="Ex: 10"
+                                      min="1"
                                       max="50"
                                       required
                                       className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                     />
                                   </div>
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="topicos">Tópicos Principais *</Label>
-                                  <Textarea
-                                    id="topicos"
-                                    value={formData.topicos || ''}
-                                    onChange={(e) => handleInputChange('topicos', e.target.value)}
-                                    placeholder="Ex: Conceito de função, Gráficos, Coeficientes, Resolução de problemas"
-                                    rows={2}
-                                    required
-                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="context">Contexto de Uso</Label>
-                                  <Textarea
-                                    id="context"
-                                    value={formData.context || ''}
-                                    onChange={(e) => handleInputChange('context', e.target.value)}
-                                    placeholder="Ex: Para revisão antes da prova, estudo em grupo, reforço de conceitos..."
-                                    rows={2}
-                                    className="mt-1 text-sm bg-white dark:bg-gray-808 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
+                                  <div>
+                                    <Label htmlFor="context" className="text-sm">Contexto de Uso</Label>
+                                    <Input
+                                      id="context"
+                                      value={formData.context}
+                                      onChange={(e) => handleInputChange('context', e.target.value)}
+                                      placeholder="Ex: Revisão para prova, estudo em casa"
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -2964,7 +2802,7 @@ const EditActivityModal = ({
             {activeTab === 'preview' && (
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                  {isContentLoaded && (generatedContent || quizInterativoContent || flashCardsContent) ? (
+                  {isContentLoaded && (generatedContent || flashCardsContent || quizInterativoContent) ? (
                     activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
@@ -3021,21 +2859,14 @@ const EditActivityModal = ({
                       />
                     )
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                      <FileText className="h-16 w-16 text-gray-400 mb-4" />
+                    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
                       <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                        Nenhuma atividade gerada ainda
+                        Aguardando construção...
                       </h4>
-                      <p className="text-gray-500 dark:text-gray-500 mb-4">
-                        Preencha os campos na aba "Editar" e clique em "Construir Atividade" para gerar o conteúdo
+                      <p className="text-gray-500 dark:text-gray-500">
+                        Configure os campos e clique em "Construir Todas" para gerar o conteúdo.
                       </p>
-                      <Button
-                        variant="outline"
-                        onClick={() => setActiveTab('editar')}
-                        className="text-[#FF6B00] border-[#FF6B00] hover:bg-[#FF6B00] hover:text-white"
-                      >
-                        Ir para Edição
-                      </Button>
                     </div>
                   )}
                 </div>

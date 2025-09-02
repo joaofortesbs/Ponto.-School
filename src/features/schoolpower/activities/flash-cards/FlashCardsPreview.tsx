@@ -50,6 +50,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     console.log('🃏 FlashCardsPreview recebeu content:', content);
     console.log('📊 Tipo do content:', typeof content);
     console.log('🔍 Content é null/undefined?', content === null || content === undefined);
+    console.log('⚙️ Props isLoading:', isLoading);
     
     if (content) {
       console.log('📊 Estrutura COMPLETA do content:', {
