@@ -747,51 +747,32 @@ const EditActivityModal = ({
         dataStructure: finalContent
       });
 
-      // APLICAR DADOS IMEDIATAMENTE nos estados locais com múltiplas estratégias
-      console.log('🔄 Aplicando dados nos estados locais...', finalContent);
-      
+      // APLICAR DADOS IMEDIATAMENTE nos estados locais
       setFlashCardsContent(finalContent);
       setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
-      // Forçar múltiplas atualizações com deep clone para garantir reatividade
-      const applyDataWithDelay = (delay: number, attempt: number) => {
-        setTimeout(() => {
-          const clonedContent = JSON.parse(JSON.stringify(finalContent));
-          setFlashCardsContent(clonedContent);
-          setGeneratedContent(clonedContent);
-          console.log(`🔄 Estados atualizados (tentativa ${attempt}):`, clonedContent);
-          
-          // Force re-render
-          setIsContentLoaded(prev => !prev);
-          setTimeout(() => setIsContentLoaded(true), 10);
-        }, delay);
-      };
+      // Forçar atualização com deep clone para garantir reatividade
+      setTimeout(() => {
+        const clonedContent = JSON.parse(JSON.stringify(finalContent));
+        setFlashCardsContent(clonedContent);
+        setGeneratedContent(clonedContent);
+        console.log('🔄 Estados atualizados com clone:', clonedContent);
+      }, 50);
 
-      // Aplicar em múltiplos momentos para garantir
-      applyDataWithDelay(25, 1);
-      applyDataWithDelay(75, 2);
-      applyDataWithDelay(150, 3);
-
-      console.log('🎯 Estados locais sendo atualizados:', {
+      console.log('🎯 Estados locais atualizados:', {
         flashCardsContent: !!flashCardsContent,
         generatedContent: !!generatedContent,
         isContentLoaded,
-        finalContentSample: {
-          title: finalContent.title,
-          cardsCount: finalContent.cards.length,
-          firstCard: finalContent.cards[0]
-        }
+        finalContent
       });
 
-      // Disparar eventos para notificar outros componentes com dados consolidados
+      // Disparar eventos para notificar outros componentes
       const eventDetail = { 
         activityId: activity?.id || 'flash-cards', 
         data: finalContent,
         source: 'EditActivityModal-Generate',
-        timestamp: new Date().toISOString(),
-        cards: finalContent.cards, // Garante que os cards estão disponíveis
-        success: true
+        timestamp: new Date().toISOString()
       };
 
       const eventTypes = [
@@ -801,8 +782,6 @@ const EditActivityModal = ({
         'flash-cards-content-ready'
       ];
 
-      console.log('📡 Preparando para disparar eventos com dados:', eventDetail);
-
       // Disparar eventos IMEDIATAMENTE
       eventTypes.forEach(eventType => {
         window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
@@ -810,27 +789,13 @@ const EditActivityModal = ({
 
       console.log('📡 Eventos imediatos disparados:', eventTypes);
 
-      // Backup de eventos com delay - GARANTIR que os dados estejam salvos
+      // Backup de eventos com delay
       setTimeout(() => {
-        // Re-verificar se os dados estão salvos corretamente
-        const verificationKeys = [flashCardsStorageKey, genericFlashCardsKey, fallbackKey];
-        const savedCorrectly = verificationKeys.every(key => localStorage.getItem(key));
-        
-        console.log('🔍 Verificação antes do backup:', { 
-          savedCorrectly, 
-          keys: verificationKeys.map(k => ({ key: k, exists: !!localStorage.getItem(k) })) 
-        });
-
-        // Disparar eventos de backup com dados atualizados
         eventTypes.forEach(eventType => {
-          window.dispatchEvent(new CustomEvent(eventType, { detail: { 
-            ...eventDetail, 
-            isBackup: true,
-            savedCorrectly 
-          }}));
+          window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
         });
-        console.log('📡 Eventos de backup disparados com verificação');
-      }, 150);
+        console.log('📡 Eventos de backup disparados');
+      }, 100);
 
       // Verificação final após delay
       setTimeout(() => {
