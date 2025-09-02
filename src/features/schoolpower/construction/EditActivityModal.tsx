@@ -1431,7 +1431,8 @@ const EditActivityModal = ({
 
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-            } else if (activity?.id === 'mapa-mental') {
+            }
+            else if (activity?.id === 'mapa-mental') {
               console.log('🧠 Processando dados específicos de Mapa Mental');
               enrichedFormData = {
                 ...formData,
@@ -1828,6 +1829,19 @@ const EditActivityModal = ({
             };
             console.log('🧠 Dados diretos do Mapa Mental processados:', directFormData);
           }
+          else if (activity?.id === 'flash-cards') { // Preenchimento direto para Flash Cards
+              console.log('🃏 Processando dados diretos de Flash Cards');
+              directFormData = {
+                ...formData,
+                title: activityData.title || customFields['Título'] || 'Flash Cards',
+                description: activityData.description || customFields['Descrição'] || '',
+                theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || '',
+                topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || '',
+                numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || '10',
+                context: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || '',
+              };
+              console.log('🃏 Dados diretos do Flash Cards processados:', directFormData);
+            }
           else {
             directFormData = {
               title: activityData.title || '',
