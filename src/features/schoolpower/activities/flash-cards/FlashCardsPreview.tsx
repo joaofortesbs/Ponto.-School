@@ -150,36 +150,72 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     const checkForBuiltFlashCards = () => {
       console.log('🔍 Verificando localStorage para Flash Cards...');
       
-      // Múltiplas tentativas de encontrar dados
-      const possibleKeys = [
-        `constructed_flash-cards_flash-cards`,
-        'constructed_flash-cards_',
-        'activity_flash-cards',
+      // Lista expandida de possíveis chaves
+      const specificKeys = [
+        `constructed_flash-cards_${activity?.id}`,
+        'constructed_flash-cards_flash-cards',
+        'flash-cards-data',
+        'flash-cards-data-generated',
         'constructedActivities'
       ];
+
+      // Também buscar por qualquer chave que contenha 'flash-cards'
+      const allStorageKeys = Object.keys(localStorage);
+      const flashCardKeys = allStorageKeys.filter(key => 
+        key.includes('flash-cards') || key.includes('flash_cards')
+      );
+      
+      const allKeys = [...new Set([...specificKeys, ...flashCardKeys])];
+      
+      console.log('🔑 Chaves a verificar:', allKeys);
       
       let foundData = null;
       let usedKey = '';
       
-      for (const key of possibleKeys) {
+      for (const key of allKeys) {
         const data = localStorage.getItem(key);
         if (data) {
           try {
             const parsed = JSON.parse(data);
+            console.log(`🔍 Verificando chave ${key}:`, parsed);
+            
             if (key === 'constructedActivities') {
               // Procurar atividade de flash cards no objeto
-              const flashCardsActivity = Object.values(parsed).find((activity: any) => 
-                activity.activityType === 'flash-cards' && activity.generatedContent?.cards
+              const flashCardsActivity = Object.values(parsed).find((activityData: any) => 
+                activityData.activityType === 'flash-cards' && 
+                activityData.generatedContent?.cards &&
+                Array.isArray(activityData.generatedContent.cards) &&
+                activityData.generatedContent.cards.length > 0
               );
               if (flashCardsActivity) {
                 foundData = (flashCardsActivity as any).generatedContent;
                 usedKey = key;
+                console.log(`✅ Flash Cards encontrado em constructedActivities:`, foundData);
                 break;
               }
-            } else if (parsed.data || parsed.cards) {
-              foundData = parsed.data || parsed;
-              usedKey = key;
-              break;
+            } else {
+              // Verificar estruturas possíveis
+              let candidateData = null;
+              
+              if (parsed.data?.cards && Array.isArray(parsed.data.cards) && parsed.data.cards.length > 0) {
+                candidateData = parsed.data;
+              } else if (parsed.cards && Array.isArray(parsed.cards) && parsed.cards.length > 0) {
+                candidateData = parsed;
+              }
+              
+              if (candidateData) {
+                // Validar se os cards têm estrutura correta
+                const hasValidCards = candidateData.cards.some(card => 
+                  card && card.question && card.answer
+                );
+                
+                if (hasValidCards) {
+                  foundData = candidateData;
+                  usedKey = key;
+                  console.log(`✅ Flash Cards válidos encontrados na chave ${key}:`, foundData);
+                  break;
+                }
+              }
             }
           } catch (error) {
             console.warn(`❌ Erro ao parsear ${key}:`, error);
@@ -187,39 +223,42 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         }
       }
       
-      console.log('🔍 Resultado da busca:', { foundData: !!foundData, usedKey });
+      console.log('🔍 Resultado final da busca:', { 
+        foundData: !!foundData, 
+        usedKey, 
+        cardsCount: foundData?.cards?.length || 0 
+      });
       
       if (foundData && foundData.cards && foundData.cards.length > 0) {
-        console.log('✅ Flash Cards encontrados:', foundData);
+        console.log('✅ Aplicando Flash Cards encontrados:', foundData);
+        
+        // Aplicar dados no estado interno
         setInternalFlashCardsData(foundData);
         setIsContentLoaded(true);
+        
+        // Forçar re-render
+        setTimeout(() => {
+          setContentLoaded(prev => !prev);
+        }, 50);
       }
       
       setHasCheckedStorage(true);
-      
-      // Verificar storage genérico como fallback
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const flashCardsActivity = Object.values(constructedActivities).find((activity: any) => 
-        activity.activityType === 'flash-cards' && 
-        activity.generatedContent && 
-        activity.generatedContent.cards
-      );
-
-      if (flashCardsActivity && (flashCardsActivity as any).generatedContent) {
-        console.log('🔄 Flash Cards encontrado no storage genérico:', (flashCardsActivity as any).generatedContent);
-        setInternalFlashCardsData((flashCardsActivity as any).generatedContent);
-        setIsContentLoaded(true);
-      }
     };
 
     // Verificar imediatamente
     checkForBuiltFlashCards();
     
-    // Verificar periodicamente
-    const interval = setInterval(checkForBuiltFlashCards, 2000);
+    // Verificar periodicamente durante os primeiros 10 segundos
+    const interval = setInterval(checkForBuiltFlashCards, 1000);
+    
+    // Parar verificação após 10 segundos para não sobrecarregar
+    setTimeout(() => {
+      clearInterval(interval);
+      console.log('⏹️ Parou verificação periódica do localStorage');
+    }, 10000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [activity?.id]);
 
   // Estado para forçar re-renderização
   const [contentLoaded, setContentLoaded] = useState(false);
@@ -294,39 +333,78 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
 
   // Função para obter dados efetivos (priorizar dados internos)
   const getEffectiveContent = () => {
-    return internalFlashCardsData || content;
+    console.log('🔍 getEffectiveContent - avaliando fontes:', {
+      hasInternalData: !!internalFlashCardsData,
+      hasContent: !!content,
+      internalCards: internalFlashCardsData?.cards?.length || 0,
+      contentCards: content?.cards?.length || 0
+    });
+    
+    // Priorizar dados internos se existirem e forem válidos
+    if (internalFlashCardsData && internalFlashCardsData.cards && internalFlashCardsData.cards.length > 0) {
+      console.log('✅ Usando dados internos:', internalFlashCardsData);
+      return internalFlashCardsData;
+    }
+    
+    // Fallback para content prop
+    if (content && content.cards && content.cards.length > 0) {
+      console.log('✅ Usando content prop:', content);
+      return content;
+    }
+    
+    console.log('⚠️ Nenhuma fonte de dados válida encontrada');
+    return null;
   };
 
   // Função para obter cards válidos
   const getValidCards = () => {
     const effectiveContent = getEffectiveContent();
     
-    if (!effectiveContent) return [];
-    
-    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
-      return effectiveContent.cards.filter(card => card && card.question && card.answer);
+    if (!effectiveContent) {
+      console.log('❌ getValidCards: Nenhum conteúdo efetivo');
+      return [];
     }
     
+    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
+      const validCards = effectiveContent.cards.filter(card => {
+        const isValid = card && 
+                       typeof card.question === 'string' && card.question.trim() &&
+                       typeof card.answer === 'string' && card.answer.trim();
+        return isValid;
+      });
+      
+      console.log('🃏 Cards válidos encontrados:', validCards.length, validCards);
+      return validCards;
+    }
+    
+    console.log('❌ Nenhum card válido encontrado');
     return [];
   };
 
   // Validação usando dados efetivos
   const hasValidContent = () => {
     const effectiveContent = getEffectiveContent();
+    const validCards = getValidCards();
     
-    if (!effectiveContent) return false;
+    console.log('🔍 hasValidContent verificação:', {
+      hasEffectiveContent: !!effectiveContent,
+      validCardsCount: validCards.length,
+      effectiveContent
+    });
     
-    // Verificar se tem cards válidos
-    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
-      const validCards = effectiveContent.cards.some(card => card && card.question && card.answer);
-      if (validCards) return true;
-    }
-    
-    // Verificar se tem dados mínimos para fallback
-    if (effectiveContent.title || effectiveContent.theme || effectiveContent.topicos) {
+    // Se tem cards válidos, considera como conteúdo válido
+    if (validCards.length > 0) {
+      console.log('✅ Conteúdo válido - tem cards');
       return true;
     }
     
+    // Verificar se tem dados mínimos para fallback
+    if (effectiveContent && (effectiveContent.title || effectiveContent.theme || effectiveContent.topicos)) {
+      console.log('✅ Conteúdo válido - tem dados mínimos');
+      return true;
+    }
+    
+    console.log('❌ Não tem conteúdo válido');
     return false;
   };
 
@@ -354,101 +432,97 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
+  // Verificação final de conteúdo válido
+  const validCards = getValidCards();
+  const effectiveContent = getEffectiveContent();
+  
   // Se não há conteúdo válido após verificar todas as fontes
-  if (!hasValidContent()) {
-    console.log('🔍 Não há conteúdo válido, verificando todas as fontes...');
+  if (!hasValidContent() && validCards.length === 0) {
+    console.log('🔍 Não há conteúdo válido, fazendo busca final no localStorage...');
     
-    // Busca intensiva por dados em todas as possíveis localizações
-    const possibleSources = [
-      () => localStorage.getItem('constructedActivities'),
-      () => localStorage.getItem('constructed_flash-cards_flash-cards'),
-      () => {
-        const keys = Object.keys(localStorage);
-        const flashCardKeys = keys.filter(key => key.includes('flash-cards'));
-        console.log('🔑 Chaves encontradas no localStorage:', flashCardKeys);
-        
-        for (const key of flashCardKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.data?.cards || parsed.cards) {
-                console.log(`✅ Dados encontrados na chave: ${key}`, parsed);
-                return data;
-              }
-            } catch (e) {
-              console.warn(`❌ Erro ao parsear ${key}:`, e);
-            }
-          }
-        }
-        return null;
-      }
+    // Busca final no localStorage
+    const storageKeys = [
+      'constructedActivities',
+      'constructed_flash-cards_flash-cards',
+      `constructed_flash-cards_${activity?.id || 'flash-cards'}`,
+      'flash-cards-data'
     ];
-
-    for (const source of possibleSources) {
+    
+    // Também buscar por qualquer chave que contenha 'flash-cards'
+    const allKeys = Object.keys(localStorage);
+    const flashCardKeys = allKeys.filter(key => key.includes('flash-cards'));
+    storageKeys.push(...flashCardKeys);
+    
+    console.log('🔑 Chaves a verificar:', storageKeys);
+    
+    for (const key of storageKeys) {
       try {
-        const storageData = source();
-        if (storageData) {
-          const parsed = JSON.parse(storageData);
-          
-          // Procurar dados de flash cards
+        const data = localStorage.getItem(key);
+        if (data) {
+          const parsed = JSON.parse(data);
           let flashCardsData = null;
           
-          if (parsed.data?.cards) {
+          // Diferentes estruturas possíveis
+          if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
             flashCardsData = parsed.data;
-          } else if (parsed.cards) {
+          } else if (parsed.cards && Array.isArray(parsed.cards)) {
             flashCardsData = parsed;
           } else if (typeof parsed === 'object') {
-            const foundData = Object.values(parsed).find((item: any) => 
-              item?.activityType === 'flash-cards' && item?.generatedContent?.cards
+            // Buscar em constructedActivities
+            const foundActivity = Object.values(parsed).find((item: any) => 
+              item?.activityType === 'flash-cards' && 
+              item?.generatedContent?.cards && 
+              Array.isArray(item.generatedContent.cards)
             );
-            if (foundData) {
-              flashCardsData = (foundData as any).generatedContent;
+            if (foundActivity) {
+              flashCardsData = (foundActivity as any).generatedContent;
             }
           }
           
           if (flashCardsData && flashCardsData.cards && flashCardsData.cards.length > 0) {
-            console.log('🎯 Flash Cards encontrados! Aplicando imediatamente:', flashCardsData);
+            console.log('🎯 Flash Cards encontrados na busca final:', flashCardsData);
             
-            // Aplicar dados IMEDIATAMENTE no estado interno
+            // Aplicar dados encontrados
             setInternalFlashCardsData(flashCardsData);
             setIsContentLoaded(true);
             
             // Forçar re-render
             setTimeout(() => {
               setContentLoaded(prev => !prev);
-            }, 50);
+            }, 10);
             
+            // Retornar loading temporário enquanto aplica os dados
             return (
               <div className="flex flex-col items-center justify-center h-full p-6">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-400">Carregando Flash Cards encontrados...</p>
+                <p className="text-gray-600 dark:text-gray-400">Aplicando Flash Cards encontrados...</p>
               </div>
             );
           }
         }
       } catch (error) {
-        console.error('❌ Erro ao verificar fonte de dados:', error);
+        console.warn(`❌ Erro ao verificar chave ${key}:`, error);
       }
     }
     
-    console.log('❌ Nenhum dado de Flash Cards encontrado em nenhuma fonte');
+    console.log('❌ Busca final concluída - nenhum Flash Cards encontrado');
     
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
         <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
         <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-          Aguardando Flash Cards...
+          Nenhum flash card disponível
         </h4>
         <p className="text-gray-500 dark:text-gray-500 mb-4">
-          Configure os campos e gere os flash cards para começar
+          Configure os campos e gere os flash cards primeiro
         </p>
-        <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded">
-          <strong>Debug Info:</strong><br/>
-          Content: {!!content ? 'Sim' : 'Não'}<br/>
-          Internal: {!!internalFlashCardsData ? 'Sim' : 'Não'}<br/>
-          Content Cards: {content?.cards?.length || 0}<br/>
-          Internal Cards: {internalFlashCardsData?.cards?.length || 0}
+        <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded mt-4">
+          <strong>Debug - Cards Disponíveis:</strong><br/>
+          Total Valid Cards: {validCards.length}<br/>
+          Has Effective Content: {!!effectiveContent ? 'Sim' : 'Não'}<br/>
+          Internal Data: {!!internalFlashCardsData ? 'Sim' : 'Não'}<br/>
+          Content Prop: {!!content ? 'Sim' : 'Não'}<br/>
+          Has Checked Storage: {hasCheckedStorage ? 'Sim' : 'Não'}
         </div>
       </div>
     );

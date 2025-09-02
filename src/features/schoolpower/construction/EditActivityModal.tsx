@@ -663,9 +663,13 @@ const EditActivityModal = ({
         context: formData.context?.trim() || 'Contexto educacional geral'
       };
 
+      console.log('🔄 Gerando Flash Cards com dados:', flashCardsData);
+
       // Criar instância do gerador e gerar conteúdo
       const generator = new FlashCardsGenerator();
       const generatedContent = await generator.generateFlashCardsContent(flashCardsData);
+
+      console.log('📦 Conteúdo gerado pela API:', generatedContent);
 
       // Validar conteúdo gerado
       if (!generatedContent || !generatedContent.cards || !Array.isArray(generatedContent.cards) || generatedContent.cards.length === 0) {
@@ -683,6 +687,8 @@ const EditActivityModal = ({
         throw new Error('Cards gerados têm estrutura inválida');
       }
 
+      console.log('✅ Validação dos cards passou, estruturando dados finais...');
+
       // Preparar conteúdo final com validação completa
       const finalContent = {
         title: formData.title,
@@ -693,8 +699,8 @@ const EditActivityModal = ({
         context: formData.context,
         cards: generatedContent.cards.map((card, index) => ({
           id: card.id || index + 1,
-          question: card.question,
-          answer: card.answer,
+          question: card.question.trim(),
+          answer: card.answer.trim(),
           category: card.category || formData.theme || 'Geral'
         })),
         totalCards: generatedContent.cards.length,
@@ -703,80 +709,114 @@ const EditActivityModal = ({
         isFallback: false
       };
 
+      console.log('📋 Conteúdo final estruturado:', finalContent);
+
       // Salvar em múltiplas chaves para garantir acesso
-        const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
-        const genericFlashCardsKey = 'constructed_flash-cards_flash-cards';
+      const flashCardsStorageKey = `constructed_flash-cards_${activity?.id || 'flash-cards'}`;
+      const genericFlashCardsKey = 'constructed_flash-cards_flash-cards';
+      const fallbackKey = 'flash-cards-data';
 
-        // Salvar dados em múltiplas localizações
-        localStorage.setItem(flashCardsStorageKey, JSON.stringify({
-          success: true,
-          data: finalContent
-        }));
-        localStorage.setItem(genericFlashCardsKey, JSON.stringify({
-          success: true,
-          data: finalContent
-        }));
+      const storageData = {
+        success: true,
+        data: finalContent,
+        timestamp: Date.now(),
+        source: 'EditActivityModal-Generate'
+      };
 
-        // Salvar também em constructedActivities
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        constructedActivities[`flash-cards_${Date.now()}`] = {
-          activityType: 'flash-cards',
-          generatedContent: finalContent,
-          timestamp: Date.now()
-        };
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      // Salvar dados em múltiplas localizações
+      localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+      localStorage.setItem(genericFlashCardsKey, JSON.stringify(storageData));
+      localStorage.setItem(fallbackKey, JSON.stringify(storageData));
 
-        console.log('💾 Flash Cards salvo em múltiplas localizações:', {
-          specificKey: flashCardsStorageKey,
-          genericKey: genericFlashCardsKey,
-          data: finalContent
+      // Salvar também em constructedActivities
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const activityKey = `flash-cards_${activity?.id || Date.now()}`;
+      constructedActivities[activityKey] = {
+        activityType: 'flash-cards',
+        generatedContent: finalContent,
+        timestamp: Date.now(),
+        source: 'EditActivityModal-Generate'
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+
+      console.log('💾 Flash Cards salvo em múltiplas localizações:', {
+        specificKey: flashCardsStorageKey,
+        genericKey: genericFlashCardsKey,
+        fallbackKey: fallbackKey,
+        constructedKey: activityKey,
+        dataStructure: finalContent
+      });
+
+      // APLICAR DADOS IMEDIATAMENTE nos estados locais
+      setFlashCardsContent(finalContent);
+      setGeneratedContent(finalContent);
+      setIsContentLoaded(true);
+
+      // Forçar atualização com deep clone para garantir reatividade
+      setTimeout(() => {
+        const clonedContent = JSON.parse(JSON.stringify(finalContent));
+        setFlashCardsContent(clonedContent);
+        setGeneratedContent(clonedContent);
+        console.log('🔄 Estados atualizados com clone:', clonedContent);
+      }, 50);
+
+      console.log('🎯 Estados locais atualizados:', {
+        flashCardsContent: !!flashCardsContent,
+        generatedContent: !!generatedContent,
+        isContentLoaded,
+        finalContent
+      });
+
+      // Disparar eventos para notificar outros componentes
+      const eventDetail = { 
+        activityId: activity?.id || 'flash-cards', 
+        data: finalContent,
+        source: 'EditActivityModal-Generate',
+        timestamp: new Date().toISOString()
+      };
+
+      const eventTypes = [
+        'flash-cards-auto-build',
+        'activity-auto-built', 
+        'flash-cards-generated',
+        'flash-cards-content-ready'
+      ];
+
+      // Disparar eventos IMEDIATAMENTE
+      eventTypes.forEach(eventType => {
+        window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
+      });
+
+      console.log('📡 Eventos imediatos disparados:', eventTypes);
+
+      // Backup de eventos com delay
+      setTimeout(() => {
+        eventTypes.forEach(eventType => {
+          window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
         });
+        console.log('📡 Eventos de backup disparados');
+      }, 100);
 
-        // Aplicar dados IMEDIATAMENTE no estado local
-        setFlashCardsContent(finalContent);
-        setGeneratedContent(finalContent);
-        setIsContentLoaded(true);
-
-        console.log('🎯 Estado local atualizado com dados:', finalContent);
-
-        // Disparar eventos síncronos E assíncronos
-        const eventDetail = { 
-          activityId: activity?.id, 
-          data: finalContent,
-          source: 'EditActivityModal-Generate',
-          timestamp: new Date().toISOString()
-        };
-
-        // Disparar eventos IMEDIATAMENTE
-        window.dispatchEvent(new CustomEvent('flash-cards-auto-build', { detail: eventDetail }));
-        window.dispatchEvent(new CustomEvent('activity-auto-built', { detail: eventDetail }));
-        window.dispatchEvent(new CustomEvent('flash-cards-generated', { detail: eventDetail }));
-        window.dispatchEvent(new CustomEvent('flash-cards-content-ready', { detail: eventDetail }));
-
-        console.log('📡 Eventos imediatos disparados para Flash Cards:', eventDetail);
-
-        // Também disparar com delay como backup
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('flash-cards-auto-build', { detail: eventDetail }));
-          window.dispatchEvent(new CustomEvent('activity-auto-built', { detail: eventDetail }));
-          window.dispatchEvent(new CustomEvent('flash-cards-generated', { detail: eventDetail }));
-          window.dispatchEvent(new CustomEvent('flash-cards-content-ready', { detail: eventDetail }));
-          console.log('📡 Eventos de backup disparados para Flash Cards');
-        }, 100);
-
-        // Forçar renderização do preview
-        setTimeout(() => {
-          console.log('🔄 Verificação final - dados disponíveis:', {
-            flashCardsKey: !!localStorage.getItem(flashCardsStorageKey),
+      // Verificação final após delay
+      setTimeout(() => {
+        const verification = {
+          localStorage: {
+            specificKey: !!localStorage.getItem(flashCardsStorageKey),
             genericKey: !!localStorage.getItem(genericFlashCardsKey),
-            constructedActivities: !!localStorage.getItem('constructedActivities'),
-            stateContent: !!flashCardsContent,
-            generatedContent: !!generatedContent
-          });
-        }, 200);
+            fallbackKey: !!localStorage.getItem(fallbackKey),
+            constructedActivities: !!localStorage.getItem('constructedActivities')
+          },
+          state: {
+            flashCardsContent: !!flashCardsContent,
+            generatedContent: !!generatedContent,
+            isContentLoaded
+          }
+        };
+        console.log('🔍 Verificação final dos dados:', verification);
+      }, 200);
 
-        // Atualizar aba para mostrar preview
-        setActiveTab('preview');
+      // Mudar para aba de preview
+      setActiveTab('preview');
 
       toast({
         title: "Flash Cards Gerados com Sucesso!",
