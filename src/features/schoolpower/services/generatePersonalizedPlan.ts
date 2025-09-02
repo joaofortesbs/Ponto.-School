@@ -187,6 +187,14 @@ IMPORTANT:
         - "Objetivo Geral": string com objetivo geral da atividade
         - "Critérios de Avaliação": string com critérios de avaliação
 
+        IMPORTANTE: Para atividades do tipo "flash-cards", use OBRIGATORIAMENTE estes campos específicos:
+        - "Título": string com o título dos flash cards
+        - "Descrição": string com descrição detalhada da atividade
+        - "Tema": string com o tema principal dos flash cards
+        - "Tópicos": string com os tópicos abordados
+        - "Número de flashcards": string com a quantidade de flashcards (ex: "15")
+        - "Contexto": string com o contexto de aplicação
+
         EXEMPLO para quadro-interativo:
         {
           "id": "quadro-interativo",
@@ -219,6 +227,23 @@ IMPORTANT:
           "Categorias Principais": "Conceitos Principais, Fórmulas, Aplicações Práticas, Demonstrações",
           "Objetivo Geral": "Organizar e compreender os conceitos fundamentais do Teorema de Pitágoras através de representação visual",
           "Critérios de Avaliação": "Clareza na organização, correção dos conceitos, criatividade na apresentação, completude das informações"
+        }
+
+        EXEMPLO para flash-cards:
+        {
+          "id": "flash-cards",
+          "title": "Flash Cards: Funções do 1º Grau",
+          "description": "Criação de flash cards para memorização de conceitos chave sobre funções do 1º grau",
+          "duration": "30 min",
+          "difficulty": "Fácil",
+          "category": "Matemática",
+          "type": "activity",
+          "Título": "Flash Cards: Funções do 1º Grau",
+          "Descrição": "Criação de flash cards para memorização de conceitos chave sobre funções do 1º grau",
+          "Tema": "Funções do 1º Grau",
+          "Tópicos": "Definição, Gráfico, Coeficientes, Zero da função",
+          "Número de flashcards": "15",
+          "Contexto": "Revisão e memorização de conceitos fundamentais"
         }
 `;
 
@@ -612,12 +637,12 @@ export async function generatePersonalizedPlan(
         // Processar campos específicos para flash-cards
         if (activityData.id === 'flash-cards') {
           finalCustomFields = {
-            titulo: activityData.titulo || activityData.title || '',
-            descricao: activityData.descricao || activityData.description || '',
-            tema: activityData.tema || activityData.theme || '',
-            topicos: activityData.topicos || activityData.topics || '',
-            numeroFlashcards: activityData.numeroFlashcards || activityData.numberOfFlashcards || '10',
-            contexto: activityData.contexto || activityData.context || ''
+            'Título': activityData.titulo || activityData.title || activityData['Título'] || '',
+            'Descrição': activityData.descricao || activityData.description || activityData['Descrição'] || '',
+            'Tema': activityData.tema || activityData.theme || activityData['Tema'] || '',
+            'Tópicos': activityData.topicos || activityData.topics || activityData['Tópicos'] || '',
+            'Número de flashcards': activityData.numeroFlashcards || activityData.numberOfFlashcards || activityData['Número de flashcards'] || '10',
+            'Contexto': activityData.contexto || activityData.context || activityData['Contexto'] || ''
           };
         }
 

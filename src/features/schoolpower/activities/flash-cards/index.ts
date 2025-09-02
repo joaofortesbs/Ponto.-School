@@ -1,20 +1,20 @@
 
 export const flashCardsFieldMapping = {
-  titulo: 'Título',
-  descricao: 'Descrição', 
-  tema: 'Tema',
-  topicos: 'Tópicos',
-  numeroFlashcards: 'Número de flashcards',
-  contexto: 'Contexto'
+  'Título': 'Título',
+  'Descrição': 'Descrição', 
+  'Tema': 'Tema',
+  'Tópicos': 'Tópicos',
+  'Número de flashcards': 'Número de flashcards',
+  'Contexto': 'Contexto'
 };
 
 export const flashCardsProcessor = (activityData: any) => {
   return {
-    titulo: activityData.titulo || activityData.title || '',
-    descricao: activityData.descricao || activityData.description || '',
-    tema: activityData.tema || activityData.theme || '',
-    topicos: activityData.topicos || activityData.topics || '',
-    numeroFlashcards: activityData.numeroFlashcards || activityData.numberOfFlashcards || '10',
-    contexto: activityData.contexto || activityData.context || ''
+    'Título': activityData.titulo || activityData.title || activityData['Título'] || '',
+    'Descrição': activityData.descricao || activityData.description || activityData['Descrição'] || '',
+    'Tema': activityData.tema || activityData.theme || activityData['Tema'] || '',
+    'Tópicos': activityData.topicos || activityData.topics || activityData['Tópicos'] || '',
+    'Número de flashcards': activityData.numeroFlashcards || activityData.numberOfFlashcards || activityData['Número de flashcards'] || '10',
+    'Contexto': activityData.contexto || activityData.context || activityData['Contexto'] || ''
   };
 };

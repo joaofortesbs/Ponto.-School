@@ -49,8 +49,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       // Fade state aleatório para animação suave de aparecimento/desaparecimento
       const fadeState = Math.random() > 0.7 ? 'out' : Math.random() > 0.5 ? 'in' : 'stable';
       const fadeTimer = Math.floor(Math.random() * 500) + 100;
-      const opacity = fadeState === 'in' ? Math.random() * 0.3 : 
-                     fadeState === 'out' ? 0.1 + Math.random() * 0.3 : 
+      const opacity = fadeState === 'in' ? Math.random() * 0.3 :
+                     fadeState === 'out' ? 0.1 + Math.random() * 0.3 :
                      0.2 + Math.random() * 0.3;
 
       newNodes.push({
@@ -81,7 +81,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     if (isInitializedRef.current) return;
 
     // Garantir que temos dimensões válidas
-    const { width, height } = dimensions.width === 0 ? 
+    const { width, height } = dimensions.width === 0 ?
       { width: window.innerWidth || 1280, height: window.innerHeight || 800 } : dimensions;
 
     try {
@@ -422,8 +422,8 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         ref={canvasRef}
         width={dimensions.width}
         height={dimensions.height}
-        className="absolute top-0 left-0 w-full h-full z-10"  
-        style={{ 
+        className="absolute top-0 left-0 w-full h-full z-10"
+        style={{
           pointerEvents: 'auto',
           touchAction: 'none'
         }}

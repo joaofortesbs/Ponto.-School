@@ -378,13 +378,13 @@ const renderFlashCardFields = (customFields: Record<string, string>) => {
     return String(value);
   };
 
-  // Novos campos para Flash Cards
-  const titulo = safeString(customFields['Título'] || customFields['titulo'] || '');
-  const descricao = safeString(customFields['Descrição'] || customFields['descricao'] || '');
-  const tema = safeString(customFields['Tema'] || customFields['tema'] || '');
-  const topicos = safeString(customFields['Tópicos'] || customFields['topicos'] || '');
-  const numeroFlashcards = safeString(customFields['Número de flashcards'] || customFields['numeroFlashcards'] || '');
-  const contexto = safeString(customFields['Contexto'] || customFields['contexto'] || '');
+  // Campos atualizados para Flash Cards
+  const titulo = safeString(customFields['Título'] || '');
+  const descricao = safeString(customFields['Descrição'] || '');
+  const tema = safeString(customFields['Tema'] || '');
+  const topicos = safeString(customFields['Tópicos'] || '');
+  const numeroFlashcards = safeString(customFields['Número de flashcards'] || '');
+  const contexto = safeString(customFields['Contexto'] || '');
 
   return (
     <div className="space-y-3 p-4 border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg">
