@@ -45,71 +45,19 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   const [responses, setResponses] = useState<CardResponse[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // Debug logging DETALHADO para validar conteúdo recebido
+  // Logging otimizado para debug
   useEffect(() => {
-    console.log('🃏 FlashCardsPreview recebeu content:', content);
-    console.log('📊 Tipo do content:', typeof content);
-    console.log('🔍 Content é null/undefined?', content === null || content === undefined);
-    console.log('⚙️ Props isLoading:', isLoading);
-    
-    if (content) {
-      console.log('📊 Estrutura COMPLETA do content:', {
-        hasTitle: !!content.title,
-        title: content.title,
-        hasDescription: !!content.description,
-        description: content.description,
-        hasTheme: !!content.theme,
-        theme: content.theme,
-        hasTopicos: !!content.topicos,
-        topicos: content.topicos,
-        hasCards: !!content.cards,
-        cardsType: typeof content.cards,
-        cardsIsArray: Array.isArray(content.cards),
-        cardsLength: content.cards?.length || 0,
-        totalCards: content.totalCards,
-        numberOfFlashcards: content.numberOfFlashcards,
-        isGeneratedByAI: content.isGeneratedByAI,
-        isFallback: content.isFallback,
-        generatedAt: content.generatedAt,
-        context: content.context
-      });
+    if (content && content.cards) {
+      const validCardsCount = Array.isArray(content.cards) ? 
+        content.cards.filter(card => card && card.question && card.answer).length : 0;
       
-      if (content.cards) {
-        if (Array.isArray(content.cards)) {
-          console.log('🃏 Array de cards detectado:', content.cards.length, 'cards');
-          
-          if (content.cards.length > 0) {
-            console.log('🔍 Primeiro card COMPLETO:', content.cards[0]);
-            console.log('🔍 Segundo card (se existir):', content.cards[1] || 'N/A');
-            console.log('🔍 Último card:', content.cards[content.cards.length - 1]);
-            
-            console.log('🔍 Estrutura dos cards DETALHADA:', content.cards.map((card, index) => ({
-              index,
-              id: card?.id,
-              hasQuestion: !!(card?.question),
-              questionLength: card?.question?.length || 0,
-              hasAnswer: !!(card?.answer),
-              answerLength: card?.answer?.length || 0,
-              category: card?.category,
-              isValid: !!(card && card.question && card.answer)
-            })));
-            
-            const validCardsCount = content.cards.filter(card => 
-              card && card.question && card.answer
-            ).length;
-            
-            console.log('📈 Cards válidos:', validCardsCount, 'de', content.cards.length);
-          } else {
-            console.warn('⚠️ Array de cards está vazio');
-          }
-        } else {
-          console.error('❌ content.cards não é um array:', typeof content.cards);
-        }
-      } else {
-        console.error('❌ content.cards é null/undefined');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🃏 FlashCards:', {
+          totalCards: content.cards?.length || 0,
+          validCards: validCardsCount,
+          isGeneratedByAI: content.isGeneratedByAI
+        });
       }
-    } else {
-      console.error('❌ Content é null/undefined');
     }
   }, [content]);
 
@@ -148,31 +96,12 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  // VALIDAÇÃO ROBUSTA com debug detalhado
-  const validationResult = {
-    hasContent: !!content,
-    hasCards: !!(content && content.cards),
-    isCardsArray: !!(content && Array.isArray(content.cards)),
-    cardsLength: content?.cards?.length || 0,
-    hasValidCards: content?.cards && Array.isArray(content.cards) && 
-                  content.cards.length > 0 && 
-                  content.cards.some(card => card && card.question && card.answer)
-  };
-
-  console.log('🔍 VALIDAÇÃO ROBUSTA:', validationResult);
-  
-  // Adicionar log detalhado se a validação falhar
-  if (!validationResult.hasValidCards && content) {
-    console.warn('⚠️ Diagnóstico detalhado de falha na validação:', {
-      content,
-      cards: content.cards,
-      cardsType: typeof content.cards,
-      cardsIsArray: Array.isArray(content.cards),
-      cardsLength: content.cards?.length,
-      sampleCard: content.cards?.[0],
-      allCards: content.cards
-    });
-  }
+  // Validação otimizada
+  const hasValidContent = content && 
+    content.cards && 
+    Array.isArray(content.cards) && 
+    content.cards.length > 0 && 
+    content.cards.some(card => card && card.question && card.answer);
 
   // Se não há conteúdo válido mas está carregando, mostrar loading
   if (isLoading) {
@@ -184,8 +113,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  if (!validationResult.hasContent || !validationResult.hasCards || !validationResult.isCardsArray || !validationResult.hasValidCards) {
-    console.warn('⚠️ FlashCardsPreview: Falha na validação robusta', validationResult);
+  if (!hasValidContent) {
     
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
@@ -194,33 +122,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
           Aguardando Flash Cards...
         </h4>
         <p className="text-gray-500 dark:text-gray-500">
-          {!validationResult.hasContent ? 'Nenhum conteúdo recebido' :
-           !validationResult.hasCards ? 'Aguardando dados dos cards' :
-           !validationResult.isCardsArray ? 'Formato de dados inválido' :
-           !validationResult.hasValidCards ? 'Cards sem perguntas válidas' :
-           'Configure os campos e gere os flash cards'}
+          Configure os campos e gere os flash cards para começar
         </p>
-        {process.env.NODE_ENV === 'development' && (
-          <>
-            <div className="mt-4 text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-              Debug: {JSON.stringify(validationResult, null, 2)}
-            </div>
-            {content && (
-              <div className="mt-2 text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded max-w-md">
-                Content: {JSON.stringify({
-                  title: content.title,
-                  hasCards: !!content.cards,
-                  cardsType: typeof content.cards,
-                  cardsLength: content.cards?.length,
-                  firstCard: content.cards?.[0] ? {
-                    hasQuestion: !!content.cards[0].question,
-                    hasAnswer: !!content.cards[0].answer
-                  } : null
-                }, null, 2)}
-              </div>
-            )}
-          </>
-        )}
       </div>
     );
   }

@@ -634,9 +634,6 @@ const EditActivityModal = ({
       setIsGeneratingFlashCards(true);
       setGenerationError(null);
 
-      console.log('🃏 Iniciando geração real do Flash Cards');
-      console.log('📋 FormData completo:', formData);
-
       // Validar dados obrigatórios
       if (!formData.title?.trim()) {
         throw new Error('Título é obrigatório');
@@ -661,17 +658,12 @@ const EditActivityModal = ({
         context: formData.context?.trim() || 'Contexto educacional geral'
       };
 
-      console.log('🃏 Dados estruturados para o Gemini:', flashCardsData);
-
       // Criar instância do gerador e gerar conteúdo
       const generator = new FlashCardsGenerator();
       const generatedContent = await generator.generateFlashCardsContent(flashCardsData);
 
-      console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
-
-      // Validar conteúdo gerado - VALIDAÇÃO CRÍTICA
+      // Validar conteúdo gerado
       if (!generatedContent || !generatedContent.cards || !Array.isArray(generatedContent.cards) || generatedContent.cards.length === 0) {
-        console.warn('⚠️ Conteúdo gerado inválido, usando fallback');
         throw new Error('Nenhum flash card válido foi gerado pela API');
       }
 
@@ -683,7 +675,6 @@ const EditActivityModal = ({
       );
 
       if (!validCards) {
-        console.warn('⚠️ Cards com estrutura inválida detectados');
         throw new Error('Cards gerados têm estrutura inválida');
       }
 
@@ -707,10 +698,6 @@ const EditActivityModal = ({
         isFallback: false
       };
 
-      console.log('📦 Conteúdo final preparado e validado:', finalContent);
-      console.log('🃏 Cards incluídos:', finalContent.cards);
-      console.log('🔢 Total de cards válidos:', finalContent.cards.length);
-
       // Salvar no localStorage com chave consistente
       const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
       const storageData = {
@@ -719,28 +706,16 @@ const EditActivityModal = ({
       };
 
       localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
-      console.log('💾 Flash Cards salvo no localStorage:', flashCardsStorageKey);
 
-      // SINCRONIZAÇÃO CRÍTICA: Garantir que todos os estados sejam atualizados
-      const contentClone = JSON.parse(JSON.stringify(finalContent));
-
-      setFlashCardsContent(contentClone);
-      setGeneratedContent(contentClone);
+      // Sincronização de estados
+      setFlashCardsContent(finalContent);
+      setGeneratedContent(finalContent);
       setIsContentLoaded(true);
 
-      // Force um re-render
-      setTimeout(() => {
-        setFlashCardsContent(prev => prev ? {...prev} : contentClone);
-        setGeneratedContent(prev => prev ? {...prev} : contentClone);
-      }, 100);
-
       // Disparar evento customizado para notificar o Preview
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
-          detail: { activityId: activity?.id, data: contentClone }
-        }));
-        console.log('📡 Evento de auto-build disparado para Flash Cards');
-      }, 150);
+      window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
+        detail: { activityId: activity?.id, data: finalContent }
+      }));
 
       // Atualizar aba para mostrar preview
       setActiveTab('preview');

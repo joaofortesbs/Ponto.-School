@@ -30,8 +30,6 @@ export class FlashCardsGenerator {
   }
 
   async generateFlashCardsContent(data: FlashCardData): Promise<FlashCardsResponse> {
-    console.log('🃏 FlashCardsGenerator: Iniciando geração com dados:', data);
-
     try {
       // Validar entrada
       if (!data.theme || !data.topicos) {
@@ -39,13 +37,11 @@ export class FlashCardsGenerator {
       }
 
       if (!this.apiKey) {
-        console.warn('⚠️ Chave da API Gemini não configurada, usando dados de fallback');
         return this.createFallbackContent(data);
       }
 
       // Preparar prompt para o Gemini
       const prompt = this.buildPrompt(data);
-      console.log('📝 Prompt para Gemini:', prompt);
 
       // Fazer chamada para a API Gemini
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`, {
@@ -73,18 +69,15 @@ export class FlashCardsGenerator {
       }
 
       const result = await response.json();
-      console.log('📥 Resposta bruta da API Gemini:', result);
 
       if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
         throw new Error('Resposta inválida da API Gemini');
       }
 
       const generatedText = result.candidates[0].content.parts[0].text;
-      console.log('📄 Texto gerado pela IA:', generatedText);
 
       // Tentar parsear o JSON
       const parsedContent = this.parseGeneratedContent(generatedText, data);
-      console.log('✅ Conteúdo parseado com sucesso:', parsedContent);
 
       return parsedContent;
 
