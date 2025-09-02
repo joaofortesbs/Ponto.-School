@@ -1,11 +1,11 @@
+
 export { default as FlashCardsPreview } from './FlashCardsPreview';
 export { FlashCardsGenerator } from './FlashCardsGenerator';
-export { flashCardsMonitor } from './FlashCardsMonitor';
-export type { default as FlashCardsMonitor } from './FlashCardsMonitor';
+export type { FlashCardsContent, FlashCardsFormData } from './FlashCardsGenerator';
 
 export const flashCardsFieldMapping = {
   'Título': 'Título',
-  'Descrição': 'Descrição',
+  'Descrição': 'Descrição', 
   'Tema': 'Tema',
   'Tópicos': 'Tópicos',
   'Número de flashcards': 'Número de flashcards',

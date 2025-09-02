@@ -721,34 +721,26 @@ const EditActivityModal = ({
       localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
       console.log('💾 Flash Cards salvo no localStorage:', flashCardsStorageKey);
 
-      // SINCRONIZAÇÃO CRÍTICA CORRIGIDA: Atualizar estados de forma robusta
+      // SINCRONIZAÇÃO CRÍTICA: Garantir que todos os estados sejam atualizados
       const contentClone = JSON.parse(JSON.stringify(finalContent));
 
-      // Batch update síncrono
       setFlashCardsContent(contentClone);
       setGeneratedContent(contentClone);
       setIsContentLoaded(true);
 
-      // Garantir propagação imediata para o Preview
-      queueMicrotask(() => {
-        console.log('🔄 Sincronização imediata iniciada');
-        
-        // Force update com nova referência
-        setFlashCardsContent(JSON.parse(JSON.stringify(contentClone)));
-        setGeneratedContent(JSON.parse(JSON.stringify(contentClone)));
+      // Force um re-render
+      setTimeout(() => {
+        setFlashCardsContent(prev => prev ? {...prev} : contentClone);
+        setGeneratedContent(prev => prev ? {...prev} : contentClone);
+      }, 100);
 
-        // Disparar evento para notificar outros componentes
+      // Disparar evento customizado para notificar o Preview
+      setTimeout(() => {
         window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
-          detail: { 
-            activityId: activity?.id, 
-            data: contentClone,
-            timestamp: Date.now(),
-            source: 'modal-generation'
-          }
+          detail: { activityId: activity?.id, data: contentClone }
         }));
-        
-        console.log('📡 Evento de sincronização disparado');
-      });
+        console.log('📡 Evento de auto-build disparado para Flash Cards');
+      }, 150);
 
       // Atualizar aba para mostrar preview
       setActiveTab('preview');
@@ -1082,8 +1074,8 @@ const EditActivityModal = ({
       const sequenciaDidaticaSavedContent = localStorage.getItem(`constructed_sequencia-didatica_${activity.id}`);
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
-      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
-      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
+      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`); // New: Load Quiz Interativo content
+      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`); // New: Load Flash Cards content
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
@@ -1098,100 +1090,85 @@ const EditActivityModal = ({
       });
 
       let contentToLoad = null;
-      
-      // FLASH CARDS - SINCRONIZAÇÃO CRÍTICA CORRIGIDA
-      if (activity.id === 'flash-cards' && flashCardsSavedContent) {
+      if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
+        try {
+          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
+          console.log(`✅ Conteúdo específico da Sequência Didática encontrado para: ${activity.id}`);
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico da Sequência Didática:', error);
+        }
+      } else if (activity.id === 'plano-aula' && planoAulaSavedContent) {
+        try {
+          contentToLoad = JSON.parse(planoAulaSavedContent);
+          console.log(`✅ Conteúdo específico do plano-aula encontrado para: ${activity.id}`);
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico do plano-aula:', error);
+        }
+      } else if (activity.id === 'quadro-interativo' && (quadroInterativoSavedContent || quadroInterativoSpecificData)) {
+        try {
+          // Priorizar conteúdo construído específico
+          if (quadroInterativoSavedContent) {
+            contentToLoad = JSON.parse(quadroInterativoSavedContent);
+            console.log(`✅ Conteúdo específico do quadro-interativo encontrado para: ${activity.id}`);
+          } else if (quadroInterativoSpecificData) {
+            contentToLoad = JSON.parse(quadroInterativoSpecificData);
+            console.log(`✅ Dados específicos do quadro-interativo encontrados para: ${activity.id}`);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico do Quadro Interativo:', error);
+        }
+      } else if (activity.id === 'quiz-interativo' && quizInterativoSavedContent) { // Check for Quiz Interativo content
+        try {
+          const parsedContent = JSON.parse(quizInterativoSavedContent);
+          contentToLoad = parsedContent.data || parsedContent; // Handle both wrapped and direct data
+
+          // Validar se o conteúdo tem questões
+          if (contentToLoad && contentToLoad.questions && contentToLoad.questions.length > 0) {
+            console.log(`✅ Conteúdo específico do Quiz Interativo encontrado para: ${activity.id}`, contentToLoad);
+            console.log(`📝 ${contentToLoad.questions.length} questões carregadas`);
+            setQuizInterativoContent(contentToLoad); // Set the specific state for Quiz Interativo
+          } else {
+            console.warn('⚠️ Conteúdo do Quiz encontrado mas sem questões válidas');
+            contentToLoad = null;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
+          contentToLoad = null;
+        }
+      } else if (activity.id === 'flash-cards' && flashCardsSavedContent) { // Check for Flash Cards content
         try {
           const parsedContent = JSON.parse(flashCardsSavedContent);
-          contentToLoad = parsedContent.data || parsedContent;
+          contentToLoad = parsedContent.data || parsedContent; // Handle both wrapped and direct data
 
-          // Validação rigorosa dos cards
-          if (contentToLoad && contentToLoad.cards && Array.isArray(contentToLoad.cards) && contentToLoad.cards.length > 0) {
-            console.log(`✅ Flash Cards válidos encontrados: ${activity.id}`, contentToLoad);
-            console.log(`🃏 ${contentToLoad.cards.length} cards carregados com sucesso`);
+          // Validar se o conteúdo tem cards
+          if (contentToLoad && contentToLoad.cards && contentToLoad.cards.length > 0) {
+            console.log(`✅ Conteúdo específico do Flash Cards encontrado para: ${activity.id}`, contentToLoad);
+            console.log(`🃏 ${contentToLoad.cards.length} cards carregados`);
             
-            // SINCRONIZAÇÃO IMEDIATA E ROBUSTA
+            // CRITICAL: Garantir sincronização imediata
             const flashContentClone = JSON.parse(JSON.stringify(contentToLoad));
-            
-            // Batch update para evitar re-renders desnecessários
             setFlashCardsContent(flashContentClone);
             setGeneratedContent(flashContentClone);
             setIsContentLoaded(true);
             
-            // Garantir que o preview receba os dados
-            queueMicrotask(() => {
-              setFlashCardsContent(prev => {
-                console.log('🔄 Force update Flash Cards content');
-                return JSON.parse(JSON.stringify(flashContentClone));
-              });
-            });
+            // Force update para garantir que o Preview receba os dados
+            setTimeout(() => {
+              setFlashCardsContent(prev => prev ? {...prev} : flashContentClone);
+            }, 50);
             
           } else {
-            console.warn('⚠️ Flash Cards encontrado mas estrutura inválida');
+            console.warn('⚠️ Conteúdo do Flash Cards encontrado mas sem cards válidos');
             contentToLoad = null;
           }
         } catch (error) {
-          console.error('❌ Erro ao parsear Flash Cards:', error);
+          console.error('❌ Erro ao parsear conteúdo específico do Flash Cards:', error);
           contentToLoad = null;
         }
-      }
-      // QUIZ INTERATIVO
-      else if (activity.id === 'quiz-interativo' && quizInterativoSavedContent) {
-        try {
-          const parsedContent = JSON.parse(quizInterativoSavedContent);
-          contentToLoad = parsedContent.data || parsedContent;
-
-          if (contentToLoad && contentToLoad.questions && contentToLoad.questions.length > 0) {
-            console.log(`✅ Quiz Interativo encontrado: ${activity.id}`, contentToLoad);
-            console.log(`📝 ${contentToLoad.questions.length} questões carregadas`);
-            setQuizInterativoContent(contentToLoad);
-          } else {
-            console.warn('⚠️ Quiz encontrado mas sem questões válidas');
-            contentToLoad = null;
-          }
-        } catch (error) {
-          console.error('❌ Erro ao parsear Quiz Interativo:', error);
-          contentToLoad = null;
-        }
-      }
-      // SEQUENCIA DIDATICA
-      else if (activity.id === 'sequencia-didatica' && sequenciaDidaticaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(sequenciaDidaticaSavedContent);
-          console.log(`✅ Sequência Didática encontrada: ${activity.id}`);
-        } catch (error) {
-          console.error('❌ Erro ao parsear Sequência Didática:', error);
-        }
-      }
-      // PLANO AULA
-      else if (activity.id === 'plano-aula' && planoAulaSavedContent) {
-        try {
-          contentToLoad = JSON.parse(planoAulaSavedContent);
-          console.log(`✅ Plano Aula encontrado: ${activity.id}`);
-        } catch (error) {
-          console.error('❌ Erro ao parsear Plano Aula:', error);
-        }
-      }
-      // QUADRO INTERATIVO
-      else if (activity.id === 'quadro-interativo' && (quadroInterativoSavedContent || quadroInterativoSpecificData)) {
-        try {
-          if (quadroInterativoSavedContent) {
-            contentToLoad = JSON.parse(quadroInterativoSavedContent);
-            console.log(`✅ Quadro Interativo encontrado: ${activity.id}`);
-          } else if (quadroInterativoSpecificData) {
-            contentToLoad = JSON.parse(quadroInterativoSpecificData);
-            console.log(`✅ Dados específicos do Quadro Interativo: ${activity.id}`);
-          }
-        } catch (error) {
-          console.error('❌ Erro ao parsear Quadro Interativo:', error);
-        }
-      }
-      // FALLBACK GENÉRICO
-      else if (constructedActivities[activity.id]?.generatedContent) {
-        console.log(`✅ Conteúdo construído genérico: ${activity.id}`);
+      } else if (constructedActivities[activity.id]?.generatedContent) {
+        console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
         contentToLoad = constructedActivities[activity.id].generatedContent;
       } else if (savedContent) {
-        console.log(`✅ Conteúdo salvo genérico: ${activity.id}`);
+        console.log(`✅ Conteúdo salvo encontrado para: ${activity.id}`);
         try {
           contentToLoad = JSON.parse(savedContent);
         } catch (error) {
@@ -1200,11 +1177,8 @@ const EditActivityModal = ({
         }
       }
 
-      // Aplicar conteúdo apenas se não for Flash Cards (já aplicado acima)
-      if (activity.id !== 'flash-cards') {
-        setGeneratedContent(contentToLoad);
-        setIsContentLoaded(!!contentToLoad);
-      }
+      setGeneratedContent(contentToLoad);
+      setIsContentLoaded(!!contentToLoad);
     }
   }, [activity, isOpen]);
 
@@ -2126,111 +2100,132 @@ const EditActivityModal = ({
     }
   };
 
-  // Agente Interno de Execução - Sistema de Auto-Build Corrigido
+  // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
     if (!activity || !isOpen) return;
 
     const customFields = activity.customFields || {};
-    const preenchidoPorIA = activity.preenchidoAutomaticamente === true || Object.keys(customFields).length > 0;
+
+    const preenchidoPorIA = activity.preenchidoAutomaticamente === true ||
+                           Object.keys(customFields).length > 0;
+
     const isFormValid = isFormValidForBuild();
 
-    // Verificar se já existe conteúdo construído
-    const hasExistingContent = (() => {
-      const activityType = activity.id;
-      const storageKey = `constructed_${activityType}_${activity.id}`;
-      const existingContent = localStorage.getItem(storageKey);
-      
-      if (existingContent) {
-        try {
-          const parsed = JSON.parse(existingContent);
-          return !!(parsed && (parsed.data || parsed.cards || parsed.questions));
-        } catch {
-          return false;
-        }
+    // Verificação específica para Quadro Interativo
+    const isQuadroInterativo = activity.id === 'quadro-interativo';
+    const hasQuadroInterativoData = isQuadroInterativo && (
+      (formData.subject && formData.subject !== 'Matemática') ||
+      (formData.schoolYear && formData.schoolYear !== '6º Ano') ||
+      (formData.theme && formData.theme !== '') ||
+      (formData.objectives && formData.objectives !== '') ||
+      (formData.difficultyLevel && formData.difficultyLevel !== 'Intermediário') ||
+      (formData.quadroInterativoCampoEspecifico && formData.quadroInterativoCampoEspecifico !== '')
+    );
+
+    // Verificação específica para Quiz Interativo
+    const isQuizInterativo = activity.id === 'quiz-interativo';
+    const hasQuizInterativoData = isQuizInterativo && (
+      (formData.subject && formData.subject !== 'Matemática') ||
+      (formData.schoolYear && formData.schoolYear !== '6º Ano - Ensino Fundamental') ||
+      (formData.theme && formData.theme !== '') ||
+      (formData.numberOfQuestions && formData.numberOfQuestions !== '10') ||
+      (formData.difficultyLevel && formData.difficultyLevel !== 'Médio') ||
+      (formData.questionModel && formData.questionModel !== 'Múltipla Escolha') ||
+      (formData.format && formData.format !== '') || // Check new fields
+      (formData.timePerQuestion && formData.timePerQuestion !== '') // Check new fields
+    );
+
+    // Verificação específica para Mapa Mental
+    const isMapaMental = activity.id === 'mapa-mental';
+    const hasMapaMentalData = isMapaMental && (
+      (formData.centralTheme && formData.centralTheme !== '') ||
+      (formData.mainCategories && formData.mainCategories !== '') ||
+      (formData.generalObjective && formData.generalObjective !== '') ||
+      (formData.evaluationCriteria && formData.evaluationCriteria !== '')
+    );
+
+    // Verificação específica para Flash Cards
+    const isFlashCards = activity.id === 'flash-cards';
+    const hasFlashCardsData = isFlashCards && (
+      (formData.theme && formData.theme !== '') ||
+      (formData.topicos && formData.topicos !== '') ||
+      (formData.numberOfFlashcards && formData.numberOfFlashcards !== '10') ||
+      (formData.context && formData.context !== '')
+    );
+
+
+    if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
+      console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
+
+      if (isQuadroInterativo) {
+        console.log('🖼️ Processamento específico para Quadro Interativo detectado');
+        console.log('📊 Estado dos dados do Quadro Interativo:', {
+          subject: formData.subject,
+          schoolYear: formData.schoolYear,
+          theme: formData.theme,
+          objectives: formData.objectives,
+          difficultyLevel: formData.difficultyLevel,
+          quadroInterativoCampoEspecifico: formData.quadroInterativoCampoEspecifico,
+          hasQuadroInterativoData
+        });
+      } else if (isQuizInterativo) {
+        console.log('🎯 Processamento específico para Quiz Interativo detectado');
+        console.log('📊 Estado dos dados do Quiz Interativo:', {
+          subject: formData.subject,
+          schoolYear: formData.schoolYear,
+          theme: formData.theme,
+          numberOfQuestions: formData.numberOfQuestions,
+          difficultyLevel: formData.difficultyLevel,
+          questionModel: formData.questionModel,
+          format: formData.format,
+          timePerQuestion: formData.timePerQuestion,
+          hasQuizInterativoData
+        });
+      } else if (isMapaMental) {
+        console.log('🧠 Processamento específico para Mapa Mental detectado');
+        console.log('📊 Estado dos dados do Mapa Mental:', {
+          centralTheme: formData.centralTheme,
+          mainCategories: formData.mainCategories,
+          generalObjective: formData.generalObjective,
+          evaluationCriteria: formData.evaluationCriteria,
+          hasMapaMentalData
+        });
+      } else if (isFlashCards) {
+        console.log('🃏 Processamento específico para Flash Cards detectado');
+        console.log('📊 Estado dos dados do Flash Cards:', {
+          theme: formData.theme,
+          topicos: formData.topicos,
+          numberOfFlashcards: formData.numberOfFlashcards,
+          context: formData.context,
+          hasFlashCardsData
+        });
       }
-      return false;
-    })();
 
-    // Verificações específicas por tipo de atividade
-    const activityChecks = {
-      isQuadroInterativo: activity.id === 'quadro-interativo',
-      isQuizInterativo: activity.id === 'quiz-interativo', 
-      isMapaMental: activity.id === 'mapa-mental',
-      isFlashCards: activity.id === 'flash-cards',
-      
-      hasQuadroData: activity.id === 'quadro-interativo' && (
-        (formData.subject && formData.subject !== 'Matemática') ||
-        (formData.theme && formData.theme !== '') ||
-        (formData.objectives && formData.objectives !== '') ||
-        (formData.quadroInterativoCampoEspecifico && formData.quadroInterativoCampoEspecifico !== '')
-      ),
-      
-      hasQuizData: activity.id === 'quiz-interativo' && (
-        (formData.subject && formData.subject !== 'Matemática') ||
-        (formData.theme && formData.theme !== '') ||
-        (formData.numberOfQuestions && formData.numberOfQuestions !== '10') ||
-        (formData.difficultyLevel && formData.difficultyLevel !== 'Médio')
-      ),
-      
-      hasMapaData: activity.id === 'mapa-mental' && (
-        (formData.centralTheme && formData.centralTheme !== '') ||
-        (formData.mainCategories && formData.mainCategories !== '') ||
-        (formData.generalObjective && formData.generalObjective !== '')
-      ),
-      
-      hasFlashData: activity.id === 'flash-cards' && (
-        (formData.theme && formData.theme !== '') ||
-        (formData.topicos && formData.topicos !== '') ||
-        (formData.numberOfFlashcards && formData.numberOfFlashcards !== '10')
-      )
-    };
-
-    console.log('🔍 Análise do Auto-Build:', {
-      activityId: activity.id,
-      preenchidoPorIA,
-      isFormValid,
-      hasExistingContent,
-      activityChecks,
-      shouldTriggerAutoBuild: isFormValid && preenchidoPorIA && !hasExistingContent && !activity.isBuilt
-    });
-
-    // CONDIÇÃO CORRIGIDA PARA AUTO-BUILD
-    if (isFormValid && preenchidoPorIA && !hasExistingContent && !activity.isBuilt && !isBuilding && !isGeneratingQuiz && !isGeneratingFlashCards) {
-      console.log('🤖 ACIONANDO AUTO-BUILD - Condições atendidas');
+      console.log('🎯 Acionando construção automática da atividade...');
 
       const timer = setTimeout(async () => {
-        try {
-          if (activityChecks.isQuizInterativo && activityChecks.hasQuizData) {
-            console.log('🎯 Auto-build: Quiz Interativo');
-            await handleGenerateQuizInterativo();
-          } else if (activityChecks.isFlashCards && activityChecks.hasFlashData) {
-            console.log('🃏 Auto-build: Flash Cards');
-            await handleGenerateFlashCards();
-          } else if (activityChecks.isMapaMental && activityChecks.hasMapaData) {
-            console.log('🧠 Auto-build: Mapa Mental');
-            await handleBuildActivity();
-          } else if (activityChecks.isQuadroInterativo && activityChecks.hasQuadroData) {
-            console.log('🖼️ Auto-build: Quadro Interativo');
-            await handleBuildActivity();
-          } else {
-            console.log('🏗️ Auto-build: Genérico');
-            await handleBuildActivity();
-          }
-          
-          // Marcar atividade como construída
-          if (onUpdateActivity) {
-            await onUpdateActivity({ ...activity, isBuilt: true });
-          }
-          
-          console.log('✅ Auto-build concluído com sucesso');
-        } catch (error) {
-          console.error('❌ Erro no auto-build:', error);
+        if (isQuizInterativo) {
+          console.log('🎯 Auto-build específico para Quiz Interativo');
+          await handleGenerateQuizInterativo(); // Use the specific function for Quiz
+        } else if (isMapaMental) {
+          console.log('🧠 Auto-build específico para Mapa Mental');
+          // Para Mapa Mental, a construção é mais um salvamento dos dados inseridos
+          // Chama handleBuildActivity que por sua vez chama generateActivityContent
+          await handleBuildActivity();
+        } else if (isFlashCards) {
+          console.log('🃏 Auto-build específico para Flash Cards');
+          await handleGenerateFlashCards(); // Use the specific function for Flash Cards
         }
-      }, 1000); // Delay único de 1 segundo para todos os tipos
+        else {
+          console.log('🏗️ Auto-build genérico para outras atividades');
+          await handleBuildActivity(); // Use the generic build function
+        }
+        console.log('✅ Atividade construída automaticamente pelo agente interno');
+      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : (isFlashCards ? 300 : 300)) )); // Increased delay for Quiz for API call
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, preenchidoPorIA, isFormValidForBuild, isBuilding, isGeneratingQuiz, isGeneratingFlashCards]);
+  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, isFormValidForBuild]);
 
   if (!isOpen) return null;
 

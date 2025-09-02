@@ -1,3 +1,4 @@
+
 import { ActivityFormData } from './types/ActivityTypes';
 
 // Função principal para gerar conteúdo de atividades
@@ -8,7 +9,7 @@ export async function generateActivityContent(activityType: string, formData: Ac
     if (activityType === 'flash-cards') {
       // Importar e usar o gerador específico de Flash Cards
       const { FlashCardsGenerator } = await import('../activities/flash-cards/FlashCardsGenerator');
-
+      
       const flashCardsData = {
         title: formData.title?.trim() || 'Flash Cards',
         description: formData.description?.trim() || `Flash Cards sobre ${formData.theme}`,
@@ -46,7 +47,7 @@ export async function generateActivityContent(activityType: string, formData: Ac
     } else if (activityType === 'quiz-interativo') {
       // Importar e usar o gerador específico de Quiz Interativo
       const { QuizInterativoGenerator } = await import('../activities/quiz-interativo/QuizInterativoGenerator');
-
+      
       const quizData = {
         subject: formData.subject?.trim() || 'Matemática',
         schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
@@ -103,7 +104,7 @@ export async function generateActivityContent(activityType: string, formData: Ac
 
   } catch (error) {
     console.error(`❌ Erro ao gerar conteúdo para ${activityType}:`, error);
-
+    
     // Retornar fallback específico para cada tipo
     if (activityType === 'flash-cards') {
       const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
