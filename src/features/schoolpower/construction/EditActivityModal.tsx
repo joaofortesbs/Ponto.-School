@@ -2003,7 +2003,7 @@ const EditActivityModal = ({
 
             console.log('🖼️ Dados diretos do Quadro Interativo processados:', directFormData);
           }
-          else if (activity?.id === 'mapa-mental') { // Preenchimento direto para Mapa Mental
+          else if (activity?.id === 'mapa-mental') {
             console.log('🧠 Processando dados diretos de Mapa Mental');
             directFormData = {
               ...formData,
@@ -3011,7 +3011,7 @@ const EditActivityModal = ({
                       </div>
                     ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
                       <FlashCardsPreview 
-                        content={flashCardsContent || generatedContent} 
+                        content={flashCardsContent || generatedContent}
                         isLoading={isGeneratingFlashCards}
                       />
                     ) : (

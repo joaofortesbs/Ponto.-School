@@ -143,6 +143,16 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
 
   console.log('🔍 VALIDAÇÃO ROBUSTA:', validationResult);
 
+  // Se não há conteúdo válido mas está carregando, mostrar loading
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-400">Gerando Flash Cards...</p>
+      </div>
+    );
+  }
+
   if (!validationResult.hasContent || !validationResult.hasCards || !validationResult.isCardsArray || !validationResult.hasValidCards) {
     console.warn('⚠️ FlashCardsPreview: Falha na validação robusta', validationResult);
     
@@ -159,22 +169,26 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
            !validationResult.hasValidCards ? 'Cards sem perguntas válidas' :
            'Configure os campos e gere os flash cards'}
         </p>
-        <div className="mt-4 text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-          Debug: {JSON.stringify(validationResult, null, 2)}
-        </div>
-        {content && (
-          <div className="mt-2 text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded max-w-md">
-            Content: {JSON.stringify({
-              title: content.title,
-              hasCards: !!content.cards,
-              cardsType: typeof content.cards,
-              cardsLength: content.cards?.length,
-              firstCard: content.cards?.[0] ? {
-                hasQuestion: !!content.cards[0].question,
-                hasAnswer: !!content.cards[0].answer
-              } : null
-            }, null, 2)}
-          </div>
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <div className="mt-4 text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+              Debug: {JSON.stringify(validationResult, null, 2)}
+            </div>
+            {content && (
+              <div className="mt-2 text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded max-w-md">
+                Content: {JSON.stringify({
+                  title: content.title,
+                  hasCards: !!content.cards,
+                  cardsType: typeof content.cards,
+                  cardsLength: content.cards?.length,
+                  firstCard: content.cards?.[0] ? {
+                    hasQuestion: !!content.cards[0].question,
+                    hasAnswer: !!content.cards[0].answer
+                  } : null
+                }, null, 2)}
+              </div>
+            )}
+          </>
         )}
       </div>
     );

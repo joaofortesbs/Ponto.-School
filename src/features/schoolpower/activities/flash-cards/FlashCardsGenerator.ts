@@ -41,13 +41,28 @@ export class FlashCardsGenerator {
     this.genAI = new GoogleGenerativeAI(apiKey || '');
   }
 
-  async generateFlashCardsContent(formData: FlashCardsFormData): Promise<FlashCardsContent> {
-    console.log('🃏 Iniciando geração de Flash Cards com Gemini:', formData);
-
+  async generateFlashCardsContent(data: FlashCardsFormData): Promise<FlashCardsContent> {
     try {
+      console.log('🃏 FlashCardsGenerator: Iniciando geração com dados:', data);
+
+      // Validar dados de entrada mais rigorosamente
+      if (!data.theme?.trim()) {
+        throw new Error('Tema é obrigatório para gerar flash cards');
+      }
+      if (!data.topicos?.trim()) {
+        throw new Error('Tópicos são obrigatórios para gerar flash cards');
+      }
+
+      const numberOfCards = parseInt(data.numberOfFlashcards) || 10;
+
+      // Validar número de cards
+      if (numberOfCards < 1 || numberOfCards > 50) {
+        throw new Error('Número de flash cards deve estar entre 1 e 50');
+      }
+
       const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-      const prompt = this.buildPrompt(formData);
+      const prompt = this.buildPrompt(data);
       console.log('📝 Prompt enviado para Gemini:', prompt);
 
       const result = await model.generateContent(prompt);
@@ -56,7 +71,63 @@ export class FlashCardsGenerator {
 
       console.log('📥 Resposta bruta do Gemini:', text);
 
-      const parsedContent = this.parseGeminiResponse(text, formData);
+      const parsedContent = this.parseGeminiResponse(text, data);
+
+      // Validar cards gerados com verificação mais robusta
+      if (!parsedContent.cards || !Array.isArray(parsedContent.cards)) {
+        console.error('❌ parsedContent.cards não é um array válido:', parsedContent);
+        throw new Error('API não retornou formato de cards válido');
+      }
+
+      if (parsedContent.cards.length === 0) {
+        console.error('❌ Array de cards está vazio:', parsedContent);
+        throw new Error('API não gerou nenhum flash card');
+      }
+
+      // Validar e limpar estrutura dos cards
+      const validCards = [];
+      const invalidCards = [];
+
+      parsedContent.cards.forEach((card, index) => {
+        if (!card || typeof card !== 'object') {
+          invalidCards.push({ index, reason: 'Card não é um objeto válido', card });
+          return;
+        }
+
+        if (!card.question || typeof card.question !== 'string' || card.question.trim() === '') {
+          invalidCards.push({ index, reason: 'Pergunta inválida ou vazia', card });
+          return;
+        }
+
+        if (!card.answer || typeof card.answer !== 'string' || card.answer.trim() === '') {
+          invalidCards.push({ index, reason: 'Resposta inválida ou vazia', card });
+          return;
+        }
+
+        // Card válido - adicionar à lista
+        validCards.push({
+          id: card.id || index + 1,
+          question: card.question.trim(),
+          answer: card.answer.trim(),
+          category: card.category || data.theme || 'Geral'
+        });
+      });
+
+      if (invalidCards.length > 0) {
+        console.warn(`⚠️ ${invalidCards.length} cards inválidos detectados:`, invalidCards);
+      }
+
+      if (validCards.length === 0) {
+        console.error('❌ Nenhum card válido após validação:', {
+          totalCards: parsedContent.cards.length,
+          invalidCards: invalidCards.length,
+          invalidDetails: invalidCards
+        });
+        throw new Error('Todos os cards gerados pela API são inválidos');
+      }
+
+      console.log(`✅ ${validCards.length} cards válidos de ${parsedContent.cards.length} gerados`);
+      parsedContent.cards = validCards;
 
       console.log('✅ Flash Cards gerados com sucesso:', parsedContent);
 
@@ -66,7 +137,7 @@ export class FlashCardsGenerator {
       console.error('❌ Erro ao gerar Flash Cards:', error);
 
       // Fallback com dados de exemplo
-      return this.generateFallbackContent(formData);
+      return this.generateFallbackContent(data);
     }
   }
 
