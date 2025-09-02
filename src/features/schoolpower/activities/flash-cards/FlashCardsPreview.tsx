@@ -18,9 +18,14 @@ interface FlashCardsContent {
   title: string;
   description: string;
   theme: string;
+  topicos?: string;
+  numberOfFlashcards?: number;
+  context?: string;
   cards: FlashCard[];
   totalCards: number;
   isGeneratedByAI?: boolean;
+  isFallback?: boolean;
+  generatedAt?: string;
 }
 
 interface FlashCardsPreviewProps {
@@ -40,6 +45,30 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   const [responses, setResponses] = useState<CardResponse[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // Debug logging para validar conteúdo recebido
+  useEffect(() => {
+    console.log('🃏 FlashCardsPreview recebeu content:', content);
+    if (content) {
+      console.log('📊 Estrutura do content:', {
+        hasTitle: !!content.title,
+        hasDescription: !!content.description,
+        hasTheme: !!content.theme,
+        hasCards: !!content.cards,
+        cardsLength: content.cards?.length || 0,
+        totalCards: content.totalCards,
+        isGeneratedByAI: content.isGeneratedByAI,
+        isFallback: content.isFallback
+      });
+      
+      if (content.cards && content.cards.length > 0) {
+        console.log('🔍 Primeiro card:', content.cards[0]);
+        console.log('🔍 Estrutura dos cards válida:', content.cards.every(card => 
+          card && card.question && card.answer
+        ));
+      }
+    }
+  }, [content]);
+
   // Reset quando o conteúdo mudar
   useEffect(() => {
     setCurrentCardIndex(0);
@@ -58,7 +87,14 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  if (!content || !content.cards || content.cards.length === 0) {
+  if (!content || !content.cards || !Array.isArray(content.cards) || content.cards.length === 0) {
+    console.warn('⚠️ FlashCardsPreview: Conteúdo inválido ou vazio', {
+      hasContent: !!content,
+      hasCards: !!(content && content.cards),
+      isArray: !!(content && Array.isArray(content.cards)),
+      cardsLength: content?.cards?.length || 0
+    });
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
         <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
@@ -68,6 +104,15 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         <p className="text-gray-500 dark:text-gray-500">
           Configure os campos e gere os flash cards para começar
         </p>
+        {content && (
+          <div className="mt-4 text-xs text-gray-400">
+            Debug: {JSON.stringify({
+              hasContent: !!content,
+              hasCards: !!(content.cards),
+              cardsCount: content.cards?.length || 0
+            })}
+          </div>
+        )}
       </div>
     );
   }

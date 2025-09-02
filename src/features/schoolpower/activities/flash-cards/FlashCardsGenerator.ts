@@ -1,4 +1,3 @@
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface FlashCard {
@@ -19,6 +18,7 @@ export interface FlashCardsContent {
   totalCards: number;
   generatedAt: string;
   isGeneratedByAI: boolean;
+  isFallback?: boolean; // Adicionado para indicar se o conteúdo é de fallback
 }
 
 export interface FlashCardsFormData {
@@ -57,14 +57,14 @@ export class FlashCardsGenerator {
       console.log('📥 Resposta bruta do Gemini:', text);
 
       const parsedContent = this.parseGeminiResponse(text, formData);
-      
+
       console.log('✅ Flash Cards gerados com sucesso:', parsedContent);
 
       return parsedContent;
 
     } catch (error) {
       console.error('❌ Erro ao gerar Flash Cards:', error);
-      
+
       // Fallback com dados de exemplo
       return this.generateFallbackContent(formData);
     }
@@ -149,28 +149,35 @@ IMPORTANTE: Retorne APENAS o JSON válido, sem explicações adicionais.
     console.log('🛡️ Gerando conteúdo de fallback para Flash Cards');
 
     const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
-    const fallbackCards: FlashCard[] = [];
+    const topicsList = formData.topicos ? formData.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
 
-    for (let i = 1; i <= numberOfCards; i++) {
-      fallbackCards.push({
-        id: i,
-        question: `Pergunta ${i} sobre ${formData.theme}`,
-        answer: `Esta é a resposta ${i} relacionada ao tema ${formData.theme}. ${formData.context ? `Considerando o contexto: ${formData.context}` : ''}`,
-        category: 'Geral'
-      });
-    }
+    const cards: FlashCard[] = Array.from({ length: numberOfCards }, (_, index) => {
+      const topic = topicsList[index % topicsList.length];
+      return {
+        id: index + 1,
+        question: `O que você sabe sobre ${topic} em ${formData.theme}?`,
+        answer: `${topic} é um conceito importante em ${formData.theme}. ${formData.context ? `No contexto: ${formData.context}` : 'É fundamental para o entendimento do tema.'}`,
+        category: formData.theme || 'Geral'
+      };
+    });
 
-    return {
+    const fallbackContent: FlashCardsContent = {
       title: formData.title,
-      description: formData.description,
+      description: formData.description || `Flash Cards sobre ${formData.theme} (Modo Demonstração)`,
       theme: formData.theme,
       topicos: formData.topicos,
       numberOfFlashcards: numberOfCards,
       context: formData.context,
-      cards: fallbackCards,
-      totalCards: fallbackCards.length,
+      cards: cards,
+      totalCards: numberOfCards,
       generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false
+      isGeneratedByAI: false,
+      isFallback: true
     };
+
+    console.log('🛡️ Conteúdo de fallback gerado:', fallbackContent);
+    console.log('📊 Cards de fallback:', cards);
+
+    return fallbackContent;
   }
 }

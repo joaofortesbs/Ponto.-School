@@ -910,27 +910,49 @@ const EditActivityModal = ({
 
       console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
 
-      // Validar conteúdo gerado
-      if (!generatedContent.cards || generatedContent.cards.length === 0) {
-        console.warn('⚠️ Conteúdo gerado sem cards, usando fallback');
-        throw new Error('Nenhum flash card foi gerado pela API');
+      // Validar conteúdo gerado - VALIDAÇÃO CRÍTICA
+      if (!generatedContent || !generatedContent.cards || !Array.isArray(generatedContent.cards) || generatedContent.cards.length === 0) {
+        console.warn('⚠️ Conteúdo gerado inválido, usando fallback');
+        throw new Error('Nenhum flash card válido foi gerado pela API');
       }
 
-      // Preparar conteúdo final
+      // Verificar estrutura dos cards
+      const validCards = generatedContent.cards.every(card => 
+        card && 
+        typeof card.question === 'string' && card.question.trim() &&
+        typeof card.answer === 'string' && card.answer.trim()
+      );
+
+      if (!validCards) {
+        console.warn('⚠️ Cards com estrutura inválida detectados');
+        throw new Error('Cards gerados têm estrutura inválida');
+      }
+
+      // Preparar conteúdo final com validação completa
       const finalContent = {
-        ...generatedContent,
-        title: formData.title || generatedContent.title,
+        title: formData.title,
         description: formData.description || generatedContent.description,
-        generatedByAI: true,
+        theme: formData.theme,
+        topicos: formData.topicos,
+        numberOfFlashcards: generatedContent.cards.length,
+        context: formData.context,
+        cards: generatedContent.cards.map((card, index) => ({
+          id: card.id || index + 1,
+          question: card.question,
+          answer: card.answer,
+          category: card.category || formData.theme || 'Geral'
+        })),
+        totalCards: generatedContent.cards.length,
         generatedAt: new Date().toISOString(),
-        formDataUsed: flashCardsData
+        isGeneratedByAI: true,
+        isFallback: false
       };
 
-      console.log('📦 Conteúdo final preparado:', finalContent);
+      console.log('📦 Conteúdo final preparado e validado:', finalContent);
       console.log('🃏 Cards incluídos:', finalContent.cards);
-      console.log('🔢 Total de cards:', finalContent.cards.length);
+      console.log('🔢 Total de cards válidos:', finalContent.cards.length);
 
-      // Salvar no localStorage
+      // Salvar no localStorage com chave consistente
       const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
       const storageData = {
         success: true,
@@ -940,10 +962,18 @@ const EditActivityModal = ({
       localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
       console.log('💾 Flash Cards salvo no localStorage:', flashCardsStorageKey);
 
-      // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
-      setFlashCardsContent(finalContent);
-      setGeneratedContent(finalContent);
+      // SINCRONIZAÇÃO CRÍTICA: Garantir que todos os estados sejam atualizados
+      const contentClone = JSON.parse(JSON.stringify(finalContent));
+      
+      setFlashCardsContent(contentClone);
+      setGeneratedContent(contentClone);
       setIsContentLoaded(true);
+
+      // Force um re-render
+      setTimeout(() => {
+        setFlashCardsContent(prev => prev ? {...prev} : contentClone);
+        setGeneratedContent(prev => prev ? {...prev} : contentClone);
+      }, 100);
 
       // Atualizar aba para mostrar preview
       setActiveTab('preview');
@@ -957,30 +987,38 @@ const EditActivityModal = ({
       console.error('❌ Erro ao gerar Flash Cards:', error);
       setGenerationError(`Erro ao gerar flash cards: ${error.message}`);
 
-      // Criar conteúdo de fallback em caso de erro
+      // Criar conteúdo de fallback mais robusto
+      const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
+      const topicsList = formData.topicos ? formData.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
+      
       const fallbackContent = {
         title: formData.title || `Flash Cards: ${formData.theme}`,
         description: formData.description || `Flash Cards sobre ${formData.theme} (Modo Demonstração)`,
         theme: formData.theme || 'Tema Geral',
         topicos: formData.topicos || 'Tópicos gerais',
-        numberOfFlashcards: parseInt(formData.numberOfFlashcards) || 5,
+        numberOfFlashcards: numberOfCards,
         context: formData.context || 'Contexto educacional',
-        cards: Array.from({ length: parseInt(formData.numberOfFlashcards) || 5 }, (_, index) => ({
-          id: index + 1,
-          question: `Pergunta ${index + 1}: Sobre ${formData.theme}, qual conceito é mais importante?`,
-          answer: `Resposta ${index + 1}: O conceito mais importante sobre ${formData.theme} é fundamental para o entendimento. ${formData.context ? `Considerando o contexto: ${formData.context}` : ''}`,
-          category: 'Geral'
-        })),
-        totalCards: parseInt(formData.numberOfFlashcards) || 5,
+        cards: Array.from({ length: numberOfCards }, (_, index) => {
+          const topic = topicsList[index % topicsList.length];
+          return {
+            id: index + 1,
+            question: `O que você sabe sobre ${topic} em ${formData.theme}?`,
+            answer: `${topic} é um conceito importante em ${formData.theme}. ${formData.context ? `No contexto: ${formData.context}` : 'É fundamental para o entendimento do tema.'}`,
+            category: formData.theme || 'Geral'
+          };
+        }),
+        totalCards: numberOfCards,
         generatedAt: new Date().toISOString(),
         isGeneratedByAI: false,
         isFallback: true
       };
 
-      console.log('🛡️ Usando conteúdo de fallback:', fallbackContent);
+      console.log('🛡️ Usando conteúdo de fallback robusto:', fallbackContent);
 
-      setFlashCardsContent(fallbackContent);
-      setGeneratedContent(fallbackContent);
+      const fallbackClone = JSON.parse(JSON.stringify(fallbackContent));
+      
+      setFlashCardsContent(fallbackClone);
+      setGeneratedContent(fallbackClone);
       setIsContentLoaded(true);
       setActiveTab('preview');
 
@@ -2967,7 +3005,10 @@ const EditActivityModal = ({
                         </p>
                       </div>
                     ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
-                      <FlashCardsPreview content={flashCardsContent || generatedContent} isLoading={isGeneratingFlashCards} />
+                      <FlashCardsPreview 
+                        content={flashCardsContent || generatedContent || null} 
+                        isLoading={isGeneratingFlashCards} 
+                      />
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
