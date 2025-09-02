@@ -2967,10 +2967,7 @@ const EditActivityModal = ({
                         </p>
                       </div>
                     ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
-                      <FlashCardsPreview
-                        content={flashCardsContent || generatedContent}
-                        isLoading={isGeneratingFlashCards}
-                      />
+                      <FlashCardsPreview content={flashCardsContent || generatedContent} isLoading={isGeneratingFlashCards} />
                     ) : (
                       <ActivityPreview
                         content={generatedContent || formData}
