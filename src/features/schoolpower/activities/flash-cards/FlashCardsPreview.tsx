@@ -433,12 +433,12 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  // Verificação final de conteúdo válido usando dados já obtidos
-  const currentValidCards = getValidCards();
-  const currentEffectiveContent = getEffectiveContent();
+  // Obter dados efetivos uma única vez para evitar redeclaração
+  const finalValidCards = getValidCards();
+  const finalEffectiveContent = getEffectiveContent();
   
   // Se não há conteúdo válido após verificar todas as fontes
-  if (!hasValidContent() && currentValidCards.length === 0) {
+  if (!hasValidContent() && finalValidCards.length === 0) {
     console.log('🔍 Não há conteúdo válido, fazendo busca final no localStorage...');
     
     // Busca final no localStorage
@@ -519,8 +519,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         </p>
         <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded mt-4">
           <strong>Debug - Cards Disponíveis:</strong><br/>
-          Total Valid Cards: {currentValidCards.length}<br/>
-          Has Effective Content: {!!currentEffectiveContent ? 'Sim' : 'Não'}<br/>
+          Total Valid Cards: {finalValidCards.length}<br/>
+          Has Effective Content: {!!finalEffectiveContent ? 'Sim' : 'Não'}<br/>
           Internal Data: {!!internalFlashCardsData ? 'Sim' : 'Não'}<br/>
           Content Prop: {!!content ? 'Sim' : 'Não'}<br/>
           Has Checked Storage: {hasCheckedStorage ? 'Sim' : 'Não'}
@@ -529,11 +529,9 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  // Usar os dados já obtidos para evitar redeclaração
-  const effectiveContent = currentEffectiveContent;
-  const validCards = currentValidCards;
-  const currentCard = validCards.length > 0 ? validCards[currentCardIndex] : null;
-  const totalCards = validCards.length || effectiveContent?.totalCards || 0;
+  // Usar os dados finais já obtidos
+  const currentCard = finalValidCards.length > 0 ? finalValidCards[currentCardIndex] : null;
+  const totalCards = finalValidCards.length || finalEffectiveContent?.totalCards || 0;
   const progress = totalCards > 0 ? ((currentCardIndex + (showAnswer ? 1 : 0)) / totalCards) * 100 : 0;
   const completedCards = responses.length;
 
@@ -557,8 +555,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
 
     setResponses(prev => [...prev, newResponse]);
 
-    const validCards = getValidCards();
-    if (currentCardIndex < validCards.length - 1) {
+    if (currentCardIndex < finalValidCards.length - 1) {
       // Próximo card
       setCurrentCardIndex(prev => prev + 1);
       setShowAnswer(false);
@@ -632,19 +629,19 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       {/* Header com informações */}
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-          {effectiveContent?.title || 'Flash Cards'}
+          {finalEffectiveContent?.title || 'Flash Cards'}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          {effectiveContent?.description || 'Descrição dos flash cards'}
+          {finalEffectiveContent?.description || 'Descrição dos flash cards'}
         </p>
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            {effectiveContent?.theme || 'Tema'}
+            {finalEffectiveContent?.theme || 'Tema'}
           </Badge>
           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
             {currentCardIndex + 1} de {totalCards}
           </Badge>
-          {effectiveContent?.isGeneratedByAI && (
+          {finalEffectiveContent?.isGeneratedByAI && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               Gerado por IA
             </Badge>
@@ -726,9 +723,9 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
                 </p>
                 <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded mt-4">
                   <strong>Debug - Cards Disponíveis:</strong><br/>
-                  Total Valid Cards: {getValidCards().length}<br/>
+                  Total Valid Cards: {finalValidCards.length}<br/>
                   Current Index: {currentCardIndex}<br/>
-                  Effective Content: {getEffectiveContent() ? 'Sim' : 'Não'}<br/>
+                  Effective Content: {finalEffectiveContent ? 'Sim' : 'Não'}<br/>
                   Internal Data: {internalFlashCardsData ? 'Sim' : 'Não'}
                 </div>
               </CardContent>
