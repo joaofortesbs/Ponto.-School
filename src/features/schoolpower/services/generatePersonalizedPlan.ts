@@ -609,6 +609,18 @@ export async function generatePersonalizedPlan(
           });
         }
 
+        // Processar campos específicos para flash-cards
+        if (activityData.id === 'flash-cards') {
+          finalCustomFields = {
+            titulo: activityData.titulo || activityData.title || '',
+            descricao: activityData.descricao || activityData.description || '',
+            tema: activityData.tema || activityData.theme || '',
+            topicos: activityData.topicos || activityData.topics || '',
+            numeroFlashcards: activityData.numeroFlashcards || activityData.numberOfFlashcards || '10',
+            contexto: activityData.contexto || activityData.context || ''
+          };
+        }
+
         console.log(`✅ Custom fields extracted for ${activityData.id}:`, finalCustomFields);
 
         const activity = {

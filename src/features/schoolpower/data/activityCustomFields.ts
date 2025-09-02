@@ -96,6 +96,14 @@ export function normalizeQuadroInterativoFields(fields: Record<string, any>): Re
 }
 
 export const activityCustomFields: Record<string, string[]> = {
+  "flash-cards": [
+    "titulo",
+    "descricao",
+    "tema",
+    "topicos",
+    "numeroFlashcards",
+    "contexto"
+  ],
   "lista-exercicios": [
     "tema",
     "disciplina",

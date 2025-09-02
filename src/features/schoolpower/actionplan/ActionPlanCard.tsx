@@ -363,6 +363,83 @@ const QuadroInterativoFieldsRenderer = ({ customFields }: { customFields: Record
   );
 };
 
+// Função para renderizar os campos específicos da atividade de Flash Cards
+const renderFlashCardFields = (customFields: Record<string, string>) => {
+  console.log('🃏 [ActionPlanCard] Renderizando campos flash-cards:', customFields);
+
+  // Helper function para garantir que valores sejam strings
+  const safeString = (value: any, defaultValue = ''): string => {
+    if (value === null || value === undefined) return defaultValue;
+    if (typeof value === 'object') {
+      if (value.title) return String(value.title);
+      if (value.description) return String(value.description);
+      return JSON.stringify(value);
+    }
+    return String(value);
+  };
+
+  // Novos campos para Flash Cards
+  const titulo = safeString(customFields['Título'] || customFields['titulo'] || '');
+  const descricao = safeString(customFields['Descrição'] || customFields['descricao'] || '');
+  const tema = safeString(customFields['Tema'] || customFields['tema'] || '');
+  const topicos = safeString(customFields['Tópicos'] || customFields['topicos'] || '');
+  const numeroFlashcards = safeString(customFields['Número de flashcards'] || customFields['numeroFlashcards'] || '');
+  const contexto = safeString(customFields['Contexto'] || customFields['contexto'] || '');
+
+  return (
+    <div className="space-y-3 p-4 border border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/50 rounded-lg">
+      {/* Título em destaque */}
+      {titulo && (
+        <div className="w-full">
+          <div className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 mb-1">Título</div>
+          <div className="text-sm font-medium text-yellow-900 dark:text-yellow-100 bg-yellow-100 dark:bg-yellow-800 px-3 py-2 rounded-lg border border-yellow-300 dark:border-yellow-600">{titulo}</div>
+        </div>
+      )}
+
+      {/* Descrição */}
+      {descricao && (
+        <div className="w-full">
+          <div className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Descrição</div>
+          <div className="text-sm text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-700 px-2 py-1 rounded">{descricao}</div>
+        </div>
+      )}
+
+      {/* Tema e Tópicos */}
+      <div className="grid grid-cols-2 gap-3">
+        {tema && (
+          <div>
+            <div className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Tema</div>
+            <div className="text-sm text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-700 px-2 py-1 rounded">{tema}</div>
+          </div>
+        )}
+        {topicos && (
+          <div>
+            <div className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Tópicos</div>
+            <div className="text-sm text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-700 px-2 py-1 rounded">{topicos}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Número de Flashcards e Contexto */}
+      <div className="grid grid-cols-2 gap-3">
+        {numeroFlashcards && (
+          <div>
+            <div className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Número de Flashcards</div>
+            <Badge variant="solid" className="text-xs px-3 py-1 bg-yellow-500 text-white">{numeroFlashcards}</Badge>
+          </div>
+        )}
+        {contexto && (
+          <div>
+            <div className="text-xs font-medium text-yellow-700 dark:text-yellow-400 mb-1">Contexto</div>
+            <div className="text-sm text-yellow-800 dark:text-yellow-200 bg-yellow-200 dark:bg-yellow-700 px-2 py-1 rounded">{contexto}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
 // Função padrão para renderizar campos customizados não especificados
 const renderDefaultFields = (customFields: Record<string, string>) => {
   return (
@@ -374,6 +451,24 @@ const renderDefaultFields = (customFields: Record<string, string>) => {
       ))}
     </div>
   );
+};
+
+// Função principal para renderizar campos customizados baseada no ID da atividade
+const renderCustomFields = (activity: ActionPlanActivity) => {
+  if (!activity.customFields) {
+    return null;
+  }
+
+  switch (activity.id) {
+    case 'plano-aula':
+      return renderPlanoAulaFields(activity.customFields);
+    case 'quadro-interativo':
+      return <QuadroInterativoFieldsRenderer customFields={activity.customFields} />;
+    case 'flash-cards': // Caso específico para Flash Cards
+      return renderFlashCardFields(activity.customFields);
+    default:
+      return renderDefaultFields(activity.customFields);
+  }
 };
 
 
@@ -479,7 +574,7 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
 
       console.log('📊 Atividade aprovada com dados completos:', approvedActivity);
 
-      // Salvar dados específicos para preenchimento automático
+      // Salvar dados específicos para preenchimento automatico
       if (activity.id === 'plano-aula') {
         console.log('📚 Salvando dados específicos do Plano de Aula para preenchimento automático');
 
@@ -705,17 +800,9 @@ export function ActionPlanCard({ actionPlan, onApprove, isLoading = false }: Act
                     </p>
 
                     {/* Custom fields como badges - específico para cada tipo de atividade */}
-                    {item.customFields && Object.keys(item.customFields).length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                        {item.id === 'plano-aula' ? (
-                          renderPlanoAulaFields(item.customFields)
-                        ) : item.id === 'quadro-interativo' ? (
-                          <QuadroInterativoFieldsRenderer customFields={item.customFields} />
-                        ) : (
-                          renderDefaultFields(item.customFields)
-                        )}
-                      </div>
-                    )}
+                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                      {renderCustomFields(item)}
+                    </div>
 
                     {/* ID da atividade (para debug) */}
                     <div className="mt-2">
