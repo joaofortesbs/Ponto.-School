@@ -22,6 +22,7 @@ import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-in
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { CheckCircle2 } from 'lucide-react';
+import generateActivityContent from './generateActivityContent';
 
 // --- Componentes de Edição Específicos ---
 
@@ -733,6 +734,14 @@ const EditActivityModal = ({
         setGeneratedContent(prev => prev ? {...prev} : contentClone);
       }, 100);
 
+      // Disparar evento customizado para notificar o Preview
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
+          detail: { activityId: activity?.id, data: contentClone }
+        }));
+        console.log('📡 Evento de auto-build disparado para Flash Cards');
+      }, 150);
+
       // Atualizar aba para mostrar preview
       setActiveTab('preview');
 
@@ -1135,7 +1144,18 @@ const EditActivityModal = ({
           if (contentToLoad && contentToLoad.cards && contentToLoad.cards.length > 0) {
             console.log(`✅ Conteúdo específico do Flash Cards encontrado para: ${activity.id}`, contentToLoad);
             console.log(`🃏 ${contentToLoad.cards.length} cards carregados`);
-            setFlashCardsContent(contentToLoad); // Set the specific state for Flash Cards
+            
+            // CRITICAL: Garantir sincronização imediata
+            const flashContentClone = JSON.parse(JSON.stringify(contentToLoad));
+            setFlashCardsContent(flashContentClone);
+            setGeneratedContent(flashContentClone);
+            setIsContentLoaded(true);
+            
+            // Force update para garantir que o Preview receba os dados
+            setTimeout(() => {
+              setFlashCardsContent(prev => prev ? {...prev} : flashContentClone);
+            }, 50);
+            
           } else {
             console.warn('⚠️ Conteúdo do Flash Cards encontrado mas sem cards válidos');
             contentToLoad = null;
@@ -1917,89 +1937,13 @@ const EditActivityModal = ({
 
       // Trigger específico para Flash Cards
       if (activityType === 'flash-cards') {
-        console.log('🃏 Processamento específico para Flash Cards - Iniciando geração com Gemini');
+        console.log('🃏 Processamento específico concluído para Flash Cards');
 
-        // Para Flash Cards, precisamos gerar conteúdo real via API
-        try {
-          const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
+        // Garantir que o conteúdo específico também seja definido
+        const flashCardsData = result.data || result;
+        setFlashCardsContent(flashCardsData);
 
-          const flashCardsData = {
-            title: formData.title?.trim() || 'Flash Cards',
-            description: formData.description?.trim() || `Flash Cards sobre ${formData.theme}`,
-            theme: formData.theme?.trim() || 'Tema Geral',
-            topicos: formData.topicos?.trim() || 'Tópicos gerais',
-            numberOfFlashcards: formData.numberOfFlashcards?.trim() || '10',
-            context: formData.context?.trim() || 'Contexto educacional geral'
-          };
-
-          console.log('🃏 Dados estruturados para geração automática:', flashCardsData);
-
-          const generator = new FlashCardsGenerator();
-          const generatedFlashContent = await generator.generateFlashCardsContent(flashCardsData);
-
-          console.log('✅ Flash Cards gerados automaticamente via Gemini:', generatedFlashContent);
-
-          // Preparar conteúdo final
-          const finalFlashContent = {
-            title: formData.title,
-            description: formData.description || generatedFlashContent.description,
-            theme: formData.theme,
-            topicos: formData.topicos,
-            numberOfFlashcards: generatedFlashContent.cards.length,
-            context: formData.context,
-            cards: generatedFlashContent.cards,
-            totalCards: generatedFlashContent.cards.length,
-            generatedAt: new Date().toISOString(),
-            isGeneratedByAI: true,
-            isFallback: false
-          };
-
-          // Salvar com chave consistente
-          const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
-          localStorage.setItem(flashCardsStorageKey, JSON.stringify({
-            success: true,
-            data: finalFlashContent
-          }));
-
-          setFlashCardsContent(finalFlashContent);
-          setGeneratedContent(finalFlashContent);
-
-          console.log('💾 Flash Cards processado e salvo automaticamente:', finalFlashContent);
-
-        } catch (error) {
-          console.error('❌ Erro na geração automática de Flash Cards:', error);
-
-          // Usar fallback robusto
-          const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
-          const topicsList = formData.topicos ? formData.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
-
-          const fallbackContent = {
-            title: formData.title || `Flash Cards: ${formData.theme}`,
-            description: formData.description || `Flash Cards sobre ${formData.theme} (Modo Demonstração)`,
-            theme: formData.theme || 'Tema Geral',
-            topicos: formData.topicos || 'Tópicos gerais',
-            numberOfFlashcards: numberOfCards,
-            context: formData.context || 'Contexto educacional',
-            cards: Array.from({ length: numberOfCards }, (_, index) => {
-              const topic = topicsList[index % topicsList.length];
-              return {
-                id: index + 1,
-                question: `O que você sabe sobre ${topic} em ${formData.theme}?`,
-                answer: `${topic} é um conceito importante em ${formData.theme}. ${formData.context ? `No contexto: ${formData.context}` : 'É fundamental para o entendimento do tema.'}`,
-                category: formData.theme || 'Geral'
-              };
-            }),
-            totalCards: numberOfCards,
-            generatedAt: new Date().toISOString(),
-            isGeneratedByAI: false,
-            isFallback: true
-          };
-
-          setFlashCardsContent(fallbackContent);
-          setGeneratedContent(fallbackContent);
-
-          console.log('🛡️ Flash Cards fallback aplicado automaticamente:', fallbackContent);
-        }
+        console.log('💾 Flash Cards processado e salvo:', flashCardsData);
       }
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');

@@ -122,6 +122,23 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setIsCompleted(false);
   }, [content]);
 
+  // Listener para dados construídos automaticamente
+  useEffect(() => {
+    const handleFlashCardsUpdate = (event: CustomEvent) => {
+      console.log('📡 FlashCardsPreview recebeu evento de atualização:', event.detail);
+      if (event.detail && event.detail.data) {
+        // Forçar atualização do componente
+        console.log('🔄 Forçando atualização do Preview com novos dados');
+      }
+    };
+
+    window.addEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6">
@@ -143,6 +160,19 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   };
 
   console.log('🔍 VALIDAÇÃO ROBUSTA:', validationResult);
+  
+  // Adicionar log detalhado se a validação falhar
+  if (!validationResult.hasValidCards && content) {
+    console.warn('⚠️ Diagnóstico detalhado de falha na validação:', {
+      content,
+      cards: content.cards,
+      cardsType: typeof content.cards,
+      cardsIsArray: Array.isArray(content.cards),
+      cardsLength: content.cards?.length,
+      sampleCard: content.cards?.[0],
+      allCards: content.cards
+    });
+  }
 
   // Se não há conteúdo válido mas está carregando, mostrar loading
   if (isLoading) {

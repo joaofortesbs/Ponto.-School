@@ -1,27 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export interface FlashCard {
-  id: number;
-  question: string;
-  answer: string;
-  category?: string;
-}
-
-export interface FlashCardsContent {
-  title: string;
-  description: string;
-  theme: string;
-  topicos: string;
-  numberOfFlashcards: number;
-  context: string;
-  cards: FlashCard[];
-  totalCards: number;
-  generatedAt: string;
-  isGeneratedByAI: boolean;
-  isFallback?: boolean; // Adicionado para indicar se o conteúdo é de fallback
-}
-
-export interface FlashCardsFormData {
+interface FlashCardData {
   title: string;
   description: string;
   theme: string;
@@ -30,225 +8,208 @@ export interface FlashCardsFormData {
   context: string;
 }
 
+interface FlashCard {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+}
+
+interface FlashCardsResponse {
+  cards: FlashCard[];
+  description: string;
+  totalCards: number;
+  isGeneratedByAI: boolean;
+}
+
 export class FlashCardsGenerator {
-  private genAI: GoogleGenerativeAI;
+  private apiKey: string;
 
   constructor() {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('⚠️ Chave da API Gemini não encontrada');
-    }
-    this.genAI = new GoogleGenerativeAI(apiKey || '');
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   }
 
-  async generateFlashCardsContent(data: FlashCardsFormData): Promise<FlashCardsContent> {
+  async generateFlashCardsContent(data: FlashCardData): Promise<FlashCardsResponse> {
+    console.log('🃏 FlashCardsGenerator: Iniciando geração com dados:', data);
+
     try {
-      console.log('🃏 FlashCardsGenerator: Iniciando geração com dados:', data);
-
-      // Validar dados de entrada mais rigorosamente
-      if (!data.theme?.trim()) {
-        throw new Error('Tema é obrigatório para gerar flash cards');
-      }
-      if (!data.topicos?.trim()) {
-        throw new Error('Tópicos são obrigatórios para gerar flash cards');
+      // Validar entrada
+      if (!data.theme || !data.topicos) {
+        throw new Error('Tema e tópicos são obrigatórios para gerar flash cards');
       }
 
-      const numberOfCards = parseInt(data.numberOfFlashcards) || 10;
-
-      // Validar número de cards
-      if (numberOfCards < 1 || numberOfCards > 50) {
-        throw new Error('Número de flash cards deve estar entre 1 e 50');
+      if (!this.apiKey) {
+        console.warn('⚠️ Chave da API Gemini não configurada, usando dados de fallback');
+        return this.createFallbackContent(data);
       }
 
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-pro' });
-
+      // Preparar prompt para o Gemini
       const prompt = this.buildPrompt(data);
-      console.log('📝 Prompt enviado para Gemini:', prompt);
+      console.log('📝 Prompt para Gemini:', prompt);
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-
-      console.log('📥 Resposta bruta do Gemini:', text);
-
-      const parsedContent = this.parseGeminiResponse(text, data);
-
-      // Validar cards gerados com verificação mais robusta
-      if (!parsedContent.cards || !Array.isArray(parsedContent.cards)) {
-        console.error('❌ parsedContent.cards não é um array válido:', parsedContent);
-        throw new Error('API não retornou formato de cards válido');
-      }
-
-      if (parsedContent.cards.length === 0) {
-        console.error('❌ Array de cards está vazio:', parsedContent);
-        throw new Error('API não gerou nenhum flash card');
-      }
-
-      // Validar e limpar estrutura dos cards
-      const validCards = [];
-      const invalidCards = [];
-
-      parsedContent.cards.forEach((card, index) => {
-        if (!card || typeof card !== 'object') {
-          invalidCards.push({ index, reason: 'Card não é um objeto válido', card });
-          return;
-        }
-
-        if (!card.question || typeof card.question !== 'string' || card.question.trim() === '') {
-          invalidCards.push({ index, reason: 'Pergunta inválida ou vazia', card });
-          return;
-        }
-
-        if (!card.answer || typeof card.answer !== 'string' || card.answer.trim() === '') {
-          invalidCards.push({ index, reason: 'Resposta inválida ou vazia', card });
-          return;
-        }
-
-        // Card válido - adicionar à lista
-        validCards.push({
-          id: card.id || index + 1,
-          question: card.question.trim(),
-          answer: card.answer.trim(),
-          category: card.category || data.theme || 'Geral'
-        });
+      // Fazer chamada para a API Gemini
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 4096,
+          }
+        })
       });
 
-      if (invalidCards.length > 0) {
-        console.warn(`⚠️ ${invalidCards.length} cards inválidos detectados:`, invalidCards);
+      if (!response.ok) {
+        throw new Error(`Erro na API Gemini: ${response.status} ${response.statusText}`);
       }
 
-      if (validCards.length === 0) {
-        console.error('❌ Nenhum card válido após validação:', {
-          totalCards: parsedContent.cards.length,
-          invalidCards: invalidCards.length,
-          invalidDetails: invalidCards
-        });
-        throw new Error('Todos os cards gerados pela API são inválidos');
+      const result = await response.json();
+      console.log('📥 Resposta bruta da API Gemini:', result);
+
+      if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+        throw new Error('Resposta inválida da API Gemini');
       }
 
-      console.log(`✅ ${validCards.length} cards válidos de ${parsedContent.cards.length} gerados`);
-      parsedContent.cards = validCards;
+      const generatedText = result.candidates[0].content.parts[0].text;
+      console.log('📄 Texto gerado pela IA:', generatedText);
 
-      console.log('✅ Flash Cards gerados com sucesso:', parsedContent);
+      // Tentar parsear o JSON
+      const parsedContent = this.parseGeneratedContent(generatedText, data);
+      console.log('✅ Conteúdo parseado com sucesso:', parsedContent);
 
       return parsedContent;
 
     } catch (error) {
-      console.error('❌ Erro ao gerar Flash Cards:', error);
-
-      // Fallback com dados de exemplo
-      return this.generateFallbackContent(data);
+      console.error('❌ Erro na geração com Gemini:', error);
+      console.log('🛡️ Usando conteúdo de fallback');
+      return this.createFallbackContent(data);
     }
   }
 
-  private buildPrompt(formData: FlashCardsFormData): string {
+  private buildPrompt(data: FlashCardData): string {
+    const numberOfCards = parseInt(data.numberOfFlashcards) || 10;
+    
     return `
-Você é um especialista em educação e criação de materiais didáticos. Gere ${formData.numberOfFlashcards} flash cards sobre o tema "${formData.theme}".
+Você é um especialista em educação e precisa criar ${numberOfCards} flash cards sobre o tema "${data.theme}".
 
-DADOS FORNECIDOS:
-- Tema: ${formData.theme}
-- Tópicos Principais: ${formData.topicos}
-- Contexto de Uso: ${formData.context}
-- Quantidade: ${formData.numberOfFlashcards} cards
+Tópicos principais a abordar: ${data.topicos}
+Contexto de uso: ${data.context}
 
-INSTRUÇÕES PARA CRIAÇÃO:
-1. Crie perguntas claras e objetivas relacionadas ao tema
-2. As respostas devem ser concisas mas completas
-3. Varie o tipo de pergunta (conceitos, aplicações, exemplos)
-4. Mantenha a linguagem adequada ao contexto fornecido
-5. Cada card deve abordar um aspecto diferente do tema
-
-FORMATO DE RESPOSTA (JSON):
+FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
 {
   "cards": [
     {
       "id": 1,
-      "question": "Pergunta clara e objetiva",
-      "answer": "Resposta completa e didática",
-      "category": "Categoria do conteúdo"
+      "question": "pergunta clara e objetiva",
+      "answer": "resposta completa e educativa",
+      "category": "categoria do card"
     }
-  ]
+  ],
+  "description": "descrição geral dos flash cards",
+  "totalCards": ${numberOfCards}
 }
 
-IMPORTANTE: Retorne APENAS o JSON válido, sem explicações adicionais.
-    `;
+REGRAS:
+1. Crie exatamente ${numberOfCards} flash cards
+2. Cada pergunta deve ser clara e específica sobre ${data.theme}
+3. Cada resposta deve ser completa e educativa
+4. Use linguagem adequada para estudantes
+5. Varie o tipo de perguntas: conceitos, aplicações, exemplos
+6. Retorne APENAS o JSON, sem texto adicional
+
+Tópicos para os flash cards: ${data.topicos}
+`;
   }
 
-  private parseGeminiResponse(text: string, formData: FlashCardsFormData): FlashCardsContent {
+  private parseGeneratedContent(generatedText: string, data: FlashCardData): FlashCardsResponse {
     try {
-      // Limpar a resposta para extrair apenas o JSON
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('JSON não encontrado na resposta');
+      // Limpar o texto e tentar extrair JSON
+      let jsonText = generatedText.trim();
+      
+      // Remover markdown se presente
+      jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      // Tentar encontrar o JSON no texto
+      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[0];
       }
 
-      const jsonText = jsonMatch[0];
-      const parsedData = JSON.parse(jsonText);
+      const parsed = JSON.parse(jsonText);
+      console.log('📋 JSON parseado:', parsed);
 
-      if (!parsedData.cards || !Array.isArray(parsedData.cards)) {
-        throw new Error('Formato de resposta inválido');
+      // Validar estrutura
+      if (!parsed.cards || !Array.isArray(parsed.cards)) {
+        throw new Error('Estrutura inválida: cards não é um array');
       }
 
-      // Validar e processar cards
-      const processedCards: FlashCard[] = parsedData.cards.map((card: any, index: number) => ({
-        id: index + 1,
-        question: card.question || `Pergunta ${index + 1}`,
-        answer: card.answer || `Resposta ${index + 1}`,
-        category: card.category || 'Geral'
-      }));
+      // Validar cada card
+      const validCards = parsed.cards.map((card: any, index: number) => {
+        if (!card.question || !card.answer) {
+          console.warn(`⚠️ Card ${index + 1} inválido, usando fallback`);
+          const topics = data.topicos.split(',').map(t => t.trim());
+          const topic = topics[index % topics.length];
+          
+          return {
+            id: index + 1,
+            question: card.question || `O que você sabe sobre ${topic}?`,
+            answer: card.answer || `${topic} é um conceito importante em ${data.theme}.`,
+            category: card.category || data.theme
+          };
+        }
+
+        return {
+          id: card.id || index + 1,
+          question: card.question,
+          answer: card.answer,
+          category: card.category || data.theme
+        };
+      });
 
       return {
-        title: formData.title,
-        description: formData.description,
-        theme: formData.theme,
-        topicos: formData.topicos,
-        numberOfFlashcards: parseInt(formData.numberOfFlashcards),
-        context: formData.context,
-        cards: processedCards,
-        totalCards: processedCards.length,
-        generatedAt: new Date().toISOString(),
+        cards: validCards,
+        description: parsed.description || `Flash Cards sobre ${data.theme}`,
+        totalCards: validCards.length,
         isGeneratedByAI: true
       };
 
     } catch (error) {
-      console.error('❌ Erro ao parsear resposta do Gemini:', error);
+      console.error('❌ Erro ao parsear conteúdo da IA:', error);
+      console.log('🔄 Retornando para fallback após falha no parsing');
       throw error;
     }
   }
 
-  private generateFallbackContent(formData: FlashCardsFormData): FlashCardsContent {
-    console.log('🛡️ Gerando conteúdo de fallback para Flash Cards');
+  private createFallbackContent(data: FlashCardData): FlashCardsResponse {
+    const numberOfCards = parseInt(data.numberOfFlashcards) || 5;
+    const topicsList = data.topicos ? data.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
 
-    const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
-    const topicsList = formData.topicos ? formData.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
-
-    const cards: FlashCard[] = Array.from({ length: numberOfCards }, (_, index) => {
+    const cards = Array.from({ length: numberOfCards }, (_, index) => {
       const topic = topicsList[index % topicsList.length];
       return {
         id: index + 1,
-        question: `O que você sabe sobre ${topic} em ${formData.theme}?`,
-        answer: `${topic} é um conceito importante em ${formData.theme}. ${formData.context ? `No contexto: ${formData.context}` : 'É fundamental para o entendimento do tema.'}`,
-        category: formData.theme || 'Geral'
+        question: `O que você sabe sobre ${topic} em ${data.theme}?`,
+        answer: `${topic} é um conceito importante em ${data.theme}. ${data.context ? `No contexto: ${data.context}` : 'É fundamental para o entendimento do tema.'}`,
+        category: data.theme || 'Geral'
       };
     });
 
-    const fallbackContent: FlashCardsContent = {
-      title: formData.title,
-      description: formData.description || `Flash Cards sobre ${formData.theme} (Modo Demonstração)`,
-      theme: formData.theme,
-      topicos: formData.topicos,
-      numberOfFlashcards: numberOfCards,
-      context: formData.context,
-      cards: cards,
+    return {
+      cards,
+      description: `Flash Cards sobre ${data.theme} (Conteúdo de demonstração)`,
       totalCards: numberOfCards,
-      generatedAt: new Date().toISOString(),
-      isGeneratedByAI: false,
-      isFallback: true
+      isGeneratedByAI: false
     };
-
-    console.log('🛡️ Conteúdo de fallback gerado:', fallbackContent);
-    console.log('📊 Cards de fallback:', cards);
-
-    return fallbackContent;
   }
 }
+
+export default FlashCardsGenerator;
