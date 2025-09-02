@@ -70,6 +70,9 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setIsCompleted(false);
   }, [content]);
 
+  // Estado interno para gerenciar dados dos Flash Cards
+  const [internalFlashCardsData, setInternalFlashCardsData] = useState<any>(null);
+
   // Listener para dados construídos automaticamente via AutoBuild
   useEffect(() => {
     const handleFlashCardsUpdate = (event: CustomEvent) => {
@@ -79,35 +82,30 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         const updatedContent = event.detail.data;
         console.log('🔄 Aplicando novos dados do AutoBuild:', updatedContent);
         
-        // Forçar atualização imediata do estado
-        setCurrentCardIndex(0);
-        setIsFlipped(false);
-        setShowAnswer(false);
-        setResponses([]);
-        setIsCompleted(false);
-        
-        // Aguardar um ciclo de renderização antes de aplicar os novos dados
-        setTimeout(() => {
-          // Criar deep clone para garantir reatividade
-          const newContent = JSON.parse(JSON.stringify(updatedContent));
-          console.log('✅ Aplicando conteúdo clonado:', newContent);
+        // Validar estrutura dos dados recebidos
+        if (updatedContent.cards && Array.isArray(updatedContent.cards) && updatedContent.cards.length > 0) {
+          console.log('✅ Dados válidos recebidos, atualizando estado interno');
           
-          // Se o conteúdo for do tipo esperado para FlashCards, aplicar diretamente
-          if (newContent.cards && Array.isArray(newContent.cards) && newContent.cards.length > 0) {
-            // Force update do prop content através de callback se disponível
-            if (typeof content === 'object' && content !== null) {
-              Object.assign(content, newContent);
-            }
-            
-            // Disparar re-render forçado
-            setIsContentLoaded(false);
-            setTimeout(() => setIsContentLoaded(true), 50);
-          }
-        }, 100);
+          // Resetar estados de navegação
+          setCurrentCardIndex(0);
+          setIsFlipped(false);
+          setShowAnswer(false);
+          setResponses([]);
+          setIsCompleted(false);
+          
+          // Aplicar dados no estado interno
+          setInternalFlashCardsData(updatedContent);
+          setIsContentLoaded(true);
+          
+          console.log('📊 Flash Cards carregados:', {
+            totalCards: updatedContent.cards.length,
+            cards: updatedContent.cards
+          });
+        }
       }
     };
 
-    // Escutar tanto o evento específico quanto o genérico
+    // Escutar eventos de atualização
     window.addEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
     window.addEventListener('activity-auto-built', handleFlashCardsUpdate as EventListener);
     
@@ -115,15 +113,33 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       window.removeEventListener('flash-cards-auto-build', handleFlashCardsUpdate as EventListener);
       window.removeEventListener('activity-auto-built', handleFlashCardsUpdate as EventListener);
     };
-  }, [content]);
+  }, []);
 
-  // Monitorar mudanças no localStorage para Flash Cards construídos
+  // Monitorar localStorage para Flash Cards construídos
   useEffect(() => {
     const checkForBuiltFlashCards = () => {
-      const storageKey = 'constructedActivities';
-      const constructedActivities = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      // Verificar chave específica do Flash Cards
+      const flashCardsStorageKey = `constructed_flash-cards_${window.location.pathname.split('/').pop()}`;
+      const flashCardsData = localStorage.getItem(flashCardsStorageKey);
       
-      // Verificar se existe uma atividade flash-cards construída
+      if (flashCardsData) {
+        try {
+          const parsedData = JSON.parse(flashCardsData);
+          const flashContent = parsedData.data || parsedData;
+          
+          if (flashContent.cards && flashContent.cards.length > 0) {
+            console.log('🎯 Flash Cards encontrado no localStorage:', flashContent);
+            setInternalFlashCardsData(flashContent);
+            setIsContentLoaded(true);
+            return;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao parsear dados do localStorage:', error);
+        }
+      }
+      
+      // Verificar storage genérico como fallback
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const flashCardsActivity = Object.values(constructedActivities).find((activity: any) => 
         activity.activityType === 'flash-cards' && 
         activity.generatedContent && 
@@ -131,30 +147,20 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       );
 
       if (flashCardsActivity && flashCardsActivity.generatedContent) {
-        console.log('🎯 Flash Cards encontrado no storage construído:', flashCardsActivity.generatedContent);
-        
-        const flashContent = flashCardsActivity.generatedContent;
-        if (flashContent.cards && flashContent.cards.length > 0) {
-          console.log('✅ Aplicando Flash Cards do storage construído');
-          
-          // Aplicar o conteúdo encontrado
-          if (typeof content === 'object' && content !== null) {
-            Object.assign(content, flashContent);
-          }
-          
-          setIsContentLoaded(true);
-        }
+        console.log('🔄 Flash Cards encontrado no storage genérico:', flashCardsActivity.generatedContent);
+        setInternalFlashCardsData(flashCardsActivity.generatedContent);
+        setIsContentLoaded(true);
       }
     };
 
     // Verificar imediatamente
     checkForBuiltFlashCards();
     
-    // Verificar periodicamente por mudanças
-    const interval = setInterval(checkForBuiltFlashCards, 1000);
+    // Verificar periodicamente
+    const interval = setInterval(checkForBuiltFlashCards, 2000);
     
     return () => clearInterval(interval);
-  }, [content]);
+  }, []);
 
   // Estado para forçar re-renderização
   const [contentLoaded, setContentLoaded] = useState(false);
@@ -172,39 +178,47 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
-  // Validação otimizada com multiple checks
+  // Validação usando dados efetivos
   const hasValidContent = () => {
-    if (!content) return false;
+    const effectiveContent = getEffectiveContent();
+    
+    if (!effectiveContent) return false;
     
     // Verificar se tem cards válidos
-    if (content.cards && Array.isArray(content.cards) && content.cards.length > 0) {
-      const validCards = content.cards.some(card => card && card.question && card.answer);
+    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
+      const validCards = effectiveContent.cards.some(card => card && card.question && card.answer);
       if (validCards) return true;
     }
     
     // Verificar se tem dados mínimos para fallback
-    if (content.title || content.theme || content.topicos) {
+    if (effectiveContent.title || effectiveContent.theme || effectiveContent.topicos) {
       return true;
     }
     
     return false;
   };
 
-  // Função para obter cards válidos ou fallback
+  // Função para obter dados efetivos (priorizar dados internos)
+  const getEffectiveContent = () => {
+    return internalFlashCardsData || content;
+  };
+
+  // Função para obter cards válidos
   const getValidCards = () => {
-    if (!content) return [];
+    const effectiveContent = getEffectiveContent();
     
-    if (content.cards && Array.isArray(content.cards) && content.cards.length > 0) {
-      return content.cards.filter(card => card && card.question && card.answer);
+    if (!effectiveContent) return [];
+    
+    if (effectiveContent.cards && Array.isArray(effectiveContent.cards) && effectiveContent.cards.length > 0) {
+      return effectiveContent.cards.filter(card => card && card.question && card.answer);
     }
     
-    // Retornar array vazio se não há cards válidos
     return [];
   };
 
   // Função para verificar se deve mostrar loading
   const shouldShowLoading = () => {
-    return isLoading || (!hasValidContent() && contentLoaded);
+    return isLoading || (!getValidCards().length && !internalFlashCardsData && contentLoaded);
   };
 
   // Se está carregando, mostrar loading
@@ -273,9 +287,10 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     );
   }
 
+  const effectiveContent = getEffectiveContent();
   const validCards = getValidCards();
   const currentCard = validCards.length > 0 ? validCards[currentCardIndex] : null;
-  const totalCards = validCards.length || content?.totalCards || 0;
+  const totalCards = validCards.length || effectiveContent?.totalCards || 0;
   const progress = totalCards > 0 ? ((currentCardIndex + (showAnswer ? 1 : 0)) / totalCards) * 100 : 0;
   const completedCards = responses.length;
 
@@ -374,19 +389,19 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       {/* Header com informações */}
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-          {content.title}
+          {effectiveContent?.title || 'Flash Cards'}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          {content.description}
+          {effectiveContent?.description || 'Descrição dos flash cards'}
         </p>
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-            {content.theme}
+            {effectiveContent?.theme || 'Tema'}
           </Badge>
           <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
             {currentCardIndex + 1} de {totalCards}
           </Badge>
-          {content.isGeneratedByAI && (
+          {effectiveContent?.isGeneratedByAI && (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
               Gerado por IA
             </Badge>

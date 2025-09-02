@@ -713,9 +713,16 @@ const EditActivityModal = ({
       setIsContentLoaded(true);
 
       // Disparar evento customizado para notificar o Preview
-      window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
-        detail: { activityId: activity?.id, data: finalContent }
-      }));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('flash-cards-auto-build', {
+          detail: { 
+            activityId: activity?.id, 
+            data: finalContent,
+            source: 'EditActivityModal-Generate'
+          }
+        }));
+        console.log('📡 Evento flash-cards-auto-build disparado com dados:', finalContent);
+      }, 100);
 
       // Atualizar aba para mostrar preview
       setActiveTab('preview');

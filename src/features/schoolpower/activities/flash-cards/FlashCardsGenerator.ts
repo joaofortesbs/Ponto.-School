@@ -1,4 +1,3 @@
-
 interface FlashCardData {
   title: string;
   description: string;
@@ -20,6 +19,11 @@ interface FlashCardsResponse {
   description: string;
   totalCards: number;
   isGeneratedByAI: boolean;
+  title?: string;
+  theme?: string;
+  topicos?: string;
+  context?: string;
+  generatedAt?: string;
 }
 
 export class FlashCardsGenerator {
@@ -90,7 +94,7 @@ export class FlashCardsGenerator {
 
   private buildPrompt(data: FlashCardData): string {
     const numberOfCards = parseInt(data.numberOfFlashcards) || 10;
-    
+
     return `
 Você é um especialista em educação e precisa criar ${numberOfCards} flash cards sobre o tema "${data.theme}".
 
@@ -123,62 +127,63 @@ Tópicos para os flash cards: ${data.topicos}
 `;
   }
 
-  private parseGeneratedContent(generatedText: string, data: FlashCardData): FlashCardsResponse {
+  private parseGeneratedContent(responseText: string, data: FlashCardData): FlashCardsResponse {
     try {
-      // Limpar o texto e tentar extrair JSON
-      let jsonText = generatedText.trim();
-      
+      console.log('🔍 Parseando resposta da API:', responseText.substring(0, 200) + '...');
+
+      // Limpar resposta JSON
+      let cleanedResponse = responseText.trim();
+
       // Remover markdown se presente
-      jsonText = jsonText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      
-      // Tentar encontrar o JSON no texto
-      const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        jsonText = jsonMatch[0];
+      cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+
+      // Encontrar início e fim do JSON
+      const jsonStart = cleanedResponse.indexOf('{');
+      const jsonEnd = cleanedResponse.lastIndexOf('}');
+
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        cleanedResponse = cleanedResponse.substring(jsonStart, jsonEnd + 1);
       }
 
-      const parsed = JSON.parse(jsonText);
-      console.log('📋 JSON parseado:', parsed);
+      const parsedContent = JSON.parse(cleanedResponse);
+      console.log('📋 Conteúdo parseado:', parsedContent);
 
       // Validar estrutura
-      if (!parsed.cards || !Array.isArray(parsed.cards)) {
-        throw new Error('Estrutura inválida: cards não é um array');
+      if (!parsedContent.cards || !Array.isArray(parsedContent.cards)) {
+        throw new Error('Resposta não contém array de cards válido');
       }
 
-      // Validar cada card
-      const validCards = parsed.cards.map((card: any, index: number) => {
-        if (!card.question || !card.answer) {
-          console.warn(`⚠️ Card ${index + 1} inválido, usando fallback`);
-          const topics = data.topicos.split(',').map(t => t.trim());
-          const topic = topics[index % topics.length];
-          
-          return {
-            id: index + 1,
-            question: card.question || `O que você sabe sobre ${topic}?`,
-            answer: card.answer || `${topic} é um conceito importante em ${data.theme}.`,
-            category: card.category || data.theme
-          };
-        }
-
-        return {
+      // Processar cards com validação rigorosa
+      const processedCards = parsedContent.cards
+        .filter((card: any) => card && card.question && card.answer)
+        .map((card: any, index: number) => ({
           id: card.id || index + 1,
-          question: card.question,
-          answer: card.answer,
-          category: card.category || data.theme
-        };
-      });
+          question: String(card.question).trim(),
+          answer: String(card.answer).trim(),
+          category: card.category || data.theme || 'Geral'
+        }));
 
-      return {
-        cards: validCards,
-        description: parsed.description || `Flash Cards sobre ${data.theme}`,
-        totalCards: validCards.length,
-        isGeneratedByAI: true
+      console.log(`✅ ${processedCards.length} cards processados com sucesso`);
+
+      const result = {
+        cards: processedCards,
+        description: parsedContent.description || `Flash cards sobre ${data.theme}`,
+        totalCards: processedCards.length,
+        isGeneratedByAI: true,
+        title: data.title,
+        theme: data.theme,
+        topicos: data.topicos,
+        context: data.context,
+        generatedAt: new Date().toISOString()
       };
 
+      console.log('🎯 Resultado final da geração:', result);
+      return result;
+
     } catch (error) {
-      console.error('❌ Erro ao parsear conteúdo da IA:', error);
-      console.log('🔄 Retornando para fallback após falha no parsing');
-      throw error;
+      console.error('❌ Erro ao parsear conteúdo gerado:', error);
+      console.error('📄 Texto original:', responseText);
+      throw new Error(`Erro no parsing: ${error.message}`);
     }
   }
 
