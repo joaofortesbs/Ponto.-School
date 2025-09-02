@@ -485,6 +485,9 @@ const EditActivityModal = ({
     mainCategories: '',
     generalObjective: '',
     evaluationCriteria: '',
+    // Campos específicos para Flash Cards (novo)
+    topicos: '',
+    numberOfFlashcards: '10',
   });
 
   // Estado para conteúdo gerado
@@ -605,6 +608,11 @@ const EditActivityModal = ({
              formData.mainCategories?.trim() &&
              formData.generalObjective?.trim() &&
              formData.evaluationCriteria?.trim();
+    } else if (activityType === 'flash-cards') { // Validar campos específicos do Flash Cards
+      return formData.title.trim() &&
+             formData.theme?.trim() &&
+             formData.topicos?.trim() &&
+             formData.numberOfFlashcards?.trim();
     }
     else {
       return formData.title.trim() &&
@@ -824,6 +832,21 @@ const EditActivityModal = ({
           mainCategories: data.mainCategories,
           generalObjective: data.generalObjective,
           evaluationCriteria: data.evaluationCriteria,
+          generatedAt: new Date().toISOString(),
+          isGeneratedByAI: true,
+        }
+      };
+    } else if (type === 'flash-cards') { // Lógica para Flash Cards
+      console.log('🃏 Gerando conteúdo para Flash Cards:', data);
+      return {
+        success: true,
+        data: {
+          ...data,
+          title: data.title || `Flash Cards: ${data.theme || 'Tema Principal'}`,
+          description: data.description || data.topicos || 'Flash cards sobre o tema.',
+          theme: data.theme,
+          topicos: data.topicos,
+          numberOfFlashcards: parseInt(data.numberOfFlashcards) || 10,
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: true,
         }
@@ -1408,7 +1431,7 @@ const EditActivityModal = ({
 
               console.log('🖼️ Dados finais do Quadro Interativo processados:', enrichedFormData);
 
-            } else if (activity?.id === 'mapa-mental') { // Processamento para Mapa Mental
+            } else if (activity?.id === 'mapa-mental') {
               console.log('🧠 Processando dados específicos de Mapa Mental');
               enrichedFormData = {
                 ...formData,
@@ -1536,8 +1559,6 @@ const EditActivityModal = ({
               quantidadeAvaliacoes: '',
               cronograma: '',
               quadroInterativoCampoEspecifico: '',
-              format: '', // Default for Quiz Interativo
-              timePerQuestion: '', // Default for Quiz Interativo
             };
 
             setFormData(fallbackData);
@@ -2046,6 +2067,12 @@ const EditActivityModal = ({
             'Objetivo Geral': formData.generalObjective,
             'Critérios de Avaliação': formData.evaluationCriteria,
           }),
+          ...(activity?.id === 'flash-cards' && { // Salvar campos específicos do Flash Cards
+            'Tema': formData.theme,
+            'Tópicos': formData.topicos,
+            'Número de Flash Cards': formData.numberOfFlashcards,
+            'Contexto': formData.context,
+          }),
         }
       };
 
@@ -2127,6 +2154,16 @@ const EditActivityModal = ({
       (formData.evaluationCriteria && formData.evaluationCriteria !== '')
     );
 
+    // Verificação específica para Flash Cards
+    const isFlashCards = activity.id === 'flash-cards';
+    const hasFlashCardsData = isFlashCards && (
+      (formData.theme && formData.theme !== '') ||
+      (formData.topicos && formData.topicos !== '') ||
+      (formData.numberOfFlashcards && formData.numberOfFlashcards !== '10') ||
+      (formData.context && formData.context !== '')
+    );
+
+
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
       console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
 
@@ -2163,6 +2200,15 @@ const EditActivityModal = ({
           evaluationCriteria: formData.evaluationCriteria,
           hasMapaMentalData
         });
+      } else if (isFlashCards) {
+        console.log('🃏 Processamento específico para Flash Cards detectado');
+        console.log('📊 Estado dos dados do Flash Cards:', {
+          theme: formData.theme,
+          topicos: formData.topicos,
+          numberOfFlashcards: formData.numberOfFlashcards,
+          context: formData.context,
+          hasFlashCardsData
+        });
       }
 
       console.log('🎯 Acionando construção automática da atividade...');
@@ -2176,13 +2222,16 @@ const EditActivityModal = ({
           // Para Mapa Mental, a construção é mais um salvamento dos dados inseridos
           // Chama handleBuildActivity que por sua vez chama generateActivityContent
           await handleBuildActivity();
+        } else if (isFlashCards) {
+          console.log('🃏 Auto-build específico para Flash Cards');
+          await handleBuildActivity(); // Chama a construção genérica que inclui Flash Cards
         }
         else {
           console.log('🏗️ Auto-build genérico para outras atividades');
           await handleBuildActivity(); // Use the generic build function
         }
         console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : 300))); // Increased delay for Quiz for API call
+      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : (isFlashCards ? 300 : 300)) )); // Increased delay for Quiz for API call
 
       return () => clearTimeout(timer);
     }
@@ -2299,7 +2348,7 @@ const EditActivityModal = ({
                         return (
                           <>
                             {/* Campos Genéricos */}
-                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental') && (
+                            {(activityType !== 'sequencia-didatica' && activityType !== 'plano-aula' && activityType !== 'quadro-interativo' && activityType !== 'quiz-interativo' && activityType !== 'mapa-mental' && activityType !== 'flash-cards') && (
                               <DefaultEditActivity formData={formData} onFieldChange={handleInputChange} />
                             )}
 
@@ -2604,6 +2653,59 @@ const EditActivityModal = ({
                                 </div>
                               </div>
                             )}
+
+                            {/* Campos Específicos Flash Cards */}
+                            {activityType === 'flash-cards' && (
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="theme" className="text-sm">Tema dos Flash Cards *</Label>
+                                  <Input
+                                    id="theme"
+                                    value={formData.theme}
+                                    onChange={(e) => handleInputChange('theme', e.target.value)}
+                                    placeholder="Digite o tema principal dos flash cards"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="topicos" className="text-sm">Tópicos Principais *</Label>
+                                  <Textarea
+                                    id="topicos"
+                                    value={formData.topicos}
+                                    onChange={(e) => handleInputChange('topicos', e.target.value)}
+                                    placeholder="Liste os tópicos importantes (um por linha)..."
+                                    rows={3}
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="numberOfFlashcards" className="text-sm">Número de Flash Cards *</Label>
+                                  <Input
+                                    id="numberOfFlashcards"
+                                    type="number"
+                                    value={formData.numberOfFlashcards}
+                                    onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
+                                    placeholder="Ex: 10, 20, 30"
+                                    min="1"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="context" className="text-sm">Contexto de Uso</Label>
+                                  <Textarea
+                                    id="context"
+                                    value={formData.context}
+                                    onChange={(e) => handleInputChange('context', e.target.value)}
+                                    placeholder="Descreva o contexto em que os flash cards serão usados (ex: revisão para prova, aprendizado de vocabulário)..."
+                                    rows={2}
+                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </>
                         );
                       })()}
@@ -2693,6 +2795,22 @@ const EditActivityModal = ({
                         </div>
                         <p className="text-sm text-gray-500 mt-4">
                           Esta é uma pré-visualização textual. A representação visual do Mapa Mental será gerada em uma ferramenta específica.
+                        </p>
+                      </div>
+                    ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
+                      <div className="p-6 flex flex-col items-center justify-center h-full text-center">
+                        <FileText className="h-16 w-16 text-gray-400 mb-4" />
+                        <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                          Flash Cards Gerados
+                        </h4>
+                        <div className="text-left space-y-2 text-gray-700 dark:text-gray-300">
+                          <p><strong>Tema:</strong> {generatedContent?.theme || formData.theme}</p>
+                          <p><strong>Tópicos:</strong> {generatedContent?.topicos?.split('\n').map((line: string, i: number) => <span key={i}>{line}<br/></span>)}</p>
+                          <p><strong>Número de Flash Cards:</strong> {generatedContent?.numberOfFlashcards || formData.numberOfFlashcards}</p>
+                          <p><strong>Contexto de Uso:</strong> {generatedContent?.context || formData.context}</p>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-4">
+                          Os flash cards gerados estão prontos para serem utilizados.
                         </p>
                       </div>
                     ) : (

@@ -52,6 +52,14 @@ export interface ActivityFormData {
   quantidadeDiagnosticos?: string;
   quantidadeAvaliacoes?: string;
   cronograma?: string;
+  // Campos específicos para Flash Cards
+  topicos?: string;
+  numberOfFlashcards?: string;
+  // Campos específicos para Mapa Mental
+  centralTheme?: string;
+  mainCategories?: string;
+  generalObjective?: string;
+  evaluationCriteria?: string;
 }
 
 export interface GeneratedActivity {
