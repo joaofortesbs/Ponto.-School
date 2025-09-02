@@ -964,7 +964,7 @@ const EditActivityModal = ({
 
       // SINCRONIZAÇÃO CRÍTICA: Garantir que todos os estados sejam atualizados
       const contentClone = JSON.parse(JSON.stringify(finalContent));
-      
+
       setFlashCardsContent(contentClone);
       setGeneratedContent(contentClone);
       setIsContentLoaded(true);
@@ -990,7 +990,7 @@ const EditActivityModal = ({
       // Criar conteúdo de fallback mais robusto
       const numberOfCards = parseInt(formData.numberOfFlashcards) || 5;
       const topicsList = formData.topicos ? formData.topicos.split(',').map(t => t.trim()) : ['Conceitos básicos'];
-      
+
       const fallbackContent = {
         title: formData.title || `Flash Cards: ${formData.theme}`,
         description: formData.description || `Flash Cards sobre ${formData.theme} (Modo Demonstração)`,
@@ -1016,7 +1016,7 @@ const EditActivityModal = ({
       console.log('🛡️ Usando conteúdo de fallback robusto:', fallbackContent);
 
       const fallbackClone = JSON.parse(JSON.stringify(fallbackContent));
-      
+
       setFlashCardsContent(fallbackClone);
       setGeneratedContent(fallbackClone);
       setIsContentLoaded(true);
@@ -2858,51 +2858,56 @@ const EditActivityModal = ({
                             {/* Campos Específicos Flash Cards */}
                             {activityType === 'flash-cards' && (
                               <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="theme" className="text-sm">Tema dos Flash Cards *</Label>
-                                  <Input
-                                    id="theme"
-                                    value={formData.theme}
-                                    onChange={(e) => handleInputChange('theme', e.target.value)}
-                                    placeholder="Digite o tema principal dos flash cards"
-                                    required
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="theme">Tema *</Label>
+                                    <Input
+                                      id="theme"
+                                      value={formData.theme || ''}
+                                      onChange={(e) => handleInputChange('theme', e.target.value)}
+                                      placeholder="Ex: Funções do 1º Grau"
+                                      required
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="numberOfFlashcards">Número de Flash Cards *</Label>
+                                    <Input
+                                      id="numberOfFlashcards"
+                                      type="number"
+                                      value={formData.numberOfFlashcards || '10'}
+                                      onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
+                                      placeholder="10"
+                                      min="5"
+                                      max="50"
+                                      required
+                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    />
+                                  </div>
                                 </div>
+
                                 <div>
-                                  <Label htmlFor="topicos" className="text-sm">Tópicos Principais *</Label>
+                                  <Label htmlFor="topicos">Tópicos Principais *</Label>
                                   <Textarea
                                     id="topicos"
-                                    value={formData.topicos}
+                                    value={formData.topicos || ''}
                                     onChange={(e) => handleInputChange('topicos', e.target.value)}
-                                    placeholder="Liste os tópicos importantes (um por linha)..."
-                                    rows={3}
+                                    placeholder="Ex: Conceito de função, Gráficos, Coeficientes, Resolução de problemas"
+                                    rows={2}
                                     required
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
                                 </div>
+
                                 <div>
-                                  <Label htmlFor="numberOfFlashcards" className="text-sm">Número de Flash Cards *</Label>
-                                  <Input
-                                    id="numberOfFlashcards"
-                                    type="number"
-                                    value={formData.numberOfFlashcards}
-                                    onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
-                                    placeholder="Ex: 10, 20, 30"
-                                    min="1"
-                                    required
-                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                  />
-                                </div>
-                                <div>
-                                  <Label htmlFor="context" className="text-sm">Contexto de Uso</Label>
+                                  <Label htmlFor="context">Contexto de Uso</Label>
                                   <Textarea
                                     id="context"
-                                    value={formData.context}
+                                    value={formData.context || ''}
                                     onChange={(e) => handleInputChange('context', e.target.value)}
-                                    placeholder="Descreva o contexto em que os flash cards serão usados (ex: revisão para prova, aprendizado de vocabulário)..."
+                                    placeholder="Ex: Para revisão antes da prova, estudo em grupo, reforço de conceitos..."
                                     rows={2}
-                                    className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                    className="mt-1 text-sm bg-white dark:bg-gray-808 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
                                 </div>
                               </div>
@@ -3006,8 +3011,8 @@ const EditActivityModal = ({
                       </div>
                     ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
                       <FlashCardsPreview 
-                        content={flashCardsContent || generatedContent || null} 
-                        isLoading={isGeneratingFlashCards} 
+                        content={flashCardsContent || generatedContent} 
+                        isLoading={isGeneratingFlashCards}
                       />
                     ) : (
                       <ActivityPreview
