@@ -30,8 +30,8 @@ export class FlashCardsGenerator {
   private apiKey: string;
 
   constructor() {
-    // Usar a API key centralizada do sistema
-    this.apiKey = 'AIzaSyD-Sso0SdyYKoA4M3tQhcWjQ1AoddB7Wo4';
+    // Usar a API key do ambiente, igual ao QuizInterativoGenerator
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
     console.log('🔑 FlashCardsGenerator inicializado com API key:', this.apiKey ? 'Presente' : 'Ausente');
   }
 

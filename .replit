@@ -13,6 +13,22 @@ localPort = 3001
 externalPort = 5000
 
 [[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 6800
+
+[[ports]]
+localPort = 5002
+externalPort = 8000
+
+[[ports]]
+localPort = 5003
+externalPort = 8008
+
+[[ports]]
 localPort = 5173
 externalPort = 80
 
@@ -53,7 +69,6 @@ localPort = 8081
 externalPort = 8081
 
 [workflows]
-runButton = "Run"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -216,6 +231,27 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "App Server"
+
+[[workflows.workflow]]
+name = "App Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [auth]
 pageEnabled = false

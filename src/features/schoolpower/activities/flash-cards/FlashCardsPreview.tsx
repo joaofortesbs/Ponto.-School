@@ -446,7 +446,8 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       'constructedActivities',
       'constructed_flash-cards_flash-cards',
       `constructed_flash-cards_${activity?.id || 'flash-cards'}`,
-      'flash-cards-data'
+      'flash-cards-data',
+      'flash-cards-data-generated'
     ];
     
     // Também buscar por qualquer chave que contenha 'flash-cards'
@@ -464,7 +465,9 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
           let flashCardsData = null;
           
           // Diferentes estruturas possíveis
-          if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
+          if (parsed.success && parsed.data?.cards && Array.isArray(parsed.data.cards)) {
+            flashCardsData = parsed.data;
+          } else if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
             flashCardsData = parsed.data;
           } else if (parsed.cards && Array.isArray(parsed.cards)) {
             flashCardsData = parsed;
@@ -483,14 +486,20 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
           if (flashCardsData && flashCardsData.cards && flashCardsData.cards.length > 0) {
             console.log('🎯 Flash Cards encontrados na busca final:', flashCardsData);
             
-            // Aplicar dados encontrados
+            // Aplicar dados encontrados IMEDIATAMENTE
             setInternalFlashCardsData(flashCardsData);
             setIsContentLoaded(true);
             
-            // Forçar re-render
+            // Forçar re-render múltiplas vezes para garantir
             setTimeout(() => {
               setContentLoaded(prev => !prev);
+              setInternalFlashCardsData(prev => ({...flashCardsData}));
             }, 10);
+            
+            // Segundo backup
+            setTimeout(() => {
+              setInternalFlashCardsData(prev => ({...flashCardsData}));
+            }, 100);
             
             // Retornar loading temporário enquanto aplica os dados
             return (
