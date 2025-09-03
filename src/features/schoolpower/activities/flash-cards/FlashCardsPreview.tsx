@@ -19,7 +19,8 @@ import {
   Clock,
   BookOpen,
   Star,
-  Shuffle
+  Shuffle,
+  AlertCircle
 } from 'lucide-react';
 
 interface FlashCard {
@@ -372,7 +373,10 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
     }));
 
-    setTimeout(handleNextCard, 1000);
+    // Transição suave para o próximo card
+    setTimeout(() => {
+      handleNextCard();
+    }, 500);
   };
 
   const handleShuffle = () => {
@@ -400,10 +404,30 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   return (
-    <div className="h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-6">
         <div className="max-w-2xl w-full">
+          {/* Barra de Progresso */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                Progresso: {currentCardIndex + 1} de {normalizedContent.cards.length}
+              </span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+
           {/* Card 3D */}
-          <div className="relative w-full h-80 perspective-1000">
+          <div className="relative w-full h-80 perspective-1000 mb-6">
             <motion.div
               className="relative w-full h-full cursor-pointer"
               style={{ transformStyle: 'preserve-3d' }}
@@ -440,7 +464,54 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             </motion.div>
           </div>
 
+          {/* Botões de Feedback - Aparecem apenas quando o card está virado */}
+          <AnimatePresence>
+            {isFlipped && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                className="flex gap-4 justify-center"
+              >
+                <Button
+                  onClick={() => handleMarkCard(false)}
+                  variant="outline"
+                  className="flex items-center gap-2 px-6 py-3 text-orange-600 border-orange-300 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-600 dark:hover:bg-orange-900/20 transition-all duration-200"
+                >
+                  <AlertCircle className="w-5 h-5" />
+                  Essa foi por pouco!
+                </Button>
+                <Button
+                  onClick={() => handleMarkCard(true)}
+                  variant="outline"
+                  className="flex items-center gap-2 px-6 py-3 text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-600 dark:hover:bg-green-900/20 transition-all duration-200"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  Acertei em cheio!
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Indicador do Card Atual */}
+          <div className="flex justify-center mt-6">
+            <div className="flex items-center gap-2">
+              {normalizedContent.cards.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentCardIndex
+                      ? 'bg-blue-500 w-8'
+                      : index < currentCardIndex
+                      ? 'bg-green-500'
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
+        </div>
     </div>
   );
 };
