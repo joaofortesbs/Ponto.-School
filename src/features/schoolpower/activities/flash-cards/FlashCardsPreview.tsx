@@ -225,11 +225,26 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   // Inicializar ordem dos cards
   useEffect(() => {
-    if (normalizedContent?.cards) {
+    if (normalizedContent?.cards && normalizedContent.cards.length > 0) {
       const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
       setCardOrder(order);
+      // Garantir que o índice atual seja válido
+      if (currentCardIndex >= normalizedContent.cards.length) {
+        setCurrentCardIndex(0);
+      }
+      console.log('🃏 CardOrder inicializado:', order);
+    } else {
+      setCardOrder([]);
+      setCurrentCardIndex(0);
     }
   }, [normalizedContent?.cards]);
+
+  // Verificação adicional para currentCardIndex válido
+  useEffect(() => {
+    if (normalizedContent?.cards && currentCardIndex >= normalizedContent.cards.length) {
+      setCurrentCardIndex(0);
+    }
+  }, [currentCardIndex, normalizedContent?.cards]);
 
   // Auto-play functionality
   useEffect(() => {
@@ -288,10 +303,34 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]];
+  const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
   const progress = ((currentCardIndex + 1) / normalizedContent.cards.length) * 100;
 
+  // Verificação de segurança adicional
+  if (!currentCard) {
+    console.error('🃏 Erro: currentCard é undefined', {
+      currentCardIndex,
+      cardOrderLength: cardOrder.length,
+      cardsLength: normalizedContent.cards.length,
+      cardOrder
+    });
+    
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+        <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+          Erro na Exibição do Flash Card
+        </h3>
+        <p className="text-gray-500 dark:text-gray-500 mb-4">
+          Problema ao carregar o card atual. Tente recarregar a atividade.
+        </p>
+      </div>
+    );
+  }
+
   const handleNextCard = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
     if (currentCardIndex < normalizedContent.cards.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
       setIsFlipped(false);
@@ -302,6 +341,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   const handlePrevCard = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
     if (currentCardIndex > 0) {
       setCurrentCardIndex(prev => prev - 1);
       setIsFlipped(false);
@@ -313,6 +354,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   const handleMarkCard = (correct: boolean) => {
+    if (!currentCard) return;
+    
     const cardId = currentCard.id;
     setCardStats(prev => ({
       ...prev,
@@ -333,6 +376,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   const handleShuffle = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
     const newOrder = [...cardOrder].sort(() => Math.random() - 0.5);
     setCardOrder(newOrder);
     setCurrentCardIndex(0);
