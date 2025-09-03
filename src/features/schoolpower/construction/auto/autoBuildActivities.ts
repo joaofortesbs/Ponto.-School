@@ -64,6 +64,13 @@ export const autoBuildActivities = async (
         console.log('💾 Auto-build: Dados do plano-aula salvos para visualização:', viewStorageKey);
       }
 
+      // Para flash-cards, também salvar com chave específica para visualização
+      if (activityType === 'flash-cards') {
+        const viewStorageKey = `constructed_flash-cards_${activity.id}`;
+        localStorage.setItem(viewStorageKey, JSON.stringify(result.data));
+        console.log('💾 Auto-build: Dados dos flash-cards salvos para visualização:', viewStorageKey);
+      }
+
       // Adicionar à lista de atividades construídas
       let constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '[]');
       if (!constructedActivities.includes(activity.id)) {
