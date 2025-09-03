@@ -400,61 +400,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Header com informações */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
-              {normalizedContent.title || 'Flash Cards'}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              {normalizedContent.description || 'Flash cards para estudo e revisão'}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {normalizedContent.generatedByAI && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                <Star className="w-3 h-3 mr-1" />
-                IA
-              </Badge>
-            )}
-            <Badge variant="outline">
-              {normalizedContent.cards.length} cards
-            </Badge>
-          </div>
-        </div>
-
-        {/* Informações do conteúdo */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="font-medium text-gray-600 dark:text-gray-400">Disciplina:</span>
-            <p className="text-gray-800 dark:text-white">{normalizedContent.subject || 'Geral'}</p>
-          </div>
-          <div>
-            <span className="font-medium text-gray-600 dark:text-gray-400">Ano:</span>
-            <p className="text-gray-800 dark:text-white">{normalizedContent.schoolYear || 'Todos'}</p>
-          </div>
-          <div>
-            <span className="font-medium text-gray-600 dark:text-gray-400">Dificuldade:</span>
-            <p className="text-gray-800 dark:text-white">{normalizedContent.difficultyLevel || 'Médio'}</p>
-          </div>
-          <div>
-            <span className="font-medium text-gray-600 dark:text-gray-400">Progresso:</span>
-            <p className="text-gray-800 dark:text-white">
-              {currentCardIndex + 1} / {normalizedContent.cards.length}
-            </p>
-          </div>
-        </div>
-
-        {/* Barra de progresso */}
-        <div className="mt-4">
-          <Progress value={progress} className="h-2" />
-        </div>
-      </div>
-
-      {/* Área principal do card */}
-      <div className="flex-1 flex items-center justify-center p-6">
+    <div className="h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="max-w-2xl w-full">
           {/* Card 3D */}
           <div className="relative w-full h-80 perspective-1000">
@@ -468,24 +414,11 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               {/* Frente do card */}
               <Card className="absolute inset-0 bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-700 shadow-xl border-2 border-blue-200 dark:border-blue-800 hover:shadow-2xl transition-shadow"
                     style={{ backfaceVisibility: 'hidden' }}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline" className="text-xs">
-                      Frente #{currentCard.id}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {currentCard.category || normalizedContent.subject}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-full pb-6">
+                <CardContent className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <p className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-white leading-relaxed">
                       {currentCard.front}
                     </p>
-                    <div className="mt-6 text-gray-500 dark:text-gray-400 text-sm">
-                      Clique para ver a resposta
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -496,164 +429,18 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                       backfaceVisibility: 'hidden',
                       transform: 'rotateY(180deg)'
                     }}>
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
-                      Verso #{currentCard.id}
-                    </Badge>
-                    <Badge 
-                      variant="secondary" 
-                      className={`text-xs ${
-                        currentCard.difficulty === 'Fácil' ? 'bg-green-100 text-green-800' :
-                        currentCard.difficulty === 'Difícil' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {currentCard.difficulty || 'Médio'}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-full pb-6">
+                <CardContent className="flex items-center justify-center h-full">
                   <div className="text-center">
                     <p className="text-lg md:text-xl text-gray-800 dark:text-white leading-relaxed">
                       {currentCard.back}
                     </p>
-                    {studyMode === 'test' && (
-                      <div className="mt-6 flex gap-3 justify-center">
-                        <Button 
-                          onClick={(e) => { e.stopPropagation(); handleMarkCard(false); }}
-                          variant="outline" 
-                          size="sm"
-                          className="border-red-300 text-red-700 hover:bg-red-50"
-                        >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Errei
-                        </Button>
-                        <Button 
-                          onClick={(e) => { e.stopPropagation(); handleMarkCard(true); }}
-                          variant="outline" 
-                          size="sm"
-                          className="border-green-300 text-green-700 hover:bg-green-50"
-                        >
-                          <CheckCircle2 className="w-4 h-4 mr-1" />
-                          Acertei
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
 
-          {/* Controles */}
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            <Button 
-              onClick={handlePrevCard} 
-              disabled={currentCardIndex === 0}
-              variant="outline" 
-              size="sm"
-            >
-              <SkipBack className="w-4 h-4" />
-            </Button>
-
-            <Button 
-              onClick={() => setIsPlaying(!isPlaying)} 
-              variant="outline" 
-              size="sm"
-            >
-              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </Button>
-
-            <Button 
-              onClick={handleFlipCard} 
-              variant="outline" 
-              size="sm"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Virar
-            </Button>
-
-            <Button 
-              onClick={handleNextCard} 
-              disabled={currentCardIndex === normalizedContent.cards.length - 1}
-              variant="outline" 
-              size="sm"
-            >
-              <SkipForward className="w-4 h-4" />
-            </Button>
-
-            <Button onClick={handleShuffle} variant="outline" size="sm">
-              <Shuffle className="w-4 h-4" />
-            </Button>
-
-            <Button 
-              onClick={() => setShowStats(!showStats)} 
-              variant="outline" 
-              size="sm"
-            >
-              <BarChart3 className="w-4 h-4" />
-            </Button>
-
-            <Button onClick={resetSession} variant="outline" size="sm">
-              <RotateCcw className="w-4 h-4" />
-              Reset
-            </Button>
           </div>
-        </div>
-      </div>
-
-      {/* Estatísticas */}
-      <AnimatePresence>
-        {showStats && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-          >
-            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
-              Estatísticas da Sessão
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {sessionStats.cardsStudied}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  Cards Estudados
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {sessionStats.correctAnswers}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  Acertos
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {sessionStats.incorrectAnswers}
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  Erros
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {sessionStats.cardsStudied > 0 
-                    ? Math.round((sessionStats.correctAnswers / sessionStats.cardsStudied) * 100)
-                    : 0}%
-                </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  Precisão
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
