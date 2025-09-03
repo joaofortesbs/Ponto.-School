@@ -20,6 +20,7 @@ import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/Plano
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
+import { FlashCardsPreview } from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { CheckCircle2 } from 'lucide-react';
 
 // --- Componentes de Edição Específicos ---
@@ -496,6 +497,8 @@ const EditActivityModal = ({
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
+  const [isGeneratingFlashCards, setIsGeneratingFlashCards] = useState(false);
 
   // Estado para controle de construção da atividade
   const [buildingStatus, setBuildingStatus] = useState({
@@ -609,10 +612,20 @@ const EditActivityModal = ({
              formData.generalObjective?.trim() &&
              formData.evaluationCriteria?.trim();
     } else if (activityType === 'flash-cards') { // Validar campos específicos do Flash Cards
-      return formData.title.trim() &&
-             formData.theme?.trim() &&
-             formData.topicos?.trim() &&
-             formData.numberOfFlashcards?.trim();
+      const isValid = formData.title.trim() &&
+                     formData.theme?.trim() &&
+                     formData.topicos?.trim() &&
+                     formData.numberOfFlashcards?.trim();
+
+      console.log('🔍 Validação do Flash Cards:', {
+        title: !!formData.title.trim(),
+        theme: !!formData.theme?.trim(),
+        topicos: !!formData.topicos?.trim(),
+        numberOfFlashcards: !!formData.numberOfFlashcards?.trim(),
+        isValid
+      });
+
+      return isValid;
     }
     else {
       return formData.title.trim() &&
@@ -864,6 +877,189 @@ const EditActivityModal = ({
   };
 
   // --- Funções de Geração Específicas ---
+
+  // Função para gerar conteúdo do Flash Cards
+  const handleGenerateFlashCards = async () => {
+    try {
+      setIsGeneratingFlashCards(true);
+      setGenerationError(null);
+
+      console.log('🃏 Iniciando geração real dos Flash Cards');
+      console.log('📋 FormData completo:', formData);
+
+      // Validar dados obrigatórios
+      if (!formData.title?.trim()) {
+        throw new Error('Título é obrigatório');
+      }
+      if (!formData.theme?.trim()) {
+        throw new Error('Tema é obrigatório');
+      }
+      if (!formData.topicos?.trim()) {
+        throw new Error('Tópicos são obrigatórios');
+      }
+
+      // Importar o gerador do Flash Cards
+      const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
+
+      // Preparar dados estruturados para o gerador
+      const flashCardsData = {
+        subject: formData.subject?.trim() || 'Português',
+        schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
+        theme: formData.theme?.trim() || formData.title?.trim() || 'Tema Geral',
+        objectives: formData.objectives?.trim() || formData.description?.trim() || `Estudar e revisar conceitos sobre ${formData.theme}`,
+        difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
+        numberOfFlashcards: formData.numberOfFlashcards?.trim() || '10',
+        topicos: formData.topicos?.trim() || 'Tópicos gerais sobre o tema',
+        instructions: formData.instructions?.trim() || 'Use estes flash cards para revisar o conteúdo estudado.',
+        evaluation: formData.evaluation?.trim() || 'Avalie o aprendizado pela capacidade de responder corretamente às perguntas.'
+      };
+
+      console.log('🃏 Dados estruturados para o Gemini:', flashCardsData);
+
+      // Validar campos críticos
+      const requiredFields = ['subject', 'theme', 'numberOfFlashcards', 'topicos'];
+      for (const field of requiredFields) {
+        if (!flashCardsData[field as keyof typeof flashCardsData]) {
+          throw new Error(`Campo obrigatório não preenchido: ${field}`);
+        }
+      }
+
+      // Criar instância do gerador e gerar conteúdo
+      const generator = new FlashCardsGenerator();
+      const generatedContent = await generator.generateFlashCardsContent(flashCardsData);
+
+      console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
+
+      // Validar conteúdo gerado
+      if (!generatedContent.cards || generatedContent.cards.length === 0) {
+        console.warn('⚠️ Conteúdo gerado sem flash cards, usando fallback');
+        throw new Error('Nenhum flash card foi gerado pela API');
+      }
+
+      // Preparar conteúdo final com dados do formulário
+      const finalContent = {
+        title: formData.title || generatedContent.title,
+        description: formData.description || generatedContent.description,
+        cards: generatedContent.cards,
+        totalCards: generatedContent.cards.length,
+        subject: flashCardsData.subject,
+        schoolYear: flashCardsData.schoolYear,
+        theme: flashCardsData.theme,
+        topicos: flashCardsData.topicos,
+        numberOfFlashcards: flashCardsData.numberOfFlashcards,
+        instructions: flashCardsData.instructions,
+        evaluation: flashCardsData.evaluation,
+        generatedByAI: true,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: generatedContent.isGeneratedByAI || true,
+        isFallback: false,
+        formDataUsed: flashCardsData
+      };
+
+      console.log('📦 Conteúdo final preparado:', finalContent);
+      console.log('🃏 Flash cards incluídos (CRÍTICO):', finalContent.cards);
+      console.log('🔢 Total de flash cards:', finalContent.cards.length);
+
+      // Salvar no localStorage com estrutura consistente
+      const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
+      const storageData = {
+        success: true,
+        data: finalContent
+      };
+
+      localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+      console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
+
+      // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
+      setFlashCardsContent(finalContent);
+      setGeneratedContent(finalContent);
+      setIsContentLoaded(true);
+
+      // Validação detalhada da estrutura
+      const validation = {
+        hasCards: !!(finalContent.cards && finalContent.cards.length > 0),
+        cardsCount: finalContent.cards?.length || 0,
+        allCardsValid: finalContent.cards?.every(card =>
+          card.front && card.back && card.id
+        ) || false,
+        hasTitle: !!finalContent.title,
+        hasTotalCards: !!finalContent.totalCards
+      };
+
+      console.log('🔍 Validação da estrutura final:', validation);
+
+      if (!validation.hasCards || !validation.allCardsValid) {
+        console.error('❌ Estrutura de dados inválida detectada:', finalContent);
+        throw new Error('Dados gerados pela API estão incompletos ou malformados');
+      }
+
+      // Force update para garantir reatividade
+      setTimeout(() => {
+        console.log('🔄 Verificação de sincronização:', {
+          flashCardsContent: !!flashCardsContent,
+          generatedContent: !!generatedContent,
+          cardsCount: finalContent.cards.length,
+          validation,
+          actualCards: finalContent.cards
+        });
+
+        // Force update com deep clone para garantir reatividade
+        setFlashCardsContent(JSON.parse(JSON.stringify(finalContent)));
+        setGeneratedContent(JSON.parse(JSON.stringify(finalContent)));
+
+        // Atualizar aba para mostrar preview
+        setActiveTab('preview');
+      }, 100);
+
+      toast({
+        title: "Flash Cards Gerados com Sucesso!",
+        description: `${finalContent.cards.length} flash cards foram gerados pela IA do Gemini.`,
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar Flash Cards:', error);
+      setGenerationError(`Erro ao gerar o conteúdo dos flash cards: ${error.message}`);
+
+      // Criar conteúdo de fallback em caso de erro
+      const fallbackContent = {
+        title: formData.title || `Flash Cards: ${formData.theme}`,
+        description: formData.description || `Flash cards sobre ${formData.theme} (Modo Demonstração)`,
+        cards: Array.from({ length: parseInt(formData.numberOfFlashcards) || 5 }, (_, index) => ({
+          id: index + 1,
+          front: `Pergunta ${index + 1}: Sobre ${formData.theme} em ${formData.subject}, qual conceito é importante para o ${formData.schoolYear}?`,
+          back: `Resposta ${index + 1}: Esta é uma resposta de exemplo sobre ${formData.theme}. O conceito abordado é fundamental para o entendimento em ${formData.subject} no ${formData.schoolYear}.`,
+          category: 'conceitos gerais',
+          difficulty: formData.difficultyLevel || 'médio'
+        })),
+        totalCards: parseInt(formData.numberOfFlashcards) || 5,
+        subject: formData.subject,
+        schoolYear: formData.schoolYear,
+        theme: formData.theme,
+        topicos: formData.topicos,
+        numberOfFlashcards: formData.numberOfFlashcards,
+        instructions: formData.instructions || 'Use estes flash cards para revisar o conteúdo estudado.',
+        evaluation: formData.evaluation || 'Avalie o aprendizado pela capacidade de responder corretamente.',
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: false,
+        isFallback: true
+      };
+
+      console.log('🛡️ Usando conteúdo de fallback:', fallbackContent);
+
+      setFlashCardsContent(fallbackContent);
+      setGeneratedContent(fallbackContent);
+      setIsContentLoaded(true);
+      setActiveTab('preview');
+
+      toast({
+        title: "Flash Cards Criados (Modo Demonstração)",
+        description: "Foi criado um conjunto de flash cards de exemplo. Verifique a configuração da API para gerar conteúdo personalizado.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingFlashCards(false);
+    }
+  };
 
   // Função para gerar conteúdo do Quiz Interativo
   const handleGenerateQuizInterativo = async () => {
@@ -1141,6 +1337,7 @@ const EditActivityModal = ({
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
       const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`); // New: Load Quiz Interativo content
+      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`); // New: Load Flash Cards content
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
@@ -1150,6 +1347,7 @@ const EditActivityModal = ({
         hasQuadroInterativoSavedContent: !!quadroInterativoSavedContent,
         hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
         hasQuizInterativoSavedContent: !!quizInterativoSavedContent,
+        hasFlashCardsSavedContent: !!flashCardsSavedContent,
         activityId: activity.id
       });
 
@@ -1197,6 +1395,24 @@ const EditActivityModal = ({
           }
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
+          contentToLoad = null;
+        }
+      } else if (activity.id === 'flash-cards' && flashCardsSavedContent) { // Check for Flash Cards content
+        try {
+          const parsedContent = JSON.parse(flashCardsSavedContent);
+          contentToLoad = parsedContent.data || parsedContent; // Handle both wrapped and direct data
+
+          // Validar se o conteúdo tem flash cards
+          if (contentToLoad && contentToLoad.cards && contentToLoad.cards.length > 0) {
+            console.log(`✅ Conteúdo específico do Flash Cards encontrado para: ${activity.id}`, contentToLoad);
+            console.log(`🃏 ${contentToLoad.cards.length} flash cards carregados`);
+            setFlashCardsContent(contentToLoad); // Set the specific state for Flash Cards
+          } else {
+            console.warn('⚠️ Conteúdo do Flash Cards encontrado mas sem cards válidos');
+            contentToLoad = null;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico do Flash Cards:', error);
           contentToLoad = null;
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
@@ -2238,18 +2454,18 @@ const EditActivityModal = ({
           await handleBuildActivity();
         } else if (isFlashCards) {
           console.log('🃏 Auto-build específico para Flash Cards');
-          await handleBuildActivity(); // Chama a construção genérica que inclui Flash Cards
+          await handleGenerateFlashCards(); // Use the specific function for Flash Cards
         }
         else {
           console.log('🏗️ Auto-build genérico para outras atividades');
           await handleBuildActivity(); // Use the generic build function
         }
         console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : (isFlashCards ? 300 : 300)) )); // Increased delay for Quiz for API call
+      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : (isFlashCards ? 800 : 300)) )); // Increased delay for Flash Cards for API call
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, isFormValidForBuild]);
+  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, handleGenerateFlashCards, isFormValidForBuild]);
 
   if (!isOpen) return null;
 
@@ -2740,22 +2956,28 @@ const EditActivityModal = ({
                     const activityType = activity?.id || '';
                     if (activityType === 'quiz-interativo') {
                       handleGenerateQuizInterativo();
+                    } else if (activityType === 'flash-cards') {
+                      handleGenerateFlashCards();
                     } else {
                       handleBuildActivity();
                     }
                   }}
-                  disabled={isBuilding || isGeneratingQuiz || !isFormValidForBuild()}
+                  disabled={isBuilding || isGeneratingQuiz || isGeneratingFlashCards || !isFormValidForBuild()}
                   className="w-full bg-gradient-to-r from-[#FF6B00] to-[#FF8C40] hover:from-[#FF8C40] hover:to-[#FF6B00] text-white font-semibold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isBuilding || isGeneratingQuiz ? (
+                  {isBuilding || isGeneratingQuiz || isGeneratingFlashCards ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isGeneratingQuiz ? 'Gerando Quiz...' : (activity?.id === 'quiz-interativo' ? 'Gerando Quiz...' : 'Gerando Atividade...')}
+                      {isGeneratingQuiz ? 'Gerando Quiz...' : 
+                       isGeneratingFlashCards ? 'Gerando Flash Cards...' : 
+                       (activity?.id === 'quiz-interativo' ? 'Gerando Quiz...' : 
+                        activity?.id === 'flash-cards' ? 'Gerando Flash Cards...' : 'Gerando Atividade...')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      {activity?.id === 'quiz-interativo' ? 'Gerar Quiz com IA' : 'Construir Atividade'}
+                      {activity?.id === 'quiz-interativo' ? 'Gerar Quiz com IA' : 
+                       activity?.id === 'flash-cards' ? 'Gerar Flash Cards com IA' : 'Construir Atividade'}
                     </>
                   )}
                 </Button>
@@ -2766,7 +2988,7 @@ const EditActivityModal = ({
             {activeTab === 'preview' && (
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                  {isContentLoaded && (generatedContent || quizInterativoContent) ? (
+                  {isContentLoaded && (generatedContent || quizInterativoContent || flashCardsContent) ? (
                     activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
@@ -2792,6 +3014,11 @@ const EditActivityModal = ({
                       <QuizInterativoPreview // Use the specific preview component for Quiz Interativo
                         content={quizInterativoContent || generatedContent}
                         isLoading={isGeneratingQuiz}
+                      />
+                    ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
+                      <FlashCardsPreview
+                        content={flashCardsContent || generatedContent}
+                        isLoading={isGeneratingFlashCards}
                       />
                     ) : activity?.id === 'mapa-mental' ? ( // Preview para Mapa Mental
                       <div className="p-6 flex flex-col items-center justify-center h-full text-center">
@@ -2867,12 +3094,13 @@ const EditActivityModal = ({
             <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
-            {(generatedContent || quizInterativoContent) && (
+            {(generatedContent || quizInterativoContent || flashCardsContent) && (
               <>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    navigator.clipboard.writeText(JSON.stringify(quizInterativoContent || generatedContent, null, 2));
+                    const contentToCopy = flashCardsContent || quizInterativoContent || generatedContent;
+                    navigator.clipboard.writeText(JSON.stringify(contentToCopy, null, 2));
                     toast({
                       title: "Conteúdo copiado!",
                       description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
@@ -2884,12 +3112,13 @@ const EditActivityModal = ({
                 </Button>
               </>
             )}
-             {(generatedContent || quizInterativoContent) && (
+             {(generatedContent || quizInterativoContent || flashCardsContent) && (
               <Button
                 variant="outline"
                 onClick={() => {
                   clearContent(); // Clear generic content
                   setQuizInterativoContent(null); // Clear specific quiz content
+                  setFlashCardsContent(null); // Clear specific flash cards content
                   setIsContentLoaded(false); // Reset content loaded state
                   toast({
                     title: "Conteúdo Limpo",
