@@ -126,18 +126,9 @@
       return !!(activityFormData.subject?.trim() && activityFormData.theme?.trim());
     })();
 
-// Sistema robusto de armazenamento para Flash Cards
+// Sistema otimizado de armazenamento para Flash Cards
         const timestamp = Date.now();
-        const baseStorageKey = `constructed_${activityType}_${activityKey}`;
-
-        // Salvar em múltiplas chaves para garantir disponibilidade
-        const storageKeys = [
-          baseStorageKey,
-          `constructed_${activityType}_flash-cards`,
-          `flash-cards-auto-build-${timestamp}`,
-          'flash-cards-data-latest'
-        ];
-
+        
         const storageData = {
           success: true,
           data: result.data,
@@ -146,9 +137,9 @@
           source: 'autoBuild'
         };
 
-        storageKeys.forEach(key => {
-          localStorage.setItem(key, JSON.stringify(storageData));
-        });
+        // Salvar nas chaves principais
+        localStorage.setItem('flash-cards-data-latest', JSON.stringify(storageData));
+        localStorage.setItem('constructed_flash-cards_flash-cards', JSON.stringify(storageData));
 
         // Salvar também em constructedActivities
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
@@ -160,62 +151,27 @@
         };
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-        console.log(`✅ [AutoBuild] ${activityType} construído e salvo:`, {
-          storageKeys,
-          data: result.data
-        });
+        console.log(`✅ [AutoBuild] ${activityType} construído e salvo:`, result.data);
 
-        // Notificar o sistema centralizado se for Flash Cards
+        // Sistema único de eventos para Flash Cards
         if (activityType === 'flash-cards') {
-          try {
-            // Tentar acessar o FlashCardsDataManager
-            setTimeout(async () => {
-              try {
-                const { FlashCardsDataManager } = await import('../activities/flash-cards/FlashCardsPreview');
-                const manager = FlashCardsDataManager.getInstance();
-                manager.updateData(result.data);
-                console.log('📊 Flash Cards enviados para o manager centralizado');
-              } catch (error) {
-                console.warn('❌ Erro ao notificar manager centralizado:', error);
-              }
-            }, 100);
-          } catch (error) {
-            console.warn('❌ Erro ao importar FlashCardsDataManager:', error);
-          }
+          const eventDetail = {
+            activityKey,
+            data: result.data,
+            success: true,
+            source: 'autoBuild',
+            timestamp
+          };
+
+          // Disparar evento principal
+          window.dispatchEvent(new CustomEvent('flash-cards-content-ready', { detail: eventDetail }));
+          
+          // Notificar o manager centralizado
+          setTimeout(() => {
+            try {
+              window.dispatchEvent(new CustomEvent('flash-cards-data-update', { detail: eventDetail }));
+            } catch (error) {
+              console.warn('❌ Erro ao disparar evento de atualização:', error);
+            }
+          }, 50);
         }
-
-        // Sistema expandido de eventos
-        const eventTypes = [
-          `${activityType}-auto-build`,
-          'activity-auto-built',
-          'construction-completed'
-        ];
-
-        // Eventos específicos para Flash Cards
-        if (activityType === 'flash-cards') {
-          eventTypes.push(
-            'flash-cards-generated',
-            'flash-cards-content-ready',
-            'flash-cards-preview-update'
-          );
-        }
-
-        const eventDetail = {
-          activityKey,
-          data: result.data,
-          success: true,
-          source: 'autoBuild',
-          timestamp
-        };
-
-        // Disparar todos os eventos
-        eventTypes.forEach(eventType => {
-          window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
-        });
-
-        // Backup com delay
-        setTimeout(() => {
-          eventTypes.forEach(eventType => {
-            window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
-          });
-        }, 200);

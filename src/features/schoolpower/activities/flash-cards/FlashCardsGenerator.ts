@@ -231,29 +231,13 @@ Tópicos para os flash cards: ${data.topicos}
       generatedAt: new Date().toISOString()
     };
 
-    // Notificar o sistema centralizado
-    setTimeout(() => {
-      try {
-        const eventDetail = { 
-          data: finalResult, 
-          source: 'FlashCardsGenerator',
-          timestamp: Date.now()
-        };
-
-        const eventTypes = [
-          'flash-cards-generated',
-          'flash-cards-content-ready'
-        ];
-
-        eventTypes.forEach(eventType => {
-          window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
-        });
-
-        console.log('📡 FlashCardsGenerator: Eventos disparados', eventTypes);
-      } catch (error) {
-        console.warn('❌ FlashCardsGenerator: Erro ao disparar eventos:', error);
-      }
-    }, 100);
+    // Salvar nos locais corretos para garantir acesso
+    localStorage.setItem('flash-cards-data-latest', JSON.stringify({
+      success: true,
+      data: finalResult,
+      timestamp: Date.now(),
+      source: 'FlashCardsGenerator'
+    }));
 
     return finalResult;
   }

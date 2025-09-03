@@ -75,23 +75,15 @@ class FlashCardsDataManager {
   searchInStorage(activityId?: string): FlashCardsContent | null {
     console.log('🔍 FlashCardsDataManager: Buscando no localStorage...');
 
-    const searchKeys = [
-      `constructed_flash-cards_${activityId || 'flash-cards'}`,
+    // Buscar prioritariamente pelas chaves mais recentes
+    const priorityKeys = [
+      'flash-cards-data-latest',
       'constructed_flash-cards_flash-cards',
-      'flash-cards-data',
-      'flash-cards-data-generated',
-      'constructedActivities'
+      `constructed_flash-cards_${activityId || 'flash-cards'}`
     ];
 
-    // Buscar por todas as chaves que contêm 'flash-cards'
-    const allKeys = Object.keys(localStorage);
-    const flashCardKeys = allKeys.filter(key => 
-      key.includes('flash-cards') || key.includes('flash_cards')
-    );
-
-    const combinedKeys = [...new Set([...searchKeys, ...flashCardKeys])];
-
-    for (const key of combinedKeys) {
+    // Primeiro, tentar as chaves prioritárias
+    for (const key of priorityKeys) {
       try {
         const data = localStorage.getItem(key);
         if (!data) continue;
@@ -99,30 +91,43 @@ class FlashCardsDataManager {
         const parsed = JSON.parse(data);
         let flashCardsData = null;
 
-        // Diferentes estruturas possíveis
-        if (key === 'constructedActivities') {
-          const activity = Object.values(parsed).find((item: any) => 
-            item?.activityType === 'flash-cards' && 
-            item?.generatedContent?.cards &&
-            Array.isArray(item.generatedContent.cards) &&
-            item.generatedContent.cards.length > 0
-          );
-          if (activity) {
-            flashCardsData = (activity as any).generatedContent;
-          }
-        } else if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
+        if (parsed.success && parsed.data?.cards) {
           flashCardsData = parsed.data;
         } else if (parsed.cards && Array.isArray(parsed.cards)) {
           flashCardsData = parsed;
         }
 
         if (flashCardsData && this.isValidFlashCardsData(flashCardsData)) {
-          console.log(`✅ FlashCardsDataManager: Dados encontrados na chave ${key}:`, flashCardsData);
+          console.log(`✅ FlashCardsDataManager: Dados prioritários encontrados na chave ${key}:`, flashCardsData);
           return flashCardsData;
         }
       } catch (error) {
-        console.warn(`❌ FlashCardsDataManager: Erro ao processar chave ${key}:`, error);
+        console.warn(`❌ FlashCardsDataManager: Erro ao processar chave prioritária ${key}:`, error);
       }
+    }
+
+    // Se não encontrou nas chaves prioritárias, buscar em constructedActivities
+    try {
+      const constructedData = localStorage.getItem('constructedActivities');
+      if (constructedData) {
+        const parsed = JSON.parse(constructedData);
+        const flashCardsActivity = Object.values(parsed).find((item: any) => 
+          item?.activityType === 'flash-cards' && 
+          item?.generatedContent?.cards &&
+          Array.isArray(item.generatedContent.cards) &&
+          item.generatedContent.cards.length > 0
+        );
+        
+        if (flashCardsActivity) {
+          const flashCardsData = (flashCardsActivity as any).generatedContent;
+          if (this.isValidFlashCardsData(flashCardsData)) {
+            console.log('✅ FlashCardsDataManager: Dados encontrados em constructedActivities:', flashCardsData);
+            return flashCardsData;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('❌ FlashCardsDataManager: Erro ao processar constructedActivities:', error);
     }
 
     console.log('❌ FlashCardsDataManager: Nenhum dado válido encontrado no localStorage');
@@ -151,38 +156,30 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   // Instância do gerenciador de dados
   const dataManager = FlashCardsDataManager.getInstance();
 
-  // Sistema de busca ativa de dados
+  // Sistema de busca ativa de dados (não recorrente)
   const searchForFlashCardsData = useCallback(async () => {
     if (isSearching) return;
 
     setIsSearching(true);
-    console.log('🔍 Iniciando busca ativa por dados de Flash Cards...');
+    console.log('🔍 Iniciando busca única por dados de Flash Cards...');
 
     try {
-      // Buscar no storage
+      // Buscar no storage uma única vez
       const storageData = dataManager.searchInStorage(activity?.id);
       if (storageData) {
-        console.log('✅ Dados encontrados no storage, aplicando:', storageData);
+        console.log('✅ Dados encontrados no storage:', storageData);
         dataManager.updateData(storageData);
+        setIsSearching(false);
         return;
       }
 
-      // Aguardar um pouco e tentar novamente
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const retryData = dataManager.searchInStorage(activity?.id);
-      if (retryData) {
-        console.log('✅ Dados encontrados na segunda tentativa:', retryData);
-        dataManager.updateData(retryData);
-      } else {
-        console.log('❌ Nenhum dado encontrado após busca completa');
-      }
+      console.log('❌ Nenhum dado encontrado no storage');
     } catch (error) {
       console.error('❌ Erro na busca de dados:', error);
     } finally {
       setIsSearching(false);
     }
-  }, [activity?.id, isSearching]);
+  }, [activity?.id, dataManager]);
 
   // Subscrever aos dados centralizados
   useEffect(() => {
@@ -195,10 +192,10 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     return unsubscribe;
   }, []);
 
-  // Listener para eventos globais
+  // Listener para eventos globais (simplificado)
   useEffect(() => {
     const handleFlashCardsEvent = (event: CustomEvent) => {
-      console.log('📡 FlashCardsPreview: Evento recebido:', event.type, event.detail);
+      console.log('📡 FlashCardsPreview: Evento recebido:', event.type);
 
       if (event.detail?.data) {
         const eventData = event.detail.data;
@@ -217,59 +214,21 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
       }
     };
 
-    const eventTypes = [
-      'flash-cards-auto-build',
-      'activity-auto-built',
-      'flash-cards-generated',
-      'flash-cards-content-ready',
-      'construction-completed'
-    ];
-
-    eventTypes.forEach(eventType => {
-      window.addEventListener(eventType, handleFlashCardsEvent as EventListener);
-    });
+    // Evento principal para receber dados
+    window.addEventListener('flash-cards-content-ready', handleFlashCardsEvent as EventListener);
+    window.addEventListener('flash-cards-data-update', handleFlashCardsEvent as EventListener);
 
     return () => {
-      eventTypes.forEach(eventType => {
-        window.removeEventListener(eventType, handleFlashCardsEvent as EventListener);
-      });
+      window.removeEventListener('flash-cards-content-ready', handleFlashCardsEvent as EventListener);
+      window.removeEventListener('flash-cards-data-update', handleFlashCardsEvent as EventListener);
     };
   }, [dataManager]);
 
-  // Busca inicial e periódica
+  // Busca inicial única
   useEffect(() => {
-    // Busca imediata
-    const immediateSearch = async () => {
-      await searchForFlashCardsData();
-    };
-    immediateSearch();
-
-    // Busca periódica mais eficiente
-    let attemptCount = 0;
-    const maxAttempts = 5;
-    
-    const interval = setInterval(() => {
-      if (!dataManager.getCurrentData() && attemptCount < maxAttempts) {
-        attemptCount++;
-        console.log(`🔄 Tentativa ${attemptCount}/${maxAttempts} de busca`);
-        searchForFlashCardsData();
-      } else if (attemptCount >= maxAttempts) {
-        clearInterval(interval);
-        console.log('⏹️ Limite de tentativas atingido, parando busca');
-      }
-    }, 2000);
-
-    // Limpar após 15 segundos
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      console.log('⏹️ Timeout da busca periódica');
-    }, 15000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [activity?.id, searchForFlashCardsData]);
+    // Busca imediata única
+    searchForFlashCardsData();
+  }, [activity?.id]);
 
   // Reset quando o conteúdo mudar
   useEffect(() => {
@@ -330,19 +289,17 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   const progress = totalCards > 0 ? ((currentCardIndex + (showAnswer ? 1 : 0)) / totalCards) * 100 : 0;
   const completedCards = responses.length;
 
-  // Debug info
+  // Debug info controlado
   useEffect(() => {
-    console.log('🎯 FlashCardsPreview - Estado atual:', {
-      hasEffectiveContent: !!effectiveContent,
-      validCardsCount: validCards.length,
-      currentCardIndex,
-      isLoading,
-      isSearching,
-      hasDynamicContent: !!dynamicContent,
-      hasContentProp: !!content,
-      lastUpdate: new Date(lastUpdate).toLocaleTimeString()
-    });
-  }, [effectiveContent, validCards.length, currentCardIndex, isLoading, isSearching, dynamicContent, content, lastUpdate]);
+    if (validCards.length > 0) {
+      console.log('🎯 FlashCardsPreview - Estado atual:', {
+        validCardsCount: validCards.length,
+        currentCardIndex,
+        isLoading,
+        isSearching
+      });
+    }
+  }, [validCards.length, isLoading]);
 
   // Loading states
   if (isLoading || isSearching) {
