@@ -1,0 +1,15 @@
+AGORA FOQUE EXCLUSIVAMENTE NAS SEGUINTES COISAS:
+
+Faça as seguintes alterações dentro da seção de School Power: Dentro da interface de Construção de Atividades: Dentro do modal de Visualizar Atividades, mas especificamente dentro ddas atividades de Flash Cards:
+
+Agora precisamos começar a configurar a maneira e a lógica da criação da atividade de Flash Cards é construida dentro do modal de Editar Materiais! (Verifique se existe um arquivo especifico que cuida da lógica de geração/construção da atividade de Flash Cards, se ainda não exsitir, crie um arquivo separado para essa lógica! Se inspire nos sistema de geração/construção de ativiadede de Flash Cards)!!!!!!!
+
+Seja extremamente cuidadoso e super analista! Revise e analise tudo para não fazer nada errado! Reflita sobre cada modificação e analise como você vai fazer cada alteração dentro da plataforma! Não se esqueça de fazer nada que eu te pedi! Faça que a plataforma seja renderizada corretamente depois de todas as alterações!!!!!!!
+
+A nova lógica de construção, precisa ser:
+
+Você vai analisar toda a estrutura da construção da atividade de Quiz Interativo, e vai fazer exatamente a mesma estrutura, com exatamente o mesmo código, mesmos sistemas, mesmas configurações, mesmas sicronizações, mesmas conexões e integrações, você vai copiar absolutametne tudo igual, porém agora para a atividade de Flash Cards! Ou seja, quando o usuário for construir a atividade de Flash Cards, a atividade que vai aparecer dentro da interface de Pré-visualziação de dentro do modal de Editar Materiais, vai ser um quiz interativo, com exatamente o mesmo desing de uma atividade de Quiz Interativo!
+
+Eu preciso que você investigue e analise todos os códigos atuais do sistema de cosntrução e visualização da atividade de Quiz Interativo, porque você vai copiar absolutamente tudo para a atividade de Flash Cards!!!!!!!
+
+Você só vai atualizar a lógica da geração da atividade, fazendo uma duplicata exata! Não altere coisas fora de contexto! E não mude os campos de dentro do modal de Editar Materiais! Não prejudique negativamente as funcionalidaeds existentes já funcionais!!!!!!!
