@@ -1,0 +1,220 @@
+[plugin:vite:react-swc] × the name `effectiveContent` is defined multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:434:1]
+ 434 │ 
+ 435 │   // Verificação final de conteúdo válido
+ 436 │   const validCards = getValidCards();
+ 437 │   const effectiveContent = getEffectiveContent();
+     ·         ────────┬───────
+     ·                 ╰── previous definition of `effectiveContent` here
+ 438 │   
+ 439 │   // Se não há conteúdo válido após verificar todas as fontes
+ 440 │   if (!hasValidContent() && validCards.length === 0) {
+ 441 │     console.log('🔍 Não há conteúdo válido, fazendo busca final no localStorage...');
+ 442 │     
+ 443 │     // Busca final no localStorage
+ 444 │     const storageKeys = [
+ 445 │       'constructedActivities',
+ 446 │       'constructed_flash-cards_flash-cards',
+ 447 │       `constructed_flash-cards_${activity?.id || 'flash-cards'}`,
+ 448 │       'flash-cards-data'
+ 449 │     ];
+ 450 │     
+ 451 │     // Também buscar por qualquer chave que contenha 'flash-cards'
+ 452 │     const allKeys = Object.keys(localStorage);
+ 453 │     const flashCardKeys = allKeys.filter(key => key.includes('flash-cards'));
+ 454 │     storageKeys.push(...flashCardKeys);
+ 455 │     
+ 456 │     console.log('🔑 Chaves a verificar:', storageKeys);
+ 457 │     
+ 458 │     for (const key of storageKeys) {
+ 459 │       try {
+ 460 │         const data = localStorage.getItem(key);
+ 461 │         if (data) {
+ 462 │           const parsed = JSON.parse(data);
+ 463 │           let flashCardsData = null;
+ 464 │           
+ 465 │           // Diferentes estruturas possíveis
+ 466 │           if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
+ 467 │             flashCardsData = parsed.data;
+ 468 │           } else if (parsed.cards && Array.isArray(parsed.cards)) {
+ 469 │             flashCardsData = parsed;
+ 470 │           } else if (typeof parsed === 'object') {
+ 471 │             // Buscar em constructedActivities
+ 472 │             const foundActivity = Object.values(parsed).find((item: any) => 
+ 473 │               item?.activityType === 'flash-cards' && 
+ 474 │               item?.generatedContent?.cards && 
+ 475 │               Array.isArray(item.generatedContent.cards)
+ 476 │             );
+ 477 │             if (foundActivity) {
+ 478 │               flashCardsData = (foundActivity as any).generatedContent;
+ 479 │             }
+ 480 │           }
+ 481 │           
+ 482 │           if (flashCardsData && flashCardsData.cards && flashCardsData.cards.length > 0) {
+ 483 │             console.log('🎯 Flash Cards encontrados na busca final:', flashCardsData);
+ 484 │             
+ 485 │             // Aplicar dados encontrados
+ 486 │             setInternalFlashCardsData(flashCardsData);
+ 487 │             setIsContentLoaded(true);
+ 488 │             
+ 489 │             // Forçar re-render
+ 490 │             setTimeout(() => {
+ 491 │               setContentLoaded(prev => !prev);
+ 492 │             }, 10);
+ 493 │             
+ 494 │             // Retornar loading temporário enquanto aplica os dados
+ 495 │             return (
+ 496 │               <div className="flex flex-col items-center justify-center h-full p-6">
+ 497 │                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
+ 498 │                 <p className="text-gray-600 dark:text-gray-400">Aplicando Flash Cards encontrados...</p>
+ 499 │               </div>
+ 500 │             );
+ 501 │           }
+ 502 │         }
+ 503 │       } catch (error) {
+ 504 │         console.warn(`❌ Erro ao verificar chave ${key}:`, error);
+ 505 │       }
+ 506 │     }
+ 507 │     
+ 508 │     console.log('❌ Busca final concluída - nenhum Flash Cards encontrado');
+ 509 │     
+ 510 │     return (
+ 511 │       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+ 512 │         <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+ 513 │         <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+ 514 │           Nenhum flash card disponível
+ 515 │         </h4>
+ 516 │         <p className="text-gray-500 dark:text-gray-500 mb-4">
+ 517 │           Configure os campos e gere os flash cards primeiro
+ 518 │         </p>
+ 519 │         <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded mt-4">
+ 520 │           <strong>Debug - Cards Disponíveis:</strong><br/>
+ 521 │           Total Valid Cards: {validCards.length}<br/>
+ 522 │           Has Effective Content: {!!effectiveContent ? 'Sim' : 'Não'}<br/>
+ 523 │           Internal Data: {!!internalFlashCardsData ? 'Sim' : 'Não'}<br/>
+ 524 │           Content Prop: {!!content ? 'Sim' : 'Não'}<br/>
+ 525 │           Has Checked Storage: {hasCheckedStorage ? 'Sim' : 'Não'}
+ 526 │         </div>
+ 527 │       </div>
+ 528 │     );
+ 529 │   }
+ 530 │ 
+ 531 │   const effectiveContent = getEffectiveContent();
+     ·         ────────┬───────
+     ·                 ╰── `effectiveContent` redefined here
+ 532 │   const validCards = getValidCards();
+ 533 │   const currentCard = validCards.length > 0 ? validCards[currentCardIndex] : null;
+ 534 │   const totalCards = validCards.length || effectiveContent?.totalCards || 0;
+     ╰────
+
+  × the name `validCards` is defined multiple times
+     ╭─[/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:433:1]
+ 433 │   }
+ 434 │ 
+ 435 │   // Verificação final de conteúdo válido
+ 436 │   const validCards = getValidCards();
+     ·         ─────┬────
+     ·              ╰── previous definition of `validCards` here
+ 437 │   const effectiveContent = getEffectiveContent();
+ 438 │   
+ 439 │   // Se não há conteúdo válido após verificar todas as fontes
+ 440 │   if (!hasValidContent() && validCards.length === 0) {
+ 441 │     console.log('🔍 Não há conteúdo válido, fazendo busca final no localStorage...');
+ 442 │     
+ 443 │     // Busca final no localStorage
+ 444 │     const storageKeys = [
+ 445 │       'constructedActivities',
+ 446 │       'constructed_flash-cards_flash-cards',
+ 447 │       `constructed_flash-cards_${activity?.id || 'flash-cards'}`,
+ 448 │       'flash-cards-data'
+ 449 │     ];
+ 450 │     
+ 451 │     // Também buscar por qualquer chave que contenha 'flash-cards'
+ 452 │     const allKeys = Object.keys(localStorage);
+ 453 │     const flashCardKeys = allKeys.filter(key => key.includes('flash-cards'));
+ 454 │     storageKeys.push(...flashCardKeys);
+ 455 │     
+ 456 │     console.log('🔑 Chaves a verificar:', storageKeys);
+ 457 │     
+ 458 │     for (const key of storageKeys) {
+ 459 │       try {
+ 460 │         const data = localStorage.getItem(key);
+ 461 │         if (data) {
+ 462 │           const parsed = JSON.parse(data);
+ 463 │           let flashCardsData = null;
+ 464 │           
+ 465 │           // Diferentes estruturas possíveis
+ 466 │           if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
+ 467 │             flashCardsData = parsed.data;
+ 468 │           } else if (parsed.cards && Array.isArray(parsed.cards)) {
+ 469 │             flashCardsData = parsed;
+ 470 │           } else if (typeof parsed === 'object') {
+ 471 │             // Buscar em constructedActivities
+ 472 │             const foundActivity = Object.values(parsed).find((item: any) => 
+ 473 │               item?.activityType === 'flash-cards' && 
+ 474 │               item?.generatedContent?.cards && 
+ 475 │               Array.isArray(item.generatedContent.cards)
+ 476 │             );
+ 477 │             if (foundActivity) {
+ 478 │               flashCardsData = (foundActivity as any).generatedContent;
+ 479 │             }
+ 480 │           }
+ 481 │           
+ 482 │           if (flashCardsData && flashCardsData.cards && flashCardsData.cards.length > 0) {
+ 483 │             console.log('🎯 Flash Cards encontrados na busca final:', flashCardsData);
+ 484 │             
+ 485 │             // Aplicar dados encontrados
+ 486 │             setInternalFlashCardsData(flashCardsData);
+ 487 │             setIsContentLoaded(true);
+ 488 │             
+ 489 │             // Forçar re-render
+ 490 │             setTimeout(() => {
+ 491 │               setContentLoaded(prev => !prev);
+ 492 │             }, 10);
+ 493 │             
+ 494 │             // Retornar loading temporário enquanto aplica os dados
+ 495 │             return (
+ 496 │               <div className="flex flex-col items-center justify-center h-full p-6">
+ 497 │                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6B00] mb-4"></div>
+ 498 │                 <p className="text-gray-600 dark:text-gray-400">Aplicando Flash Cards encontrados...</p>
+ 499 │               </div>
+ 500 │             );
+ 501 │           }
+ 502 │         }
+ 503 │       } catch (error) {
+ 504 │         console.warn(`❌ Erro ao verificar chave ${key}:`, error);
+ 505 │       }
+ 506 │     }
+ 507 │     
+ 508 │     console.log('❌ Busca final concluída - nenhum Flash Cards encontrado');
+ 509 │     
+ 510 │     return (
+ 511 │       <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+ 512 │         <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+ 513 │         <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+ 514 │           Nenhum flash card disponível
+ 515 │         </h4>
+ 516 │         <p className="text-gray-500 dark:text-gray-500 mb-4">
+ 517 │           Configure os campos e gere os flash cards primeiro
+ 518 │         </p>
+ 519 │         <div className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 p-2 rounded mt-4">
+ 520 │           <strong>Debug - Cards Disponíveis:</strong><br/>
+ 521 │           Total Valid Cards: {validCards.length}<br/>
+ 522 │           Has Effective Content: {!!effectiveContent ? 'Sim' : 'Não'}<br/>
+ 523 │           Internal Data: {!!internalFlashCardsData ? 'Sim' : 'Não'}<br/>
+ 524 │           Content Prop: {!!content ? 'Sim' : 'Não'}<br/>
+ 525 │           Has Checked Storage: {hasCheckedStorage ? 'Sim' : 'Não'}
+ 526 │         </div>
+ 527 │       </div>
+ 528 │     );
+ 529 │   }
+ 530 │ 
+ 531 │   const effectiveContent = getEffectiveContent();
+ 532 │   const validCards = getValidCards();
+     ·         ─────┬────
+     ·              ╰── `validCards` redefined here
+ 533 │   const currentCard = validCards.length > 0 ? validCards[currentCardIndex] : null;
+ 534 │   const totalCards = validCards.length || effectiveContent?.totalCards || 0;
+ 535 │   const progress = totalCards > 0 ? ((currentCardIndex + (showAnswer ? 1 : 0)) / totalCards) * 100 : 0;
+     ╰────
+/home/runner/workspace/src/features/schoolpower/activities/flash-cards/FlashCardsPreview.tsx:434:1

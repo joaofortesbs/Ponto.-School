@@ -3701,11 +3701,11 @@ Exemplo de formato da resposta:
                                   
                                   if (sendButton && input && modal) {
                                     sendButton.addEventListener('click', async () => {
-                                      const email = (input as HTMLInputElement).value;
+                                      const email = input.value;
                                       if (email && email.includes('@')) {
                                         // Mostrar indicador de carregamento
                                         sendButton.innerHTML = '<div class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-1"></div> Enviando...';
-                                        (sendButton as HTMLButtonElement).disabled = true;
+                                        sendButton.disabled = true;
                                         
                                         try {
                                           // Usar o serviço de e-mail para enviar a mensagem
@@ -3716,7 +3716,7 @@ Exemplo de formato da resposta:
                                           };
                                           
                                           // Importar o serviço de e-mail
-                                          const emailService = await import('../../services/emailService');
+                                          const emailService = await import('../../services/emailService')vice = await import('@/services/emailService');
                                           const result = await emailService.sendEmail(emailData);
                                           
                                           // Remover o modal após o envio
