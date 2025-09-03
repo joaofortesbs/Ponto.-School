@@ -492,9 +492,10 @@ const EditActivityModal = ({
 
   // Estado para conteúdo gerado
   const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
+  const [flashCardsContent, setFlashCardsContent] = useState<any>(null); // New state for Flash Cards content
   const [isContentLoaded, setIsContentLoaded] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   // Estado para controle de construção da atividade
@@ -621,248 +622,6 @@ const EditActivityModal = ({
     }
   }, [formData, activity?.id]);
 
-  // --- Geração de Conteúdo ---
-
-  // Função placeholder para gerar conteúdo genérico (usada por atividades não específicas)
-  const generateActivityContent = async (type: string, data: any) => {
-    console.log(`Gerando conteúdo para tipo: ${type} com dados:`, data);
-
-    if (type === 'quiz-interativo') {
-      console.log('🎯 Gerando Quiz Interativo com API Gemini:', data);
-
-      try {
-        // Importar o gerador do Quiz Interativo
-        const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
-
-        // Preparar dados para o gerador com validação completa
-        const quizData = {
-          subject: data.subject?.trim() || 'Matemática',
-          schoolYear: data.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
-          theme: data.theme?.trim() || data.title?.trim() || 'Tema Geral',
-          objectives: data.objectives?.trim() || data.description?.trim() || 'Testar conhecimentos do tema proposto',
-          difficultyLevel: data.difficultyLevel?.trim() || 'Médio',
-          format: data.questionModel?.trim() || data.format?.trim() || 'Múltipla Escolha',
-          numberOfQuestions: data.numberOfQuestions?.trim() || '10',
-          timePerQuestion: data.timePerQuestion?.trim() || '60',
-          instructions: data.instructions?.trim() || 'Responda às questões no tempo determinado.',
-          evaluation: data.evaluation?.trim() || 'Pontuação baseada nas respostas corretas.'
-        };
-
-        console.log('🎯 Dados preparados para geração do Quiz:', quizData);
-        console.log('📝 Estado atual do formData:', {
-          title: data.title,
-          description: data.description,
-          subject: data.subject,
-          theme: data.theme,
-          schoolYear: data.schoolYear,
-          numberOfQuestions: data.numberOfQuestions,
-          difficultyLevel: data.difficultyLevel,
-          questionModel: data.questionModel,
-          timePerQuestion: data.timePerQuestion
-        });
-
-        // Criar instância do gerador e gerar conteúdo
-        const generator = new QuizInterativoGenerator();
-        const generatedContent = await generator.generateQuizContent(quizData);
-
-        const finalData = {
-          ...data,
-          ...generatedContent,
-          title: data.title || generatedContent.title,
-          description: data.description || generatedContent.description,
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          generatedByAI: true
-        };
-
-        console.log('✅ Quiz Interativo gerado com sucesso:', finalData);
-
-        return {
-          success: true,
-          data: finalData
-        };
-
-      } catch (error) {
-        console.error('❌ Erro ao gerar Quiz Interativo via API:', error);
-
-        // Fallback para dados simulados se a API falhar
-        const fallbackData = {
-          ...data,
-          title: data.title || "Quiz Interativo (Modo Demonstração)",
-          description: data.description || "Quiz gerado em modo demonstração",
-          questions: [
-            {
-              id: 1,
-              question: `Qual é o conceito principal de ${data.theme || 'matemática'}?`,
-              type: 'multipla-escolha',
-              options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
-              correctAnswer: 'Opção A',
-              explanation: 'Esta é a resposta correta baseada no conceito estudado.'
-            }
-          ],
-          timePerQuestion: parseInt(data.timePerQuestion) || 60,
-          totalQuestions: parseInt(data.numberOfQuestions) || 1,
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          generatedByAI: false,
-          isFallback: true
-        };
-
-        return {
-          success: true,
-          data: fallbackData
-        };
-      }
-    } else if (type === 'quadro-interativo') {
-      console.log('🖼️ Preparando dados para Quadro Interativo:', data);
-
-      // Para Quadro Interativo, apenas salvar os dados preparados
-      // A geração de conteúdo será feita diretamente no Preview
-      const finalData = {
-        ...data,
-        isBuilt: true,
-        builtAt: new Date().toISOString()
-      };
-
-      // Salvar dados básicos
-      const quadroInterativoStorageKey = `constructed_quadro-interativo_${activity?.id}`;
-      localStorage.setItem(quadroInterativoStorageKey, JSON.stringify({
-        success: true,
-        data: finalData
-      }));
-
-      console.log('💾 Dados do Quadro Interativo preparados:', finalData);
-
-      return {
-        success: true,
-        data: finalData
-      };
-    } else if (type === 'plano-aula') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Plano de Aula Exemplo",
-          description: data.description || "Descrição do plano de aula...",
-          content: {
-            objetivos: data.objectives,
-            materiais: data.materials,
-            avaliacao: data.evaluation,
-            tempoEstimado: data.timeLimit,
-            componenteCurricular: data.subject,
-            tema: data.theme,
-            anoSerie: data.schoolYear,
-            habilidadesBNCC: data.competencies,
-            perfilTurma: data.context,
-            tipoAula: data.difficultyLevel,
-            observacoes: data.evaluation,
-          },
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'lista-exercicios') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Lista de Exercícios Exemplo",
-          description: data.description || "Descrição da lista de exercícios...",
-          questoes: [
-            { id: 'q1', enunciado: 'Questão 1?', resposta: 'A', options: ['A', 'B', 'C'], type: 'multipla-escolha' },
-            { id: 'q2', enunciado: 'Questão 2?', resposta: 'Verdadeiro', type: 'verdadeiro-falso' },
-          ],
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'sequencia-didatica') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.tituloTemaAssunto || "Sequência Didática Exemplo",
-          description: data.objetivosAprendizagem || "Descrição da sequência didática...",
-          content: {
-            tituloTemaAssunto: data.tituloTemaAssunto,
-            anoSerie: data.anoSerie,
-            disciplina: data.disciplina,
-            bnccCompetencias: data.bnccCompetencias,
-            publicoAlvo: data.publicoAlvo,
-            objetivosAprendizagem: data.objetivosAprendizagem,
-            quantidadeAulas: data.quantidadeAulas,
-            quantidadeDiagnosticos: data.quantidadeDiagnosticos,
-            quantidadeAvaliacoes: data.quantidadeAvaliacoes,
-            cronograma: data.cronograma,
-            subject: data.subject,
-            theme: data.theme,
-            schoolYear: data.schoolYear,
-            competencies: data.competencies,
-            objectives: data.objectives,
-            materials: data.materials,
-            instructions: data.instructions,
-            evaluation: data.evaluation,
-            timeLimit: data.timeLimit,
-            context: data.context,
-          },
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'quadro-interativo') {
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || "Quadro Interativo Exemplo",
-          description: data.description || "Descrição do quadro interativo...",
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'mapa-mental') { // Nova lógica para Mapa Mental
-      console.log('🧠 Gerando conteúdo para Mapa Mental:', data);
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || `Mapa Mental: ${data.centralTheme || 'Tema Principal'}`,
-          description: data.description || data.generalObjective || 'Um mapa mental detalhado sobre o tema.',
-          centralTheme: data.centralTheme,
-          mainCategories: data.mainCategories,
-          generalObjective: data.generalObjective,
-          evaluationCriteria: data.evaluationCriteria,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    } else if (type === 'flash-cards') { // Lógica para Flash Cards
-      console.log('🃏 Gerando conteúdo para Flash Cards:', data);
-      return {
-        success: true,
-        data: {
-          ...data,
-          title: data.title || `Flash Cards: ${data.theme || 'Tema Principal'}`,
-          description: data.description || data.topicos || 'Flash cards sobre o tema.',
-          theme: data.theme,
-          topicos: data.topicos,
-          numberOfFlashcards: parseInt(data.numberOfFlashcards) || 10,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-        }
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        ...data,
-        generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true,
-      }
-    };
-  };
-
   // --- Funções de Geração Específicas ---
 
   // Função para gerar conteúdo do Quiz Interativo
@@ -903,6 +662,18 @@ const EditActivityModal = ({
       };
 
       console.log('🎯 Dados estruturados para o Gemini:', quizData);
+      console.log('📝 Estado atual do formData:', {
+        title: formData.title,
+        description: formData.description,
+        subject: formData.subject,
+        theme: formData.theme,
+        schoolYear: formData.schoolYear,
+        numberOfQuestions: formData.numberOfQuestions,
+        difficultyLevel: formData.difficultyLevel,
+        questionModel: formData.questionModel,
+        timePerQuestion: formData.timePerQuestion
+      });
+
 
       // Validar campos críticos
       const requiredFields = ['subject', 'theme', 'numberOfQuestions'];
@@ -962,7 +733,7 @@ const EditActivityModal = ({
 
       // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
       setQuizInterativoContent(finalContent);
-      setGeneratedContent(finalContent);
+      setGeneratedContent(finalContent); // Also update generic content for preview fallback
       setIsContentLoaded(true);
 
       // Validação detalhada da estrutura
@@ -1042,7 +813,7 @@ const EditActivityModal = ({
       console.log('🛡️ Usando conteúdo de fallback:', fallbackContent);
 
       setQuizInterativoContent(fallbackContent);
-      setGeneratedContent(fallbackContent);
+      setGeneratedContent(fallbackContent); // Also update generic content for preview fallback
       setIsContentLoaded(true);
       setActiveTab('preview');
 
@@ -1055,6 +826,82 @@ const EditActivityModal = ({
       setIsGeneratingQuiz(false);
     }
   };
+
+  // Função para gerar conteúdo de Flash Cards
+  const handleGenerateFlashCards = async () => {
+    try {
+      //setIsGeneratingFlashcards(true); // If you have a specific loading state for flashcards
+      setGenerationError(null);
+
+      console.log('🃏 Iniciando geração de Flash Cards');
+      console.log('📋 FormData completo para Flash Cards:', formData);
+
+      // Validar dados obrigatórios para Flash Cards
+      if (!formData.title?.trim()) throw new Error('Título é obrigatório');
+      if (!formData.theme?.trim()) throw new Error('Tema é obrigatório');
+      if (!formData.topicos?.trim()) throw new Error('Tópicos são obrigatórios');
+      if (!formData.numberOfFlashcards?.trim()) throw new Error('Número de Flash Cards é obrigatório');
+
+      // Preparar dados para a geração
+      const flashCardData = {
+        title: formData.title || `Flash Cards: ${formData.theme}`,
+        theme: formData.theme,
+        topicos: formData.topicos.split('\n').filter(topic => topic.trim() !== ''), // Split topics and remove empty ones
+        numberOfFlashcards: parseInt(formData.numberOfFlashcards) || 10,
+        context: formData.context || '',
+        description: formData.description || `Conjunto de flash cards sobre ${formData.theme}`,
+      };
+
+      console.log('🃏 Dados preparados para geração de Flash Cards:', flashCardData);
+
+      // Simular geração de conteúdo (substituir com chamada de API real se aplicável)
+      const generatedContent = {
+        ...flashCardData,
+        flashcards: flashCardData.topicos.map((topic, index) => ({
+          id: index + 1,
+          front: topic, // Use topic as front for now
+          back: `Definição ou detalhe sobre ${topic}`, // Placeholder for back
+          context: flashCardData.context
+        })).slice(0, flashCardData.numberOfFlashcards), // Limit by numberOfFlashcards
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+      };
+
+      console.log('✅ Flash Cards gerados (simulado):', generatedContent);
+
+      // Salvar no localStorage
+      const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
+      const storageData = {
+        success: true,
+        data: generatedContent
+      };
+      localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+      console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
+
+      // Atualizar estados
+      setFlashCardsContent(generatedContent);
+      setGeneratedContent(generatedContent); // Also update generic content for preview fallback
+      setIsContentLoaded(true);
+      setActiveTab('preview');
+
+      toast({
+        title: "Flash Cards Gerados com Sucesso!",
+        description: `${generatedContent.flashcards.length} flash cards foram gerados.`,
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar Flash Cards:', error);
+      setGenerationError(`Erro ao gerar os flash cards: ${error.message}`);
+      toast({
+        title: "Erro na Geração de Flash Cards",
+        description: "Houve um problema ao gerar seus flash cards. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      //setIsGeneratingFlashcards(false);
+    }
+  };
+
 
   // Chamada genérica de geração (para outros tipos de atividade)
   const handleGenerate = async () => {
@@ -1141,6 +988,7 @@ const EditActivityModal = ({
       const quadroInterativoSavedContent = localStorage.getItem(`constructed_quadro-interativo_${activity.id}`);
       const quadroInterativoSpecificData = localStorage.getItem(`quadro_interativo_data_${activity.id}`);
       const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`); // New: Load Quiz Interativo content
+      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`); // Load Flash Cards content
 
       console.log(`🔎 Estado do localStorage:`, {
         constructedActivities: Object.keys(constructedActivities),
@@ -1150,6 +998,7 @@ const EditActivityModal = ({
         hasQuadroInterativoSavedContent: !!quadroInterativoSavedContent,
         hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
         hasQuizInterativoSavedContent: !!quizInterativoSavedContent,
+        hasFlashCardsSavedContent: !!flashCardsSavedContent,
         activityId: activity.id
       });
 
@@ -1197,6 +1046,22 @@ const EditActivityModal = ({
           }
         } catch (error) {
           console.error('❌ Erro ao parsear conteúdo específico do Quiz Interativo:', error);
+          contentToLoad = null;
+        }
+      } else if (activity.id === 'flash-cards' && flashCardsSavedContent) { // Check for Flash Cards content
+        try {
+          const parsedContent = JSON.parse(flashCardsSavedContent);
+          contentToLoad = parsedContent.data || parsedContent;
+
+          if (contentToLoad && contentToLoad.flashcards && contentToLoad.flashcards.length > 0) {
+            console.log(`✅ Conteúdo específico de Flash Cards encontrado para: ${activity.id}`, contentToLoad);
+            setFlashCardsContent(contentToLoad); // Set the specific state for Flash Cards
+          } else {
+            console.warn('⚠️ Conteúdo de Flash Cards encontrado mas sem flash cards válidos');
+            contentToLoad = null;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo específico de Flash Cards:', error);
           contentToLoad = null;
         }
       } else if (constructedActivities[activity.id]?.generatedContent) {
@@ -1445,6 +1310,19 @@ const EditActivityModal = ({
               };
               console.log('🧠 Dados do Mapa Mental processados:', enrichedFormData);
             }
+            else if (activity?.id === 'flash-cards') { // Preenchimento direto para Flash Cards
+                console.log('🃏 Processando dados específicos de Flash Cards');
+                enrichedFormData = {
+                  ...formData,
+                  title: activityData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
+                  description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
+                  theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
+                  topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
+                  numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
+                  context: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || autoFormData.context || '',
+                };
+                console.log('🃏 Dados do Flash Cards processados:', enrichedFormData);
+              }
             else {
               enrichedFormData = {
                 title: consolidatedData.title || autoFormData.title || '',
@@ -1462,22 +1340,22 @@ const EditActivityModal = ({
                 evaluation: consolidatedCustomFields['Critérios de Correção'] || consolidatedCustomFields['Critérios de Avaliação'] || consolidatedCustomFields['criteriosAvaliacao'] || autoFormData.evaluation || '',
                 timeLimit: consolidatedCustomFields['Tempo de Prova'] || consolidatedCustomFields['Tempo Limite'] || consolidatedCustomFields['tempoLimite'] || autoFormData.timeLimit || '',
                 context: consolidatedCustomFields['Contexto de Aplicação'] || consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contexto'] || autoFormData.context || '',
-                textType: consolidatedCustomFields['Tipo de Texto'] || consolidatedCustomFields['tipoTexto'] || '',
-                textGenre: consolidatedCustomFields['Gênero Textual'] || consolidatedCustomFields['generoTextual'] || '',
-                textLength: consolidatedCustomFields['Extensão do Texto'] || consolidatedCustomFields['extensaoTexto'] || '',
-                associatedQuestions: consolidatedCustomFields['Questões Associadas'] || consolidatedCustomFields['questoesAssociadas'] || '',
-                competencies: consolidatedCustomFields['Competências Trabalhadas'] || consolidatedCustomFields['competencias'] || '',
-                readingStrategies: consolidatedCustomFields['Estratégias de Leitura'] || consolidatedCustomFields['estrategiasLeitura'] || '',
-                visualResources: consolidatedCustomFields['Recursos Visuais'] || consolidatedCustomFields['recursosVisuais'] || '',
-                practicalActivities: consolidatedCustomFields['Atividades Práticas'] || consolidatedCustomFields['atividadesPraticas'] || '',
-                wordsIncluded: consolidatedCustomFields['Palavras Incluídas'] || consolidatedCustomFields['palavrasIncluidas'] || '',
-                gridFormat: consolidatedCustomFields['Formato da Grade'] || consolidatedCustomFields['formatoGrade'] || '',
-                providedHints: consolidatedCustomFields['Dicas Fornecidas'] || consolidatedCustomFields['dicasFornecidas'] || '',
-                vocabularyContext: consolidatedCustomFields['Contexto de Uso'] || consolidatedCustomFields['contextoUso'] || '',
-                language: consolidatedCustomFields['Idioma'] || consolidatedCustomFields['idioma'] || '',
-                associatedExercises: consolidatedCustomFields['Exercícios Associados'] || consolidatedCustomFields['exerciciosAssociados'] || '',
-                knowledgeArea: consolidatedCustomFields['Área de Conhecimento'] || consolidatedCustomFields['areaConhecimento'] || '',
-                complexityLevel: consolidatedCustomFields['Nível de Complexidade'] || consolidatedCustomFields['nivelComplexidade'] || '',
+                textType: '',
+                textGenre: '',
+                textLength: '',
+                associatedQuestions: '',
+                competencies: '',
+                readingStrategies: '',
+                visualResources: '',
+                practicalActivities: '',
+                wordsIncluded: '',
+                gridFormat: '',
+                providedHints: '',
+                vocabularyContext: '',
+                language: '',
+                associatedExercises: '',
+                knowledgeArea: '',
+                complexityLevel: '',
                 tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || '',
                 anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || '',
                 disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || '',
@@ -2003,127 +1881,6 @@ const EditActivityModal = ({
     }
   }, [activity, formData, isBuilding, toast]);
 
-  // Automação da Construção de Atividades - será chamada externamente
-  useEffect(() => {
-    const handleAutoBuild = () => {
-      if (activity && formData.title && formData.description && !isGenerating) {
-        console.log('🤖 Construção automática iniciada para:', activity.title);
-        handleBuildActivity();
-      }
-    };
-
-    if (activity) {
-      (window as any).autoBuildCurrentActivity = handleAutoBuild;
-    }
-
-    return () => {
-      delete (window as any).autoBuildCurrentActivity;
-    };
-  }, [activity, formData, isGenerating, handleBuildActivity]);
-
-  const handleSave = async () => {
-    if (!activity) return;
-
-    try {
-      const customFields = activity.customFields || {};
-
-      const updatedActivity = {
-        ...activity,
-        ...formData,
-        customFields: {
-          ...customFields,
-          'Disciplina': formData.subject,
-          'Tema': formData.theme,
-          'Ano de Escolaridade': formData.schoolYear,
-          'Tempo Limite': formData.timeLimit,
-          'Competências': formData.competencies,
-          'Objetivos': formData.objectives,
-          'Materiais': formData.materials,
-          'Contexto': formData.context,
-          'Nível de Dificuldade': formData.difficultyLevel,
-          'Critérios de Avaliação': formData.evaluation,
-          ...(activity?.id === 'lista-exercicios' && {
-            'Quantidade de Questões': formData.numberOfQuestions,
-            'Modelo de Questões': formData.questionModel,
-            'Fontes': formData.sources,
-            'Instruções': formData.instructions
-          }),
-          ...(activity?.id === 'sequencia-didatica' && {
-            'Título do Tema / Assunto': formData.tituloTemaAssunto,
-            'Ano / Série': formData.anoSerie,
-            'Disciplina': formData.disciplina,
-            'BNCC / Competências': formData.bnccCompetencias,
-            'Público-alvo': formData.publicoAlvo,
-            'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
-            'Quantidade de Aulas': formData.quantidadeAulas,
-            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
-            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
-            'Cronograma': formData.cronograma
-          }),
-          ...(activity?.id === 'quiz-interativo' && {
-            'Número de Questões': formData.numberOfQuestions,
-            'Tema': formData.theme,
-            'Disciplina': formData.subject,
-            'Ano de Escolaridade': formData.schoolYear,
-            'Nível de Dificuldade': formData.difficultyLevel,
-            'Formato': formData.questionModel,
-            'Formato do Quiz': formData.format, // Save new field
-            'Tempo por Questão': formData.timePerQuestion, // Save new field
-          }),
-          ...(activity?.id === 'quadro-interativo' && {
-            'quadroInterativoCampoEspecifico': formData.quadroInterativoCampoEspecifico
-          }),
-          ...(activity?.id === 'mapa-mental' && { // Salvar campos específicos do Mapa Mental
-            'Título': formData.title,
-            'Descrição': formData.description,
-            'Tema Central': formData.centralTheme,
-            'Categorias Principais': formData.mainCategories,
-            'Objetivo Geral': formData.generalObjective,
-            'Critérios de Avaliação': formData.evaluationCriteria,
-          }),
-          ...(activity?.id === 'flash-cards' && { // Salvar campos específicos do Flash Cards
-            'Tema': formData.theme,
-            'Tópicos': formData.topicos,
-            'Número de Flash Cards': formData.numberOfFlashcards,
-            'Contexto': formData.context,
-          }),
-        }
-      };
-
-      if (onUpdateActivity) {
-        await onUpdateActivity(updatedActivity);
-      }
-
-      localStorage.setItem(`activity_${activity.id}`, JSON.stringify(updatedActivity));
-      localStorage.setItem(`activity_fields_${activity.id}`, JSON.stringify(customFields));
-
-      if (activity.categoryId === 'sequencia-didatica' || activity.type === 'sequencia-didatica') {
-        const constructedKey = `constructed_sequencia-didatica_${activity.id}`;
-        localStorage.setItem(constructedKey, JSON.stringify(updatedActivity));
-        console.log('📚 Sequência Didática salva como atividade construída');
-      }
-
-      console.log('💾 Dados salvos no localStorage:', {
-        activity: updatedActivity,
-        fields: customFields
-      });
-
-      toast({
-        title: "Atividade atualizada",
-        description: "As alterações foram salvas com sucesso.",
-      });
-
-      onClose();
-    } catch (error) {
-      console.error('Erro ao salvar atividade:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações.",
-      });
-    }
-  };
-
   // Agente Interno de Execução - Automação da Construção de Atividades
   useEffect(() => {
     if (!activity || !isOpen) return;
@@ -2159,15 +1916,6 @@ const EditActivityModal = ({
       (formData.timePerQuestion && formData.timePerQuestion !== '') // Check new fields
     );
 
-    // Verificação específica para Mapa Mental
-    const isMapaMental = activity.id === 'mapa-mental';
-    const hasMapaMentalData = isMapaMental && (
-      (formData.centralTheme && formData.centralTheme !== '') ||
-      (formData.mainCategories && formData.mainCategories !== '') ||
-      (formData.generalObjective && formData.generalObjective !== '') ||
-      (formData.evaluationCriteria && formData.evaluationCriteria !== '')
-    );
-
     // Verificação específica para Flash Cards
     const isFlashCards = activity.id === 'flash-cards';
     const hasFlashCardsData = isFlashCards && (
@@ -2177,11 +1925,28 @@ const EditActivityModal = ({
       (formData.context && formData.context !== '')
     );
 
+    // Verificação específica para Mapa Mental
+    const isMapaMental = activity.id === 'mapa-mental';
+    const hasMapaMentalData = isMapaMental && (
+      (formData.centralTheme && formData.centralTheme !== '') ||
+      (formData.mainCategories && formData.mainCategories !== '') ||
+      (formData.generalObjective && formData.generalObjective !== '') ||
+      (formData.evaluationCriteria && formData.evaluationCriteria !== '')
+    );
 
     if (isFormValid && preenchidoPorIA && !activity.isBuilt) {
       console.log('🤖 Agente Interno de Execução: Detectados campos preenchidos pela IA e formulário válido');
 
-      if (isQuadroInterativo) {
+      if (isFlashCards) {
+        console.log('🃏 Processamento específico para Flash Cards detectado');
+        console.log('📊 Estado dos dados de Flash Cards:', {
+          theme: formData.theme,
+          topicos: formData.topicos,
+          numberOfFlashcards: formData.numberOfFlashcards,
+          context: formData.context,
+          hasFlashCardsData
+        });
+      } else if (isQuadroInterativo) {
         console.log('🖼️ Processamento específico para Quadro Interativo detectado');
         console.log('📊 Estado dos dados do Quadro Interativo:', {
           subject: formData.subject,
@@ -2214,42 +1979,33 @@ const EditActivityModal = ({
           evaluationCriteria: formData.evaluationCriteria,
           hasMapaMentalData
         });
-      } else if (isFlashCards) {
-        console.log('🃏 Processamento específico para Flash Cards detectado');
-        console.log('📊 Estado dos dados do Flash Cards:', {
-          theme: formData.theme,
-          topicos: formData.topicos,
-          numberOfFlashcards: formData.numberOfFlashcards,
-          context: formData.context,
-          hasFlashCardsData
-        });
       }
 
       console.log('🎯 Acionando construção automática da atividade...');
 
       const timer = setTimeout(async () => {
-        if (isQuizInterativo) {
-          console.log('🎯 Auto-build específico para Quiz Interativo');
-          await handleGenerateQuizInterativo(); // Use the specific function for Quiz
-        } else if (isMapaMental) {
-          console.log('🧠 Auto-build específico para Mapa Mental');
-          // Para Mapa Mental, a construção é mais um salvamento dos dados inseridos
-          // Chama handleBuildActivity que por sua vez chama generateActivityContent
-          await handleBuildActivity();
-        } else if (isFlashCards) {
-          console.log('🃏 Auto-build específico para Flash Cards');
-          await handleBuildActivity(); // Chama a construção genérica que inclui Flash Cards
-        }
-        else {
-          console.log('🏗️ Auto-build genérico para outras atividades');
-          await handleBuildActivity(); // Use the generic build function
-        }
-        console.log('✅ Atividade construída automaticamente pelo agente interno');
-      }, isQuizInterativo ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : (isFlashCards ? 300 : 300)) )); // Increased delay for Quiz for API call
+          if (isQuizInterativo) {
+            console.log('🎯 Auto-build específico para Quiz Interativo');
+            await handleGenerateQuizInterativo(); // Use the specific function for Quiz
+          } else if (isFlashCards) {
+            console.log('🃏 Auto-build específico para Flash Cards');
+            await handleGenerateFlashCards(); // Use the specific function for Flash Cards
+          } else if (isMapaMental) {
+            console.log('🧠 Auto-build específico para Mapa Mental');
+            // Para Mapa Mental, a construção é mais um salvamento dos dados inseridos
+            // Chama handleBuildActivity que por sua vez chama generateActivityContent
+            await handleBuildActivity();
+          }
+          else {
+            console.log('🏗️ Auto-build genérico para outras atividades');
+            await handleBuildActivity(); // Use the generic build function
+          }
+          console.log('✅ Atividade construída automaticamente pelo agente interno');
+        }, isQuizInterativo ? 800 : (isFlashCards ? 800 : (isQuadroInterativo ? 500 : (isMapaMental ? 300 : 300)) )); // Increased delay for Flash Cards for API call
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, isFormValidForBuild]);
+  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, isFormValidForBuild, handleGenerateFlashCards]);
 
   if (!isOpen) return null;
 
@@ -2740,6 +2496,8 @@ const EditActivityModal = ({
                     const activityType = activity?.id || '';
                     if (activityType === 'quiz-interativo') {
                       handleGenerateQuizInterativo();
+                    } else if (activityType === 'flash-cards') {
+                      handleGenerateFlashCards();
                     } else {
                       handleBuildActivity();
                     }
@@ -2755,7 +2513,7 @@ const EditActivityModal = ({
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      {activity?.id === 'quiz-interativo' ? 'Gerar Quiz com IA' : 'Construir Atividade'}
+                      {activity?.id === 'quiz-interativo' ? 'Gerar Quiz com IA' : (activity?.id === 'flash-cards' ? 'Gerar Flash Cards' : 'Construir Atividade')}
                     </>
                   )}
                 </Button>
@@ -2766,7 +2524,7 @@ const EditActivityModal = ({
             {activeTab === 'preview' && (
               <div className="h-full">
                 <div className="border rounded-lg h-full overflow-hidden bg-white dark:bg-gray-800">
-                  {isContentLoaded && (generatedContent || quizInterativoContent) ? (
+                  {(isContentLoaded && (generatedContent || quizInterativoContent || flashCardsContent)) ? (
                     activity?.id === 'plano-aula' ? (
                       <PlanoAulaPreview
                         data={generatedContent}
@@ -2818,10 +2576,10 @@ const EditActivityModal = ({
                           Flash Cards Gerados
                         </h4>
                         <div className="text-left space-y-2 text-gray-700 dark:text-gray-300">
-                          <p><strong>Tema:</strong> {generatedContent?.theme || formData.theme}</p>
-                          <p><strong>Tópicos:</strong> {generatedContent?.topicos?.split('\n').map((line: string, i: number) => <span key={i}>{line}<br/></span>)}</p>
-                          <p><strong>Número de Flash Cards:</strong> {generatedContent?.numberOfFlashcards || formData.numberOfFlashcards}</p>
-                          <p><strong>Contexto de Uso:</strong> {generatedContent?.context || formData.context}</p>
+                          <p><strong>Tema:</strong> {flashCardsContent?.theme || generatedContent?.theme || formData.theme}</p>
+                          <p><strong>Tópicos:</strong> {flashCardsContent?.topicos?.split('\n').map((line: string, i: number) => <span key={i}>{line}<br/></span>)}</p>
+                          <p><strong>Número de Flash Cards:</strong> {flashCardsContent?.numberOfFlashcards || generatedContent?.numberOfFlashcards || formData.numberOfFlashcards}</p>
+                          <p><strong>Contexto de Uso:</strong> {flashCardsContent?.context || generatedContent?.context || formData.context}</p>
                         </div>
                         <p className="text-sm text-gray-500 mt-4">
                           Os flash cards gerados estão prontos para serem utilizados.
@@ -2867,29 +2625,31 @@ const EditActivityModal = ({
             <X className="w-4 h-4 mr-2" />
             Fechar
           </Button>
-            {(generatedContent || quizInterativoContent) && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(JSON.stringify(quizInterativoContent || generatedContent, null, 2));
-                    toast({
-                      title: "Conteúdo copiado!",
-                      description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
-                    });
-                  }}
-                  className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                >
-                  <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
-                </Button>
-              </>
-            )}
-             {(generatedContent || quizInterativoContent) && (
+            {(generatedContent || quizInterativoContent || flashCardsContent) && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const contentToCopy = flashCardsContent || quizInterativoContent || generatedContent;
+                      navigator.clipboard.writeText(JSON.stringify(contentToCopy, null, 2));
+                      toast({
+                        title: "Conteúdo copiado!",
+                        description: "O conteúdo da pré-visualização foi copiado para a área de transferência.",
+                      });
+                    }}
+                    className="px-4 text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  >
+                    <Copy className="h-4 w-4 mr-2" /> Copiar Conteúdo
+                  </Button>
+                </>
+              )}
+             {(generatedContent || quizInterativoContent || flashCardsContent) && (
               <Button
                 variant="outline"
                 onClick={() => {
                   clearContent(); // Clear generic content
                   setQuizInterativoContent(null); // Clear specific quiz content
+                  setFlashCardsContent(null); // Clear specific flashcards content
                   setIsContentLoaded(false); // Reset content loaded state
                   toast({
                     title: "Conteúdo Limpo",
