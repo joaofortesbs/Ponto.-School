@@ -500,6 +500,45 @@ const EditActivityModal = ({
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
   const [isGeneratingFlashCards, setIsGeneratingFlashCards] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0); // Para forçar re-renderização
+
+  // LISTENER PARA DETECTAR QUANDO FLASH CARDS FOI CONSTRUÍDO PELO "CONSTRUIR TODAS"
+  useEffect(() => {
+    const handleActivityBuilt = (event: CustomEvent) => {
+      const activityId = event.detail?.activityId;
+      
+      // Se for para esta atividade ou for flash-cards genérico
+      if (activityId === activity?.id || activityId === 'flash-cards') {
+        console.log('🎯 [EditActivityModal] Detectado que Flash Cards foi construído:', activityId);
+        
+        // Forçar atualização dos dados
+        setTimeout(() => {
+          const activityKey = `activity_${activityId}`;
+          const constructedData = localStorage.getItem(activityKey);
+          
+          if (constructedData) {
+            try {
+              const parsed = JSON.parse(constructedData);
+              if (parsed.cards && Array.isArray(parsed.cards) && parsed.cards.length > 0) {
+                console.log('✅ [EditActivityModal] Aplicando dados construídos:', parsed);
+                setFlashCardsContent(parsed);
+                setIsContentLoaded(true);
+                setForceRefresh(prev => prev + 1); // Forçar re-render
+              }
+            } catch (error) {
+              console.error('❌ [EditActivityModal] Erro ao aplicar dados construídos:', error);
+            }
+          }
+        }, 200);
+      }
+    };
+
+    window.addEventListener('activity-built', handleActivityBuilt as EventListener);
+    
+    return () => {
+      window.removeEventListener('activity-built', handleActivityBuilt as EventListener);
+    };
+  }, [activity?.id]);
 
   // Estado para controle de construção da atividade
   const [buildingStatus, setBuildingStatus] = useState({
@@ -2873,18 +2912,65 @@ const EditActivityModal = ({
                       </div>
                     ) : activity?.id === 'flash-cards' ? ( // Preview para Flash Cards
                       <FlashCardsPreview 
-                        content={flashCardsContent || generatedContent || {
-                          title: formData.title || 'Flash Cards',
-                          description: formData.description || 'Descrição dos flash cards',
-                          theme: formData.theme || 'Tema',
-                          topicos: formData.topicos || 'Tópicos',
-                          numberOfFlashcards: parseInt(formData.numberOfFlashcards) || 0,
-                          context: formData.context || 'Contexto',
-                          cards: [],
-                          totalCards: 0,
-                          isGeneratedByAI: false,
-                          isFallback: true
-                        }}
+                        key={forceRefresh} // Força re-renderização quando dados mudam
+                        content={(() => {
+                          // BUSCAR DADOS CONSTRUÍDOS PRIMEIRO
+                          const activityKey = `activity_${activity.id}`;
+                          const constructedData = localStorage.getItem(activityKey);
+                          
+                          if (constructedData) {
+                            try {
+                              const parsed = JSON.parse(constructedData);
+                              if (parsed.cards && Array.isArray(parsed.cards) && parsed.cards.length > 0) {
+                                console.log('✅ [EditActivityModal] Dados construídos encontrados para Flash Cards:', parsed);
+                                return parsed;
+                              }
+                            } catch (error) {
+                              console.warn('❌ [EditActivityModal] Erro ao parsear dados construídos:', error);
+                            }
+                          }
+                          
+                          // BUSCAR EM CONSTRUCTEDACTIVITIES
+                          const constructedActivities = localStorage.getItem('constructedActivities');
+                          if (constructedActivities) {
+                            try {
+                              const activitiesData = JSON.parse(constructedActivities);
+                              const flashCardsData = activitiesData[activity.id] || activitiesData['flash-cards'];
+                              if (flashCardsData?.generatedContent?.cards && Array.isArray(flashCardsData.generatedContent.cards)) {
+                                console.log('✅ [EditActivityModal] Dados encontrados em constructedActivities:', flashCardsData.generatedContent);
+                                return flashCardsData.generatedContent;
+                              }
+                            } catch (error) {
+                              console.warn('❌ [EditActivityModal] Erro ao parsear constructedActivities:', error);
+                            }
+                          }
+                          
+                          // FALLBACK - usar dados do estado ou formulário
+                          if (flashCardsContent && flashCardsContent.cards && flashCardsContent.cards.length > 0) {
+                            console.log('✅ [EditActivityModal] Usando flashCardsContent do estado:', flashCardsContent);
+                            return flashCardsContent;
+                          }
+                          
+                          if (generatedContent && generatedContent.cards && generatedContent.cards.length > 0) {
+                            console.log('✅ [EditActivityModal] Usando generatedContent do estado:', generatedContent);
+                            return generatedContent;
+                          }
+                          
+                          // ÚLTIMO FALLBACK - dados vazios (será detectado como sem conteúdo)
+                          console.log('⚠️ [EditActivityModal] Nenhum dado encontrado, usando fallback vazio');
+                          return {
+                            title: formData.title || 'Flash Cards',
+                            description: formData.description || 'Descrição dos flash cards',
+                            theme: formData.theme || 'Tema',
+                            topicos: formData.topicos || 'Tópicos',
+                            numberOfFlashcards: parseInt(formData.numberOfFlashcards) || 0,
+                            context: formData.context || 'Contexto',
+                            cards: [],
+                            totalCards: 0,
+                            isGeneratedByAI: false,
+                            isFallback: true
+                          };
+                        })()}
                         isLoading={isGeneratingFlashCards}
                         activity={activity}
                       />
