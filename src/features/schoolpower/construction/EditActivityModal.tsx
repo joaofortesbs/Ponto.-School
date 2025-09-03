@@ -797,14 +797,16 @@ const EditActivityModal = ({
         console.log('📡 Eventos de backup disparados');
       }, 100);
 
-      // Verificação final após delay
+      // Sistema melhorado de verificação e notificação
       setTimeout(() => {
+        // Verificar múltiplas fontes de dados
         const verification = {
           localStorage: {
             specificKey: !!localStorage.getItem(flashCardsStorageKey),
             genericKey: !!localStorage.getItem(genericFlashCardsKey),
             fallbackKey: !!localStorage.getItem(fallbackKey),
-            constructedActivities: !!localStorage.getItem('constructedActivities')
+            constructedActivities: !!localStorage.getItem('constructedActivities'),
+            latestKey: !!localStorage.getItem('flash-cards-data-latest')
           },
           state: {
             flashCardsContent: !!flashCardsContent,
@@ -813,10 +815,35 @@ const EditActivityModal = ({
           }
         };
         console.log('🔍 Verificação final dos dados:', verification);
+
+        // Notificar o FlashCardsDataManager diretamente
+        try {
+          const manager = (window as any).FlashCardsDataManager?.getInstance?.();
+          if (manager && finalContent) {
+            manager.updateData(finalContent);
+            console.log('📊 Dados enviados diretamente para o manager');
+          }
+        } catch (error) {
+          console.warn('❌ Erro ao notificar manager:', error);
+        }
+
+        // Forçar eventos adicionais
+        const additionalEvents = [
+          'flash-cards-preview-update',
+          'modal-flash-cards-ready'
+        ];
+        
+        additionalEvents.forEach(eventType => {
+          window.dispatchEvent(new CustomEvent(eventType, {
+            detail: { data: finalContent, source: 'modal-generation' }
+          }));
+        });
       }, 200);
 
-      // Mudar para aba de preview
-      setActiveTab('preview');
+      // Mudar para aba de preview com delay
+      setTimeout(() => {
+        setActiveTab('preview');
+      }, 300);
 
       toast({
         title: "Flash Cards Gerados com Sucesso!",

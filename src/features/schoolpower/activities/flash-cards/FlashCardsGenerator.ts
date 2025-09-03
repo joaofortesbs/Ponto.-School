@@ -217,10 +217,45 @@ Tópicos para os flash cards: ${data.topicos}
       };
     });
 
-    return {
+    const finalResult = {
+      title: data.title || `Flash Cards - ${data.theme}`,
+      description: data.description || `Flash Cards sobre ${data.theme}`,
+      theme: data.theme,
+      topicos: data.topicos,
+      context: data.context,
       cards,
-      description: `Flash Cards sobre ${data.theme} (Conteúdo de demonstração)`,
       totalCards: numberOfCards,
+      numberOfFlashcards: numberOfCards,
+      isGeneratedByAI: false,
+      isFallback: true,
+      generatedAt: new Date().toISOString()
+    };
+
+    // Notificar o sistema centralizado
+    setTimeout(() => {
+      try {
+        const eventDetail = { 
+          data: finalResult, 
+          source: 'FlashCardsGenerator',
+          timestamp: Date.now()
+        };
+
+        const eventTypes = [
+          'flash-cards-generated',
+          'flash-cards-content-ready'
+        ];
+
+        eventTypes.forEach(eventType => {
+          window.dispatchEvent(new CustomEvent(eventType, { detail: eventDetail }));
+        });
+
+        console.log('📡 FlashCardsGenerator: Eventos disparados', eventTypes);
+      } catch (error) {
+        console.warn('❌ FlashCardsGenerator: Erro ao disparar eventos:', error);
+      }
+    }, 100);
+
+    return finalResult;s,
       isGeneratedByAI: false
     };
   }
