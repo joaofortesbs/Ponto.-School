@@ -86,53 +86,80 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setIsCompleted(false);
   }, [content]);
 
-  // Listener para dados construídos automaticamente via AutoBuild
+  // Listener UNIFICADO para todos os eventos de Flash Cards
   useEffect(() => {
     const handleFlashCardsUpdate = (event: CustomEvent) => {
-      console.log('📡 FlashCardsPreview recebeu evento de atualização:', event.type, event.detail);
+      console.log('📡 FlashCardsPreview recebeu evento:', event.type, event.detail);
       
-      if (event.detail && event.detail.data) {
-        const updatedContent = event.detail.data;
-        console.log('🔄 Aplicando novos dados do evento:', updatedContent);
+      let data = null;
+      let activityId = null;
+      
+      // Tratar diferentes tipos de eventos
+      if (event.type === 'activity-built') {
+        activityId = event.detail?.activityId;
         
-        // Validar estrutura dos dados recebidos
-        if (updatedContent.cards && Array.isArray(updatedContent.cards) && updatedContent.cards.length > 0) {
-          console.log('✅ Dados válidos recebidos, atualizando estado interno');
-          
-          // Resetar estados de navegação
-          setCurrentCardIndex(0);
-          setIsFlipped(false);
-          setShowAnswer(false);
-          setResponses([]);
-          setIsCompleted(false);
-          
-          // Aplicar dados no estado interno
-          setInternalFlashCardsData(updatedContent);
-          setIsContentLoaded(true);
-          
-          console.log('📊 Flash Cards aplicados no estado:', {
-            totalCards: updatedContent.cards.length,
-            cards: updatedContent.cards,
-            title: updatedContent.title,
-            description: updatedContent.description
-          });
-          
-          // Forçar re-render
-          setContentLoaded(prev => !prev);
-        } else {
-          console.warn('⚠️ Dados recebidos não têm estrutura válida:', updatedContent);
+        // Se for para outra atividade, ignorar  
+        if (activity?.id && activityId !== activity.id && activityId !== 'flash-cards') {
+          console.log('⏭️ Evento activity-built para outra atividade, ignorando');
+          return;
         }
+        
+        // Buscar dados na chave que o autoBuildService usa
+        const saveKey = `activity_${activityId}`;
+        const dataString = localStorage.getItem(saveKey);
+        
+        if (dataString) {
+          try {
+            data = JSON.parse(dataString);
+            console.log('✅ Dados encontrados na chave activity_:', data);
+          } catch (error) {
+            console.error('❌ Erro ao parsear dados do activity-built:', error);
+            return;
+          }
+        } else {
+          console.warn('⚠️ Dados não encontrados na chave:', saveKey);
+          return;
+        }
+      } else if (event.type === 'flash-cards-auto-build') {
+        // Dados diretos do evento (generateActivityContent)
+        data = event.detail?.data;
+        console.log('✅ Dados recebidos diretamente do evento flash-cards-auto-build:', data);
+      }
+      
+      // Verificar se os dados são válidos para Flash Cards
+      if (data && data.cards && Array.isArray(data.cards) && data.cards.length > 0) {
+        console.log('🎯 Flash Cards válidos encontrados, aplicando:', data);
+        
+        // Resetar estados de navegação
+        setCurrentCardIndex(0);
+        setIsFlipped(false);
+        setShowAnswer(false);
+        setResponses([]);
+        setIsCompleted(false);
+        
+        // Aplicar dados no estado interno
+        setInternalFlashCardsData(data);
+        setIsContentLoaded(true);
+        
+        // Forçar re-render
+        setContentLoaded(prev => !prev);
+        
+        console.log('📊 Flash Cards aplicados no estado:', {
+          totalCards: data.cards.length,
+          cards: data.cards,
+          title: data.title,
+          description: data.description,
+          source: event.type
+        });
       } else {
-        console.warn('⚠️ Evento sem dados válidos:', event.detail);
+        console.warn('⚠️ Dados inválidos ou sem cards:', data);
       }
     };
 
-    // Escutar TODOS os eventos relacionados ao Flash Cards
+    // Escutar AMBOS os eventos que podem trazer Flash Cards
     const eventTypes = [
-      'flash-cards-auto-build',
-      'activity-auto-built', 
-      'flash-cards-generated',
-      'flash-cards-content-ready'
+      'activity-built',          // Do autoBuildService
+      'flash-cards-auto-build'   // Do generateActivityContent
     ];
     
     eventTypes.forEach(eventType => {
@@ -144,15 +171,17 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         window.removeEventListener(eventType, handleFlashCardsUpdate as EventListener);
       });
     };
-  }, []);
+  }, [activity?.id]);
 
-  // Monitorar localStorage para Flash Cards construídos
+  // Verificação INICIAL e monitoramento de localStorage 
   useEffect(() => {
     const checkForBuiltFlashCards = () => {
       console.log('🔍 Verificando localStorage para Flash Cards...');
       
-      // Lista expandida de possíveis chaves
+      // Lista expandida de possíveis chaves INCLUINDO a chave do sistema que funciona
       const specificKeys = [
+        `activity_${activity?.id}`,             // CHAVE PRINCIPAL DO SISTEMA QUE FUNCIONA
+        `activity_flash-cards`,                 // Fallback para flash-cards genérico
         `constructed_flash-cards_${activity?.id}`,
         'constructed_flash-cards_flash-cards',
         'flash-cards-data',
@@ -183,7 +212,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
             if (key === 'constructedActivities') {
               // Procurar atividade de flash cards no objeto
               const flashCardsActivity = Object.values(parsed).find((activityData: any) => 
-                activityData.activityType === 'flash-cards' && 
+                (activityData.activityType === 'flash-cards' || activityData.type === 'flash-cards') && 
                 activityData.generatedContent?.cards &&
                 Array.isArray(activityData.generatedContent.cards) &&
                 activityData.generatedContent.cards.length > 0
@@ -192,6 +221,15 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
                 foundData = (flashCardsActivity as any).generatedContent;
                 usedKey = key;
                 console.log(`✅ Flash Cards encontrado em constructedActivities:`, foundData);
+                break;
+              }
+              
+              // BUSCAR TAMBÉM por id 'flash-cards' diretamente
+              const directFlashCards = parsed['flash-cards'];
+              if (directFlashCards && directFlashCards.generatedContent?.cards && Array.isArray(directFlashCards.generatedContent.cards)) {
+                foundData = directFlashCards.generatedContent;
+                usedKey = key + '[flash-cards]';
+                console.log(`✅ Flash Cards encontrado direto em constructedActivities[flash-cards]:`, foundData);
                 break;
               }
             } else {
@@ -464,20 +502,28 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
           const parsed = JSON.parse(data);
           let flashCardsData = null;
           
-          // Diferentes estruturas possíveis
+          // Diferentes estruturas possíveis - BUSCA MAIS ABRANGENTE
           if (parsed.data?.cards && Array.isArray(parsed.data.cards)) {
             flashCardsData = parsed.data;
           } else if (parsed.cards && Array.isArray(parsed.cards)) {
             flashCardsData = parsed;
           } else if (typeof parsed === 'object') {
-            // Buscar em constructedActivities
+            // Buscar em constructedActivities - EXPANDIDO
             const foundActivity = Object.values(parsed).find((item: any) => 
-              item?.activityType === 'flash-cards' && 
+              (item?.activityType === 'flash-cards' || item?.type === 'flash-cards') && 
               item?.generatedContent?.cards && 
               Array.isArray(item.generatedContent.cards)
             );
             if (foundActivity) {
               flashCardsData = (foundActivity as any).generatedContent;
+            } else {
+              // Buscar direto por chave flash-cards
+              const directFlashCards = parsed['flash-cards'];
+              if (directFlashCards?.generatedContent?.cards && Array.isArray(directFlashCards.generatedContent.cards)) {
+                flashCardsData = directFlashCards.generatedContent;
+              } else if (directFlashCards?.cards && Array.isArray(directFlashCards.cards)) {
+                flashCardsData = directFlashCards;
+              }
             }
           }
           
