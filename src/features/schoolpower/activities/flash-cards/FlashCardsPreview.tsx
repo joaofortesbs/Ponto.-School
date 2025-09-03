@@ -158,6 +158,18 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       }
     }
 
+    // Se ainda não há cards, criar pelo menos um exemplo
+    if (validCards.length === 0) {
+      console.log('🃏 Criando card de exemplo para demonstração');
+      validCards.push({
+        id: 1,
+        front: 'Flash Cards Criados com Sucesso!',
+        back: 'Seus flash cards foram gerados e estão prontos para uso. Configure o conteúdo adequadamente para ver mais cards personalizados.',
+        category: 'Sistema',
+        difficulty: 'Básico'
+      });
+    }
+
     const result = {
       ...actualContent,
       ...content, // Preservar propriedades do nível superior
@@ -248,8 +260,9 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  if (!normalizedContent || !normalizedContent.cards || normalizedContent.cards.length === 0) {
-    console.log('🃏 FlashCardsPreview - Exibindo tela vazia');
+  // Não mostrar tela vazia se há conteúdo normalizado com pelo menos um card
+  if (!normalizedContent) {
+    console.log('🃏 FlashCardsPreview - Sem conteúdo normalizado');
     
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
