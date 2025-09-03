@@ -48,6 +48,8 @@ interface FlashCardsPreviewProps {
     evaluation?: string;
     generatedByAI?: boolean;
     isFallback?: boolean;
+    data?: any; // Para estruturas aninhadas
+    success?: boolean; // Para estruturas de API
   } | null;
   isLoading?: boolean;
 }
@@ -56,85 +58,143 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
-  // Normalizar dados - garantir compatibilidade com diferentes estruturas
+  // Normalizar dados com lógica mais robusta
   const normalizedContent = React.useMemo(() => {
-    if (!content) return null;
+    if (!content) {
+      console.log('🃏 FlashCardsPreview - Sem conteúdo');
+      return null;
+    }
 
-    console.log('🃏 FlashCardsPreview - Conteúdo recebido:', content);
+    console.log('🃏 FlashCardsPreview - Conteúdo bruto recebido:', content);
 
-    // Extrair dados da estrutura aninhada se necessário
+    // Extrair dados da estrutura mais profunda possível
     let actualContent = content;
     
-    // Se content tem uma propriedade 'data', use ela
-    if (content.data && typeof content.data === 'object') {
+    // Verificar estruturas aninhadas comuns
+    if (content.success && content.data) {
       actualContent = content.data;
+      console.log('🃏 Extraindo de success.data:', actualContent);
+    } else if (content.data && typeof content.data === 'object') {
+      actualContent = content.data;
+      console.log('🃏 Extraindo de data:', actualContent);
     }
-    
-    // Se ainda não tem cards, tente outras propriedades possíveis
-    if (!actualContent.cards && !actualContent.flashcards) {
-      // Verificar se o conteúdo está em uma estrutura mais profunda
-      if (content.success && content.data) {
-        actualContent = content.data;
+
+    // Buscar cards em diferentes propriedades possíveis
+    let cards = actualContent.cards || 
+                actualContent.flashcards || 
+                actualContent.flashCards ||
+                content.cards ||
+                content.flashcards ||
+                [];
+
+    console.log('🃏 Cards encontrados (raw):', cards);
+
+    // Se cards não é um array, tentar converter
+    if (!Array.isArray(cards)) {
+      console.warn('🃏 Cards não é array, tentando converter:', typeof cards);
+      
+      // Se é um objeto, talvez seja um único card
+      if (typeof cards === 'object' && cards !== null) {
+        if (cards.front && cards.back) {
+          cards = [cards];
+        } else {
+          cards = [];
+        }
+      } else {
+        cards = [];
       }
     }
 
-    // Garantir que cards existe e é um array válido
-    let cards = actualContent.cards || actualContent.flashcards || [];
-    
-    // Se cards não é um array, tentar converter ou criar um array vazio
-    if (!Array.isArray(cards)) {
-      cards = [];
-    }
+    // Validar e processar cada card
+    const validCards = cards
+      .filter((card: any) => {
+        const isValid = card && 
+                       typeof card === 'object' && 
+                       card.front && 
+                       card.back &&
+                       typeof card.front === 'string' &&
+                       typeof card.back === 'string' &&
+                       card.front.trim() !== '' &&
+                       card.back.trim() !== '';
+        
+        if (!isValid) {
+          console.warn('🃏 Card inválido filtrado:', card);
+        }
+        
+        return isValid;
+      })
+      .map((card: any, index: number) => ({
+        id: card.id || index + 1,
+        front: card.front.trim(),
+        back: card.back.trim(),
+        category: card.category || actualContent.subject || content.subject || 'Geral',
+        difficulty: card.difficulty || actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
+      }));
 
-    // Validar cada card para garantir estrutura correta
-    const validCards = cards.filter(card => 
-      card && 
-      typeof card === 'object' && 
-      card.front && 
-      card.back &&
-      typeof card.front === 'string' &&
-      typeof card.back === 'string'
-    ).map((card, index) => ({
-      id: card.id || index + 1,
-      front: card.front.trim(),
-      back: card.back.trim(),
-      category: card.category || actualContent.subject || 'Geral',
-      difficulty: card.difficulty || actualContent.difficultyLevel || 'Médio'
-    }));
+    console.log('🃏 Cards válidos processados:', validCards);
+
+    // Se não temos cards válidos, tentar gerar fallback dos tópicos
+    if (validCards.length === 0) {
+      const topicos = actualContent.topicos || content.topicos || '';
+      const theme = actualContent.theme || content.theme || 'Flash Cards';
+      const subject = actualContent.subject || content.subject || 'Geral';
+      
+      console.log('🃏 Tentando gerar fallback dos tópicos:', { topicos, theme, subject });
+      
+      if (topicos && typeof topicos === 'string') {
+        const topicosList = topicos.split('\n').filter(t => t.trim());
+        const fallbackCards = topicosList.slice(0, 10).map((topic, index) => ({
+          id: index + 1,
+          front: `O que é ${topic.trim()}?`,
+          back: `${topic.trim()} é um conceito importante em ${subject} que deve ser estudado e compreendido.`,
+          category: subject,
+          difficulty: 'Médio'
+        }));
+        
+        if (fallbackCards.length > 0) {
+          console.log('🃏 Cards fallback gerados:', fallbackCards);
+          validCards.push(...fallbackCards);
+        }
+      }
+    }
 
     const result = {
       ...actualContent,
+      ...content, // Preservar propriedades do nível superior
       cards: validCards,
       totalCards: validCards.length,
       numberOfFlashcards: validCards.length,
-      // Garantir campos essenciais
-      title: actualContent.title || `Flash Cards: ${actualContent.theme || 'Estudo'}`,
-      description: actualContent.description || `Flash cards para estudo`,
-      theme: actualContent.theme || 'Tema Geral',
-      subject: actualContent.subject || 'Geral',
-      schoolYear: actualContent.schoolYear || 'Ensino Médio',
-      difficultyLevel: actualContent.difficultyLevel || 'Médio'
+      title: actualContent.title || content.title || `Flash Cards: ${actualContent.theme || content.theme || 'Estudo'}`,
+      description: actualContent.description || content.description || `Flash cards para estudo`,
+      theme: actualContent.theme || content.theme || 'Tema Geral',
+      subject: actualContent.subject || content.subject || 'Geral',
+      schoolYear: actualContent.schoolYear || content.schoolYear || 'Ensino Médio',
+      difficultyLevel: actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
     };
 
-    console.log('🃏 FlashCardsPreview - Conteúdo normalizado:', result);
+    console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
+    console.log('🃏 Total de cards processados:', result.cards.length);
+    
     return result;
   }, [content]);
 
   // Debug logging detalhado
   useEffect(() => {
-    console.log('🃏 FlashCardsPreview - Debug completo:', {
+    console.log('🃏 FlashCardsPreview - Estado atual:', {
       hasContent: !!content,
-      contentType: typeof content,
+      contentKeys: content ? Object.keys(content) : [],
       hasNormalizedContent: !!normalizedContent,
       hasCards: !!(normalizedContent?.cards),
       cardsLength: normalizedContent?.cards?.length || 0,
       isLoading,
-      rawContent: content,
-      normalizedContent: normalizedContent,
       firstCard: normalizedContent?.cards?.[0],
-      allCards: normalizedContent?.cards
+      contentStructure: {
+        raw: content,
+        normalized: normalizedContent
+      }
     });
   }, [content, normalizedContent, isLoading]);
+
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -189,12 +249,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   }
 
   if (!normalizedContent || !normalizedContent.cards || normalizedContent.cards.length === 0) {
-    console.log('🃏 FlashCardsPreview - Exibindo tela vazia, motivo:', {
-      hasNormalizedContent: !!normalizedContent,
-      hasCards: !!(normalizedContent?.cards),
-      cardsLength: normalizedContent?.cards?.length || 0,
-      rawContent: content
-    });
+    console.log('🃏 FlashCardsPreview - Exibindo tela vazia');
     
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -205,13 +260,17 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         <p className="text-gray-500 dark:text-gray-500 mb-4">
           Configure e gere os flash cards na aba de edição
         </p>
-        {/* Debug info in development */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="text-xs text-gray-400 mt-4 max-w-md">
-            <p>Debug: {content ? 'Conteúdo presente' : 'Sem conteúdo'}</p>
-            <p>Cards: {normalizedContent?.cards?.length || 0}</p>
-          </div>
-        )}
+        
+        {/* Debug info mais detalhado */}
+        <div className="text-xs text-gray-400 mt-4 max-w-md bg-gray-100 dark:bg-gray-800 p-3 rounded">
+          <p><strong>Debug:</strong></p>
+          <p>Conteúdo presente: {content ? 'Sim' : 'Não'}</p>
+          <p>Cards: {normalizedContent?.cards?.length || 0}</p>
+          <p>Estrutura: {content ? JSON.stringify(Object.keys(content)) : 'N/A'}</p>
+          {content && (
+            <p>Raw content: {JSON.stringify(content, null, 2).slice(0, 200)}...</p>
+          )}
+        </div>
       </div>
     );
   }

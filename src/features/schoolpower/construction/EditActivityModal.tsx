@@ -844,6 +844,11 @@ const EditActivityModal = ({
       if (!formData.topicos?.trim()) throw new Error('Tópicos são obrigatórios');
       if (!formData.numberOfFlashcards?.trim()) throw new Error('Número de Flash Cards é obrigatório');
 
+      const numberOfCards = parseInt(formData.numberOfFlashcards) || 10;
+      if (numberOfCards <= 0 || numberOfCards > 50) {
+        throw new Error('Número de Flash Cards deve estar entre 1 e 50');
+      }
+
       // Progress timer
       const progressTimer = setInterval(() => {
         setBuildProgress(prev => Math.min(prev + 10, 90));
@@ -853,14 +858,14 @@ const EditActivityModal = ({
         // Importar o gerador de Flash Cards
         const { FlashCardsGenerator } = await import('@/features/schoolpower/activities/flash-cards/FlashCardsGenerator');
 
-        // Preparar dados estruturados para o gerador
+        // Preparar dados estruturados para o gerador - validação mais rigorosa
         const flashCardData = {
-          title: formData.title || `Flash Cards: ${formData.theme}`,
-          theme: formData.theme?.trim() || '',
+          title: formData.title.trim(),
+          theme: formData.theme.trim(),
           subject: formData.subject?.trim() || 'Geral',
           schoolYear: formData.schoolYear?.trim() || 'Ensino Médio',
-          topicos: formData.topicos?.trim() || '',
-          numberOfFlashcards: formData.numberOfFlashcards?.trim() || '10',
+          topicos: formData.topicos.trim(),
+          numberOfFlashcards: numberOfCards,
           context: formData.context?.trim() || 'Estudos e revisão',
           difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
           objectives: formData.objectives?.trim() || `Facilitar o aprendizado sobre ${formData.theme}`,
@@ -879,50 +884,57 @@ const EditActivityModal = ({
 
         console.log('✅ Conteúdo gerado pela API Gemini:', generatedContent);
 
-        // Preparar conteúdo final com dados do formulário
+        // Validar conteúdo gerado antes de usar
+        if (!generatedContent || typeof generatedContent !== 'object') {
+          throw new Error('Conteúdo gerado é inválido');
+        }
+
+        if (!generatedContent.cards || !Array.isArray(generatedContent.cards) || generatedContent.cards.length === 0) {
+          throw new Error('Nenhum card válido foi gerado');
+        }
+
+        // Preparar conteúdo final garantindo estrutura correta
         const finalContent = {
-          title: formData.title || generatedContent.title,
-          description: formData.description || generatedContent.description,
-          cards: generatedContent.cards || [],
-          totalCards: (generatedContent.cards || []).length,
-          theme: flashCardData.theme,
-          subject: flashCardData.subject,
-          schoolYear: flashCardData.schoolYear,
-          topicos: flashCardData.topicos,
-          numberOfFlashcards: (generatedContent.cards || []).length,
-          context: flashCardData.context,
-          difficultyLevel: flashCardData.difficultyLevel,
-          objectives: flashCardData.objectives,
-          instructions: flashCardData.instructions,
-          evaluation: flashCardData.evaluation,
+          title: generatedContent.title || formData.title,
+          description: generatedContent.description || formData.description || `Flash cards sobre ${formData.theme}`,
+          cards: generatedContent.cards,
+          totalCards: generatedContent.cards.length,
+          theme: generatedContent.theme || flashCardData.theme,
+          subject: generatedContent.subject || flashCardData.subject,
+          schoolYear: generatedContent.schoolYear || flashCardData.schoolYear,
+          topicos: generatedContent.topicos || flashCardData.topicos,
+          numberOfFlashcards: generatedContent.cards.length,
+          context: generatedContent.context || flashCardData.context,
+          difficultyLevel: generatedContent.difficultyLevel || flashCardData.difficultyLevel,
+          objectives: generatedContent.objectives || flashCardData.objectives,
+          instructions: generatedContent.instructions || flashCardData.instructions,
+          evaluation: generatedContent.evaluation || flashCardData.evaluation,
           generatedByAI: true,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: generatedContent.isGeneratedByAI || true,
+          generatedAt: generatedContent.generatedAt || new Date().toISOString(),
+          isGeneratedByAI: true,
           isFallback: false,
           formDataUsed: flashCardData
         };
 
-        // Aplicar fallback se necessário
-        if (!finalContent.cards || finalContent.cards.length === 0) {
-          throw new Error('Nenhum card foi gerado pela API');
-        }
-
         console.log('📦 Conteúdo final preparado:', finalContent);
-        console.log('🃏 Cards incluídos:', finalContent.cards);
+        console.log('🃏 Cards incluídos (verificação final):', finalContent.cards.length);
 
-        // Salvar com estrutura consistente
+        // Salvar com estrutura consistente e validação
         const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
         const storageData = {
           success: true,
-          data: finalContent
+          data: finalContent,
+          timestamp: new Date().toISOString(),
+          activityId: activity?.id
         };
 
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
         console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
 
-        // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
+        // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados em ordem
         setFlashCardsContent(finalContent);
         setGeneratedContent(finalContent);
+        setBuiltContent(finalContent);
         setIsContentLoaded(true);
 
         // Forçar atualização da interface
@@ -936,19 +948,40 @@ const EditActivityModal = ({
         });
 
       } catch (apiError) {
+        clearInterval(progressTimer);
         console.warn('⚠️ Erro na API, gerando fallback:', apiError);
         
-        // Gerar conteúdo de fallback
+        // Gerar conteúdo de fallback mais robusto
         const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
-        const numberOfCards = Math.min(parseInt(formData.numberOfFlashcards) || 5, topicos.length);
+        const maxCards = Math.min(numberOfCards, Math.max(topicos.length * 2, 5)); // Garantir pelo menos 5 cards
 
         const fallbackCards = [];
-        for (let i = 0; i < numberOfCards; i++) {
-          const topic = topicos[i] || `Tópico ${i + 1}`;
+        for (let i = 0; i < maxCards; i++) {
+          const topicoIndex = i % topicos.length;
+          const topic = topicos[topicoIndex] || `Conceito ${i + 1} de ${formData.theme}`;
+          const cardType = i % 3; // Variar tipos de pergunta
+          
+          let front: string;
+          let back: string;
+
+          switch (cardType) {
+            case 0:
+              front = `O que é ${topic}?`;
+              back = `${topic} é um conceito fundamental em ${formData.subject || 'Geral'} que deve ser compreendido por estudantes do ${formData.schoolYear || 'ensino médio'}. É essencial para o desenvolvimento acadêmico nesta área.`;
+              break;
+            case 1:
+              front = `Qual a importância de ${topic}?`;
+              back = `${topic} é importante porque permite compreender melhor os fundamentos de ${formData.subject || 'Geral'} e aplicar esse conhecimento na prática, contribuindo para o aprendizado integral.`;
+              break;
+            default:
+              front = `Como aplicar ${topic}?`;
+              back = `${topic} pode ser aplicado através do estudo sistemático e da compreensão dos conceitos relacionados em ${formData.subject || 'Geral'}.`;
+          }
+
           fallbackCards.push({
             id: i + 1,
-            front: `O que é ${topic}?`,
-            back: `${topic} é um conceito importante em ${formData.subject || 'Geral'} que deve ser compreendido por estudantes do ${formData.schoolYear || 'ensino médio'}.`,
+            front,
+            back,
             category: formData.subject || 'Geral',
             difficulty: formData.difficultyLevel || 'Médio'
           });
@@ -966,6 +999,9 @@ const EditActivityModal = ({
           numberOfFlashcards: fallbackCards.length,
           context: formData.context || 'Estudos e revisão',
           difficultyLevel: formData.difficultyLevel || 'Médio',
+          objectives: formData.objectives || `Facilitar o aprendizado sobre ${formData.theme}`,
+          instructions: formData.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
+          evaluation: formData.evaluation || 'Avalie o conhecimento através da prática com os cards',
           generatedAt: new Date().toISOString(),
           isGeneratedByAI: false,
           isFallback: true
@@ -977,19 +1013,23 @@ const EditActivityModal = ({
         const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
         const storageData = {
           success: true,
-          data: fallbackContent
+          data: fallbackContent,
+          timestamp: new Date().toISOString(),
+          activityId: activity?.id,
+          isFallback: true
         };
 
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
 
         setFlashCardsContent(fallbackContent);
         setGeneratedContent(fallbackContent);
+        setBuiltContent(fallbackContent);
         setIsContentLoaded(true);
         setActiveTab('preview');
 
         toast({
           title: "Flash Cards Criados (Modo Demonstração)",
-          description: "Foi criado um conjunto de flash cards de exemplo. Verifique a configuração da API para gerar conteúdo personalizado.",
+          description: `Foi criado um conjunto de ${fallbackCards.length} flash cards de exemplo. Verifique a configuração da API para gerar conteúdo personalizado.`,
           variant: "destructive",
         });
       }
@@ -1000,7 +1040,7 @@ const EditActivityModal = ({
 
       toast({
         title: "Erro na Geração",
-        description: "Não foi possível gerar os flash cards. Tente novamente.",
+        description: `Não foi possível gerar os flash cards: ${error.message}`,
         variant: "destructive",
       });
     } finally {
