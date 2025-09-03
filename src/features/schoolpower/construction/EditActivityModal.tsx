@@ -1535,24 +1535,24 @@ const EditActivityModal = ({
               console.log('🧠 Dados do Mapa Mental processados:', enrichedFormData);
             }
             else if (activity?.id === 'flash-cards') { // Preenchimento direto para Flash Cards
-                console.log('🃏 Processando dados específicos de Flash Cards');
-                enrichedFormData = {
-                  ...formData,
-                  title: consolidatedData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
-                  description: consolidatedData.description || autoFormData.description || customFields['Descrição'] || '',
-                  theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
-                  topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
-                  numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
-                  context: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || autoFormData.context || '',
-                  subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Geral',
-                  schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || autoFormData.schoolYear || 'Ensino Médio',
-                  difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || consolidatedCustomFields['nivelDificuldade'] || autoFormData.difficultyLevel || 'Médio',
-                  objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || `Facilitar o aprendizado sobre ${enrichedFormData.theme || 'o tema'}`,
-                  instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
-                  evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || 'Avalie o conhecimento através da prática com os cards',
-                };
-                console.log('🃏 Dados do Flash Cards processados:', enrichedFormData);
-              }
+              console.log('🃏 Processando dados específicos de Flash Cards');
+              enrichedFormData = {
+                ...formData,
+                title: consolidatedData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
+                description: consolidatedData.description || autoFormData.description || customFields['Descrição'] || '',
+                theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
+                topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
+                numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
+                context: customFields['Contexto de Uso'] || customFields['Contexto'] || customFields['contexto'] || autoFormData.context || '',
+                subject: consolidatedCustomFields['Disciplina'] || consolidatedCustomFields['disciplina'] || autoFormData.subject || 'Geral',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || consolidatedCustomFields['anoEscolaridade'] || autoFormData.schoolYear || 'Ensino Médio',
+                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || consolidatedCustomFields['nivelDificuldade'] || autoFormData.difficultyLevel || 'Médio',
+                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || `Facilitar o aprendizado sobre ${customFields['Tema'] || customFields['tema'] || 'o tema'}`,
+                instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || 'Avalie o conhecimento através da prática com os cards',
+              };
+              console.log('🃏 Dados do Flash Cards processados:', enrichedFormData);
+            }
             else {
               enrichedFormData = {
                 title: consolidatedData.title || autoFormData.title || '',
@@ -1870,7 +1870,7 @@ const EditActivityModal = ({
                           'Objetivos de aprendizagem',
 
               difficultyLevel: customFields['Nível de Dificuldade'] ||
-                              customFields['nivelDificuldade'] ||
+                              customCustomFields['nivelDificuldade'] ||
                               customFields['dificuldade'] ||
                               customFields['Dificuldade'] ||
                               customFields['Nível'] ||

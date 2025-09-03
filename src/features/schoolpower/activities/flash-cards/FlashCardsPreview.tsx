@@ -56,17 +56,36 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
+  // Normalizar dados - garantir compatibilidade com diferentes estruturas
+  const normalizedContent = React.useMemo(() => {
+    if (!content) return null;
+
+    // Se content tem uma propriedade 'data', use ela
+    const actualContent = content.data || content;
+
+    // Garantir que cards existe e é um array
+    const cards = actualContent.cards || actualContent.flashcards || [];
+
+    return {
+      ...actualContent,
+      cards: Array.isArray(cards) ? cards : [],
+      totalCards: cards.length || actualContent.totalCards || actualContent.numberOfFlashcards || 0
+    };
+  }, [content]);
+
   // Debug logging
   useEffect(() => {
     console.log('🃏 FlashCardsPreview - Render:', {
       hasContent: !!content,
-      hasCards: !!(content?.cards),
-      cardsLength: content?.cards?.length || 0,
+      hasNormalizedContent: !!normalizedContent,
+      hasCards: !!(normalizedContent?.cards),
+      cardsLength: normalizedContent?.cards?.length || 0,
       isLoading,
       contentKeys: content ? Object.keys(content) : [],
-      firstCard: content?.cards?.[0]
+      normalizedContentKeys: normalizedContent ? Object.keys(normalizedContent) : [],
+      firstCard: normalizedContent?.cards?.[0]
     });
-  }, [content, isLoading]);
+  }, [content, normalizedContent, isLoading]);
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -85,16 +104,16 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   // Inicializar ordem dos cards
   useEffect(() => {
-    if (content?.cards) {
-      const order = Array.from({ length: content.cards.length }, (_, i) => i);
+    if (normalizedContent?.cards) {
+      const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
       setCardOrder(order);
     }
-  }, [content?.cards]);
+  }, [normalizedContent?.cards]);
 
   // Auto-play functionality
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlaying && content?.cards) {
+    if (isPlaying && normalizedContent?.cards) {
       interval = setInterval(() => {
         if (isFlipped) {
           handleNextCard();
@@ -104,7 +123,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, isFlipped, currentCardIndex, content?.cards]);
+  }, [isPlaying, isFlipped, currentCardIndex, normalizedContent?.cards]);
 
   if (isLoading) {
     return (
@@ -120,7 +139,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  if (!content || !content.cards || content.cards.length === 0) {
+  if (!normalizedContent || !normalizedContent.cards || normalizedContent.cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -134,11 +153,11 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  const currentCard = content.cards[cardOrder[currentCardIndex]];
-  const progress = ((currentCardIndex + 1) / content.cards.length) * 100;
+  const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]];
+  const progress = ((currentCardIndex + 1) / normalizedContent.cards.length) * 100;
 
   const handleNextCard = () => {
-    if (currentCardIndex < content.cards.length - 1) {
+    if (currentCardIndex < normalizedContent.cards.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
       setIsFlipped(false);
     } else {
@@ -207,21 +226,21 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
-              {content.title || 'Flash Cards'}
+              {normalizedContent.title || 'Flash Cards'}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
-              {content.description || 'Flash cards para estudo e revisão'}
+              {normalizedContent.description || 'Flash cards para estudo e revisão'}
             </p>
           </div>
           <div className="flex gap-2">
-            {content.generatedByAI && (
+            {normalizedContent.generatedByAI && (
               <Badge variant="secondary" className="bg-green-100 text-green-800">
                 <Star className="w-3 h-3 mr-1" />
                 IA
               </Badge>
             )}
             <Badge variant="outline">
-              {content.cards.length} cards
+              {normalizedContent.cards.length} cards
             </Badge>
           </div>
         </div>
@@ -230,20 +249,20 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="font-medium text-gray-600 dark:text-gray-400">Disciplina:</span>
-            <p className="text-gray-800 dark:text-white">{content.subject || 'Geral'}</p>
+            <p className="text-gray-800 dark:text-white">{normalizedContent.subject || 'Geral'}</p>
           </div>
           <div>
             <span className="font-medium text-gray-600 dark:text-gray-400">Ano:</span>
-            <p className="text-gray-800 dark:text-white">{content.schoolYear || 'Todos'}</p>
+            <p className="text-gray-800 dark:text-white">{normalizedContent.schoolYear || 'Todos'}</p>
           </div>
           <div>
             <span className="font-medium text-gray-600 dark:text-gray-400">Dificuldade:</span>
-            <p className="text-gray-800 dark:text-white">{content.difficultyLevel || 'Médio'}</p>
+            <p className="text-gray-800 dark:text-white">{normalizedContent.difficultyLevel || 'Médio'}</p>
           </div>
           <div>
             <span className="font-medium text-gray-600 dark:text-gray-400">Progresso:</span>
             <p className="text-gray-800 dark:text-white">
-              {currentCardIndex + 1} / {content.cards.length}
+              {currentCardIndex + 1} / {normalizedContent.cards.length}
             </p>
           </div>
         </div>
@@ -275,7 +294,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                       Frente #{currentCard.id}
                     </Badge>
                     <Badge variant="secondary" className="text-xs">
-                      {currentCard.category || content.subject}
+                      {currentCard.category || normalizedContent.subject}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -377,7 +396,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
             <Button 
               onClick={handleNextCard} 
-              disabled={currentCardIndex === content.cards.length - 1}
+              disabled={currentCardIndex === normalizedContent.cards.length - 1}
               variant="outline" 
               size="sm"
             >

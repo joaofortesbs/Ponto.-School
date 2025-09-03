@@ -1,4 +1,3 @@
-
 import { geminiClient } from '@/utils/api/geminiClient';
 
 export interface FlashCard {
@@ -55,7 +54,7 @@ export class FlashCardsGenerator {
       }
 
       const numberOfCards = parseInt(data.numberOfFlashcards?.toString() || '10');
-      
+
       // Preparar prompt para o Gemini
       const prompt = this.buildFlashCardsPrompt(data, numberOfCards);
 
@@ -63,7 +62,7 @@ export class FlashCardsGenerator {
 
       // Chamar API do Gemini
       const response = await geminiClient.generateContent(prompt);
-      
+
       console.log('✅ Resposta recebida do Gemini:', response);
 
       // Processar resposta
@@ -75,7 +74,7 @@ export class FlashCardsGenerator {
 
     } catch (error) {
       console.error('❌ Erro ao gerar Flash Cards:', error);
-      
+
       // Fallback com dados estruturados
       return this.generateFallbackContent(data);
     }
@@ -128,7 +127,7 @@ Responda APENAS com o JSON válido, sem texto adicional.
     try {
       // Limpar e extrair JSON da resposta
       let cleanResponse = response.trim();
-      
+
       // Remover markdown se presente
       if (cleanResponse.startsWith('```json')) {
         cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
@@ -195,11 +194,11 @@ Responda APENAS com o JSON válido, sem texto adicional.
 
     // Gerar cards de exemplo baseados nos tópicos
     const fallbackCards: FlashCard[] = [];
-    
+
     for (let i = 0; i < Math.min(numberOfCards, topicos.length * 2); i++) {
       const topico = topicos[i % topicos.length];
       const cardNumber = Math.floor(i / topicos.length) + 1;
-      
+
       fallbackCards.push({
         id: i + 1,
         front: cardNumber === 1 
