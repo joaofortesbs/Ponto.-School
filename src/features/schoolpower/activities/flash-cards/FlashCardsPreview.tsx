@@ -56,6 +56,17 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
+  // Debug logging
+  useEffect(() => {
+    console.log('🃏 FlashCardsPreview - Render:', {
+      hasContent: !!content,
+      hasCards: !!(content?.cards),
+      cardsLength: content?.cards?.length || 0,
+      isLoading,
+      contentKeys: content ? Object.keys(content) : [],
+      firstCard: content?.cards?.[0]
+    });
+  }, [content, isLoading]);
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -249,13 +260,15 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
           {/* Card 3D */}
           <div className="relative w-full h-80 perspective-1000">
             <motion.div
-              className="relative w-full h-full preserve-3d cursor-pointer"
+              className="relative w-full h-full cursor-pointer"
+              style={{ transformStyle: 'preserve-3d' }}
               animate={{ rotateY: isFlipped ? 180 : 0 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
               onClick={handleFlipCard}
             >
               {/* Frente do card */}
-              <Card className="absolute inset-0 backface-hidden bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-700 shadow-xl border-2 border-blue-200 dark:border-blue-800 hover:shadow-2xl transition-shadow">
+              <Card className="absolute inset-0 bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-gray-700 shadow-xl border-2 border-blue-200 dark:border-blue-800 hover:shadow-2xl transition-shadow"
+                    style={{ backfaceVisibility: 'hidden' }}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <Badge variant="outline" className="text-xs">
@@ -279,7 +292,11 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               </Card>
 
               {/* Verso do card */}
-              <Card className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-700 dark:to-gray-600 shadow-xl border-2 border-green-200 dark:border-green-800 hover:shadow-2xl transition-shadow">
+              <Card className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-700 dark:to-gray-600 shadow-xl border-2 border-green-200 dark:border-green-800 hover:shadow-2xl transition-shadow"
+                    style={{ 
+                      backfaceVisibility: 'hidden',
+                      transform: 'rotateY(180deg)'
+                    }}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
