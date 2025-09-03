@@ -192,21 +192,36 @@ Responda APENAS com o JSON válido, sem texto adicional.
     const numberOfCards = parseInt(data.numberOfFlashcards?.toString() || '5');
     const topicos = data.topicos.split('\n').filter(t => t.trim());
 
-    // Gerar cards de exemplo baseados nos tópicos
+    // Garantir pelo menos 5 cards mesmo com poucos tópicos
+    const minCards = Math.max(numberOfCards, 5);
     const fallbackCards: FlashCard[] = [];
 
-    for (let i = 0; i < Math.min(numberOfCards, topicos.length * 2); i++) {
-      const topico = topicos[i % topicos.length];
-      const cardNumber = Math.floor(i / topicos.length) + 1;
+    for (let i = 0; i < minCards; i++) {
+      const topicoIndex = i % topicos.length;
+      const topico = topicos[topicoIndex] || `Conceito ${i + 1} de ${data.theme}`;
+      const cardType = i % 3; // Variar tipos de pergunta
+      
+      let front: string;
+      let back: string;
+
+      switch (cardType) {
+        case 0:
+          front = `O que é ${topico}?`;
+          back = `${topico} é um conceito fundamental em ${data.subject || 'Geral'} que deve ser compreendido por estudantes do ${data.schoolYear || 'ensino médio'}.`;
+          break;
+        case 1:
+          front = `Qual a importância de ${topico}?`;
+          back = `${topico} é importante porque permite compreender melhor os fundamentos de ${data.subject || 'Geral'} e aplicar esse conhecimento na prática.`;
+          break;
+        default:
+          front = `Como aplicar ${topico}?`;
+          back = `${topico} pode ser aplicado através do estudo prático e da compreensão dos conceitos relacionados em ${data.subject || 'Geral'}.`;
+      }
 
       fallbackCards.push({
         id: i + 1,
-        front: cardNumber === 1 
-          ? `O que é ${topico}?`
-          : `Qual a importância de ${topico} em ${data.subject}?`,
-        back: cardNumber === 1
-          ? `${topico} é um conceito fundamental em ${data.subject} para ${data.schoolYear}.`
-          : `${topico} é importante porque permite compreender melhor os fundamentos de ${data.subject}.`,
+        front,
+        back,
         category: data.subject || 'Geral',
         difficulty: data.difficultyLevel || 'Médio'
       });

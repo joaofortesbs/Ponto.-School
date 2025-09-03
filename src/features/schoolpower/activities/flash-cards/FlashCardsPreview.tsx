@@ -60,30 +60,79 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const normalizedContent = React.useMemo(() => {
     if (!content) return null;
 
+    console.log('🃏 FlashCardsPreview - Conteúdo recebido:', content);
+
+    // Extrair dados da estrutura aninhada se necessário
+    let actualContent = content;
+    
     // Se content tem uma propriedade 'data', use ela
-    const actualContent = content.data || content;
+    if (content.data && typeof content.data === 'object') {
+      actualContent = content.data;
+    }
+    
+    // Se ainda não tem cards, tente outras propriedades possíveis
+    if (!actualContent.cards && !actualContent.flashcards) {
+      // Verificar se o conteúdo está em uma estrutura mais profunda
+      if (content.success && content.data) {
+        actualContent = content.data;
+      }
+    }
 
-    // Garantir que cards existe e é um array
-    const cards = actualContent.cards || actualContent.flashcards || [];
+    // Garantir que cards existe e é um array válido
+    let cards = actualContent.cards || actualContent.flashcards || [];
+    
+    // Se cards não é um array, tentar converter ou criar um array vazio
+    if (!Array.isArray(cards)) {
+      cards = [];
+    }
 
-    return {
+    // Validar cada card para garantir estrutura correta
+    const validCards = cards.filter(card => 
+      card && 
+      typeof card === 'object' && 
+      card.front && 
+      card.back &&
+      typeof card.front === 'string' &&
+      typeof card.back === 'string'
+    ).map((card, index) => ({
+      id: card.id || index + 1,
+      front: card.front.trim(),
+      back: card.back.trim(),
+      category: card.category || actualContent.subject || 'Geral',
+      difficulty: card.difficulty || actualContent.difficultyLevel || 'Médio'
+    }));
+
+    const result = {
       ...actualContent,
-      cards: Array.isArray(cards) ? cards : [],
-      totalCards: cards.length || actualContent.totalCards || actualContent.numberOfFlashcards || 0
+      cards: validCards,
+      totalCards: validCards.length,
+      numberOfFlashcards: validCards.length,
+      // Garantir campos essenciais
+      title: actualContent.title || `Flash Cards: ${actualContent.theme || 'Estudo'}`,
+      description: actualContent.description || `Flash cards para estudo`,
+      theme: actualContent.theme || 'Tema Geral',
+      subject: actualContent.subject || 'Geral',
+      schoolYear: actualContent.schoolYear || 'Ensino Médio',
+      difficultyLevel: actualContent.difficultyLevel || 'Médio'
     };
+
+    console.log('🃏 FlashCardsPreview - Conteúdo normalizado:', result);
+    return result;
   }, [content]);
 
-  // Debug logging
+  // Debug logging detalhado
   useEffect(() => {
-    console.log('🃏 FlashCardsPreview - Render:', {
+    console.log('🃏 FlashCardsPreview - Debug completo:', {
       hasContent: !!content,
+      contentType: typeof content,
       hasNormalizedContent: !!normalizedContent,
       hasCards: !!(normalizedContent?.cards),
       cardsLength: normalizedContent?.cards?.length || 0,
       isLoading,
-      contentKeys: content ? Object.keys(content) : [],
-      normalizedContentKeys: normalizedContent ? Object.keys(normalizedContent) : [],
-      firstCard: normalizedContent?.cards?.[0]
+      rawContent: content,
+      normalizedContent: normalizedContent,
+      firstCard: normalizedContent?.cards?.[0],
+      allCards: normalizedContent?.cards
     });
   }, [content, normalizedContent, isLoading]);
   // Estados para controle da sessão de estudo
@@ -140,15 +189,29 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   }
 
   if (!normalizedContent || !normalizedContent.cards || normalizedContent.cards.length === 0) {
+    console.log('🃏 FlashCardsPreview - Exibindo tela vazia, motivo:', {
+      hasNormalizedContent: !!normalizedContent,
+      hasCards: !!(normalizedContent?.cards),
+      cardsLength: normalizedContent?.cards?.length || 0,
+      rawContent: content
+    });
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
         <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
           Nenhum Flash Card Disponível
         </h3>
-        <p className="text-gray-500 dark:text-gray-500">
+        <p className="text-gray-500 dark:text-gray-500 mb-4">
           Configure e gere os flash cards na aba de edição
         </p>
+        {/* Debug info in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="text-xs text-gray-400 mt-4 max-w-md">
+            <p>Debug: {content ? 'Conteúdo presente' : 'Sem conteúdo'}</p>
+            <p>Cards: {normalizedContent?.cards?.length || 0}</p>
+          </div>
+        )}
       </div>
     );
   }
