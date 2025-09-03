@@ -976,6 +976,115 @@ const EditActivityModal = ({
     }
   };
 
+  // Função para salvar alterações
+  const handleSave = async () => {
+    if (!activity) return;
+
+    try {
+      console.log('💾 Salvando alterações da atividade:', activity.id);
+      console.log('📊 Dados do formulário:', formData);
+
+      // Preparar dados da atividade atualizada
+      const updatedActivity = {
+        ...activity,
+        title: formData.title,
+        description: formData.description,
+        customFields: {
+          ...activity.customFields,
+          // Mapear campos específicos baseado no tipo de atividade
+          ...(activity.id === 'sequencia-didatica' && {
+            'Título do Tema / Assunto': formData.tituloTemaAssunto,
+            'Ano / Série': formData.anoSerie,
+            'Disciplina': formData.disciplina,
+            'BNCC / Competências': formData.bnccCompetencias,
+            'Público-alvo': formData.publicoAlvo,
+            'Objetivos de Aprendizagem': formData.objetivosAprendizagem,
+            'Quantidade de Aulas': formData.quantidadeAulas,
+            'Quantidade de Diagnósticos': formData.quantidadeDiagnosticos,
+            'Quantidade de Avaliações': formData.quantidadeAvaliacoes,
+            'Cronograma': formData.cronograma
+          }),
+          ...(activity.id === 'plano-aula' && {
+            'Componente Curricular': formData.subject,
+            'Tema ou Tópico Central': formData.theme,
+            'Ano/Série Escolar': formData.schoolYear,
+            'Habilidades BNCC': formData.competencies,
+            'Objetivo Geral': formData.objectives,
+            'Materiais/Recursos': formData.materials,
+            'Perfil da Turma': formData.context,
+            'Carga Horária': formData.timeLimit,
+            'Tipo de Aula': formData.difficultyLevel,
+            'Observações do Professor': formData.evaluation
+          }),
+          ...(activity.id === 'quiz-interativo' && {
+            'Número de Questões': formData.numberOfQuestions,
+            'Tema': formData.theme,
+            'Disciplina': formData.subject,
+            'Ano de Escolaridade': formData.schoolYear,
+            'Nível de Dificuldade': formData.difficultyLevel,
+            'Formato': formData.questionModel,
+            'Objetivos': formData.objectives,
+            'Tempo por Questão': formData.timePerQuestion
+          }),
+          ...(activity.id === 'quadro-interativo' && {
+            'Disciplina / Área de conhecimento': formData.subject,
+            'Ano / Série': formData.schoolYear,
+            'Tema ou Assunto da aula': formData.theme,
+            'Objetivo de aprendizagem da aula': formData.objectives,
+            'Nível de Dificuldade': formData.difficultyLevel,
+            'Atividade mostrada': formData.quadroInterativoCampoEspecifico
+          }),
+          ...(activity.id === 'flash-cards' && {
+            'Tema dos Flash Cards': formData.theme,
+            'Tópicos Principais': formData.topicos,
+            'Número de Flash Cards': formData.numberOfFlashcards,
+            'Contexto de Uso': formData.context
+          }),
+          ...(activity.id === 'mapa-mental' && {
+            'Tema Central': formData.centralTheme,
+            'Categorias Principais': formData.mainCategories,
+            'Objetivo Geral': formData.generalObjective,
+            'Critérios de Avaliação': formData.evaluationCriteria
+          })
+        },
+        lastModified: new Date().toISOString()
+      };
+
+      // Salvar conteúdo gerado se existir
+      const finalActivityData = {
+        ...updatedActivity,
+        ...(generatedContent && { generatedContent }),
+        ...(quizInterativoContent && { quizInterativoContent }),
+        ...(flashCardsContent && { flashCardsContent })
+      };
+
+      // Chamar função de callback para salvar
+      if (onSave) {
+        await onSave(finalActivityData);
+      }
+
+      // Atualizar atividade se a função estiver disponível
+      if (onUpdateActivity) {
+        await onUpdateActivity(finalActivityData);
+      }
+
+      toast({
+        title: "Alterações Salvas!",
+        description: "As modificações da atividade foram salvas com sucesso.",
+      });
+
+      console.log('✅ Atividade salva com sucesso:', finalActivityData);
+
+    } catch (error) {
+      console.error('❌ Erro ao salvar atividade:', error);
+      toast({
+        title: "Erro ao Salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Carregar conteúdo construído quando o modal abrir
   useEffect(() => {
     if (activity && isOpen) {
