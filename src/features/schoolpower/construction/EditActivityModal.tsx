@@ -723,31 +723,7 @@ const EditActivityModal = ({
         source: 'EditActivityModal-Generate'
       };
 
-      // Salvar dados em múltiplas localizações
-      localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
-      localStorage.setItem(genericFlashCardsKey, JSON.stringify(storageData));
-      localStorage.setItem(fallbackKey, JSON.stringify(storageData));
-
-      // Salvar também em constructedActivities
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const activityKey = `flash-cards_${activity?.id || Date.now()}`;
-      constructedActivities[activityKey] = {
-        activityType: 'flash-cards',
-        generatedContent: finalContent,
-        timestamp: Date.now(),
-        source: 'EditActivityModal-Generate'
-      };
-      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-      console.log('💾 Flash Cards salvo em múltiplas localizações:', {
-        specificKey: flashCardsStorageKey,
-        genericKey: genericFlashCardsKey,
-        fallbackKey: fallbackKey,
-        constructedKey: activityKey,
-        dataStructure: finalContent
-      });
-
-      // USAR A MESMA LÓGICA DO "CONSTRUIR TODAS" - salvar como activity_${id}
+      // SALVAR USANDO ESTRATÉGIA UNIFICADA (padrão do sistema que funciona)
       const saveKey = `activity_${activity.id}`;
       const savedContent = {
         ...finalContent,
@@ -757,9 +733,13 @@ const EditActivityModal = ({
         formData: formData
       };
 
+      // Salvar dados principais
       localStorage.setItem(saveKey, JSON.stringify(savedContent));
+      localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+      localStorage.setItem(genericFlashCardsKey, JSON.stringify(storageData));
+      localStorage.setItem(fallbackKey, JSON.stringify(storageData));
 
-      // Salvar em constructedActivities IGUAL ao sistema que funciona  
+      // Salvar em constructedActivities (UMA SÓ VEZ, padrão do sistema que funciona)
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       constructedActivities[activity.id] = {
         isBuilt: true,
@@ -769,11 +749,20 @@ const EditActivityModal = ({
       };
       localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
+      console.log('💾 Flash Cards salvo com estratégia unificada:', {
+        saveKey,
+        specificKey: flashCardsStorageKey,
+        genericKey: genericFlashCardsKey,
+        fallbackKey: fallbackKey,
+        constructedActivities: !!constructedActivities[activity.id],
+        dataStructure: finalContent
+      });
+
       // Marcar atividade como construída (igual ao sistema que funciona)
       activity.isBuilt = true;
       activity.builtAt = new Date().toISOString();
-      activity.progress = 100;
-      activity.status = 'completed';
+      if ('progress' in activity) activity.progress = 100;
+      if ('status' in activity) activity.status = 'completed';
 
       // APLICAR DADOS IMEDIATAMENTE nos estados locais  
       setFlashCardsContent(finalContent);
@@ -784,7 +773,7 @@ const EditActivityModal = ({
         saveKey,
         constructedActivities: !!localStorage.getItem('constructedActivities'),
         finalContent,
-        activityStatus: activity.status
+        activityStatus: 'status' in activity ? activity.status : 'completed'
       });
 
       // Disparar evento IGUAL ao sistema "Construir Todas" que funciona
