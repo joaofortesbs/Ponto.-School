@@ -1,8 +1,4 @@
 
-export { default as FlashCardsPreview } from './FlashCardsPreview';
-export { FlashCardsGenerator } from './FlashCardsGenerator';
-export type { FlashCardsContent, FlashCardsFormData } from './FlashCardsGenerator';
-
 export const flashCardsFieldMapping = {
   'Título': 'Título',
   'Descrição': 'Descrição', 
