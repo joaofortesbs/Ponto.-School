@@ -40,6 +40,77 @@ export class AutoBuildService {
   private async prepareFormDataExactlyLikeModal(activity: ConstructionActivity): Promise<any> {
     console.log(`🎯 [AUTO-BUILD] Preparando formData para: ${activity.title}`);
 
+    // Sistema exclusivo para Flash Cards
+    if (activity.id === 'flash-cards') {
+      console.log('🃏 [FLASH CARDS] Sistema exclusivo de auto-build');
+
+      try {
+        // Validar dados de entrada para Flash Cards
+        if (!activity.title || !activity.description) {
+          console.warn('⚠️ [FLASH CARDS] Dados insuficientes');
+          throw new Error('Dados insuficientes para Flash Cards');
+        }
+
+        // Preparar dados completos para Flash Cards
+        const flashCardsFormData = {
+          // Campos básicos obrigatórios
+          title: activity.title,
+          description: activity.description,
+
+          // Campos específicos do Flash Cards
+          theme: activity.customFields?.['Tema ou Assunto da aula'] || 
+                 activity.customFields?.['Tema'] || 
+                 activity.title || 
+                 'Tema Principal',
+
+          topicos: activity.customFields?.['Tópicos'] || 
+                   activity.customFields?.['Conteúdo'] || 
+                   activity.description || 
+                   'Tópicos principais do tema',
+
+          numberOfFlashcards: activity.customFields?.['Número de Flash Cards'] || 
+                              activity.customFields?.['Quantidade'] || 
+                              '10',
+
+          subject: activity.customFields?.['Disciplina / Área de conhecimento'] || 
+                   activity.customFields?.['Disciplina'] || 
+                   'Educação Geral',
+
+          schoolYear: activity.customFields?.['Ano / Série'] || 
+                      activity.customFields?.['Ano'] || 
+                      '6º Ano',
+
+          difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
+                           'Intermediário',
+
+          context: activity.customFields?.['Contexto'] || 
+                   activity.customFields?.['Contexto educacional'] || 
+                   'Contexto educacional geral',
+
+          // Marcar como auto-build
+          isFlashCardsAutoBuild: true,
+          autoBuildId: activity.id,
+          autoBuildTimestamp: new Date().toISOString()
+        };
+
+        console.log('✅ [FLASH CARDS] FormData preparado:', flashCardsFormData);
+
+        // Salvar dados para acesso posterior
+        const storageKey = `auto_activity_data_${activity.id}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+          formData: flashCardsFormData,
+          activity: activity,
+          timestamp: new Date().toISOString(),
+          type: 'flash-cards'
+        }));
+
+        return flashCardsFormData;
+      } catch (error) {
+        console.error(`❌ [FLASH CARDS] Erro no sistema exclusivo:`, error);
+        throw error;
+      }
+    }
+
     // Sistema exclusivo para Quadro Interativo
     if (activity.id === 'quadro-interativo') {
       console.log('🎯 [QUADRO INTERATIVO] Sistema exclusivo de auto-build');
@@ -260,6 +331,13 @@ export class AutoBuildService {
     console.log(`🎯 [AUTO-BUILD] Construindo: ${activity.title}`);
 
     try {
+      // SISTEMA EXCLUSIVO PARA FLASH CARDS
+      if (activity.id === 'flash-cards') {
+        console.log('🃏 [FLASH CARDS] Sistema exclusivo de construção');
+        await this.buildFlashCardsExclusively(activity);
+        return;
+      }
+
       // SISTEMA EXCLUSIVO PARA QUADRO INTERATIVO
       if (activity.id === 'quadro-interativo') {
         console.log('🎯 [QUADRO INTERATIVO] Sistema exclusivo de construção');
@@ -316,6 +394,141 @@ export class AutoBuildService {
       activity.progress = 0;
       throw error;
     }
+  }
+
+  /**
+   * Sistema exclusivo para construção de Flash Cards
+   */
+  private async buildFlashCardsExclusively(activity: ConstructionActivity): Promise<void> {
+    console.log(`🃏 [FLASH CARDS] Iniciando construção exclusiva para: ${activity.title}`);
+    
+    try {
+      // Preparar dados específicos para Flash Cards
+      const flashCardsFormData = await this.prepareFormDataExactlyLikeModal(activity);
+      
+      // Importar o gerador específico de Flash Cards
+      const { FlashCardsGenerator } = await import('../../activities/flash-cards/FlashCardsGenerator');
+      
+      // Criar instância do gerador
+      const generator = new FlashCardsGenerator();
+      
+      console.log('🃏 [FLASH CARDS] Chamando API do Gemini para gerar conteúdo:', flashCardsFormData);
+      
+      // Gerar conteúdo usando a mesma lógica do modal
+      const generatedContent = await generator.generateFlashCardsContent(flashCardsFormData);
+      
+      if (!generatedContent || !generatedContent.cards || !Array.isArray(generatedContent.cards) || generatedContent.cards.length === 0) {
+        throw new Error('API do Gemini não gerou Flash Cards válidos');
+      }
+      
+      // Preparar conteúdo final completo
+      const finalFlashCardsContent = {
+        title: flashCardsFormData.title,
+        description: flashCardsFormData.description || generatedContent.description,
+        theme: flashCardsFormData.theme,
+        topicos: flashCardsFormData.topicos,
+        numberOfFlashcards: generatedContent.cards.length,
+        context: flashCardsFormData.context,
+        cards: generatedContent.cards.map((card, index) => ({
+          id: card.id || index + 1,
+          question: card.question,
+          answer: card.answer,
+          category: card.category || flashCardsFormData.theme || 'Geral'
+        })),
+        totalCards: generatedContent.cards.length,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        isFallback: false
+      };
+      
+      console.log('🃏 [FLASH CARDS] Conteúdo final gerado:', finalFlashCardsContent);
+      
+      // Salvar com as MESMAS chaves do sistema manual
+      const activityKey = `activity_${activity.id}`;
+      const constructedStorageKey = `constructed_flash-cards_${activity.id}`;
+      
+      // Salvar dados estruturados
+      localStorage.setItem(activityKey, JSON.stringify(finalFlashCardsContent));
+      localStorage.setItem(constructedStorageKey, JSON.stringify({
+        success: true,
+        data: finalFlashCardsContent
+      }));
+      
+      // Atualizar lista de atividades construídas
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity.id] = {
+        isBuilt: true,
+        builtAt: new Date().toISOString(),
+        formData: flashCardsFormData,
+        generatedContent: finalFlashCardsContent
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      
+      // Atualizar propriedades da atividade
+      activity.isBuilt = true;
+      activity.builtAt = new Date().toISOString();
+      activity.progress = 100;
+      activity.status = 'completed';
+      
+      // Notificar conclusão
+      if (this.onActivityBuilt) {
+        this.onActivityBuilt(activity.id);
+      }
+      
+      // Disparar evento para sincronização
+      window.dispatchEvent(new CustomEvent('activity-built', {
+        detail: { 
+          activityId: activity.id,
+          activityType: 'flash-cards',
+          content: finalFlashCardsContent
+        }
+      }));
+      
+      console.log(`✅ [FLASH CARDS] Construção exclusiva concluída: ${activity.title}`);
+      
+    } catch (error) {
+      console.error(`❌ [FLASH CARDS] Erro na construção exclusiva:`, error);
+      
+      // Criar fallback em caso de erro
+      const fallbackContent = this.createFlashCardsFallback(activity);
+      
+      // Salvar fallback
+      const activityKey = `activity_${activity.id}`;
+      localStorage.setItem(activityKey, JSON.stringify(fallbackContent));
+      
+      // Atualizar propriedades da atividade como erro
+      activity.status = 'error';
+      activity.progress = 0;
+      
+      throw error;
+    }
+  }
+  
+  /**
+   * Criar conteúdo de fallback para Flash Cards
+   */
+  private createFlashCardsFallback(activity: ConstructionActivity): any {
+    const numberOfCards = 5;
+    const theme = activity.title || 'Tema Geral';
+    
+    return {
+      title: activity.title,
+      description: activity.description,
+      theme: theme,
+      topicos: 'Conceitos básicos',
+      numberOfFlashcards: numberOfCards,
+      context: 'Contexto educacional',
+      cards: Array.from({ length: numberOfCards }, (_, index) => ({
+        id: index + 1,
+        question: `Pergunta ${index + 1} sobre ${theme}`,
+        answer: `Resposta ${index + 1} relacionada ao conceito de ${theme}`,
+        category: theme
+      })),
+      totalCards: numberOfCards,
+      generatedAt: new Date().toISOString(),
+      isGeneratedByAI: false,
+      isFallback: true
+    };
   }
 
   /**

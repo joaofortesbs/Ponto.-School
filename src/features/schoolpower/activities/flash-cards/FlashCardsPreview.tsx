@@ -88,33 +88,87 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
   }
 
   if (!content || !content.cards || !Array.isArray(content.cards) || content.cards.length === 0) {
-    console.warn('⚠️ FlashCardsPreview: Conteúdo inválido ou vazio', {
-      hasContent: !!content,
-      hasCards: !!(content && content.cards),
-      isArray: !!(content && Array.isArray(content.cards)),
-      cardsLength: content?.cards?.length || 0
-    });
+    console.warn('⚠️ FlashCardsPreview: Conteúdo inválido ou vazio, tentando buscar no localStorage');
     
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-        <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
-        <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
-          Nenhum Flash Card disponível
-        </h4>
-        <p className="text-gray-500 dark:text-gray-500">
-          Configure os campos e gere os flash cards para começar
-        </p>
-        {content && (
-          <div className="mt-4 text-xs text-gray-400">
-            Debug: {JSON.stringify({
-              hasContent: !!content,
-              hasCards: !!(content.cards),
-              cardsCount: content.cards?.length || 0
-            })}
-          </div>
-        )}
-      </div>
-    );
+    // BUSCA AVANÇADA NO LOCALSTORAGE QUANDO CONTEÚDO ESTÁ VAZIO
+    const [alternativeContent, setAlternativeContent] = React.useState(null);
+    
+    React.useEffect(() => {
+      const searchForFlashCardsData = () => {
+        // Buscar em múltiplas chaves possíveis
+        const possibleKeys = [
+          'activity_flash-cards',           // Chave genérica
+          'constructed_flash-cards_flash-cards', // Chave de construção
+          'auto_activity_data_flash-cards'  // Chave de auto-build
+        ];
+        
+        // Buscar também com IDs dinâmicos no localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('flash-cards') || key.includes('activity_'))) {
+            possibleKeys.push(key);
+          }
+        }
+        
+        for (const key of possibleKeys) {
+          const storageData = localStorage.getItem(key);
+          if (storageData) {
+            try {
+              const parsed = JSON.parse(storageData);
+              
+              // Verificar se contém dados válidos de Flash Cards
+              let validData = null;
+              
+              if (parsed.success && parsed.data && parsed.data.cards) {
+                validData = parsed.data; // Formato: {success: true, data: {...}}
+              } else if (parsed.cards && Array.isArray(parsed.cards)) {
+                validData = parsed; // Formato direto: {cards: [...]}
+              } else if (parsed.generatedContent && parsed.generatedContent.cards) {
+                validData = parsed.generatedContent; // Formato: {generatedContent: {cards: [...]}}
+              }
+              
+              if (validData && validData.cards && validData.cards.length > 0) {
+                console.log(`✅ FlashCardsPreview: Dados encontrados em ${key}:`, validData);
+                setAlternativeContent(validData);
+                return;
+              }
+            } catch (error) {
+              console.error(`❌ FlashCardsPreview: Erro ao ler ${key}:`, error);
+            }
+          }
+        }
+      };
+      
+      searchForFlashCardsData();
+    }, []);
+    
+    // Se encontrou dados alternativos, usar eles
+    if (alternativeContent) {
+      console.log('🔄 FlashCardsPreview: Usando dados encontrados no localStorage');
+      // Continuar com a renderização normal usando alternativeContent
+      content = alternativeContent;
+    } else {
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+          <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+          <h4 className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-2">
+            Nenhum Flash Card disponível
+          </h4>
+          <p className="text-gray-500 dark:text-gray-500">
+            Configure os campos e gere os flash cards para começar
+          </p>
+          {content && (
+            <div className="mt-4 text-xs text-gray-400">
+              Debug: {JSON.stringify({
+                hasContent: !!content,
+                hasCards: !!(content?.cards),
+                cardsCount: content?.cards?.length || 0
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
   }
 
   const currentCard = content.cards[currentCardIndex];
