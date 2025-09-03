@@ -1417,7 +1417,7 @@ const EditActivityModal = ({
                 ...(autoFormData.title && { title: autoFormData.title }),
                 ...(autoFormData.description && { description: autoFormData.description }),
                 ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
-                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º Ano' && { schoolYear: autoFormData.schoolYear }),
+                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                 ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                 ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
                 ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
@@ -1444,28 +1444,6 @@ const EditActivityModal = ({
                 evaluationCriteria: customFields['Critérios de Avaliação'] || autoFormData.evaluationCriteria || '',
               };
               console.log('🧠 Dados do Mapa Mental processados:', enrichedFormData);
-            }
-            else if (activity?.id === 'flash-cards') {
-              console.log('🃏 Processando dados específicos de Flash Cards');
-
-              enrichedFormData = {
-                ...formData,
-                title: consolidatedData.title || autoFormData.title || activity.title || '',
-                description: consolidatedData.description || autoFormData.description || activity.description || '',
-                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || '',
-                topicos: consolidatedCustomFields['Tópicos'] || autoFormData.topicos || '',
-                numberOfFlashcards: consolidatedCustomFields['Número de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
-                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || 'Português',
-                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || '6º Ano - Ensino Fundamental',
-                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
-                context: consolidatedCustomFields['Contexto'] || autoFormData.context || '',
-                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || '',
-                instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || '',
-                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
-                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
-              };
-
-              console.log('🃏 Dados finais dos Flash Cards processados:', enrichedFormData);
             }
             else {
               enrichedFormData = {
@@ -2693,131 +2671,52 @@ const EditActivityModal = ({
                             {/* Campos Específicos Flash Cards */}
                             {activityType === 'flash-cards' && (
                               <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor="numberOfFlashcards">Número de Flash Cards *</Label>
-                                    <Input
-                                      id="numberOfFlashcards"
-                                      type="number"
-                                      value={formData.numberOfFlashcards || ''}
-                                      onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
-                                      placeholder="Ex: 10, 15, 20"
-                                      min="1"
-                                      max="50"
-                                      required
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="theme">Tema *</Label>
-                                    <Input
-                                      id="theme"
-                                      value={formData.theme || ''}
-                                      onChange={(e) => handleInputChange('theme', e.target.value)}
-                                      placeholder="Ex: Verbos Irregulares, Fórmulas Matemáticas"
-                                      required
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor="subject">Disciplina *</Label>
-                                    <Input
-                                      id="subject"
-                                      value={formData.subject || ''}
-                                      onChange={(e) => handleInputChange('subject', e.target.value)}
-                                      placeholder="Ex: Português, Matemática, Inglês"
-                                      required
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="schoolYear">Ano de Escolaridade *</Label>
-                                    <Input
-                                      id="schoolYear"
-                                      value={formData.schoolYear || ''}
-                                      onChange={(e) => handleInputChange('schoolYear', e.target.value)}
-                                      placeholder="Ex: 6º Ano - Ensino Fundamental"
-                                      required
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
-                                    <Input
-                                      id="difficultyLevel"
-                                      value={formData.difficultyLevel || ''}
-                                      onChange={(e) => handleInputChange('difficultyLevel', e.target.value)}
-                                      placeholder="Ex: Fácil, Médio, Difícil"
-                                      required
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="context">Contexto de Uso</Label>
-                                    <Input
-                                      id="context"
-                                      value={formData.context || ''}
-                                      onChange={(e) => handleInputChange('context', e.target.value)}
-                                      placeholder="Ex: Revisão, Memorização, Estudo"
-                                      className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                </div>
-
                                 <div>
-                                  <Label htmlFor="topicos">Tópicos Específicos *</Label>
+                                  <Label htmlFor="theme" className="text-sm">Tema dos Flash Cards *</Label>
+                                  <Input
+                                    id="theme"
+                                    value={formData.theme}
+                                    onChange={(e) => handleInputChange('theme', e.target.value)}
+                                    placeholder="Digite o tema principal dos flash cards"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="topicos" className="text-sm">Tópicos Principais *</Label>
                                   <Textarea
                                     id="topicos"
-                                    value={formData.topicos || ''}
+                                    value={formData.topicos}
                                     onChange={(e) => handleInputChange('topicos', e.target.value)}
-                                    placeholder="Liste os tópicos que devem ser abordados nos flash cards (um por linha)..."
+                                    placeholder="Liste os tópicos importantes (um por linha)..."
                                     rows={3}
                                     required
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
                                 </div>
-
                                 <div>
-                                  <Label htmlFor="objectives">Objetivos de Aprendizagem</Label>
+                                  <Label htmlFor="numberOfFlashcards" className="text-sm">Número de Flash Cards *</Label>
+                                  <Input
+                                    id="numberOfFlashcards"
+                                    type="number"
+                                    value={formData.numberOfFlashcards}
+                                    onChange={(e) => handleInputChange('numberOfFlashcards', e.target.value)}
+                                    placeholder="Ex: 10, 20, 30"
+                                    min="1"
+                                    required
+                                    className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="context" className="text-sm">Contexto de Uso</Label>
                                   <Textarea
-                                    id="objectives"
-                                    value={formData.objectives || ''}
-                                    onChange={(e) => handleInputChange('objectives', e.target.value)}
-                                    placeholder="Descreva os objetivos que os estudantes devem alcançar com estes flash cards..."
+                                    id="context"
+                                    value={formData.context}
+                                    onChange={(e) => handleInputChange('context', e.target.value)}
+                                    placeholder="Descreva o contexto em que os flash cards serão usados (ex: revisão para prova, aprendizado de vocabulário)..."
                                     rows={2}
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label htmlFor="instructions">Instruções de Uso</Label>
-                                    <Textarea
-                                      id="instructions"
-                                      value={formData.instructions || ''}
-                                      onChange={(e) => handleInputChange('instructions', e.target.value)}
-                                      placeholder="Como os flash cards devem ser utilizados..."
-                                      rows={2}
-                                      className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="evaluation">Critérios de Avaliação</Label>
-                                    <Textarea
-                                      id="evaluation"
-                                      value={formData.evaluation || ''}
-                                      onChange={(e) => handleInputChange('evaluation', e.target.value)}
-                                      placeholder="Como o aprendizado será avaliado..."
-                                      rows={2}
-                                      className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                    />
-                                  </div>
                                 </div>
                               </div>
                             )}
