@@ -158,24 +158,30 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
     setIsSearching(true);
     console.log('🔍 Iniciando busca ativa por dados de Flash Cards...');
 
-    // Buscar no storage
-    const storageData = dataManager.searchInStorage(activity?.id);
-    if (storageData) {
-      console.log('✅ Dados encontrados no storage, aplicando:', storageData);
-      dataManager.updateData(storageData);
-      setIsSearching(false);
-      return;
-    }
+    try {
+      // Buscar no storage
+      const storageData = dataManager.searchInStorage(activity?.id);
+      if (storageData) {
+        console.log('✅ Dados encontrados no storage, aplicando:', storageData);
+        dataManager.updateData(storageData);
+        return;
+      }
 
-    // Aguardar um pouco e tentar novamente
-    setTimeout(() => {
+      // Aguardar um pouco e tentar novamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       const retryData = dataManager.searchInStorage(activity?.id);
       if (retryData) {
         console.log('✅ Dados encontrados na segunda tentativa:', retryData);
         dataManager.updateData(retryData);
+      } else {
+        console.log('❌ Nenhum dado encontrado após busca completa');
       }
+    } catch (error) {
+      console.error('❌ Erro na busca de dados:', error);
+    } finally {
       setIsSearching(false);
-    }, 1000);
+    }
   }, [activity?.id, isSearching]);
 
   // Subscrever aos dados centralizados
@@ -206,6 +212,7 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
           setShowAnswer(false);
           setResponses([]);
           setIsCompleted(false);
+          setIsSearching(false);
         }
       }
     };
@@ -227,25 +234,36 @@ const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ content, isLoadin
         window.removeEventListener(eventType, handleFlashCardsEvent as EventListener);
       });
     };
-  }, []);
+  }, [dataManager]);
 
   // Busca inicial e periódica
   useEffect(() => {
     // Busca imediata
-    searchForFlashCardsData();
+    const immediateSearch = async () => {
+      await searchForFlashCardsData();
+    };
+    immediateSearch();
 
-    // Busca periódica nos primeiros 10 segundos
+    // Busca periódica mais eficiente
+    let attemptCount = 0;
+    const maxAttempts = 5;
+    
     const interval = setInterval(() => {
-      if (!dataManager.getCurrentData()) {
+      if (!dataManager.getCurrentData() && attemptCount < maxAttempts) {
+        attemptCount++;
+        console.log(`🔄 Tentativa ${attemptCount}/${maxAttempts} de busca`);
         searchForFlashCardsData();
+      } else if (attemptCount >= maxAttempts) {
+        clearInterval(interval);
+        console.log('⏹️ Limite de tentativas atingido, parando busca');
       }
-    }, 1500);
+    }, 2000);
 
-    // Limpar após 10 segundos
+    // Limpar após 15 segundos
     const timeout = setTimeout(() => {
       clearInterval(interval);
-      console.log('⏹️ Parando busca periódica');
-    }, 10000);
+      console.log('⏹️ Timeout da busca periódica');
+    }, 15000);
 
     return () => {
       clearInterval(interval);

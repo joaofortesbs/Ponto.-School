@@ -255,9 +255,7 @@ Tópicos para os flash cards: ${data.topicos}
       }
     }, 100);
 
-    return finalResult;s,
-      isGeneratedByAI: false
-    };
+    return finalResult;
   }
 }
 

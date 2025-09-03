@@ -64,10 +64,10 @@
     } else if (activity.id === 'flash-cards') {
       activityFormData = {
         ...activityFormData,
-        theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || '',
-        topicos: customFields['Tópicos'] || customFields['topicos'] || customFields['Tópicos Principais'] || '',
+        theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || activity.title || 'Flash Cards',
+        topicos: customFields['Tópicos'] || customFields['topicos'] || customFields['Tópicos Principais'] || 'Conceitos fundamentais',
         numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || '10',
-        context: customFields['Contexto'] || customFields['contexto'] || customFields['Contexto de Uso'] || '',
+        context: customFields['Contexto'] || customFields['contexto'] || customFields['Contexto de Uso'] || 'Estudo e revisão',
         subject: customFields['Disciplina'] || 'Geral',
         schoolYear: customFields['Ano de Escolaridade'] || '',
         difficultyLevel: customFields['Nível de Dificuldade'] || 'Médio'
@@ -115,10 +115,11 @@
                  activityFormData.subject?.trim() && 
                  activityFormData.schoolYear?.trim());
       } else if (activity.id === 'flash-cards') {
-        return !!(activityFormData.theme?.trim() && 
-                 activityFormData.topicos?.trim() && 
-                 activityFormData.numberOfFlashcards?.trim() && 
-                 parseInt(activityFormData.numberOfFlashcards) > 0);
+        const hasValidTheme = activityFormData.theme?.trim() && activityFormData.theme !== '';
+        const hasValidTopics = activityFormData.topicos?.trim() && activityFormData.topicos !== '';
+        const hasValidNumber = activityFormData.numberOfFlashcards?.trim() && 
+                              parseInt(activityFormData.numberOfFlashcards) > 0;
+        return hasValidTheme && hasValidTopics && hasValidNumber;
       }
 
       // Validação genérica
@@ -133,18 +134,31 @@
         const storageKeys = [
           baseStorageKey,
           `constructed_${activityType}_flash-cards`,
-          `flash-cards-auto-build-${timestamp}`
+          `flash-cards-auto-build-${timestamp}`,
+          'flash-cards-data-latest'
         ];
 
+        const storageData = {
+          success: true,
+          data: result.data,
+          timestamp,
+          activityType,
+          source: 'autoBuild'
+        };
+
         storageKeys.forEach(key => {
-          localStorage.setItem(key, JSON.stringify({
-            success: true,
-            data: result.data,
-            timestamp,
-            activityType,
-            source: 'autoBuild'
-          }));
+          localStorage.setItem(key, JSON.stringify(storageData));
         });
+
+        // Salvar também em constructedActivities
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activityKey] = {
+          activityType,
+          generatedContent: result.data,
+          timestamp,
+          source: 'autoBuild'
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
         console.log(`✅ [AutoBuild] ${activityType} construído e salvo:`, {
           storageKeys,

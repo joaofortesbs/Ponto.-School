@@ -25,22 +25,32 @@ export async function generateActivityContent(activityType: string, formData: Ac
 
       console.log('✅ Conteúdo gerado:', generatedContent);
 
+      // Estruturar resultado final
+      const finalResult = {
+        title: formData.title,
+        description: formData.description || generatedContent.description,
+        theme: formData.theme,
+        topicos: formData.topicos,
+        numberOfFlashcards: generatedContent.cards.length,
+        context: formData.context,
+        cards: generatedContent.cards.map((card, index) => ({
+          id: card.id || index + 1,
+          question: card.question,
+          answer: card.answer,
+          category: card.category || formData.theme || 'Geral'
+        })),
+        totalCards: generatedContent.cards.length,
+        generatedAt: new Date().toISOString(),
+        isGeneratedByAI: true,
+        isFallback: false
+      };
+
+      console.log('✅ Flash Cards estruturado com sucesso:', finalResult);
+
       // Retornar no formato esperado pelo sistema
       return {
         success: true,
-        data: {
-          title: formData.title,
-          description: formData.description || generatedContent.description,
-          theme: formData.theme,
-          topicos: formData.topicos,
-          numberOfFlashcards: generatedContent.cards.length,
-          context: formData.context,
-          cards: generatedContent.cards,
-          totalCards: generatedContent.cards.length,
-          generatedAt: new Date().toISOString(),
-          isGeneratedByAI: true,
-          isFallback: false
-        }
+        data: finalResult
       };
 
     } else if (activityType === 'quiz-interativo') {
