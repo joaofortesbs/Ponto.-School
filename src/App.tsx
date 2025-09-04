@@ -113,7 +113,7 @@ function App() {
         try {
           const { checkSupabaseConnection, setupSupabaseHealthCheck } = await import('@/lib/supabase');
 
-          if (import.meta.env.DEV) {
+          if (import.meta.env.MODE === 'development') {
             await setupSupabaseHealthCheck();
           }
 
