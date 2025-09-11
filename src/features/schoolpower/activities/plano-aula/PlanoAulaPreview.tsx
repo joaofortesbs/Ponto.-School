@@ -126,7 +126,13 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
         serie: plano.serie || plano.anoEscolaridade || plano.schoolYear || 'Série',
         tempo: plano.tempo || plano.tempoLimite || plano.timeLimit || 'Tempo',
         metodologia: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia',
-        recursos: plano.recursos || (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
+        recursos: Array.isArray(plano.recursos) 
+          ? plano.recursos 
+          : plano.recursos 
+            ? [String(plano.recursos)] 
+            : plano.materiais 
+              ? [String(plano.materiais)] 
+              : ['Recursos não especificados'],
         sugestoes_ia: ['Plano de aula personalizado']
       },
       objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
@@ -146,11 +152,23 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
         atividade_relacionada: ''
       }],
       metodologia: {
-        nome: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
-        descricao: plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
-        alternativas: ['Aula expositiva', 'Atividades práticas'],
-        simulacao_de_aula: 'Simulação disponível',
-        explicacao_em_video: 'Video explicativo disponível'
+        nome: typeof (plano.metodologia) === 'string' 
+          ? plano.metodologia 
+          : typeof (plano.metodologia) === 'object' && plano.metodologia?.nome 
+            ? plano.metodologia.nome 
+            : plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
+        descricao: typeof (plano.metodologia) === 'object' && plano.metodologia?.descricao 
+          ? plano.metodologia.descricao 
+          : plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
+        alternativas: typeof (plano.metodologia) === 'object' && Array.isArray(plano.metodologia?.alternativas) 
+          ? plano.metodologia.alternativas 
+          : ['Aula expositiva', 'Atividades práticas'],
+        simulacao_de_aula: typeof (plano.metodologia) === 'object' && plano.metodologia?.simulacao_de_aula 
+          ? plano.metodologia.simulacao_de_aula 
+          : 'Simulação disponível',
+        explicacao_em_video: typeof (plano.metodologia) === 'object' && plano.metodologia?.explicacao_em_video 
+          ? plano.metodologia.explicacao_em_video 
+          : 'Video explicativo disponível'
       },
       desenvolvimento: plano.desenvolvimento || [
         {
@@ -196,7 +214,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
         feedback: 'Feedback personalizado'
       },
       recursos_extras: {
-        materiais_complementares: plano.materiais ? [plano.materiais] : ['Material não especificado'],
+        materiais_complementares: Array.isArray(plano.materiais) 
+          ? plano.materiais 
+          : plano.materiais 
+            ? [String(plano.materiais)] 
+            : ['Material não especificado'],
         tecnologias: ['Quadro', 'Projetor'],
         referencias: ['Bibliografia básica']
       }
@@ -288,7 +310,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
   const tema = plano?.titulo || plano?.theme || plano?.tema || 'Tema não especificado';
   const serie = plano?.serie || plano?.anoEscolaridade || plano?.visao_geral?.serie || 'Série não especificada';
   const tempo = plano?.tempo || plano?.visao_geral?.tempo || '50 minutos';
-  const metodologia = plano?.metodologia || plano?.visao_geral?.metodologia || 'Ativa e participativa';
+  const metodologia = typeof (plano?.metodologia) === 'string' 
+    ? plano?.metodologia 
+    : typeof (plano?.metodologia) === 'object' && plano?.metodologia?.nome 
+      ? plano?.metodologia?.nome 
+      : plano?.visao_geral?.metodologia || 'Ativa e participativa';
 
   // Processar dados do desenvolvimento
   const etapas = plano?.desenvolvimento || [];
@@ -524,20 +550,20 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
                               </p>
 
                               {/* Recursos necessários */}
-                              {etapa.recursos_necessarios && etapa.recursos_necessarios.length > 0 && (
+                              {etapa.recursos_necessarios && Array.isArray(etapa.recursos_necessarios) && etapa.recursos_necessarios.length > 0 && (
                                 <div className="mt-4">
                                   <h4 className="text-sm font-medium text-slate-300 mb-2 flex items-center">
                                     <Target className="w-4 h-4 mr-2" />
                                     Recursos Necessários:
                                   </h4>
                                   <div className="flex flex-wrap gap-2">
-                                    {etapa.recursos_necessarios.map((recurso: string, recursoIndex: number) => (
+                                    {etapa.recursos_necessarios.map((recurso: any, recursoIndex: number) => (
                                       <Badge
                                         key={recursoIndex}
                                         variant="outline"
                                         className="border-orange-500/30 text-orange-300 bg-orange-500/10"
                                       >
-                                        {recurso}
+                                        {typeof recurso === 'string' ? recurso : String(recurso)}
                                       </Badge>
                                     ))}
                                   </div>
