@@ -183,7 +183,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {/* Cards de Estatísticas Melhorados */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           {/* Card de Aulas */}
-          <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
+          <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BookOpen className="h-6 w-6 text-orange-600" />
@@ -196,7 +196,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Diagnósticos */}
-          <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
+          <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BarChart3 className="h-6 w-6 text-green-600" />
@@ -209,7 +209,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Avaliações */}
-          <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
+          <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <FileText className="h-6 w-6 text-purple-600" />
@@ -222,7 +222,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Disciplina */}
-          <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
+          <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BookOpen className="h-6 w-6 text-blue-600" />
@@ -233,7 +233,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Ano/Série */}
-          <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
+          <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <GraduationCap className="h-6 w-6 text-teal-600" />
@@ -247,13 +247,16 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {/* Grade de Cards da Sequência */}
         {todosItens.length > 0 ? (
           <div>
-            <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-900/30 rounded-2xl border border-orange-200 dark:border-orange-700">
-              <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg">
+            <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+              <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text mb-2 flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-lg">
                   <BookOpen className="h-6 w-6 text-white" />
                 </div>
                 Estrutura da Sequência Didática
               </h3>
+              <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">
+                Explore o conteúdo completo organizado em aulas, diagnósticos e avaliações
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {todosItens.map((item, index) => {
@@ -283,7 +286,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
 
         {/* Informações Adicionais */}
         {metadados?.competenciasBNCC && (
-          <Card className="rounded-2xl">
+          <Card>
             <CardContent className="pt-4">
               <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
                 <Target className="h-4 w-4" />
@@ -295,7 +298,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         )}
 
         {metadados?.objetivosGerais && (
-          <Card className="rounded-2xl">
+          <Card>
             <CardContent className="pt-4">
               <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
                 <Target className="h-4 w-4" />
@@ -383,13 +386,16 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
       </div>
 
       {/* Título da Estrutura */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-900/30 rounded-2xl border border-orange-200 dark:border-orange-700">
-        <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-orange-600 to-orange-700 bg-clip-text flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg">
+      <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+        <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text mb-2 flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-lg">
             <BookOpen className="h-6 w-6 text-white" />
           </div>
           Estrutura da Sequência Didática
         </h3>
+        <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">
+          Aguardando geração do conteúdo pela IA do Gemini
+        </p>
       </div>
 
       {/* Aviso para construir a atividade */}
