@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BookOpen, Target, BarChart3, FileText, Clock, Users, CheckCircle, GraduationCap } from 'lucide-react';
+import { BookOpen, Target, BarChart3, FileText, Clock, Users, CheckCircle, GraduationCap, ChevronDown, ChevronRight } from 'lucide-react';
 import AulaCard from './components/AulaCard';
 import DiagnosticoCard from './components/DiagnosticoCard';
 import AvaliacaoCard from './components/AvaliacaoCard';
@@ -282,29 +282,8 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         )}
 
         {/* Informações Adicionais */}
-        {metadados?.competenciasBNCC && (
-          <Card className="rounded-xl">
-            <CardContent className="pt-4">
-              <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Competências BNCC
-              </h4>
-              <p className="text-sm text-gray-600">{metadados.competenciasBNCC}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {metadados?.objetivosGerais && (
-          <Card className="rounded-xl">
-            <CardContent className="pt-4">
-              <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Objetivos Gerais
-              </h4>
-              <p className="text-sm text-gray-600">{metadados.objetivosGerais}</p>
-            </CardContent>
-          </Card>
-        )}
+        <CompetenciasBNCCCard competencias={metadados?.competenciasBNCC} />
+        <ObjetivosGeraisCard objetivos={metadados?.objetivosGerais} />
       </div>
     );
   }
@@ -400,6 +379,80 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </AlertDescription>
       </Alert>
     </div>
+  );
+};
+
+// Componente para Competências BNCC
+const CompetenciasBNCCCard: React.FC<{ competencias?: string }> = ({ competencias }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!competencias) return null;
+
+  return (
+    <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+      <CardContent className="pt-4">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between text-left hover:bg-blue-50/50 -m-2 p-2 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <h4 className="font-bold text-blue-700 flex items-center gap-2 transition-colors duration-200 hover:text-blue-800">
+            <div className="p-1.5 bg-blue-600 rounded-lg shadow-sm">
+              <Target className="h-4 w-4 text-white" />
+            </div>
+            Competências BNCC
+          </h4>
+          {isExpanded ? 
+            <ChevronDown className="h-5 w-5 text-blue-600 transition-all duration-200 hover:text-blue-700" /> : 
+            <ChevronRight className="h-5 w-5 text-blue-600 transition-all duration-200 hover:text-blue-700" />
+          }
+        </button>
+        
+        {isExpanded && (
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <div className="bg-white/70 rounded-xl p-4 border border-blue-200">
+              <p className="text-sm text-blue-800 leading-relaxed">{competencias}</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Componente para Objetivos Gerais
+const ObjetivosGeraisCard: React.FC<{ objetivos?: string }> = ({ objetivos }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!objetivos) return null;
+
+  return (
+    <Card className="border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+      <CardContent className="pt-4">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between text-left hover:bg-emerald-50/50 -m-2 p-2 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+        >
+          <h4 className="font-bold text-emerald-700 flex items-center gap-2 transition-colors duration-200 hover:text-emerald-800">
+            <div className="p-1.5 bg-emerald-600 rounded-lg shadow-sm">
+              <Target className="h-4 w-4 text-white" />
+            </div>
+            Objetivos Gerais
+          </h4>
+          {isExpanded ? 
+            <ChevronDown className="h-5 w-5 text-emerald-600 transition-all duration-200 hover:text-emerald-700" /> : 
+            <ChevronRight className="h-5 w-5 text-emerald-600 transition-all duration-200 hover:text-emerald-700" />
+          }
+        </button>
+        
+        {isExpanded && (
+          <div className="mt-3 pt-3 border-t border-emerald-200">
+            <div className="bg-white/70 rounded-xl p-4 border border-emerald-200">
+              <p className="text-sm text-emerald-800 leading-relaxed">{objetivos}</p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
