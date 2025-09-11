@@ -28,17 +28,17 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
   };
 
   return (
-    <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 h-full hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-2">
+    <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 h-full hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-2 rounded-xl">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-3">
-          <Badge className="bg-orange-600 text-white border-orange-700 px-3 py-1 font-medium shadow-sm">
+          <Badge className="bg-orange-600 text-white border-orange-700 px-3 py-1 font-medium shadow-sm transition-all duration-200 hover:bg-orange-700">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
               Aula
             </div>
           </Badge>
           {aula.duracaoEstimada && (
-            <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-full">
+            <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-full transition-all duration-200 hover:bg-white/90">
               <Clock className="h-3 w-3 text-orange-600" />
               <span className="text-xs font-medium text-orange-700">{aula.duracaoEstimada}</span>
             </div>
@@ -51,18 +51,18 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
       
       <CardContent className="pt-0 space-y-3">
         {/* Campo Objetivo - Clicável */}
-        <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+        <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300">
           <button
             onClick={() => toggleField('objetivo')}
-            className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+            className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
           >
-            <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
-              <Target className="h-4 w-4 text-orange-600" />
+            <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2 transition-colors duration-200 hover:text-orange-800">
+              <Target className="h-4 w-4 text-orange-600 transition-colors duration-200 hover:text-orange-700" />
               Objetivo
             </h4>
             {expandedFields.objetivo ? 
-              <ChevronDown className="h-4 w-4 text-orange-600" /> : 
-              <ChevronRight className="h-4 w-4 text-orange-600" />
+              <ChevronDown className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" /> : 
+              <ChevronRight className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" />
             }
           </button>
           {expandedFields.objetivo && (
@@ -75,18 +75,18 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
         </div>
 
         {/* Campo Resumo - Clicável */}
-        <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+        <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300">
           <button
             onClick={() => toggleField('resumo')}
-            className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+            className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
           >
-            <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-orange-600" />
+            <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2 transition-colors duration-200 hover:text-orange-800">
+              <BookOpen className="h-4 w-4 text-orange-600 transition-colors duration-200 hover:text-orange-700" />
               Resumo
             </h4>
             {expandedFields.resumo ? 
-              <ChevronDown className="h-4 w-4 text-orange-600" /> : 
-              <ChevronRight className="h-4 w-4 text-orange-600" />
+              <ChevronDown className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" /> : 
+              <ChevronRight className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" />
             }
           </button>
           {expandedFields.resumo && (
@@ -100,18 +100,18 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
 
         {/* Campo Metodologia - Se disponível */}
         {aula.metodologia && (
-          <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+          <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300">
             <button
               onClick={() => toggleField('metodologia')}
-              className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+              className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
             >
-              <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
-                <Users className="h-4 w-4 text-orange-600" />
+              <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2 transition-colors duration-200 hover:text-orange-800">
+                <Users className="h-4 w-4 text-orange-600 transition-colors duration-200 hover:text-orange-700" />
                 Metodologia
               </h4>
               {expandedFields.metodologia ? 
-                <ChevronDown className="h-4 w-4 text-orange-600" /> : 
-                <ChevronRight className="h-4 w-4 text-orange-600" />
+                <ChevronDown className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" /> : 
+                <ChevronRight className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" />
               }
             </button>
             {expandedFields.metodologia && (
@@ -126,25 +126,25 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
 
         {/* Campo Instrumentos - Se disponível */}
         {aula.instrumentos && aula.instrumentos.length > 0 && (
-          <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+          <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300">
             <button
               onClick={() => toggleField('instrumentos')}
-              className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+              className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
             >
-              <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
-                <Settings className="h-4 w-4 text-orange-600" />
+              <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2 transition-colors duration-200 hover:text-orange-800">
+                <Settings className="h-4 w-4 text-orange-600 transition-colors duration-200 hover:text-orange-700" />
                 Instrumentos ({aula.instrumentos.length})
               </h4>
               {expandedFields.instrumentos ? 
-                <ChevronDown className="h-4 w-4 text-orange-600" /> : 
-                <ChevronRight className="h-4 w-4 text-orange-600" />
+                <ChevronDown className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" /> : 
+                <ChevronRight className="h-4 w-4 text-orange-600 transition-all duration-200 hover:text-orange-700" />
               }
             </button>
             {expandedFields.instrumentos && (
               <div className="mt-2 pt-2 border-t border-orange-100">
                 <div className="flex flex-wrap gap-2">
                   {aula.instrumentos.map((instrumento, index) => (
-                    <Badge key={index} className="bg-orange-100 text-orange-800 border-orange-300 text-xs">
+                    <Badge key={index} className="bg-orange-100 text-orange-800 border-orange-300 text-xs transition-all duration-200 hover:bg-orange-200 hover:scale-105">
                       {instrumento}
                     </Badge>
                   ))}
