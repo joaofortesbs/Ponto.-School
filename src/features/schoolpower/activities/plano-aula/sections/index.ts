@@ -1,3 +1,4 @@
+
 // Visão Geral
 export { default as VisaoGeralInterface } from './visao-geral/VisaoGeralInterface';
 export { VisaoGeralDataProcessor } from './visao-geral/VisaoGeralData';
@@ -17,7 +18,6 @@ export type { MetodologiaData } from './metodologia/MetodologiaData';
 export { default as DesenvolvimentoInterface } from './desenvolvimento/DesenvolvimentoInterface';
 export { DesenvolvimentoDataProcessor } from './desenvolvimento/DesenvolvimentoData';
 export type { DesenvolvimentoData, EtapaDesenvolvimento } from './desenvolvimento/DesenvolvimentoData';
-export { DesenvolvimentoIntegrator } from './desenvolvimento/DesenvolvimentoIntegrator';
 
 // Atividades
 export { default as AtividadesInterface } from './atividades/AtividadesInterface';
