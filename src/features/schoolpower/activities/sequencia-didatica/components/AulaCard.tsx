@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Target, BookOpen } from 'lucide-react';
+import { Clock, Target, BookOpen, ChevronDown, ChevronRight, Users, Settings } from 'lucide-react';
 
 interface AulaCardProps {
   aula: {
@@ -18,103 +18,141 @@ interface AulaCardProps {
 }
 
 const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
-  const getCardColor = (tipo: string) => {
-    switch (tipo) {
-      case 'Aula':
-        return 'border-blue-200 bg-blue-50';
-      case 'Diagnostico':
-        return 'border-green-200 bg-green-50';
-      case 'Avaliacao':
-        return 'border-purple-200 bg-purple-50';
-      default:
-        return 'border-gray-200 bg-gray-50';
-    }
-  };
+  const [expandedFields, setExpandedFields] = useState<{ [key: string]: boolean }>({});
 
-  const getBadgeColor = (tipo: string) => {
-    switch (tipo) {
-      case 'Aula':
-        return 'bg-blue-100 text-blue-800';
-      case 'Diagnostico':
-        return 'bg-green-100 text-green-800';
-      case 'Avaliacao':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getIcon = (tipo: string) => {
-    switch (tipo) {
-      case 'Aula':
-        return <BookOpen className="h-4 w-4" />;
-      case 'Diagnostico':
-        return <Target className="h-4 w-4" />;
-      case 'Avaliacao':
-        return <Clock className="h-4 w-4" />;
-      default:
-        return <BookOpen className="h-4 w-4" />;
-    }
+  const toggleField = (fieldName: string) => {
+    setExpandedFields(prev => ({
+      ...prev,
+      [fieldName]: !prev[fieldName]
+    }));
   };
 
   return (
-    <Card className={`${getCardColor(aula.tipo)} h-full hover:shadow-md transition-shadow duration-200`}>
+    <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 h-full hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-2">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between mb-2">
-          <Badge className={getBadgeColor(aula.tipo)}>
-            <div className="flex items-center gap-1">
-              {getIcon(aula.tipo)}
-              {aula.tipo}
+        <div className="flex items-center justify-between mb-3">
+          <Badge className="bg-orange-600 text-white border-orange-700 px-3 py-1 font-medium shadow-sm">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              Aula
             </div>
           </Badge>
           {aula.duracaoEstimada && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {aula.duracaoEstimada}
-            </span>
-          )}
-        </div>
-        <CardTitle className="text-sm font-semibold text-gray-800 line-clamp-2">
-          {aula.titulo}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div>
-            <h4 className="text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
-              <Target className="h-3 w-3" />
-              Objetivo
-            </h4>
-            <p className="text-xs text-gray-700 line-clamp-2">
-              {aula.objetivo}
-            </p>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-medium text-gray-600 mb-1">Resumo</h4>
-            <p className="text-xs text-gray-600 line-clamp-3">
-              {aula.resumo}
-            </p>
-          </div>
-
-          {aula.instrumentos && aula.instrumentos.length > 0 && (
-            <div>
-              <h4 className="text-xs font-medium text-gray-600 mb-1">Instrumentos</h4>
-              <div className="flex flex-wrap gap-1">
-                {aula.instrumentos.slice(0, 2).map((instrumento, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {instrumento}
-                  </Badge>
-                ))}
-                {aula.instrumentos.length > 2 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{aula.instrumentos.length - 2}
-                  </Badge>
-                )}
-              </div>
+            <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-full">
+              <Clock className="h-3 w-3 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700">{aula.duracaoEstimada}</span>
             </div>
           )}
         </div>
+        <CardTitle className="text-base font-bold text-orange-800 leading-tight">
+          {aula.titulo}
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="pt-0 space-y-3">
+        {/* Campo Objetivo - Clicável */}
+        <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+          <button
+            onClick={() => toggleField('objetivo')}
+            className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+          >
+            <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+              <Target className="h-4 w-4 text-orange-600" />
+              Objetivo
+            </h4>
+            {expandedFields.objetivo ? 
+              <ChevronDown className="h-4 w-4 text-orange-600" /> : 
+              <ChevronRight className="h-4 w-4 text-orange-600" />
+            }
+          </button>
+          {expandedFields.objetivo && (
+            <div className="mt-2 pt-2 border-t border-orange-100">
+              <p className="text-sm text-orange-800 leading-relaxed">
+                {aula.objetivo}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Campo Resumo - Clicável */}
+        <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+          <button
+            onClick={() => toggleField('resumo')}
+            className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+          >
+            <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-orange-600" />
+              Resumo
+            </h4>
+            {expandedFields.resumo ? 
+              <ChevronDown className="h-4 w-4 text-orange-600" /> : 
+              <ChevronRight className="h-4 w-4 text-orange-600" />
+            }
+          </button>
+          {expandedFields.resumo && (
+            <div className="mt-2 pt-2 border-t border-orange-100">
+              <p className="text-sm text-orange-800 leading-relaxed">
+                {aula.resumo}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Campo Metodologia - Se disponível */}
+        {aula.metodologia && (
+          <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+            <button
+              onClick={() => toggleField('metodologia')}
+              className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+            >
+              <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+                <Users className="h-4 w-4 text-orange-600" />
+                Metodologia
+              </h4>
+              {expandedFields.metodologia ? 
+                <ChevronDown className="h-4 w-4 text-orange-600" /> : 
+                <ChevronRight className="h-4 w-4 text-orange-600" />
+              }
+            </button>
+            {expandedFields.metodologia && (
+              <div className="mt-2 pt-2 border-t border-orange-100">
+                <p className="text-sm text-orange-800 leading-relaxed">
+                  {aula.metodologia}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Campo Instrumentos - Se disponível */}
+        {aula.instrumentos && aula.instrumentos.length > 0 && (
+          <div className="bg-white/60 rounded-lg p-3 border border-orange-200">
+            <button
+              onClick={() => toggleField('instrumentos')}
+              className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded transition-colors"
+            >
+              <h4 className="text-sm font-semibold text-orange-700 flex items-center gap-2">
+                <Settings className="h-4 w-4 text-orange-600" />
+                Instrumentos ({aula.instrumentos.length})
+              </h4>
+              {expandedFields.instrumentos ? 
+                <ChevronDown className="h-4 w-4 text-orange-600" /> : 
+                <ChevronRight className="h-4 w-4 text-orange-600" />
+              }
+            </button>
+            {expandedFields.instrumentos && (
+              <div className="mt-2 pt-2 border-t border-orange-100">
+                <div className="flex flex-wrap gap-2">
+                  {aula.instrumentos.map((instrumento, index) => (
+                    <Badge key={index} className="bg-orange-100 text-orange-800 border-orange-300 text-xs">
+                      {instrumento}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
