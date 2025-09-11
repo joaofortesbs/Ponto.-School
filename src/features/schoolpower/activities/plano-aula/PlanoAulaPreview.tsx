@@ -1,53 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from "@/components/ui/separator";
-import {
-  BookOpen,
-  Clock,
-  Users,
-  Target,
-  Lightbulb,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  Eye,
-  Plus,
-  X,
-  Presentation,
-  UserCheck,
-  Gamepad2,
-  Users2,
-  Brain,
-  Search,
-  PenTool,
-  Zap,
-  Activity,
-  FileText,
-  Play,
-  Edit,
-  Star,
-  ChevronUp,
-  GripVertical,
-  MessageSquare,
-  Video,
-  Mic,
-  Group,
-  PlayCircle, // Added for the new design
-  ArrowRight, // Added for the new design
-  Download // Added for PDF export functionality
-} from 'lucide-react';
-import { toast } from "@/components/ui/toast";
-import { motion } from 'framer-motion'; // Added for animations
+// Imports não são mais necessários - interface simplificada
+// Import apenas necessário para estado vazio
+import { BookOpen } from 'lucide-react';
 
-// Importar as seções separadas
-import VisaoGeralInterface from './sections/visao-geral/VisaoGeralInterface';
-import ObjetivosInterface from './sections/objetivos/ObjetivosInterface';
-import MetodologiaInterface from './sections/metodologia/MetodologiaInterface';
+// Importar apenas a interface de Desenvolvimento
 import DesenvolvimentoInterface from './sections/desenvolvimento/DesenvolvimentoInterface';
-import AtividadesInterface from './sections/atividades/AtividadesInterface';
-import AvaliacaoInterface from './sections/avaliacao/AvaliacaoInterface';
 
 // Importar o integrador de desenvolvimento
 import { DesenvolvimentoIntegrator } from './sections/desenvolvimento/DesenvolvimentoIntegrator';
@@ -56,13 +13,10 @@ import { DesenvolvimentoIntegrator } from './sections/desenvolvimento/Desenvolvi
 interface PlanoAulaPreviewProps {
   data: any;
   activityData?: any;
-  onClose?: () => void; // Added for the new design
 }
 
-const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData, onClose }) => {
-  // Estado para armazenar dados específicos de cada seção
-  const [secaoAtual, setSecaoAtual] = useState('visao-geral'); // Kept for potential future use, but not used in the new layout
-  const [dadosSessao, setDadosSessao] = useState<any>({}); // Kept for potential future use
+const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
+  // Estados para a interface de desenvolvimento
 
   // Integrador para sincronização de dados de desenvolvimento
   const [desenvolvimentoData, setDesenvolvimentoData] = useState<any>(null);
@@ -126,13 +80,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
         serie: plano.serie || plano.anoEscolaridade || plano.schoolYear || 'Série',
         tempo: plano.tempo || plano.tempoLimite || plano.timeLimit || 'Tempo',
         metodologia: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia',
-        recursos: Array.isArray(plano.recursos) 
-          ? plano.recursos 
-          : plano.recursos 
-            ? [String(plano.recursos)] 
-            : plano.materiais 
-              ? [String(plano.materiais)] 
-              : ['Recursos não especificados'],
+        recursos: plano.recursos || (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
         sugestoes_ia: ['Plano de aula personalizado']
       },
       objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
@@ -152,23 +100,11 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
         atividade_relacionada: ''
       }],
       metodologia: {
-        nome: typeof (plano.metodologia) === 'string' 
-          ? plano.metodologia 
-          : typeof (plano.metodologia) === 'object' && plano.metodologia?.nome 
-            ? plano.metodologia.nome 
-            : plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
-        descricao: typeof (plano.metodologia) === 'object' && plano.metodologia?.descricao 
-          ? plano.metodologia.descricao 
-          : plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
-        alternativas: typeof (plano.metodologia) === 'object' && Array.isArray(plano.metodologia?.alternativas) 
-          ? plano.metodologia.alternativas 
-          : ['Aula expositiva', 'Atividades práticas'],
-        simulacao_de_aula: typeof (plano.metodologia) === 'object' && plano.metodologia?.simulacao_de_aula 
-          ? plano.metodologia.simulacao_de_aula 
-          : 'Simulação disponível',
-        explicacao_em_video: typeof (plano.metodologia) === 'object' && plano.metodologia?.explicacao_em_video 
-          ? plano.metodologia.explicacao_em_video 
-          : 'Video explicativo disponível'
+        nome: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
+        descricao: plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
+        alternativas: ['Aula expositiva', 'Atividades práticas'],
+        simulacao_de_aula: 'Simulação disponível',
+        explicacao_em_video: 'Video explicativo disponível'
       },
       desenvolvimento: plano.desenvolvimento || [
         {
@@ -214,11 +150,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
         feedback: 'Feedback personalizado'
       },
       recursos_extras: {
-        materiais_complementares: Array.isArray(plano.materiais) 
-          ? plano.materiais 
-          : plano.materiais 
-            ? [String(plano.materiais)] 
-            : ['Material não especificado'],
+        materiais_complementares: plano.materiais ? [plano.materiais] : ['Material não especificado'],
         tecnologias: ['Quadro', 'Projetor'],
         referencias: ['Bibliografia básica']
       }
@@ -227,27 +159,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
     console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
   };
 
-  // As seções de navegação lateral foram removidas, o foco agora é no desenvolvimento da aula.
-
-  // Função para renderizar o conteúdo das seções (agora focado no desenvolvimento)
-  const renderSectionContent = () => {
-    // A lógica de switch foi simplificada para focar apenas no desenvolvimento da aula,
-    // pois o layout foi alterado para exibir isso diretamente.
-    return (
-      <DesenvolvimentoInterface
-        data={data}
-        contextoPlano={contextoCompleto}
-        onDataChange={handleDesenvolvimentoChange}
-      />
-    );
-  };
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
-  };
+  // Funções removidas - agora só temos a interface de Desenvolvimento
 
   const handleUpdateApproval = (approved: boolean) => {
     console.log('🔄 Atualização de aprovação:', approved);
@@ -303,295 +215,16 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData,
   }, [desenvolvimentoData, activityData, planoId]);
 
 
-  // ---- Nova Lógica de Renderização ----
-
-  // Informações gerais do plano
-  const disciplina = plano?.visao_geral?.disciplina || plano?.disciplina || 'Disciplina não especificada';
-  const tema = plano?.titulo || plano?.theme || plano?.tema || 'Tema não especificado';
-  const serie = plano?.serie || plano?.anoEscolaridade || plano?.visao_geral?.serie || 'Série não especificada';
-  const tempo = plano?.tempo || plano?.visao_geral?.tempo || '50 minutos';
-  const metodologia = typeof (plano?.metodologia) === 'string' 
-    ? plano?.metodologia 
-    : typeof (plano?.metodologia) === 'object' && plano?.metodologia?.nome 
-      ? plano?.metodologia?.nome 
-      : plano?.visao_geral?.metodologia || 'Ativa e participativa';
-
-  // Processar dados do desenvolvimento
-  const etapas = plano?.desenvolvimento || [];
-
-
-  // Função para obter ícone da etapa
-  const getEtapaIcon = (tipo: string) => {
-    const iconMap: { [key: string]: any } = {
-      'exposicao': PlayCircle, // Mapeado de 'Exposição' para 'exposicao'
-      'interativa': MessageSquare, // Mapeado de 'Interativa' para 'interativa'
-      'avaliativa': CheckCircle, // Mapeado de 'Avaliativa' para 'avaliativa'
-      'atividade': PenTool, // Novo tipo de atividade
-      'discussao': MessageSquare,
-      'pratica': PenTool,
-      'grupo': Users,
-      'individual': Target,
-      'default': Lightbulb
-    };
-    return iconMap[tipo?.toLowerCase()] || iconMap.default;
-  };
-
-  // Função para obter cor da etapa
-  const getEtapaCor = (tipo: string) => {
-    const corMap: { [key: string]: string } = {
-      'exposicao': 'bg-blue-500',
-      'interativa': 'bg-green-500',
-      'avaliativa': 'bg-red-500',
-      'atividade': 'bg-orange-500',
-      'discussao': 'bg-green-500',
-      'pratica': 'bg-orange-500',
-      'grupo': 'bg-purple-500',
-      'individual': 'bg-indigo-500',
-      'default': 'bg-gray-500'
-    };
-    return corMap[tipo?.toLowerCase()] || corMap.default;
-  };
-
-
   return (
-    <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden flex flex-col">
-      {/* Header Principal */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 shadow-lg sticky top-0 z-50"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="p-3 bg-white/20 rounded-lg">
-              <BookOpen className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                Plano de Aula: {tema}
-              </h1>
-              <div className="flex items-center space-x-4 mt-2 text-white/90">
-                <span className="flex items-center space-x-1">
-                  <BookOpen className="w-4 h-4" />
-                  <span>{disciplina}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>{serie}</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{tempo}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Exportar PDF
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Simular Aula
-            </Button>
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="text-white hover:bg-white/20"
-              >
-                ✕
-              </Button>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Informações Gerais Rápidas */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="p-6 bg-slate-800/50 sticky top-24 z-40" // Adjusted sticky position
-      >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-slate-700/50 border-slate-600">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <BookOpen className="w-6 h-6 text-orange-400" />
-                <div>
-                  <p className="text-sm text-slate-300">Disciplina</p>
-                  <p className="font-semibold text-white">{disciplina}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-700/50 border-slate-600">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Clock className="w-6 h-6 text-blue-400" />
-                <div>
-                  <p className="text-sm text-slate-300">Tempo</p>
-                  <p className="font-semibold text-white">{tempo}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-700/50 border-slate-600">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Users className="w-6 h-6 text-green-400" />
-                <div>
-                  <p className="text-sm text-slate-300">Série/Ano</p>
-                  <p className="font-semibold text-white">{serie}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-700/50 border-slate-600">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <Target className="w-6 h-6 text-purple-400" />
-                <div>
-                  <p className="text-sm text-slate-300">Metodologia</p>
-                  <p className="font-semibold text-white">{metodologia}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </motion.div>
-
-      {/* Desenvolvimento da Aula - Interface Principal */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="bg-slate-800/50 border-slate-600">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center space-x-3 text-xl text-white">
-                <div className="p-2 bg-orange-500 rounded-lg">
-                  <PlayCircle className="w-6 h-6 text-white" />
-                </div>
-                <span>Desenvolvimento da Aula</span>
-                <Badge variant="secondary" className="bg-orange-500/20 text-orange-300">
-                  {etapas.length} etapas
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              {etapas.length > 0 ? (
-                etapas.map((etapa: any, index: number) => {
-                  const IconComponent = getEtapaIcon(etapa.tipo_interacao);
-                  const corEtapa = getEtapaCor(etapa.tipo_interacao);
-
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + index * 0.1 }}
-                      className="relative"
-                    >
-                      {/* Linha conectora */}
-                      {index < etapas.length - 1 && (
-                        <div className="absolute left-6 top-16 w-0.5 h-12 bg-slate-600 z-0" />
-                      )}
-
-                      <Card className="bg-slate-700/30 border-slate-600 hover:bg-slate-700/50 transition-all duration-200 relative z-10">
-                        <CardContent className="p-6">
-                          <div className="flex items-start space-x-4">
-                            {/* Ícone e número da etapa */}
-                            <div className="flex-shrink-0 flex flex-col items-center space-y-2">
-                              <div className={`p-3 ${corEtapa} rounded-full`}>
-                                <IconComponent className="w-6 h-6 text-white" />
-                              </div>
-                              <Badge variant="outline" className="text-xs border-slate-500 text-slate-300">
-                                Etapa {index + 1}
-                              </Badge>
-                            </div>
-
-                            {/* Conteúdo da etapa */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-lg font-semibold text-white">
-                                  {etapa.titulo || `Etapa ${index + 1}`}
-                                </h3>
-                                <div className="flex items-center space-x-2">
-                                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
-                                    {etapa.tipo_interacao || 'Atividade'}
-                                  </Badge>
-                                  <Badge variant="outline" className="border-slate-500 text-slate-300">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    {etapa.tempo_estimado || '10 min'}
-                                  </Badge>
-                                </div>
-                              </div>
-
-                              <p className="text-slate-300 mb-4 leading-relaxed">
-                                {etapa.descricao || 'Descrição da etapa não fornecida.'}
-                              </p>
-
-                              {/* Recursos necessários */}
-                              {etapa.recursos_necessarios && Array.isArray(etapa.recursos_necessarios) && etapa.recursos_necessarios.length > 0 && (
-                                <div className="mt-4">
-                                  <h4 className="text-sm font-medium text-slate-300 mb-2 flex items-center">
-                                    <Target className="w-4 h-4 mr-2" />
-                                    Recursos Necessários:
-                                  </h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {etapa.recursos_necessarios.map((recurso: any, recursoIndex: number) => (
-                                      <Badge
-                                        key={recursoIndex}
-                                        variant="outline"
-                                        className="border-orange-500/30 text-orange-300 bg-orange-500/10"
-                                      >
-                                        {typeof recurso === 'string' ? recurso : String(recurso)}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-slate-700 rounded-full flex items-center justify-center">
-                    <BookOpen className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-slate-300 mb-2">
-                    Nenhuma etapa de desenvolvimento encontrada
-                  </h3>
-                  <p className="text-slate-400">
-                    As etapas do desenvolvimento da aula aparecerão aqui quando disponíveis.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+    <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* Layout Principal - Agora apenas com a interface de Desenvolvimento */}
+      <div className="flex-1 h-full">
+        {/* Renderizar diretamente a interface de Desenvolvimento da Aula */}
+        <DesenvolvimentoInterface
+          data={data}
+          contextoPlano={contextoCompleto}
+          onDataChange={handleDesenvolvimentoChange}
+        />
       </div>
     </div>
   );
