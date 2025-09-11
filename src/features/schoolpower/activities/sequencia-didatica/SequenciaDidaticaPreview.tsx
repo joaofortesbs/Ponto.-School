@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BookOpen, Target, BarChart3, FileText, Clock, Users, CheckCircle } from 'lucide-react';
+import { BookOpen, Target, BarChart3, FileText, Clock, Users, CheckCircle, GraduationCap } from 'lucide-react';
 import AulaCard from './components/AulaCard';
 import DiagnosticoCard from './components/DiagnosticoCard';
 import AvaliacaoCard from './components/AvaliacaoCard';
@@ -87,7 +86,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           try {
             const parsedData = JSON.parse(storedData);
             console.log(`✅ Dados encontrados em ${key}:`, parsedData);
-            
+
             // Verificar se é estrutura de sequência didática válida
             if (parsedData.sequenciaDidatica || parsedData.aulas || parsedData.diagnosticos || parsedData.avaliacoes) {
               return parsedData.sequenciaDidatica ? parsedData : {
@@ -174,55 +173,73 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
     });
 
     return (
-      <div className="space-y-6 p-4">
-        {/* Cabeçalho da Sequência */}
+      <div className="w-full max-w-7xl mx-auto p-6 space-y-8">
+        {/* Header Principal */}
         <SequenciaDidaticaHeader 
           sequencia={sequenciaDidatica}
           metadados={metadados}
         />
 
-        {/* Badge de IA Generated */}
-        {metadados?.isGeneratedByAI && (
-          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-              Sequência Didática gerada pela IA do Gemini
-            </span>
-            <span className="text-xs text-green-600 dark:text-green-400">
-              {new Date(metadados.generatedAt).toLocaleString('pt-BR')}
-            </span>
-          </div>
-        )}
-
-        {/* Estatísticas Rápidas */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-                <span className="text-2xl font-bold text-blue-600">{metadados?.totalAulas || 0}</span>
-                <span className="text-sm text-gray-600">Aulas</span>
+        {/* Cards de Estatísticas Melhorados */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          {/* Card de Aulas */}
+          <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <BookOpen className="h-6 w-6 text-orange-600" />
+                <div className="text-2xl font-bold text-orange-600">
+                  {metadados.totalAulas}
+                </div>
               </div>
+              <p className="text-orange-800 font-semibold text-sm">Aulas</p>
             </CardContent>
           </Card>
 
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <BarChart3 className="h-6 w-6 text-green-600" />
-                <span className="text-2xl font-bold text-green-600">{metadados?.totalDiagnosticos || 0}</span>
-                <span className="text-sm text-gray-600">Diagnósticos</span>
+          {/* Card de Diagnósticos */}
+          <Card className="border-orange-300 bg-gradient-to-br from-red-50 to-red-100 hover:shadow-lg transition-all duration-300 border-2">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <BarChart3 className="h-6 w-6 text-red-600" />
+                <div className="text-2xl font-bold text-red-600">
+                  {metadados.totalDiagnosticos}
+                </div>
               </div>
+              <p className="text-red-800 font-semibold text-sm">Diagnósticos</p>
             </CardContent>
           </Card>
 
-          <Card className="text-center">
-            <CardContent className="pt-4">
-              <div className="flex flex-col items-center gap-2">
+          {/* Card de Avaliações */}
+          <Card className="border-orange-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
                 <FileText className="h-6 w-6 text-purple-600" />
-                <span className="text-2xl font-bold text-purple-600">{metadados?.totalAvaliacoes || 0}</span>
-                <span className="text-sm text-gray-600">Avaliações</span>
+                <div className="text-2xl font-bold text-purple-600">
+                  {metadados.totalAvaliacoes}
+                </div>
               </div>
+              <p className="text-purple-800 font-semibold text-sm">Avaliações</p>
+            </CardContent>
+          </Card>
+
+          {/* Card de Disciplina */}
+          <Card className="border-orange-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+              </div>
+              <p className="text-blue-800 font-semibold text-sm mb-1">Disciplina</p>
+              <p className="text-blue-600 font-bold text-xs">{sequenciaDidatica.disciplina}</p>
+            </CardContent>
+          </Card>
+
+          {/* Card de Ano/Série */}
+          <Card className="border-orange-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
+            <CardContent className="p-4 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <GraduationCap className="h-6 w-6 text-green-600" />
+              </div>
+              <p className="text-green-800 font-semibold text-sm mb-1">Ano/Série</p>
+              <p className="text-green-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
             </CardContent>
           </Card>
         </div>
@@ -237,7 +254,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {todosItens.map((item, index) => {
                 const itemKey = item.id || `item-${index}`;
-                
+
                 switch (item.tipo) {
                   case 'Aula':
                     return <AulaCard key={itemKey} aula={item} />;
@@ -290,60 +307,73 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
 
   // Fallback: mostrar informações básicas (quando só há dados do formulário)
   return (
-    <div className="space-y-6 p-4">
-      {/* Cabeçalho básico */}
-      <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <CardContent className="pt-4">
-          <h2 className="text-lg font-semibold text-blue-800 mb-2">
-            {sequenciaDidatica?.titulo || 'Sequência Didática'}
-          </h2>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {sequenciaDidatica?.disciplina && (
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                {sequenciaDidatica.disciplina}
-              </span>
-            )}
-            {sequenciaDidatica?.anoSerie && (
-              <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">
-                {sequenciaDidatica.anoSerie}
-              </span>
-            )}
-          </div>
-          {sequenciaDidatica?.descricaoGeral && (
-            <p className="text-sm text-blue-700">{sequenciaDidatica.descricaoGeral}</p>
-          )}
-        </CardContent>
-      </Card>
+    <div className="w-full max-w-7xl mx-auto p-6 space-y-8">
+      {/* Header Principal */}
+      <SequenciaDidaticaHeader 
+        sequencia={sequenciaDidatica}
+        metadados={metadados}
+      />
 
-      {/* Estatísticas planejadas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="text-center">
-          <CardContent className="pt-4">
-            <div className="flex flex-col items-center gap-2">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-              <span className="text-2xl font-bold text-blue-600">{metadados?.totalAulas || 0}</span>
-              <span className="text-sm text-gray-600">Aulas</span>
+      {/* Cards de Estatísticas Melhorados */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        {/* Card de Aulas */}
+        <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <BookOpen className="h-6 w-6 text-orange-600" />
+              <div className="text-2xl font-bold text-orange-600">
+                {metadados.totalAulas}
+              </div>
             </div>
+            <p className="text-orange-800 font-semibold text-sm">Aulas</p>
           </CardContent>
         </Card>
 
-        <Card className="text-center">
-          <CardContent className="pt-4">
-            <div className="flex flex-col items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-green-600" />
-              <span className="text-2xl font-bold text-green-600">{metadados?.totalDiagnosticos || 0}</span>
-              <span className="text-sm text-gray-600">Diagnósticos</span>
+        {/* Card de Diagnósticos */}
+        <Card className="border-orange-300 bg-gradient-to-br from-red-50 to-red-100 hover:shadow-lg transition-all duration-300 border-2">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <BarChart3 className="h-6 w-6 text-red-600" />
+              <div className="text-2xl font-bold text-red-600">
+                {metadados.totalDiagnosticos}
+              </div>
             </div>
+            <p className="text-red-800 font-semibold text-sm">Diagnósticos</p>
           </CardContent>
         </Card>
 
-        <Card className="text-center">
-          <CardContent className="pt-4">
-            <div className="flex flex-col items-center gap-2">
+        {/* Card de Avaliações */}
+        <Card className="border-orange-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
               <FileText className="h-6 w-6 text-purple-600" />
-              <span className="text-2xl font-bold text-purple-600">{metadados?.totalAvaliacoes || 0}</span>
-              <span className="text-sm text-gray-600">Avaliações</span>
+              <div className="text-2xl font-bold text-purple-600">
+                {metadados.totalAvaliacoes}
+              </div>
             </div>
+            <p className="text-purple-800 font-semibold text-sm">Avaliações</p>
+          </CardContent>
+        </Card>
+
+        {/* Card de Disciplina */}
+        <Card className="border-orange-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <BookOpen className="h-6 w-6 text-blue-600" />
+            </div>
+            <p className="text-blue-800 font-semibold text-sm mb-1">Disciplina</p>
+            <p className="text-blue-600 font-bold text-xs">{sequenciaDidatica.disciplina}</p>
+          </CardContent>
+        </Card>
+
+        {/* Card de Ano/Série */}
+        <Card className="border-orange-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <GraduationCap className="h-6 w-6 text-green-600" />
+            </div>
+            <p className="text-green-800 font-semibold text-sm mb-1">Ano/Série</p>
+            <p className="text-green-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
           </CardContent>
         </Card>
       </div>
