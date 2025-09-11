@@ -545,6 +545,24 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
+        .mode-option:disabled,
+        .mode-option[disabled] {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+          pointer-events: none !important;
+          background: rgba(100, 100, 100, 0.1) !important;
+          color: rgba(204, 204, 204, 0.6) !important;
+        }
+
+        .mode-option:disabled:hover,
+        .mode-option[disabled]:hover {
+          background: rgba(100, 100, 100, 0.1) !important;
+          color: rgba(204, 204, 204, 0.6) !important;
+          transform: none !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+
         .dropdown-arrow {
           transition: transform 0.3s ease;
         }
@@ -884,10 +902,17 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                         Agente IA
                       </button>
                       <button
-                        className={`mode-option ${selectedMode === "Assistente IA" ? "active" : ""}`}
-                        onClick={() => {
-                          setSelectedMode("Assistente IA");
-                          setShowModeDropdown(false);
+                        className={`mode-option ${selectedMode === "Assistente IA" ? "active" : ""} opacity-50 cursor-not-allowed`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          // Não permite seleção do Assistente IA
+                        }}
+                        disabled={true}
+                        style={{ 
+                          pointerEvents: 'none',
+                          opacity: 0.5,
+                          cursor: 'not-allowed'
                         }}
                       >
                         <svg
