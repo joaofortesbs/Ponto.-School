@@ -150,7 +150,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           width: 600px;
           overflow: visible;
         }
-        
+
         @media (max-width: 768px) {
           .message-container {
             width: 99%; /* Aumenta ainda mais a largura para telas menores */
@@ -172,7 +172,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
           z-index: 3;
         }
-        
+
         @media (max-width: 768px) {
           .message-container-inner {
              border-radius: 14px;
@@ -189,7 +189,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           z-index: 2;
           pointer-events: none;
         }
-        
+
         @media (max-width: 768px) {
           .moving-border-container {
             border-radius: 16px;
@@ -224,7 +224,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           border: 1px solid #333;
           transition: all 0.3s ease;
         }
-        
+
         @media (max-width: 768px) {
           .inner-container {
             border-radius: 14px;
@@ -343,7 +343,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             inset 0 2px 4px rgba(255, 255, 255, 0.1),
             inset 0 -2px 4px rgba(0, 0, 0, 0.3);
         }
-        
+
         @media (max-width: 768px) {
           .file-button {
             width: 40px;
@@ -394,7 +394,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             inset 0 2px 4px rgba(255, 255, 255, 0.1),
             inset 0 -2px 4px rgba(0, 0, 0, 0.3);
         }
-        
+
         @media (max-width: 768px) {
           .mode-button {
             padding: 6px 12px;
@@ -442,7 +442,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           z-index: 1000;
           backdrop-filter: blur(10px);
         }
-        
+
         @media (max-width: 768px) {
           .mode-dropdown {
             min-width: 150px;
@@ -470,7 +470,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           position: relative;
           overflow: hidden;
         }
-        
+
         @media (max-width: 768px) {
           .mode-option {
             padding: 8px 12px;
@@ -529,7 +529,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           flex-shrink: 0;
           transition: all 0.3s ease;
         }
-        
+
         @media (max-width: 768px) {
           .mode-icon {
             width: 16px;
@@ -564,7 +564,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           opacity: 0;
           transition: opacity 0.3s ease;
         }
-        
+
         @media (max-width: 768px) {
           .tech-accent {
              top: -1px;
@@ -591,7 +591,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           position: relative;
           overflow: hidden;
         }
-        
+
         @media (max-width: 768px) {
           .expanded-card {
             border-radius: 12px;
@@ -618,7 +618,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           align-items: center;
           gap: 12px;
         }
-        
+
         @media (max-width: 768px) {
           .thinking-indicator {
             gap: 8px;
@@ -635,7 +635,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
             0 0 12px rgba(255, 107, 53, 0.4),
             0 0 24px rgba(255, 107, 53, 0.2);
         }
-        
+
         @media (max-width: 768px) {
           .pulse-dot {
             width: 10px;
@@ -649,7 +649,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
           font-weight: 400;
           line-height: 1.4;
         }
-        
+
         @media (max-width: 768px) {
           .thinking-text {
             font-size: 11px;
@@ -771,8 +771,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ isDarkTheme = true, onSend }) => 
                         ease: [0.25, 0.1, 0.25, 1],
                       }}
                     >
-                      <TextShimmerWave 
-                        className='font-mono text-sm text-white' 
+                      <TextShimmerWave
+                        className='font-mono text-sm text-white'
                         duration={1.5}
                         zDistance={8}
                         xDistance={1.5}
