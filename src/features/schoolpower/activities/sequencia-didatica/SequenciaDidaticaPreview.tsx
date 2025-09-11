@@ -247,10 +247,17 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {/* Grade de Cards da Sequência */}
         {todosItens.length > 0 ? (
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-indigo-600" />
-              Estrutura da Sequência Didática
-            </h3>
+            <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+              <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text mb-2 flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-lg">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
+                Estrutura da Sequência Didática
+              </h3>
+              <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">
+                Explore o conteúdo completo organizado em aulas, diagnósticos e avaliações
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {todosItens.map((item, index) => {
                 const itemKey = item.id || `item-${index}`;
@@ -376,6 +383,19 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
             <p className="text-teal-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Título da Estrutura */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-xl border border-indigo-200 dark:border-indigo-700">
+        <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text mb-2 flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-lg">
+            <BookOpen className="h-6 w-6 text-white" />
+          </div>
+          Estrutura da Sequência Didática
+        </h3>
+        <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">
+          Aguardando geração do conteúdo pela IA do Gemini
+        </p>
       </div>
 
       {/* Aviso para construir a atividade */}
