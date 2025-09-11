@@ -68,8 +68,13 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   // Se não tem estrutura de plano completo, cria uma estrutura básica
   let plano = planoData;
-  if (!plano.visao_geral) {
+  if (!plano || !plano.visao_geral) {
     console.log('🔨 PlanoAulaPreview - Criando estrutura básica do plano');
+
+    // Garantir que plano existe
+    if (!plano) {
+      plano = {};
+    }
 
     plano = {
       titulo: plano.titulo || plano.title || 'Plano de Aula',
@@ -80,33 +85,33 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         serie: plano.serie || plano.anoEscolaridade || plano.schoolYear || 'Série',
         tempo: plano.tempo || plano.tempoLimite || plano.timeLimit || 'Tempo',
         metodologia: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia',
-        recursos: plano.recursos || (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
+        recursos: plano.recursos && Array.isArray(plano.recursos) ? plano.recursos : (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
         sugestoes_ia: ['Plano de aula personalizado']
       },
-      objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
-        descricao: typeof obj === 'string' ? obj : obj.descricao || obj,
+      objetivos: plano.objetivos && Array.isArray(plano.objetivos) && plano.objetivos.length > 0 ? plano.objetivos.map(obj => ({
+        descricao: typeof obj === 'string' ? obj : (obj && obj.descricao) || obj || 'Objetivo não especificado',
         habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
-      })) : [{
+      })) : plano.objetivos && typeof plano.objetivos === 'string' ? [{
         descricao: plano.objetivos,
         habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
-      }]) : [{
-        descricao: plano.objetivos || 'Objetivo não especificado',
+      }] : [{
+        descricao: 'Objetivo não especificado',
         habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
       }],
       metodologia: {
-        nome: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
+        nome: (plano.metodologia && typeof plano.metodologia === 'string' ? plano.metodologia : '') || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
         descricao: plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
         alternativas: ['Aula expositiva', 'Atividades práticas'],
         simulacao_de_aula: 'Simulação disponível',
         explicacao_em_video: 'Video explicativo disponível'
       },
-      desenvolvimento: plano.desenvolvimento || [
+      desenvolvimento: plano.desenvolvimento && Array.isArray(plano.desenvolvimento) && plano.desenvolvimento.length > 0 ? plano.desenvolvimento : [
         {
           etapa: 1,
           titulo: 'Introdução',
@@ -135,7 +140,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           nota_privada_professor: 'Aplicar avaliação'
         }
       ],
-      atividades: plano.atividades || [
+      atividades: plano.atividades && Array.isArray(plano.atividades) && plano.atividades.length > 0 ? plano.atividades : [
         {
           nome: 'Atividade Principal',
           tipo: 'Prática',
@@ -150,7 +155,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         feedback: 'Feedback personalizado'
       },
       recursos_extras: {
-        materiais_complementares: plano.materiais ? [plano.materiais] : ['Material não especificado'],
+        materiais_complementares: plano.materiais && typeof plano.materiais === 'string' ? [plano.materiais] : plano.materiais && Array.isArray(plano.materiais) ? plano.materiais : ['Material não especificado'],
         tecnologias: ['Quadro', 'Projetor'],
         referencias: ['Bibliografia básica']
       }
