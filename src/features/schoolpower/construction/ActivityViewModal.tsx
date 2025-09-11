@@ -498,14 +498,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           onClick={(e) => e.stopPropagation()}
         >
           {/* Aplicar background laranja no cabeçalho quando for Plano de Aula */}
-          <style>{`
-            .modal-header {
-              background: ${activityType === 'plano-aula'
-                ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
-                : 'transparent'
-              };
-            }
-          `}</style>
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              .modal-header {
+                background: ${activityType === 'plano-aula'
+                  ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
+                  : 'transparent'
+                };
+              }
+            `
+          }} />
 
           {/* Header with Close button */}
           {isExerciseList && (
