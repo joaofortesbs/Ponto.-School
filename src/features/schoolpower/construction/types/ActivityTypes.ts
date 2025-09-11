@@ -43,7 +43,6 @@ export interface ActivityFormData {
   observacoesProfessor?: string;
   // Campos específicos da Sequência Didática
   tituloTemaAssunto?: string;
-  anoSerie?: string;
   disciplina?: string;
   bnccCompetencias?: string;
   publicoAlvo?: string;
