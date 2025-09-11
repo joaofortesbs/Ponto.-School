@@ -1,10 +1,49 @@
 import React, { useState, useEffect, useMemo } from 'react';
-// Imports não são mais necessários - interface simplificada
-// Import apenas necessário para estado vazio
-import { BookOpen } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from "@/components/ui/separator";
+import {
+  BookOpen,
+  Clock,
+  Users,
+  Target,
+  Lightbulb,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  Plus,
+  X,
+  Presentation,
+  UserCheck,
+  Gamepad2,
+  Users2,
+  Brain,
+  Search,
+  PenTool,
+  Zap,
+  Activity,
+  FileText,
+  Play,
+  Edit,
+  Star,
+  ChevronUp,
+  GripVertical,
+  MessageSquare,
+  Video,
+  Mic,
+  Group
+} from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
 
-// Importar apenas a interface de Desenvolvimento
+// Importar as seções separadas
+import VisaoGeralInterface from './sections/visao-geral/VisaoGeralInterface';
+import ObjetivosInterface from './sections/objetivos/ObjetivosInterface';
+import MetodologiaInterface from './sections/metodologia/MetodologiaInterface';
 import DesenvolvimentoInterface from './sections/desenvolvimento/DesenvolvimentoInterface';
+import AtividadesInterface from './sections/atividades/AtividadesInterface';
+import AvaliacaoInterface from './sections/avaliacao/AvaliacaoInterface';
 
 // Importar o integrador de desenvolvimento
 import { DesenvolvimentoIntegrator } from './sections/desenvolvimento/DesenvolvimentoIntegrator';
@@ -16,7 +55,9 @@ interface PlanoAulaPreviewProps {
 }
 
 const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData }) => {
-  // Estados para a interface de desenvolvimento
+  // Estado para armazenar dados específicos de cada seção
+  const [secaoAtual, setSecaoAtual] = useState('visao-geral');
+  const [dadosSessao, setDadosSessao] = useState<any>({});
 
   // Integrador para sincronização de dados de desenvolvimento
   const [desenvolvimentoData, setDesenvolvimentoData] = useState<any>(null);
@@ -68,13 +109,8 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   // Se não tem estrutura de plano completo, cria uma estrutura básica
   let plano = planoData;
-  if (!plano || !plano.visao_geral) {
+  if (!plano.visao_geral) {
     console.log('🔨 PlanoAulaPreview - Criando estrutura básica do plano');
-
-    // Garantir que plano existe
-    if (!plano) {
-      plano = {};
-    }
 
     plano = {
       titulo: plano.titulo || plano.title || 'Plano de Aula',
@@ -85,33 +121,33 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         serie: plano.serie || plano.anoEscolaridade || plano.schoolYear || 'Série',
         tempo: plano.tempo || plano.tempoLimite || plano.timeLimit || 'Tempo',
         metodologia: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia',
-        recursos: plano.recursos && Array.isArray(plano.recursos) ? plano.recursos : (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
+        recursos: plano.recursos || (plano.materiais ? [plano.materiais] : ['Recursos não especificados']),
         sugestoes_ia: ['Plano de aula personalizado']
       },
-      objetivos: plano.objetivos && Array.isArray(plano.objetivos) && plano.objetivos.length > 0 ? plano.objetivos.map(obj => ({
-        descricao: typeof obj === 'string' ? obj : (obj && obj.descricao) || obj || 'Objetivo não especificado',
+      objetivos: plano.objetivos ? (Array.isArray(plano.objetivos) ? plano.objetivos.map(obj => ({
+        descricao: typeof obj === 'string' ? obj : obj.descricao || obj,
         habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
-      })) : plano.objetivos && typeof plano.objetivos === 'string' ? [{
+      })) : [{
         descricao: plano.objetivos,
         habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
-      }] : [{
-        descricao: 'Objetivo não especificado',
+      }]) : [{
+        descricao: plano.objetivos || 'Objetivo não especificado',
         habilidade_bncc: plano.competencias || 'BNCC não especificada',
         sugestao_reescrita: '',
         atividade_relacionada: ''
       }],
       metodologia: {
-        nome: (plano.metodologia && typeof plano.metodologia === 'string' ? plano.metodologia : '') || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
+        nome: plano.metodologia || plano.tipoAula || plano.difficultyLevel || 'Metodologia Ativa',
         descricao: plano.descricaoMetodologia || plano.descricao || plano.description || 'Descrição da metodologia',
         alternativas: ['Aula expositiva', 'Atividades práticas'],
         simulacao_de_aula: 'Simulação disponível',
         explicacao_em_video: 'Video explicativo disponível'
       },
-      desenvolvimento: plano.desenvolvimento && Array.isArray(plano.desenvolvimento) && plano.desenvolvimento.length > 0 ? plano.desenvolvimento : [
+      desenvolvimento: plano.desenvolvimento || [
         {
           etapa: 1,
           titulo: 'Introdução',
@@ -140,7 +176,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
           nota_privada_professor: 'Aplicar avaliação'
         }
       ],
-      atividades: plano.atividades && Array.isArray(plano.atividades) && plano.atividades.length > 0 ? plano.atividades : [
+      atividades: plano.atividades || [
         {
           nome: 'Atividade Principal',
           tipo: 'Prática',
@@ -155,7 +191,7 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
         feedback: 'Feedback personalizado'
       },
       recursos_extras: {
-        materiais_complementares: plano.materiais && typeof plano.materiais === 'string' ? [plano.materiais] : plano.materiais && Array.isArray(plano.materiais) ? plano.materiais : ['Material não especificado'],
+        materiais_complementares: plano.materiais ? [plano.materiais] : ['Material não especificado'],
         tecnologias: ['Quadro', 'Projetor'],
         referencias: ['Bibliografia básica']
       }
@@ -164,7 +200,83 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
     console.log('✅ PlanoAulaPreview - Estrutura básica criada:', plano);
   };
 
-  // Funções removidas - agora só temos a interface de Desenvolvimento
+  // Seções de navegação lateral
+  const sidebarSections = [
+    {
+      id: 'visao-geral',
+      label: 'Visão Geral',
+      icon: BookOpen,
+      description: 'Informações gerais do plano'
+    },
+    {
+      id: 'objetivos',
+      label: 'Objetivos',
+      icon: Target,
+      description: 'Objetivos de aprendizagem'
+    },
+    {
+      id: 'metodologia',
+      label: 'Metodologia',
+      icon: Brain,
+      description: 'Abordagem pedagógica'
+    },
+    {
+      id: 'desenvolvimento',
+      label: 'Desenvolvimento',
+      icon: Activity,
+      description: 'Etapas da aula'
+    },
+    {
+      id: 'atividades',
+      label: 'Atividades',
+      icon: Play,
+      description: 'Atividades práticas'
+    },
+    {
+      id: 'avaliacao',
+      label: 'Avaliação',
+      icon: CheckCircle,
+      description: 'Critérios de avaliação'
+    }
+  ];
+
+  const renderSectionContent = () => {
+    switch (secaoAtual) {
+      case 'visao-geral':
+        return <VisaoGeralInterface planoData={plano} />;
+
+      case 'objetivos':
+        return <ObjetivosInterface planoData={plano} />;
+
+      case 'metodologia':
+        return <MetodologiaInterface planoData={plano} />;
+
+      case 'desenvolvimento':
+        return (
+          <DesenvolvimentoInterface
+            data={data}
+            contextoPlano={contextoCompleto}
+            onDataChange={handleDesenvolvimentoChange}
+          />
+        );
+
+      case 'atividades':
+        return <AtividadesInterface planoData={plano} />;
+
+      case 'avaliacao':
+        return <AvaliacaoInterface planoData={plano} />;
+
+      default:
+        return null;
+    }
+  };
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+  };
 
   const handleUpdateApproval = (approved: boolean) => {
     console.log('🔄 Atualização de aprovação:', approved);
@@ -222,14 +334,69 @@ const PlanoAulaPreview: React.FC<PlanoAulaPreviewProps> = ({ data, activityData 
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 overflow-hidden">
-      {/* Layout Principal - Agora apenas com a interface de Desenvolvimento */}
-      <div className="flex-1 h-full">
-        {/* Renderizar diretamente a interface de Desenvolvimento da Aula */}
-        <DesenvolvimentoInterface
-          data={data}
-          contextoPlano={contextoCompleto}
-          onDataChange={handleDesenvolvimentoChange}
-        />
+      {/* Layout Principal */}
+      <div className="flex flex-1 h-full">
+        {/* Sidebar de Navegação */}
+        <div className="w-80 bg-orange-50 dark:bg-orange-900/20 border-r border-orange-200 dark:border-orange-700 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {sidebarSections.map((section) => {
+              const Icon = section.icon;
+              const isActive = secaoAtual === section.id;
+
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setSecaoAtual(section.id)}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-700 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 hover:text-orange-800 dark:hover:text-orange-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      isActive
+                        ? 'bg-orange-500/20'
+                        : 'bg-orange-100 dark:bg-orange-900/30 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/40'
+                    }`}>
+                      <Icon className={`w-5 h-5 ${
+                        isActive ? 'text-orange-600' : 'text-orange-500 dark:text-orange-400'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className={`font-semibold ${
+                        isActive ? 'text-orange-800 dark:text-orange-100' : 'text-gray-900 dark:text-gray-100'
+                      }`}>
+                        {section.label}
+                      </h3>
+                      <p className={`text-sm ${
+                        isActive ? 'text-orange-700' : 'text-gray-500 dark:text-gray-400'
+                      }`}>
+                        {section.description}
+                      </p>
+                    </div>
+                    {isActive && (
+                      <ChevronRight className="w-5 h-5 text-orange-600" />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Área de Conteúdo Principal */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <div className="p-8">
+              <Card className="shadow-xl border-0 bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
+                <CardContent className="p-8">
+                  {renderSectionContent()}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

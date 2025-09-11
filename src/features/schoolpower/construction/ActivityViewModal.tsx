@@ -81,7 +81,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setQuizInterativoContent(null); // Reset Quiz Interativo content
 
       // Se for plano-aula, tentar carregar dados específicos
-      if (activity?.categoryId === 'plano-aula' || activity?.id === 'plano-aula') {
+      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
         if (planoData) {
           console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
@@ -118,7 +118,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
   // Obter questões para o sidebar
   const getQuestionsForSidebar = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || 'lista-exercicios';
+    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
     if (activityType !== 'lista-exercicios') return [];
 
@@ -168,8 +168,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   };
 
   const questionsForSidebar = getQuestionsForSidebar();
-  const isExerciseList = (activity.originalData?.type || activity.categoryId) === 'lista-exercicios';
-  const activityType = activity.originalData?.type || activity.categoryId || 'lista-exercicios';
+  const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
+  const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
 
   // Função para obter o título da atividade
   const getActivityTitle = () => {
@@ -474,8 +474,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       default:
         return (
           <ActivityPreview
-            content={previewData}
-            activityData={activity}
+            data={previewData}
+            activityType={activityType}
+            customFields={previewData.customFields}
           />
         );
     }
@@ -498,16 +499,14 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           onClick={(e) => e.stopPropagation()}
         >
           {/* Aplicar background laranja no cabeçalho quando for Plano de Aula */}
-          <style dangerouslySetInnerHTML={{
-            __html: `
-              .modal-header {
-                background: ${activityType === 'plano-aula'
-                  ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
-                  : 'transparent'
-                };
-              }
-            `
-          }} />
+          <style jsx>{`
+            .modal-header {
+              background: ${activityType === 'plano-aula'
+                ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
+                : 'transparent'
+              };
+            }
+          `}</style>
 
           {/* Header with Close button */}
           {isExerciseList && (
