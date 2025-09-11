@@ -196,20 +196,20 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Diagnósticos */}
-          <Card className="border-orange-300 bg-gradient-to-br from-red-50 to-red-100 hover:shadow-lg transition-all duration-300 border-2">
+          <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <BarChart3 className="h-6 w-6 text-red-600" />
-                <div className="text-2xl font-bold text-red-600">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+                <div className="text-2xl font-bold text-green-600">
                   {metadados.totalDiagnosticos}
                 </div>
               </div>
-              <p className="text-red-800 font-semibold text-sm">Diagnósticos</p>
+              <p className="text-green-800 font-semibold text-sm">Diagnósticos</p>
             </CardContent>
           </Card>
 
           {/* Card de Avaliações */}
-          <Card className="border-orange-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
+          <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <FileText className="h-6 w-6 text-purple-600" />
@@ -222,7 +222,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Disciplina */}
-          <Card className="border-orange-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
+          <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BookOpen className="h-6 w-6 text-blue-600" />
@@ -233,13 +233,13 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Ano/Série */}
-          <Card className="border-orange-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
+          <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <GraduationCap className="h-6 w-6 text-green-600" />
+                <GraduationCap className="h-6 w-6 text-teal-600" />
               </div>
-              <p className="text-green-800 font-semibold text-sm mb-1">Ano/Série</p>
-              <p className="text-green-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
+              <p className="text-teal-800 font-semibold text-sm mb-1">Ano/Série</p>
+              <p className="text-teal-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
             </CardContent>
           </Card>
         </div>
@@ -330,20 +330,20 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Diagnósticos */}
-        <Card className="border-orange-300 bg-gradient-to-br from-red-50 to-red-100 hover:shadow-lg transition-all duration-300 border-2">
+        <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <BarChart3 className="h-6 w-6 text-red-600" />
-              <div className="text-2xl font-bold text-red-600">
+              <BarChart3 className="h-6 w-6 text-green-600" />
+              <div className="text-2xl font-bold text-green-600">
                 {metadados.totalDiagnosticos}
               </div>
             </div>
-            <p className="text-red-800 font-semibold text-sm">Diagnósticos</p>
+            <p className="text-green-800 font-semibold text-sm">Diagnósticos</p>
           </CardContent>
         </Card>
 
         {/* Card de Avaliações */}
-        <Card className="border-orange-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
+        <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <FileText className="h-6 w-6 text-purple-600" />
@@ -356,7 +356,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Disciplina */}
-        <Card className="border-orange-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
+        <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <BookOpen className="h-6 w-6 text-blue-600" />
@@ -367,13 +367,13 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Ano/Série */}
-        <Card className="border-orange-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2">
+        <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <GraduationCap className="h-6 w-6 text-green-600" />
+              <GraduationCap className="h-6 w-6 text-teal-600" />
             </div>
-            <p className="text-green-800 font-semibold text-sm mb-1">Ano/Série</p>
-            <p className="text-green-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
+            <p className="text-teal-800 font-semibold text-sm mb-1">Ano/Série</p>
+            <p className="text-teal-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
           </CardContent>
         </Card>
       </div>
