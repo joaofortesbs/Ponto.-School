@@ -35,7 +35,8 @@ import {
   Mic,
   Group,
   PlayCircle, // Added for the new design
-  ArrowRight // Added for the new design
+  ArrowRight, // Added for the new design
+  Download // Added for PDF export functionality
 } from 'lucide-react';
 import { toast } from "@/components/ui/toast";
 import { motion } from 'framer-motion'; // Added for animations
