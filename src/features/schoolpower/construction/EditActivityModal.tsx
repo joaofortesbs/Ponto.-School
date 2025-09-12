@@ -919,9 +919,8 @@ const EditActivityModal = ({
         console.log('📦 Conteúdo final preparado:', finalContent);
         console.log('🃏 Cards incluídos (verificação final):', finalContent.cards.length);
 
-        // Salvar com estrutura consistente e validação - usar chave padrão
-        const activityType = activity?.id?.replace('atividade_', '') || 'flash_cards';
-        const flashCardsStorageKey = `constructed_${activityType}`;
+        // Salvar com estrutura consistente e validação
+        const flashCardsStorageKey = `constructed_flash-cards_${activity?.id}`;
         const storageData = {
           success: true,
           data: finalContent,
@@ -931,20 +930,6 @@ const EditActivityModal = ({
 
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
         console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
-
-        // Salvar também nas chaves alternativas para garantir compatibilidade
-        const alternativeKeys = [
-          'constructed_flash_cards',
-          'constructed_flash-cards',
-          'flashCardsContent',
-          'builtContent'
-        ];
-        
-        for (const altKey of alternativeKeys) {
-          localStorage.setItem(altKey, JSON.stringify(storageData));
-        }
-        
-        console.log('💾 Flash Cards salvos em múltiplas chaves para compatibilidade');
 
         // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados em ordem
         setFlashCardsContent(finalContent);

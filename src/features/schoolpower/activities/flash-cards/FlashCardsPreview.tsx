@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,109 +31,46 @@ interface FlashCard {
   difficulty?: string;
 }
 
-interface FlashCardsContent {
-  title?: string;
-  description?: string;
-  theme?: string;
-  subject?: string;
-  schoolYear?: string;
-  cards?: FlashCard[];
-  totalCards?: number;
-  generatedAt?: string;
-  numberOfFlashcards?: number;
-  topicos?: string;
-  context?: string;
-  difficultyLevel?: string;
-  objectives?: string;
-  instructions?: string;
-  evaluation?: string;
-  generatedByAI?: boolean;
-  isFallback?: boolean;
-  data?: any; // Para estruturas aninhadas
-  success?: boolean; // Para estruturas de API
-}
-
 interface FlashCardsPreviewProps {
-  cards?: FlashCard[];
-  title?: string;
-  subject?: string;
-  schoolYear?: string;
-  totalCards?: number;
-  generatedAt?: string;
-  theme?: string;
-  content?: FlashCardsContent;
+  content: {
+    title?: string;
+    description?: string;
+    cards?: FlashCard[];
+    totalCards?: number;
+    theme?: string;
+    subject?: string;
+    schoolYear?: string;
+    topicos?: string;
+    numberOfFlashcards?: number;
+    context?: string;
+    difficultyLevel?: string;
+    objectives?: string;
+    instructions?: string;
+    evaluation?: string;
+    generatedByAI?: boolean;
+    isFallback?: boolean;
+    data?: any; // Para estruturas aninhadas
+    success?: boolean; // Para estruturas de API
+  } | null;
+  isLoading?: boolean;
 }
 
 export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ 
-  cards: propCards = [],
-  title: propTitle = "Flash Cards",
-  subject: propSubject = "Geral",
-  schoolYear: propSchoolYear = "Ensino Médio",
-  totalCards: propTotalCards = 0,
-  generatedAt: propGeneratedAt,
-  theme: propTheme = "Estudos",
-  content
+  content, 
+  isLoading = false 
 }) => {
-  // Usar dados do content se disponível, senão usar props
-  const cards = content?.cards || propCards || [];
-  const title = content?.title || propTitle;
-  const subject = content?.subject || propSubject;
-  const schoolYear = content?.schoolYear || propSchoolYear;
-  const totalCards = content?.totalCards || content?.numberOfFlashcards || propTotalCards || cards.length;
-  const generatedAt = content?.generatedAt || propGeneratedAt;
-  const theme = content?.theme || propTheme;
-
-  // Debug log para verificar dados recebidos
-  console.log('🃏 FlashCardsPreview - Dados recebidos:', {
-    content,
-    cards: cards.length,
-    title,
-    subject,
-    totalCards
-  });
-
-  // Verificar se temos cards válidos
-  if (!cards || cards.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-amber-400 mb-4 text-4xl">⚠️</div>
-        <p className="text-gray-600 dark:text-gray-400 mb-2">
-          Nenhum Flash Card encontrado
-        </p>
-        <p className="text-sm text-gray-500">
-          Os dados podem ainda estar sendo carregados ou não foram gerados corretamente.
-        </p>
-      </div>
-    );
-  }
-
   // Normalizar dados com lógica mais robusta
   const normalizedContent = React.useMemo(() => {
-    // Se content não foi passado, usamos os dados das props já processadas
-    if (!content && propCards.length > 0) {
-      console.log('🃏 FlashCardsPreview - Usando dados das props:', { propCards, propTitle, propSubject, propSchoolYear, propTotalCards, propTheme });
-      return {
-        cards: propCards,
-        title: propTitle,
-        subject: propSubject,
-        schoolYear: propSchoolYear,
-        totalCards: propTotalCards || propCards.length,
-        theme: propTheme,
-        generatedAt: propGeneratedAt,
-        numberOfFlashcards: propCards.length,
-      };
-    }
-
     if (!content) {
-      console.log('🃏 FlashCardsPreview - Sem conteúdo para normalizar');
+      console.log('🃏 FlashCardsPreview - Sem conteúdo');
       return null;
     }
 
-    console.log('🃏 FlashCardsPreview - Conteúdo bruto recebido para normalização:', content);
+    console.log('🃏 FlashCardsPreview - Conteúdo bruto recebido:', content);
 
     // Extrair dados da estrutura mais profunda possível
     let actualContent = content;
-
+    
     // Verificar estruturas aninhadas comuns
     if (content.success && content.data) {
       actualContent = content.data;
@@ -143,33 +81,33 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     }
 
     // Buscar cards em diferentes propriedades possíveis
-    let rawCards = actualContent.cards || 
+    let cards = actualContent.cards || 
                 actualContent.flashcards || 
                 actualContent.flashCards ||
                 content.cards ||
                 content.flashcards ||
                 [];
 
-    console.log('🃏 Cards encontrados (raw):', rawCards);
+    console.log('🃏 Cards encontrados (raw):', cards);
 
     // Se cards não é um array, tentar converter
-    if (!Array.isArray(rawCards)) {
-      console.warn('🃏 Cards não é array, tentando converter:', typeof rawCards);
-
+    if (!Array.isArray(cards)) {
+      console.warn('🃏 Cards não é array, tentando converter:', typeof cards);
+      
       // Se é um objeto, talvez seja um único card
-      if (typeof rawCards === 'object' && rawCards !== null) {
-        if (rawCards.front && rawCards.back) {
-          rawCards = [rawCards];
+      if (typeof cards === 'object' && cards !== null) {
+        if (cards.front && cards.back) {
+          cards = [cards];
         } else {
-          rawCards = [];
+          cards = [];
         }
       } else {
-        rawCards = [];
+        cards = [];
       }
     }
 
     // Validar e processar cada card
-    const validCards = rawCards
+    const validCards = cards
       .filter((card: any) => {
         const isValid = card && 
                        typeof card === 'object' && 
@@ -179,11 +117,11 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                        typeof card.back === 'string' &&
                        card.front.trim() !== '' &&
                        card.back.trim() !== '';
-
+        
         if (!isValid) {
           console.warn('🃏 Card inválido filtrado:', card);
         }
-
+        
         return isValid;
       })
       .map((card: any, index: number) => ({
@@ -201,9 +139,9 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       const topicos = actualContent.topicos || content.topicos || '';
       const theme = actualContent.theme || content.theme || 'Flash Cards';
       const subject = actualContent.subject || content.subject || 'Geral';
-
+      
       console.log('🃏 Tentando gerar fallback dos tópicos:', { topicos, theme, subject });
-
+      
       if (topicos && typeof topicos === 'string') {
         const topicosList = topicos.split('\n').filter(t => t.trim());
         const fallbackCards = topicosList.slice(0, 10).map((topic, index) => ({
@@ -213,7 +151,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
           category: subject,
           difficulty: 'Médio'
         }));
-
+        
         if (fallbackCards.length > 0) {
           console.log('🃏 Cards fallback gerados:', fallbackCards);
           validCards.push(...fallbackCards);
@@ -249,9 +187,9 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
     console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
     console.log('🃏 Total de cards processados:', result.cards.length);
-
+    
     return result;
-  }, [content, propCards, propTitle, propSubject, propSchoolYear, propTotalCards, propTheme, propGeneratedAt]);
+  }, [content]);
 
   // Debug logging detalhado
   useEffect(() => {
@@ -341,7 +279,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   // Não mostrar tela vazia se há conteúdo normalizado com pelo menos um card
   if (!normalizedContent) {
     console.log('🃏 FlashCardsPreview - Sem conteúdo normalizado');
-
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -351,7 +289,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         <p className="text-gray-500 dark:text-gray-500 mb-4">
           Configure e gere os flash cards na aba de edição
         </p>
-
+        
         {/* Debug info mais detalhado */}
         <div className="text-xs text-gray-400 mt-4 max-w-md bg-gray-100 dark:bg-gray-800 p-3 rounded">
           <p><strong>Debug:</strong></p>
@@ -367,7 +305,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   }
 
   const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
-  const progress = normalizedContent.cards.length > 0 ? ((currentCardIndex + 1) / normalizedContent.cards.length) * 100 : 0;
+  const progress = ((currentCardIndex + 1) / normalizedContent.cards.length) * 100;
 
   // Verificação de segurança adicional
   if (!currentCard) {
@@ -377,7 +315,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       cardsLength: normalizedContent.cards.length,
       cardOrder
     });
-
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -393,7 +331,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   const handleNextCard = () => {
     if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
-
+    
     if (currentCardIndex < normalizedContent.cards.length - 1) {
       setCurrentCardIndex(prev => prev + 1);
       setIsFlipped(false);
@@ -405,7 +343,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   const handlePrevCard = () => {
     if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
-
+    
     if (currentCardIndex > 0) {
       setCurrentCardIndex(prev => prev - 1);
       setIsFlipped(false);
@@ -418,7 +356,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   const handleMarkCard = (correct: boolean) => {
     if (!currentCard) return;
-
+    
     const cardId = currentCard.id;
     setCardStats(prev => ({
       ...prev,
@@ -443,7 +381,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   const handleShuffle = () => {
     if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
-
+    
     const newOrder = [...cardOrder].sort(() => Math.random() - 0.5);
     setCardOrder(newOrder);
     setCurrentCardIndex(0);

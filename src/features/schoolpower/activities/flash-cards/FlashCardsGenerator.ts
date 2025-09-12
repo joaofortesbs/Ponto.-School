@@ -1,3 +1,4 @@
+
 import { geminiClient } from '@/utils/api/geminiClient';
 
 export interface FlashCard {
@@ -137,8 +138,8 @@ IMPORTANTE:
   }
 
   private processGeminiResponse(
-    response: string,
-    data: FlashCardsData,
+    response: string, 
+    data: FlashCardsData, 
     numberOfCards: number
   ): FlashCardsGeneratedContent {
     try {
@@ -147,11 +148,11 @@ IMPORTANTE:
 
       // Remover markdown se presente
       cleanResponse = cleanResponse.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
-
+      
       // Remover possíveis textos antes/depois do JSON
       const jsonStart = cleanResponse.indexOf('{');
       const jsonEnd = cleanResponse.lastIndexOf('}');
-
+      
       if (jsonStart !== -1 && jsonEnd !== -1) {
         cleanResponse = cleanResponse.substring(jsonStart, jsonEnd + 1);
       }
@@ -177,10 +178,10 @@ IMPORTANTE:
 
       // Processar e validar cards com mais rigor
       const validCards: FlashCard[] = [];
-
+      
       for (let i = 0; i < parsedResponse.cards.length; i++) {
         const card = parsedResponse.cards[i];
-
+        
         if (!card || typeof card !== 'object') {
           console.warn(`⚠️ Card ${i + 1} não é um objeto válido:`, card);
           continue;
@@ -210,10 +211,10 @@ IMPORTANTE:
         throw new Error('Nenhum card válido encontrado após processamento');
       }
 
-      // Construir objeto final com validação completa
-      const finalContent: FlashCardsGeneratedContent = {
-        title: data.title || `Flash Cards: ${data.theme}`,
-        description: `Flash Cards sobre ${data.theme} para ${data.schoolYear}`,
+      // Construir conteúdo final
+      const result = {
+        title: parsedResponse.title || data.title || `Flash Cards: ${data.theme}`,
+        description: parsedResponse.description || `Flash cards sobre ${data.theme} para ${data.schoolYear || 'ensino médio'}`,
         cards: validCards,
         totalCards: validCards.length,
         theme: data.theme,
@@ -221,23 +222,20 @@ IMPORTANTE:
         schoolYear: data.schoolYear || 'Ensino Médio',
         topicos: data.topicos,
         numberOfFlashcards: validCards.length,
-        context: data.context || `Estudos sobre ${data.theme}`,
+        context: data.context || 'Estudos e revisão',
         difficultyLevel: data.difficultyLevel || 'Médio',
         objectives: data.objectives || `Facilitar o aprendizado sobre ${data.theme}`,
         instructions: data.instructions || 'Use os flash cards para estudar e revisar o conteúdo',
         evaluation: data.evaluation || 'Avalie o conhecimento através da prática com os cards',
         generatedByAI: true,
         generatedAt: new Date().toISOString(),
-        isGeneratedByAI: true
+        isGeneratedByAI: true,
+        isFallback: false,
+        formDataUsed: data
       };
 
-      console.log('✅ Flash Cards finalizados:', {
-        totalCards: finalContent.totalCards,
-        cards: finalContent.cards.length,
-        title: finalContent.title,
-        theme: finalContent.theme
-      });
-      return finalContent;
+      console.log('✅ Conteúdo final gerado:', result);
+      return result;
 
     } catch (error) {
       console.error('❌ Erro ao processar resposta do Gemini:', error);
@@ -260,7 +258,7 @@ IMPORTANTE:
         const topicoIndex = i % topicos.length;
         const topico = topicos[topicoIndex].trim();
         const cardType = i % 4; // Variar tipos de pergunta
-
+        
         let front: string;
         let back: string;
 
