@@ -11,6 +11,7 @@ import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercic
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
+import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -91,6 +92,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   }, [isOpen, activity]);
 
   if (!isOpen || !activity) return null;
+
+  // Debug log para verificar atividade
+  console.log('🔍 ActivityViewModal - Atividade:', activity.id, activity);
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
@@ -220,7 +224,48 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   };
 
+  // Função para buscar dados específicos de Flash Cards
+  const findFlashCardsData = () => {
+    // Chaves específicas para Flash Cards baseadas no padrão do código
+    const flashCardsKeys = [
+      'constructed_flash_cards',
+      'constructed_flash-cards',
+      `constructed_flash_cards_${activity?.id}`,
+      `constructed_flash-cards_${activity?.id}`,
+      'flashCardsContent',
+      'builtContent'
+    ];
+
+    for (const key of flashCardsKeys) {
+      const data = localStorage.getItem(key);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.data || parsed;
+          if (content && (content.cards || content.totalCards)) {
+            console.log('🃏 Flash Cards encontrados na chave:', key, content);
+            return content;
+          }
+        } catch (error) {
+          console.warn('⚠️ Erro ao parsear dados da chave:', key, error);
+        }
+      }
+    }
+    return null;
+  };
+
   const renderActivityPreview = () => {
+    if (!activity) return null;
+
+    // Busca específica para Flash Cards
+    if (activity.id === 'atividade_flash_cards') {
+      const flashCardsData = findFlashCardsData();
+      if (flashCardsData) {
+        console.log('🃏 Renderizando Flash Cards Preview:', flashCardsData);
+        return <FlashCardsPreview content={flashCardsData} />;
+      }
+    }
+
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}');
@@ -480,6 +525,75 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           />
         );
     }
+  };
+
+  const renderActivityContent = () => {
+    if (!activity) return null;
+
+    // Busca específica para Flash Cards
+    if (activity.id === 'atividade_flash_cards') {
+      const flashCardsData = findFlashCardsData();
+      if (flashCardsData) {
+        console.log('🃏 Renderizando Flash Cards Preview:', flashCardsData);
+        return <FlashCardsPreview content={flashCardsData} />;
+      }
+    }
+
+    // Verificar se há dados construídos salvos - múltiplas chaves possíveis
+    const activityType = activity.id.replace('atividade_', '');
+    const storageKeys = [
+      `constructed_${activityType}_${activity.id}`,
+      `constructed_${activityType}`,
+      `constructed_${activity.id.replace('atividade_', '')}`
+    ];
+
+    let content = null;
+    let foundKey = null;
+
+    for (const storageKey of storageKeys) {
+      const savedData = localStorage.getItem(storageKey);
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          content = parsedData.data || parsedData;
+          foundKey = storageKey;
+          break;
+        } catch (error) {
+          console.error('❌ Erro ao processar dados salvos:', error);
+        }
+      }
+    }
+
+    if (content && foundKey) {
+      console.log('🎯 Dados encontrados para atividade:', activity.id, 'Key:', foundKey, content);
+
+      if (activity.id === 'atividade_quadro_interativo') {
+        return <QuadroInterativoPreview content={content} />;
+      }
+
+      if (activity.id === 'atividade_quiz_interativo') {
+        return <QuizInterativoPreview content={content} />;
+      }
+
+      if (activity.id === 'atividade_lista_exercicios') {
+        return <ExerciseListPreview exerciseList={content} />;
+      }
+    }
+
+    // Debug: mostrar todas as chaves do localStorage
+    console.log('🔍 Chaves disponíveis no localStorage:', Object.keys(localStorage).filter(k => k.includes('flash') || k.includes('constructed')));
+
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-400 mb-4">📄</div>
+        <p className="text-gray-600 dark:text-gray-400">
+          Esta atividade ainda não foi construída.
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+          Use o modal de edição para construir o conteúdo da atividade.
+        </p>
+      </div>
+    );
   };
 
   return (
