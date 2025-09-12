@@ -57,7 +57,10 @@ import { processMapaMentalData } from '../activities/mapa-mental/mapaMentalProce
 // Convert to proper format with name field
 const schoolPowerActivities = schoolPowerActivitiesData.map(activity => ({
   ...activity,
-  name: activity.name || activity.title || activity.description
+  name: activity.name || activity.title || activity.description,
+  // Garantir que Flash Cards tem o ID correto
+  id: activity.id === 'flash-cards' ? 'flash-cards' : activity.id,
+  type: activity.type || activity.id
 }));
 
 // Componente do Modal de Acesso Vitalício com código exato fornecido

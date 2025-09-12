@@ -11,6 +11,7 @@ import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercic
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
+import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 
 // Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
 // This is a placeholder, replace with actual implementation if needed.
@@ -41,6 +42,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
+  const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
 
 
   // Função específica para carregar dados do Plano de Aula
@@ -79,6 +81,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
       setQuizInterativoContent(null); // Reset Quiz Interativo content
+      setFlashCardsContent(null); // Reset Flash Cards content
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -286,6 +289,47 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('ℹ️ Nenhum conteúdo específico encontrado para Quiz Interativo. Usando dados gerais.');
       }
     }
+    // 1.5. Flash Cards
+    else if (activityType === 'flash-cards') {
+      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
+      console.log(`🃏 Flash Cards: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!flashCardsSavedContent);
+
+      if (flashCardsSavedContent) {
+        try {
+          const parsedContent = JSON.parse(flashCardsSavedContent);
+          contentToLoad = parsedContent.data || parsedContent;
+
+          console.log('🃏 Flash Cards - Conteúdo parseado no modal de visualização:', contentToLoad);
+
+          // Validar se o conteúdo tem cards válidos
+          const hasValidCards = contentToLoad && 
+                               contentToLoad.cards && 
+                               Array.isArray(contentToLoad.cards) && 
+                               contentToLoad.cards.length > 0 &&
+                               contentToLoad.cards.every(card => 
+                                 card && card.front && card.back
+                               );
+
+          if (hasValidCards) {
+            console.log(`✅ Flash Cards carregado com ${contentToLoad.cards.length} cards válidos para: ${activity.id}`);
+            setFlashCardsContent(contentToLoad); // Define o estado específico para Flash Cards
+          } else {
+            console.warn('⚠️ Conteúdo de Flash Cards encontrado mas sem cards válidos:', {
+              hasCards: !!(contentToLoad && contentToLoad.cards),
+              isArray: Array.isArray(contentToLoad?.cards),
+              cardsLength: contentToLoad?.cards?.length || 0,
+              firstCard: contentToLoad?.cards?.[0]
+            });
+            contentToLoad = null;
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar conteúdo de Flash Cards:', error);
+          contentToLoad = null;
+        }
+      } else {
+        console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
+      }
+    }
     // 2. Lista de Exercícios (com filtro de exclusão)
     else if (activityType === 'lista-exercicios') {
       try {
@@ -423,6 +467,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     if (contentToLoad) {
       if (activityType === 'quiz-interativo') {
         previewData = { ...previewData, ...contentToLoad };
+      } else if (activityType === 'flash-cards') {
+        previewData = { ...previewData, ...contentToLoad };
       } else if (activityType === 'sequencia-didatica') {
         previewData = contentToLoad; // Sequência didática substitui tudo
       } else {
@@ -466,6 +512,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         console.log('📚 Renderizando QuizInterativoPreview com dados:', previewData);
         return (
           <QuizInterativoPreview
+            content={previewData}
+            isLoading={false}
+          />
+        );
+
+      case 'flash-cards':
+        console.log('🃏 Renderizando FlashCardsPreview com dados:', previewData);
+        return (
+          <FlashCardsPreview
             content={previewData}
             isLoading={false}
           />

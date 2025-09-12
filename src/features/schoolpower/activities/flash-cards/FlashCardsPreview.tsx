@@ -204,7 +204,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       contentStructure: {
         raw: content,
         normalized: normalizedContent
-      }
+      },
+      isFromViewModal: window.location.pathname.includes('view') || document.querySelector('[data-testid="activity-view-modal"]')
     });
   }, [content, normalizedContent, isLoading]);
 

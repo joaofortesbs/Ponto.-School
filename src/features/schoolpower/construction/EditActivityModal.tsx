@@ -732,6 +732,16 @@ const EditActivityModal = ({
       localStorage.setItem(quizStorageKey, JSON.stringify(storageData));
       console.log('💾 Quiz Interativo salvo no localStorage:', quizStorageKey);
 
+      // SINCRONIZAÇÃO ADICIONAL: Salvar também no cache de atividades construídas para modal de visualização
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      constructedActivities[activity?.id] = {
+        generatedContent: finalContent,
+        timestamp: new Date().toISOString(),
+        activityType: 'quiz-interativo'
+      };
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      console.log('💾 Quiz Interativo sincronizado com cache de atividades construídas');
+
       // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
       setQuizInterativoContent(finalContent);
       setGeneratedContent(finalContent); // Also update generic content for preview fallback
@@ -931,6 +941,16 @@ const EditActivityModal = ({
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
         console.log('💾 Flash Cards salvos no localStorage:', flashCardsStorageKey);
 
+        // SINCRONIZAÇÃO ADICIONAL: Salvar também no cache de atividades construídas para modal de visualização
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity?.id] = {
+          generatedContent: finalContent,
+          timestamp: new Date().toISOString(),
+          activityType: 'flash-cards'
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        console.log('💾 Flash Cards sincronizados com cache de atividades construídas');
+
         // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados em ordem
         setFlashCardsContent(finalContent);
         setGeneratedContent(finalContent);
@@ -1020,6 +1040,16 @@ const EditActivityModal = ({
         };
 
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
+
+        // SINCRONIZAÇÃO ADICIONAL: Salvar também no cache de atividades construídas para modal de visualização
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        constructedActivities[activity?.id] = {
+          generatedContent: fallbackContent,
+          timestamp: new Date().toISOString(),
+          activityType: 'flash-cards'
+        };
+        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+        console.log('💾 Flash Cards fallback sincronizados com cache de atividades construídas');
 
         setFlashCardsContent(fallbackContent);
         setGeneratedContent(fallbackContent);

@@ -205,6 +205,15 @@ async function generateFlashCards(formData: ActivityFormData) {
   const numberOfCards = parseInt(formData.numberOfFlashcards) || 10;
   const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
   
+  // Garantir que temos pelo menos alguns tópicos
+  const finalTopicos = topicos.length > 0 ? topicos : [
+    formData.theme || 'Conceito Principal',
+    `Aplicação de ${formData.theme || 'Conceito'}`,
+    `Importância de ${formData.theme || 'Conceito'}`,
+    `Exercícios sobre ${formData.theme || 'Conceito'}`,
+    `Exemplos de ${formData.theme || 'Conceito'}`
+  ];
+  
   const content = {
     title: formData.title,
     description: formData.description,
@@ -218,16 +227,21 @@ async function generateFlashCards(formData: ActivityFormData) {
     objectives: formData.objectives,
     instructions: formData.instructions,
     evaluation: formData.evaluation,
-    cards: topicos.slice(0, numberOfCards).map((topic, i) => ({
+    cards: finalTopicos.slice(0, numberOfCards).map((topic, i) => ({
       id: i + 1,
-      front: `O que é ${topic}?`,
-      back: `${topic} é um conceito importante em ${formData.subject || 'Geral'} que deve ser compreendido por estudantes do ${formData.schoolYear || 'ensino médio'}.`,
+      front: `O que é ${topic.trim()}?`,
+      back: `${topic.trim()} é um conceito importante em ${formData.subject || 'Geral'} que deve ser compreendido por estudantes do ${formData.schoolYear || 'ensino médio'}. É essencial para o desenvolvimento acadêmico nesta área.`,
       category: formData.subject || 'Geral',
       difficulty: formData.difficultyLevel || 'Médio'
     })),
-    totalCards: Math.min(numberOfCards, topicos.length),
+    totalCards: Math.min(numberOfCards, finalTopicos.length),
     generatedAt: new Date().toISOString(),
-    isGeneratedByAI: true
+    isGeneratedByAI: false, // Corrigir o valor cortado
+    isFallback: true
+  };
+
+  return { success: true, data: content };
+}ue
   };
 
   return { success: true, data: content };
