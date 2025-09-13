@@ -12,8 +12,8 @@ export interface PlanoAulaFields {
   observacoesProfessor: string;
 }
 
-// Mapeamento de campos do Action Plan para formulário do modal
-export const planoAulaFieldMapping = {
+// Mapeamento de campos do Action Plan para formulário do modal (legacy)
+export const legacyPlanoAulaFieldMapping = {
   'Tema ou Tópico Central': 'theme',
   'Ano/Série Escolar': 'schoolYear', 
   'Componente Curricular': 'subject',
