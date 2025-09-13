@@ -107,4 +107,20 @@ export class GeminiClient {
   updateApiKey(newKey: string): void {
     this.apiKey = newKey;
   }
+
+  /**
+   * Método compatível com chamadas generateContent
+   */
+  async generateContent(prompt: string): Promise<string> {
+    const result = await this.generate({ prompt });
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Erro ao gerar conteúdo');
+    }
+    
+    return result.result;
+  }
 }
+
+// Instância padrão para importação
+export const geminiClient = new GeminiClient();
