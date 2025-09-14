@@ -34,15 +34,15 @@ export const QuizWithSchoolPower: React.FC = () => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className={`w-full ${isMobile ? 'max-w-sm mx-4' : 'max-w-5xl'}`}
           >
-            <Card className="backdrop-blur-xl bg-white/95 border-0 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh]">
+            <Card className="backdrop-blur-xl bg-white/95 dark:bg-gray-900/95 border-2 border-gray-200/50 dark:border-gray-700/50 shadow-2xl rounded-3xl overflow-hidden max-h-[90vh]">
               <CardContent className={`${isMobile ? 'p-4' : 'p-8 md:p-12'} overflow-y-auto max-h-[85vh]`}>
                 {/* Barra de Progresso Simplificada na Intro */}
                 <div className="mb-10">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-semibold text-gray-500">
+                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
                       Aguardando início...
                     </span>
-                    <span className="text-sm font-bold text-gray-400">
+                    <span className="text-sm font-bold text-gray-400 dark:text-gray-500">
                       0%
                     </span>
                   </div>
@@ -50,8 +50,8 @@ export const QuizWithSchoolPower: React.FC = () => {
                   <div className="relative">
                     <Progress
                       value={0}
-                      className="h-2 bg-gray-200 rounded-full overflow-hidden"
-                      indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 rounded-full transition-all duration-1000 ease-out"
+                      className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner"
+                      indicatorClassName="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 dark:from-orange-500 dark:via-orange-600 dark:to-orange-700 rounded-full transition-all duration-1000 ease-out"
                     />
                   </div>
                 </div>
@@ -64,9 +64,9 @@ export const QuizWithSchoolPower: React.FC = () => {
                 >
                   {/* Headline Centralizado */}
                   <div className="w-full max-w-4xl mx-auto">
-                    <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 leading-tight`}>
-                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">2 minutos</span> como a IA da Ponto. School pode economizar até 
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600"> 15 horas</span> do seu planejamento semanal
+                    <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl md:text-5xl'} font-bold text-gray-900 dark:text-gray-100 leading-tight`}>
+                      Descubra em <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-400 dark:to-orange-500">2 minutos</span> como a IA da Ponto. School pode economizar até 
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-400 dark:to-orange-500"> 15 horas</span> do seu planejamento semanal
                     </h1>
                   </div>
 
@@ -108,9 +108,9 @@ export const QuizWithSchoolPower: React.FC = () => {
                     <Button 
                       onClick={goToQuiz}
                       size={isMobile ? "default" : "lg"}
-                      className={`bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white ${isMobile ? 'px-8 py-3' : 'px-16 py-5'} ${isMobile ? 'rounded-xl' : 'rounded-2xl'} font-bold ${isMobile ? 'text-lg' : 'text-xl'} shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 border-0`}
+                      className={`bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 dark:from-orange-600 dark:via-orange-700 dark:to-orange-800 dark:hover:from-orange-700 dark:hover:via-orange-800 dark:hover:to-orange-900 text-white ${isMobile ? 'px-10 py-4' : 'px-20 py-6'} rounded-3xl font-bold ${isMobile ? 'text-lg' : 'text-2xl'} shadow-2xl hover:shadow-orange-500/30 dark:hover:shadow-orange-400/25 transition-all duration-300 border-0`}
                     >
-                      <Play className={`${isMobile ? 'mr-2 h-5 w-5' : 'mr-3 h-7 w-7'}`} />
+                      <Play className={`${isMobile ? 'mr-3 h-6 w-6' : 'mr-4 h-8 w-8'}`} />
                       {isMobile ? 'TESTAR AGORA' : 'QUERO TESTAR AGORA'}
                     </Button>
                   </motion.div>
@@ -148,7 +148,7 @@ export const QuizWithSchoolPower: React.FC = () => {
   );
 
   const renderSchoolPower = () => (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 dark:from-gray-900 dark:to-gray-800 relative">
       {/* Interface completa do School Power */}
       <SchoolPowerPage isQuizMode={true} />
     </div>
