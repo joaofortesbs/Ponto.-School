@@ -54,7 +54,7 @@ export const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = (
 
         {/* Descrição Geral */}
         <div className="mb-8">
-          <div className="bg-white/60 dark:bg-gray-800/50 rounded-xl p-6 border border-orange-200 dark:border-orange-600 shadow-sm">
+          <div className="bg-white/60 dark:bg-gray-800/50 rounded-2xl p-6 border border-orange-200 dark:border-orange-600 shadow-sm">
             <button
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
               className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 dark:hover:bg-orange-900/20 -m-2 p-2 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
@@ -85,7 +85,7 @@ export const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Público Alvo */}
           {sequencia.publicoAlvo && (
-            <div className="bg-white/60 dark:bg-gray-800/50 rounded-xl p-6 border border-orange-200 dark:border-orange-600 shadow-sm">
+            <div className="bg-white/60 dark:bg-gray-800/50 rounded-2xl p-6 border border-orange-200 dark:border-orange-600 shadow-sm">
               <h3 className="font-bold text-orange-700 dark:text-orange-300 mb-3 text-center flex items-center justify-center gap-2">
                 <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 Público Alvo
@@ -98,7 +98,7 @@ export const SequenciaDidaticaHeader: React.FC<SequenciaDidaticaHeaderProps> = (
 
           {/* Competências BNCC */}
           {sequencia.competenciasBNCC && (
-            <div className="bg-white/60 dark:bg-gray-800/50 rounded-xl p-6 border border-orange-200 dark:border-orange-600 shadow-sm">
+            <div className="bg-white/60 dark:bg-gray-800/50 rounded-2xl p-6 border border-orange-200 dark:border-orange-600 shadow-sm">
               <h3 className="font-bold text-orange-700 dark:text-orange-300 mb-3 text-center flex items-center justify-center gap-2">
                 <Target className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 Competências BNCC

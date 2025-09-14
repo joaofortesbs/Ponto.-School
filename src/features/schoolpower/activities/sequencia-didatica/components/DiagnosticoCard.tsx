@@ -49,7 +49,7 @@ const DiagnosticoCard: React.FC<DiagnosticoCardProps> = ({ diagnostico }) => {
 
       <CardContent className="pt-0 space-y-3">
         {/* Campo Objetivo - Clicável */}
-        <div className="bg-white/60 rounded-xl p-3 border border-green-200 transition-all duration-200 hover:bg-white/80 hover:border-green-300 dark:bg-gray-800/50 dark:border-green-700 dark:hover:bg-gray-700/70 dark:hover:border-green-600">
+        <div className="bg-white/60 rounded-2xl p-3 border border-green-200 transition-all duration-200 hover:bg-white/80 hover:border-green-300 dark:bg-gray-800/50 dark:border-green-700 dark:hover:bg-gray-700/70 dark:hover:border-green-600">
           <button
             onClick={() => toggleField('objetivo')}
             className="w-full flex items-center justify-between text-left hover:bg-green-50/50 dark:hover:bg-green-900/20 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
@@ -73,7 +73,7 @@ const DiagnosticoCard: React.FC<DiagnosticoCardProps> = ({ diagnostico }) => {
         </div>
 
         {/* Campo Resumo - Clicável */}
-        <div className="bg-white/60 rounded-xl p-3 border border-green-200 transition-all duration-200 hover:bg-white/80 hover:border-green-300 dark:bg-gray-800/50 dark:border-green-700 dark:hover:bg-gray-700/70 dark:hover:border-green-600">
+        <div className="bg-white/60 rounded-2xl p-3 border border-green-200 transition-all duration-200 hover:bg-white/80 hover:border-green-300 dark:bg-gray-800/50 dark:border-green-700 dark:hover:bg-gray-700/70 dark:hover:border-green-600">
           <button
             onClick={() => toggleField('resumo')}
             className="w-full flex items-center justify-between text-left hover:bg-green-50/50 dark:hover:bg-green-900/20 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
@@ -98,7 +98,7 @@ const DiagnosticoCard: React.FC<DiagnosticoCardProps> = ({ diagnostico }) => {
 
         {/* Campo Instrumentos - Se disponível */}
         {diagnostico.instrumentos && diagnostico.instrumentos.length > 0 && (
-          <div className="bg-white/60 rounded-xl p-3 border border-green-200 transition-all duration-200 hover:bg-white/80 hover:border-green-300 dark:bg-gray-800/50 dark:border-green-700 dark:hover:bg-gray-700/70 dark:hover:border-green-600">
+          <div className="bg-white/60 rounded-2xl p-3 border border-green-200 transition-all duration-200 hover:bg-white/80 hover:border-green-300 dark:bg-gray-800/50 dark:border-green-700 dark:hover:bg-gray-700/70 dark:hover:border-green-600">
             <button
               onClick={() => toggleField('instrumentos')}
               className="w-full flex items-center justify-between text-left hover:bg-green-50/50 dark:hover:bg-green-900/20 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"

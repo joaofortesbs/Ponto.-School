@@ -183,7 +183,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {/* Cards de Estatísticas Melhorados */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           {/* Card de Aulas */}
-          <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 dark:border-orange-600 dark:from-orange-900/30 dark:to-orange-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+          <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 dark:border-orange-600 dark:from-orange-900/30 dark:to-orange-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BookOpen className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -196,7 +196,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Diagnósticos */}
-          <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 dark:border-green-600 dark:from-green-900/30 dark:to-green-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+          <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 dark:border-green-600 dark:from-green-900/30 dark:to-green-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BarChart3 className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -209,7 +209,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Avaliações */}
-          <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 dark:border-purple-600 dark:from-purple-900/30 dark:to-purple-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+          <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 dark:border-purple-600 dark:from-purple-900/30 dark:to-purple-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -222,7 +222,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Disciplina */}
-          <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-blue-600 dark:from-blue-900/30 dark:to-blue-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+          <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-blue-600 dark:from-blue-900/30 dark:to-blue-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -233,7 +233,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
           </Card>
 
           {/* Card de Ano/Série */}
-          <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 dark:border-teal-600 dark:from-teal-900/30 dark:to-teal-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+          <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 dark:border-teal-600 dark:from-teal-900/30 dark:to-teal-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
             <CardContent className="p-4 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <GraduationCap className="h-6 w-6 text-teal-600 dark:text-teal-400" />
@@ -247,7 +247,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         {/* Grade de Cards da Sequência */}
         {todosItens.length > 0 ? (
           <div>
-            <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
+            <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-2xl border border-orange-200 dark:border-orange-700">
               <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-orange-600 to-amber-600 dark:from-orange-400 dark:to-amber-400 bg-clip-text mb-2 flex items-center gap-3">
                 <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 dark:from-orange-600 dark:to-amber-600 rounded-lg shadow-lg">
                   <BookOpen className="h-6 w-6 text-white" />
@@ -300,7 +300,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
       {/* Cards de Estatísticas Melhorados */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         {/* Card de Aulas */}
-        <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+        <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <BookOpen className="h-6 w-6 text-orange-600" />
@@ -313,7 +313,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Diagnósticos */}
-        <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+        <Card className="border-green-300 bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <BarChart3 className="h-6 w-6 text-green-600" />
@@ -326,7 +326,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Avaliações */}
-        <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+        <Card className="border-purple-300 bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <FileText className="h-6 w-6 text-purple-600" />
@@ -339,7 +339,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Disciplina */}
-        <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+        <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <BookOpen className="h-6 w-6 text-blue-600" />
@@ -350,7 +350,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         </Card>
 
         {/* Card de Ano/Série */}
-        <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+        <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <GraduationCap className="h-6 w-6 text-teal-600" />
@@ -362,7 +362,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
       </div>
 
       {/* Título da Estrutura */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-xl border border-orange-200 dark:border-orange-700">
+      <div className="mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-2xl border border-orange-200 dark:border-orange-700">
         <h3 className="text-xl font-bold text-transparent bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text mb-2 flex items-center gap-3">
           <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg shadow-lg">
             <BookOpen className="h-6 w-6 text-white" />
@@ -389,7 +389,7 @@ const CompetenciasBNCCCard: React.FC<{ competencias?: string }> = ({ competencia
   if (!competencias) return null;
 
   return (
-    <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-blue-600 dark:from-blue-900/30 dark:to-blue-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+    <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-blue-600 dark:from-blue-900/30 dark:to-blue-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
       <CardContent className="pt-4">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -406,7 +406,7 @@ const CompetenciasBNCCCard: React.FC<{ competencias?: string }> = ({ competencia
             <ChevronRight className="h-5 w-5 text-blue-600 dark:text-blue-400 transition-all duration-200 hover:text-blue-700 dark:hover:text-blue-300" />
           }
         </button>
-        
+
         {isExpanded && (
           <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
             <div className="bg-white/70 dark:bg-gray-800/70 rounded-xl p-4 border border-blue-200 dark:border-blue-600">
@@ -426,7 +426,7 @@ const ObjetivosGeraisCard: React.FC<{ objetivos?: string }> = ({ objetivos }) =>
   if (!objetivos) return null;
 
   return (
-    <Card className="border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-emerald-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-xl">
+    <Card className="border-emerald-300 bg-gradient-to-br from-emerald-50 to-emerald-100 dark:border-emerald-600 dark:from-emerald-900/30 dark:to-emerald-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
       <CardContent className="pt-4">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
@@ -443,7 +443,7 @@ const ObjetivosGeraisCard: React.FC<{ objetivos?: string }> = ({ objetivos }) =>
             <ChevronRight className="h-5 w-5 text-emerald-600 dark:text-emerald-400 transition-all duration-200 hover:text-emerald-700 dark:hover:text-emerald-300" />
           }
         </button>
-        
+
         {isExpanded && (
           <div className="mt-3 pt-3 border-t border-emerald-200 dark:border-emerald-700">
             <div className="bg-white/70 dark:bg-gray-800/70 rounded-xl p-4 border border-emerald-200 dark:border-emerald-600">

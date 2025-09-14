@@ -50,7 +50,7 @@ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
 
       <CardContent className="pt-0 space-y-3">
         {/* Campo Objetivo - Clicável */}
-        <div className="bg-white/60 rounded-xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
+        <div className="bg-white/60 rounded-2xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
           <button
             onClick={() => toggleField('objetivo')}
             className="w-full flex items-center justify-between text-left hover:bg-purple-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-purple-900/30"
@@ -74,7 +74,7 @@ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
         </div>
 
         {/* Campo Resumo - Clicável */}
-        <div className="bg-white/60 rounded-xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
+        <div className="bg-white/60 rounded-2xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
           <button
             onClick={() => toggleField('resumo')}
             className="w-full flex items-center justify-between text-left hover:bg-purple-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-purple-900/30"
@@ -99,7 +99,7 @@ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
 
         {/* Campo Critérios de Avaliação - Se disponível */}
         {avaliacao.criteriosAvaliacao && avaliacao.criteriosAvaliacao.length > 0 && (
-          <div className="bg-white/60 rounded-xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
+          <div className="bg-white/60 rounded-2xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
             <button
               onClick={() => toggleField('criterios')}
               className="w-full flex items-center justify-between text-left hover:bg-purple-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-purple-900/30"
@@ -129,7 +129,7 @@ const AvaliacaoCard: React.FC<AvaliacaoCardProps> = ({ avaliacao }) => {
 
         {/* Campo Instrumentos - Se disponível */}
         {avaliacao.instrumentos && avaliacao.instrumentos.length > 0 && (
-          <div className="bg-white/60 rounded-xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
+          <div className="bg-white/60 rounded-2xl p-3 border border-purple-200 transition-all duration-200 hover:bg-white/80 hover:border-purple-300 dark:bg-purple-800/30 dark:border-purple-600 dark:hover:bg-purple-800/50 dark:hover:border-purple-500">
             <button
               onClick={() => toggleField('instrumentos')}
               className="w-full flex items-center justify-between text-left hover:bg-purple-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-purple-900/30"

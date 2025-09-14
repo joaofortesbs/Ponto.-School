@@ -51,7 +51,7 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
 
       <CardContent className="pt-0 space-y-3">
         {/* Campo Objetivo - Clicável */}
-        <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
+        <div className="bg-white/60 rounded-2xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
           <button
             onClick={() => toggleField('objetivo')}
             className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-orange-900/40"
@@ -75,7 +75,7 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
         </div>
 
         {/* Campo Resumo - Clicável */}
-        <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
+        <div className="bg-white/60 rounded-2xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
           <button
             onClick={() => toggleField('resumo')}
             className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-orange-900/40"
@@ -100,7 +100,7 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
 
         {/* Campo Metodologia - Se disponível */}
         {aula.metodologia && (
-          <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
+          <div className="bg-white/60 rounded-2xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
             <button
               onClick={() => toggleField('metodologia')}
               className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-orange-900/40"
@@ -126,7 +126,7 @@ const AulaCard: React.FC<AulaCardProps> = ({ aula }) => {
 
         {/* Campo Instrumentos - Se disponível */}
         {aula.instrumentos && aula.instrumentos.length > 0 && (
-          <div className="bg-white/60 rounded-xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
+          <div className="bg-white/60 rounded-2xl p-3 border border-orange-200 transition-all duration-200 hover:bg-white/80 hover:border-orange-300 dark:bg-orange-800/50 dark:border-orange-600 dark:hover:bg-orange-800/70 dark:hover:border-orange-500">
             <button
               onClick={() => toggleField('instrumentos')}
               className="w-full flex items-center justify-between text-left hover:bg-orange-50/50 -m-1 p-1 rounded-lg transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] dark:hover:bg-orange-900/40"
