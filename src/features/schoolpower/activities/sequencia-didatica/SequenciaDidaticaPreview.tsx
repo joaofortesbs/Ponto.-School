@@ -181,7 +181,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
         />
 
         {/* Cards de Estatísticas Melhorados */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {/* Card de Aulas */}
           <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 dark:border-orange-600 dark:from-orange-900/30 dark:to-orange-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
             <CardContent className="p-4 text-center">
@@ -218,28 +218,6 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
                 </div>
               </div>
               <p className="text-purple-800 dark:text-purple-300 font-semibold text-sm">Avaliações</p>
-            </CardContent>
-          </Card>
-
-          {/* Card de Disciplina */}
-          <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 dark:border-blue-600 dark:from-blue-900/30 dark:to-blue-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <p className="text-blue-800 dark:text-blue-300 font-semibold text-sm mb-1">Disciplina</p>
-              <p className="text-blue-600 dark:text-blue-400 font-bold text-xs">{sequenciaDidatica.disciplina}</p>
-            </CardContent>
-          </Card>
-
-          {/* Card de Ano/Série */}
-          <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 dark:border-teal-600 dark:from-teal-900/30 dark:to-teal-800/30 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
-            <CardContent className="p-4 text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <GraduationCap className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-              </div>
-              <p className="text-teal-800 dark:text-teal-300 font-semibold text-sm mb-1">Ano/Série</p>
-              <p className="text-teal-600 dark:text-teal-400 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
             </CardContent>
           </Card>
         </div>
@@ -298,7 +276,7 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
       />
 
       {/* Cards de Estatísticas Melhorados */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {/* Card de Aulas */}
         <Card className="border-orange-300 bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
           <CardContent className="p-4 text-center">
@@ -335,28 +313,6 @@ export const SequenciaDidaticaPreview: React.FC<SequenciaDidaticaPreviewProps> =
               </div>
             </div>
             <p className="text-purple-800 font-semibold text-sm">Avaliações</p>
-          </CardContent>
-        </Card>
-
-        {/* Card de Disciplina */}
-        <Card className="border-blue-300 bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-            </div>
-            <p className="text-blue-800 font-semibold text-sm mb-1">Disciplina</p>
-            <p className="text-blue-600 font-bold text-xs">{sequenciaDidatica.disciplina}</p>
-          </CardContent>
-        </Card>
-
-        {/* Card de Ano/Série */}
-        <Card className="border-teal-300 bg-gradient-to-br from-teal-50 to-teal-100 hover:shadow-lg transition-all duration-300 border-2 rounded-2xl">
-          <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <GraduationCap className="h-6 w-6 text-teal-600" />
-            </div>
-            <p className="text-teal-800 font-semibold text-sm mb-1">Ano/Série</p>
-            <p className="text-teal-600 font-bold text-xs">{sequenciaDidatica.anoSerie}</p>
           </CardContent>
         </Card>
       </div>
