@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,8 +51,8 @@ interface FlashCardsPreviewProps {
     evaluation?: string;
     generatedByAI?: boolean;
     isFallback?: boolean;
-    data?: any;
-    success?: boolean;
+    data?: any; // Para estruturas aninhadas
+    success?: boolean; // Para estruturas de API
   } | null;
   isLoading?: boolean;
 }
@@ -62,31 +61,14 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
-  // Estados para controle da sessão de estudo
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [studyMode, setStudyMode] = useState<'practice' | 'test' | 'review'>('practice');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showStats, setShowStats] = useState(false);
-  const [cardStats, setCardStats] = useState<{[key: number]: { correct: number; incorrect: number; }}>({});
-  const [sessionStats, setSessionStats] = useState({
-    cardsStudied: 0,
-    correctAnswers: 0,
-    incorrectAnswers: 0,
-    totalTime: 0
-  });
-  const [shuffled, setShuffled] = useState(false);
-  const [cardOrder, setCardOrder] = useState<number[]>([]);
-  const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
-
-  // Memoizar o conteúdo normalizado para evitar recalculos desnecessários
-  const normalizedContent = useMemo(() => {
+  // Normalizar dados com lógica mais robusta
+  const normalizedContent = React.useMemo(() => {
     if (!content) {
-      console.log('🃏 FlashCardsPreview - Sem conteúdo para normalizar');
+      console.log('🃏 FlashCardsPreview - Sem conteúdo');
       return null;
     }
 
-    console.log('🃏 FlashCardsPreview - Conteúdo recebido, normalizando...');
+    console.log('🃏 FlashCardsPreview - Conteúdo bruto recebido:', content);
 
     // Extrair dados da estrutura mais profunda possível
     let actualContent = content;
@@ -154,101 +136,41 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
     console.log('🃏 Cards válidos processados:', validCards);
 
-    // Se não temos cards válidos, tentar gerar fallback dos tópicos ou customFields
+    // Se não temos cards válidos, tentar gerar fallback dos tópicos
     if (validCards.length === 0) {
-      console.log('🃏 Nenhum card válido encontrado, gerando fallback');
+      const topicos = actualContent.topicos || content.topicos || '';
+      const theme = actualContent.theme || content.theme || 'Flash Cards';
+      const subject = actualContent.subject || content.subject || 'Geral';
       
-      // Tentar diferentes fontes de tópicos
-      const topicos = actualContent.topicos || 
-                     content.topicos || 
-                     content.customFields?.['Tópicos'] ||
-                     content.customFields?.['Tópicos Principais'] ||
-                     '';
+      console.log('🃏 Tentando gerar fallback dos tópicos:', { topicos, theme, subject });
       
-      const theme = actualContent.theme || 
-                   content.theme || 
-                   content.customFields?.['Tema'] ||
-                   content.customFields?.['Tema dos Flash Cards'] ||
-                   'Flash Cards';
-                   
-      const subject = actualContent.subject || 
-                     content.subject || 
-                     content.customFields?.['Disciplina'] ||
-                     'Geral';
-      
-      console.log('🃏 Tentando gerar fallback com:', { topicos, theme, subject });
-      
-      if (topicos && typeof topicos === 'string' && topicos.trim()) {
+      if (topicos && typeof topicos === 'string') {
         const topicosList = topicos.split('\n').filter(t => t.trim());
-        console.log('🃏 Lista de tópicos encontrada:', topicosList);
+        const fallbackCards = topicosList.slice(0, 10).map((topic, index) => ({
+          id: index + 1,
+          front: `O que é ${topic.trim()}?`,
+          back: `${topic.trim()} é um conceito importante em ${subject} que deve ser estudado e compreendido.`,
+          category: subject,
+          difficulty: 'Médio'
+        }));
         
-        if (topicosList.length > 0) {
-          const numberOfCards = Math.min(
-            parseInt(content.customFields?.['Número de Flash Cards'] || '10'),
-            Math.max(topicosList.length * 2, 8)
-          );
-          
-          const fallbackCards = [];
-          for (let i = 0; i < numberOfCards; i++) {
-            const topicoIndex = i % topicosList.length;
-            const topic = topicosList[topicoIndex].trim();
-            const cardType = i % 4;
-            
-            let front: string;
-            let back: string;
-
-            switch (cardType) {
-              case 0:
-                front = `O que é ${topic}?`;
-                back = `${topic} é um conceito fundamental sobre ${theme} em ${subject}. É importante para compreender os fundamentos desta disciplina.`;
-                break;
-              case 1:
-                front = `Qual a importância de ${topic}?`;
-                back = `${topic} é importante porque estabelece bases conceituais essenciais para entender ${theme} em ${subject}.`;
-                break;
-              case 2:
-                front = `Como aplicar ${topic} na prática?`;
-                back = `${topic} pode ser aplicado através de exercícios práticos e análise de casos relacionados ao ${theme}.`;
-                break;
-              default:
-                front = `Defina ${topic}`;
-                back = `${topic}: Elemento-chave para compreensão de ${theme} em ${subject}, requerendo estudo teórico e prático.`;
-            }
-
-            fallbackCards.push({
-              id: i + 1,
-              front,
-              back,
-              category: subject,
-              difficulty: content.customFields?.['Nível de Dificuldade'] || 'Médio'
-            });
-          }
-          
-          if (fallbackCards.length > 0) {
-            console.log('🃏 Cards fallback gerados dos tópicos:', fallbackCards);
-            validCards.push(...fallbackCards);
-          }
+        if (fallbackCards.length > 0) {
+          console.log('🃏 Cards fallback gerados:', fallbackCards);
+          validCards.push(...fallbackCards);
         }
       }
     }
 
-    // Se ainda não há cards, criar exemplo baseado no tema
+    // Se ainda não há cards, criar pelo menos um exemplo
     if (validCards.length === 0) {
-      console.log('🃏 Criando cards de exemplo baseados no tema');
-      
-      const theme = content.customFields?.['Tema'] || content.theme || 'Flash Cards';
-      const subject = content.customFields?.['Disciplina'] || content.subject || 'Geral';
-      const numberOfCards = Math.max(parseInt(content.customFields?.['Número de Flash Cards'] || '5'), 3);
-      
-      for (let i = 0; i < numberOfCards; i++) {
-        validCards.push({
-          id: i + 1,
-          front: `Conceito ${i + 1} sobre ${theme}`,
-          back: `Este é um conceito importante relacionado a ${theme} em ${subject}. Configure os tópicos para gerar cards personalizados.`,
-          category: subject,
-          difficulty: 'Médio'
-        });
-      }
+      console.log('🃏 Criando card de exemplo para demonstração');
+      validCards.push({
+        id: 1,
+        front: 'Flash Cards Criados com Sucesso!',
+        back: 'Seus flash cards foram gerados e estão prontos para uso. Configure o conteúdo adequadamente para ver mais cards personalizados.',
+        category: 'Sistema',
+        difficulty: 'Básico'
+      });
     }
 
     const result = {
@@ -257,193 +179,92 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       cards: validCards,
       totalCards: validCards.length,
       numberOfFlashcards: validCards.length,
-      title: actualContent.title || 
-             content.title || 
-             content.customFields?.['Título'] ||
-             `Flash Cards: ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'Estudo'}`,
-      description: actualContent.description || 
-                  content.description || 
-                  content.customFields?.['Descrição'] ||
-                  `Flash cards para estudo sobre ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'o tema'}`,
-      theme: actualContent.theme || 
-             content.theme || 
-             content.customFields?.['Tema'] ||
-             content.customFields?.['Tema dos Flash Cards'] ||
-             'Tema Geral',
-      subject: actualContent.subject || 
-               content.subject || 
-               content.customFields?.['Disciplina'] ||
-               'Geral',
-      schoolYear: actualContent.schoolYear || 
-                  content.schoolYear || 
-                  content.customFields?.['Ano de Escolaridade'] ||
-                  'Ensino Médio',
-      difficultyLevel: actualContent.difficultyLevel || 
-                      content.difficultyLevel || 
-                      content.customFields?.['Nível de Dificuldade'] ||
-                      'Médio',
-      topicos: actualContent.topicos || 
-               content.topicos || 
-               content.customFields?.['Tópicos'] ||
-               content.customFields?.['Tópicos Principais'] ||
-               '',
-      context: actualContent.context || 
-               content.context || 
-               content.customFields?.['Contexto'] ||
-               content.customFields?.['Contexto de Uso'] ||
-               'Revisão e fixação do conteúdo'
+      title: actualContent.title || content.title || `Flash Cards: ${actualContent.theme || content.theme || 'Estudo'}`,
+      description: actualContent.description || content.description || `Flash cards para estudo`,
+      theme: actualContent.theme || content.theme || 'Tema Geral',
+      subject: actualContent.subject || content.subject || 'Geral',
+      schoolYear: actualContent.schoolYear || content.schoolYear || 'Ensino Médio',
+      difficultyLevel: actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
     };
 
     console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
     console.log('🃏 Total de cards processados:', result.cards.length);
     
     return result;
-  }, [content]); // Apenas dependência do content
+  }, [content]);
 
-  // Calcular dados derivados usando useMemo para evitar recalculos
-  const { currentCard, progress, cardsLength } = useMemo(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) {
-      return { currentCard: null, progress: 0, cardsLength: 0 };
-    }
-
-    const length = normalizedContent.cards.length;
-    const cardIndex = cardOrder.length > 0 ? cardOrder[currentCardIndex] : currentCardIndex;
-    const card = normalizedContent.cards[cardIndex] || normalizedContent.cards[0];
-    const progressValue = (currentCardIndex / length) * 100;
-
-    return {
-      currentCard: card,
-      progress: progressValue,
-      cardsLength: length
-    };
-  }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
-
-  // Inicializar ordem dos cards apenas quando necessário
+  // Debug logging detalhado
   useEffect(() => {
-    if (normalizedContent?.cards && normalizedContent.cards.length > 0 && cardOrder.length === 0) {
-      const cardsLength = normalizedContent.cards.length;
-      
-      setCardOrder(Array.from({ length: cardsLength }, (_, i) => i));
+    console.log('🃏 FlashCardsPreview - Estado atual:', {
+      hasContent: !!content,
+      contentKeys: content ? Object.keys(content) : [],
+      hasNormalizedContent: !!normalizedContent,
+      hasCards: !!(normalizedContent?.cards),
+      cardsLength: normalizedContent?.cards?.length || 0,
+      isLoading,
+      firstCard: normalizedContent?.cards?.[0],
+      contentStructure: {
+        raw: content,
+        normalized: normalizedContent
+      },
+      isFromViewModal: window.location.pathname.includes('view') || document.querySelector('[data-testid="activity-view-modal"]')
+    });
+  }, [content, normalizedContent, isLoading]);
+
+  // Estados para controle da sessão de estudo
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [studyMode, setStudyMode] = useState<'practice' | 'test' | 'review'>('practice');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [cardStats, setCardStats] = useState<{[key: number]: { correct: number; incorrect: number; }}>({});
+  const [sessionStats, setSessionStats] = useState({
+    cardsStudied: 0,
+    correctAnswers: 0,
+    incorrectAnswers: 0,
+    totalTime: 0
+  });
+  const [shuffled, setShuffled] = useState(false);
+  const [cardOrder, setCardOrder] = useState<number[]>([]);
+  const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
+
+  // Inicializar ordem dos cards
+  useEffect(() => {
+    if (normalizedContent?.cards && normalizedContent.cards.length > 0) {
+      const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
+      setCardOrder(order);
+      // Garantir que o índice atual seja válido
+      if (currentCardIndex >= normalizedContent.cards.length) {
+        setCurrentCardIndex(0);
+      }
+      console.log('🃏 CardOrder inicializado:', order);
+    } else {
+      setCardOrder([]);
       setCurrentCardIndex(0);
-      
-      console.log('🃏 CardOrder inicializado para', cardsLength, 'cards');
     }
-  }, [normalizedContent?.cards?.length, cardOrder.length]);
+  }, [normalizedContent?.cards]);
 
-  // Auto-play otimizado com cleanup
+  // Verificação adicional para currentCardIndex válido
   useEffect(() => {
-    if (!isPlaying || cardsLength === 0) return;
+    if (normalizedContent?.cards && currentCardIndex >= normalizedContent.cards.length) {
+      setCurrentCardIndex(0);
+    }
+  }, [currentCardIndex, normalizedContent?.cards]);
 
-    const interval = setInterval(() => {
-      setIsFlipped(prev => {
-        if (prev) {
-          // Se já está virado, ir para o próximo card
-          setCurrentCardIndex(current => {
-            if (current < cardsLength - 1) {
-              return current + 1;
-            } else {
-              setIsPlaying(false); // Parar quando chegar ao fim
-              return current;
-            }
-          });
-          return false; // Desvirar o card
+  // Auto-play functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying && normalizedContent?.cards) {
+      interval = setInterval(() => {
+        if (isFlipped) {
+          handleNextCard();
         } else {
-          return true; // Virar o card
+          setIsFlipped(true);
         }
-      });
-    }, 3000);
-
+      }, 3000);
+    }
     return () => clearInterval(interval);
-  }, [isPlaying, cardsLength]);
-
-  const handleNextCard = useCallback(() => {
-    if (cardsLength === 0) return;
-    
-    setCurrentCardIndex(prev => {
-      if (prev < cardsLength - 1) {
-        setIsFlipped(false);
-        return prev + 1;
-      } else {
-        setIsPlaying(false);
-        setShowStats(true);
-        return prev;
-      }
-    });
-  }, [cardsLength]);
-
-  const handlePrevCard = useCallback(() => {
-    if (cardsLength === 0) return;
-    
-    setCurrentCardIndex(prev => {
-      if (prev > 0) {
-        setIsFlipped(false);
-        return prev - 1;
-      }
-      return prev;
-    });
-  }, [cardsLength]);
-
-  const handleFlipCard = useCallback(() => {
-    setIsFlipped(prev => !prev);
-  }, []);
-
-  const handleMarkCard = useCallback((correct: boolean) => {
-    if (!currentCard) return;
-    
-    const cardId = currentCard.id;
-    
-    setCardStats(prev => ({
-      ...prev,
-      [cardId]: {
-        correct: (prev[cardId]?.correct || 0) + (correct ? 1 : 0),
-        incorrect: (prev[cardId]?.incorrect || 0) + (correct ? 0 : 1)
-      }
-    }));
-
-    setSessionStats(prev => ({
-      ...prev,
-      cardsStudied: prev.cardsStudied + 1,
-      correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
-      incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
-    }));
-
-    setCardResults(prev => ({
-      ...prev,
-      [currentCardIndex]: correct
-    }));
-
-    // Transição suave para o próximo card
-    setTimeout(() => {
-      handleNextCard();
-    }, 500);
-  }, [currentCard, currentCardIndex, handleNextCard]);
-
-  const handleShuffle = useCallback(() => {
-    if (cardsLength === 0) return;
-    
-    setCardOrder(prev => {
-      const newOrder = [...prev].sort(() => Math.random() - 0.5);
-      setCurrentCardIndex(0);
-      setIsFlipped(false);
-      setShuffled(true);
-      return newOrder;
-    });
-  }, [cardsLength]);
-
-  const resetSession = useCallback(() => {
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setIsPlaying(false);
-    setShowStats(false);
-    setCardStats({});
-    setCardResults({});
-    setSessionStats({
-      cardsStudied: 0,
-      correctAnswers: 0,
-      incorrectAnswers: 0,
-      totalTime: 0
-    });
-  }, []);
+  }, [isPlaying, isFlipped, currentCardIndex, normalizedContent?.cards]);
 
   if (isLoading) {
     return (
@@ -478,6 +299,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
+  // Não mostrar tela vazia se há conteúdo normalizado com pelo menos um card
   if (!normalizedContent) {
     console.log('🃏 FlashCardsPreview - Sem conteúdo normalizado');
     
@@ -523,12 +345,15 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
+  const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
+  const progress = (currentCardIndex / normalizedContent.cards.length) * 100;
+
   // Verificação de segurança adicional
   if (!currentCard) {
     console.error('🃏 Erro: currentCard é undefined', {
       currentCardIndex,
       cardOrderLength: cardOrder.length,
-      cardsLength: normalizedContent.cards?.length,
+      cardsLength: normalizedContent.cards.length,
       cardOrder
     });
     
@@ -544,6 +369,87 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       </div>
     );
   }
+
+  const handleNextCard = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
+    if (currentCardIndex < normalizedContent.cards.length - 1) {
+      setCurrentCardIndex(prev => prev + 1);
+      setIsFlipped(false);
+    } else {
+      setIsPlaying(false);
+      setShowStats(true);
+    }
+  };
+
+  const handlePrevCard = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(prev => prev - 1);
+      setIsFlipped(false);
+    }
+  };
+
+  const handleFlipCard = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleMarkCard = (correct: boolean) => {
+    if (!currentCard) return;
+    
+    const cardId = currentCard.id;
+    setCardStats(prev => ({
+      ...prev,
+      [cardId]: {
+        correct: (prev[cardId]?.correct || 0) + (correct ? 1 : 0),
+        incorrect: (prev[cardId]?.incorrect || 0) + (correct ? 0 : 1)
+      }
+    }));
+
+    setSessionStats(prev => ({
+      ...prev,
+      cardsStudied: prev.cardsStudied + 1,
+      correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
+      incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
+    }));
+
+    // Marcar o resultado do card atual
+    setCardResults(prev => ({
+      ...prev,
+      [currentCardIndex]: correct
+    }));
+
+    // Transição suave para o próximo card
+    setTimeout(() => {
+      handleNextCard();
+    }, 500);
+  };
+
+  const handleShuffle = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
+    const newOrder = [...cardOrder].sort(() => Math.random() - 0.5);
+    setCardOrder(newOrder);
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setShuffled(true);
+  };
+
+  const resetSession = () => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setIsPlaying(false);
+    setShowStats(false);
+    setCardStats({});
+    setCardResults({});
+    setSessionStats({
+      cardsStudied: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      totalTime: 0
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
@@ -571,7 +477,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                   </div>
                   <div>
                     <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                      Card {currentCardIndex + 1} de {cardsLength}
+                      Card {currentCardIndex + 1} de {normalizedContent.cards.length}
                     </span>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Progresso do estudo
@@ -823,7 +729,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleNextCard}
-              disabled={currentCardIndex === cardsLength - 1}
+              disabled={currentCardIndex === normalizedContent.cards.length - 1}
               className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-3 border border-orange-200/50 dark:border-orange-700/30 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300"
             >
               <SkipForward className="h-5 w-5 text-orange-600 dark:text-orange-400" />

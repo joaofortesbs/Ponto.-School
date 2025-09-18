@@ -611,23 +611,11 @@ const EditActivityModal = ({
              formData.generalObjective?.trim() &&
              formData.evaluationCriteria?.trim();
     } else if (activityType === 'flash-cards') { // Validar campos específicos do Flash Cards
-        const isValid = formData.title.trim() &&
-                       formData.theme?.trim() &&
-                       formData.topicos?.trim() &&
-                       formData.numberOfFlashcards?.trim() &&
-                       formData.subject?.trim();
-
-        console.log('🃏 Validação do Flash Cards:', {
-          title: !!formData.title.trim(),
-          theme: !!formData.theme?.trim(),
-          topicos: !!formData.topicos?.trim(),
-          numberOfFlashcards: !!formData.numberOfFlashcards?.trim(),
-          subject: !!formData.subject?.trim(),
-          isValid
-        });
-
-        return isValid;
-      }
+      return formData.title.trim() &&
+             formData.theme?.trim() &&
+             formData.topicos?.trim() &&
+             formData.numberOfFlashcards?.trim();
+    }
     else {
       return formData.title.trim() &&
              formData.description.trim() &&
@@ -963,7 +951,7 @@ const EditActivityModal = ({
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
         console.log('💾 Flash Cards sincronizados com cache de atividades construídas');
 
-        // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
+        // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados em ordem
         setFlashCardsContent(finalContent);
         setGeneratedContent(finalContent);
         setBuiltContent(finalContent);
@@ -982,7 +970,7 @@ const EditActivityModal = ({
       } catch (apiError) {
         clearInterval(progressTimer);
         console.warn('⚠️ Erro na API, gerando fallback:', apiError);
-
+        
         // Gerar conteúdo de fallback mais robusto
         const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
         const maxCards = Math.min(numberOfCards, Math.max(topicos.length * 2, 5)); // Garantir pelo menos 5 cards
@@ -992,7 +980,7 @@ const EditActivityModal = ({
           const topicoIndex = i % topicos.length;
           const topic = topicos[topicoIndex] || `Conceito ${i + 1} de ${formData.theme}`;
           const cardType = i % 3; // Variar tipos de pergunta
-
+          
           let front: string;
           let back: string;
 
@@ -1354,11 +1342,11 @@ const EditActivityModal = ({
           console.log('🃏 Flash Cards - Conteúdo parseado:', contentToLoad);
 
           // Validar se o conteúdo tem cards válidos
-          const hasValidCards = contentToLoad &&
-                               contentToLoad.cards &&
-                               Array.isArray(contentToLoad.cards) &&
+          const hasValidCards = contentToLoad && 
+                               contentToLoad.cards && 
+                               Array.isArray(contentToLoad.cards) && 
                                contentToLoad.cards.length > 0 &&
-                               contentToLoad.cards.every(card =>
+                               contentToLoad.cards.every(card => 
                                  card && card.front && card.back
                                );
 
@@ -1437,58 +1425,56 @@ const EditActivityModal = ({
               console.log('📚 Processando dados específicos de Plano de Aula');
 
               enrichedFormData = {
-                ...formData, // Start with default form data
                 title: consolidatedData.personalizedTitle || consolidatedData.title || activity.personalizedTitle || activity.title || '',
                 description: consolidatedData.personalizedDescription || consolidatedData.description || activity.personalizedDescription || activity.description || '',
                 subject: consolidatedCustomFields['Componente Curricular'] ||
                          consolidatedCustomFields['disciplina'] ||
                          consolidatedCustomFields['Disciplina'] ||
-                         customFields['disciplina'] || customFields['Disciplina'] || // Also check direct customFields
                          'Matemática',
                 theme: consolidatedCustomFields['Tema ou Tópico Central'] ||
                        consolidatedCustomFields['Tema Central'] ||
                        consolidatedCustomFields['tema'] ||
-                       consolidatedCustomFields['Tema'] || customFields['tema'] || customFields['Tema'] || '',
+                       consolidatedCustomFields['Tema'] || '',
                 schoolYear: consolidatedCustomFields['Ano/Série Escolar'] ||
                            consolidatedCustomFields['Público-Alvo'] ||
                            consolidatedCustomFields['anoEscolaridade'] ||
-                           consolidatedCustomFields['Ano de Escolaridade'] || customFields['anoEscolaridade'] || customFields['Ano de Escolaridade'] || '',
-                numberOfQuestions: '1', // Default for Plano de Aula
+                           consolidatedCustomFields['Ano de Escolaridade'] || '',
+                numberOfQuestions: '1',
                 difficultyLevel: consolidatedCustomFields['Tipo de Aula'] ||
                                 consolidatedCustomFields['Metodologia'] ||
-                                consolidatedCustomFields['tipoAula'] || customFields['Tipo de Aula'] || customFields['Metodologia'] || customFields['tipoAula'] || 'Expositiva',
+                                consolidatedCustomFields['tipoAula'] || 'Expositiva',
                 questionModel: '',
                 sources: consolidatedCustomFields['Fontes'] ||
                         consolidatedCustomFields['Referencias'] ||
-                        consolidatedCustomFields['fontes'] || customFields['Fontes'] || customFields['fontes'] || '',
+                        consolidatedCustomFields['fontes'] || '',
                 objectives: consolidatedCustomFields['Objetivo Geral'] ||
                            consolidatedCustomFields['Objetivos de Aprendizagem'] ||
                            consolidatedCustomFields['Objetivo Principal'] ||
-                           consolidatedCustomFields['objetivos'] || customFields['Objetivo Geral'] || customFields['Objetivos de Aprendizagem'] || customFields['Objetivo Principal'] || customFields['objetivos'] || '',
+                           consolidatedCustomFields['objetivos'] || '',
                 materials: consolidatedCustomFields['Materiais/Recursos'] ||
                           consolidatedCustomFields['Recursos'] ||
                           consolidatedCustomFields['Materiais Necessários'] ||
-                          consolidatedCustomFields['materiais'] || customFields['Materiais/Recursos'] || customFields['Recursos'] || customFields['Materiais Necessários'] || customFields['materiais'] || '',
+                          consolidatedCustomFields['materiais'] || '',
                 instructions: consolidatedCustomFields['Instruções'] ||
                              consolidatedCustomFields['Metodologia'] ||
-                             consolidatedCustomFields['instrucoes'] || customFields['Instruções'] || customFields['Metodologia'] || customFields['instrucoes'] || '',
+                             consolidatedCustomFields['instrucoes'] || '',
                 evaluation: consolidatedCustomFields['Observações do Professor'] ||
                            consolidatedCustomFields['Observações'] ||
                            consolidatedCustomFields['Avaliação'] ||
-                           consolidatedCustomFields['observacoes'] || customFields['Observações do Professor'] || customFields['Observações'] || customFields['Avaliação'] || customFields['observacoes'] || '',
+                           consolidatedCustomFields['observacoes'] || '',
                 timeLimit: consolidatedCustomFields['Carga Horária'] ||
                           consolidatedCustomFields['Tempo Estimado'] ||
-                          consolidatedCustomFields['tempoLimite'] || customFields['Carga Horária'] || customFields['Tempo Estimado'] || customFields['tempoLimite'] || '',
+                          consolidatedCustomFields['tempoLimite'] || '',
                 context: consolidatedCustomFields['Perfil da Turma'] ||
                         consolidatedCustomFields['Contexto'] ||
-                        consolidatedCustomFields['contexto'] || customFields['Perfil da Turma'] || customFields['Contexto'] || customFields['contexto'] || '',
+                        consolidatedCustomFields['contexto'] || '',
                 textType: '',
                 textGenre: '',
                 textLength: '',
                 associatedQuestions: '',
                 competencies: consolidatedCustomFields['Habilidades BNCC'] ||
                              consolidatedCustomFields['Competências'] ||
-                             consolidatedCustomFields['competencias'] || customFields['Habilidades BNCC'] || customFields['Competências'] || customFields['competencias'] || '',
+                             consolidatedCustomFields['competencias'] || '',
                 readingStrategies: '',
                 visualResources: '',
                 practicalActivities: '',
@@ -1500,17 +1486,17 @@ const EditActivityModal = ({
                 associatedExercises: '',
                 knowledgeArea: '',
                 complexityLevel: '',
-                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || customFields['Título do Tema / Assunto'] || '',
-                anoSerie: consolidatedCustomFields['Ano / Série'] || customFields['Ano / Série'] || '',
-                disciplina: consolidatedCustomFields['Disciplina'] || customFields['Disciplina'] || '',
-                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || customFields['BNCC / Competências'] || '',
-                publicoAlvo: consolidatedCustomFields['Público-alvo'] || customFields['Público-alvo'] || '',
-                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || customFields['Objetivos de Aprendizagem'] || '',
-                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || customFields['Quantidade de Aulas'] || '',
-                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || customFields['Quantidade de Diagnósticos'] || '',
-                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || customFields['Quantidade de Avaliações'] || '',
-                cronograma: consolidatedCustomFields['Cronograma'] || customFields['Cronograma'] || '',
-                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || customFields['quadroInterativoCampoEspecifico'] || '',
+                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || '',
+                anoSerie: consolidatedCustomFields['Ano / Série'] || '',
+                disciplina: consolidatedCustomFields['Disciplina'] || '',
+                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || '',
+                publicoAlvo: consolidatedCustomFields['Público-alvo'] || '',
+                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || '',
+                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || '',
+                cronograma: consolidatedCustomFields['Cronograma'] || '',
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || '',
               };
 
               console.log('✅ Dados do Plano de Aula processados:', enrichedFormData);
@@ -1521,25 +1507,25 @@ const EditActivityModal = ({
                 ...formData,
                 title: consolidatedData.title || autoFormData.title || activity.title || '',
                 description: consolidatedData.description || autoFormData.description || activity.description || '',
-                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || customFields['Título do Tema / Assunto'] || '',
-                anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || customFields['Ano / Série'] || '',
-                disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || activity?.customFields?.disciplina || customFields['Disciplina'] || '',
-                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || autoFormData.bnccCompetencias || customFields['BNCC / Competências'] || '',
-                publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || customFields['Público-alvo'] || '',
-                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || customFields['Objetivos de Aprendizagem'] || '',
-                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || customFields['Quantidade de Aulas'] || '',
-                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || customFields['Quantidade de Diagnósticos'] || '',
-                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || customFields['Quantidade de Avaliações'] || '',
-                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || customFields['Cronograma'] || '',
-                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || activity?.customFields?.disciplina || customFields['Disciplina'] || 'Português',
-                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity?.theme || customFields['Tema'] || '',
-                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || activity?.schoolYear || customFields['Ano de Escolaridade'] || '',
-                competencies: consolidatedCustomFields['Competências'] || autoFormData.competencies || customFields['Competências'] || '',
-                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || customFields['Objetivos'] || '',
-                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || activity?.materials || customFields['Materiais'] || '',
-                context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || customFields['Contexto de Aplicação'] || '',
-                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || customFields['Critérios de Avaliação'] || '',
-                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || customFields['quadroInterativoCampoEspecifico'] || '',
+                tituloTemaAssunto: consolidatedCustomFields['Título do Tema / Assunto'] || autoFormData.tituloTemaAssunto || '',
+                anoSerie: consolidatedCustomFields['Ano / Série'] || autoFormData.anoSerie || '',
+                disciplina: consolidatedCustomFields['Disciplina'] || autoFormData.disciplina || activity?.customFields?.disciplina || '',
+                bnccCompetencias: consolidatedCustomFields['BNCC / Competências'] || autoFormData.bnccCompetencias || '',
+                publicoAlvo: consolidatedCustomFields['Público-alvo'] || autoFormData.publicoAlvo || '',
+                objetivosAprendizagem: consolidatedCustomFields['Objetivos de Aprendizagem'] || autoFormData.objetivosAprendizagem || '',
+                quantidadeAulas: consolidatedCustomFields['Quantidade de Aulas'] || autoFormData.quantidadeAulas || '',
+                quantidadeDiagnosticos: consolidatedCustomFields['Quantidade de Diagnósticos'] || autoFormData.quantidadeDiagnosticos || '',
+                quantidadeAvaliacoes: consolidatedCustomFields['Quantidade de Avaliações'] || autoFormData.quantidadeAvaliacoes || '',
+                cronograma: consolidatedCustomFields['Cronograma'] || autoFormData.cronograma || '',
+                subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || activity?.customFields?.disciplina || 'Português',
+                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity?.theme || '',
+                schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || activity?.schoolYear || '',
+                competencies: consolidatedCustomFields['Competências'] || autoFormData.competencies || '',
+                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || activity?.objectives || '',
+                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || activity?.materials || '',
+                context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+                quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
               };
 
               console.log('✅ Dados da Sequência Didática processados:', enrichedFormData);
@@ -1550,18 +1536,18 @@ const EditActivityModal = ({
                 ...formData,
                 title: consolidatedData.title || autoFormData.title || activity.title || '',
                 description: consolidatedData.description || autoFormData.description || activity.description || '',
-                numberOfQuestions: consolidatedCustomFields['Número de Questões'] || autoFormData.numberOfQuestions || customFields['Número de Questões'] || '10',
-                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity.theme || customFields['Tema'] || '',
+                numberOfQuestions: consolidatedCustomFields['Número de Questões'] || autoFormData.numberOfQuestions || '10',
+                theme: consolidatedCustomFields['Tema'] || autoFormData.theme || activity.theme || '',
                 subject: consolidatedCustomFields['Disciplina'] || autoFormData.subject || 'Matemática',
                 schoolYear: consolidatedCustomFields['Ano de Escolaridade'] || autoFormData.schoolYear || '6º Ano - Ensino Fundamental',
-                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || customFields['Nível de Dificuldade'] || 'Médio',
-                questionModel: consolidatedCustomFields['Formato'] || autoFormData.questionModel || customFields['Formato'] || 'Múltipla Escolha',
-                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || customFields['Objetivos'] || '',
-                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || customFields['Materiais'] || '',
-                instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || customFields['Instruções'] || '',
-                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || customFields['Critérios de Avaliação'] || '',
-                timeLimit: consolidatedCustomFields['Tempo Limite'] || autoFormData.timeLimit || customFields['Tempo Limite'] || '',
-                context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || customFields['Contexto de Aplicação'] || '',
+                difficultyLevel: consolidatedCustomFields['Nível de Dificuldade'] || autoFormData.difficultyLevel || 'Médio',
+                questionModel: consolidatedCustomFields['Formato'] || autoFormData.questionModel || 'Múltipla Escolha',
+                objectives: consolidatedCustomFields['Objetivos'] || autoFormData.objectives || '',
+                materials: consolidatedCustomFields['Materiais'] || autoFormData.materials || '',
+                instructions: consolidatedCustomFields['Instruções'] || autoFormData.instructions || '',
+                evaluation: consolidatedCustomFields['Critérios de Avaliação'] || autoFormData.evaluation || '',
+                timeLimit: consolidatedCustomFields['Tempo Limite'] || autoFormData.timeLimit || '',
+                context: consolidatedCustomFields['Contexto de Aplicação'] || autoFormData.context || '',
                 format: consolidatedCustomFields['Formato do Quiz'] || autoFormData.format || '', // New field
                 timePerQuestion: consolidatedCustomFields['Tempo por Questão'] || autoFormData.timePerQuestion || '', // New field
                 quadroInterativoCampoEspecifico: consolidatedCustomFields['quadroInterativoCampoEspecifico'] || autoFormData.quadroInterativoCampoEspecifico || '',
@@ -1598,11 +1584,11 @@ const EditActivityModal = ({
                 // Sobrescrever com dados automáticos se existirem e forem válidos
                 ...(autoFormData.title && { title: autoFormData.title }),
                 ...(autoFormData.description && { description: autoFormData.description }),
-                ...(autoFormData.subject && autoFormData.subject !== 'Matemática' && { subject: autoFormData.subject }),
-                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º Ano' && { schoolYear: autoFormData.schoolYear }),
+                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                 ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                 ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Intermediário' && { difficultyLevel: autoFormData.difficultyLevel }),
+                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
                 ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
                 ...(autoFormData.materials && { materials: autoFormData.materials }),
                 ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
@@ -1631,8 +1617,8 @@ const EditActivityModal = ({
               console.log('🃏 Processando dados específicos de Flash Cards');
               enrichedFormData = {
                 ...formData,
-                title: activityData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
-                description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
+                title: consolidatedData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
+                description: consolidatedData.description || autoFormData.description || customFields['Descrição'] || '',
                 theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
                 topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
                 numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
@@ -1781,7 +1767,6 @@ const EditActivityModal = ({
             console.log('📚 Processando dados diretos de Plano de Aula');
 
             directFormData = {
-              ...formData,
               title: activityData.personalizedTitle || activityData.title || '',
               description: activityData.personalizedDescription || activityData.description || '',
               subject: customFields['Componente Curricular'] ||
