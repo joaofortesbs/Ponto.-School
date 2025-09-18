@@ -73,15 +73,15 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     return null;
   };
 
-  // Resetar estado do sidebar quando o modal abre
+  // Resetar estado do sidebar quando o modal abre - com dependência estável
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && activity) {
       setShowSidebar(false);
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      setQuizInterativoContent(null); // Reset Quiz Interativo content
-      setFlashCardsContent(null); // Reset Flash Cards content
+      setQuizInterativoContent(null);
+      setFlashCardsContent(null);
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -91,7 +91,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       }
     }
-  }, [isOpen, activity]);
+  }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
 
   if (!isOpen || !activity) return null;
 
@@ -311,7 +311,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             if (validCards.length > 0) {
               console.log(`✅ Flash Cards carregado com ${validCards.length} cards válidos para: ${activity.id}`);
               contentToLoad.cards = validCards; // Garantir apenas cards válidos
-              setFlashCardsContent(contentToLoad);
+              // Não usar setFlashCardsContent aqui para evitar loops
             } else {
               console.warn('⚠️ Nenhum card válido encontrado');
               contentToLoad = null;

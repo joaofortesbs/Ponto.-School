@@ -839,7 +839,9 @@ const EditActivityModal = ({
   };
 
   // Função para gerar conteúdo de Flash Cards
-  const handleGenerateFlashCards = async () => {
+  const handleGenerateFlashCards = useCallback(async () => {
+    if (isBuilding) return; // Evitar múltiplas execuções simultâneas
+    
     try {
       setIsBuilding(true);
       setGenerationError(null);
@@ -926,20 +928,20 @@ const EditActivityModal = ({
 
         // Sincronização com cache de atividades
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        constructedActivities[activity?.id] = {
+        constructedActivities[activity?.id || ''] = {
           generatedContent: finalContent,
           timestamp: new Date().toISOString(),
           activityType: 'flash-cards'
         };
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
 
-        // Atualizar estados
+        // Atualizar estados de forma controlada
         setFlashCardsContent(finalContent);
         setGeneratedContent(finalContent);
         setBuiltContent(finalContent);
         setIsContentLoaded(true);
 
-        // Ir para preview
+        // Ir para preview com delay
         setTimeout(() => {
           setActiveTab('preview');
         }, 100);
@@ -1003,7 +1005,7 @@ const EditActivityModal = ({
         localStorage.setItem(flashCardsStorageKey, JSON.stringify(storageData));
 
         const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        constructedActivities[activity?.id] = {
+        constructedActivities[activity?.id || ''] = {
           generatedContent: fallbackContent,
           timestamp: new Date().toISOString(),
           activityType: 'flash-cards'
@@ -1036,7 +1038,7 @@ const EditActivityModal = ({
       setIsBuilding(false);
       setBuildProgress(0);
     }
-  };
+  }, [formData, activity?.id, isBuilding]);
 
 
   // Chamada genérica de geração (para outros tipos de atividade)
