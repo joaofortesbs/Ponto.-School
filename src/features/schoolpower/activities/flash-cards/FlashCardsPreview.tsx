@@ -82,15 +82,18 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       console.log('🃏 Extraindo de data:', actualContent);
     }
 
-    // Buscar cards em diferentes propriedades possíveis
+    // Buscar cards em diferentes propriedades possíveis - busca mais abrangente
     let cards = actualContent.cards || 
                 actualContent.flashcards || 
                 actualContent.flashCards ||
                 content.cards ||
                 content.flashcards ||
+                content.flashCards ||
                 [];
 
     console.log('🃏 Cards encontrados (raw):', cards);
+    console.log('🃏 Estrutura do actualContent:', Object.keys(actualContent));
+    console.log('🃏 Estrutura do content original:', Object.keys(content));
 
     // Se cards não é um array, tentar converter
     if (!Array.isArray(cards)) {
@@ -138,14 +141,18 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
     // Se não temos cards válidos, tentar gerar fallback dos tópicos
     if (validCards.length === 0) {
-      const topicos = actualContent.topicos || content.topicos || '';
-      const theme = actualContent.theme || content.theme || 'Flash Cards';
+      const topicos = actualContent.topicos || content.topicos || actualContent.customFields?.['Tópicos'] || content.customFields?.['Tópicos'] || '';
+      const theme = actualContent.theme || content.theme || actualContent.customFields?.['Tema'] || content.customFields?.['Tema'] || 'Flash Cards';
       const subject = actualContent.subject || content.subject || 'Geral';
       
       console.log('🃏 Tentando gerar fallback dos tópicos:', { topicos, theme, subject });
       
       if (topicos && typeof topicos === 'string') {
-        const topicosList = topicos.split('\n').filter(t => t.trim());
+        // Tentar dividir por vírgula primeiro, depois por quebra de linha
+        let topicosList = topicos.includes(',') ? 
+          topicos.split(',').map(t => t.trim()).filter(t => t) :
+          topicos.split('\n').filter(t => t.trim());
+        
         const fallbackCards = topicosList.slice(0, 10).map((topic, index) => ({
           id: index + 1,
           front: `O que é ${topic.trim()}?`,
@@ -155,9 +162,40 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         }));
         
         if (fallbackCards.length > 0) {
-          console.log('🃏 Cards fallback gerados:', fallbackCards);
+          console.log('🃏 Cards fallback gerados dos tópicos:', fallbackCards);
           validCards.push(...fallbackCards);
         }
+      }
+      
+      // Se ainda não há cards, tentar gerar do tema
+      if (validCards.length === 0 && theme) {
+        console.log('🃏 Gerando cards genéricos do tema:', theme);
+        const genericCards = [
+          {
+            id: 1,
+            front: `O que você sabe sobre ${theme}?`,
+            back: `${theme} é um tópico importante que requer estudo e compreensão adequados.`,
+            category: subject,
+            difficulty: 'Médio'
+          },
+          {
+            id: 2,
+            front: `Qual a importância de estudar ${theme}?`,
+            back: `Estudar ${theme} é fundamental para desenvolver conhecimentos sólidos na área.`,
+            category: subject,
+            difficulty: 'Médio'
+          },
+          {
+            id: 3,
+            front: `Como aplicar os conceitos de ${theme}?`,
+            back: `Os conceitos de ${theme} podem ser aplicados através de prática e exercícios regulares.`,
+            category: subject,
+            difficulty: 'Médio'
+          }
+        ];
+        
+        validCards.push(...genericCards);
+        console.log('🃏 Cards genéricos criados:', genericCards);
       }
     }
 

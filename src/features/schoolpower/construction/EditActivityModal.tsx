@@ -572,11 +572,11 @@ const EditActivityModal = ({
         title: !!formData.title.trim(),
         description: !!formData.description.trim(),
         numberOfQuestions: !!formData.numberOfQuestions?.trim(),
-        theme: !!formData.theme?.trim(),
-        subject: !!formData.subject?.trim(),
-        schoolYear: !!formData.schoolYear?.trim(),
-        difficultyLevel: !!formData.difficultyLevel?.trim(),
-        questionModel: !!formData.questionModel?.trim(),
+        theme: !!formData.theme.trim(),
+        subject: !!formData.subject.trim(),
+        schoolYear: !!formData.schoolYear.trim(),
+        difficultyLevel: !!formData.difficultyLevel.trim(),
+        questionModel: !!formData.questionModel.trim(),
         isValid
       });
 
@@ -946,12 +946,32 @@ const EditActivityModal = ({
         constructedActivities[activity?.id] = {
           generatedContent: finalContent,
           timestamp: new Date().toISOString(),
-          activityType: 'flash-cards'
+          activityType: 'flash-cards',
+          builtAt: new Date().toISOString()
         };
         localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-        console.log('💾 Flash Cards sincronizados com cache de atividades construídas');
+        console.log('💾 Flash Cards sincronizados com cache de atividades construídas:', finalContent);
 
-        // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados em ordem
+        // SINCRONIZAÇÃO EXTRA: Garantir que a estrutura esteja correta para recuperação
+        const extraSyncData = {
+          success: true,
+          data: {
+            ...finalContent,
+            // Garantir ambos os formatos para compatibilidade
+            cards: finalContent.cards,
+            flashCards: finalContent.cards,
+            isBuilt: true,
+            builtAt: new Date().toISOString()
+          },
+          timestamp: new Date().toISOString(),
+          activityId: activity?.id,
+          activityType: 'flash-cards'
+        };
+
+        localStorage.setItem(`flash_cards_${activity?.id}`, JSON.stringify(extraSyncData));
+        console.log('💾 Flash Cards - Sincronização extra realizada');
+
+        // SINCRONIZAÇÃO CRÍTICA: Atualizar todos os estados
         setFlashCardsContent(finalContent);
         setGeneratedContent(finalContent);
         setBuiltContent(finalContent);
@@ -970,7 +990,7 @@ const EditActivityModal = ({
       } catch (apiError) {
         clearInterval(progressTimer);
         console.warn('⚠️ Erro na API, gerando fallback:', apiError);
-        
+
         // Gerar conteúdo de fallback mais robusto
         const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
         const maxCards = Math.min(numberOfCards, Math.max(topicos.length * 2, 5)); // Garantir pelo menos 5 cards
@@ -980,7 +1000,7 @@ const EditActivityModal = ({
           const topicoIndex = i % topicos.length;
           const topic = topicos[topicoIndex] || `Conceito ${i + 1} de ${formData.theme}`;
           const cardType = i % 3; // Variar tipos de pergunta
-          
+
           let front: string;
           let back: string;
 
@@ -1342,11 +1362,11 @@ const EditActivityModal = ({
           console.log('🃏 Flash Cards - Conteúdo parseado:', contentToLoad);
 
           // Validar se o conteúdo tem cards válidos
-          const hasValidCards = contentToLoad && 
-                               contentToLoad.cards && 
-                               Array.isArray(contentToLoad.cards) && 
+          const hasValidCards = contentToLoad &&
+                               contentToLoad.cards &&
+                               Array.isArray(contentToLoad.cards) &&
                                contentToLoad.cards.length > 0 &&
-                               contentToLoad.cards.every(card => 
+                               contentToLoad.cards.every(card =>
                                  card && card.front && card.back
                                );
 
@@ -1425,6 +1445,7 @@ const EditActivityModal = ({
               console.log('📚 Processando dados específicos de Plano de Aula');
 
               enrichedFormData = {
+                ...formData,
                 title: consolidatedData.personalizedTitle || consolidatedData.title || activity.personalizedTitle || activity.title || '',
                 description: consolidatedData.personalizedDescription || consolidatedData.description || activity.personalizedDescription || activity.description || '',
                 subject: consolidatedCustomFields['Componente Curricular'] ||
