@@ -11,10 +11,12 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { useUserInfo } from '../hooks/useUserInfo';
+import schoolPowerActivities from '../../data/schoolPowerActivities.json';
 
 interface UniversalActivityHeaderProps {
   activityTitle: string;
-  activityIcon: React.ComponentType<{ className?: string }>;
+  activityIcon?: React.ComponentType<{ className?: string }>;
+  activityType?: string;
   userName?: string;
   userAvatar?: string;
   onMoreOptions?: () => void;
@@ -30,6 +32,7 @@ interface UniversalActivityHeaderProps {
 export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = ({
   activityTitle,
   activityIcon: ActivityIcon,
+  activityType,
   userName,
   userAvatar,
   onMoreOptions,
@@ -43,12 +46,56 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 }) => {
   const userInfo = useUserInfo();
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
-  const [currentSPs, setCurrentSPs] = React.useState(Math.max(schoolPoints, 100));
-  const [tempSPs, setTempSPs] = React.useState(Math.max(schoolPoints, 100).toString());
+  const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
+  const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
   
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
   const finalUserAvatar = userAvatar || userInfo.avatar;
+
+  // Função para obter o ícone correto baseado no tipo de atividade
+  const getActivityIcon = () => {
+    if (ActivityIcon) return ActivityIcon;
+    
+    if (activityType && schoolPowerActivities) {
+      const activity = schoolPowerActivities.find(act => 
+        act.type === activityType || act.title === activityType
+      );
+      if (activity && activity.icon) {
+        // Mapear ícones do JSON para componentes Lucide
+        const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
+          'BookOpen': require('lucide-react').BookOpen,
+          'Lightbulb': require('lucide-react').Lightbulb,
+          'FileText': require('lucide-react').FileText,
+          'Target': require('lucide-react').Target,
+          'Users': require('lucide-react').Users,
+          'Calendar': require('lucide-react').Calendar,
+          'CheckSquare': require('lucide-react').CheckSquare,
+          'Brain': require('lucide-react').Brain,
+          'Zap': require('lucide-react').Zap,
+          'PenTool': require('lucide-react').PenTool,
+          'Star': require('lucide-react').Star,
+          'Award': require('lucide-react').Award,
+          'GraduationCap': require('lucide-react').GraduationCap,
+          'Puzzle': require('lucide-react').Puzzle,
+          'Gamepad2': require('lucide-react').Gamepad2,
+          'MessageSquare': require('lucide-react').MessageSquare,
+          'Map': require('lucide-react').Map,
+          'List': require('lucide-react').List,
+          'FileQuestion': require('lucide-react').FileQuestion,
+          'Presentation': require('lucide-react').Presentation,
+          'ClipboardList': require('lucide-react').ClipboardList,
+          'Timer': require('lucide-react').Timer,
+          'BarChart3': require('lucide-react').BarChart3,
+        };
+        return iconMap[activity.icon] || require('lucide-react').BookOpen;
+      }
+    }
+    
+    return require('lucide-react').BookOpen;
+  };
+
+  const FinalActivityIcon = getActivityIcon();
   
   // Função para obter as iniciais do nome do usuário
   const getUserInitials = (name: string) => {
@@ -67,7 +114,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   const handleSaveSPs = () => {
-    const newSPs = Math.max(parseInt(tempSPs) || 100, 100);
+    const newSPs = parseInt(tempSPs) || 0;
     setCurrentSPs(newSPs);
     setIsEditingSPs(false);
   };
@@ -87,7 +134,8 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
   const handleSPsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (value === '' || (parseInt(value) >= 100 && parseInt(value) <= 9999)) {
+    // Permitir qualquer número positivo até 99999
+    if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 99999)) {
       setTempSPs(value);
     }
   };
@@ -99,7 +147,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         <div className="flex items-center gap-4">
           {/* Ícone da Atividade */}
           <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg border border-orange-200 dark:border-orange-700/50">
-            <ActivityIcon className="w-6 h-6 text-white" />
+            <FinalActivityIcon className="w-6 h-6 text-white" />
           </div>
 
           {/* Título e Professor */}
@@ -145,9 +193,9 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                     onChange={handleSPsChange}
                     onKeyDown={handleKeyPress}
                     onBlur={handleSaveSPs}
-                    min="100"
-                    max="9999"
-                    className="w-12 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    min="0"
+                    max="99999"
+                    className="w-16 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     autoFocus
                   />
                   <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SPs</span>
@@ -178,29 +226,29 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
               align="end" 
               className="w-52 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
             >
-              <DropdownMenuItem onClick={onAddToClass} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
-                <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
-                <span className="text-gray-800 dark:text-gray-200">Adicionar à aula</span>
+              <DropdownMenuItem onClick={onAddToClass} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-90 transition-all duration-200" />
+                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Adicionar à aula</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDownload} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
-                <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
-                <span className="text-gray-800 dark:text-gray-200">Baixar</span>
+              <DropdownMenuItem onClick={onDownload} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
+                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onShare} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
-                <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
-                <span className="text-gray-800 dark:text-gray-200">Compartilhar</span>
+              <DropdownMenuItem onClick={onShare} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
+                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Compartilhar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSendMaterial} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
-                <Send className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
-                <span className="text-gray-800 dark:text-gray-200">Enviar material</span>
+              <DropdownMenuItem onClick={onSendMaterial} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <Send className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:translate-x-1 transition-all duration-200" />
+                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Enviar material</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onMakePrivate} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
-                <Lock className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
-                <span className="text-gray-800 dark:text-gray-200">Tornar privado</span>
+              <DropdownMenuItem onClick={onMakePrivate} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <Lock className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-200" />
+                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Tornar privado</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="cursor-pointer rounded-xl px-3 py-3 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
-                <Trash2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
-                <span className="text-red-600 dark:text-red-400">Deletar atividade</span>
+              <DropdownMenuItem onClick={onDelete} className="group cursor-pointer rounded-xl px-3 py-3 hover:bg-red-200/80 dark:hover:bg-red-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                <Trash2 className="w-4 h-4 mr-3 text-red-600 dark:text-red-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
+                <span className="text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 font-medium">Deletar atividade</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
