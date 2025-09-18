@@ -2,17 +2,18 @@
 /* Estilos para o Cabeçalho Universal das Atividades */
 .universal-activity-header {
   position: relative;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-bottom: 2px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 50%, #fff7ed 100%);
+  border-bottom: 2px solid #fed7aa;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.08);
   transition: all 0.3s ease;
+  min-height: 112px; /* 28 * 4 = 112px para h-28 */
 }
 
 /* Dark mode support */
 .dark .universal-activity-header {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  border-bottom-color: #475569;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, #1e293b 50%, rgba(255, 107, 0, 0.05) 100%);
+  border-bottom-color: rgba(255, 107, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.15);
 }
 
 /* Animação de entrada suave */
@@ -50,9 +51,9 @@
 /* Responsividade */
 @media (max-width: 768px) {
   .universal-activity-header {
-    padding: 12px 16px;
+    padding: 16px 20px;
     height: auto;
-    min-height: 64px;
+    min-height: 96px;
   }
   
   .universal-activity-header h1 {
@@ -69,19 +70,24 @@
     .universal-activity-header .flex.items-center.gap-2 span {
       display: none;
     }
+    
+    .universal-activity-header {
+      min-height: 80px;
+      padding: 12px 16px;
+    }
   }
 }
 
-/* Efeito de brilho sutil */
+/* Efeito de brilho sutil laranja */
 .universal-activity-header::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 165, 0, 0.5), transparent);
-  opacity: 0.7;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.6), transparent);
+  opacity: 0.8;
 }
 
 /* Estilo para o avatar do professor */

@@ -33,7 +33,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   return (
-    <div className="universal-activity-header w-full h-20 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div className="universal-activity-header w-full h-28 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-5 shadow-sm">
       <div className="flex items-center justify-between h-full">
         {/* Lado Esquerdo - Ícone e Informações da Atividade */}
         <div className="flex items-center gap-4">
@@ -50,13 +50,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
-              <Avatar className="w-5 h-5">
+              <Avatar className="w-5 h-5 rounded-xl">
                 <AvatarImage src={userAvatar} alt={`Prof. ${userName}`} />
-                <AvatarFallback className="text-xs bg-gradient-to-r from-orange-400 to-orange-500 text-white">
+                <AvatarFallback className="text-xs bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl">
                   {getUserInitials(userName)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">
                 Prof. {userName}
               </span>
             </div>
@@ -66,17 +66,17 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         {/* Lado Direito - Controles */}
         <div className="flex items-center gap-3">
           {/* Card de Trilha */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 rounded-full px-3 py-2 border border-blue-200 dark:border-blue-700/50">
-            <Route className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
+            <Route className="w-4 h-4 text-orange-600 dark:text-orange-400" />
           </div>
 
           {/* Card de School Points */}
-          <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 rounded-lg px-3 py-2 border border-green-200 dark:border-green-700/50">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+              <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
                 {schoolPoints} SPs
               </span>
-              <Pencil className="w-3 h-3 text-green-600 dark:text-green-400" />
+              <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
             </div>
           </div>
 
@@ -85,9 +85,9 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             variant="ghost"
             size="icon"
             onClick={onMoreOptions}
-            className="w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            className="w-10 h-10 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
           >
-            <MoreHorizontal className="w-5 h-5" />
+            <MoreHorizontal className="w-5 h-5 rotate-90" />
           </Button>
         </div>
       </div>
