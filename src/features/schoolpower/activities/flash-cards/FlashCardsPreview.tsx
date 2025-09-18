@@ -61,7 +61,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
-  // Normalizar dados com lógica mais robusta
+  // Normalizar dados com lógica mais robusta - memoização otimizada
   const normalizedContent = React.useMemo(() => {
     if (!content) {
       console.log('🃏 FlashCardsPreview - Sem conteúdo');
@@ -280,25 +280,22 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     console.log('🃏 Total de cards processados:', result.cards.length);
     
     return result;
-  }, [content]);
+  }, [content?.cards, content?.title, content?.customFields]);
 
-  // Debug logging detalhado
+  // Debug logging detalhado - otimizado
   useEffect(() => {
-    console.log('🃏 FlashCardsPreview - Estado atual:', {
-      hasContent: !!content,
-      contentKeys: content ? Object.keys(content) : [],
-      hasNormalizedContent: !!normalizedContent,
-      hasCards: !!(normalizedContent?.cards),
-      cardsLength: normalizedContent?.cards?.length || 0,
-      isLoading,
-      firstCard: normalizedContent?.cards?.[0],
-      contentStructure: {
-        raw: content,
-        normalized: normalizedContent
-      },
-      isFromViewModal: window.location.pathname.includes('view') || document.querySelector('[data-testid="activity-view-modal"]')
-    });
-  }, [content, normalizedContent, isLoading]);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🃏 FlashCardsPreview - Estado atual:', {
+        hasContent: !!content,
+        contentKeys: content ? Object.keys(content) : [],
+        hasNormalizedContent: !!normalizedContent,
+        hasCards: !!(normalizedContent?.cards),
+        cardsLength: normalizedContent?.cards?.length || 0,
+        isLoading,
+        firstCard: normalizedContent?.cards?.[0]
+      });
+    }
+  }, [!!content, !!normalizedContent, normalizedContent?.cards?.length, isLoading]);
 
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -317,28 +314,38 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const [cardOrder, setCardOrder] = useState<number[]>([]);
   const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
 
-  // Inicializar ordem dos cards
+  // Inicializar ordem dos cards - otimizado
   useEffect(() => {
     if (normalizedContent?.cards && normalizedContent.cards.length > 0) {
       const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
-      setCardOrder(order);
+      setCardOrder(prevOrder => {
+        // Só atualizar se realmente mudou
+        if (prevOrder.length !== order.length) {
+          console.log('🃏 CardOrder inicializado:', order);
+          return order;
+        }
+        return prevOrder;
+      });
+      
       // Garantir que o índice atual seja válido
-      if (currentCardIndex >= normalizedContent.cards.length) {
-        setCurrentCardIndex(0);
-      }
-      console.log('🃏 CardOrder inicializado:', order);
+      setCurrentCardIndex(prevIndex => {
+        if (prevIndex >= normalizedContent.cards.length) {
+          return 0;
+        }
+        return prevIndex;
+      });
     } else {
-      setCardOrder([]);
-      setCurrentCardIndex(0);
+      setCardOrder(prevOrder => prevOrder.length > 0 ? [] : prevOrder);
+      setCurrentCardIndex(prevIndex => prevIndex !== 0 ? 0 : prevIndex);
     }
-  }, [normalizedContent?.cards]);
+  }, [normalizedContent?.cards?.length]);
 
-  // Verificação adicional para currentCardIndex válido
+  // Verificação adicional para currentCardIndex válido - simplificada
   useEffect(() => {
     if (normalizedContent?.cards && currentCardIndex >= normalizedContent.cards.length) {
       setCurrentCardIndex(0);
     }
-  }, [currentCardIndex, normalizedContent?.cards]);
+  }, [normalizedContent?.cards?.length, currentCardIndex]);
 
   // Auto-play functionality
   useEffect(() => {

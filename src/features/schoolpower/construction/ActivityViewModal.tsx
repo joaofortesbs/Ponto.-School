@@ -262,7 +262,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           const parsedContent = JSON.parse(quizInterativoSavedContent);
           contentToLoad = parsedContent.data || parsedContent;
 
-          // Validar estrutura das questões
+          // Validar questões
           if (contentToLoad && contentToLoad.questions && Array.isArray(contentToLoad.questions) && contentToLoad.questions.length > 0) {
             // Validar cada questão individualmente
             const validQuestions = contentToLoad.questions.filter(q =>
@@ -272,7 +272,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             if (validQuestions.length > 0) {
               contentToLoad.questions = validQuestions;
               console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
-              setQuizInterativoContent(contentToLoad); // Define o estado específico para Quiz Interativo
+              // Não chamar setQuizInterativoContent aqui para evitar re-renders desnecessários
             } else {
               console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
               contentToLoad = null;
@@ -328,7 +328,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         }
       } else {
         console.log('🃏 Flash Cards: Criando fallback a partir dos campos customizados');
-        
+
         // Se não há conteúdo construído, criar fallback usando customFields
         if (activity.customFields) {
           const customFields = activity.customFields;
@@ -336,18 +336,18 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           const theme = customFields['Tema'] || customFields['Tema dos Flash Cards'] || activity.title || 'Flash Cards';
           const subject = customFields['Disciplina'] || 'Geral';
           const numberOfCards = parseInt(customFields['Número de Flash Cards'] || '10');
-          
+
           if (topicos && topicos.trim()) {
             const topicosList = topicos.split('\n').filter(t => t.trim());
             const fallbackCards = [];
-            
+
             const cardsToGenerate = Math.min(numberOfCards, Math.max(topicosList.length * 2, 5));
-            
+
             for (let i = 0; i < cardsToGenerate; i++) {
               const topicoIndex = i % topicosList.length;
               const topic = topicosList[topicoIndex].trim();
               const cardType = i % 3;
-              
+
               let front: string;
               let back: string;
 
@@ -373,7 +373,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                 difficulty: customFields['Nível de Dificuldade'] || 'Médio'
               });
             }
-            
+
             if (fallbackCards.length > 0) {
               contentToLoad = {
                 title: customFields['Título'] || activity.title || `Flash Cards: ${theme}`,
@@ -392,7 +392,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
                 type: 'flash-cards',
                 activityType: 'flash-cards'
               };
-              
+
               console.log('🃏 Flash Cards fallback criado:', contentToLoad);
               setFlashCardsContent(contentToLoad);
             }
