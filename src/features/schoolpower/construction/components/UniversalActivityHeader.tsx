@@ -4,6 +4,7 @@ import { MoreHorizontal, Pencil, Route } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useUserInfo } from '../hooks/useUserInfo';
 
 interface UniversalActivityHeaderProps {
   activityTitle: string;
@@ -17,11 +18,17 @@ interface UniversalActivityHeaderProps {
 export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = ({
   activityTitle,
   activityIcon: ActivityIcon,
-  userName = 'Usuário',
+  userName,
   userAvatar,
   onMoreOptions,
   schoolPoints = 100
 }) => {
+  const userInfo = useUserInfo();
+  
+  // Usar dados do hook se não forem fornecidos via props
+  const finalUserName = userName || userInfo.name || 'Usuário';
+  const finalUserAvatar = userAvatar || userInfo.avatar;
+  
   // Função para obter as iniciais do nome do usuário
   const getUserInitials = (name: string) => {
     return name
@@ -51,13 +58,17 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
               <Avatar className="w-5 h-5 rounded-xl">
-                <AvatarImage src={userAvatar} alt={`Prof. ${userName}`} />
+                <AvatarImage src={finalUserAvatar} alt={`Prof. ${finalUserName}`} />
                 <AvatarFallback className="text-xs bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl">
-                  {getUserInitials(userName)}
+                  {getUserInitials(finalUserName)}
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">
-                Prof. {userName}
+                {userInfo.isLoading ? (
+                  <div className="w-16 h-3 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
+                ) : (
+                  `Prof. ${finalUserName}`
+                )}
               </span>
             </div>
           </div>

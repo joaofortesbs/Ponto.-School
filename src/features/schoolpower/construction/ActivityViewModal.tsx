@@ -317,10 +317,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           // Validar se o conteúdo tem cards válidos
           if (contentToLoad?.cards && Array.isArray(contentToLoad.cards) && contentToLoad.cards.length > 0) {
             // Validar estrutura de cada card
-            const validCards = contentToLoad.cards.filter(card => 
+            const validCards = contentToLoad.cards.filter(card =>
               card && typeof card === 'object' && card.front && card.back
             );
-            
+
             if (validCards.length > 0) {
               console.log(`✅ Flash Cards carregado com ${validCards.length} cards válidos para: ${activity.id}`);
               contentToLoad.cards = validCards; // Garantir apenas cards válidos

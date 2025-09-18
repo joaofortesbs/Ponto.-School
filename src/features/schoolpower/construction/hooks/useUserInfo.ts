@@ -1,59 +1,110 @@
 
 import { useState, useEffect } from 'react';
+import { profileService } from '@/services/profileService';
 
 interface UserInfo {
   name: string;
   avatar?: string;
   displayName?: string;
+  isLoading: boolean;
 }
 
 export const useUserInfo = (): UserInfo => {
   const [userInfo, setUserInfo] = useState<UserInfo>({
     name: 'Usuário',
     avatar: undefined,
-    displayName: undefined
+    displayName: undefined,
+    isLoading: true
   });
 
   useEffect(() => {
-    // Tentar obter informações do localStorage
-    const profileData = localStorage.getItem('user_profile');
-    if (profileData) {
+    const loadUserInfo = async () => {
       try {
-        const profile = JSON.parse(profileData);
-        setUserInfo({
-          name: profile.display_name || profile.username || 'Usuário',
-          avatar: profile.avatar_url,
-          displayName: profile.display_name
-        });
-      } catch (error) {
-        console.warn('Erro ao carregar perfil do usuário:', error);
-      }
-    }
+        // Primeiro, tentar cache rápido
+        const cachedProfile = localStorage.getItem('userProfile');
+        if (cachedProfile) {
+          try {
+            const profile = JSON.parse(cachedProfile);
+            if (profile) {
+              setUserInfo({
+                name: profile.display_name || profile.full_name || profile.username || 'Usuário',
+                avatar: profile.avatar_url,
+                displayName: profile.display_name || profile.full_name,
+                isLoading: false
+              });
+              return; // Usar cache e sair
+            }
+          } catch (e) {
+            console.warn('Erro ao parsear perfil em cache:', e);
+          }
+        }
 
-    // Tentar obter do sessionStorage
-    const sessionProfile = sessionStorage.getItem('user_profile');
-    if (sessionProfile) {
-      try {
-        const profile = JSON.parse(sessionProfile);
-        setUserInfo({
-          name: profile.display_name || profile.username || 'Usuário',
-          avatar: profile.avatar_url,
-          displayName: profile.display_name
-        });
+        // Se não tiver cache, carregar do profileService
+        const profile = await profileService.getCurrentUserProfile();
+        if (profile) {
+          const userInfoData = {
+            name: profile.display_name || profile.full_name || profile.username || 'Usuário',
+            avatar: profile.avatar_url,
+            displayName: profile.display_name || profile.full_name,
+            isLoading: false
+          };
+          
+          setUserInfo(userInfoData);
+          
+          // Atualizar cache para próximas execuções
+          localStorage.setItem('userProfile', JSON.stringify(profile));
+        } else {
+          // Fallback se não conseguir carregar perfil
+          setUserInfo({
+            name: 'Usuário',
+            avatar: undefined,
+            displayName: undefined,
+            isLoading: false
+          });
+        }
       } catch (error) {
-        console.warn('Erro ao carregar perfil da sessão:', error);
+        console.error('Erro ao carregar informações do usuário:', error);
+        setUserInfo({
+          name: 'Usuário',
+          avatar: undefined,
+          displayName: undefined,
+          isLoading: false
+        });
       }
-    }
+    };
 
-    // Fallback: tentar obter do contexto global se disponível
-    if (typeof window !== 'undefined' && window.userProfile) {
-      const profile = window.userProfile;
-      setUserInfo({
-        name: profile.display_name || profile.username || 'Usuário',
-        avatar: profile.avatar_url,
-        displayName: profile.display_name
-      });
-    }
+    loadUserInfo();
+
+    // Escutar por atualizações de perfil
+    const handleProfileUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.profile) {
+        const profile = event.detail.profile;
+        setUserInfo({
+          name: profile.display_name || profile.full_name || profile.username || 'Usuário',
+          avatar: profile.avatar_url,
+          displayName: profile.display_name || profile.full_name,
+          isLoading: false
+        });
+      }
+    };
+
+    const handleAvatarUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.url) {
+        setUserInfo(prev => ({
+          ...prev,
+          avatar: event.detail.url
+        }));
+      }
+    };
+
+    // Eventos para escutar atualizações
+    document.addEventListener('profile-updated', handleProfileUpdate as EventListener);
+    document.addEventListener('avatar-updated', handleAvatarUpdate as EventListener);
+
+    return () => {
+      document.removeEventListener('profile-updated', handleProfileUpdate as EventListener);
+      document.removeEventListener('avatar-updated', handleAvatarUpdate as EventListener);
+    };
   }, []);
 
   return userInfo;

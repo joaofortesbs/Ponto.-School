@@ -116,6 +116,11 @@ class ProfileService {
       if (data) {
         localStorage.setItem('userProfile', JSON.stringify(data));
         localStorage.setItem('userProfileCacheTime', Date.now().toString());
+        
+        // Disparar evento para notificar componentes sobre a atualização
+        document.dispatchEvent(new CustomEvent('profile-updated', {
+          detail: { profile: data }
+        }));
       }
 
       return data;
@@ -153,6 +158,11 @@ class ProfileService {
         if (data) {
           localStorage.setItem('userProfile', JSON.stringify(data));
           localStorage.setItem('userProfileCacheTime', Date.now().toString());
+          
+          // Disparar evento para notificar componentes sobre a atualização
+          document.dispatchEvent(new CustomEvent('profile-updated', {
+            detail: { profile: data }
+          }));
         }
       } catch (e) {
         // Silenciar erros em atualizações em background
