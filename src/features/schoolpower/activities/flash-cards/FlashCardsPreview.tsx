@@ -346,7 +346,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   }
 
   const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
-  const progress = ((currentCardIndex + 1) / normalizedContent.cards.length) * 100;
+  const progress = (currentCardIndex / normalizedContent.cards.length) * 100;
 
   // Verificação de segurança adicional
   if (!currentCard) {
@@ -452,26 +452,21 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-center justify-center p-4">
         <div className="max-w-4xl w-full">
           {/* Header com Título e Estatísticas */}
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-6"
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-3 shadow-lg">
-                <BookOpen className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent">
-                  {normalizedContent.title || 'Flash Cards'}
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
-                </p>
-              </div>
+            <div className="text-center mb-4">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent">
+                {normalizedContent.title || 'Flash Cards'}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
+                {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
+              </p>
             </div>
           </motion.div>
 
@@ -479,7 +474,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-6"
           >
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-200/50 dark:border-orange-700/30 shadow-xl">
               <div className="flex justify-between items-center mb-4">
@@ -520,7 +515,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
           </motion.div>
 
           {/* Card 3D Premium */}
-          <div className="relative w-full h-96 perspective-1000 mb-8">
+          <div className="relative w-full h-96 perspective-1000 mb-6">
             <motion.div
               className="relative w-full h-full cursor-pointer group"
               style={{ transformStyle: 'preserve-3d' }}
@@ -667,7 +662,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex justify-center mt-8"
+            className="flex justify-center mt-6"
           >
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 border border-orange-200/50 dark:border-orange-700/30 shadow-lg">
               <div className="flex items-center justify-center gap-3">
@@ -716,7 +711,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex justify-center gap-4 mt-6"
+            className="flex justify-center gap-4 mt-4"
           >
             <motion.button
               whileHover={{ scale: 1.1 }}
