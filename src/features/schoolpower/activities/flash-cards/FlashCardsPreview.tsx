@@ -452,31 +452,24 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
         <div className="max-w-4xl w-full">
-          {/* Header com Título e Estatísticas */}
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-6"
-          >
-            <div className="text-center mb-4">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent">
-                {normalizedContent.title || 'Flash Cards'}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 text-sm">
-                {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
-              </p>
-            </div>
-          </motion.div>
-
-          {/* Barra de Progresso Melhorada */}
+          {/* Barra de Progresso com Título */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-200/50 dark:border-orange-700/30 shadow-xl">
+              {/* Título dentro do card */}
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
+                  {normalizedContent.title?.replace(/^Flash Cards:\s*/, '') || 'Flash Cards'}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                  {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
+                </p>
+              </div>
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-3">
                   <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-2">
