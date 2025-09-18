@@ -302,24 +302,22 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           console.log('🃏 Flash Cards - Conteúdo parseado no modal de visualização:', contentToLoad);
 
           // Validar se o conteúdo tem cards válidos
-          const hasValidCards = contentToLoad && 
-                               contentToLoad.cards && 
-                               Array.isArray(contentToLoad.cards) && 
-                               contentToLoad.cards.length > 0 &&
-                               contentToLoad.cards.every(card => 
-                                 card && card.front && card.back
-                               );
-
-          if (hasValidCards) {
-            console.log(`✅ Flash Cards carregado com ${contentToLoad.cards.length} cards válidos para: ${activity.id}`);
-            setFlashCardsContent(contentToLoad); // Define o estado específico para Flash Cards
+          if (contentToLoad?.cards && Array.isArray(contentToLoad.cards) && contentToLoad.cards.length > 0) {
+            // Validar estrutura de cada card
+            const validCards = contentToLoad.cards.filter(card => 
+              card && typeof card === 'object' && card.front && card.back
+            );
+            
+            if (validCards.length > 0) {
+              console.log(`✅ Flash Cards carregado com ${validCards.length} cards válidos para: ${activity.id}`);
+              contentToLoad.cards = validCards; // Garantir apenas cards válidos
+              setFlashCardsContent(contentToLoad);
+            } else {
+              console.warn('⚠️ Nenhum card válido encontrado');
+              contentToLoad = null;
+            }
           } else {
-            console.warn('⚠️ Conteúdo de Flash Cards encontrado mas sem cards válidos:', {
-              hasCards: !!(contentToLoad && contentToLoad.cards),
-              isArray: Array.isArray(contentToLoad?.cards),
-              cardsLength: contentToLoad?.cards?.length || 0,
-              firstCard: contentToLoad?.cards?.[0]
-            });
+            console.warn('⚠️ Conteúdo de Flash Cards sem cards válidos');
             contentToLoad = null;
           }
         } catch (error) {
