@@ -1,9 +1,15 @@
 
 import React from 'react';
-import { MoreHorizontal, Pencil, Route } from 'lucide-react';
+import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 import { useUserInfo } from '../hooks/useUserInfo';
 
 interface UniversalActivityHeaderProps {
@@ -13,6 +19,12 @@ interface UniversalActivityHeaderProps {
   userAvatar?: string;
   onMoreOptions?: () => void;
   schoolPoints?: number;
+  onAddToClass?: () => void;
+  onDownload?: () => void;
+  onShare?: () => void;
+  onSendMaterial?: () => void;
+  onMakePrivate?: () => void;
+  onDelete?: () => void;
 }
 
 export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = ({
@@ -21,12 +33,18 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   userName,
   userAvatar,
   onMoreOptions,
-  schoolPoints = 100
+  schoolPoints = 100,
+  onAddToClass,
+  onDownload,
+  onShare,
+  onSendMaterial,
+  onMakePrivate,
+  onDelete
 }) => {
   const userInfo = useUserInfo();
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
-  const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
-  const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
+  const [currentSPs, setCurrentSPs] = React.useState(Math.max(schoolPoints, 100));
+  const [tempSPs, setTempSPs] = React.useState(Math.max(schoolPoints, 100).toString());
   
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
@@ -49,7 +67,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   const handleSaveSPs = () => {
-    const newSPs = parseInt(tempSPs) || 100;
+    const newSPs = Math.max(parseInt(tempSPs) || 100, 100);
     setCurrentSPs(newSPs);
     setIsEditingSPs(false);
   };
@@ -67,13 +85,20 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   };
 
+  const handleSPsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '' || (parseInt(value) >= 100 && parseInt(value) <= 9999)) {
+      setTempSPs(value);
+    }
+  };
+
   return (
     <div className="universal-activity-header w-full h-28 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-5 shadow-sm">
       <div className="flex items-center justify-between h-full">
         {/* Lado Esquerdo - Ícone e Informações da Atividade */}
         <div className="flex items-center gap-4">
           {/* Ícone da Atividade */}
-          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg border border-orange-200 dark:border-orange-700/50">
             <ActivityIcon className="w-6 h-6 text-white" />
           </div>
 
@@ -85,7 +110,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
-              <Avatar className="w-6 h-6 rounded-xl">
+              <Avatar className="w-6 h-6 rounded-xl border-2 border-orange-400 dark:border-orange-500">
                 <AvatarImage src={finalUserAvatar} alt={`Prof. ${finalUserName}`} />
                 <AvatarFallback className="text-sm bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl">
                   {getUserInitials(finalUserName)}
@@ -117,10 +142,12 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                   <input
                     type="number"
                     value={tempSPs}
-                    onChange={(e) => setTempSPs(e.target.value)}
+                    onChange={handleSPsChange}
                     onKeyDown={handleKeyPress}
                     onBlur={handleSaveSPs}
-                    className="w-12 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none"
+                    min="100"
+                    max="9999"
+                    className="w-12 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     autoFocus
                   />
                   <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SPs</span>
@@ -136,15 +163,44 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             </div>
           </div>
 
-          {/* Botão de Mais Opções */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMoreOptions}
-            className="w-10 h-10 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
-          >
-            <MoreHorizontal className="w-5 h-5 rotate-90" />
-          </Button>
+          {/* Dropdown de Mais Opções */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-10 h-10 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
+              >
+                <MoreHorizontal className="w-5 h-5 rotate-90" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={onAddToClass} className="cursor-pointer">
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar à aula
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDownload} className="cursor-pointer">
+                <Download className="w-4 h-4 mr-2" />
+                Baixar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onShare} className="cursor-pointer">
+                <Share2 className="w-4 h-4 mr-2" />
+                Compartilhar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onSendMaterial} className="cursor-pointer">
+                <Send className="w-4 h-4 mr-2" />
+                Enviar material
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onMakePrivate} className="cursor-pointer">
+                <Lock className="w-4 h-4 mr-2" />
+                Tornar privado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-red-600 dark:text-red-400">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Deletar atividade
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>
