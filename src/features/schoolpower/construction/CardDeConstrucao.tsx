@@ -171,7 +171,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-          
+
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -238,12 +238,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                
+
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-                
+
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -1294,7 +1294,10 @@ export function CardDeConstrucao({
       "texto-apoio": BookOpen,
       "gerar-questoes": PenTool,
       "apresentacao-slides": Target,
-      "tornar-relevante": Star
+      "tornar-relevante": Star,
+      "quadro-interativo": Eye,
+      "quiz-interativo": Gamepad2,
+      "flash-cards": Star
     };
 
     // Check if direct mapping exists for the ID

@@ -17,24 +17,116 @@ import { useUserInfo } from './hooks/useUserInfo';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
-  const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
-    'lista-exercicios': BookOpen,
-    'plano-aula': FileText,
-    'sequencia-didatica': Calendar,
-    'quiz-interativo': GamepadIcon,
-    'flash-cards': Star,
-    'quadro-interativo': Eye,
-    'mapa-mental': Users,
-    'prova': BookOpen,
-    'jogo': GamepadIcon,
-    'apresentacao': Eye,
-    'redacao': PenTool,
-    'matematica': Calculator,
-    'ciencias': Beaker,
-    'default': GraduationCap
+  // Sistema unificado de ícones - EXATAMENTE igual ao CardDeConstrucao.tsx e UniversalActivityHeader.tsx
+  const uniqueIconMapping: { [key: string]: React.ComponentType<{ className?: string }> } = {
+    "atividade-adaptada": Star, // Usando Star como alternativa para Heart
+    "atividades-contos-infantis": BookOpen,
+    "atividades-ia": Star, // Usando Star como alternativa para Brain
+    "atividades-matematica": Calculator, // Mantendo Calculator para matemática
+    "atividades-ortografia-alfabeto": PenTool,
+    "aulas-eletivas": Star,
+    "bncc-descomplicada": BookOpen,
+    "caca-palavras": Star, // Usando Star como alternativa para Puzzle
+    "capitulo-livro": BookOpen,
+    "charadas": Star, // Usando Star como alternativa para Puzzle
+    "chatbot-bncc": Star, // Usando Star como alternativa para MessageSquare
+    "consulta-video": Eye, // Usando Eye para vídeo
+    "corretor-gramatical": CheckCircle2, // Usando CheckCircle2 como alternativa
+    "corretor-provas-feedback": CheckCircle2,
+    "corretor-provas-papel": FileText,
+    "corretor-questoes": PenTool,
+    "corretor-redacao": PenTool,
+    "criterios-avaliacao": CheckCircle2,
+    "desenho-simetrico": Star,
+    "desenvolvimento-caligrafia": PenTool,
+    "dinamicas-sala-aula": Users,
+    "emails-escolares": Star, // Usando Star como alternativa para Mail
+    "erros-comuns": Eye, // Usando Eye como alternativa para Search
+    "exemplos-contextualizados": BookOpen,
+    "experimento-cientifico": Beaker, // Mantendo Beaker para ciências
+    "fichamento-obra-literaria": BookOpen,
+    "gerador-tracejados": PenTool,
+    "historias-sociais": Star,
+    "ideias-atividades": Star, // Usando Star como alternativa para Lightbulb
+    "ideias-aulas-acessiveis": Star,
+    "ideias-avaliacoes-adaptadas": Star,
+    "ideias-brincadeiras-infantis": Users,
+    "ideias-confraternizacoes": Users,
+    "ideias-datas-comemorativas": Calendar,
+    "imagem-para-colorir": Star, // Usando Star como alternativa para Palette
+    "instrucoes-claras": FileText,
+    "jogos-educacionais-interativos": GamepadIcon,
+    "jogos-educativos": GamepadIcon,
+    "lista-exercicios": FileText,
+    "lista-vocabulario": BookOpen,
+    "maquete": Star, // Usando Star como alternativa para Wrench
+    "mapa-mental": Users,
+    "mensagens-agradecimento": Star,
+    "musica-engajar": Star, // Usando Star como alternativa para Music
+    "niveador-textos": BookOpen,
+    "objetivos-aprendizagem": Star, // Usando Star como alternativa para Target
+    "palavras-cruzadas": Star,
+    "pei-pdi": Star,
+    "perguntas-taxonomia-bloom": Star,
+    "pergunte-texto": Star,
+    "plano-aula": FileText,
+    "plano-ensino": FileText,
+    "plano-recuperacao": Star,
+    "projeto": Star,
+    "projeto-vida": Star,
+    "proposta-redacao": PenTool,
+    "prova": CheckCircle2,
+    "questoes-pdf": FileText,
+    "questoes-site": Star, // Usando Star como alternativa para Globe
+    "questoes-texto": FileText,
+    "questoes-video": Eye,
+    "redacao": PenTool,
+    "reescritor-texto": PenTool,
+    "reflexao-incidente": Star,
+    "relatorio": FileText,
+    "relatorio-desempenho": Star, // Usando Star como alternativa para Trophy
+    "resposta-email": Star,
+    "revisor-gramatical": CheckCircle2,
+    "revisao-guiada": BookOpen,
+    "resumo": FileText,
+    "resumo-texto": FileText,
+    "resumo-video": Eye,
+    "sequencia-didatica": Calendar,
+    "simulado": CheckCircle2,
+    "sugestoes-intervencao": Star,
+    "tabela-apoio": Star,
+    "tarefa-adaptada": Star,
+    "texto-apoio": BookOpen,
+    "gerar-questoes": PenTool,
+    "apresentacao-slides": Eye,
+    "tornar-relevante": Star,
+    "quadro-interativo": Eye,
+    "quiz-interativo": GamepadIcon,
+    "flash-cards": Star
   };
 
-  return iconMap[activityId] || iconMap['default'];
+  // Verifica se existe mapeamento direto para o ID
+  if (uniqueIconMapping[activityId]) {
+    return uniqueIconMapping[activityId];
+  }
+
+  // Fallback para ícones padrão
+  const fallbackIcons = [
+    BookOpen, FileText, PenTool, Eye, Users,
+    Star, Calendar, CheckCircle2, GamepadIcon, Calculator,
+    Beaker, GraduationCap
+  ];
+
+  // Gera hash consistente baseado no ID
+  let hash = 0;
+  for (let i = 0; i < activityId.length; i++) {
+    const char = activityId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+
+  const iconIndex = Math.abs(hash) % fallbackIcons.length;
+  return fallbackIcons[iconIndex] || GraduationCap;
 };
 
 

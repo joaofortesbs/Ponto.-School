@@ -127,7 +127,10 @@ const getIconByActivityId = (activityId: string) => {
     "texto-apoio": BookOpen,
     "gerar-questoes": PenTool,
     "apresentacao-slides": Target,
-    "tornar-relevante": Star
+    "tornar-relevante": Star,
+    "quadro-interativo": Eye,
+    "quiz-interativo": Gamepad2,
+    "flash-cards": Star
   };
 
   // Verifica se existe mapeamento direto para o ID
@@ -186,27 +189,35 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
   // Função para obter o ícone correto - SINCRONIZADA com CardDeConstrucao.tsx
   const getActivityIcon = () => {
-    // PRIORIDADE 1: Se activityId foi fornecido, usar sistema de sincronização
-    if (activityId) {
+    console.log('🎯 UniversalActivityHeader: Processando ícone para:', { activityId, activityType, activityTitle });
+    
+    // PRIORIDADE 1: Se activityId foi fornecido, usar sistema de sincronização SEMPRE
+    if (activityId && activityId.trim() !== '') {
       console.log('🎯 UniversalActivityHeader: Usando ícone sincronizado para activityId:', activityId);
-      return getIconByActivityId(activityId);
+      const iconComponent = getIconByActivityId(activityId);
+      console.log('🎯 UniversalActivityHeader: Ícone encontrado:', iconComponent?.name || 'Componente');
+      return iconComponent;
     }
     
-    // PRIORIDADE 2: Se ActivityIcon foi passado diretamente
-    if (ActivityIcon) {
-      console.log('🎯 UniversalActivityHeader: Usando ícone passado via props');
-      return ActivityIcon;
-    }
-    
-    // PRIORIDADE 3: Buscar no schoolPowerActivities por activityType
+    // PRIORIDADE 2: Buscar no schoolPowerActivities por activityType
     if (activityType && schoolPowerActivities) {
+      console.log('🎯 UniversalActivityHeader: Buscando por activityType:', activityType);
       const activity = schoolPowerActivities.find(act => 
-        act.type === activityType || act.title === activityType || act.id === activityType
+        act.id === activityType || 
+        act.type === activityType || 
+        act.title === activityType ||
+        act.name === activityType
       );
       if (activity && activity.id) {
         console.log('🎯 UniversalActivityHeader: Encontrou atividade por tipo, usando ícone sincronizado para:', activity.id);
         return getIconByActivityId(activity.id);
       }
+    }
+    
+    // PRIORIDADE 3: Se ActivityIcon foi passado diretamente (só como último recurso)
+    if (ActivityIcon) {
+      console.log('🎯 UniversalActivityHeader: Usando ícone passado via props como fallback');
+      return ActivityIcon;
     }
     
     // FALLBACK: Ícone padrão
