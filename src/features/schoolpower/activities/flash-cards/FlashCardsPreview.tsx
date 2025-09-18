@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,13 +78,12 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const [shuffled, setShuffled] = useState(false);
   const [cardOrder, setCardOrder] = useState<number[]>([]);
   const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
-  const [normalizedContent, setNormalizedContent] = useState<any>(null);
 
-  // Normalizar conteúdo apenas quando content mudar
-  useEffect(() => {
+  // Memoizar o conteúdo normalizado para evitar recalculos desnecessários
+  const normalizedContent = useMemo(() => {
     if (!content) {
-      setNormalizedContent(null);
-      return;
+      console.log('🃏 FlashCardsPreview - Sem conteúdo para normalizar');
+      return null;
     }
 
     console.log('🃏 FlashCardsPreview - Conteúdo recebido, normalizando...');
@@ -298,12 +297,30 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
     console.log('🃏 Total de cards processados:', result.cards.length);
     
-    setNormalizedContent(result);
+    return result;
   }, [content]); // Apenas dependência do content
 
-  // Inicializar ordem dos cards apenas quando normalizedContent mudar
+  // Calcular dados derivados usando useMemo para evitar recalculos
+  const { currentCard, progress, cardsLength } = useMemo(() => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) {
+      return { currentCard: null, progress: 0, cardsLength: 0 };
+    }
+
+    const length = normalizedContent.cards.length;
+    const cardIndex = cardOrder.length > 0 ? cardOrder[currentCardIndex] : currentCardIndex;
+    const card = normalizedContent.cards[cardIndex] || normalizedContent.cards[0];
+    const progressValue = (currentCardIndex / length) * 100;
+
+    return {
+      currentCard: card,
+      progress: progressValue,
+      cardsLength: length
+    };
+  }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
+
+  // Inicializar ordem dos cards apenas quando necessário
   useEffect(() => {
-    if (normalizedContent?.cards && normalizedContent.cards.length > 0) {
+    if (normalizedContent?.cards && normalizedContent.cards.length > 0 && cardOrder.length === 0) {
       const cardsLength = normalizedContent.cards.length;
       
       setCardOrder(Array.from({ length: cardsLength }, (_, i) => i));
@@ -311,35 +328,122 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       
       console.log('🃏 CardOrder inicializado para', cardsLength, 'cards');
     }
-  }, [normalizedContent?.cards?.length]);
+  }, [normalizedContent?.cards?.length, cardOrder.length]);
 
-  // Auto-play otimizado
+  // Auto-play otimizado com cleanup
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isPlaying && cardsLength > 0) {
-      interval = setInterval(() => {
-        setIsFlipped(prev => {
-          if (prev) {
-            // Se já está virado, ir para o próximo card
-            setCurrentCardIndex(current => {
-              if (current < cardsLength - 1) {
-                return current + 1;
-              } else {
-                setIsPlaying(false); // Parar quando chegar ao fim
-                return current;
-              }
-            });
-            return false; // Desvirar o card
-          } else {
-            return true; // Virar o card
-          }
-        });
-      }, 3000);
-    }
+    if (!isPlaying || cardsLength === 0) return;
+
+    const interval = setInterval(() => {
+      setIsFlipped(prev => {
+        if (prev) {
+          // Se já está virado, ir para o próximo card
+          setCurrentCardIndex(current => {
+            if (current < cardsLength - 1) {
+              return current + 1;
+            } else {
+              setIsPlaying(false); // Parar quando chegar ao fim
+              return current;
+            }
+          });
+          return false; // Desvirar o card
+        } else {
+          return true; // Virar o card
+        }
+      });
+    }, 3000);
+
     return () => clearInterval(interval);
   }, [isPlaying, cardsLength]);
 
-  
+  const handleNextCard = useCallback(() => {
+    if (cardsLength === 0) return;
+    
+    setCurrentCardIndex(prev => {
+      if (prev < cardsLength - 1) {
+        setIsFlipped(false);
+        return prev + 1;
+      } else {
+        setIsPlaying(false);
+        setShowStats(true);
+        return prev;
+      }
+    });
+  }, [cardsLength]);
+
+  const handlePrevCard = useCallback(() => {
+    if (cardsLength === 0) return;
+    
+    setCurrentCardIndex(prev => {
+      if (prev > 0) {
+        setIsFlipped(false);
+        return prev - 1;
+      }
+      return prev;
+    });
+  }, [cardsLength]);
+
+  const handleFlipCard = useCallback(() => {
+    setIsFlipped(prev => !prev);
+  }, []);
+
+  const handleMarkCard = useCallback((correct: boolean) => {
+    if (!currentCard) return;
+    
+    const cardId = currentCard.id;
+    
+    setCardStats(prev => ({
+      ...prev,
+      [cardId]: {
+        correct: (prev[cardId]?.correct || 0) + (correct ? 1 : 0),
+        incorrect: (prev[cardId]?.incorrect || 0) + (correct ? 0 : 1)
+      }
+    }));
+
+    setSessionStats(prev => ({
+      ...prev,
+      cardsStudied: prev.cardsStudied + 1,
+      correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
+      incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
+    }));
+
+    setCardResults(prev => ({
+      ...prev,
+      [currentCardIndex]: correct
+    }));
+
+    // Transição suave para o próximo card
+    setTimeout(() => {
+      handleNextCard();
+    }, 500);
+  }, [currentCard, currentCardIndex, handleNextCard]);
+
+  const handleShuffle = useCallback(() => {
+    if (cardsLength === 0) return;
+    
+    setCardOrder(prev => {
+      const newOrder = [...prev].sort(() => Math.random() - 0.5);
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+      setShuffled(true);
+      return newOrder;
+    });
+  }, [cardsLength]);
+
+  const resetSession = useCallback(() => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setIsPlaying(false);
+    setShowStats(false);
+    setCardStats({});
+    setCardResults({});
+    setSessionStats({
+      cardsStudied: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      totalTime: 0
+    });
+  }, []);
 
   if (isLoading) {
     return (
@@ -440,113 +544,6 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       </div>
     );
   }
-
-  // Calcular dados derivados de forma otimizada usando useMemo
-  const { currentCard, progress, cardsLength } = useMemo(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) {
-      return { currentCard: null, progress: 0, cardsLength: 0 };
-    }
-
-    const length = normalizedContent.cards.length;
-    const cardIndex = cardOrder.length > 0 ? cardOrder[currentCardIndex] : currentCardIndex;
-    const card = normalizedContent.cards[cardIndex] || normalizedContent.cards[0];
-    const progressValue = (currentCardIndex / length) * 100;
-
-    return {
-      currentCard: card,
-      progress: progressValue,
-      cardsLength: length
-    };
-  }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
-
-  const handleNextCard = useCallback(() => {
-    if (cardsLength === 0) return;
-    
-    setCurrentCardIndex(prev => {
-      if (prev < cardsLength - 1) {
-        setIsFlipped(false);
-        return prev + 1;
-      } else {
-        setIsPlaying(false);
-        setShowStats(true);
-        return prev;
-      }
-    });
-  }, [cardsLength]);
-
-  const handlePrevCard = useCallback(() => {
-    if (cardsLength === 0) return;
-    
-    setCurrentCardIndex(prev => {
-      if (prev > 0) {
-        setIsFlipped(false);
-        return prev - 1;
-      }
-      return prev;
-    });
-  }, [cardsLength]);
-
-  const handleFlipCard = useCallback(() => {
-    setIsFlipped(prev => !prev);
-  }, []);
-
-  const handleMarkCard = useCallback((correct: boolean) => {
-    if (!currentCard) return;
-    
-    const cardId = currentCard.id;
-    
-    setCardStats(prev => ({
-      ...prev,
-      [cardId]: {
-        correct: (prev[cardId]?.correct || 0) + (correct ? 1 : 0),
-        incorrect: (prev[cardId]?.incorrect || 0) + (correct ? 0 : 1)
-      }
-    }));
-
-    setSessionStats(prev => ({
-      ...prev,
-      cardsStudied: prev.cardsStudied + 1,
-      correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
-      incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
-    }));
-
-    setCardResults(prev => ({
-      ...prev,
-      [currentCardIndex]: correct
-    }));
-
-    // Transição suave para o próximo card
-    setTimeout(() => {
-      handleNextCard();
-    }, 500);
-  }, [currentCard, currentCardIndex, handleNextCard]);
-
-  const handleShuffle = useCallback(() => {
-    if (cardsLength === 0) return;
-    
-    setCardOrder(prev => {
-      const newOrder = [...prev].sort(() => Math.random() - 0.5);
-      setCurrentCardIndex(0);
-      setIsFlipped(false);
-      setShuffled(true);
-      return newOrder;
-    });
-  }, [cardsLength]);
-
-  const resetSession = () => {
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setIsPlaying(false);
-    setShowStats(false);
-    setCardStats({});
-    setCardResults({});
-    setSessionStats({
-      cardsStudied: 0,
-      correctAnswers: 0,
-      incorrectAnswers: 0,
-      totalTime: 0
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
