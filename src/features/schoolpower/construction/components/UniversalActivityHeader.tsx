@@ -12,11 +12,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUserInfo } from '../hooks/useUserInfo';
 import schoolPowerActivities from '../../data/schoolPowerActivities.json';
+import { 
+  Wrench, CheckSquare, Filter, 
+  Trophy, Zap, Brain, Heart, 
+  PenTool, Presentation, Search, MapPin, Calculator, Globe,
+  Microscope, Palette, Music, Camera, Video, Headphones,
+  Gamepad2, Puzzle, Award, Star, Flag, Compass,
+  Upload, Share2 as ShareIcon, MessageSquare, ThumbsUp,
+  Pause, SkipForward, Volume2, Wifi, Battery,
+  Shield, Key, Mail, Phone, Home, Car, Plane,
+  TreePine, Sun, Moon, Cloud, Umbrella, Snowflake, Triangle,
+  BookOpen, FileText, Target, Users, Calendar, Lightbulb,
+  Edit3, Eye, CheckCircle, Clock, Building2, Play
+} from "lucide-react";
 
 interface UniversalActivityHeaderProps {
   activityTitle: string;
   activityIcon?: React.ComponentType<{ className?: string }>;
   activityType?: string;
+  activityId?: string; // Adicionar activityId para sincronização
   userName?: string;
   userAvatar?: string;
   onMoreOptions?: () => void;
@@ -29,10 +43,127 @@ interface UniversalActivityHeaderProps {
   onDelete?: () => void;
 }
 
+// Sistema de sincronização de ícones - EXATAMENTE igual ao CardDeConstrucao.tsx
+const getIconByActivityId = (activityId: string) => {
+  // 100% unique mapping system - cada ID tem seu próprio ícone específico
+  const uniqueIconMapping: { [key: string]: any } = {
+    "atividade-adaptada": Heart,
+    "atividades-contos-infantis": BookOpen,
+    "atividades-ia": Brain,
+    "atividades-matematica": Target,
+    "atividades-ortografia-alfabeto": PenTool,
+    "aulas-eletivas": Star,
+    "bncc-descomplicada": BookOpen,
+    "caca-palavras": Puzzle,
+    "capitulo-livro": BookOpen,
+    "charadas": Puzzle,
+    "chatbot-bncc": MessageSquare,
+    "consulta-video": Video,
+    "corretor-gramatical": CheckSquare,
+    "corretor-provas-feedback": CheckSquare,
+    "corretor-provas-papel": FileText,
+    "corretor-questoes": PenTool,
+    "corretor-redacao": PenTool,
+    "criterios-avaliacao": CheckSquare,
+    "desenho-simetrico": Puzzle,
+    "desenvolvimento-caligrafia": PenTool,
+    "dinamicas-sala-aula": Users,
+    "emails-escolares": Mail,
+    "erros-comuns": Search,
+    "exemplos-contextualizados": BookOpen,
+    "experimento-cientifico": Microscope,
+    "fichamento-obra-literaria": BookOpen,
+    "gerador-tracejados": PenTool,
+    "historias-sociais": Heart,
+    "ideias-atividades": Lightbulb,
+    "ideias-aulas-acessiveis": Heart,
+    "ideias-avaliacoes-adaptadas": Heart,
+    "ideias-brincadeiras-infantis": Play,
+    "ideias-confraternizacoes": Users,
+    "ideias-datas-comemorativas": Calendar,
+    "imagem-para-colorir": Palette,
+    "instrucoes-claras": FileText,
+    "jogos-educacionais-interativos": Gamepad2,
+    "jogos-educativos": Puzzle,
+    "lista-exercicios": FileText,
+    "lista-vocabulario": BookOpen,
+    "maquete": Wrench,
+    "mapa-mental": Brain,
+    "mensagens-agradecimento": Heart,
+    "musica-engajar": Music,
+    "niveador-textos": BookOpen,
+    "objetivos-aprendizagem": Target,
+    "palavras-cruzadas": Puzzle,
+    "pei-pdi": Heart,
+    "perguntas-taxonomia-bloom": MessageSquare,
+    "pergunte-texto": MessageSquare,
+    "plano-aula": BookOpen,
+    "plano-ensino": BookOpen,
+    "plano-recuperacao": Heart,
+    "projeto": Wrench,
+    "projeto-vida": Star,
+    "proposta-redacao": PenTool,
+    "prova": CheckSquare,
+    "questoes-pdf": FileText,
+    "questoes-site": Globe,
+    "questoes-texto": FileText,
+    "questoes-video": Video,
+    "redacao": PenTool,
+    "reescritor-texto": PenTool,
+    "reflexao-incidente": MessageSquare,
+    "relatorio": FileText,
+    "relatorio-desempenho": Trophy,
+    "resposta-email": Mail,
+    "revisor-gramatical": CheckSquare,
+    "revisao-guiada": BookOpen,
+    "resumo": FileText,
+    "resumo-texto": FileText,
+    "resumo-video": Video,
+    "sequencia-didatica": BookOpen,
+    "simulado": CheckSquare,
+    "sugestoes-intervencao": Lightbulb,
+    "tabela-apoio": Puzzle,
+    "tarefa-adaptada": Heart,
+    "texto-apoio": BookOpen,
+    "gerar-questoes": PenTool,
+    "apresentacao-slides": Target,
+    "tornar-relevante": Star
+  };
+
+  // Verifica se existe mapeamento direto para o ID
+  if (uniqueIconMapping[activityId]) {
+    return uniqueIconMapping[activityId];
+  }
+
+  // Sistema de fallback com hash consistente para IDs não mapeados
+  const fallbackIcons = [
+    BookOpen, FileText, PenTool, Search, Brain,
+    Users, MessageSquare, Presentation, ThumbsUp, Heart,
+    Wrench, Target, Compass, Trophy, Edit3,
+    Calendar, Clock, CheckSquare, Star, Award,
+    Microscope, Calculator, Eye, Globe, MapPin,
+    Music, Palette, Camera, Video, Headphones,
+    Lightbulb, Zap, Flag, Key, Shield,
+    TreePine, Sun, Cloud, Home, Car
+  ];
+
+  // Gera hash consistente baseado no ID
+  let hash = 0;
+  for (let i = 0; i < activityId.length; i++) {
+    const char = activityId.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+
+  const iconIndex = Math.abs(hash) % fallbackIcons.length;
+  return fallbackIcons[iconIndex];
+};
+
 export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = ({
   activityTitle,
   activityIcon: ActivityIcon,
   activityType,
+  activityId, // Novo parâmetro para sincronização
   userName,
   userAvatar,
   onMoreOptions,
@@ -53,46 +184,34 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const finalUserName = userName || userInfo.name || 'Usuário';
   const finalUserAvatar = userAvatar || userInfo.avatar;
 
-  // Função para obter o ícone correto baseado no tipo de atividade
+  // Função para obter o ícone correto - SINCRONIZADA com CardDeConstrucao.tsx
   const getActivityIcon = () => {
-    if (ActivityIcon) return ActivityIcon;
+    // PRIORIDADE 1: Se activityId foi fornecido, usar sistema de sincronização
+    if (activityId) {
+      console.log('🎯 UniversalActivityHeader: Usando ícone sincronizado para activityId:', activityId);
+      return getIconByActivityId(activityId);
+    }
     
+    // PRIORIDADE 2: Se ActivityIcon foi passado diretamente
+    if (ActivityIcon) {
+      console.log('🎯 UniversalActivityHeader: Usando ícone passado via props');
+      return ActivityIcon;
+    }
+    
+    // PRIORIDADE 3: Buscar no schoolPowerActivities por activityType
     if (activityType && schoolPowerActivities) {
       const activity = schoolPowerActivities.find(act => 
-        act.type === activityType || act.title === activityType
+        act.type === activityType || act.title === activityType || act.id === activityType
       );
-      if (activity && activity.icon) {
-        // Mapear ícones do JSON para componentes Lucide
-        const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
-          'BookOpen': require('lucide-react').BookOpen,
-          'Lightbulb': require('lucide-react').Lightbulb,
-          'FileText': require('lucide-react').FileText,
-          'Target': require('lucide-react').Target,
-          'Users': require('lucide-react').Users,
-          'Calendar': require('lucide-react').Calendar,
-          'CheckSquare': require('lucide-react').CheckSquare,
-          'Brain': require('lucide-react').Brain,
-          'Zap': require('lucide-react').Zap,
-          'PenTool': require('lucide-react').PenTool,
-          'Star': require('lucide-react').Star,
-          'Award': require('lucide-react').Award,
-          'GraduationCap': require('lucide-react').GraduationCap,
-          'Puzzle': require('lucide-react').Puzzle,
-          'Gamepad2': require('lucide-react').Gamepad2,
-          'MessageSquare': require('lucide-react').MessageSquare,
-          'Map': require('lucide-react').Map,
-          'List': require('lucide-react').List,
-          'FileQuestion': require('lucide-react').FileQuestion,
-          'Presentation': require('lucide-react').Presentation,
-          'ClipboardList': require('lucide-react').ClipboardList,
-          'Timer': require('lucide-react').Timer,
-          'BarChart3': require('lucide-react').BarChart3,
-        };
-        return iconMap[activity.icon] || require('lucide-react').BookOpen;
+      if (activity && activity.id) {
+        console.log('🎯 UniversalActivityHeader: Encontrou atividade por tipo, usando ícone sincronizado para:', activity.id);
+        return getIconByActivityId(activity.id);
       }
     }
     
-    return require('lucide-react').BookOpen;
+    // FALLBACK: Ícone padrão
+    console.log('🎯 UniversalActivityHeader: Usando ícone padrão (BookOpen)');
+    return BookOpen;
   };
 
   const FinalActivityIcon = getActivityIcon();
