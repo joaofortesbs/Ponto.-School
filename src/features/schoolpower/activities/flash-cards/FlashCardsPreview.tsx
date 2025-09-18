@@ -226,6 +226,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   });
   const [shuffled, setShuffled] = useState(false);
   const [cardOrder, setCardOrder] = useState<number[]>([]);
+  const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
 
   // Inicializar ordem dos cards
   useEffect(() => {
@@ -413,6 +414,12 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
     }));
 
+    // Marcar o resultado do card atual
+    setCardResults(prev => ({
+      ...prev,
+      [currentCardIndex]: correct
+    }));
+
     // Transição suave para o próximo card
     setTimeout(() => {
       handleNextCard();
@@ -435,6 +442,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     setIsPlaying(false);
     setShowStats(false);
     setCardStats({});
+    setCardResults({});
     setSessionStats({
       cardsStudied: 0,
       correctAnswers: 0,
@@ -662,33 +670,43 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             className="flex justify-center mt-8"
           >
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-4 border border-orange-200/50 dark:border-orange-700/30 shadow-lg">
-              <div className="flex items-center gap-3">
-                {normalizedContent.cards.slice(0, 15).map((_, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: index * 0.05, type: "spring" }}
-                    className={`rounded-full transition-all duration-500 transform ${
-                      index === currentCardIndex
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 w-4 h-4 shadow-lg scale-125'
-                        : index < currentCardIndex
-                        ? 'bg-gradient-to-r from-emerald-500 to-green-600 w-3 h-3 shadow-md'
-                        : 'bg-gray-300 dark:bg-gray-600 w-2 h-2'
-                    }`}
-                  />
-                ))}
+              <div className="flex items-center justify-center gap-3">
+                {normalizedContent.cards.slice(0, 15).map((_, index) => {
+                  let dotClass = 'bg-gray-300 dark:bg-gray-600 w-2 h-2';
+                  
+                  if (index === currentCardIndex) {
+                    // Card atual - laranja
+                    dotClass = 'bg-gradient-to-r from-orange-500 to-orange-600 w-4 h-4 shadow-lg scale-125';
+                  } else if (index < currentCardIndex) {
+                    // Cards já respondidos - verificar se foi correto ou incorreto
+                    const wasCorrect = cardResults[index];
+                    if (wasCorrect === true) {
+                      // Acertou - verde
+                      dotClass = 'bg-gradient-to-r from-emerald-500 to-green-600 w-3 h-3 shadow-md';
+                    } else if (wasCorrect === false) {
+                      // Errou - vermelho
+                      dotClass = 'bg-gradient-to-r from-red-500 to-red-600 w-3 h-3 shadow-md';
+                    } else {
+                      // Sem resposta ainda - cinza
+                      dotClass = 'bg-gray-300 dark:bg-gray-600 w-2 h-2';
+                    }
+                  }
+                  
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: index * 0.05, type: "spring" }}
+                      className={`rounded-full transition-all duration-500 transform ${dotClass}`}
+                    />
+                  );
+                })}
                 {normalizedContent.cards.length > 15 && (
                   <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                     +{normalizedContent.cards.length - 15}
                   </span>
                 )}
-              </div>
-              
-              <div className="text-center mt-3">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                  {currentCardIndex + 1} de {normalizedContent.cards.length} cards
-                </span>
               </div>
             </div>
           </motion.div>
