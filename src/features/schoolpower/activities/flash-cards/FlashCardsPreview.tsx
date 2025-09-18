@@ -282,23 +282,17 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     return result;
   }, [content]);
 
-  // Debug logging detalhado
+  // Debug logging otimizado - apenas quando conteúdo muda
   useEffect(() => {
-    console.log('🃏 FlashCardsPreview - Estado atual:', {
-      hasContent: !!content,
-      contentKeys: content ? Object.keys(content) : [],
-      hasNormalizedContent: !!normalizedContent,
-      hasCards: !!(normalizedContent?.cards),
-      cardsLength: normalizedContent?.cards?.length || 0,
-      isLoading,
-      firstCard: normalizedContent?.cards?.[0],
-      contentStructure: {
-        raw: content,
-        normalized: normalizedContent
-      },
-      isFromViewModal: window.location.pathname.includes('view') || document.querySelector('[data-testid="activity-view-modal"]')
-    });
-  }, [content, normalizedContent, isLoading]);
+    if (content) {
+      console.log('🃏 FlashCardsPreview - Conteúdo atualizado:', {
+        hasContent: !!content,
+        hasNormalizedContent: !!normalizedContent,
+        cardsLength: normalizedContent?.cards?.length || 0,
+        isLoading
+      });
+    }
+  }, [content]); // Removido normalizedContent para evitar loop
 
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -317,43 +311,57 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const [cardOrder, setCardOrder] = useState<number[]>([]);
   const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
 
-  // Inicializar ordem dos cards
+  // Inicializar ordem dos cards de forma otimizada
   useEffect(() => {
     if (normalizedContent?.cards && normalizedContent.cards.length > 0) {
-      const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
-      setCardOrder(order);
-      // Garantir que o índice atual seja válido
-      if (currentCardIndex >= normalizedContent.cards.length) {
-        setCurrentCardIndex(0);
-      }
-      console.log('🃏 CardOrder inicializado:', order);
-    } else {
-      setCardOrder([]);
-      setCurrentCardIndex(0);
+      const cardsLength = normalizedContent.cards.length;
+      
+      // Só atualizar se necessário
+      setCardOrder(prev => {
+        const newOrder = Array.from({ length: cardsLength }, (_, i) => i);
+        if (prev.length !== cardsLength) {
+          console.log('🃏 CardOrder atualizado:', newOrder);
+          return newOrder;
+        }
+        return prev;
+      });
+      
+      // Resetar índice se inválido
+      setCurrentCardIndex(prev => {
+        if (prev >= cardsLength) {
+          return 0;
+        }
+        return prev;
+      });
     }
-  }, [normalizedContent?.cards]);
+  }, [normalizedContent?.cards?.length]); // Usar apenas length para evitar re-renders desnecessários
 
-  // Verificação adicional para currentCardIndex válido
-  useEffect(() => {
-    if (normalizedContent?.cards && currentCardIndex >= normalizedContent.cards.length) {
-      setCurrentCardIndex(0);
-    }
-  }, [currentCardIndex, normalizedContent?.cards]);
-
-  // Auto-play functionality
+  // Auto-play otimizado
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlaying && normalizedContent?.cards) {
+    if (isPlaying && normalizedContent?.cards?.length > 0) {
       interval = setInterval(() => {
-        if (isFlipped) {
-          handleNextCard();
-        } else {
-          setIsFlipped(true);
-        }
+        setIsFlipped(prev => {
+          if (prev) {
+            // Se já está virado, ir para o próximo card
+            setCurrentCardIndex(current => {
+              const cardsLength = normalizedContent.cards.length;
+              if (current < cardsLength - 1) {
+                return current + 1;
+              } else {
+                setIsPlaying(false); // Parar quando chegar ao fim
+                return current;
+              }
+            });
+            return false; // Desvirar o card
+          } else {
+            return true; // Virar o card
+          }
+        });
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, isFlipped, currentCardIndex, normalizedContent?.cards]);
+  }, [isPlaying, normalizedContent?.cards?.length]); // Remover dependências que causam loops
 
   if (isLoading) {
     return (
@@ -434,8 +442,17 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
-  const progress = (currentCardIndex / normalizedContent.cards.length) * 100;
+  const currentCard = React.useMemo(() => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return null;
+    
+    const cardIndex = cardOrder.length > 0 ? cardOrder[currentCardIndex] : currentCardIndex;
+    return normalizedContent.cards[cardIndex] || normalizedContent.cards[0];
+  }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
+
+  const progress = React.useMemo(() => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return 0;
+    return (currentCardIndex / normalizedContent.cards.length) * 100;
+  }, [currentCardIndex, normalizedContent?.cards?.length]);
 
   // Verificação de segurança adicional
   if (!currentCard) {
@@ -459,35 +476,43 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  const handleNextCard = () => {
+  const handleNextCard = React.useCallback(() => {
     if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
     
-    if (currentCardIndex < normalizedContent.cards.length - 1) {
-      setCurrentCardIndex(prev => prev + 1);
-      setIsFlipped(false);
-    } else {
-      setIsPlaying(false);
-      setShowStats(true);
-    }
-  };
+    setCurrentCardIndex(prev => {
+      if (prev < normalizedContent.cards.length - 1) {
+        setIsFlipped(false);
+        return prev + 1;
+      } else {
+        setIsPlaying(false);
+        setShowStats(true);
+        return prev;
+      }
+    });
+  }, [normalizedContent?.cards?.length]);
 
-  const handlePrevCard = () => {
+  const handlePrevCard = React.useCallback(() => {
     if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
     
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(prev => prev - 1);
-      setIsFlipped(false);
-    }
-  };
+    setCurrentCardIndex(prev => {
+      if (prev > 0) {
+        setIsFlipped(false);
+        return prev - 1;
+      }
+      return prev;
+    });
+  }, [normalizedContent?.cards?.length]);
 
-  const handleFlipCard = () => {
-    setIsFlipped(!isFlipped);
-  };
+  const handleFlipCard = React.useCallback(() => {
+    setIsFlipped(prev => !prev);
+  }, []);
 
-  const handleMarkCard = (correct: boolean) => {
-    if (!currentCard) return;
+  const handleMarkCard = React.useCallback((correct: boolean) => {
+    const currentCardData = normalizedContent?.cards?.[cardOrder[currentCardIndex]] || normalizedContent?.cards?.[currentCardIndex];
+    if (!currentCardData) return;
     
-    const cardId = currentCard.id;
+    const cardId = currentCardData.id;
+    
     setCardStats(prev => ({
       ...prev,
       [cardId]: {
@@ -503,7 +528,6 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
     }));
 
-    // Marcar o resultado do card atual
     setCardResults(prev => ({
       ...prev,
       [currentCardIndex]: correct
@@ -513,17 +537,19 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     setTimeout(() => {
       handleNextCard();
     }, 500);
-  };
+  }, [currentCardIndex, cardOrder, normalizedContent?.cards, handleNextCard]);
 
-  const handleShuffle = () => {
+  const handleShuffle = React.useCallback(() => {
     if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
     
-    const newOrder = [...cardOrder].sort(() => Math.random() - 0.5);
-    setCardOrder(newOrder);
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setShuffled(true);
-  };
+    setCardOrder(prev => {
+      const newOrder = [...prev].sort(() => Math.random() - 0.5);
+      setCurrentCardIndex(0);
+      setIsFlipped(false);
+      setShuffled(true);
+      return newOrder;
+    });
+  }, [normalizedContent?.cards?.length]);
 
   const resetSession = () => {
     setCurrentCardIndex(0);
