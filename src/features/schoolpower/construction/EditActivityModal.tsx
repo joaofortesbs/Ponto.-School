@@ -2275,7 +2275,27 @@ const EditActivityModal = ({
 
       return () => clearTimeout(timer);
     }
-  }, [formData, activity, isOpen, handleBuildActivity, handleGenerateQuizInterativo, isFormValidForBuild, handleGenerateFlashCards]);
+  }, [
+    activity?.id, 
+    isOpen, 
+    formData.theme, 
+    formData.topicos, 
+    formData.numberOfFlashcards, 
+    formData.context,
+    formData.subject,
+    formData.schoolYear,
+    formData.objectives,
+    formData.difficultyLevel,
+    formData.numberOfQuestions,
+    formData.questionModel,
+    formData.quadroInterativoCampoEspecifico,
+    formData.centralTheme,
+    formData.mainCategories,
+    formData.generalObjective,
+    formData.evaluationCriteria,
+    activity?.preenchidoAutomaticamente,
+    activity?.isBuilt
+  ]);
 
   if (!isOpen) return null;
 

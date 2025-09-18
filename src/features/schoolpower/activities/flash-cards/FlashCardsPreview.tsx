@@ -62,10 +62,6 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
-  // Usar useRef para evitar re-renderizações desnecessárias
-  const contentRef = useRef(content);
-  const hasInitialized = useRef(false);
-
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -80,10 +76,12 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const [cardOrder, setCardOrder] = useState<number[]>([]);
   const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
 
-  // Normalizar dados com memoização ESTÁVEL - usando JSON.stringify para comparação profunda
+  // Usar useRef para valores que não devem causar re-renderização
+  const hasInitialized = useRef(false);
+  const intervalRef = useRef<NodeJS.Timeout>();
+
+  // Normalizar dados com memoização ESTÁVEL usando JSON.stringify
   const normalizedContent = useMemo(() => {
-    const contentString = JSON.stringify(content);
-    
     if (!content) {
       console.log('🃏 FlashCardsPreview - Sem conteúdo');
       return null;
@@ -192,7 +190,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     console.log('🃏 Total de cards processados:', result.cards.length);
 
     return result;
-  }, [JSON.stringify(content)]); // Usar JSON.stringify para comparação estável
+  }, [JSON.stringify(content)]);
 
   // Inicializar ordem dos cards - APENAS uma vez quando há cards válidos
   useEffect(() => {
@@ -200,6 +198,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
       setCardOrder(order);
       setCurrentCardIndex(0);
+      setIsFlipped(false);
       hasInitialized.current = true;
       console.log('🃏 CardOrder inicializado:', order);
     }
@@ -207,20 +206,39 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
   // Auto-play functionality - com dependências estáveis
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    // Limpar intervalo anterior
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     if (isPlaying && normalizedContent?.cards && normalizedContent.cards.length > 0 && currentCardIndex < normalizedContent.cards.length) {
-      interval = setInterval(() => {
-        if (isFlipped) {
-          handleNextCard();
-        } else {
-          setIsFlipped(true);
-        }
+      intervalRef.current = setInterval(() => {
+        setIsFlipped(prev => {
+          if (prev) {
+            // Se já está virado, ir para próximo card
+            setCurrentCardIndex(prevIndex => {
+              if (prevIndex < normalizedContent.cards.length - 1) {
+                return prevIndex + 1;
+              } else {
+                setIsPlaying(false);
+                return prevIndex;
+              }
+            });
+            return false;
+          } else {
+            // Se não está virado, virar
+            return true;
+          }
+        });
       }, 3000);
     }
+
     return () => {
-      if (interval) clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [isPlaying, isFlipped, currentCardIndex, normalizedContent?.cards?.length]);
+  }, [isPlaying, currentCardIndex, normalizedContent?.cards?.length]);
 
   // Callbacks estáveis usando useCallback
   const handleNextCard = useCallback(() => {
@@ -241,11 +259,11 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       setCurrentCardIndex(prev => prev - 1);
       setIsFlipped(false);
     }
-  }, [currentCardIndex, normalizedContent?.cards?.length]);
+  }, [currentCardIndex]);
 
   const handleFlipCard = useCallback(() => {
-    setIsFlipped(!isFlipped);
-  }, [isFlipped]);
+    setIsFlipped(prev => !prev);
+  }, []);
 
   const handleMarkCard = useCallback((correct: boolean) => {
     const currentCard = normalizedContent?.cards?.[currentCardIndex];

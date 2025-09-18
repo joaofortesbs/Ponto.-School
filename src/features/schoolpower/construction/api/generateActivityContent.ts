@@ -236,12 +236,8 @@ async function generateFlashCards(formData: ActivityFormData) {
     })),
     totalCards: Math.min(numberOfCards, finalTopicos.length),
     generatedAt: new Date().toISOString(),
-    isGeneratedByAI: false, // Corrigir o valor cortado
+    isGeneratedByAI: false,
     isFallback: true
-  };
-
-  return { success: true, data: content };
-}ue
   };
 
   return { success: true, data: content };
