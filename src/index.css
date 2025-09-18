@@ -2844,3 +2844,4 @@ textarea:hover,
   overflow: hidden;
   line-height: 1.5;
 }
+@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');

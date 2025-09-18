@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Calculator, Beaker, PenTool, GamepadIcon } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,17 +12,29 @@ import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/Plano
 import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
 import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
+import { UniversalActivityHeader } from './components/UniversalActivityHeader';
+import { useUserInfo } from './hooks/useUserInfo';
 
-// Helper function to get activity icon (assuming it's defined elsewhere or needs to be added)
-// This is a placeholder, replace with actual implementation if needed.
+// Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
-  // Example: return an icon component based on activityId
-  return ({ className }: { className: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c0-1.707.833-3.123 2.12-4.119C15.387 2.507 17.017 2 19 2s3.613.507 4.88-1.881C24.833 1.707 24 3.123 24 5v10a2 2 0 01-2 2H2a2 2 0 01-2-2V5c0-1.877.847-3.293 2.12-4.119C4.167 0.507 5.993 0 8 0s3.833.507 5.12 1.881C14.833 1.707 14 3.123 14 5v10z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v16M8 20h8" />
-    </svg>
-  );
+  const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
+    'lista-exercicios': BookOpen,
+    'plano-aula': FileText,
+    'sequencia-didatica': Calendar,
+    'quiz-interativo': GamepadIcon,
+    'flash-cards': Star,
+    'quadro-interativo': Eye,
+    'mapa-mental': Users,
+    'prova': BookOpen,
+    'jogo': GamepadIcon,
+    'apresentacao': Eye,
+    'redacao': PenTool,
+    'matematica': Calculator,
+    'ciencias': Beaker,
+    'default': GraduationCap
+  };
+
+  return iconMap[activityId] || iconMap['default'];
 };
 
 
@@ -35,6 +47,7 @@ interface ActivityViewModalProps {
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const userInfo = useUserInfo();
   const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
   const [respostas, setRespostas] = useState<{ [key: string]: any }>({});
@@ -561,171 +574,26 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             }
           `}</style>
 
-          {/* Header with Close button */}
-          {isExerciseList && (
-            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                    {isInQuestionView && selectedQuestionIndex !== null ? (
-                      <span className="text-white font-bold text-sm">
-                        {selectedQuestionIndex + 1}
-                      </span>
-                    ) : (
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    {isInQuestionView && selectedQuestionIndex !== null ? (
-                      <>
-                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
-                          Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
-                        </h2>
-                        <p className="text-orange-700 dark:text-orange-300 text-sm">
-                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
-                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
-                        </h2>
-                        <p className="text-orange-700 dark:text-orange-300 text-sm">
-                          {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
-                        </p>
-                      </>
-                    )}
-                  </div>
+          {/* Cabeçalho Universal para todas as atividades */}
+          <UniversalActivityHeader
+            activityTitle={getActivityTitle()}
+            activityIcon={getActivityIcon(activityType)}
+            userName={userInfo.displayName || userInfo.name}
+            userAvatar={userInfo.avatar}
+            schoolPoints={100}
+            onMoreOptions={() => {
+              // TODO: Implementar menu de opções
+              console.log('Menu de opções clicado');
+            }}
+          />
 
-                  {/* Tags and Info */}
-                  <div className="flex flex-wrap gap-2">
-                    {activity?.originalData?.disciplina && (
-                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        {activity.originalData.disciplina}
-                      </Badge>
-                    )}
-                    {activity?.originalData?.tema && (
-                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
-                        </svg>
-                        {activity.originalData.tema}
-                      </Badge>
-                    )}
-                    {questionsForSidebar.length > 0 && (
-                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                        {questionsForSidebar.length} questões
-                      </Badge>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* Close button - positioned in the extreme right */}
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Non-Exercise List Header */}
-          {!isExerciseList && (
-            <div className="modal-header flex items-center justify-between p-6 border-b">
-              <div className="flex items-center gap-3 flex-1">
-                <div className={`p-2 rounded-lg ${
-                  activityType === 'plano-aula'
-                    ? 'bg-orange-100'
-                    : isLightMode ? 'bg-blue-100' : 'bg-blue-900/30'
-                }`}>
-                  <BookOpen className={`h-6 w-6 ${
-                    activityType === 'plano-aula'
-                      ? 'text-orange-600'
-                      : isLightMode ? 'text-blue-600' : 'text-blue-400'
-                  }`} />
-                </div>
-                <div className="flex-1">
-                  <h2 className={`text-xl font-semibold ${
-                    activityType === 'plano-aula' ? 'text-white' : ''
-                  }`}>
-                    {getActivityTitle()}
-                  </h2>
-                  {activityType === 'plano-aula' ? (
-                    <div className="flex items-center gap-4 mt-1">
-                      {(() => {
-                        const headerInfo = getPlanoAulaHeaderInfo();
-                        return headerInfo ? (
-                          <>
-                            <div className="flex items-center gap-1 text-white/90 text-sm">
-                              <BookOpen className="h-4 w-4" />
-                              <span>{headerInfo.disciplina} (Integrado com Português)</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-white/90 text-sm">
-                              <GraduationCap className="h-4 w-4" />
-                              <span>{headerInfo.anoEscolar}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-white/90 text-sm">
-                              <Clock className="h-4 w-4" />
-                              <span>{headerInfo.duracao}</span>
-                            </div>
-                          </>
-                        ) : null;
-                      })()}
-                    </div>
-                  ) : (
-                    <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                      {activity.description || activity.personalizedDescription || 'Visualizar atividade'}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {activityType === 'plano-aula' && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Exportar PDF
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Simular Aula
-                    </Button>
-                  </>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onClose}
-                  className={`${
-                    activityType === 'plano-aula'
-                      ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                      : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
-                  }`}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Botão de fechar fixo no canto superior direito */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-50 p-2 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 rounded-full shadow-lg transition-all duration-200"
+          >
+            <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          </button>
 
 
           {/* Content Layout */}
