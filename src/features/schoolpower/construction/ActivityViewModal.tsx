@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react"; // Import Eye component
+import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,19 +41,26 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const [isInQuestionView, setIsInQuestionView] = useState<boolean>(false);
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  // Estados para conteúdo específico - ESTÁVEIS
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
+  const [generalContent, setGeneralContent] = useState<any>(null);
 
+  // Memoizar o tipo de atividade para evitar recálculos
+  const activityType = useMemo(() => {
+    return activity?.originalData?.type || activity?.categoryId || activity?.type || 'lista-exercicios';
+  }, [activity?.originalData?.type, activity?.categoryId, activity?.type]);
 
-  // Função específica para carregar dados do Plano de Aula
-  const loadPlanoAulaData = (activityId: string) => {
+  // Função para carregar dados do Plano de Aula - MEMOIZADA
+  const loadPlanoAulaData = useCallback((activityId: string) => {
     console.log('🔍 ActivityViewModal: Carregando dados específicos do Plano de Aula para:', activityId);
 
     const cacheKeys = [
-      `constructed_plano-aula_${activity.id}`, // Use activity.id for specificity
+      `constructed_plano-aula_${activityId}`,
       `schoolpower_plano-aula_content`,
-      `activity_${activity.id}`,
-      `activity_fields_${activity.id}`
+      `activity_${activityId}`,
+      `activity_fields_${activityId}`
     ];
 
     for (const key of cacheKeys) {
@@ -71,39 +78,216 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
 
     console.log('⚠️ Nenhum dado específico encontrado para plano-aula');
     return null;
-  };
+  }, []);
 
-  // Resetar estado do sidebar quando o modal abre
+  // Carregar conteúdo construído quando o modal abrir - OTIMIZADO
+  React.useEffect(() => {
+    if (!activity || !isOpen) {
+      // Reset states when modal closes
+      setQuizInterativoContent(null);
+      setFlashCardsContent(null);
+      setGeneralContent(null);
+      setShowSidebar(false);
+      setSelectedQuestionId(null);
+      setSelectedQuestionIndex(null);
+      setIsInQuestionView(false);
+      return;
+    }
+
+    console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id} (${activityType})`);
+
+    // Carregar conteúdo baseado no tipo de atividade
+    let contentLoaded = false;
+
+    // Quiz Interativo
+    if (activityType === 'quiz-interativo') {
+      const quizSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
+      console.log(`🎯 Quiz Interativo: Verificando conteúdo para ${activity.id}. Existe?`, !!quizSavedContent);
+
+      if (quizSavedContent) {
+        try {
+          const parsedContent = JSON.parse(quizSavedContent);
+          const contentData = parsedContent.data || parsedContent;
+
+          if (contentData && contentData.questions && Array.isArray(contentData.questions) && contentData.questions.length > 0) {
+            const validQuestions = contentData.questions.filter(q =>
+              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
+            );
+
+            if (validQuestions.length > 0) {
+              contentData.questions = validQuestions;
+              console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas`);
+              setQuizInterativoContent(contentData);
+              contentLoaded = true;
+            }
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar conteúdo do Quiz Interativo:', error);
+        }
+      }
+    }
+    // Flash Cards
+    else if (activityType === 'flash-cards') {
+      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
+      console.log(`🃏 Flash Cards: Verificando conteúdo para ${activity.id}. Existe?`, !!flashCardsSavedContent);
+
+      if (flashCardsSavedContent) {
+        try {
+          const parsedContent = JSON.parse(flashCardsSavedContent);
+          const contentData = parsedContent.data || parsedContent;
+
+          console.log('🃏 Flash Cards - Conteúdo parseado:', contentData);
+
+          const hasValidCards = contentData &&
+                               contentData.cards &&
+                               Array.isArray(contentData.cards) &&
+                               contentData.cards.length > 0 &&
+                               contentData.cards.every(card =>
+                                 card && card.front && card.back
+                               );
+
+          if (hasValidCards) {
+            console.log(`✅ Flash Cards carregado com ${contentData.cards.length} cards válidos`);
+            setFlashCardsContent(contentData);
+            contentLoaded = true;
+          } else {
+            console.warn('⚠️ Conteúdo de Flash Cards sem cards válidos');
+          }
+        } catch (error) {
+          console.error('❌ Erro ao processar conteúdo de Flash Cards:', error);
+        }
+      }
+
+      // Se não há conteúdo construído, criar fallback usando customFields
+      if (!contentLoaded && activity.customFields) {
+        const customFields = activity.customFields;
+        const topicos = customFields['Tópicos'] || customFields['Tópicos Principais'] || '';
+        const theme = customFields['Tema'] || customFields['Tema dos Flash Cards'] || activity.title || 'Flash Cards';
+        const subject = customFields['Disciplina'] || 'Geral';
+        const numberOfCards = parseInt(customFields['Número de Flash Cards'] || '10');
+
+        if (topicos && topicos.trim()) {
+          const topicosList = topicos.split('\n').filter(t => t.trim());
+          const fallbackCards = [];
+
+          const cardsToGenerate = Math.min(numberOfCards, Math.max(topicosList.length * 2, 5));
+
+          for (let i = 0; i < cardsToGenerate; i++) {
+            const topicoIndex = i % topicosList.length;
+            const topic = topicosList[topicoIndex].trim();
+            const cardType = i % 3;
+
+            let front: string;
+            let back: string;
+
+            switch (cardType) {
+              case 0:
+                front = `O que é ${topic}?`;
+                back = `${topic} é um conceito importante sobre ${theme} em ${subject}.`;
+                break;
+              case 1:
+                front = `Qual a importância de ${topic}?`;
+                back = `${topic} é importante porque estabelece bases conceituais para ${theme}.`;
+                break;
+              default:
+                front = `Como aplicar ${topic}?`;
+                back = `${topic} pode ser aplicado através de exercícios práticos relacionados ao ${theme}.`;
+            }
+
+            fallbackCards.push({
+              id: i + 1,
+              front,
+              back,
+              category: subject,
+              difficulty: customFields['Nível de Dificuldade'] || 'Médio'
+            });
+          }
+
+          if (fallbackCards.length > 0) {
+            const fallbackContent = {
+              title: customFields['Título'] || activity.title || `Flash Cards: ${theme}`,
+              description: customFields['Descrição'] || activity.description || `Flash cards sobre ${theme}`,
+              cards: fallbackCards,
+              totalCards: fallbackCards.length,
+              theme,
+              subject,
+              topicos,
+              numberOfFlashcards: fallbackCards.length,
+              context: customFields['Contexto'] || customFields['Contexto de Uso'] || 'Revisão e fixação',
+              difficultyLevel: customFields['Nível de Dificuldade'] || 'Médio',
+              generatedAt: new Date().toISOString(),
+              isGeneratedByAI: false,
+              isFallback: true,
+              type: 'flash-cards',
+              activityType: 'flash-cards'
+            };
+
+            console.log('🃏 Flash Cards fallback criado:', fallbackContent);
+            setFlashCardsContent(fallbackContent);
+            contentLoaded = true;
+          }
+        }
+      }
+    }
+    // Outros tipos de atividade
+    else {
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const savedContent = localStorage.getItem(`activity_${activity.id}`);
+
+      let content = null;
+      if (constructedActivities[activity.id]?.generatedContent) {
+        content = constructedActivities[activity.id].generatedContent;
+        console.log(`✅ Conteúdo construído encontrado no cache para: ${activity.id}`);
+      } else if (savedContent) {
+        try {
+          content = JSON.parse(savedContent);
+          console.log(`✅ Conteúdo salvo encontrado para: ${activity.id}`);
+        } catch (error) {
+          console.error('❌ Erro ao parsear conteúdo salvo:', error);
+        }
+      }
+
+      if (content) {
+        setGeneralContent(content);
+        contentLoaded = true;
+      }
+    }
+
+    // Se for plano-aula, tentar carregar dados específicos
+    if (activityType === 'plano-aula') {
+      const planoData = loadPlanoAulaData(activity.id);
+      if (planoData) {
+        console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
+        setGeneralContent(planoData);
+        contentLoaded = true;
+      }
+    }
+
+    console.log(`📊 Resultado do carregamento para ${activity.id}: ${contentLoaded ? 'Sucesso' : 'Nenhum conteúdo'}`);
+
+  }, [activity?.id, isOpen, activityType, loadPlanoAulaData, activity?.originalData, activity?.customFields, activity.title, activity.personalizedTitle, activity.description, activity.personalizedDescription]); // Dependências específicas e estáveis
+
+  // Resetar estado do sidebar quando o modal abre - SIMPLIFICADO
   React.useEffect(() => {
     if (isOpen) {
       setShowSidebar(false);
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
       setIsInQuestionView(false);
-      setQuizInterativoContent(null); // Reset Quiz Interativo content
-      setFlashCardsContent(null); // Reset Flash Cards content
-
-      // Se for plano-aula, tentar carregar dados específicos
-      if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
-        const planoData = loadPlanoAulaData(activity.id);
-        if (planoData) {
-          console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
-        }
-      }
     }
-  }, [isOpen, activity]);
+  }, [isOpen]);
 
   if (!isOpen || !activity) return null;
 
-  // Função para lidar com seleção de questão
-  const handleQuestionSelect = (questionIndex: number, questionId: string) => {
+  // Função para lidar com seleção de questão - MEMOIZADA
+  const handleQuestionSelect = useCallback((questionIndex: number, questionId: string) => {
     setSelectedQuestionIndex(questionIndex);
     setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
-  };
+  }, []);
 
-  // Função para rolar para uma questão específica
-  const scrollToQuestion = (questionId: string, questionIndex?: number) => {
+  // Função para rolar para uma questão específica - MEMOIZADA
+  const scrollToQuestion = useCallback((questionId: string, questionIndex?: number) => {
     setSelectedQuestionId(questionId);
     if (questionIndex !== undefined) {
       setSelectedQuestionIndex(questionIndex);
@@ -117,12 +301,10 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         inline: 'nearest'
       });
     }
-  };
+  }, []);
 
-  // Obter questões para o sidebar
-  const getQuestionsForSidebar = () => {
-    const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
-
+  // Obter questões para o sidebar - MEMOIZADA
+  const getQuestionsForSidebar = useCallback(() => {
     if (activityType !== 'lista-exercicios') return [];
 
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
@@ -136,7 +318,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       }
     };
 
-    // Buscar questões em diferentes possíveis localizações
     let questoes = [];
     if (previewData.questoes && Array.isArray(previewData.questoes)) {
       questoes = previewData.questoes;
@@ -148,13 +329,11 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       questoes = previewData.content.questions;
     }
 
-    // Aplicar filtro de exclusões
     try {
       const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
       if (deletedQuestionsJson) {
         const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
         questoes = questoes.filter(questao => !deletedQuestionIds.includes(questao.id || `questao-${questoes.indexOf(questao) + 1}`));
-        console.log(`🔍 Sidebar: Questões filtradas para navegação. ${questoes.length} questões restantes após exclusões`);
       }
     } catch (error) {
       console.warn('⚠️ Erro ao aplicar filtro de exclusões no sidebar:', error);
@@ -165,27 +344,38 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       numero: index + 1,
       dificuldade: (questao.dificuldade || questao.difficulty || 'medio').toLowerCase(),
       tipo: questao.type || questao.tipo || 'multipla-escolha',
-      completed: false, // Pode ser expandido para rastrear progresso
-      enunciado: questao.enunciado || questao.statement || 'Sem enunciado' // Adicionado para exibição no sidebar
+      completed: false,
+      enunciado: questao.enunciado || questao.statement || 'Sem enunciado'
     }));
-  };
+  }, [activityType, activity.id, activity.originalData, activity.customFields]);
 
-  const questionsForSidebar = getQuestionsForSidebar();
-  const isExerciseList = (activity.originalData?.type || activity.categoryId || activity.type) === 'lista-exercicios';
-  const activityType = activity.originalData?.type || activity.categoryId || activity.type || 'lista-exercicios';
+  const questionsForSidebar = useMemo(() => getQuestionsForSidebar(), [getQuestionsForSidebar]);
+  const isExerciseList = activityType === 'lista-exercicios';
 
-  // Função para obter o título da atividade
-  const getActivityTitle = () => {
+  // Função para obter o título da atividade - MEMOIZADA
+  const getActivityTitle = useCallback(() => {
     if (activityType === 'plano-aula') {
-      const planoTitle = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.titulo || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.title || activity.title || activity.personalizedTitle || 'Plano de Aula' : activity.title || activity.personalizedTitle || 'Plano de Aula';
-      const tema = localStorage.getItem(`activity_${activity.id}`) ? JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.tema || JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}')?.['Tema ou Tópico Central'] || '' : '';
+      const storedData = localStorage.getItem(`activity_${activity.id}`);
+      let planoTitle = activity.title || activity.personalizedTitle || 'Plano de Aula';
+      let tema = '';
+
+      if (storedData) {
+        try {
+          const parsed = JSON.parse(storedData);
+          planoTitle = parsed.titulo || parsed.title || planoTitle;
+          tema = parsed.tema || parsed['Tema ou Tópico Central'] || '';
+        } catch (error) {
+          console.warn('Erro ao parsear dados do plano:', error);
+        }
+      }
+
       return tema ? `${planoTitle}: ${tema}` : planoTitle;
     }
     return activity.title || activity.personalizedTitle || 'Atividade';
-  };
+  }, [activityType, activity.id, activity.title, activity.personalizedTitle]);
 
-  // Função para obter informações adicionais do Plano de Aula para o cabeçalho
-  const getPlanoAulaHeaderInfo = () => {
+  // Função para obter informações adicionais do Plano de Aula - MEMOIZADA
+  const getPlanoAulaHeaderInfo = useCallback(() => {
     if (activityType !== 'plano-aula') return null;
 
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
@@ -199,9 +389,9 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       anoEscolar,
       duracao
     };
-  };
+  }, [activityType, activity.id]);
 
-  const getDifficultyColor = (dificuldade: string) => {
+  const getDifficultyColor = useCallback((dificuldade: string) => {
     switch (dificuldade.toLowerCase()) {
       case 'facil':
       case 'fácil':
@@ -221,17 +411,16 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       default:
         return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
-  };
+  }, []);
 
-  const renderActivityPreview = () => {
+  const renderActivityPreview = useCallback(() => {
     // Tentar recuperar dados do localStorage se não estiverem disponíveis
     const storedData = JSON.parse(localStorage.getItem(`activity_${activity.id}`) || '{}');
     const storedFields = JSON.parse(localStorage.getItem(`activity_${activity.id}_fields`) || '{}');
 
-    console.log('💾 ActivityViewModal: Dados armazenados:', storedData);
-    console.log('🗂️ ActivityViewModal: Campos armazenados:', storedFields);
+    console.log('💾 ActivityViewModal: Renderizando preview para tipo:', activityType);
 
-    // Preparar dados para o preview EXATAMENTE como no modal de edição
+    // Preparar dados para o preview
     let previewData = {
       ...activity.originalData,
       ...storedData,
@@ -242,311 +431,37 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         ...storedFields
       },
       type: activityType,
-      // Incluir todos os campos que podem estar no originalData
       exercicios: activity.originalData?.exercicios || storedData.exercicios,
       questions: activity.originalData?.questions || storedData.questions,
       content: activity.originalData?.content || storedData.content
     };
 
-    let contentToLoad = null;
-
-    // --- Carregamento de Conteúdo Específico por Tipo de Atividade ---
-
-    // 1. Quiz Interativo
-    if (activityType === 'quiz-interativo') {
-      const quizInterativoSavedContent = localStorage.getItem(`constructed_quiz-interativo_${activity.id}`);
-      console.log(`🔍 Quiz Interativo: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!quizInterativoSavedContent);
-
-      if (quizInterativoSavedContent) {
-        try {
-          const parsedContent = JSON.parse(quizInterativoSavedContent);
-          contentToLoad = parsedContent.data || parsedContent;
-
-          // Validar questões
-          if (contentToLoad && contentToLoad.questions && Array.isArray(contentToLoad.questions) && contentToLoad.questions.length > 0) {
-            // Validar cada questão individualmente
-            const validQuestions = contentToLoad.questions.filter(q =>
-              q && (q.question || q.text) && (q.options || q.type === 'verdadeiro-falso') && q.correctAnswer
-            );
-
-            if (validQuestions.length > 0) {
-              contentToLoad.questions = validQuestions;
-              console.log(`✅ Quiz Interativo carregado com ${validQuestions.length} questões válidas para: ${activity.id}`);
-              // Não chamar setQuizInterativoContent aqui para evitar re-renders desnecessários
-            } else {
-              console.warn('⚠️ Nenhuma questão válida encontrada no Quiz');
-              contentToLoad = null;
-            }
-          } else {
-            console.warn('⚠️ Estrutura de dados inválida para Quiz Interativo');
-            contentToLoad = null;
-          }
-        } catch (error) {
-          console.error('❌ Erro ao processar conteúdo do Quiz Interativo:', error);
-          contentToLoad = null;
-        }
-      } else {
-        console.log('ℹ️ Nenhum conteúdo específico encontrado para Quiz Interativo. Usando dados gerais.');
-      }
-    }
-    // 1.5. Flash Cards
-    else if (activityType === 'flash-cards') {
-      const flashCardsSavedContent = localStorage.getItem(`constructed_flash-cards_${activity.id}`);
-      console.log(`🃏 Flash Cards: Verificando conteúdo salvo para ${activity.id}. Existe?`, !!flashCardsSavedContent);
-
-      if (flashCardsSavedContent) {
-        try {
-          const parsedContent = JSON.parse(flashCardsSavedContent);
-          contentToLoad = parsedContent.data || parsedContent;
-
-          console.log('🃏 Flash Cards - Conteúdo parseado no modal de visualização:', contentToLoad);
-
-          // Validar se o conteúdo tem cards válidos
-          const hasValidCards = contentToLoad && 
-                               contentToLoad.cards && 
-                               Array.isArray(contentToLoad.cards) && 
-                               contentToLoad.cards.length > 0 &&
-                               contentToLoad.cards.every(card => 
-                                 card && card.front && card.back
-                               );
-
-          if (hasValidCards) {
-            console.log(`✅ Flash Cards carregado com ${contentToLoad.cards.length} cards válidos para: ${activity.id}`);
-            setFlashCardsContent(contentToLoad); // Define o estado específico para Flash Cards
-          } else {
-            console.warn('⚠️ Conteúdo de Flash Cards encontrado mas sem cards válidos:', {
-              hasCards: !!(contentToLoad && contentToLoad.cards),
-              isArray: Array.isArray(contentToLoad?.cards),
-              cardsLength: contentToLoad?.cards?.length || 0,
-              firstCard: contentToLoad?.cards?.[0]
-            });
-            contentToLoad = null;
-          }
-        } catch (error) {
-          console.error('❌ Erro ao processar conteúdo de Flash Cards:', error);
-          contentToLoad = null;
-        }
-      } else {
-        console.log('🃏 Flash Cards: Criando fallback a partir dos campos customizados');
-
-        // Se não há conteúdo construído, criar fallback usando customFields
-        if (activity.customFields) {
-          const customFields = activity.customFields;
-          const topicos = customFields['Tópicos'] || customFields['Tópicos Principais'] || '';
-          const theme = customFields['Tema'] || customFields['Tema dos Flash Cards'] || activity.title || 'Flash Cards';
-          const subject = customFields['Disciplina'] || 'Geral';
-          const numberOfCards = parseInt(customFields['Número de Flash Cards'] || '10');
-
-          if (topicos && topicos.trim()) {
-            const topicosList = topicos.split('\n').filter(t => t.trim());
-            const fallbackCards = [];
-
-            const cardsToGenerate = Math.min(numberOfCards, Math.max(topicosList.length * 2, 5));
-
-            for (let i = 0; i < cardsToGenerate; i++) {
-              const topicoIndex = i % topicosList.length;
-              const topic = topicosList[topicoIndex].trim();
-              const cardType = i % 3;
-
-              let front: string;
-              let back: string;
-
-              switch (cardType) {
-                case 0:
-                  front = `O que é ${topic}?`;
-                  back = `${topic} é um conceito importante sobre ${theme} em ${subject} que deve ser estudado e compreendido.`;
-                  break;
-                case 1:
-                  front = `Qual a importância de ${topic}?`;
-                  back = `${topic} é importante porque estabelece bases conceituais para entender ${theme} em ${subject}.`;
-                  break;
-                default:
-                  front = `Como aplicar ${topic}?`;
-                  back = `${topic} pode ser aplicado através de exercícios práticos relacionados ao ${theme}.`;
-              }
-
-              fallbackCards.push({
-                id: i + 1,
-                front,
-                back,
-                category: subject,
-                difficulty: customFields['Nível de Dificuldade'] || 'Médio'
-              });
-            }
-
-            if (fallbackCards.length > 0) {
-              contentToLoad = {
-                title: customFields['Título'] || activity.title || `Flash Cards: ${theme}`,
-                description: customFields['Descrição'] || activity.description || `Flash cards sobre ${theme}`,
-                cards: fallbackCards,
-                totalCards: fallbackCards.length,
-                theme,
-                subject,
-                topicos,
-                numberOfFlashcards: fallbackCards.length,
-                context: customFields['Contexto'] || customFields['Contexto de Uso'] || 'Revisão e fixação',
-                difficultyLevel: customFields['Nível de Dificuldade'] || 'Médio',
-                generatedAt: new Date().toISOString(),
-                isGeneratedByAI: false,
-                isFallback: true,
-                type: 'flash-cards',
-                activityType: 'flash-cards'
-              };
-
-              console.log('🃏 Flash Cards fallback criado:', contentToLoad);
-              setFlashCardsContent(contentToLoad);
-            }
-          }
-        }
-      }
-    }
-    // 2. Lista de Exercícios (com filtro de exclusão)
-    else if (activityType === 'lista-exercicios') {
+    // Aplicar filtro de exclusão para lista de exercícios
+    if (activityType === 'lista-exercicios') {
       try {
         const deletedQuestionsJson = localStorage.getItem(`activity_deleted_questions_${activity.id}`);
         if (deletedQuestionsJson) {
           const deletedQuestionIds = JSON.parse(deletedQuestionsJson);
-          console.log(`🔍 ActivityViewModal: Aplicando filtro de exclusões. IDs excluídos:`, deletedQuestionIds);
 
-          // Filtrar questões excluídas em todas as possíveis localizações
           if (previewData.questoes && Array.isArray(previewData.questoes)) {
             previewData.questoes = previewData.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questões filtradas na raiz: ${previewData.questoes.length} restantes`);
           }
-
           if (previewData.content?.questoes && Array.isArray(previewData.content.questoes)) {
             previewData.content.questoes = previewData.content.questoes.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questões filtradas no content: ${previewData.content.questoes.length} restantes`);
           }
-
           if (previewData.questions && Array.isArray(previewData.questions)) {
             previewData.questions = previewData.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Questions filtradas: ${previewData.questions.length} restantes`);
           }
-
           if (previewData.content?.questions && Array.isArray(previewData.content.questions)) {
             previewData.content.questions = previewData.content.questions.filter(questao => !deletedQuestionIds.includes(questao.id));
-            console.log(`🗑️ Content questions filtradas: ${previewData.content.questions.length} restantes`);
           }
 
-          // Adicionar os IDs excluídos aos dados para referência
           previewData.deletedQuestionIds = deletedQuestionIds;
         }
       } catch (error) {
-        console.warn('⚠️ Erro ao aplicar filtro de exclusões no ActivityViewModal:', error);
+        console.warn('⚠️ Erro ao aplicar filtro de exclusões:', error);
       }
     }
-    // 3. Sequência Didática (com carregamento de dados da IA)
-    else if (activityType === 'sequencia-didatica') {
-      console.log('📚 ActivityViewModal: Processando Sequência Didática');
-
-      // Verificar múltiplas fontes de dados em ordem de prioridade
-      const sequenciaCacheKeys = [
-        `constructed_sequencia-didatica_${activity.id}`,
-        `schoolpower_sequencia-didatica_content`,
-        `activity_${activity.id}`,
-        `activity_fields_${activity.id}`
-      ];
-
-      let sequenciaContent = null;
-      for (const key of sequenciaCacheKeys) {
-        const data = localStorage.getItem(key);
-        if (data) {
-          try {
-            const parsedData = JSON.parse(data);
-            // Verificar se tem estrutura válida de sequência didática
-            if (parsedData.sequenciaDidatica ||
-                parsedData.aulas ||
-                parsedData.diagnosticos ||
-                parsedData.avaliacoes ||
-                parsedData.data?.sequenciaDidatica ||
-                parsedData.success) {
-              sequenciaContent = parsedData;
-              console.log(`✅ Dados da Sequência Didática encontrados em ${key}:`, parsedData);
-              break;
-            }
-          } catch (error) {
-            console.warn(`⚠️ Erro ao parsear dados de ${key}:`, error);
-          }
-        }
-      }
-
-      if (sequenciaContent) {
-        // Processar dados de acordo com a estrutura encontrada
-        let processedData = sequenciaContent;
-
-        // Se os dados estão dentro de 'data' (resultado da API)
-        if (sequenciaContent.data) {
-          processedData = sequenciaContent.data;
-        }
-
-        // Se tem sucesso e dados estruturados
-        if (sequenciaContent.success && sequenciaContent.data) {
-          processedData = sequenciaContent.data;
-        }
-
-        // Mesclar dados da sequência didática com dados existentes
-        contentToLoad = {
-          ...previewData,
-          ...processedData,
-          id: activity.id,
-          type: activityType,
-          title: processedData.sequenciaDidatica?.titulo ||
-                 processedData.titulo ||
-                 processedData.title ||
-                 previewData.title,
-          description: processedData.sequenciaDidatica?.descricaoGeral ||
-                      processedData.descricaoGeral ||
-                      processedData.description ||
-                      previewData.description,
-          // Garantir estrutura completa para visualização
-          sequenciaDidatica: processedData.sequenciaDidatica || processedData,
-          metadados: processedData.metadados || {
-            totalAulas: processedData.aulas?.length || 0,
-            totalDiagnosticos: processedData.diagnosticos?.length || 0,
-            totalAvaliacoes: processedData.avaliacoes?.length || 0,
-            isGeneratedByAI: true,
-            generatedAt: processedData.generatedAt || new Date().toISOString()
-          }
-        };
-        console.log('📚 Dados da Sequência Didática processados para visualização:', contentToLoad);
-      } else {
-        console.log('⚠️ Nenhum conteúdo específico da Sequência Didática encontrado');
-        // Criar estrutura básica a partir dos dados do formulário
-        contentToLoad = {
-          ...previewData,
-          sequenciaDidatica: {
-            titulo: previewData.title || 'Sequência Didática',
-            descricaoGeral: previewData.description || 'Descrição da sequência didática',
-            aulas: [],
-            diagnosticos: [],
-            avaliacoes: []
-          },
-          metadados: {
-            totalAulas: 0,
-            totalDiagnosticos: 0,
-            totalAvaliacoes: 0,
-            isGeneratedByAI: false,
-            generatedAt: new Date().toISOString()
-          }
-        };
-      }
-    }
-
-    // Atualizar previewData com o conteúdo carregado, se aplicável
-    if (contentToLoad) {
-      if (activityType === 'quiz-interativo') {
-        previewData = { ...previewData, ...contentToLoad };
-      } else if (activityType === 'flash-cards') {
-        previewData = { ...previewData, ...contentToLoad };
-      } else if (activityType === 'sequencia-didatica') {
-        previewData = contentToLoad; // Sequência didática substitui tudo
-      } else {
-        // Para outros tipos, mesclar campos relevantes
-        previewData = { ...previewData, ...contentToLoad };
-      }
-    }
-
 
     console.log('📊 ActivityViewModal: Dados finais para preview:', previewData);
 
@@ -561,37 +476,33 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
         );
 
       case 'plano-aula':
-        console.log('📚 Renderizando PlanoAulaPreview com dados:', previewData);
         return (
           <PlanoAulaPreview
-            data={previewData}
+            data={generalContent || previewData}
             activityData={activity}
           />
         );
 
       case 'sequencia-didatica':
-        console.log('📚 Renderizando SequenciaDidaticaPreview com dados:', previewData);
         return (
           <SequenciaDidaticaPreview
-            data={previewData}
+            data={generalContent || previewData}
             activityData={activity}
           />
         );
 
       case 'quiz-interativo':
-        console.log('📚 Renderizando QuizInterativoPreview com dados:', previewData);
         return (
           <QuizInterativoPreview
-            content={previewData}
+            content={quizInterativoContent || previewData}
             isLoading={false}
           />
         );
 
       case 'flash-cards':
-        console.log('🃏 Renderizando FlashCardsPreview com dados:', previewData);
         return (
           <FlashCardsPreview
-            content={previewData}
+            content={flashCardsContent || previewData}
             isLoading={false}
           />
         );
@@ -599,13 +510,26 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       default:
         return (
           <ActivityPreview
-            data={previewData}
+            data={generalContent || previewData}
             activityType={activityType}
             customFields={previewData.customFields}
           />
         );
     }
-  };
+  }, [
+    activity.id,
+    activity.originalData,
+    activity.personalizedTitle,
+    activity.title,
+    activity.personalizedDescription,
+    activity.description,
+    activity.customFields,
+    activityType,
+    quizInterativoContent,
+    flashCardsContent,
+    generalContent,
+    handleQuestionSelect
+  ]);
 
   return (
     <AnimatePresence>
@@ -623,185 +547,72 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Aplicar background laranja no cabeçalho quando for Plano de Aula */}
-          <style jsx>{`
-            .modal-header {
-              background: ${activityType === 'plano-aula'
-                ? 'linear-gradient(135deg, #ff8c42 0%, #ff6b1a 100%)'
-                : 'transparent'
-              };
-            }
-          `}</style>
-
-          {/* Header with Close button */}
-          {isExerciseList && (
-            <div className="bg-orange-50 dark:bg-gray-800/50 border-b border-orange-200 dark:border-gray-700 px-6 py-4 mb-0 z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                    {isInQuestionView && selectedQuestionIndex !== null ? (
-                      <span className="text-white font-bold text-sm">
-                        {selectedQuestionIndex + 1}
-                      </span>
-                    ) : (
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    {isInQuestionView && selectedQuestionIndex !== null ? (
-                      <>
-                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
-                          Questão {selectedQuestionIndex + 1} de {questionsForSidebar.length}
-                        </h2>
-                        <p className="text-orange-700 dark:text-orange-300 text-sm">
-                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'} - {activity?.originalData?.tema || 'Nível Introdutório'}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h2 className="text-xl font-bold text-orange-900 dark:text-orange-100">
-                          {activity?.personalizedTitle || activity?.title || 'Lista de Exercícios'}
-                        </h2>
-                        <p className="text-orange-700 dark:text-orange-300 text-sm">
-                          {activity?.personalizedDescription || activity?.description || 'Exercícios práticos para fixação do conteúdo'}
-                        </p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Tags and Info */}
-                  <div className="flex flex-wrap gap-2">
-                    {activity?.originalData?.disciplina && (
-                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                        {activity.originalData.disciplina}
-                      </Badge>
-                    )}
-                    {activity?.originalData?.tema && (
-                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m4-8h6m0 0v6m0-6l-6 6" />
-                        </svg>
-                        {activity.originalData.tema}
-                      </Badge>
-                    )}
-                    {questionsForSidebar.length > 0 && (
-                      <Badge variant="secondary" className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-700">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                        {questionsForSidebar.length} questões
-                      </Badge>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* Close button - positioned in the extreme right */}
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Non-Exercise List Header */}
-          {!isExerciseList && (
-            <div className="modal-header flex items-center justify-between p-6 border-b">
-              <div className="flex items-center gap-3 flex-1">
-                <div className={`p-2 rounded-lg ${
+          {/* Header aplicado condicionalmente */}
+          <div className={`${activityType === 'plano-aula' ? 'modal-header bg-gradient-to-r from-orange-500 to-orange-600' : ''} flex items-center justify-between p-6 border-b`}>
+            <div className="flex items-center gap-3 flex-1">
+              <div className={`p-2 rounded-lg ${
+                activityType === 'plano-aula'
+                  ? 'bg-orange-100'
+                  : isLightMode ? 'bg-blue-100' : 'bg-blue-900/30'
+              }`}>
+                <BookOpen className={`h-6 w-6 ${
                   activityType === 'plano-aula'
-                    ? 'bg-orange-100'
-                    : isLightMode ? 'bg-blue-100' : 'bg-blue-900/30'
-                }`}>
-                  <BookOpen className={`h-6 w-6 ${
-                    activityType === 'plano-aula'
-                      ? 'text-orange-600'
-                      : isLightMode ? 'text-blue-600' : 'text-blue-400'
-                  }`} />
-                </div>
-                <div className="flex-1">
-                  <h2 className={`text-xl font-semibold ${
-                    activityType === 'plano-aula' ? 'text-white' : ''
-                  }`}>
-                    {getActivityTitle()}
-                  </h2>
-                  {activityType === 'plano-aula' ? (
-                    <div className="flex items-center gap-4 mt-1">
-                      {(() => {
-                        const headerInfo = getPlanoAulaHeaderInfo();
-                        return headerInfo ? (
-                          <>
-                            <div className="flex items-center gap-1 text-white/90 text-sm">
-                              <BookOpen className="h-4 w-4" />
-                              <span>{headerInfo.disciplina} (Integrado com Português)</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-white/90 text-sm">
-                              <GraduationCap className="h-4 w-4" />
-                              <span>{headerInfo.anoEscolar}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-white/90 text-sm">
-                              <Clock className="h-4 w-4" />
-                              <span>{headerInfo.duracao}</span>
-                            </div>
-                          </>
-                        ) : null;
-                      })()}
-                    </div>
-                  ) : (
-                    <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-                      {activity.description || activity.personalizedDescription || 'Visualizar atividade'}
-                    </p>
-                  )}
-                </div>
+                    ? 'text-orange-600'
+                    : isLightMode ? 'text-blue-600' : 'text-blue-400'
+                }`} />
               </div>
-              <div className="flex items-center gap-2">
-                {activityType === 'plano-aula' && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Exportar PDF
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Simular Aula
-                    </Button>
-                  </>
+              <div className="flex-1">
+                <h2 className={`text-xl font-semibold ${
+                  activityType === 'plano-aula' ? 'text-white' : ''
+                }`}>
+                  {getActivityTitle()}
+                </h2>
+                {activityType === 'plano-aula' ? (
+                  <div className="flex items-center gap-4 mt-1">
+                    {(() => {
+                      const headerInfo = getPlanoAulaHeaderInfo();
+                      return headerInfo ? (
+                        <>
+                          <div className="flex items-center gap-1 text-white/90 text-sm">
+                            <BookOpen className="h-4 w-4" />
+                            <span>{headerInfo.disciplina}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-white/90 text-sm">
+                            <GraduationCap className="h-4 w-4" />
+                            <span>{headerInfo.anoEscolar}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-white/90 text-sm">
+                            <Clock className="h-4 w-4" />
+                            <span>{headerInfo.duracao}</span>
+                          </div>
+                        </>
+                      ) : null;
+                    })()}
+                  </div>
+                ) : (
+                  <p className={`text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                    {activity.description || activity.personalizedDescription || 'Visualizar atividade'}
+                  </p>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onClose}
-                  className={`${
-                    activityType === 'plano-aula'
-                      ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                      : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
-                  }`}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
               </div>
             </div>
-          )}
 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className={`${
+                activityType === 'plano-aula'
+                  ? 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+                  : isLightMode ? 'hover:bg-gray-100' : 'hover:bg-gray-700'
+              }`}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
           {/* Content Layout */}
-          <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
+          <div className="flex flex-1 overflow-hidden">
             {/* Question Navigation Sidebar - Only for Exercise Lists and when showSidebar is true */}
             {isExerciseList && questionsForSidebar.length > 0 && showSidebar && (
               <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-y-auto flex-shrink-0">
@@ -859,5 +670,4 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   );
 }
 
-// Default export for compatibility
 export default ActivityViewModal;
