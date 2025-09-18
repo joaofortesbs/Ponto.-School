@@ -58,14 +58,14 @@ interface FlashCardsPreviewProps {
   isLoading?: boolean;
 }
 
-export const FlashCardsPreview: React.FC<FlashProps> = ({ 
+export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ 
   content, 
   isLoading = false 
 }) => {
   // Normalizar dados uma única vez com memoização otimizada
   const normalizedContent = useMemo(() => {
-    if (!content) {
-      console.log('🃏 FlashCardsPreview - Sem conteúdo');
+    if (!content || typeof content !== 'object') {
+      console.log('🃏 FlashCardsPreview - Sem conteúdo válido');
       return null;
     }
 
@@ -202,30 +202,30 @@ export const FlashCardsPreview: React.FC<FlashProps> = ({
       cards: validCards,
       totalCards: validCards.length,
       numberOfFlashcards: validCards.length,
-      title: actualContent.title || 
-             content.title || 
-             content.customFields?.['Título'] ||
-             `Flash Cards: ${actualContent.theme || content.theme || 'Estudo'}`,
-      description: actualContent.description || 
-                  content.description || 
-                  content.customFields?.['Descrição'] ||
-                  `Flash cards para estudo`,
-      theme: actualContent.theme || 
-             content.theme || 
-             content.customFields?.['Tema'] ||
-             'Tema Geral',
-      subject: actualContent.subject || 
-               content.subject || 
-               content.customFields?.['Disciplina'] ||
-               'Geral',
-      schoolYear: actualContent.schoolYear || 
-                  content.schoolYear || 
-                  content.customFields?.['Ano de Escolaridade'] ||
-                  'Ensino Médio',
-      difficultyLevel: actualContent.difficultyLevel || 
-                      content.difficultyLevel || 
-                      content.customFields?.['Nível de Dificuldade'] ||
-                      'Médio'
+      title: (actualContent?.title || 
+             content?.title || 
+             content?.customFields?.['Título'] ||
+             `Flash Cards: ${actualContent?.theme || content?.theme || 'Estudo'}`) || 'Flash Cards',
+      description: (actualContent?.description || 
+                  content?.description || 
+                  content?.customFields?.['Descrição'] ||
+                  `Flash cards para estudo`) || 'Flash cards para revisão',
+      theme: (actualContent?.theme || 
+             content?.theme || 
+             content?.customFields?.['Tema'] ||
+             'Tema Geral') || 'Geral',
+      subject: (actualContent?.subject || 
+               content?.subject || 
+               content?.customFields?.['Disciplina'] ||
+               'Geral') || 'Disciplina Geral',
+      schoolYear: (actualContent?.schoolYear || 
+                  content?.schoolYear || 
+                  content?.customFields?.['Ano de Escolaridade'] ||
+                  'Ensino Médio') || 'Ensino Médio',
+      difficultyLevel: (actualContent?.difficultyLevel || 
+                      content?.difficultyLevel || 
+                      content?.customFields?.['Nível de Dificuldade'] ||
+                      'Médio') || 'Médio'
     };
 
     console.log('🃏 FlashCardsPreview - Conteúdo normalizado:', result);
@@ -363,7 +363,7 @@ export const FlashCardsPreview: React.FC<FlashProps> = ({
   }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
 
   const progress = useMemo(() => {
-    if (!normalizedContent?.cards?.length) return 0;
+    if (!normalizedContent?.cards?.length || currentCardIndex < 0) return 0;
     return (currentCardIndex / normalizedContent.cards.length) * 100;
   }, [currentCardIndex, normalizedContent?.cards?.length]);
 
@@ -470,10 +470,10 @@ export const FlashCardsPreview: React.FC<FlashProps> = ({
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-200/50 dark:border-orange-700/30 shadow-xl">
               <div className="text-center mb-6">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
-                  {normalizedContent.title?.replace(/^Flash Cards:\s*/, '') || 'Flash Cards'}
+                  {(normalizedContent?.title || 'Flash Cards').replace(/^Flash Cards:\s*/, '')}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
+                  {normalizedContent?.description || 'Pratique e aprenda com flash cards interativos'}
                 </p>
               </div>
               <div className="flex justify-between items-center mb-4">
