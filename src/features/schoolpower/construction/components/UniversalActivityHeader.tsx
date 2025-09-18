@@ -24,6 +24,9 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   schoolPoints = 100
 }) => {
   const userInfo = useUserInfo();
+  const [isEditingSPs, setIsEditingSPs] = React.useState(false);
+  const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
+  const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
   
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
@@ -37,6 +40,31 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Funções para gerenciar edição de SPs
+  const handleEditSPs = () => {
+    setTempSPs(currentSPs.toString());
+    setIsEditingSPs(true);
+  };
+
+  const handleSaveSPs = () => {
+    const newSPs = parseInt(tempSPs) || 100;
+    setCurrentSPs(newSPs);
+    setIsEditingSPs(false);
+  };
+
+  const handleCancelEdit = () => {
+    setTempSPs(currentSPs.toString());
+    setIsEditingSPs(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveSPs();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
   };
 
   return (
@@ -57,15 +85,15 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
-              <Avatar className="w-5 h-5 rounded-xl">
+              <Avatar className="w-6 h-6 rounded-xl">
                 <AvatarImage src={finalUserAvatar} alt={`Prof. ${finalUserName}`} />
-                <AvatarFallback className="text-xs bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl">
+                <AvatarFallback className="text-sm bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl">
                   {getUserInitials(finalUserName)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">
+              <span className="text-base text-orange-700 dark:text-orange-300 font-medium">
                 {userInfo.isLoading ? (
-                  <div className="w-16 h-3 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
+                  <div className="w-20 h-4 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
                 ) : (
                   `Prof. ${finalUserName}`
                 )}
@@ -77,17 +105,34 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         {/* Lado Direito - Controles */}
         <div className="flex items-center gap-3">
           {/* Card de Trilha */}
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <Route className="w-4 h-4 text-orange-600 dark:text-orange-400" />
           </div>
 
           {/* Card de School Points */}
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
+          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                {schoolPoints} SPs
-              </span>
-              <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
+              {isEditingSPs ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={tempSPs}
+                    onChange={(e) => setTempSPs(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    onBlur={handleSaveSPs}
+                    className="w-12 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none"
+                    autoFocus
+                  />
+                  <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SPs</span>
+                </div>
+              ) : (
+                <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                  {currentSPs} SPs
+                </span>
+              )}
+              <button onClick={handleEditSPs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
+                <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
+              </button>
             </div>
           </div>
 
@@ -96,7 +141,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             variant="ghost"
             size="icon"
             onClick={onMoreOptions}
-            className="w-10 h-10 rounded-xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
+            className="w-10 h-10 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
           >
             <MoreHorizontal className="w-5 h-5 rotate-90" />
           </Button>
