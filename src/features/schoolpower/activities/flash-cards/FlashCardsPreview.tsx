@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,9 +51,8 @@ interface FlashCardsPreviewProps {
     evaluation?: string;
     generatedByAI?: boolean;
     isFallback?: boolean;
-    data?: any;
-    success?: boolean;
-    customFields?: any;
+    data?: any; // Para estruturas aninhadas
+    success?: boolean; // Para estruturas de API
   } | null;
   isLoading?: boolean;
 }
@@ -62,25 +61,28 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   content, 
   isLoading = false 
 }) => {
-  // Normalizar dados uma única vez com memoização otimizada
-  const normalizedContent = useMemo(() => {
-    if (!content || typeof content !== 'object') {
-      console.log('🃏 FlashCardsPreview - Sem conteúdo válido');
+  // Normalizar dados com lógica mais robusta
+  const normalizedContent = React.useMemo(() => {
+    if (!content) {
+      console.log('🃏 FlashCardsPreview - Sem conteúdo');
       return null;
     }
 
-    console.log('🃏 FlashCardsPreview - Processando conteúdo:', content);
+    console.log('🃏 FlashCardsPreview - Conteúdo bruto recebido:', content);
 
     // Extrair dados da estrutura mais profunda possível
     let actualContent = content;
-
+    
+    // Verificar estruturas aninhadas comuns
     if (content.success && content.data) {
       actualContent = content.data;
+      console.log('🃏 Extraindo de success.data:', actualContent);
     } else if (content.data && typeof content.data === 'object') {
       actualContent = content.data;
+      console.log('🃏 Extraindo de data:', actualContent);
     }
 
-    // Buscar cards com validação rigorosa
+    // Buscar cards em diferentes propriedades possíveis
     let cards = actualContent.cards || 
                 actualContent.flashcards || 
                 actualContent.flashCards ||
@@ -88,9 +90,19 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                 content.flashcards ||
                 [];
 
+    console.log('🃏 Cards encontrados (raw):', cards);
+
+    // Se cards não é um array, tentar converter
     if (!Array.isArray(cards)) {
-      if (typeof cards === 'object' && cards !== null && cards.front && cards.back) {
-        cards = [cards];
+      console.warn('🃏 Cards não é array, tentando converter:', typeof cards);
+      
+      // Se é um objeto, talvez seja um único card
+      if (typeof cards === 'object' && cards !== null) {
+        if (cards.front && cards.back) {
+          cards = [cards];
+        } else {
+          cards = [];
+        }
       } else {
         cards = [];
       }
@@ -99,14 +111,20 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     // Validar e processar cada card
     const validCards = cards
       .filter((card: any) => {
-        return card && 
-               typeof card === 'object' && 
-               card.front && 
-               card.back &&
-               typeof card.front === 'string' &&
-               typeof card.back === 'string' &&
-               card.front.trim() !== '' &&
-               card.back.trim() !== '';
+        const isValid = card && 
+                       typeof card === 'object' && 
+                       card.front && 
+                       card.back &&
+                       typeof card.front === 'string' &&
+                       typeof card.back === 'string' &&
+                       card.front.trim() !== '' &&
+                       card.back.trim() !== '';
+        
+        if (!isValid) {
+          console.warn('🃏 Card inválido filtrado:', card);
+        }
+        
+        return isValid;
       })
       .map((card: any, index: number) => ({
         id: card.id || index + 1,
@@ -116,60 +134,70 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         difficulty: card.difficulty || actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
       }));
 
-    // Se não há cards válidos, tentar gerar fallback
+    console.log('🃏 Cards válidos processados:', validCards);
+
+    // Se não temos cards válidos, tentar gerar fallback dos tópicos ou customFields
     if (validCards.length === 0) {
+      console.log('🃏 Nenhum card válido encontrado, gerando fallback');
+      
+      // Tentar diferentes fontes de tópicos
       const topicos = actualContent.topicos || 
                      content.topicos || 
                      content.customFields?.['Tópicos'] ||
                      content.customFields?.['Tópicos Principais'] ||
                      '';
-
+      
       const theme = actualContent.theme || 
                    content.theme || 
                    content.customFields?.['Tema'] ||
+                   content.customFields?.['Tema dos Flash Cards'] ||
                    'Flash Cards';
-
+                   
       const subject = actualContent.subject || 
                      content.subject || 
                      content.customFields?.['Disciplina'] ||
                      'Geral';
-
+      
+      console.log('🃏 Tentando gerar fallback com:', { topicos, theme, subject });
+      
       if (topicos && typeof topicos === 'string' && topicos.trim()) {
         const topicosList = topicos.split('\n').filter(t => t.trim());
-
+        console.log('🃏 Lista de tópicos encontrada:', topicosList);
+        
         if (topicosList.length > 0) {
           const numberOfCards = Math.min(
             parseInt(content.customFields?.['Número de Flash Cards'] || '10'),
             Math.max(topicosList.length * 2, 8)
           );
-
+          
+          const fallbackCards = [];
           for (let i = 0; i < numberOfCards; i++) {
             const topicoIndex = i % topicosList.length;
             const topic = topicosList[topicoIndex].trim();
             const cardType = i % 4;
-
+            
             let front: string;
             let back: string;
 
             switch (cardType) {
               case 0:
                 front = `O que é ${topic}?`;
-                back = `${topic} é um conceito fundamental sobre ${theme} em ${subject}.`;
+                back = `${topic} é um conceito fundamental sobre ${theme} em ${subject}. É importante para compreender os fundamentos desta disciplina.`;
                 break;
               case 1:
                 front = `Qual a importância de ${topic}?`;
-                back = `${topic} é importante porque estabelece bases conceituais para ${theme}.`;
+                back = `${topic} é importante porque estabelece bases conceituais essenciais para entender ${theme} em ${subject}.`;
                 break;
               case 2:
-                front = `Como aplicar ${topic}?`;
-                back = `${topic} pode ser aplicado através de exercícios práticos relacionados ao ${theme}.`;
+                front = `Como aplicar ${topic} na prática?`;
+                back = `${topic} pode ser aplicado através de exercícios práticos e análise de casos relacionados ao ${theme}.`;
                 break;
               default:
                 front = `Defina ${topic}`;
-                back = `${topic}: Elemento-chave para compreensão de ${theme} em ${subject}.`;
+                back = `${topic}: Elemento-chave para compreensão de ${theme} em ${subject}, requerendo estudo teórico e prático.`;
             }
 
-            validCards.push({
+            fallbackCards.push({
               id: i + 1,
               front,
               back,
@@ -177,21 +205,28 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               difficulty: content.customFields?.['Nível de Dificuldade'] || 'Médio'
             });
           }
+          
+          if (fallbackCards.length > 0) {
+            console.log('🃏 Cards fallback gerados dos tópicos:', fallbackCards);
+            validCards.push(...fallbackCards);
+          }
         }
       }
     }
 
-    // Se ainda não há cards, criar exemplos mínimos
+    // Se ainda não há cards, criar exemplo baseado no tema
     if (validCards.length === 0) {
+      console.log('🃏 Criando cards de exemplo baseados no tema');
+      
       const theme = content.customFields?.['Tema'] || content.theme || 'Flash Cards';
       const subject = content.customFields?.['Disciplina'] || content.subject || 'Geral';
       const numberOfCards = Math.max(parseInt(content.customFields?.['Número de Flash Cards'] || '5'), 3);
-
+      
       for (let i = 0; i < numberOfCards; i++) {
         validCards.push({
           id: i + 1,
           front: `Conceito ${i + 1} sobre ${theme}`,
-          back: `Este é um conceito importante relacionado a ${theme} em ${subject}.`,
+          back: `Este é um conceito importante relacionado a ${theme} em ${subject}. Configure os tópicos para gerar cards personalizados.`,
           category: subject,
           difficulty: 'Médio'
         });
@@ -199,42 +234,76 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     }
 
     const result = {
+      ...actualContent,
+      ...content, // Preservar propriedades do nível superior
       cards: validCards,
       totalCards: validCards.length,
       numberOfFlashcards: validCards.length,
-      title: (actualContent?.title || 
-             content?.title || 
-             content?.customFields?.['Título'] ||
-             `Flash Cards: ${actualContent?.theme || content?.theme || 'Estudo'}`) || 'Flash Cards',
-      description: (actualContent?.description || 
-                  content?.description || 
-                  content?.customFields?.['Descrição'] ||
-                  `Flash cards para estudo`) || 'Flash cards para revisão',
-      theme: (actualContent?.theme || 
-             content?.theme || 
-             content?.customFields?.['Tema'] ||
-             'Tema Geral') || 'Geral',
-      subject: (actualContent?.subject || 
-               content?.subject || 
-               content?.customFields?.['Disciplina'] ||
-               'Geral') || 'Disciplina Geral',
-      schoolYear: (actualContent?.schoolYear || 
-                  content?.schoolYear || 
-                  content?.customFields?.['Ano de Escolaridade'] ||
-                  'Ensino Médio') || 'Ensino Médio',
-      difficultyLevel: (actualContent?.difficultyLevel || 
-                      content?.difficultyLevel || 
-                      content?.customFields?.['Nível de Dificuldade'] ||
-                      'Médio') || 'Médio'
+      title: actualContent.title || 
+             content.title || 
+             content.customFields?.['Título'] ||
+             `Flash Cards: ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'Estudo'}`,
+      description: actualContent.description || 
+                  content.description || 
+                  content.customFields?.['Descrição'] ||
+                  `Flash cards para estudo sobre ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'o tema'}`,
+      theme: actualContent.theme || 
+             content.theme || 
+             content.customFields?.['Tema'] ||
+             content.customFields?.['Tema dos Flash Cards'] ||
+             'Tema Geral',
+      subject: actualContent.subject || 
+               content.subject || 
+               content.customFields?.['Disciplina'] ||
+               'Geral',
+      schoolYear: actualContent.schoolYear || 
+                  content.schoolYear || 
+                  content.customFields?.['Ano de Escolaridade'] ||
+                  'Ensino Médio',
+      difficultyLevel: actualContent.difficultyLevel || 
+                      content.difficultyLevel || 
+                      content.customFields?.['Nível de Dificuldade'] ||
+                      'Médio',
+      topicos: actualContent.topicos || 
+               content.topicos || 
+               content.customFields?.['Tópicos'] ||
+               content.customFields?.['Tópicos Principais'] ||
+               '',
+      context: actualContent.context || 
+               content.context || 
+               content.customFields?.['Contexto'] ||
+               content.customFields?.['Contexto de Uso'] ||
+               'Revisão e fixação do conteúdo'
     };
 
-    console.log('🃏 FlashCardsPreview - Conteúdo normalizado:', result);
+    console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
+    console.log('🃏 Total de cards processados:', result.cards.length);
+    
     return result;
-  }, [content]); // Dependência única e estável
+  }, [content]);
+
+  // Debug logging detalhado
+  useEffect(() => {
+    console.log('🃏 FlashCardsPreview - Estado atual:', {
+      hasContent: !!content,
+      contentKeys: content ? Object.keys(content) : [],
+      hasNormalizedContent: !!normalizedContent,
+      hasCards: !!(normalizedContent?.cards),
+      cardsLength: normalizedContent?.cards?.length || 0,
+      isLoading,
+      firstCard: normalizedContent?.cards?.[0],
+      contentStructure: {
+        raw: content,
+        normalized: normalizedContent
+      },
+      isFromViewModal: window.location.pathname.includes('view') || document.querySelector('[data-testid="activity-view-modal"]')
+    });
+  }, [content, normalizedContent, isLoading]);
 
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [studyMode, setStudyMode] = useState<'practice' | 'test' | 'review'>('practice');
   const [isPlaying, setIsPlaying] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [cardStats, setCardStats] = useState<{[key: number]: { correct: number; incorrect: number; }}>({});
@@ -248,124 +317,43 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const [cardOrder, setCardOrder] = useState<number[]>([]);
   const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
 
-  // Inicializar ordem dos cards - OTIMIZADO para evitar loops
+  // Inicializar ordem dos cards
   useEffect(() => {
     if (normalizedContent?.cards && normalizedContent.cards.length > 0) {
-      const expectedLength = normalizedContent.cards.length;
-
-      setCardOrder(prevOrder => {
-        // Só atualizar se o tamanho mudou
-        if (prevOrder.length !== expectedLength) {
-          const newOrder = Array.from({ length: expectedLength }, (_, i) => i);
-          console.log('🃏 CardOrder atualizado:', newOrder);
-          return newOrder;
-        }
-        return prevOrder;
-      });
-
+      const order = Array.from({ length: normalizedContent.cards.length }, (_, i) => i);
+      setCardOrder(order);
       // Garantir que o índice atual seja válido
-      setCurrentCardIndex(prevIndex => {
-        if (prevIndex >= expectedLength) {
-          return 0;
-        }
-        return prevIndex;
-      });
-    }
-  }, [normalizedContent?.cards?.length]); // Dependência específica
-
-  // Auto-play functionality - OTIMIZADO
-  useEffect(() => {
-    if (!isPlaying || !normalizedContent?.cards) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      if (isFlipped) {
-        handleNextCard();
-      } else {
-        setIsFlipped(true);
+      if (currentCardIndex >= normalizedContent.cards.length) {
+        setCurrentCardIndex(0);
       }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, isFlipped, currentCardIndex, normalizedContent?.cards?.length]);
-
-  // Funções de controle - MEMOIZADAS para evitar re-criação
-  const handleNextCard = useCallback(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
-
-    if (currentCardIndex < normalizedContent.cards.length - 1) {
-      setCurrentCardIndex(prev => prev + 1);
-      setIsFlipped(false);
+      console.log('🃏 CardOrder inicializado:', order);
     } else {
-      setIsPlaying(false);
-      setShowStats(true);
+      setCardOrder([]);
+      setCurrentCardIndex(0);
     }
-  }, [currentCardIndex, normalizedContent?.cards?.length]);
+  }, [normalizedContent?.cards]);
 
-  const handlePrevCard = useCallback(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
-
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(prev => prev - 1);
-      setIsFlipped(false);
+  // Verificação adicional para currentCardIndex válido
+  useEffect(() => {
+    if (normalizedContent?.cards && currentCardIndex >= normalizedContent.cards.length) {
+      setCurrentCardIndex(0);
     }
-  }, [currentCardIndex]);
+  }, [currentCardIndex, normalizedContent?.cards]);
 
-  const handleFlipCard = useCallback(() => {
-    setIsFlipped(prev => !prev);
-  }, []);
-
-  const handleMarkCard = useCallback((correct: boolean) => {
-    const currentCard = normalizedContent?.cards?.[cardOrder[currentCardIndex]] || normalizedContent?.cards?.[currentCardIndex];
-    if (!currentCard) return;
-
-    const cardId = currentCard.id;
-    setCardStats(prev => ({
-      ...prev,
-      [cardId]: {
-        correct: (prev[cardId]?.correct || 0) + (correct ? 1 : 0),
-        incorrect: (prev[cardId]?.incorrect || 0) + (correct ? 0 : 1)
-      }
-    }));
-
-    setSessionStats(prev => ({
-      ...prev,
-      cardsStudied: prev.cardsStudied + 1,
-      correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
-      incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
-    }));
-
-    setCardResults(prev => ({
-      ...prev,
-      [currentCardIndex]: correct
-    }));
-
-    setTimeout(() => {
-      handleNextCard();
-    }, 500);
-  }, [currentCardIndex, cardOrder, normalizedContent?.cards, handleNextCard]);
-
-  const handleShuffle = useCallback(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
-
-    const newOrder = [...cardOrder].sort(() => Math.random() - 0.5);
-    setCardOrder(newOrder);
-    setCurrentCardIndex(0);
-    setIsFlipped(false);
-    setShuffled(true);
-  }, [cardOrder, normalizedContent?.cards]);
-
-  // Valores computados memoizados
-  const currentCard = useMemo(() => {
-    if (!normalizedContent?.cards || !cardOrder.length) return null;
-    return normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
-  }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
-
-  const progress = useMemo(() => {
-    if (!normalizedContent?.cards?.length || currentCardIndex < 0) return 0;
-    return (currentCardIndex / normalizedContent.cards.length) * 100;
-  }, [currentCardIndex, normalizedContent?.cards?.length]);
+  // Auto-play functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPlaying && normalizedContent?.cards) {
+      interval = setInterval(() => {
+        if (isFlipped) {
+          handleNextCard();
+        } else {
+          setIsFlipped(true);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, isFlipped, currentCardIndex, normalizedContent?.cards]);
 
   if (isLoading) {
     return (
@@ -375,7 +363,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-orange-200 dark:border-orange-800 border-t-orange-500 dark:border-t-orange-400 shadow-lg"></div>
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 opacity-20 animate-pulse"></div>
           </div>
-
+          
           <div className="text-center space-y-4 max-w-md">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Zap className="h-6 w-6 text-orange-500 dark:text-orange-400 animate-pulse" />
@@ -384,11 +372,11 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               </h3>
               <Zap className="h-6 w-6 text-orange-500 dark:text-orange-400 animate-pulse" />
             </div>
-
+            
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-              A IA do Gemini está criando seus flash cards personalizados
+              A IA do Gemini está criando seus flash cards personalizados com conteúdo educacional de alta qualidade
             </p>
-
+            
             <div className="flex items-center justify-center gap-2 pt-4">
               <div className="h-2 w-2 bg-orange-500 dark:bg-orange-400 rounded-full animate-bounce"></div>
               <div className="h-2 w-2 bg-orange-500 dark:bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -400,23 +388,26 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
-  if (!normalizedContent || !normalizedContent.cards || normalizedContent.cards.length === 0) {
+  // Não mostrar tela vazia se há conteúdo normalizado com pelo menos um card
+  if (!normalizedContent) {
+    console.log('🃏 FlashCardsPreview - Sem conteúdo normalizado');
+    
     return (
       <div className="min-h-[600px] bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 rounded-3xl border-2 border-orange-200/50 dark:border-orange-800/30 shadow-2xl">
         <div className="flex flex-col items-center justify-center h-full p-12 text-center">
           <div className="bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/20 rounded-full p-8 mb-8 border-2 border-orange-200 dark:border-orange-700 shadow-lg">
             <BookOpen className="h-20 w-20 text-orange-500 dark:text-orange-400" />
           </div>
-
+          
           <div className="space-y-4 max-w-lg">
             <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
               Flash Cards em Preparação
             </h3>
-
+            
             <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
               Configure os campos obrigatórios na aba "Editar" e clique em "Construir Atividade" para gerar seus flash cards personalizados
             </p>
-
+            
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-200 dark:border-orange-700 shadow-lg mt-6">
               <div className="flex items-center gap-3 text-orange-600 dark:text-orange-400 mb-3">
                 <Target className="h-5 w-5" />
@@ -443,8 +434,18 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
+  const currentCard = normalizedContent.cards[cardOrder[currentCardIndex]] || normalizedContent.cards[currentCardIndex] || normalizedContent.cards[0];
+  const progress = (currentCardIndex / normalizedContent.cards.length) * 100;
+
+  // Verificação de segurança adicional
   if (!currentCard) {
-    console.error('🃏 Erro: currentCard é undefined');
+    console.error('🃏 Erro: currentCard é undefined', {
+      currentCardIndex,
+      cardOrderLength: cardOrder.length,
+      cardsLength: normalizedContent.cards.length,
+      cardOrder
+    });
+    
     return (
       <div className="flex flex-col items-center justify-center h-full p-8 text-center">
         <BookOpen className="h-16 w-16 text-gray-400 mb-4" />
@@ -458,6 +459,87 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
+  const handleNextCard = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
+    if (currentCardIndex < normalizedContent.cards.length - 1) {
+      setCurrentCardIndex(prev => prev + 1);
+      setIsFlipped(false);
+    } else {
+      setIsPlaying(false);
+      setShowStats(true);
+    }
+  };
+
+  const handlePrevCard = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
+    if (currentCardIndex > 0) {
+      setCurrentCardIndex(prev => prev - 1);
+      setIsFlipped(false);
+    }
+  };
+
+  const handleFlipCard = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  const handleMarkCard = (correct: boolean) => {
+    if (!currentCard) return;
+    
+    const cardId = currentCard.id;
+    setCardStats(prev => ({
+      ...prev,
+      [cardId]: {
+        correct: (prev[cardId]?.correct || 0) + (correct ? 1 : 0),
+        incorrect: (prev[cardId]?.incorrect || 0) + (correct ? 0 : 1)
+      }
+    }));
+
+    setSessionStats(prev => ({
+      ...prev,
+      cardsStudied: prev.cardsStudied + 1,
+      correctAnswers: prev.correctAnswers + (correct ? 1 : 0),
+      incorrectAnswers: prev.incorrectAnswers + (correct ? 0 : 1)
+    }));
+
+    // Marcar o resultado do card atual
+    setCardResults(prev => ({
+      ...prev,
+      [currentCardIndex]: correct
+    }));
+
+    // Transição suave para o próximo card
+    setTimeout(() => {
+      handleNextCard();
+    }, 500);
+  };
+
+  const handleShuffle = () => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    
+    const newOrder = [...cardOrder].sort(() => Math.random() - 0.5);
+    setCardOrder(newOrder);
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setShuffled(true);
+  };
+
+  const resetSession = () => {
+    setCurrentCardIndex(0);
+    setIsFlipped(false);
+    setIsPlaying(false);
+    setShowStats(false);
+    setCardStats({});
+    setCardResults({});
+    setSessionStats({
+      cardsStudied: 0,
+      correctAnswers: 0,
+      incorrectAnswers: 0,
+      totalTime: 0
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
         <div className="max-w-4xl w-full">
@@ -468,12 +550,13 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             className="mb-6"
           >
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-200/50 dark:border-orange-700/30 shadow-xl">
+              {/* Título dentro do card */}
               <div className="text-center mb-6">
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
-                  {(normalizedContent?.title || 'Flash Cards').replace(/^Flash Cards:\s*/, '')}
+                  {normalizedContent.title?.replace(/^Flash Cards:\s*/, '') || 'Flash Cards'}
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 text-sm">
-                  {normalizedContent?.description || 'Pratique e aprenda com flash cards interativos'}
+                  {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
                 </p>
               </div>
               <div className="flex justify-between items-center mb-4">
@@ -490,7 +573,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                     </p>
                   </div>
                 </div>
-
+                
                 <div className="text-right">
                   <div className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent">
                     {Math.round(progress)}%
@@ -500,7 +583,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                   </p>
                 </div>
               </div>
-
+              
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
                 <motion.div
                   className="h-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 rounded-full shadow-lg"
@@ -527,19 +610,22 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               {/* Frente do card */}
               <Card className="absolute inset-0 bg-gradient-to-br from-white via-orange-50/30 to-orange-100/50 dark:from-gray-800 dark:via-gray-700 dark:to-orange-900/20 shadow-2xl border-2 border-orange-200/60 dark:border-orange-700/50 hover:shadow-3xl transition-all duration-300 rounded-3xl overflow-hidden"
                     style={{ backfaceVisibility: 'hidden' }}>
-
+                
+                {/* Header decorativo */}
                 <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700"></div>
-
+                
+                {/* Ícone de dica */}
                 <div className="absolute top-4 right-4 bg-orange-500/20 dark:bg-orange-600/30 rounded-full p-2">
                   <Eye className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                 </div>
-
+                
+                {/* Badge de categoria */}
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0 rounded-xl px-3 py-1 text-xs font-semibold shadow-lg">
                     {currentCard.category || 'Flash Card'}
                   </Badge>
                 </div>
-
+                
                 <CardContent className="flex items-center justify-center h-full p-8 pt-16">
                   <div className="text-center space-y-4 max-w-2xl">
                     <div className="bg-orange-500/10 dark:bg-orange-600/20 rounded-2xl p-1 inline-block">
@@ -548,7 +634,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                     <p className="text-xl md:text-2xl font-bold text-gray-800 dark:text-white leading-relaxed">
                       {currentCard.front}
                     </p>
-
+                    
+                    {/* Indicador para virar */}
                     <div className="flex items-center justify-center gap-2 text-orange-600 dark:text-orange-400 text-sm animate-pulse">
                       <RotateCcw className="h-4 w-4" />
                       <span>Clique para ver a resposta</span>
@@ -563,19 +650,22 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                       backfaceVisibility: 'hidden',
                       transform: 'rotateY(180deg)'
                     }}>
-
+                
+                {/* Header decorativo */}
                 <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 via-green-600 to-emerald-700"></div>
-
+                
+                {/* Ícone de resposta */}
                 <div className="absolute top-4 right-4 bg-emerald-500/20 dark:bg-green-600/30 rounded-full p-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-green-400" />
                 </div>
-
+                
+                {/* Badge de dificuldade */}
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 rounded-xl px-3 py-1 text-xs font-semibold shadow-lg">
                     {currentCard.difficulty || 'Médio'}
                   </Badge>
                 </div>
-
+                
                 <CardContent className="flex items-center justify-center h-full p-8 pt-16">
                   <div className="text-center space-y-4 max-w-2xl">
                     <div className="bg-emerald-500/10 dark:bg-green-600/20 rounded-2xl p-1 inline-block">
@@ -584,7 +674,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                     <p className="text-lg md:text-xl font-semibold text-gray-800 dark:text-white leading-relaxed">
                       {currentCard.back}
                     </p>
-
+                    
+                    {/* Indicador de avaliação */}
                     <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-green-400 text-sm">
                       <Trophy className="h-4 w-4" />
                       <span>Como foi seu desempenho?</span>
@@ -595,7 +686,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             </motion.div>
           </div>
 
-          {/* Botões de Feedback Premium */}
+          {/* Botões de Feedback Premium - Aparecem apenas quando o card está virado */}
           <AnimatePresence>
             {isFlipped && (
               <motion.div
@@ -648,7 +739,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
             )}
           </AnimatePresence>
 
-          {/* Indicadores de Progresso */}
+          {/* Indicadores de Progresso Modernos */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -659,18 +750,25 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               <div className="flex items-center justify-center gap-3">
                 {normalizedContent.cards.slice(0, 15).map((_, index) => {
                   let dotClass = 'bg-gray-300 dark:bg-gray-600 w-2 h-2';
-
+                  
                   if (index === currentCardIndex) {
+                    // Card atual - laranja
                     dotClass = 'bg-gradient-to-r from-orange-500 to-orange-600 w-4 h-4 shadow-lg scale-125';
                   } else if (index < currentCardIndex) {
+                    // Cards já respondidos - verificar se foi correto ou incorreto
                     const wasCorrect = cardResults[index];
                     if (wasCorrect === true) {
+                      // Acertou - verde
                       dotClass = 'bg-gradient-to-r from-emerald-500 to-green-600 w-3 h-3 shadow-md';
                     } else if (wasCorrect === false) {
+                      // Errou - vermelho
                       dotClass = 'bg-gradient-to-r from-red-500 to-red-600 w-3 h-3 shadow-md';
+                    } else {
+                      // Sem resposta ainda - cinza
+                      dotClass = 'bg-gray-300 dark:bg-gray-600 w-2 h-2';
                     }
                   }
-
+                  
                   return (
                     <motion.div
                       key={index}
