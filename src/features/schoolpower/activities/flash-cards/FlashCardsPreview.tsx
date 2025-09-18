@@ -80,24 +80,24 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   const [cardResults, setCardResults] = useState<{[key: number]: boolean}>({});
   const [normalizedContent, setNormalizedContent] = useState<any>(null);
 
-  // Função para normalizar dados - extraída e otimizada
-  const normalizeContent = useCallback((rawContent: any) => {
-    if (!rawContent) {
-      console.log('🃏 FlashCardsPreview - Sem conteúdo');
-      return null;
+  // Normalizar conteúdo apenas quando content mudar
+  useEffect(() => {
+    if (!content) {
+      setNormalizedContent(null);
+      return;
     }
 
-    console.log('🃏 FlashCardsPreview - Conteúdo bruto recebido:', rawContent);
+    console.log('🃏 FlashCardsPreview - Conteúdo recebido, normalizando...');
 
     // Extrair dados da estrutura mais profunda possível
-    let actualContent = rawContent;
+    let actualContent = content;
     
     // Verificar estruturas aninhadas comuns
-    if (rawContent.success && rawContent.data) {
-      actualContent = rawContent.data;
+    if (content.success && content.data) {
+      actualContent = content.data;
       console.log('🃏 Extraindo de success.data:', actualContent);
-    } else if (rawContent.data && typeof rawContent.data === 'object') {
-      actualContent = rawContent.data;
+    } else if (content.data && typeof content.data === 'object') {
+      actualContent = content.data;
       console.log('🃏 Extraindo de data:', actualContent);
     }
 
@@ -105,8 +105,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     let cards = actualContent.cards || 
                 actualContent.flashcards || 
                 actualContent.flashCards ||
-                rawContent.cards ||
-                rawContent.flashcards ||
+                content.cards ||
+                content.flashcards ||
                 [];
 
     console.log('🃏 Cards encontrados (raw):', cards);
@@ -149,8 +149,8 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         id: card.id || index + 1,
         front: card.front.trim(),
         back: card.back.trim(),
-        category: card.category || actualContent.subject || rawContent.subject || 'Geral',
-        difficulty: card.difficulty || actualContent.difficultyLevel || rawContent.difficultyLevel || 'Médio'
+        category: card.category || actualContent.subject || content.subject || 'Geral',
+        difficulty: card.difficulty || actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
       }));
 
     console.log('🃏 Cards válidos processados:', validCards);
@@ -161,20 +161,20 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       
       // Tentar diferentes fontes de tópicos
       const topicos = actualContent.topicos || 
-                     rawContent.topicos || 
-                     rawContent.customFields?.['Tópicos'] ||
-                     rawContent.customFields?.['Tópicos Principais'] ||
+                     content.topicos || 
+                     content.customFields?.['Tópicos'] ||
+                     content.customFields?.['Tópicos Principais'] ||
                      '';
       
       const theme = actualContent.theme || 
-                   rawContent.theme || 
-                   rawContent.customFields?.['Tema'] ||
-                   rawContent.customFields?.['Tema dos Flash Cards'] ||
+                   content.theme || 
+                   content.customFields?.['Tema'] ||
+                   content.customFields?.['Tema dos Flash Cards'] ||
                    'Flash Cards';
                    
       const subject = actualContent.subject || 
-                     rawContent.subject || 
-                     rawContent.customFields?.['Disciplina'] ||
+                     content.subject || 
+                     content.customFields?.['Disciplina'] ||
                      'Geral';
       
       console.log('🃏 Tentando gerar fallback com:', { topicos, theme, subject });
@@ -185,7 +185,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         
         if (topicosList.length > 0) {
           const numberOfCards = Math.min(
-            parseInt(rawContent.customFields?.['Número de Flash Cards'] || '10'),
+            parseInt(content.customFields?.['Número de Flash Cards'] || '10'),
             Math.max(topicosList.length * 2, 8)
           );
           
@@ -221,7 +221,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               front,
               back,
               category: subject,
-              difficulty: rawContent.customFields?.['Nível de Dificuldade'] || 'Médio'
+              difficulty: content.customFields?.['Nível de Dificuldade'] || 'Médio'
             });
           }
           
@@ -237,9 +237,9 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     if (validCards.length === 0) {
       console.log('🃏 Criando cards de exemplo baseados no tema');
       
-      const theme = rawContent.customFields?.['Tema'] || rawContent.theme || 'Flash Cards';
-      const subject = rawContent.customFields?.['Disciplina'] || rawContent.subject || 'Geral';
-      const numberOfCards = Math.max(parseInt(rawContent.customFields?.['Número de Flash Cards'] || '5'), 3);
+      const theme = content.customFields?.['Tema'] || content.theme || 'Flash Cards';
+      const subject = content.customFields?.['Disciplina'] || content.subject || 'Geral';
+      const numberOfCards = Math.max(parseInt(content.customFields?.['Número de Flash Cards'] || '5'), 3);
       
       for (let i = 0; i < numberOfCards; i++) {
         validCards.push({
@@ -254,63 +254,52 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
     const result = {
       ...actualContent,
-      ...rawContent, // Preservar propriedades do nível superior
+      ...content, // Preservar propriedades do nível superior
       cards: validCards,
       totalCards: validCards.length,
       numberOfFlashcards: validCards.length,
       title: actualContent.title || 
-             rawContent.title || 
-             rawContent.customFields?.['Título'] ||
-             `Flash Cards: ${actualContent.theme || rawContent.theme || rawContent.customFields?.['Tema'] || 'Estudo'}`,
+             content.title || 
+             content.customFields?.['Título'] ||
+             `Flash Cards: ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'Estudo'}`,
       description: actualContent.description || 
-                  rawContent.description || 
-                  rawContent.customFields?.['Descrição'] ||
-                  `Flash cards para estudo sobre ${actualContent.theme || rawContent.theme || rawContent.customFields?.['Tema'] || 'o tema'}`,
+                  content.description || 
+                  content.customFields?.['Descrição'] ||
+                  `Flash cards para estudo sobre ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'o tema'}`,
       theme: actualContent.theme || 
-             rawContent.theme || 
-             rawContent.customFields?.['Tema'] ||
-             rawContent.customFields?.['Tema dos Flash Cards'] ||
+             content.theme || 
+             content.customFields?.['Tema'] ||
+             content.customFields?.['Tema dos Flash Cards'] ||
              'Tema Geral',
       subject: actualContent.subject || 
-               rawContent.subject || 
-               rawContent.customFields?.['Disciplina'] ||
+               content.subject || 
+               content.customFields?.['Disciplina'] ||
                'Geral',
       schoolYear: actualContent.schoolYear || 
-                  rawContent.schoolYear || 
-                  rawContent.customFields?.['Ano de Escolaridade'] ||
+                  content.schoolYear || 
+                  content.customFields?.['Ano de Escolaridade'] ||
                   'Ensino Médio',
       difficultyLevel: actualContent.difficultyLevel || 
-                      rawContent.difficultyLevel || 
-                      rawContent.customFields?.['Nível de Dificuldade'] ||
+                      content.difficultyLevel || 
+                      content.customFields?.['Nível de Dificuldade'] ||
                       'Médio',
       topicos: actualContent.topicos || 
-               rawContent.topicos || 
-               rawContent.customFields?.['Tópicos'] ||
-               rawContent.customFields?.['Tópicos Principais'] ||
+               content.topicos || 
+               content.customFields?.['Tópicos'] ||
+               content.customFields?.['Tópicos Principais'] ||
                '',
       context: actualContent.context || 
-               rawContent.context || 
-               rawContent.customFields?.['Contexto'] ||
-               rawContent.customFields?.['Contexto de Uso'] ||
+               content.context || 
+               content.customFields?.['Contexto'] ||
+               content.customFields?.['Contexto de Uso'] ||
                'Revisão e fixação do conteúdo'
     };
 
     console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
     console.log('🃏 Total de cards processados:', result.cards.length);
     
-    return result;
-  }, []); // Sem dependências para evitar recriação desnecessária
-
-  // Normalizar conteúdo apenas quando content mudar
-  useEffect(() => {
-    if (content) {
-      console.log('🃏 FlashCardsPreview - Conteúdo recebido, normalizando...');
-      const normalized = normalizeContent(content);
-      setNormalizedContent(normalized);
-    } else {
-      setNormalizedContent(null);
-    }
-  }, [content, normalizeContent]);
+    setNormalizedContent(result);
+  }, [content]); // Apenas dependência do content
 
   // Inicializar ordem dos cards apenas quando normalizedContent mudar
   useEffect(() => {
@@ -327,13 +316,12 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   // Auto-play otimizado
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isPlaying && normalizedContent?.cards?.length > 0) {
+    if (isPlaying && cardsLength > 0) {
       interval = setInterval(() => {
         setIsFlipped(prev => {
           if (prev) {
             // Se já está virado, ir para o próximo card
             setCurrentCardIndex(current => {
-              const cardsLength = normalizedContent.cards.length;
               if (current < cardsLength - 1) {
                 return current + 1;
               } else {
@@ -349,16 +337,9 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, normalizedContent?.cards?.length]);
+  }, [isPlaying, cardsLength]);
 
-  // Calcular dados derivados de forma otimizada
-  const currentCard = normalizedContent?.cards && normalizedContent.cards.length > 0
-    ? normalizedContent.cards[cardOrder.length > 0 ? cardOrder[currentCardIndex] : currentCardIndex] || normalizedContent.cards[0]
-    : null;
-
-  const progress = normalizedContent?.cards && normalizedContent.cards.length > 0
-    ? (currentCardIndex / normalizedContent.cards.length) * 100
-    : 0;
+  
 
   if (isLoading) {
     return (
@@ -460,11 +441,29 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     );
   }
 
+  // Calcular dados derivados de forma otimizada usando useMemo
+  const { currentCard, progress, cardsLength } = useMemo(() => {
+    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) {
+      return { currentCard: null, progress: 0, cardsLength: 0 };
+    }
+
+    const length = normalizedContent.cards.length;
+    const cardIndex = cardOrder.length > 0 ? cardOrder[currentCardIndex] : currentCardIndex;
+    const card = normalizedContent.cards[cardIndex] || normalizedContent.cards[0];
+    const progressValue = (currentCardIndex / length) * 100;
+
+    return {
+      currentCard: card,
+      progress: progressValue,
+      cardsLength: length
+    };
+  }, [normalizedContent?.cards, cardOrder, currentCardIndex]);
+
   const handleNextCard = useCallback(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    if (cardsLength === 0) return;
     
     setCurrentCardIndex(prev => {
-      if (prev < normalizedContent.cards.length - 1) {
+      if (prev < cardsLength - 1) {
         setIsFlipped(false);
         return prev + 1;
       } else {
@@ -473,10 +472,10 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
         return prev;
       }
     });
-  }, [normalizedContent?.cards?.length]);
+  }, [cardsLength]);
 
   const handlePrevCard = useCallback(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    if (cardsLength === 0) return;
     
     setCurrentCardIndex(prev => {
       if (prev > 0) {
@@ -485,17 +484,16 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       }
       return prev;
     });
-  }, [normalizedContent?.cards?.length]);
+  }, [cardsLength]);
 
   const handleFlipCard = useCallback(() => {
     setIsFlipped(prev => !prev);
   }, []);
 
   const handleMarkCard = useCallback((correct: boolean) => {
-    const currentCardData = normalizedContent?.cards?.[cardOrder[currentCardIndex]] || normalizedContent?.cards?.[currentCardIndex];
-    if (!currentCardData) return;
+    if (!currentCard) return;
     
-    const cardId = currentCardData.id;
+    const cardId = currentCard.id;
     
     setCardStats(prev => ({
       ...prev,
@@ -521,10 +519,10 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     setTimeout(() => {
       handleNextCard();
     }, 500);
-  }, [currentCardIndex, cardOrder, normalizedContent?.cards, handleNextCard]);
+  }, [currentCard, currentCardIndex, handleNextCard]);
 
   const handleShuffle = useCallback(() => {
-    if (!normalizedContent?.cards || normalizedContent.cards.length === 0) return;
+    if (cardsLength === 0) return;
     
     setCardOrder(prev => {
       const newOrder = [...prev].sort(() => Math.random() - 0.5);
@@ -533,7 +531,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       setShuffled(true);
       return newOrder;
     });
-  }, [normalizedContent?.cards?.length]);
+  }, [cardsLength]);
 
   const resetSession = () => {
     setCurrentCardIndex(0);
@@ -576,7 +574,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
                   </div>
                   <div>
                     <span className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                      Card {currentCardIndex + 1} de {normalizedContent.cards.length}
+                      Card {currentCardIndex + 1} de {cardsLength}
                     </span>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Progresso do estudo
@@ -828,7 +826,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={handleNextCard}
-              disabled={currentCardIndex === normalizedContent.cards.length - 1}
+              disabled={currentCardIndex === cardsLength - 1}
               className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-3 border border-orange-200/50 dark:border-orange-700/30 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-xl transition-all duration-300"
             >
               <SkipForward className="h-5 w-5 text-orange-600 dark:text-orange-400" />
