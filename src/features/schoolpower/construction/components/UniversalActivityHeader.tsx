@@ -174,30 +174,33 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 <MoreHorizontal className="w-5 h-5 rotate-90" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={onAddToClass} className="cursor-pointer">
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar à aula
+            <DropdownMenuContent 
+              align="end" 
+              className="w-52 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
+            >
+              <DropdownMenuItem onClick={onAddToClass} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
+                <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
+                <span className="text-gray-800 dark:text-gray-200">Adicionar à aula</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDownload} className="cursor-pointer">
-                <Download className="w-4 h-4 mr-2" />
-                Baixar
+              <DropdownMenuItem onClick={onDownload} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
+                <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
+                <span className="text-gray-800 dark:text-gray-200">Baixar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onShare} className="cursor-pointer">
-                <Share2 className="w-4 h-4 mr-2" />
-                Compartilhar
+              <DropdownMenuItem onClick={onShare} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
+                <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
+                <span className="text-gray-800 dark:text-gray-200">Compartilhar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSendMaterial} className="cursor-pointer">
-                <Send className="w-4 h-4 mr-2" />
-                Enviar material
+              <DropdownMenuItem onClick={onSendMaterial} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
+                <Send className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
+                <span className="text-gray-800 dark:text-gray-200">Enviar material</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onMakePrivate} className="cursor-pointer">
-                <Lock className="w-4 h-4 mr-2" />
-                Tornar privado
+              <DropdownMenuItem onClick={onMakePrivate} className="cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-100/70 dark:hover:bg-orange-700/30 transition-colors">
+                <Lock className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
+                <span className="text-gray-800 dark:text-gray-200">Tornar privado</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-red-600 dark:text-red-400">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Deletar atividade
+              <DropdownMenuItem onClick={onDelete} className="cursor-pointer rounded-xl px-3 py-3 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                <Trash2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400" />
+                <span className="text-red-600 dark:text-red-400">Deletar atividade</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
