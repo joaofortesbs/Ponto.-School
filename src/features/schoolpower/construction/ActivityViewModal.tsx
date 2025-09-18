@@ -327,7 +327,77 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           contentToLoad = null;
         }
       } else {
-        console.log('ℹ️ Nenhum conteúdo específico encontrado para Flash Cards. Usando dados gerais.');
+        console.log('🃏 Flash Cards: Criando fallback a partir dos campos customizados');
+        
+        // Se não há conteúdo construído, criar fallback usando customFields
+        if (activity.customFields) {
+          const customFields = activity.customFields;
+          const topicos = customFields['Tópicos'] || customFields['Tópicos Principais'] || '';
+          const theme = customFields['Tema'] || customFields['Tema dos Flash Cards'] || activity.title || 'Flash Cards';
+          const subject = customFields['Disciplina'] || 'Geral';
+          const numberOfCards = parseInt(customFields['Número de Flash Cards'] || '10');
+          
+          if (topicos && topicos.trim()) {
+            const topicosList = topicos.split('\n').filter(t => t.trim());
+            const fallbackCards = [];
+            
+            const cardsToGenerate = Math.min(numberOfCards, Math.max(topicosList.length * 2, 5));
+            
+            for (let i = 0; i < cardsToGenerate; i++) {
+              const topicoIndex = i % topicosList.length;
+              const topic = topicosList[topicoIndex].trim();
+              const cardType = i % 3;
+              
+              let front: string;
+              let back: string;
+
+              switch (cardType) {
+                case 0:
+                  front = `O que é ${topic}?`;
+                  back = `${topic} é um conceito importante sobre ${theme} em ${subject} que deve ser estudado e compreendido.`;
+                  break;
+                case 1:
+                  front = `Qual a importância de ${topic}?`;
+                  back = `${topic} é importante porque estabelece bases conceituais para entender ${theme} em ${subject}.`;
+                  break;
+                default:
+                  front = `Como aplicar ${topic}?`;
+                  back = `${topic} pode ser aplicado através de exercícios práticos relacionados ao ${theme}.`;
+              }
+
+              fallbackCards.push({
+                id: i + 1,
+                front,
+                back,
+                category: subject,
+                difficulty: customFields['Nível de Dificuldade'] || 'Médio'
+              });
+            }
+            
+            if (fallbackCards.length > 0) {
+              contentToLoad = {
+                title: customFields['Título'] || activity.title || `Flash Cards: ${theme}`,
+                description: customFields['Descrição'] || activity.description || `Flash cards sobre ${theme}`,
+                cards: fallbackCards,
+                totalCards: fallbackCards.length,
+                theme,
+                subject,
+                topicos,
+                numberOfFlashcards: fallbackCards.length,
+                context: customFields['Contexto'] || customFields['Contexto de Uso'] || 'Revisão e fixação',
+                difficultyLevel: customFields['Nível de Dificuldade'] || 'Médio',
+                generatedAt: new Date().toISOString(),
+                isGeneratedByAI: false,
+                isFallback: true,
+                type: 'flash-cards',
+                activityType: 'flash-cards'
+              };
+              
+              console.log('🃏 Flash Cards fallback criado:', contentToLoad);
+              setFlashCardsContent(contentToLoad);
+            }
+          }
+        }
       }
     }
     // 2. Lista de Exercícios (com filtro de exclusão)

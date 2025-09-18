@@ -136,41 +136,101 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
 
     console.log('🃏 Cards válidos processados:', validCards);
 
-    // Se não temos cards válidos, tentar gerar fallback dos tópicos
+    // Se não temos cards válidos, tentar gerar fallback dos tópicos ou customFields
     if (validCards.length === 0) {
-      const topicos = actualContent.topicos || content.topicos || '';
-      const theme = actualContent.theme || content.theme || 'Flash Cards';
-      const subject = actualContent.subject || content.subject || 'Geral';
+      console.log('🃏 Nenhum card válido encontrado, gerando fallback');
       
-      console.log('🃏 Tentando gerar fallback dos tópicos:', { topicos, theme, subject });
+      // Tentar diferentes fontes de tópicos
+      const topicos = actualContent.topicos || 
+                     content.topicos || 
+                     content.customFields?.['Tópicos'] ||
+                     content.customFields?.['Tópicos Principais'] ||
+                     '';
       
-      if (topicos && typeof topicos === 'string') {
+      const theme = actualContent.theme || 
+                   content.theme || 
+                   content.customFields?.['Tema'] ||
+                   content.customFields?.['Tema dos Flash Cards'] ||
+                   'Flash Cards';
+                   
+      const subject = actualContent.subject || 
+                     content.subject || 
+                     content.customFields?.['Disciplina'] ||
+                     'Geral';
+      
+      console.log('🃏 Tentando gerar fallback com:', { topicos, theme, subject });
+      
+      if (topicos && typeof topicos === 'string' && topicos.trim()) {
         const topicosList = topicos.split('\n').filter(t => t.trim());
-        const fallbackCards = topicosList.slice(0, 10).map((topic, index) => ({
-          id: index + 1,
-          front: `O que é ${topic.trim()}?`,
-          back: `${topic.trim()} é um conceito importante em ${subject} que deve ser estudado e compreendido.`,
-          category: subject,
-          difficulty: 'Médio'
-        }));
+        console.log('🃏 Lista de tópicos encontrada:', topicosList);
         
-        if (fallbackCards.length > 0) {
-          console.log('🃏 Cards fallback gerados:', fallbackCards);
-          validCards.push(...fallbackCards);
+        if (topicosList.length > 0) {
+          const numberOfCards = Math.min(
+            parseInt(content.customFields?.['Número de Flash Cards'] || '10'),
+            Math.max(topicosList.length * 2, 8)
+          );
+          
+          const fallbackCards = [];
+          for (let i = 0; i < numberOfCards; i++) {
+            const topicoIndex = i % topicosList.length;
+            const topic = topicosList[topicoIndex].trim();
+            const cardType = i % 4;
+            
+            let front: string;
+            let back: string;
+
+            switch (cardType) {
+              case 0:
+                front = `O que é ${topic}?`;
+                back = `${topic} é um conceito fundamental sobre ${theme} em ${subject}. É importante para compreender os fundamentos desta disciplina.`;
+                break;
+              case 1:
+                front = `Qual a importância de ${topic}?`;
+                back = `${topic} é importante porque estabelece bases conceituais essenciais para entender ${theme} em ${subject}.`;
+                break;
+              case 2:
+                front = `Como aplicar ${topic} na prática?`;
+                back = `${topic} pode ser aplicado através de exercícios práticos e análise de casos relacionados ao ${theme}.`;
+                break;
+              default:
+                front = `Defina ${topic}`;
+                back = `${topic}: Elemento-chave para compreensão de ${theme} em ${subject}, requerendo estudo teórico e prático.`;
+            }
+
+            fallbackCards.push({
+              id: i + 1,
+              front,
+              back,
+              category: subject,
+              difficulty: content.customFields?.['Nível de Dificuldade'] || 'Médio'
+            });
+          }
+          
+          if (fallbackCards.length > 0) {
+            console.log('🃏 Cards fallback gerados dos tópicos:', fallbackCards);
+            validCards.push(...fallbackCards);
+          }
         }
       }
     }
 
-    // Se ainda não há cards, criar pelo menos um exemplo
+    // Se ainda não há cards, criar exemplo baseado no tema
     if (validCards.length === 0) {
-      console.log('🃏 Criando card de exemplo para demonstração');
-      validCards.push({
-        id: 1,
-        front: 'Flash Cards Criados com Sucesso!',
-        back: 'Seus flash cards foram gerados e estão prontos para uso. Configure o conteúdo adequadamente para ver mais cards personalizados.',
-        category: 'Sistema',
-        difficulty: 'Básico'
-      });
+      console.log('🃏 Criando cards de exemplo baseados no tema');
+      
+      const theme = content.customFields?.['Tema'] || content.theme || 'Flash Cards';
+      const subject = content.customFields?.['Disciplina'] || content.subject || 'Geral';
+      const numberOfCards = Math.max(parseInt(content.customFields?.['Número de Flash Cards'] || '5'), 3);
+      
+      for (let i = 0; i < numberOfCards; i++) {
+        validCards.push({
+          id: i + 1,
+          front: `Conceito ${i + 1} sobre ${theme}`,
+          back: `Este é um conceito importante relacionado a ${theme} em ${subject}. Configure os tópicos para gerar cards personalizados.`,
+          category: subject,
+          difficulty: 'Médio'
+        });
+      }
     }
 
     const result = {
@@ -179,12 +239,41 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
       cards: validCards,
       totalCards: validCards.length,
       numberOfFlashcards: validCards.length,
-      title: actualContent.title || content.title || `Flash Cards: ${actualContent.theme || content.theme || 'Estudo'}`,
-      description: actualContent.description || content.description || `Flash cards para estudo`,
-      theme: actualContent.theme || content.theme || 'Tema Geral',
-      subject: actualContent.subject || content.subject || 'Geral',
-      schoolYear: actualContent.schoolYear || content.schoolYear || 'Ensino Médio',
-      difficultyLevel: actualContent.difficultyLevel || content.difficultyLevel || 'Médio'
+      title: actualContent.title || 
+             content.title || 
+             content.customFields?.['Título'] ||
+             `Flash Cards: ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'Estudo'}`,
+      description: actualContent.description || 
+                  content.description || 
+                  content.customFields?.['Descrição'] ||
+                  `Flash cards para estudo sobre ${actualContent.theme || content.theme || content.customFields?.['Tema'] || 'o tema'}`,
+      theme: actualContent.theme || 
+             content.theme || 
+             content.customFields?.['Tema'] ||
+             content.customFields?.['Tema dos Flash Cards'] ||
+             'Tema Geral',
+      subject: actualContent.subject || 
+               content.subject || 
+               content.customFields?.['Disciplina'] ||
+               'Geral',
+      schoolYear: actualContent.schoolYear || 
+                  content.schoolYear || 
+                  content.customFields?.['Ano de Escolaridade'] ||
+                  'Ensino Médio',
+      difficultyLevel: actualContent.difficultyLevel || 
+                      content.difficultyLevel || 
+                      content.customFields?.['Nível de Dificuldade'] ||
+                      'Médio',
+      topicos: actualContent.topicos || 
+               content.topicos || 
+               content.customFields?.['Tópicos'] ||
+               content.customFields?.['Tópicos Principais'] ||
+               '',
+      context: actualContent.context || 
+               content.context || 
+               content.customFields?.['Contexto'] ||
+               content.customFields?.['Contexto de Uso'] ||
+               'Revisão e fixação do conteúdo'
     };
 
     console.log('🃏 FlashCardsPreview - Conteúdo final normalizado:', result);
