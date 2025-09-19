@@ -2846,6 +2846,18 @@ textarea:hover,
 }
 @import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
 
+
+/* Ocultar scrollbar apenas no card de visualização sem afetar dimensões */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0px !important;
+  background: transparent !important;
+}
+
+.custom-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
   /* Custom scrollbar para o card de pré-visualização */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
