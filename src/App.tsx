@@ -58,10 +58,6 @@ import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 
-// Import da nova página de atividade compartilhada
-import AtividadeCompartilhadaPage from '@/pages/atividade/[activityId]/[uniqueCode]';
-
-
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
@@ -108,12 +104,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
-  const [user, setUser] = useState(null); // State to hold user info
-
-  // Handler for closing the welcome modal
-  const handleCloseWelcomeModal = () => {
-    setShowWelcomeModal(false);
-  };
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -154,19 +144,9 @@ function App() {
     const handleLogout = () => {
       localStorage.removeItem('auth_status');
       localStorage.removeItem('auth_checked');
-      setUser(null); // Clear user on logout
     };
 
     window.addEventListener('logout', handleLogout);
-
-    // Fetch user data on mount if authenticated
-    const fetchUserData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-      }
-    };
-    fetchUserData();
 
     return () => {
       clearTimeout(loadingTimeout);
@@ -299,12 +279,6 @@ function App() {
                  {/* Rota pública para quiz */}
                  <Route path="/quiz" element={<QuizPage />} />
 
-                {/* Rota pública para atividades compartilhadas - DEVE vir primeiro */}
-                <Route
-                  path="/atividade/:activityId/:uniqueCode"
-                  element={<AtividadeCompartilhadaPage />}
-                />
-
                 {/* Main App Routes - Protegidas */}
                 <Route path="/" element={
                   <ProtectedRoute>
@@ -367,7 +341,7 @@ function App() {
               {!isAuthRoute &&
                 <WelcomeModal
                   isOpen={showWelcomeModal}
-                  onClose={handleCloseWelcomeModal}
+                  onClose={() => setShowWelcomeModal(false)}
                   isFirstLogin={isFirstLogin}
                 />
               }

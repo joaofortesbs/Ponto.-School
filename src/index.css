@@ -9,9 +9,6 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
-@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
-
-/* Utilitário para limitar linhas de texto */</old_str>
 
 /* Utilitário para limitar linhas de texto */
 .line-clamp-3 {
@@ -2846,19 +2843,14 @@ textarea:hover,
 .typewriter-message {
   overflow: hidden;
   line-height: 1.5;
-}</old_str>
+}
+@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
 
 
 /* Estilos para páginas públicas de atividades compartilhadas */
 .public-activity-page {
   /* Garantir que a página seja completamente independente */
   isolation: isolate;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-}
-
-.dark .public-activity-page {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
 }
 
 .public-activity-page * {
@@ -2866,21 +2858,10 @@ textarea:hover,
   box-sizing: border-box;
 }
 
-/* Container principal público */
-.public-activity-page .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
-}
-
 /* Estilos para melhor responsividade em dispositivos móveis */
 @media (max-width: 768px) {
   .public-activity-page {
     font-size: 14px;
-  }
-  
-  .public-activity-page .container {
-    padding: 1rem 0.5rem;
   }
   
   .public-activity-page .max-w-7xl {
@@ -2903,39 +2884,6 @@ textarea:hover,
   .public-activity-page .text-2xl {
     font-size: 1.5rem;
   }
-  
-  .public-activity-page .container {
-    padding: 0.5rem;
-  }
-}
-
-/* Estilos para cards em modo público */
-.public-activity-page .card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.dark .public-activity-page .card {
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Animações suaves para modo público */
-.public-activity-page .animate-fade-in {
-  animation: fadeInPublic 0.6s ease-out forwards;
-}
-
-@keyframes fadeInPublic {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Estilos para impressão */
@@ -2947,14 +2895,6 @@ textarea:hover,
   }
   
   .public-activity-page {
-    background: white !important;
-  }
-  
-  .public-activity-page .card {
-    background: white !important;
-    border: 1px solid #ccc !important;
-    box-shadow: none !important;
-  }ty-page {
     background: white !important;
   }
   
