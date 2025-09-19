@@ -43,7 +43,7 @@ import RegisterPage from "@/pages/auth/register";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 import PlanSelectionPage from "@/pages/plan-selection";
-import AuthPage from "@/pages/auth";
+import AuthPage from "@/components/auth/AuthPage";
 import PlanSelection from "@/pages/plan-selection";
 import PlanSelectionRedesigned from "@/pages/plan-selection-redesigned";
 
