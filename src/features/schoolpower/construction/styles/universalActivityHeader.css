@@ -6,7 +6,7 @@
   border-bottom: 2px solid #fed7aa;
   box-shadow: 0 4px 12px rgba(255, 107, 0, 0.08);
   transition: all 0.3s ease;
-  min-height: 112px; /* 28 * 4 = 112px para h-28 */
+  min-height: 96px; /* 24 * 4 = 96px para h-24 */
 }
 
 /* Dark mode support */

@@ -260,7 +260,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   return (
-    <div className="universal-activity-header w-full h-28 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-5 shadow-sm">
+    <div className="universal-activity-header w-full h-24 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-4 shadow-sm">
       <div className="flex items-center justify-between h-full">
         {/* Lado Esquerdo - Ícone e Informações da Atividade */}
         <div className="flex items-center gap-4">
