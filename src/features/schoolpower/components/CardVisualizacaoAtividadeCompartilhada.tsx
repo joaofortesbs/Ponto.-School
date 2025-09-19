@@ -137,11 +137,13 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
-                {/* Conteúdo da pré-visualização com interação desabilitada */}
-                <div className="p-4 pointer-events-none">
-                  {renderActivityPreview()}
-                </div>
+              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
+                {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
+                <div className="p-4 pointer-events-none overflow-hidden h-full">
+                  <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
+                    {renderActivityPreview()}
+                  </div>
+                </div></div>
 
                 {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
                 <div 
