@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 
@@ -8,12 +7,12 @@ const router = express.Router();
 router.use(cors());
 
 // Rota para buscar atividade pública por ID e código único
-router.get('/:id/:code?', async (req, res) => {
+router.get('/:id/:code*', async (req, res) => {
   try {
     const { id, code } = req.params;
-    
+
     console.log('🔍 API: Buscando atividade pública:', { id, code });
-    
+
     // Simular busca de atividade com dados mock mais completos
     const mockActivity = {
       id: id,
@@ -28,7 +27,7 @@ router.get('/:id/:code?', async (req, res) => {
     };
 
     console.log('✅ API: Atividade encontrada:', mockActivity);
-    
+
     res.json({
       success: true,
       data: mockActivity

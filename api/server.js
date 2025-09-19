@@ -17,8 +17,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Routes
-app.use('/api/publicActivity', publicActivityRouter);
+// Routes with error handling
+try {
+  app.use('/api/publicActivity', publicActivityRouter);
+} catch (error) {
+  console.error('Erro ao configurar rotas:', error);
+}
 
 // Health check
 app.get('/api/health', (req, res) => {

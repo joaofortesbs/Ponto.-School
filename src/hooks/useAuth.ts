@@ -128,7 +128,8 @@ export function useAuth() {
         const currentPath = window.location.pathname;
         const isPublicRoute = currentPath.startsWith('/atividade/') ||
                               currentPath === '/quiz' ||
-                              currentPath === '/blank';
+                              currentPath === '/blank' ||
+                              currentPath.includes('/atividade/');
 
         const isAuthRoute = currentPath === '/login' ||
                            currentPath === '/register' ||

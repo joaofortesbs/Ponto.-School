@@ -5,7 +5,6 @@ import {
   Navigate,
   useLocation,
   useNavigate,
-  BrowserRouter as Router,
 } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
@@ -364,13 +363,12 @@ function App() {
 
 
   return (
-    <Router>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <UsernameProvider>
-          <StudyGoalProvider>
-            <ErrorBoundary>
-              <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-                <Routes>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <UsernameProvider>
+        <StudyGoalProvider>
+          <ErrorBoundary>
+            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+              <Routes>
                   {/* Rota pública de atividade - DEVE vir ANTES das rotas protegidas */}
                   <Route 
                     path="/atividade/:id/:code?" 
@@ -465,7 +463,6 @@ function App() {
           </StudyGoalProvider>
         </UsernameProvider>
       </ThemeProvider>
-    </Router>
   );
 }
 

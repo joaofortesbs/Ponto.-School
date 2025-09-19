@@ -30,10 +30,12 @@ export default function PublicActivityPage() {
     console.log('🔍 PublicActivityPage carregada com parâmetros:', { id, code });
     console.log('🔓 Página pública carregando independentemente da autenticação');
 
-    if (id) {
+    // Validar ID antes de prosseguir
+    if (id && id.trim().length > 0) {
       fetchPublicActivity(id, code);
     } else {
-      setError('ID da atividade não fornecido');
+      console.error('❌ ID da atividade inválido:', id);
+      setError('ID da atividade não fornecido ou inválido');
       setLoading(false);
     }
   }, [id, code]);

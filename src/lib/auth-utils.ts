@@ -10,7 +10,8 @@ export const checkAuthentication = async (): Promise<boolean> => {
     const currentPath = window.location.pathname;
     const isPublicRoute = currentPath.startsWith('/atividade/') ||
                           currentPath === '/quiz' ||
-                          currentPath === '/blank';
+                          currentPath === '/blank' ||
+                          currentPath.includes('/atividade/');
     
     if (isPublicRoute) {
       console.log("🔓 Rota pública detectada, permitindo acesso sem autenticação");
