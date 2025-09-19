@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -136,27 +135,34 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   <span className="font-semibold">Pré-visualização da Atividade</span>
                 </div>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
                 {/* Conteúdo da pré-visualização com interação desabilitada */}
                 <div className="p-4 pointer-events-none">
                   {renderActivityPreview()}
                 </div>
-                
+
                 {/* Overlay fixo que cobre toda a pré-visualização */}
-                <div className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/30 transition-all duration-300">
-                  {/* Ícone e texto fixos no centro da tela */}
-                  <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
-                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 flex flex-col items-center gap-3 text-white">
-                      <div className="bg-orange-600 rounded-full p-4 shadow-2xl">
-                        <Play className="w-8 h-8" />
-                      </div>
-                      <span className="text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
-                        Apresentar Atividade
-                      </span>
+              <div className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out">
+                {/* Ícone e texto fixos no centro da tela */}
+                <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white">
+                    {/* Ícone de play com animação aprimorada */}
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-300/30 relative overflow-hidden">
+                      {/* Efeito de brilho interno */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                      <Play className="w-10 h-10 fill-white drop-shadow-lg relative z-10 transition-all duration-300 group-hover:scale-110" />
                     </div>
+
+                    {/* Texto com efeitos aprimorados */}
+                    <span className="text-xl font-bold bg-black/80 px-6 py-3 rounded-2xl backdrop-blur-lg shadow-2xl border border-white/30 text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-500/30 group-hover:border-orange-400/40 relative overflow-hidden">
+                      {/* Efeito de brilho no texto */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                      <span className="relative z-10">Apresentar Atividade</span>
+                    </span>
                   </div>
                 </div>
+              </div>
               </div>
             </CardContent>
           </Card>
@@ -171,7 +177,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             <Play className="w-5 h-5" />
             Apresentar Material
           </Button>
-          
+
           <Button
             onClick={onUsarMaterial}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
