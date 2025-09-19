@@ -277,9 +277,9 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
-              <Avatar className="w-7 h-7 rounded-xl border-2 border-orange-400 dark:border-orange-500">
+              <Avatar className="w-7 h-7 rounded-full border-2 border-orange-400 dark:border-orange-500">
                 <AvatarImage src={finalUserAvatar} alt={`Prof. ${finalUserName}`} />
-                <AvatarFallback className="text-base bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl">
+                <AvatarFallback className="text-base bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-full">
                   {getUserInitials(finalUserName)}
                 </AvatarFallback>
               </Avatar>
