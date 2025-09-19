@@ -389,6 +389,12 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         onClose={() => setIsShareModalOpen(false)}
         activityTitle={activityTitle}
         activityId={activityId}
+        activityType={activityType}
+        activityData={{
+          title: activityTitle,
+          type: activityType,
+          id: activityId
+        }}
       />
     </div>
   );

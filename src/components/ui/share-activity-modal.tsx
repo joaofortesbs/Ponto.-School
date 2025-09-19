@@ -1,27 +1,103 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Share2 } from 'lucide-react';
+import { X, Copy, Check, Share2, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
+import { criarLinkAtividade, regenerarLinkAtividade, AtividadeCompartilhavel } from '@/features/schoolpower/services/gerador-link-atividades-schoolpower';
+import { useUserInfo } from '@/features/schoolpower/construction/hooks/useUserInfo';
 
 interface ShareActivityModalProps {
   isOpen: boolean;
   onClose: () => void;
   activityTitle: string;
   activityId?: string;
+  activityType?: string;
+  activityData?: any;
 }
 
 export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   isOpen,
   onClose,
   activityTitle,
-  activityId
+  activityId,
+  activityType = 'atividade',
+  activityData = {}
 }) => {
   const [copied, setCopied] = useState(false);
-  
-  // Por enquanto, vamos usar um link placeholder até implementarmos o sistema de links únicos
-  const shareLink = `https://pontoschool.com/atividade/${activityId || 'exemplo'}`;
+  const [loading, setLoading] = useState(false);
+  const [atividade, setAtividade] = useState<AtividadeCompartilhavel | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const userInfo = useUserInfo();
+
+  // Busca ou cria o link compartilhável quando o modal abre
+  useEffect(() => {
+    if (isOpen && activityId && activityTitle) {
+      criarOuBuscarLink();
+    }
+  }, [isOpen, activityId, activityTitle]);
+
+  const criarOuBuscarLink = async () => {
+    if (!activityId || !activityTitle) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('🔗 Criando link compartilhável para:', activityTitle);
+
+      const novaAtividade = await criarLinkAtividade({
+        id: activityId,
+        titulo: activityTitle,
+        tipo: activityType,
+        dados: activityData,
+        criadoPor: userInfo.userId || 'usuario-anonimo'
+      });
+
+      if (novaAtividade) {
+        setAtividade(novaAtividade);
+        console.log('✅ Link criado:', novaAtividade.linkPublico);
+      } else {
+        setError('Erro ao gerar link de compartilhamento');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao criar link:', error);
+      setError('Erro ao gerar link de compartilhamento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const regenerarLink = async () => {
+    if (!activityId) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('🔄 Regenerando link para:', activityId);
+
+      const atividadeAtualizada = await regenerarLinkAtividade(activityId);
+
+      if (atividadeAtualizada) {
+        setAtividade(atividadeAtualizada);
+        toast({
+          title: "Link regenerado!",
+          description: "Um novo link foi gerado para esta atividade.",
+        });
+      } else {
+        setError('Erro ao regenerar link');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao regenerar link:', error);
+      setError('Erro ao regenerar link');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shareLink = atividade?.linkPublico || '';
 
   const handleCopyLink = async () => {
     try {
@@ -81,39 +157,82 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
 
           {/* Campo do Link */}
           <div className="space-y-4">
-            <div className="relative">
-              <Input
-                value={shareLink}
-                readOnly
-                className="pr-12 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl"
-              />
-              <button
-                onClick={handleCopyLink}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-                ) : (
-                  <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                )}
-              </button>
-            </div>
-
-            {/* Feedback de Cópia */}
-            <AnimatePresence>
-              {copied && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="text-center"
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
+                <span className="ml-2 text-gray-600 dark:text-gray-400">
+                  Gerando link...
+                </span>
+              </div>
+            ) : error ? (
+              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                <AlertCircle className="w-6 h-6 mx-auto mb-2 text-red-500" />
+                <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
+                <Button
+                  onClick={criarOuBuscarLink}
+                  variant="outline"
+                  size="sm"
+                  className="border-red-300 text-red-600 hover:bg-red-50"
                 >
-                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">
-                    ✓ Link copiado com sucesso!
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  <Input
+                    value={shareLink}
+                    readOnly
+                    className="pr-24 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                    <button
+                      onClick={regenerarLink}
+                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      title="Regenerar link"
+                    >
+                      <RefreshCw className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    </button>
+                    <button
+                      onClick={handleCopyLink}
+                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      title="Copiar link"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Informações adicionais */}
+                {atividade && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    Link criado em {new Date(atividade.criadoEm).toLocaleDateString('pt-BR')} • 
+                    Código: {atividade.codigoUnico}
+                  </div>
+                )}
+
+                {/* Feedback de Cópia */}
+                <AnimatePresence>
+                  {copied && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-center"
+                    >
+                      <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                        ✓ Link copiado com sucesso!
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
           </div>
 
           {/* Botões de Ação */}
@@ -127,7 +246,8 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
             </Button>
             <Button
               onClick={handleCopyLink}
-              className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl"
+              disabled={loading || !!error}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {copied ? 'Copiado!' : 'Copiar Link'}
             </Button>
