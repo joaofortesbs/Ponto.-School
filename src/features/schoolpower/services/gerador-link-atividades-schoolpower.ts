@@ -113,12 +113,37 @@ class GeradorLinkAtividadesSchoolPower {
   async criarAtividadeCompartilhavel(atividade: NovaAtividadeCompartilhavel): Promise<AtividadeCompartilhavel | null> {
     try {
       console.log('🔗 Gerando link único para atividade:', atividade.titulo);
+      
+      // Primeiro, verifica se já existe uma atividade compartilhável para este ID
+      const { data: existente, error: erroExistente } = await supabase
+        .from('atividades_compartilhaveis')
+        .select('*')
+        .eq('atividade_id', atividade.id)
+        .eq('ativo', true)
+        .single();
+
+      // Se já existe, retorna a existente
+      if (!erroExistente && existente) {
+        console.log('✅ Atividade já existe, retornando link existente:', existente.link_publico);
+        return {
+          id: existente.atividade_id,
+          titulo: existente.titulo,
+          tipo: existente.tipo,
+          dados: existente.dados,
+          criadoPor: existente.criado_por,
+          criadoEm: existente.criado_em,
+          codigoUnico: existente.codigo_unico,
+          linkPublico: existente.link_publico
+        };
+      }
 
       // Gera código único validado
       const codigoUnico = await this.gerarCodigoUnicoValidado();
+      console.log('🎯 Código único gerado:', codigoUnico);
       
       // Cria o link público
       const linkPublico = this.criarLinkPublico(atividade.id, codigoUnico);
+      console.log('🔗 Link público gerado:', linkPublico);
 
       // Dados para salvar no banco
       const dadosParaSalvar = {
@@ -133,6 +158,8 @@ class GeradorLinkAtividadesSchoolPower {
         ativo: true
       };
 
+      console.log('💾 Salvando dados no banco:', dadosParaSalvar);
+
       // Salva no banco de dados
       const { data, error } = await supabase
         .from('atividades_compartilhaveis')
@@ -145,10 +172,11 @@ class GeradorLinkAtividadesSchoolPower {
         return null;
       }
 
-      console.log('✅ Atividade compartilhável criada com sucesso:', linkPublico);
+      console.log('✅ Dados salvos no banco:', data);
+      console.log('✅ Atividade compartilhável criada com sucesso:', data.link_publico);
 
       // Retorna no formato esperado
-      return {
+      const resultado = {
         id: data.atividade_id,
         titulo: data.titulo,
         tipo: data.tipo,
@@ -158,6 +186,9 @@ class GeradorLinkAtividadesSchoolPower {
         codigoUnico: data.codigo_unico,
         linkPublico: data.link_publico
       };
+
+      console.log('🎯 Retornando resultado:', resultado);
+      return resultado;
 
     } catch (error) {
       console.error('❌ Erro ao criar atividade compartilhável:', error);

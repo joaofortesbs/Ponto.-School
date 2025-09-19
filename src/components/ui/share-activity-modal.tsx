@@ -43,6 +43,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
 
     setLoading(true);
     setError(null);
+    setAtividade(null); // Limpa atividade anterior
 
     try {
       console.log('🔗 Criando link compartilhável para:', activityTitle);
@@ -55,10 +56,13 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
         criadoPor: userInfo.userId || 'usuario-anonimo'
       });
 
-      if (novaAtividade) {
+      console.log('🔍 Resposta da API:', novaAtividade);
+
+      if (novaAtividade && novaAtividade.linkPublico) {
         setAtividade(novaAtividade);
-        console.log('✅ Link criado:', novaAtividade.linkPublico);
+        console.log('✅ Link criado e configurado:', novaAtividade.linkPublico);
       } else {
+        console.error('❌ Link público não encontrado na resposta:', novaAtividade);
         setError('Erro ao gerar link de compartilhamento');
       }
     } catch (error) {
@@ -98,14 +102,31 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   };
 
   const shareLink = atividade?.linkPublico || '';
+  
+  // Debug: Log do estado atual
+  useEffect(() => {
+    console.log('🔍 Estado atual do modal:', {
+      atividade,
+      shareLink,
+      loading,
+      error,
+      isOpen
+    });
+  }, [atividade, shareLink, loading, error, isOpen]);
 
   const handleCopyLink = async () => {
+    if (!shareLink) {
+      console.error('❌ Tentativa de copiar link vazio');
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(shareLink);
       setCopied(true);
+      console.log('✅ Link copiado:', shareLink);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Erro ao copiar link:', error);
+      console.error('❌ Erro ao copiar link:', error);
     }
   };
 
@@ -184,8 +205,15 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                   <Input
                     value={shareLink}
                     readOnly
-                    className="pr-24 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl"
+                    placeholder="Gerando link..."
+                    className="pr-24 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm"
                   />
+                  {/* Debug: Mostrar se tem link */}
+                  {shareLink && (
+                    <div className="absolute -bottom-6 left-0 text-xs text-green-600 dark:text-green-400">
+                      ✓ Link disponível ({shareLink.length} caracteres)
+                    </div>
+                  )}
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button
                       onClick={regenerarLink}
