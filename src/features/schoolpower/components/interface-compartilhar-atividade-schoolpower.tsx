@@ -125,31 +125,10 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
       try {
         console.log('🔍 [PÚBLICO] Carregando atividade compartilhada:', { finalActivityId, finalUniqueCode });
         
-        // Configurar modo público
-        localStorage.setItem('pontoschool_public_page_mode', 'true');
-        
         const atividadeEncontrada = await buscarAtividadeCompartilhada(finalActivityId, finalUniqueCode);
         
         if (!atividadeEncontrada) {
-          // Tentar fallback - buscar direto no localStorage alternativo
-          console.log('🔄 [FALLBACK] Tentando método alternativo...');
-          
-          try {
-            const atividadesFallback = JSON.parse(localStorage.getItem('pontoschool_backup_atividades') || '{}');
-            const atividadeFallback = atividadesFallback[finalActivityId];
-            
-            if (atividadeFallback && atividadeFallback.codigoUnico === finalUniqueCode) {
-              console.log('✅ [FALLBACK] Atividade encontrada no backup');
-              setAtividade(atividadeFallback);
-              document.title = `${atividadeFallback.titulo} - Ponto School`;
-              setCarregando(false);
-              return;
-            }
-          } catch (fallbackError) {
-            console.warn('⚠️ [FALLBACK] Erro no método alternativo:', fallbackError);
-          }
-          
-          setErro('Atividade não encontrada ou link expirado. Clique em "Acessar Ponto School" para fazer login e tentar novamente.');
+          setErro('Atividade não encontrada ou link expirado');
           setCarregando(false);
           return;
         }
@@ -160,24 +139,11 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         // Configurar título da página
         document.title = `${atividadeEncontrada.titulo} - Ponto School`;
         
-        // Disparar evento personalizado para analytics
-        if (window.gtag) {
-          window.gtag('event', 'page_view', {
-            page_title: atividadeEncontrada.titulo,
-            page_location: window.location.href,
-            custom_parameter: 'shared_activity_view'
-          });
-        }
-        
       } catch (error) {
         console.error('❌ [PÚBLICO] Erro ao carregar atividade:', error);
-        setErro('Erro ao carregar atividade compartilhada. Tente acessar via Ponto School.');
+        setErro('Erro ao carregar atividade compartilhada');
       } finally {
         setCarregando(false);
-        // Limpar flag de modo público após carregar
-        setTimeout(() => {
-          localStorage.removeItem('pontoschool_public_page_mode');
-        }, 1000);
       }
     };
 

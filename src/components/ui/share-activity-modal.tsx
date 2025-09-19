@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Share2, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
@@ -35,16 +36,16 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
     if (isOpen && activityId && activityTitle) {
       console.log('🚀 Modal aberto - iniciando geração de link imediatamente');
       console.log('📋 Dados disponíveis:', { activityId, activityTitle, activityType, userInfo: userInfo.userId });
-
+      
       // Reset estado anterior
       setAtividade(null);
       setError(null);
       setLoading(true);
-
+      
       // Criar link imediatamente
       criarOuBuscarLink();
     }
-
+    
     // Limpa estado quando modal fecha
     if (!isOpen) {
       console.log('🔒 Modal fechado - limpando estado');
@@ -94,30 +95,20 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       console.log('📨 [MODAL] Resposta do sistema:', novaAtividade);
 
       if (novaAtividade && novaAtividade.linkPublico) {
-        // Adicionar parâmetros UTM ao link gerado
-        const urlWithUTM = new URL(novaAtividade.linkPublico);
-        urlWithUTM.searchParams.set('utm_source', 'pontoschool');
-        urlWithUTM.searchParams.set('utm_medium', 'link_compartilhamento');
-        urlWithUTM.searchParams.set('utm_campaign', 'atividade_compartilhada');
-        urlWithUTM.searchParams.set('utm_content', activityType || 'atividade');
-        urlWithUTM.searchParams.set('session_id', Math.random().toString(36).substring(2, 15));
-
-        const linkComUTM = urlWithUTM.toString();
-
-        setAtividade({ ...novaAtividade, linkPublico: linkComUTM });
-        console.log('✅ [MODAL] Link gerado com sucesso:', linkComUTM);
+        setAtividade(novaAtividade);
+        console.log('✅ [MODAL] Link gerado com sucesso:', novaAtividade.linkPublico);
         console.log('🔑 [MODAL] Código único:', novaAtividade.codigoUnico);
         setError(null);
-
+        
         // Salvar uma cópia adicional no localStorage como backup
         try {
           const backupKey = `share_backup_${activityId}`;
-          localStorage.setItem(backupKey, JSON.stringify({ ...novaAtividade, linkPublico: linkComUTM }));
+          localStorage.setItem(backupKey, JSON.stringify(novaAtividade));
           console.log('💾 [MODAL] Backup salvo em:', backupKey);
         } catch (backupError) {
           console.warn('⚠️ [MODAL] Erro ao salvar backup:', backupError);
         }
-
+        
       } else if (novaAtividade) {
         console.error('❌ [MODAL] Link público ausente na resposta:', novaAtividade);
         setError('Link não foi gerado corretamente');
@@ -127,13 +118,13 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       }
     } catch (error) {
       console.error('❌ [MODAL] Erro completo ao criar link:', error);
-
+      
       // Tentar recovery com dados locais
       try {
         console.log('🔄 [MODAL] Tentando recovery com dados locais...');
         const backupKey = `share_backup_${activityId}`;
         const backup = localStorage.getItem(backupKey);
-
+        
         if (backup) {
           const backupData = JSON.parse(backup);
           setAtividade(backupData);
@@ -144,7 +135,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       } catch (recoveryError) {
         console.error('❌ [MODAL] Falha no recovery:', recoveryError);
       }
-
+      
       // Se chegou até aqui, mostrar erro amigável
       if (error.message && error.message.includes('quota')) {
         setError('Armazenamento local cheio. Limpe o cache do navegador e tente novamente.');
@@ -168,16 +159,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       const atividadeAtualizada = await regenerarLinkAtividade(activityId);
 
       if (atividadeAtualizada) {
-        // Adicionar parâmetros UTM ao link regenerado
-        const urlWithUTM = new URL(atividadeAtualizada.linkPublico);
-        urlWithUTM.searchParams.set('utm_source', 'pontoschool');
-        urlWithUTM.searchParams.set('utm_medium', 'link_compartilhamento');
-        urlWithUTM.searchParams.set('utm_campaign', 'atividade_compartilhada');
-        urlWithUTM.searchParams.set('utm_content', activityType || 'atividade');
-        urlWithUTM.searchParams.set('session_id', Math.random().toString(36).substring(2, 15));
-        const linkComUTM = urlWithUTM.toString();
-
-        setAtividade({ ...atividadeAtualizada, linkPublico: linkComUTM });
+        setAtividade(atividadeAtualizada);
         toast({
           title: "Link regenerado!",
           description: "Um novo link foi gerado para esta atividade.",
@@ -194,7 +176,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   };
 
   const shareLink = atividade?.linkPublico || '';
-
+  
   // Debug: Log do estado atual e retry automático se necessário
   useEffect(() => {
     console.log('🔍 [DEBUG] Estado atual do modal:', {
@@ -354,7 +336,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                 {/* Informações adicionais */}
                 {atividade && (
                   <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Link criado em {new Date(atividade.criadoEm).toLocaleDateString('pt-BR')} •
+                    Link criado em {new Date(atividade.criadoEm).toLocaleDateString('pt-BR')} • 
                     Código: {atividade.codigoUnico}
                   </div>
                 )}

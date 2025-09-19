@@ -122,16 +122,6 @@ export function useAuth() {
 
   // Verificar o estado de autenticação atual
   useEffect(() => {
-    // Verificar se estamos em uma página pública
-    const isPublicPage = window.location.pathname.includes('/atividade/') || 
-                        localStorage.getItem('pontoschool_public_page_mode') === 'true';
-    
-    if (isPublicPage) {
-      console.log('🔓 [AUTH] Página pública detectada, pulando verificação de autenticação');
-      setAuth(null, null, false);
-      return;
-    }
-
     const checkAuth = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -157,20 +147,9 @@ export function useAuth() {
             // Verificar e gerar ID quando o usuário fizer login
             if (event === 'SIGNED_IN' && user) {
               await checkAndGenerateUserId(user);
-              
-              // Verificar se veio de uma página de compartilhamento
-              const redirectTo = new URLSearchParams(window.location.search).get('redirect_to');
-              if (redirectTo) {
-                window.location.href = redirectTo + '?login_success=true&user_id=' + user.id;
-                return;
-              }
-              
               navigate('/dashboard');
             } else if (event === 'SIGNED_OUT') {
-              // Não redirecionar se estiver em página pública
-              if (!window.location.pathname.includes('/atividade/')) {
-                navigate('/login');
-              }
+              navigate('/login');
             }
           }
         );
