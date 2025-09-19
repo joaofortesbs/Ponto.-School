@@ -129,6 +129,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <CardVisualizacaoAtividadeCompartilhada
           titulo={atividade.titulo}
+          atividade={atividade}
           onApresentarMaterial={handleApresentarMaterial}
           onUsarMaterial={handleUsarMaterial}
         />
