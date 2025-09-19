@@ -138,22 +138,24 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
               </div>
               
               <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
-                {/* Overlay que desabilita interação e escurece no hover */}
-                <div className="absolute inset-0 z-10 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
-                  {/* Ícone e texto que aparecem no hover */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 flex flex-col items-center gap-3 text-white">
-                    <div className="bg-orange-600 rounded-full p-4 shadow-2xl">
-                      <Play className="w-8 h-8" />
-                    </div>
-                    <span className="text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
-                      Apresentar Atividade
-                    </span>
-                  </div>
-                </div>
-                
                 {/* Conteúdo da pré-visualização com interação desabilitada */}
                 <div className="p-4 pointer-events-none">
                   {renderActivityPreview()}
+                </div>
+                
+                {/* Overlay fixo que cobre toda a pré-visualização */}
+                <div className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/30 transition-all duration-300">
+                  {/* Ícone e texto fixos no centro da tela */}
+                  <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 flex flex-col items-center gap-3 text-white">
+                      <div className="bg-orange-600 rounded-full p-4 shadow-2xl">
+                        <Play className="w-8 h-8" />
+                      </div>
+                      <span className="text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                        Apresentar Atividade
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
