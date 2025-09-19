@@ -9,7 +9,9 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
-@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');</old_str>
+@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
+
+/* Utilitário para limitar linhas de texto */</old_str>
 
 /* Utilitário para limitar linhas de texto */
 .line-clamp-3 {
