@@ -120,8 +120,8 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
               <Input
                 value={shareLink}
                 readOnly
-                className="flex-1 bg-gray-50 dark:bg-gray-800"
-                placeholder="Gerando link..."
+                className="flex-1 bg-gray-50 dark:bg-gray-800 text-xs"
+                placeholder="Gerando link único..."
               />
               <Button
                 onClick={handleCopyLink}
@@ -140,8 +140,23 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                 )}
               </Button>
             </div>
+            
+            {/* Informação sobre código único */}
+            {shareLink && shareLink.includes('/') && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
+                  <div className="text-xs text-blue-700 dark:text-blue-300">
+                    <p className="font-medium mb-1">🔒 Link Único e Seguro</p>
+                    <p>Este link contém um código único gerado especialmente para esta atividade. 
+                    Qualquer pessoa pode acessá-la sem precisar de conta na plataforma.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Este link permite que qualquer pessoa acesse a atividade, mesmo sem conta na plataforma.
+              Link público com código único - Funciona sem necessidade de login
             </p>
           </div>
 
