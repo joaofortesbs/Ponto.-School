@@ -110,7 +110,10 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
   // IDs finais (props ou params)  
   const finalActivityId = activityId;
-  const finalUniqueCode = uniqueCode;</old_str>
+  const finalUniqueCode = uniqueCode;
+
+  /**
+   * Carrega a atividade compartilhada</old_str>
 
   /**
    * Carrega a atividade compartilhada
