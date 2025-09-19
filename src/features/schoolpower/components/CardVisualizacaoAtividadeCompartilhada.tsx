@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -142,21 +143,20 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   {renderActivityPreview()}
                 </div>
 
-                {/* Container unificado SEMPRE VISÍVEL E FIXO NA VIEWPORT: Overlay + Ícone + Texto */}
+                {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
                 <div 
-                  className="sticky top-0 left-0 z-50 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out flex items-center justify-center"
+                  className="absolute inset-0 z-40 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out flex items-center justify-center"
                   style={{ 
-                    position: 'sticky',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     width: '100%',
                     height: '100%',
-                    minHeight: '350px',
-                    zIndex: 50,
-                    pointerEvents: 'auto'
+                    zIndex: 10000
                   }}
-                ></div>
+                >
                   {/* Container unificado com ícone e texto FIXO */}
                   <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none relative">
                     {/* Ícone de play com animação aprimorada */}
