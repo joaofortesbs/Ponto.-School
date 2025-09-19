@@ -8,6 +8,9 @@ const AtividadeCompartilhadaPage: React.FC = () => {
     // 🔓 PÁGINA COMPLETAMENTE PÚBLICA - SEM AUTENTICAÇÃO NECESSÁRIA
     console.log('📄 [PÚBLICO] Página de atividade compartilhada carregada (modo independente)');
     console.log('🔗 [PÚBLICO] URL atual:', window.location.href);
+    
+    // Desabilitar verificações de autenticação para esta página
+    localStorage.setItem('pontoschool_public_mode', 'true');
 
     // Extrair e processar UTM parameters
     const utmData = extrairUTMDaURL();

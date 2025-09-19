@@ -135,3 +135,34 @@
 .universal-activity-header .w-12.h-12:hover::before {
   transform: translateX(100%);
 }
+/* Estilos para UniversalActivityHeader */
+.universal-activity-header {
+  background: linear-gradient(135deg, #ff6b00, #ff8c40);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.universal-activity-header h3 {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.universal-activity-header .icon {
+  filter: brightness(0) invert(1);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .universal-activity-header {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .universal-activity-header h3 {
+    font-size: 1rem;
+  }
+}

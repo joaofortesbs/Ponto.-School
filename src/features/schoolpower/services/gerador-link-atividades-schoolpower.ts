@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Interface para atividade compartilhável
@@ -170,15 +171,10 @@ export const extrairUTMDaURL = (): UTMData => {
   };
 };
 
-// Função para gerar link de compartilhamento
-export const gerarLinkCompartilhamento = async (
-  activityId: string,
-  activityTitle: string,
-  activityType: string,
-  activityData: any
-): Promise<string> => {
+// Função principal para criar link de atividade (nome correto usado no modal)
+export const criarLinkAtividade = async (dadosAtividade: any): Promise<AtividadeCompartilhavel> => {
   try {
-    console.log('🔗 [GERADOR] Iniciando geração de link para:', activityTitle);
+    console.log('🔗 [GERADOR] Criando link para atividade:', dadosAtividade.titulo);
 
     // Gerar código único
     const codigoUnico = uuidv4().replace(/-/g, '').substring(0, 16);
@@ -188,12 +184,12 @@ export const gerarLinkCompartilhamento = async (
 
     // Criar objeto da atividade
     const atividade: AtividadeCompartilhavel = {
-      id: activityId,
-      titulo: activityTitle,
-      tipo: activityType,
-      dados: activityData,
+      id: dadosAtividade.id,
+      titulo: dadosAtividade.titulo,
+      tipo: dadosAtividade.tipo || 'atividade',
+      dados: dadosAtividade.dados || dadosAtividade,
       codigoUnico,
-      linkPublico: `${window.location.origin}/atividade/${activityId}/${codigoUnico}`,
+      linkPublico: `${window.location.origin}/atividade/${dadosAtividade.id}/${codigoUnico}`,
       criadoEm: new Date().toISOString(),
       expiracaoEm: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
       visualizacoes: 0,
@@ -214,12 +210,45 @@ export const gerarLinkCompartilhamento = async (
     // Limpar dados expirados
     LocalStorageManager.limparDadosExpirados();
 
-    console.log('✅ [GERADOR] Link gerado com sucesso:', atividade.linkPublico);
-    return atividade.linkPublico;
+    console.log('✅ [GERADOR] Link criado com sucesso:', atividade.linkPublico);
+    return atividade;
 
   } catch (error) {
-    console.error('❌ [GERADOR] Erro ao gerar link:', error);
+    console.error('❌ [GERADOR] Erro ao criar link:', error);
     throw error;
+  }
+};
+
+// Função para regenerar link (compatibilidade)
+export const regenerarLinkAtividade = async (activityId: string): Promise<AtividadeCompartilhavel | null> => {
+  try {
+    const atividades = LocalStorageManager.obterAtividades();
+    const atividadeExistente = atividades[activityId];
+
+    if (!atividadeExistente) {
+      console.error('❌ Atividade não encontrada para regenerar:', activityId);
+      return null;
+    }
+
+    // Gerar novo código único
+    const novoCodigoUnico = uuidv4().replace(/-/g, '').substring(0, 16);
+
+    // Atualizar atividade
+    const atividadeAtualizada: AtividadeCompartilhavel = {
+      ...atividadeExistente,
+      codigoUnico: novoCodigoUnico,
+      linkPublico: `${window.location.origin}/atividade/${activityId}/${novoCodigoUnico}`,
+      criadoEm: new Date().toISOString(),
+      visualizacoes: 0
+    };
+
+    LocalStorageManager.salvarAtividade(atividadeAtualizada);
+
+    console.log('🔄 Link regenerado:', atividadeAtualizada.linkPublico);
+    return atividadeAtualizada;
+  } catch (error) {
+    console.error('❌ Erro ao regenerar link:', error);
+    return null;
   }
 };
 
@@ -255,7 +284,8 @@ export const buscarAtividadeCompartilhada = async (
   }
 };
 
-// Função para verificar se uma atividade existe
+// Funções de compatibilidade (mantidas para não quebrar código existente)
+export const gerarLinkCompartilhamento = criarLinkAtividade;
 export const verificarAtividadeExiste = (activityId: string, uniqueCode: string): boolean => {
   try {
     const atividade = LocalStorageManager.obterAtividade(activityId, uniqueCode);
@@ -266,7 +296,6 @@ export const verificarAtividadeExiste = (activityId: string, uniqueCode: string)
   }
 };
 
-// Função para obter estatísticas de uma atividade
 export const obterEstatisticasAtividade = (activityId: string): { visualizacoes: number; compartilhada: boolean } => {
   try {
     const atividades = LocalStorageManager.obterAtividades();
@@ -282,7 +311,6 @@ export const obterEstatisticasAtividade = (activityId: string): { visualizacoes:
   }
 };
 
-// Função para capturar dados de conversão (quando usuário faz login via link)
 export const capturarConversaoLogin = (userId: string): void => {
   try {
     const utmData = LocalStorageManager.obterUTMData();
