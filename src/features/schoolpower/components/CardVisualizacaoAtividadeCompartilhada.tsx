@@ -117,8 +117,8 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   };
 
   return (
-    <Card className="w-full max-w-4xl bg-slate-800/90 border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl">
-      <CardContent className="p-8">
+    <Card className="w-full max-w-4xl min-h-[600px] bg-slate-800/90 border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl">
+      <CardContent className="p-8 min-h-[550px] flex flex-col">
         {/* Título da atividade */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white text-center leading-tight">
@@ -127,9 +127,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
 
         {/* Card de Pré-visualização da Atividade */}
-        <div className="mb-8">
-          <Card className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
-            <CardContent className="p-0">
+        <div className="mb-8 flex-1">
+          <Card className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
+            <CardContent className="p-0 h-full flex flex-col">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
                 <div className="flex items-center justify-center gap-2 text-white">
                   <Eye className="w-5 h-5" />
@@ -137,7 +137,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
               
-              <div className="max-h-96 overflow-y-auto custom-scrollbar">
+              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px]">
                 <div className="p-4">
                   {renderActivityPreview()}
                 </div>
