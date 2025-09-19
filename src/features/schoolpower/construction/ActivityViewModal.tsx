@@ -14,6 +14,10 @@ import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-intera
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { UniversalActivityHeader } from './components/UniversalActivityHeader';
 import { useUserInfo } from './hooks/useUserInfo';
+import { criarLinkAtividade, AtividadeCompartilhavel } from '@/features/schoolpower/services/gerador-link-atividades-schoolpower';
+import { toast } from '@/components/ui/use-toast';
+import { Copy, RefreshCw, Share2, FileText as FileTextIcon, AlertCircle, CheckCircle } from 'lucide-react'; // Importados para a aba de compartilhamento
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Importados para a aba de compartilhamento
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -47,6 +51,12 @@ interface ActivityViewModalProps {
 export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewModalProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState<number | null>(null);
+  const [isOpenModal, setIsOpen] = useState(false); // Renomeado para evitar conflito com prop isOpen
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('preview');
+  const [linkCompartilhavel, setLinkCompartilhavel] = useState<AtividadeCompartilhavel | null>(null);
+  const [gerandoLink, setGerandoLink] = useState(false);
+  const [linkCopiado, setLinkCopiado] = useState(false);
   const userInfo = useUserInfo();
   const contentRef = useRef<HTMLDivElement>(null);
   const [questoesExpandidas, setQuestoesExpandidas] = useState<{ [key: string]: boolean }>({});
@@ -89,6 +99,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   // Resetar estado do sidebar quando o modal abre - com dependência estável
   React.useEffect(() => {
     if (isOpen && activity) {
+      setIsOpen(true); // Usa o estado local renomeado
       setShowSidebar(false);
       setSelectedQuestionId(null);
       setSelectedQuestionIndex(null);
@@ -106,7 +117,94 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
 
-  if (!isOpen || !activity) return null;
+  // Efeito para gerar link automaticamente quando o modal abre
+  React.useEffect(() => {
+    if (activity) {
+      setIsOpen(true);
+      setExpandedSections([]);
+      setActiveTab('preview');
+      // Gerar link automaticamente quando modal abre
+      gerarLinkCompartilhavel();
+    } else {
+      setIsOpen(false);
+      setLinkCompartilhavel(null);
+      setGerandoLink(false);
+      setLinkCopiado(false);
+    }
+  }, [activity]);
+
+
+  const gerarLinkCompartilhavel = async () => {
+    if (!activity?.id || !activity?.title) {
+      console.error('❌ Dados da atividade não disponíveis para gerar link');
+      return;
+    }
+
+    setGerandoLink(true);
+
+    try {
+      console.log('🔗 [ActivityViewModal] Gerando link para:', activity.title);
+
+      const novaAtividade = await criarLinkAtividade({
+        id: activity.id,
+        titulo: activity.title,
+        tipo: activity.type || 'atividade',
+        dados: {
+          title: activity.title,
+          description: activity.description,
+          type: activity.type,
+          customFields: activity.customFields || {},
+          ...activity
+        },
+        criadoPor: userInfo.userId || 'usuario-anonimo'
+      });
+
+      if (novaAtividade && novaAtividade.linkPublico) {
+        setLinkCompartilhavel(novaAtividade);
+        console.log('✅ [ActivityViewModal] Link gerado com sucesso:', novaAtividade.linkPublico);
+      } else {
+        console.error('❌ [ActivityViewModal] Falha ao gerar link');
+        toast({
+          title: "Erro",
+          description: "Não foi possível gerar o link de compartilhamento",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('❌ [ActivityViewModal] Erro ao gerar link:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar link de compartilhamento",
+        variant: "destructive"
+      });
+    } finally {
+      setGerandoLink(false);
+    }
+  };
+
+  const copiarLink = async () => {
+    if (!linkCompartilhavel?.linkPublico) return;
+
+    try {
+      await navigator.clipboard.writeText(linkCompartilhavel.linkPublico);
+      setLinkCopiado(true);
+      toast({
+        title: "Link copiado!",
+        description: "O link foi copiado para a área de transferência",
+      });
+      setTimeout(() => setLinkCopiado(false), 2000);
+    } catch (error) {
+      console.error('❌ Erro ao copiar link:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível copiar o link",
+        variant: "destructive"
+      });
+    }
+  };
+
+
+  if (!isOpen && !activity) return null; // Ajustado para usar o estado local renomeado
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
@@ -585,7 +683,24 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
               // TODO: Implementar menu de opções
               console.log('Menu de opções clicado');
             }}
-          />
+          >
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:text-orange-300 dark:hover:bg-orange-900/20"
+                onClick={copiarLink}
+                disabled={gerandoLink || !linkCompartilhavel}
+              >
+                {gerandoLink ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : linkCopiado ? (
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                ) : (
+                  <Share2 className="w-4 h-4 mr-2" />
+                )}
+                {gerandoLink ? 'Gerando...' : linkCopiado ? 'Copiado!' : 'Compartilhar'}
+              </Button>
+          </UniversalActivityHeader>
 
           {/* Botão de fechar fixo no canto superior direito */}
           <button
@@ -645,7 +760,132 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden">
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] bg-white dark:bg-gray-900" ref={contentRef}>
-                {renderActivityPreview()}
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsTrigger value="preview">Visualização</TabsTrigger>
+                    <TabsTrigger value="details">Detalhes</TabsTrigger>
+                    <TabsTrigger value="share">Compartilhar</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="preview" className="space-y-6">
+                    {renderActivityPreview()}
+                  </TabsContent>
+
+                  <TabsContent value="details" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileTextIcon className="w-5 h-5" />
+                          Informações Detalhadas
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {activity.customFields && Object.entries(activity.customFields).map(([key, value]) => (
+                          <div key={key} className="flex justify-between items-start">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 capitalize">
+                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                            </span>
+                            <span className="text-right max-w-xs text-gray-900 dark:text-gray-100">
+                              {typeof value === 'string' ? value : JSON.stringify(value)}
+                            </span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="share" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Share2 className="w-5 h-5" />
+                          Compartilhar Atividade
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {gerandoLink ? (
+                          <div className="flex items-center justify-center p-8">
+                            <RefreshCw className="w-6 h-6 animate-spin text-orange-600 mr-2" />
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Gerando link único...
+                            </span>
+                          </div>
+                        ) : linkCompartilhavel ? (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Link Público da Atividade
+                              </label>
+                              <div className="relative mt-1">
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={linkCompartilhavel.linkPublico}
+                                  className="w-full p-3 pr-24 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300"
+                                />
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                                  <button
+                                    onClick={gerarLinkCompartilhavel}
+                                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                                    title="Regenerar link"
+                                  >
+                                    <RefreshCw className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                  </button>
+                                  <button
+                                    onClick={copiarLink}
+                                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                                    title="Copiar link"
+                                  >
+                                    {linkCopiado ? (
+                                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                    ) : (
+                                      <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                              <div className="flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                <div className="text-sm">
+                                  <p className="text-blue-800 dark:text-blue-200 font-medium mb-1">
+                                    Como funciona o compartilhamento
+                                  </p>
+                                  <p className="text-blue-700 dark:text-blue-300">
+                                    Este link é público e permite que qualquer pessoa acesse esta atividade.
+                                    O código único ({linkCompartilhavel.codigoUnico}) garante a segurança do link.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                              Link criado em {new Date(linkCompartilhavel.criadoEm).toLocaleDateString('pt-BR')} •
+                              Código: {linkCompartilhavel.codigoUnico}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center p-8">
+                            <AlertCircle className="w-8 h-8 mx-auto mb-3 text-red-500" />
+                            <p className="text-gray-600 dark:text-gray-400 mb-4">
+                              Erro ao gerar link de compartilhamento
+                            </p>
+                            <Button
+                              onClick={gerarLinkCompartilhavel}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Tentar novamente
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
           </div>

@@ -117,9 +117,15 @@ class GeradorLinkAtividadesSchoolPower {
         id: atividade.id,
         titulo: atividade.titulo,
         tipo: atividade.tipo,
-        criadoPor: atividade.criadoPor
+        criadoPor: atividade.criadoPor,
+        dados: atividade.dados
       });
       
+      // Validar dados obrigatórios
+      if (!atividade.id || !atividade.titulo) {
+        throw new Error('ID e título da atividade são obrigatórios');
+      }
+
       // Primeiro, verifica se já existe uma atividade compartilhável para este ID
       console.log('🔍 [GERADOR] Verificando se já existe link...');
       const { data: existente, error: erroExistente } = await supabase
