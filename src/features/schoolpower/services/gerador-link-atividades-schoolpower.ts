@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 // Caracteres para geração de código único (Base62)
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -14,6 +14,7 @@ export interface AtividadeCompartilhavel {
   criadoEm: string;
   codigoUnico: string;
   linkPublico: string;
+  ativo: boolean;
 }
 
 // Interface para criar nova atividade compartilhável
@@ -25,12 +26,108 @@ export interface NovaAtividadeCompartilhavel {
   criadoPor: string;
 }
 
+// Chave base para localStorage
+const STORAGE_KEY = 'ponto_school_atividades_compartilhaveis';
+const STORAGE_VERSION = '1.0';
+
+class LocalStorageManager {
+  private getStorageKey(): string {
+    return `${STORAGE_KEY}_v${STORAGE_VERSION}`;
+  }
+
+  private getAllActivities(): AtividadeCompartilhavel[] {
+    try {
+      const stored = localStorage.getItem(this.getStorageKey());
+      if (!stored) return [];
+      return JSON.parse(stored);
+    } catch (error) {
+      console.error('❌ Erro ao carregar atividades do localStorage:', error);
+      return [];
+    }
+  }
+
+  private saveAllActivities(activities: AtividadeCompartilhavel[]): boolean {
+    try {
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(activities));
+      console.log('✅ Atividades salvas no localStorage:', activities.length);
+      return true;
+    } catch (error) {
+      console.error('❌ Erro ao salvar atividades no localStorage:', error);
+      return false;
+    }
+  }
+
+  findByActivityId(activityId: string): AtividadeCompartilhavel | null {
+    const activities = this.getAllActivities();
+    return activities.find(activity => 
+      activity.id === activityId && activity.ativo === true
+    ) || null;
+  }
+
+  findByCode(activityId: string, codigoUnico: string): AtividadeCompartilhavel | null {
+    const activities = this.getAllActivities();
+    return activities.find(activity => 
+      activity.id === activityId && 
+      activity.codigoUnico === codigoUnico && 
+      activity.ativo === true
+    ) || null;
+  }
+
+  saveActivity(activity: AtividadeCompartilhavel): boolean {
+    const activities = this.getAllActivities();
+    const existingIndex = activities.findIndex(a => a.id === activity.id);
+    
+    if (existingIndex >= 0) {
+      activities[existingIndex] = activity;
+    } else {
+      activities.push(activity);
+    }
+    
+    return this.saveAllActivities(activities);
+  }
+
+  updateActivity(activityId: string, updates: Partial<AtividadeCompartilhavel>): boolean {
+    const activities = this.getAllActivities();
+    const index = activities.findIndex(a => a.id === activityId);
+    
+    if (index >= 0) {
+      activities[index] = { ...activities[index], ...updates };
+      return this.saveAllActivities(activities);
+    }
+    
+    return false;
+  }
+
+  getAllByUser(userId: string): AtividadeCompartilhavel[] {
+    const activities = this.getAllActivities();
+    return activities.filter(activity => 
+      activity.criadoPor === userId && activity.ativo === true
+    );
+  }
+
+  deactivateActivity(activityId: string): boolean {
+    return this.updateActivity(activityId, { 
+      ativo: false,
+      criadoEm: new Date().toISOString() // Atualizar timestamp de desativação
+    });
+  }
+
+  codeExists(codigo: string): boolean {
+    const activities = this.getAllActivities();
+    return activities.some(activity => 
+      activity.codigoUnico === codigo && activity.ativo === true
+    );
+  }
+}
+
 class GeradorLinkAtividadesSchoolPower {
   private readonly baseUrl: string;
+  private storage: LocalStorageManager;
 
   constructor() {
     // URL base da plataforma
     this.baseUrl = window.location.origin;
+    this.storage = new LocalStorageManager();
   }
 
   /**
@@ -47,44 +144,18 @@ class GeradorLinkAtividadesSchoolPower {
   }
 
   /**
-   * Verifica se um código único já existe no banco de dados
-   * @param codigo - Código a ser verificado
-   * @returns True se o código já existe, false caso contrário
-   */
-  private async codigoJaExiste(codigo: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase
-        .from('atividades_compartilhaveis')
-        .select('codigo_unico')
-        .eq('codigo_unico', codigo)
-        .limit(1);
-
-      if (error) {
-        console.error('Erro ao verificar código único:', error);
-        return false;
-      }
-
-      return data && data.length > 0;
-    } catch (error) {
-      console.error('Erro ao verificar código único:', error);
-      return false;
-    }
-  }
-
-  /**
    * Gera um código único garantindo que não existe duplicata
    * @param tamanho - Tamanho do código
    * @returns Código único válido
    */
-  private async gerarCodigoUnicoValidado(tamanho: number = 8): Promise<string> {
+  private gerarCodigoUnicoValidado(tamanho: number = 8): string {
     let tentativas = 0;
     const maxTentativas = 10;
 
     while (tentativas < maxTentativas) {
       const codigo = this.gerarCodigoUnico(tamanho);
-      const existe = await this.codigoJaExiste(codigo);
       
-      if (!existe) {
+      if (!this.storage.codeExists(codigo)) {
         return codigo;
       }
       
@@ -106,7 +177,7 @@ class GeradorLinkAtividadesSchoolPower {
   }
 
   /**
-   * Salva uma nova atividade compartilhável no banco de dados
+   * Salva uma nova atividade compartilhável no localStorage
    * @param atividade - Dados da atividade
    * @returns Atividade compartilhável criada
    */
@@ -125,97 +196,60 @@ class GeradorLinkAtividadesSchoolPower {
       
       // Primeiro, verifica se já existe uma atividade compartilhável para este ID
       console.log('🔍 [GERADOR] Verificando se já existe link para ID:', atividade.id);
-      const { data: existente, error: erroExistente } = await supabase
-        .from('atividades_compartilhaveis')
-        .select('*')
-        .eq('atividade_id', atividade.id)
-        .eq('ativo', true)
-        .single();
+      const existente = this.storage.findByActivityId(atividade.id);
 
       // Se já existe, retorna a existente
-      if (!erroExistente && existente) {
-        console.log('♻️ [GERADOR] Link já existe, retornando link existente:', existente.link_publico);
-        console.log('🔑 [GERADOR] Código existente:', existente.codigo_unico);
-        return {
-          id: existente.atividade_id,
-          titulo: existente.titulo,
-          tipo: existente.tipo,
-          dados: existente.dados,
-          criadoPor: existente.criado_por,
-          criadoEm: existente.criado_em,
-          codigoUnico: existente.codigo_unico,
-          linkPublico: existente.link_publico
-        };
+      if (existente) {
+        console.log('♻️ [GERADOR] Link já existe, retornando link existente:', existente.linkPublico);
+        console.log('🔑 [GERADOR] Código existente:', existente.codigoUnico);
+        return existente;
       }
 
       console.log('🆕 [GERADOR] Criando novo link...');
       
       // Gera código único validado
-      const codigoUnico = await this.gerarCodigoUnicoValidado();
+      const codigoUnico = this.gerarCodigoUnicoValidado();
       console.log('🎯 [GERADOR] Código único:', codigoUnico);
       
       // Cria o link público
       const linkPublico = this.criarLinkPublico(atividade.id, codigoUnico);
       console.log('🔗 [GERADOR] Link público:', linkPublico);
 
-      // Dados para salvar no banco
-      const dadosParaSalvar = {
-        atividade_id: atividade.id,
+      // Criar objeto da atividade compartilhável
+      const novaAtividade: AtividadeCompartilhavel = {
+        id: atividade.id,
         titulo: atividade.titulo,
         tipo: atividade.tipo,
         dados: atividade.dados || {},
-        criado_por: atividade.criadoPor,
-        codigo_unico: codigoUnico,
-        link_publico: linkPublico,
-        criado_em: new Date().toISOString(),
+        criadoPor: atividade.criadoPor,
+        codigoUnico: codigoUnico,
+        linkPublico: linkPublico,
+        criadoEm: new Date().toISOString(),
         ativo: true
       };
 
-      console.log('💾 [GERADOR] Salvando no banco:', dadosParaSalvar);
+      console.log('💾 [GERADOR] Salvando no localStorage:', novaAtividade);
 
-      // Salva no banco de dados
-      const { data, error } = await supabase
-        .from('atividades_compartilhaveis')
-        .insert([dadosParaSalvar])
-        .select()
-        .single();
+      // Salva no localStorage
+      const success = this.storage.saveActivity(novaAtividade);
 
-      if (error) {
-        console.error('❌ [GERADOR] Erro no banco:', error);
-        throw new Error(`Erro no banco de dados: ${error.message}`);
+      if (!success) {
+        throw new Error('Falha ao salvar no localStorage');
       }
 
-      if (!data) {
-        console.error('❌ [GERADOR] Dados não retornados pelo banco');
-        throw new Error('Nenhum dado retornado após inserção');
-      }
-
-      console.log('✅ [GERADOR] Sucesso! Dados salvos:', data);
-
-      // Retorna no formato esperado
-      const resultado = {
-        id: data.atividade_id,
-        titulo: data.titulo,
-        tipo: data.tipo,
-        dados: data.dados,
-        criadoPor: data.criado_por,
-        criadoEm: data.criado_em,
-        codigoUnico: data.codigo_unico,
-        linkPublico: data.link_publico
-      };
-
-      console.log('🎯 [GERADOR] Resultado final:', resultado);
+      console.log('✅ [GERADOR] Sucesso! Dados salvos');
+      console.log('🎯 [GERADOR] Resultado final:', novaAtividade);
       
       // Validação final
-      if (!resultado.linkPublico) {
+      if (!novaAtividade.linkPublico) {
         throw new Error('Link público não foi gerado corretamente');
       }
 
-      return resultado;
+      return novaAtividade;
 
     } catch (error) {
       console.error('❌ [GERADOR] Erro completo:', error);
-      throw error; // Re-propaga o erro para o componente
+      throw error;
     }
   }
 
@@ -229,36 +263,15 @@ class GeradorLinkAtividadesSchoolPower {
     try {
       console.log('🔍 Buscando atividade com código:', codigoUnico);
 
-      const { data, error } = await supabase
-        .from('atividades_compartilhaveis')
-        .select('*')
-        .eq('atividade_id', atividadeId)
-        .eq('codigo_unico', codigoUnico)
-        .eq('ativo', true)
-        .single();
+      const atividade = this.storage.findByCode(atividadeId, codigoUnico);
 
-      if (error) {
-        console.error('❌ Erro ao buscar atividade:', error);
-        return null;
-      }
-
-      if (!data) {
+      if (!atividade) {
         console.log('⚠️ Atividade não encontrada');
         return null;
       }
 
-      console.log('✅ Atividade encontrada:', data.titulo);
-
-      return {
-        id: data.atividade_id,
-        titulo: data.titulo,
-        tipo: data.tipo,
-        dados: data.dados,
-        criadoPor: data.criado_por,
-        criadoEm: data.criado_em,
-        codigoUnico: data.codigo_unico,
-        linkPublico: data.link_publico
-      };
+      console.log('✅ Atividade encontrada:', atividade.titulo);
+      return atividade;
 
     } catch (error) {
       console.error('❌ Erro ao buscar atividade:', error);
@@ -276,52 +289,34 @@ class GeradorLinkAtividadesSchoolPower {
       console.log('🔄 Regenerando link para atividade:', atividadeId);
 
       // Busca a atividade atual
-      const { data: atividadeAtual, error: erroAtual } = await supabase
-        .from('atividades_compartilhaveis')
-        .select('*')
-        .eq('atividade_id', atividadeId)
-        .eq('ativo', true)
-        .single();
+      const atividadeAtual = this.storage.findByActivityId(atividadeId);
 
-      if (erroAtual || !atividadeAtual) {
+      if (!atividadeAtual) {
         console.error('❌ Atividade não encontrada para regenerar link');
         return null;
       }
 
       // Gera novo código único
-      const novoCodigoUnico = await this.gerarCodigoUnicoValidado();
+      const novoCodigoUnico = this.gerarCodigoUnicoValidado();
       const novoLinkPublico = this.criarLinkPublico(atividadeId, novoCodigoUnico);
 
-      // Atualiza no banco
-      const { data, error } = await supabase
-        .from('atividades_compartilhaveis')
-        .update({
-          codigo_unico: novoCodigoUnico,
-          link_publico: novoLinkPublico,
-          atualizado_em: new Date().toISOString()
-        })
-        .eq('atividade_id', atividadeId)
-        .eq('ativo', true)
-        .select()
-        .single();
+      // Atualiza no localStorage
+      const success = this.storage.updateActivity(atividadeId, {
+        codigoUnico: novoCodigoUnico,
+        linkPublico: novoLinkPublico,
+        criadoEm: new Date().toISOString() // Atualizar timestamp
+      });
 
-      if (error) {
-        console.error('❌ Erro ao regenerar link:', error);
+      if (!success) {
+        console.error('❌ Erro ao regenerar link no localStorage');
         return null;
       }
 
       console.log('✅ Link regenerado com sucesso:', novoLinkPublico);
 
-      return {
-        id: data.atividade_id,
-        titulo: data.titulo,
-        tipo: data.tipo,
-        dados: data.dados,
-        criadoPor: data.criado_por,
-        criadoEm: data.criado_em,
-        codigoUnico: data.codigo_unico,
-        linkPublico: data.link_publico
-      };
+      // Buscar a atividade atualizada
+      const atividadeAtualizada = this.storage.findByActivityId(atividadeId);
+      return atividadeAtualizada;
 
     } catch (error) {
       console.error('❌ Erro ao regenerar link:', error);
@@ -338,21 +333,15 @@ class GeradorLinkAtividadesSchoolPower {
     try {
       console.log('🚫 Desativando atividade:', atividadeId);
 
-      const { error } = await supabase
-        .from('atividades_compartilhaveis')
-        .update({
-          ativo: false,
-          desativado_em: new Date().toISOString()
-        })
-        .eq('atividade_id', atividadeId);
+      const success = this.storage.deactivateActivity(atividadeId);
 
-      if (error) {
-        console.error('❌ Erro ao desativar atividade:', error);
-        return false;
+      if (success) {
+        console.log('✅ Atividade desativada com sucesso');
+      } else {
+        console.error('❌ Erro ao desativar atividade');
       }
 
-      console.log('✅ Atividade desativada com sucesso');
-      return true;
+      return success;
 
     } catch (error) {
       console.error('❌ Erro ao desativar atividade:', error);
@@ -369,28 +358,14 @@ class GeradorLinkAtividadesSchoolPower {
     try {
       console.log('📋 Listando atividades do usuário:', userId);
 
-      const { data, error } = await supabase
-        .from('atividades_compartilhaveis')
-        .select('*')
-        .eq('criado_por', userId)
-        .eq('ativo', true)
-        .order('criado_em', { ascending: false });
+      const atividades = this.storage.getAllByUser(userId);
+      
+      // Ordenar por data de criação (mais recentes primeiro)
+      atividades.sort((a, b) => 
+        new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
+      );
 
-      if (error) {
-        console.error('❌ Erro ao listar atividades:', error);
-        return [];
-      }
-
-      return data.map(item => ({
-        id: item.atividade_id,
-        titulo: item.titulo,
-        tipo: item.tipo,
-        dados: item.dados,
-        criadoPor: item.criado_por,
-        criadoEm: item.criado_em,
-        codigoUnico: item.codigo_unico,
-        linkPublico: item.link_publico
-      }));
+      return atividades;
 
     } catch (error) {
       console.error('❌ Erro ao listar atividades:', error);

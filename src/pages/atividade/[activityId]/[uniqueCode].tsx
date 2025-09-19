@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InterfaceCompartilharAtividade } from '@/features/schoolpower/components/interface-compartilhar-atividade-schoolpower';
 

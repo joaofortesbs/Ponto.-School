@@ -73,36 +73,75 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
     });
 
     try {
+      // Preparar dados da atividade com fallbacks robustos
       const dadosAtividade = {
         id: activityId,
-        titulo: activityTitle,
+        titulo: activityTitle || 'Atividade sem título',
         tipo: activityType || 'atividade',
-        dados: activityData || {},
-        criadoPor: userInfo.userId || 'usuario-anonimo'
+        dados: {
+          ...activityData,
+          // Garantir dados mínimos
+          title: activityTitle,
+          type: activityType || 'atividade',
+          timestamp: new Date().toISOString()
+        },
+        criadoPor: userInfo.userId || userInfo.name || 'usuario-anonimo'
       };
 
-      console.log('🚀 [MODAL] Enviando dados para API:', dadosAtividade);
+      console.log('🚀 [MODAL] Enviando dados para localStorage:', dadosAtividade);
 
       const novaAtividade = await criarLinkAtividade(dadosAtividade);
 
-      console.log('📨 [MODAL] Resposta da API:', novaAtividade);
+      console.log('📨 [MODAL] Resposta do sistema:', novaAtividade);
 
       if (novaAtividade && novaAtividade.linkPublico) {
         setAtividade(novaAtividade);
         console.log('✅ [MODAL] Link gerado com sucesso:', novaAtividade.linkPublico);
         console.log('🔑 [MODAL] Código único:', novaAtividade.codigoUnico);
         setError(null);
+        
+        // Salvar uma cópia adicional no localStorage como backup
+        try {
+          const backupKey = `share_backup_${activityId}`;
+          localStorage.setItem(backupKey, JSON.stringify(novaAtividade));
+          console.log('💾 [MODAL] Backup salvo em:', backupKey);
+        } catch (backupError) {
+          console.warn('⚠️ [MODAL] Erro ao salvar backup:', backupError);
+        }
+        
       } else if (novaAtividade) {
         console.error('❌ [MODAL] Link público ausente na resposta:', novaAtividade);
         setError('Link não foi gerado corretamente');
       } else {
-        console.error('❌ [MODAL] Resposta nula da API');
-        setError('Erro na comunicação com o servidor');
+        console.error('❌ [MODAL] Resposta nula do sistema');
+        setError('Erro no sistema de compartilhamento');
       }
     } catch (error) {
       console.error('❌ [MODAL] Erro completo ao criar link:', error);
-      console.error('❌ [MODAL] Stack trace:', error.stack);
-      setError(`Erro ao gerar link: ${error.message || 'Falha desconhecida'}`);
+      
+      // Tentar recovery com dados locais
+      try {
+        console.log('🔄 [MODAL] Tentando recovery com dados locais...');
+        const backupKey = `share_backup_${activityId}`;
+        const backup = localStorage.getItem(backupKey);
+        
+        if (backup) {
+          const backupData = JSON.parse(backup);
+          setAtividade(backupData);
+          console.log('✅ [MODAL] Recovery bem-sucedido:', backupData.linkPublico);
+          setError(null);
+          return;
+        }
+      } catch (recoveryError) {
+        console.error('❌ [MODAL] Falha no recovery:', recoveryError);
+      }
+      
+      // Se chegou até aqui, mostrar erro amigável
+      if (error.message && error.message.includes('quota')) {
+        setError('Armazenamento local cheio. Limpe o cache do navegador e tente novamente.');
+      } else {
+        setError(`Erro ao gerar link: ${error.message || 'Falha no sistema de compartilhamento'}`);
+      }
     } finally {
       setLoading(false);
     }
