@@ -36,6 +36,7 @@ interface UniversalActivityHeaderProps {
   userAvatar?: string;
   onMoreOptions?: () => void;
   schoolPoints?: number;
+  activityData?: any; // Dados completos da atividade para compartilhamento
   onAddToClass?: () => void;
   onDownload?: () => void;
   onShare?: () => void;
@@ -169,6 +170,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   userAvatar,
   onMoreOptions,
   schoolPoints = 100,
+  activityData, // Dados completos da atividade
   onAddToClass,
   onDownload,
   onShare,
@@ -393,8 +395,12 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         activityData={{
           title: activityTitle,
           type: activityType,
-          id: activityId
+          id: activityId,
+          ...activityData
         }}
+        preGeneratedLink={activityData?.linkCompartilhavel}
+        isGeneratingLink={activityData?.isGeneratingLink || false}
+        linkError={activityData?.linkError || null}
       />
     </div>
   );
