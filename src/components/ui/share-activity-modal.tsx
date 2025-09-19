@@ -34,19 +34,39 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   // Busca ou cria o link compartilhável quando o modal abre
   useEffect(() => {
     if (isOpen && activityId && activityTitle) {
+      // Reset estado anterior
+      setAtividade(null);
+      setError(null);
       criarOuBuscarLink();
+    }
+    
+    // Limpa estado quando modal fecha
+    if (!isOpen) {
+      setAtividade(null);
+      setError(null);
+      setLoading(false);
+      setCopied(false);
     }
   }, [isOpen, activityId, activityTitle]);
 
   const criarOuBuscarLink = async () => {
-    if (!activityId || !activityTitle) return;
+    if (!activityId || !activityTitle) {
+      console.error('❌ Dados obrigatórios não fornecidos:', { activityId, activityTitle });
+      setError('Dados da atividade não encontrados');
+      return;
+    }
 
     setLoading(true);
     setError(null);
-    setAtividade(null); // Limpa atividade anterior
 
     try {
-      console.log('🔗 Criando link compartilhável para:', activityTitle);
+      console.log('🔗 Iniciando criação de link compartilhável para:', activityTitle);
+      console.log('📋 Dados da atividade:', {
+        id: activityId,
+        titulo: activityTitle,
+        tipo: activityType,
+        userInfo: userInfo.userId
+      });
 
       const novaAtividade = await criarLinkAtividade({
         id: activityId,
@@ -56,18 +76,24 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
         criadoPor: userInfo.userId || 'usuario-anonimo'
       });
 
-      console.log('🔍 Resposta da API:', novaAtividade);
+      console.log('🔍 Resposta completa da API:', novaAtividade);
 
-      if (novaAtividade && novaAtividade.linkPublico) {
-        setAtividade(novaAtividade);
-        console.log('✅ Link criado e configurado:', novaAtividade.linkPublico);
+      if (novaAtividade) {
+        if (novaAtividade.linkPublico) {
+          setAtividade(novaAtividade);
+          console.log('✅ Link criado com sucesso:', novaAtividade.linkPublico);
+          console.log('🎯 Código único gerado:', novaAtividade.codigoUnico);
+        } else {
+          console.error('❌ Link público ausente na resposta:', novaAtividade);
+          setError('Link não foi gerado corretamente');
+        }
       } else {
-        console.error('❌ Link público não encontrado na resposta:', novaAtividade);
-        setError('Erro ao gerar link de compartilhamento');
+        console.error('❌ Resposta nula da API');
+        setError('Falha na comunicação com o servidor');
       }
     } catch (error) {
-      console.error('❌ Erro ao criar link:', error);
-      setError('Erro ao gerar link de compartilhamento');
+      console.error('❌ Erro completo ao criar link:', error);
+      setError(`Erro: ${error.message || 'Falha desconhecida'}`);
     } finally {
       setLoading(false);
     }
@@ -205,26 +231,32 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                   <Input
                     value={shareLink}
                     readOnly
-                    placeholder="Gerando link..."
+                    placeholder={shareLink ? shareLink : "Gerando link..."}
                     className="pr-24 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm"
                   />
-                  {/* Debug: Mostrar se tem link */}
-                  {shareLink && (
+                  {/* Status do Link */}
+                  {shareLink ? (
                     <div className="absolute -bottom-6 left-0 text-xs text-green-600 dark:text-green-400">
-                      ✓ Link disponível ({shareLink.length} caracteres)
+                      ✓ Link pronto para compartilhar ({shareLink.length} caracteres)
+                    </div>
+                  ) : (
+                    <div className="absolute -bottom-6 left-0 text-xs text-blue-600 dark:text-blue-400">
+                      ⏳ Gerando link único...
                     </div>
                   )}
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button
                       onClick={regenerarLink}
-                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      disabled={!shareLink || loading}
+                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Regenerar link"
                     >
                       <RefreshCw className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </button>
                     <button
                       onClick={handleCopyLink}
-                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      disabled={!shareLink || loading}
+                      className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Copiar link"
                     >
                       {copied ? (

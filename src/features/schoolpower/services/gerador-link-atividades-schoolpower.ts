@@ -112,9 +112,16 @@ class GeradorLinkAtividadesSchoolPower {
    */
   async criarAtividadeCompartilhavel(atividade: NovaAtividadeCompartilhavel): Promise<AtividadeCompartilhavel | null> {
     try {
-      console.log('🔗 Gerando link único para atividade:', atividade.titulo);
+      console.log('🔗 [GERADOR] Iniciando geração de link para:', atividade.titulo);
+      console.log('📋 [GERADOR] Dados recebidos:', {
+        id: atividade.id,
+        titulo: atividade.titulo,
+        tipo: atividade.tipo,
+        criadoPor: atividade.criadoPor
+      });
       
       // Primeiro, verifica se já existe uma atividade compartilhável para este ID
+      console.log('🔍 [GERADOR] Verificando se já existe link...');
       const { data: existente, error: erroExistente } = await supabase
         .from('atividades_compartilhaveis')
         .select('*')
@@ -124,7 +131,7 @@ class GeradorLinkAtividadesSchoolPower {
 
       // Se já existe, retorna a existente
       if (!erroExistente && existente) {
-        console.log('✅ Atividade já existe, retornando link existente:', existente.link_publico);
+        console.log('✅ [GERADOR] Link já existe, retornando:', existente.link_publico);
         return {
           id: existente.atividade_id,
           titulo: existente.titulo,
@@ -137,20 +144,22 @@ class GeradorLinkAtividadesSchoolPower {
         };
       }
 
+      console.log('🆕 [GERADOR] Criando novo link...');
+      
       // Gera código único validado
       const codigoUnico = await this.gerarCodigoUnicoValidado();
-      console.log('🎯 Código único gerado:', codigoUnico);
+      console.log('🎯 [GERADOR] Código único:', codigoUnico);
       
       // Cria o link público
       const linkPublico = this.criarLinkPublico(atividade.id, codigoUnico);
-      console.log('🔗 Link público gerado:', linkPublico);
+      console.log('🔗 [GERADOR] Link público:', linkPublico);
 
       // Dados para salvar no banco
       const dadosParaSalvar = {
         atividade_id: atividade.id,
         titulo: atividade.titulo,
         tipo: atividade.tipo,
-        dados: atividade.dados,
+        dados: atividade.dados || {},
         criado_por: atividade.criadoPor,
         codigo_unico: codigoUnico,
         link_publico: linkPublico,
@@ -158,7 +167,7 @@ class GeradorLinkAtividadesSchoolPower {
         ativo: true
       };
 
-      console.log('💾 Salvando dados no banco:', dadosParaSalvar);
+      console.log('💾 [GERADOR] Salvando no banco:', dadosParaSalvar);
 
       // Salva no banco de dados
       const { data, error } = await supabase
@@ -168,12 +177,16 @@ class GeradorLinkAtividadesSchoolPower {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao salvar atividade compartilhável:', error);
-        return null;
+        console.error('❌ [GERADOR] Erro no banco:', error);
+        throw new Error(`Erro no banco de dados: ${error.message}`);
       }
 
-      console.log('✅ Dados salvos no banco:', data);
-      console.log('✅ Atividade compartilhável criada com sucesso:', data.link_publico);
+      if (!data) {
+        console.error('❌ [GERADOR] Dados não retornados pelo banco');
+        throw new Error('Nenhum dado retornado após inserção');
+      }
+
+      console.log('✅ [GERADOR] Sucesso! Dados salvos:', data);
 
       // Retorna no formato esperado
       const resultado = {
@@ -187,12 +200,18 @@ class GeradorLinkAtividadesSchoolPower {
         linkPublico: data.link_publico
       };
 
-      console.log('🎯 Retornando resultado:', resultado);
+      console.log('🎯 [GERADOR] Resultado final:', resultado);
+      
+      // Validação final
+      if (!resultado.linkPublico) {
+        throw new Error('Link público não foi gerado corretamente');
+      }
+
       return resultado;
 
     } catch (error) {
-      console.error('❌ Erro ao criar atividade compartilhável:', error);
-      return null;
+      console.error('❌ [GERADOR] Erro completo:', error);
+      throw error; // Re-propaga o erro para o componente
     }
   }
 
