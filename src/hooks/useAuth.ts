@@ -124,6 +124,16 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Verificar se é uma rota pública
+        const currentPath = window.location.pathname;
+        const isPublicRoute = currentPath.startsWith('/atividade/');
+        
+        if (isPublicRoute) {
+          console.log('🔓 Rota pública detectada, saltando verificação de autenticação');
+          setAuth(null, null, false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.getSession();
 
         if (error) throw error;
@@ -147,9 +157,17 @@ export function useAuth() {
             // Verificar e gerar ID quando o usuário fizer login
             if (event === 'SIGNED_IN' && user) {
               await checkAndGenerateUserId(user);
-              navigate('/dashboard');
+              // Só redirecionar se não estiver em rota pública
+              const currentPath = window.location.pathname;
+              if (!currentPath.startsWith('/atividade/')) {
+                navigate('/dashboard');
+              }
             } else if (event === 'SIGNED_OUT') {
-              navigate('/login');
+              // Só redirecionar se não estiver em rota pública
+              const currentPath = window.location.pathname;
+              if (!currentPath.startsWith('/atividade/')) {
+                navigate('/login');
+              }
             }
           }
         );

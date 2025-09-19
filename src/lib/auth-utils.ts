@@ -6,6 +6,13 @@ import { supabase } from "./supabase";
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
+    // Verificar se é uma rota pública que não precisa de autenticação
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/atividade/')) {
+      console.log('🔓 Rota pública detectada, retornando false para checkAuthentication');
+      return false;
+    }
+
     // Verificar cache local para resposta instantânea
     const cachedStatus = localStorage.getItem('auth_status');
     const cacheTime = localStorage.getItem('auth_cache_time');

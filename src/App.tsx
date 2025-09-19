@@ -43,6 +43,9 @@ import RegisterPage from "@/pages/auth/register";
 import ForgotPasswordPage from "@/pages/auth/forgot-password";
 import ResetPasswordPage from "@/pages/auth/reset-password";
 import PlanSelectionPage from "@/pages/plan-selection";
+import AuthPage from "@/pages/auth";
+import PlanSelection from "@/pages/plan-selection";
+import PlanSelectionRedesigned from "@/pages/plan-selection-redesigned";
 
 // User Pages
 import ProfilePage from "@/pages/profile";
@@ -57,6 +60,9 @@ import EpictusIAPage from "./pages/epictus-ia";
 import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
+
+// Import da nova página de atividade pública
+import PublicActivityPage from './pages/atividade/[id]';
 
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
@@ -104,6 +110,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [isAuth, setIsAuth] = useState(false); // Estado para controlar a autenticação
+  const [loading, setLoading] = useState(true); // Estado para controle de carregamento inicial
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -131,6 +139,7 @@ function App() {
         console.error("Connection check error:", error);
       } finally {
         setIsLoading(false);
+        console.log("Connection check finished.");
       }
     };
 
@@ -152,6 +161,43 @@ function App() {
       clearTimeout(loadingTimeout);
       window.removeEventListener('logout', handleLogout);
     };
+  }, []);
+
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      console.log("Iniciando aplicação e verificando autenticação...");
+
+      try {
+        // Verificar se é uma rota pública de atividade
+        const currentPath = window.location.pathname;
+        const isPublicActivityRoute = currentPath.startsWith('/atividade/');
+
+        if (isPublicActivityRoute) {
+          // Para rotas públicas de atividades, não verificar autenticação
+          console.log("🔓 Rota pública de atividade detectada, permitindo acesso sem autenticação");
+          setIsAuth(false); // Definir como não autenticado para não mostrar componentes autenticados
+          setLoading(false);
+          return;
+        }
+
+        const isAuthenticated = await checkAuthentication();
+        setIsAuth(isAuthenticated);
+
+        if (isAuthenticated) {
+          localStorage.setItem('auth_checked', 'true');
+          localStorage.setItem('auth_status', 'authenticated');
+        }
+      } catch (error) {
+        console.error("Erro na verificação de autenticação:", error);
+        setIsAuth(false);
+      } finally {
+        setLoading(false);
+        console.log("Aplicação inicializada com sucesso.");
+      }
+    };
+
+    initializeApp();
   }, []);
 
   // Rotas de autenticação
@@ -260,6 +306,40 @@ function App() {
     };
   }, [location.pathname]);
 
+  // Verificar se é uma rota pública de atividade
+  const currentPath = window.location.pathname;
+  const isPublicActivityRoute = currentPath.startsWith('/atividade/');
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300 font-medium">Carregando aplicação...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuth && !isPublicActivityRoute) {
+    return (
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <Router>
+          <Routes>
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
+            <Route path="/plan-selection" element={<PlanSelection />} />
+            <Route path="/plan-selection-redesigned" element={<PlanSelectionRedesigned />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    );
+  }
+
+
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <UsernameProvider>
@@ -267,7 +347,22 @@ function App() {
           <ErrorBoundary>
             <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
               <Routes>
-                {/* Auth Routes - Públicas */}
+                {/* Rota pública de atividade - DEVE vir ANTES das rotas protegidas */}
+                <Route 
+                  path="/atividade/:id/:code?" 
+                  element={
+                    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center">
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-gray-600 text-lg">Carregando atividade...</p>
+                      </div>
+                    </div>}>
+                      <PublicActivityPage />
+                    </Suspense>
+                  } 
+                />
+
+                {/* Rotas de autenticação */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -330,8 +425,8 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Fallback Route - Redireciona para login */}
-                <Route path="*" element={<Navigate to="/login" />} />
+                {/* Fallback Route - Redireciona para login se não estiver autenticado */}
+                <Route path="*" element={isAuth ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
               </Routes>
 
               {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}

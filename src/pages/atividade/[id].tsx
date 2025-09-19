@@ -29,6 +29,7 @@ export default function PublicActivityPage() {
 
   useEffect(() => {
     console.log('🔍 PublicActivityPage carregada com parâmetros:', { id, code });
+    console.log('🔓 Página pública carregando independentemente da autenticação');
     
     if (id) {
       fetchPublicActivity(id, code);
