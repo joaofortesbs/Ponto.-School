@@ -143,7 +143,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
                     {renderActivityPreview()}
                   </div>
-                </div></div>
+                </div>
 
                 {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
                 <div 
