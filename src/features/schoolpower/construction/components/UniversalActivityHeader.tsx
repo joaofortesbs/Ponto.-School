@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -180,7 +181,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
   const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
-
+  
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
   const finalUserAvatar = userAvatar || userInfo.avatar;
@@ -192,13 +193,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       console.log('🎯 UniversalActivityHeader: Usando ícone sincronizado para activityId:', activityId);
       return getIconByActivityId(activityId);
     }
-
+    
     // PRIORIDADE 2: Se ActivityIcon foi passado diretamente
     if (ActivityIcon) {
       console.log('🎯 UniversalActivityHeader: Usando ícone passado via props');
       return ActivityIcon;
     }
-
+    
     // PRIORIDADE 3: Buscar no schoolPowerActivities por activityType
     if (activityType && schoolPowerActivities) {
       const activity = schoolPowerActivities.find(act => 
@@ -209,14 +210,14 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         return getIconByActivityId(activity.id);
       }
     }
-
+    
     // FALLBACK: Ícone padrão
     console.log('🎯 UniversalActivityHeader: Usando ícone padrão (BookOpen)');
     return BookOpen;
   };
 
   const FinalActivityIcon = getActivityIcon();
-
+  
   // Função para obter as iniciais do nome do usuário
   const getUserInitials = (name: string) => {
     return name
@@ -261,9 +262,6 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   const handleShareClick = () => {
-    console.log('🔗 [UniversalActivityHeader] Abrindo modal de compartilhar para:', activityTitle);
-    console.log('🎯 [UniversalActivityHeader] Activity ID:', activityId);
-    console.log('🎯 [UniversalActivityHeader] Activity Type:', activityType);
     setIsShareModalOpen(true);
     if (onShare) {
       onShare();
@@ -285,7 +283,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             <h1 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
               {activityTitle}
             </h1>
-
+            
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
               <Avatar className="w-7 h-7 rounded-full border-2 border-orange-400 dark:border-orange-500">
@@ -384,7 +382,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           </DropdownMenu>
         </div>
       </div>
-
+      
       {/* Modal de Compartilhar */}
       <ShareActivityModal
         isOpen={isShareModalOpen}
