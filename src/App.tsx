@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, lazy } from "react";
 import {
   Routes,
   Route,
@@ -58,6 +58,10 @@ import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 
+// Public activity page (no authentication required)
+const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activityId]/[uniqueCode]'));
+
+
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
@@ -99,11 +103,20 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : null;
 }
 
+// Component to check if current route is public
+function useIsPublicRoute() {
+  const location = useLocation();
+  return location.pathname.startsWith('/atividade/');
+}
+
+
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const isPublicRoute = useIsPublicRoute();
+
 
   useEffect(() => {
     console.log("App carregado com sucesso!");
@@ -259,6 +272,40 @@ function App() {
       restoreScroll();
     };
   }, [location.pathname]);
+
+  // For public routes, skip authentication check and render directly
+  if (isPublicRoute) {
+    return (
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <Toaster />
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando atividade...</p>
+            </div>
+          </div>
+        }>
+          <Routes>
+            <Route path="/atividade/:activityId/:uniqueCode" element={<AtividadeCompartilhadaPage />} />
+          </Routes>
+        </Suspense>
+      </ThemeProvider>
+    );
+  }
+
+  // If not a public route, proceed with authentication check
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

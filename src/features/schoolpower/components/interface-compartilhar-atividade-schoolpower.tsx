@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -99,7 +98,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 }) => {
   const { activityId, uniqueCode } = useParams();
   const navigate = useNavigate();
-  
+
   // Estados
   const [atividade, setAtividade] = useState<AtividadeCompartilhavel | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -124,9 +123,9 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
       try {
         console.log('🔍 [PÚBLICO] Carregando atividade compartilhada:', { finalActivityId, finalUniqueCode });
-        
+
         const atividadeEncontrada = await buscarAtividadeCompartilhada(finalActivityId, finalUniqueCode);
-        
+
         if (!atividadeEncontrada) {
           setErro('Atividade não encontrada ou link expirado');
           setCarregando(false);
@@ -135,10 +134,10 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
         setAtividade(atividadeEncontrada);
         console.log('✅ [PÚBLICO] Atividade carregada:', atividadeEncontrada.titulo);
-        
+
         // Configurar título da página
         document.title = `${atividadeEncontrada.titulo} - Ponto School`;
-        
+
       } catch (error) {
         console.error('❌ [PÚBLICO] Erro ao carregar atividade:', error);
         setErro('Erro ao carregar atividade compartilhada');
@@ -163,7 +162,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         title: "Link copiado!",
         description: "O link foi copiado para sua área de transferência.",
       });
-      
+
       setTimeout(() => setLinkCopiado(false), 2000);
     } catch (error) {
       console.error('Erro ao copiar link:', error);
@@ -212,16 +211,16 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
     switch (atividade.tipo) {
       case 'plano-aula':
         return <PlanoAulaPreview {...previewProps} />;
-      
+
       case 'sequencia-didatica':
         return <SequenciaDidaticaPreview {...previewProps} />;
-      
+
       case 'flash-cards':
         return <FlashCardsPreview {...previewProps} />;
-      
+
       case 'mapa-mental':
         return <MapaMentalPreview {...previewProps} />;
-      
+
       default:
         return <GenericActivityPreview {...previewProps} />;
     }
@@ -317,7 +316,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
                 )}
                 {linkCopiado ? 'Copiado!' : 'Copiar Link'}
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -361,7 +360,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
                   )}
                   {linkCopiado ? 'Copiado!' : 'Copiar Link'}
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -392,26 +391,16 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
                   <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                     <AtividadeIcon className="w-8 h-8 text-white" />
                   </div>
-                  
+
                   <div className="flex-1">
                     <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                       {atividade.titulo}
                     </CardTitle>
-                    
+
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                         {atividade.tipo.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </Badge>
-                      
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(atividade.criadoEm).toLocaleDateString('pt-BR')}
-                      </div>
-                      
-                      <div className="flex items-center gap-1">
-                        <User className="w-4 h-4" />
-                        Criado por School Power
-                      </div>
+                      </CardContent>
                     </div>
                   </div>
                 </div>
