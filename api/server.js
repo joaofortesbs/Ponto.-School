@@ -1,8 +1,8 @@
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
+import publicActivityRouter from './publicActivity';
 
 dotenv.config();
 
@@ -40,15 +40,25 @@ app.get('/', (req, res) => {
         <div class="endpoint">
           <p><strong>POST /api/enviar-email</strong> - Enviar email</p>
         </div>
+        <div class="endpoint">
+          <p><strong>GET /api/publicActivity/:activityId</strong> - Obter atividade pública por ID</p>
+        </div>
       </body>
     </html>
   `);
 });
 
-// Rota de teste
+// Rota de status
 app.get('/api/status', (req, res) => {
-  res.json({ status: 'Servidor de API funcionando corretamente!' });
+  res.json({ 
+    status: 'OK', 
+    message: 'API está funcionando!',
+    timestamp: new Date().toISOString()
+  });
 });
+
+// Rotas de atividades públicas
+app.use('/api/publicActivity', publicActivityRouter);
 
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
