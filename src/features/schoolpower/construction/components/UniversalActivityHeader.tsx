@@ -33,7 +33,7 @@ interface UniversalActivityHeaderProps {
   activityTitle: string;
   activityIcon?: React.ComponentType<{ className?: string }>;
   activityType?: string;
-  activityId?: string; // Adicionar activityId para sincronização
+  activityId?: string;
   userName?: string;
   userAvatar?: string;
   onMoreOptions?: () => void;
@@ -258,11 +258,15 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
   // Função para compartilhar atividade
   const handleCompartilharAtividade = () => {
+    console.log('🔗 Tentando compartilhar atividade com ID:', activityId);
+    
     if (!activityId) {
-      showToast('ID da atividade não encontrado', 'error');
+      console.error('❌ ID da atividade não encontrado');
+      showToast('ID da atividade não encontrado para compartilhamento', 'error');
       return;
     }
 
+    console.log('✅ Abrindo modal de compartilhamento');
     setShowShareModal(true);
   };
 

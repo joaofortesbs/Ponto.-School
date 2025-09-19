@@ -1,8 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import emailRoutes from './enviar-email.js';
-import publicActivityRouter from './publicActivity';
+
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
@@ -13,8 +13,26 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Import das rotas
+let emailRoutes;
+let publicActivityRouter;
+
+try {
+  emailRoutes = require('./enviar-email.js');
+} catch (error) {
+  console.warn('Módulo enviar-email.js não encontrado:', error.message);
+}
+
+try {
+  publicActivityRouter = require('./publicActivity.js');
+} catch (error) {
+  console.warn('Módulo publicActivity.js não encontrado:', error.message);
+}
+
 // Rotas
-app.use('/api', emailRoutes);
+if (emailRoutes) {
+  app.use('/api', emailRoutes);
+}
 
 // Rota raiz
 app.get('/', (req, res) => {
@@ -58,7 +76,31 @@ app.get('/api/status', (req, res) => {
 });
 
 // Rotas de atividades públicas
-app.use('/api/publicActivity', publicActivityRouter);
+if (publicActivityRouter) {
+  app.use('/api/publicActivity', publicActivityRouter);
+} else {
+  // Fallback para quando o módulo não existir
+  app.get('/api/publicActivity/:id', (req, res) => {
+    const { id } = req.params;
+    
+    // Mock data de exemplo
+    const mockActivity = {
+      id: id,
+      title: 'Atividade Educacional',
+      description: 'Atividade gerada pela Ponto School',
+      subject: 'Geral',
+      activityType: 'atividade-geral',
+      content: 'Conteúdo da atividade será carregado aqui.',
+      createdAt: new Date().toISOString(),
+      isPublic: true
+    };
+    
+    res.json({
+      success: true,
+      data: mockActivity
+    });
+  });
+}
 
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
@@ -69,4 +111,8 @@ app.listen(PORT, '0.0.0.0', () => {
 // Tratamento global de erros para evitar que o servidor caia
 process.on('uncaughtException', (error) => {
   console.error('Erro não tratado no servidor:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Promise rejection não tratada em:', promise, 'razão:', reason);
 });

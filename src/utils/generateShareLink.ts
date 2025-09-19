@@ -3,8 +3,17 @@
  * Gera um link único para compartilhamento público de atividade
  */
 export function gerarLinkCompartilhamento(activityId: string): string {
+  if (!activityId || activityId.trim() === '') {
+    console.error('❌ ID da atividade inválido para geração de link:', activityId);
+    return '';
+  }
+
   const baseUrl = window.location.origin;
-  return `${baseUrl}/atividade/${activityId}`;
+  const cleanId = activityId.trim().replace(/[^a-zA-Z0-9_-]/g, '');
+  const link = `${baseUrl}/atividade/${cleanId}`;
+  
+  console.log('🔗 Link de compartilhamento gerado:', link);
+  return link;
 }
 
 /**

@@ -578,12 +578,13 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <UniversalActivityHeader
             activityTitle={getActivityTitle()}
             activityIcon={getActivityIcon(activityType)}
+            activityId={activity?.id}
+            activityType={activityType}
             userName={userInfo.displayName || userInfo.name}
             userAvatar={userInfo.avatar}
             schoolPoints={100}
             onMoreOptions={() => {
-              // TODO: Implementar menu de opções
-              console.log('Menu de opções clicado');
+              console.log('Menu de opções clicado para atividade:', activity?.id);
             }}
           />
 

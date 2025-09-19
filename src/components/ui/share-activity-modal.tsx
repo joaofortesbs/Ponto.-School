@@ -27,14 +27,27 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (isOpen && activityId) {
-      const link = gerarLinkCompartilhamento(activityId);
-      setShareLink(link);
+    if (isOpen) {
+      console.log('📤 ShareActivityModal aberto com activityId:', activityId);
+      
+      if (activityId && activityId.trim() !== '') {
+        const link = gerarLinkCompartilhamento(activityId);
+        console.log('🔗 Link gerado:', link);
+        setShareLink(link);
+      } else {
+        console.warn('⚠️ activityId não fornecido ou vazio');
+        setShareLink('');
+      }
     }
   }, [isOpen, activityId]);
 
   const handleCopyLink = async () => {
     try {
+      if (!activityId || activityId.trim() === '') {
+        showToast('ID da atividade não encontrado', 'error');
+        return;
+      }
+
       const sucesso = await copiarLinkCompartilhamento(activityId);
       if (sucesso) {
         setCopied(true);
