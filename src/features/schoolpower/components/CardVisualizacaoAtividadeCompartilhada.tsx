@@ -137,20 +137,20 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
+              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative group">
                 {/* Conteúdo da pré-visualização com interação desabilitada */}
                 <div className="relative p-4 pointer-events-none">
                   {renderActivityPreview()}
                 </div>
                 
-                {/* Overlay que cobre toda a área da pré-visualização com posicionamento fixo */}
-                <div className="preview-overlay">
-                  {/* Ícone e texto com posicionamento fixo no centro da tela */}
-                  <div className="preview-overlay-content flex flex-col items-center gap-5 text-white">
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-700 rounded-full p-6 shadow-2xl transition-all duration-500 ease-out transform hover:scale-110 hover:shadow-orange-500/30">
-                      <Play className="w-12 h-12 fill-white drop-shadow-lg" />
+                {/* Overlay que cobre toda a área da pré-visualização */}
+                <div className="absolute inset-0 z-20 pointer-events-auto cursor-pointer bg-transparent group-hover:bg-black/40 transition-all duration-500 ease-in-out flex items-center justify-center">
+                  {/* Ícone e texto com efeito suave */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out transform scale-75 group-hover:scale-100 flex flex-col items-center gap-4 text-white">
+                    <div className="bg-orange-600 hover:bg-orange-500 rounded-full p-5 shadow-2xl transition-all duration-300 transform hover:scale-110">
+                      <Play className="w-10 h-10 fill-white" />
                     </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-black/80 to-black/60 px-8 py-4 rounded-2xl backdrop-blur-lg shadow-2xl border border-white/30 text-center whitespace-nowrap">
+                    <span className="text-xl font-bold bg-black/70 px-6 py-3 rounded-xl backdrop-blur-md shadow-lg border border-white/20">
                       Apresentar Atividade
                     </span>
                   </div>
