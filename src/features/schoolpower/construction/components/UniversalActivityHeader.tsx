@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUserInfo } from '../hooks/useUserInfo';
 import schoolPowerActivities from '../../data/schoolPowerActivities.json';
+import { ShareActivityModal } from '@/components/ui/share-activity-modal';
 import { 
   Wrench, CheckSquare, Filter, 
   Trophy, Zap, Brain, Heart, 
@@ -179,6 +180,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
   const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
   const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
+  const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
   
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
@@ -256,6 +258,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     // Permitir qualquer número positivo até 99999
     if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 99999)) {
       setTempSPs(value);
+    }
+  };
+
+  const handleShareClick = () => {
+    setIsShareModalOpen(true);
+    if (onShare) {
+      onShare();
     }
   };
 
@@ -353,7 +362,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
                 <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onShare} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+              <DropdownMenuItem onClick={handleShareClick} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
                 <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
                 <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Compartilhar</span>
               </DropdownMenuItem>
@@ -373,6 +382,14 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           </DropdownMenu>
         </div>
       </div>
+      
+      {/* Modal de Compartilhar */}
+      <ShareActivityModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        activityTitle={activityTitle}
+        activityId={activityId}
+      />
     </div>
   );
 };
