@@ -15,9 +15,6 @@ interface ShareActivityModalProps {
   activityId?: string;
   activityType?: string;
   activityData?: any;
-  preGeneratedLink?: AtividadeCompartilhavel | null; // Link já gerado
-  isGeneratingLink?: boolean; // Estado de geração do componente pai
-  linkError?: string | null; // Erro do componente pai
 }
 
 export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
@@ -26,10 +23,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   activityTitle,
   activityId,
   activityType = 'atividade',
-  activityData = {},
-  preGeneratedLink = null,
-  isGeneratingLink: externalIsGeneratingLink = false,
-  linkError: externalLinkError = null
+  activityData = {}
 }) => {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -43,28 +37,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       // Reset estado anterior
       setAtividade(null);
       setError(null);
-      
-      // Se já temos um link pré-gerado, usar ele
-      if (preGeneratedLink && preGeneratedLink.linkPublico) {
-        console.log('✅ ShareActivityModal: Usando link pré-gerado:', preGeneratedLink.linkPublico);
-        setAtividade(preGeneratedLink);
-        setLoading(false);
-        setError(null);
-      } else if (externalLinkError) {
-        // Se há erro externo, mostrar ele
-        console.log('❌ ShareActivityModal: Erro externo detectado:', externalLinkError);
-        setError(externalLinkError);
-        setLoading(false);
-      } else if (externalIsGeneratingLink) {
-        // Se está gerando externamente, mostrar loading
-        console.log('⏳ ShareActivityModal: Geração externa em andamento');
-        setLoading(true);
-        setError(null);
-      } else {
-        // Caso contrário, gerar novo link
-        console.log('🔗 ShareActivityModal: Criando novo link');
-        criarOuBuscarLink();
-      }
+      criarOuBuscarLink();
     }
     
     // Limpa estado quando modal fecha
@@ -74,30 +47,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       setLoading(false);
       setCopied(false);
     }
-  }, [isOpen, activityId, activityTitle, preGeneratedLink, externalIsGeneratingLink, externalLinkError]);
-
-  // Atualizar estado quando link externo for gerado
-  useEffect(() => {
-    if (preGeneratedLink && preGeneratedLink.linkPublico && !atividade) {
-      console.log('🔄 ShareActivityModal: Atualizando com link gerado externamente:', preGeneratedLink.linkPublico);
-      setAtividade(preGeneratedLink);
-      setLoading(false);
-      setError(null);
-    }
-  }, [preGeneratedLink, atividade]);
-
-  // Atualizar estado baseado nos props externos
-  useEffect(() => {
-    if (externalIsGeneratingLink && !loading) {
-      setLoading(true);
-      setError(null);
-    }
-    
-    if (externalLinkError && !error) {
-      setError(externalLinkError);
-      setLoading(false);
-    }
-  }, [externalIsGeneratingLink, externalLinkError, loading, error]);
+  }, [isOpen, activityId, activityTitle]);
 
   const criarOuBuscarLink = async () => {
     if (!activityId || !activityTitle) {
@@ -184,16 +134,11 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
     console.log('🔍 Estado atual do modal:', {
       atividade,
       shareLink,
-      loading: loading || externalIsGeneratingLink,
-      error: error || externalLinkError,
-      isOpen,
-      preGeneratedLink: !!preGeneratedLink,
-      externalStates: {
-        isGeneratingLink: externalIsGeneratingLink,
-        linkError: externalLinkError
-      }
+      loading,
+      error,
+      isOpen
     });
-  }, [atividade, shareLink, loading, error, isOpen, preGeneratedLink, externalIsGeneratingLink, externalLinkError]);
+  }, [atividade, shareLink, loading, error, isOpen]);
 
   const handleCopyLink = async () => {
     if (!shareLink) {
@@ -259,17 +204,17 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
 
           {/* Campo do Link */}
           <div className="space-y-4">
-            {(loading || externalIsGeneratingLink) ? (
+            {loading ? (
               <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
                 <span className="ml-2 text-gray-600 dark:text-gray-400">
                   Gerando link...
                 </span>
               </div>
-            ) : (error || externalLinkError) ? (
+            ) : error ? (
               <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
                 <AlertCircle className="w-6 h-6 mx-auto mb-2 text-red-500" />
-                <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error || externalLinkError}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 mb-3">{error}</p>
                 <Button
                   onClick={criarOuBuscarLink}
                   variant="outline"
@@ -361,7 +306,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
             </Button>
             <Button
               onClick={handleCopyLink}
-              disabled={loading || externalIsGeneratingLink || !!error || !!externalLinkError || !shareLink}
+              disabled={loading || !!error}
               className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {copied ? 'Copiado!' : 'Copiar Link'}

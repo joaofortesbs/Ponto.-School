@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, BookOpen, ChevronLeft, ChevronRight, FileText, Clock, Star, Users, Calendar, GraduationCap, Calculator, Beaker, PenTool, GamepadIcon } from "lucide-react"; // Import Eye component
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ConstructionActivity } from './types';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
@@ -14,7 +14,6 @@ import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-intera
 import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
 import { UniversalActivityHeader } from './components/UniversalActivityHeader';
 import { useUserInfo } from './hooks/useUserInfo';
-import { criarLinkAtividade, AtividadeCompartilhavel } from '@/features/schoolpower/services/gerador-link-atividades-schoolpower';
 
 // Helper function to get activity icon based on activity type
 const getActivityIcon = (activityId: string) => {
@@ -57,8 +56,7 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
   const isLightMode = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
   const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
   const [flashCardsContent, setFlashCardsContent] = useState<any>(null);
-  const [shareableLink, setShareableLink] = useState<string | null>(null);
-  const [isLinkGenerating, setIsLinkGenerating] = useState<boolean>(false);
+
 
   // Função específica para carregar dados do Plano de Aula
   const loadPlanoAulaData = (activityId: string) => {
@@ -97,8 +95,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setIsInQuestionView(false);
       setQuizInterativoContent(null);
       setFlashCardsContent(null);
-      setShareableLink(null); // Limpa o link ao abrir novo modal
-      setIsLinkGenerating(false); // Reseta o estado de geração
 
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
@@ -110,68 +106,12 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
     }
   }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
 
-  // Efeito para gerar o link compartilhável quando o modal abre e a atividade está disponível
-  useEffect(() => {
-    if (isOpen && activity) {
-      generateShareableLink();
-    }
-  }, [isOpen, activity]);
-
-  // Função para gerar o link compartilhável
-  const generateShareableLink = async () => {
-    if (!activity || isLinkGenerating) return;
-
-    setIsLinkGenerating(true);
-    setShareableLink(null); // Limpa o link anterior enquanto gera um novo
-
-    console.log('🔗 Gerando link compartilhável para a atividade:', activity.id);
-
-    try {
-      const linkData: AtividadeCompartilhavel = {
-        activityId: activity.id,
-        type: activity.type,
-        // Passar dados relevantes que podem ser necessários para a geração do link
-        // Adapte conforme a estrutura esperada por criarLinkAtividade
-        // Exemplo: dados do plano de aula, questões, etc.
-        ...(activity.type === 'plano-aula' && { planoAulaData: loadPlanoAulaData(activity.id) }),
-        ...(activity.type === 'lista-exercicios' && { exerciciosData: getQuestionsForSidebar() }),
-        // Adicione outros tipos de atividades e seus dados conforme necessário
-      };
-
-      const result = await criarLinkAtividade(linkData);
-
-      if (result && result.success && result.link) {
-        console.log('✅ Link compartilhável gerado com sucesso:', result.link);
-        setShareableLink(result.link);
-      } else {
-        console.error('❌ Falha ao gerar link compartilhável:', result.message);
-        // Poderia definir um estado de erro aqui, se necessário
-      }
-    } catch (error) {
-      console.error('❌ Erro na geração do link compartilhável:', error);
-      // Tratar erro de forma mais robusta se necessário
-    } finally {
-      setIsLinkGenerating(false);
-    }
-  };
-
-  // Handler para copiar o link
-  const handleCopyLink = () => {
-    if (shareableLink) {
-      navigator.clipboard.writeText(shareableLink).then(() => {
-        alert('Link copiado para a área de transferência!');
-      }).catch(err => {
-        console.error('Erro ao copiar link: ', err);
-      });
-    }
-  };
-
   if (!isOpen || !activity) return null;
 
   // Função para lidar com seleção de questão
   const handleQuestionSelect = (questionIndex: number, questionId: string) => {
-    setSelectedQuestionId(questionId);
     setSelectedQuestionIndex(questionIndex);
+    setSelectedQuestionId(questionId);
     setIsInQuestionView(true);
   };
 
@@ -655,26 +595,6 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
             <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </button>
 
-          {/* Botão para gerar e visualizar o link compartilhável */}
-          <div className="absolute top-4 right-16 z-50">
-            {shareableLink ? (
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={shareableLink}
-                  readOnly
-                  className="px-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm w-48"
-                />
-                <Button onClick={handleCopyLink} size="sm">
-                  Copiar Link
-                </Button>
-              </div>
-            ) : (
-              <Button onClick={generateShareableLink} size="sm" disabled={isLinkGenerating}>
-                {isLinkGenerating ? 'Gerando...' : 'Gerar Link Compartilhável'}
-              </Button>
-            )}
-          </div>
 
           {/* Content Layout */}
           <div className="flex flex-1 overflow-hidden" style={{ height: isExerciseList ? 'calc(100% - 140px)' : 'calc(100% - 100px)' }}>
