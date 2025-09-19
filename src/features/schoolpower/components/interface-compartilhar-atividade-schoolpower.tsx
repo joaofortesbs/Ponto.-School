@@ -28,7 +28,8 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   useEffect(() => {
     const carregarAtividade = async () => {
       if (!finalActivityId || !finalUniqueCode) {
-        setErro('Link inválido: parâmetros faltando');
+        console.error('❌ [PÚBLICO] Parâmetros faltando:', { finalActivityId, finalUniqueCode });
+        setErro('Link inválido: parâmetros obrigatórios não fornecidos');
         setCarregando(false);
         return;
       }
@@ -39,7 +40,8 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         const atividadeEncontrada = await buscarAtividadeCompartilhada(finalActivityId, finalUniqueCode);
         
         if (!atividadeEncontrada) {
-          setErro('Atividade não encontrada ou link expirado');
+          console.warn('⚠️ [PÚBLICO] Atividade não encontrada');
+          setErro('Atividade não encontrada, link expirado ou removido');
           setCarregando(false);
           return;
         }
