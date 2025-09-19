@@ -137,24 +137,22 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
+              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative group">
                 {/* Conteúdo da pré-visualização com interação desabilitada */}
-                <div className="p-4 pointer-events-none">
+                <div className="relative p-4 pointer-events-none">
                   {renderActivityPreview()}
                 </div>
                 
-                {/* Overlay fixo que cobre toda a pré-visualização */}
-                <div className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/30 transition-all duration-300">
-                  {/* Ícone e texto fixos no centro da tela */}
-                  <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
-                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-90 group-hover:scale-100 flex flex-col items-center gap-3 text-white">
-                      <div className="bg-orange-600 rounded-full p-4 shadow-2xl">
-                        <Play className="w-8 h-8" />
-                      </div>
-                      <span className="text-lg font-semibold bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
-                        Apresentar Atividade
-                      </span>
+                {/* Overlay que cobre toda a área da pré-visualização */}
+                <div className="absolute inset-0 z-20 pointer-events-auto cursor-pointer bg-transparent group-hover:bg-black/40 transition-all duration-500 ease-in-out flex items-center justify-center">
+                  {/* Ícone e texto com efeito suave */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-500 ease-in-out transform scale-75 group-hover:scale-100 flex flex-col items-center gap-4 text-white">
+                    <div className="bg-orange-600 hover:bg-orange-500 rounded-full p-5 shadow-2xl transition-all duration-300 transform hover:scale-110">
+                      <Play className="w-10 h-10 fill-white" />
                     </div>
+                    <span className="text-xl font-bold bg-black/70 px-6 py-3 rounded-xl backdrop-blur-md shadow-lg border border-white/20">
+                      Apresentar Atividade
+                    </span>
                   </div>
                 </div>
               </div>
