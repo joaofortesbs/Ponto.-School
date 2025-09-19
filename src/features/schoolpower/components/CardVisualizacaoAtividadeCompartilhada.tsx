@@ -146,20 +146,22 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
               <div className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out">
                 {/* Ícone e texto fixos no centro da tela */}
                 <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white">
-                    {/* Ícone de play com animação aprimorada */}
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-300/30 relative overflow-hidden">
+                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-700 ease-out transform scale-0 group-hover:scale-100 flex flex-col items-center gap-6 text-white">
+                    {/* Ícone de play com animação de zoom suave */}
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600 rounded-full p-6 shadow-2xl transition-all duration-600 ease-out transform scale-0 group-hover:scale-100 border-2 border-orange-300/30 relative overflow-hidden animate-bounce-in">
                       {/* Efeito de brilho interno */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-                      <Play className="w-10 h-10 fill-white drop-shadow-lg relative z-10 transition-all duration-300 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-800 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1200"></div>
+                      <Play className="w-12 h-12 fill-white drop-shadow-lg relative z-10 transition-all duration-500" />
                     </div>
 
-                    {/* Texto com efeitos aprimorados */}
-                    <span className="text-xl font-bold bg-black/80 px-6 py-3 rounded-2xl backdrop-blur-lg shadow-2xl border border-white/30 text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-500/30 group-hover:border-orange-400/40 relative overflow-hidden">
-                      {/* Efeito de brilho no texto */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-                      <span className="relative z-10">Apresentar Atividade</span>
-                    </span>
+                    {/* Texto com efeitos aprimorados e zoom suave */}
+                    <div className="transform scale-0 group-hover:scale-100 transition-all duration-700 ease-out delay-100">
+                      <span className="text-2xl font-bold bg-black/90 px-8 py-4 rounded-2xl backdrop-blur-lg shadow-2xl border border-white/30 text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-500/40 group-hover:border-orange-400/50 relative overflow-hidden block">
+                        {/* Efeito de brilho no texto */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-400/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-800 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1200"></div>
+                        <span className="relative z-10">Apresentar Atividade</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
