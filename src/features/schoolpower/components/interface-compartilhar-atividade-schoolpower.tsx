@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { buscarAtividadeCompartilhada, AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import ParticlesBackground from '@/sections/SchoolPower/components/ParticlesBackground';
+import CardVisualizacaoAtividadeCompartilhada from './CardVisualizacaoAtividadeCompartilhada';
 
 interface InterfaceCompartilharAtividadeProps {
   activityId?: string;
@@ -109,14 +110,28 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
     return null;
   }
 
+  const handleApresentarMaterial = () => {
+    console.log('🎯 Apresentar Material clicado para:', atividade.titulo);
+    // Aqui será implementada a lógica para apresentar o material
+  };
+
+  const handleUsarMaterial = () => {
+    console.log('📥 Usar Material clicado para:', atividade.titulo);
+    // Aqui será implementada a lógica para usar o material
+  };
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden" style={{ backgroundColor: "rgb(15, 23, 42)" }}>
       {/* Background de partículas - igual ao School Power */}
       <ParticlesBackground isDarkTheme={true} />
       
-      {/* Interface vazia - apenas o fundo de partículas */}
-      <div className="relative z-10 min-h-screen">
-        {/* Conteúdo da interface será adicionado aqui futuramente */}
+      {/* Interface com o card centralizado */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+        <CardVisualizacaoAtividadeCompartilhada
+          titulo={atividade.titulo}
+          onApresentarMaterial={handleApresentarMaterial}
+          onUsarMaterial={handleUsarMaterial}
+        />
       </div>
     </div>
   );
