@@ -6,14 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getSharedActivityByCode, validarCodigoUnico, validarIdAtividade } from '@/utils/generateShareLink';
 
 interface PublicActivityData {
   id: string;
-  uniqueCode?: string;
   title: string;
   description: string;
-  subject?: string;
+  subject: string;
   activityType: string;
   content: string;
   createdAt: string;
@@ -21,7 +19,7 @@ interface PublicActivityData {
 }
 
 export default function PublicActivityPage() {
-  const { id, code } = useParams<{ id: string; code?: string }>();
+  const { id } = useParams<{ id: string }>();
   const [activity, setActivity] = useState<PublicActivityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,41 +27,16 @@ export default function PublicActivityPage() {
 
   useEffect(() => {
     if (id) {
-      fetchPublicActivity(id, code);
+      fetchPublicActivity(id);
     }
-  }, [id, code]);
+  }, [id]);
 
-  const fetchPublicActivity = async (activityId: string, uniqueCode?: string) => {
+  const fetchPublicActivity = async (activityId: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 Buscando atividade pública:', { activityId, uniqueCode });
-      
-      // Se temos código único, tentar buscar localmente primeiro
-      if (uniqueCode && validarCodigoUnico(uniqueCode)) {
-        const localActivity = getSharedActivityByCode(uniqueCode);
-        if (localActivity) {
-          console.log('✅ Atividade encontrada localmente pelo código único:', localActivity);
-          setActivity({
-            id: localActivity.id,
-            uniqueCode: localActivity.uniqueCode,
-            title: localActivity.title,
-            description: localActivity.description || 'Descrição da atividade',
-            subject: 'Geral',
-            activityType: localActivity.activityType,
-            content: typeof localActivity.content === 'string' 
-              ? localActivity.content 
-              : JSON.stringify(localActivity.content, null, 2),
-            createdAt: localActivity.createdAt,
-            isPublic: localActivity.isPublic
-          });
-          return;
-        }
-      }
-      
-      // Fallback para API
-      const response = await fetch(`/api/publicActivity/${activityId}${uniqueCode ? `?code=${uniqueCode}` : ''}`);
+      const response = await fetch(`/api/publicActivity/${activityId}`);
       const result = await response.json();
       
       if (result.success) {

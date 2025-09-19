@@ -12,9 +12,8 @@ export const routes: RouteObject[] = [
     path: "/profile",
     element: lazy(() => import("./pages/profile"))
   },
-  // Página pública de atividade (com código único opcional)
   {
-    path: "/atividade/:id/:code?",
+    path: "/atividade/:id",
     element: PublicActivityPage
   },
 ];

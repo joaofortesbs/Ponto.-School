@@ -13,35 +13,9 @@ router.use(cors());
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { code } = req.query;
-    
-    console.log('🔍 API: Buscando atividade pública:', { id, code });
-    
-    // Se temos código único, tentar buscar por ele
-    if (code && typeof code === 'string') {
-      const sharedActivity = getSharedActivityByCode(code);
-      if (sharedActivity) {
-        console.log('✅ API: Atividade encontrada por código único:', sharedActivity);
-        return res.json({
-          success: true,
-          data: {
-            id: sharedActivity.id,
-            uniqueCode: sharedActivity.uniqueCode,
-            title: sharedActivity.title,
-            description: sharedActivity.description || 'Descrição da atividade',
-            subject: 'Geral',
-            activityType: sharedActivity.activityType,
-            content: typeof sharedActivity.content === 'string' 
-              ? sharedActivity.content 
-              : JSON.stringify(sharedActivity.content, null, 2),
-            createdAt: sharedActivity.createdAt,
-            isPublic: sharedActivity.isPublic
-          }
-        });
-      }
-    }
     
     // Buscar dados da atividade no localStorage (simulando banco de dados)
+    // Em produção, isso seria uma consulta real ao banco
     const activityData = getActivityById(id);
     
     if (!activityData) {
@@ -60,6 +34,7 @@ router.get('/:id', async (req, res) => {
       activityType: activityData.type || activityData.categoryId,
       content: activityData.content,
       createdAt: activityData.createdAt || new Date().toISOString(),
+      // Remover dados privados do usuário
       isPublic: true
     };
 
@@ -115,38 +90,6 @@ function getActivityById(id) {
     return mockActivities[id] || null;
   } catch (error) {
     console.error('Erro ao buscar atividade:', error);
-    return null;
-  }
-}
-
-// Função para buscar atividade por código único
-function getSharedActivityByCode(uniqueCode) {
-  try {
-    // Em um ambiente Node.js real, isso seria uma consulta ao banco de dados
-    // Por enquanto, simular com dados mock
-    console.log('🔍 API: Buscando atividade por código único:', uniqueCode);
-    
-    // Simular dados baseados no código único
-    const mockSharedActivity = {
-      id: 'mock-activity',
-      uniqueCode: uniqueCode,
-      title: 'Atividade Compartilhada',
-      description: 'Esta é uma atividade compartilhada publicamente',
-      activityType: 'lista-exercicios',
-      content: `
-Atividade de exemplo compartilhada via código único: ${uniqueCode}
-
-1. Esta é uma questão de exemplo
-2. Esta é outra questão de exemplo
-3. Questão final de exemplo
-      `,
-      createdAt: new Date().toISOString(),
-      isPublic: true
-    };
-    
-    return mockSharedActivity;
-  } catch (error) {
-    console.error('Erro ao buscar atividade por código único:', error);
     return null;
   }
 }
