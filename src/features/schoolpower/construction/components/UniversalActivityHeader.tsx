@@ -14,6 +14,7 @@ import { useUserInfo } from '../hooks/useUserInfo';
 import schoolPowerActivities from '../../data/schoolPowerActivities.json';
 import { gerarLinkCompartilhamento, copiarLinkCompartilhamento, compartilharAtividade } from '@/utils/generateShareLink';
 import { useToast } from '@/components/ui/toast-notification';
+import ShareActivityModal from '@/components/ui/share-activity-modal';
 import { 
   Wrench, CheckSquare, Filter, 
   Trophy, Zap, Brain, Heart, 
@@ -182,6 +183,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
   const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
   const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
+  const [showShareModal, setShowShareModal] = React.useState(false);
   
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
@@ -255,34 +257,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   };
 
   // Função para compartilhar atividade
-  const handleCompartilharAtividade = async () => {
+  const handleCompartilharAtividade = () => {
     if (!activityId) {
       showToast('ID da atividade não encontrado', 'error');
       return;
     }
 
-    try {
-      const sucesso = await compartilharAtividade(
-        activityId,
-        activityTitle,
-        `Confira esta atividade de ${activityType || 'educação'}`
-      );
-      
-      if (sucesso) {
-        showToast('Atividade compartilhada com sucesso!', 'success');
-      } else {
-        // Fallback: copiar link
-        const copiado = await copiarLinkCompartilhamento(activityId);
-        if (copiado) {
-          showToast('Link copiado para a área de transferência!', 'info');
-        } else {
-          showToast('Erro ao compartilhar atividade', 'error');
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao compartilhar:', error);
-      showToast('Erro ao compartilhar atividade', 'error');
-    }
+    setShowShareModal(true);
   };
 
   const handleSPsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -407,6 +388,15 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Modal de Compartilhamento */}
+      <ShareActivityModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        activityId={activityId || ''}
+        activityTitle={activityTitle}
+        activityDescription={`Confira esta atividade de ${activityType || 'educação'}`}
+      />
     </div>
   );
 };
