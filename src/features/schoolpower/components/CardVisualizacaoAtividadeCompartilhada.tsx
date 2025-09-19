@@ -136,7 +136,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
+              <div className="flex-1 overflow-y-auto hide-scrollbar min-h-[350px] relative">
                 {/* Conteúdo da pré-visualização com interação desabilitada */}
                 <div className="p-4 pointer-events-none">
                   {renderActivityPreview()}
