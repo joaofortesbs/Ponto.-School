@@ -147,6 +147,23 @@ export function useAuth() {
             // Verificar e gerar ID quando o usuário fizer login
             if (event === 'SIGNED_IN' && user) {
               await checkAndGenerateUserId(user);
+              
+              // Verificar se há contexto de atividade compartilhada para redirecionar
+              const redirectContext = localStorage.getItem('redirect_after_login');
+              if (redirectContext) {
+                try {
+                  const context = JSON.parse(redirectContext);
+                  if (context.type === 'shared_activity' && context.activityId && context.uniqueCode) {
+                    localStorage.removeItem('redirect_after_login');
+                    navigate(`/atividade/${context.activityId}/${context.uniqueCode}`);
+                    return;
+                  }
+                } catch (error) {
+                  console.error('Erro ao processar contexto de redirecionamento:', error);
+                }
+                localStorage.removeItem('redirect_after_login');
+              }
+              
               navigate('/dashboard');
             } else if (event === 'SIGNED_OUT') {
               navigate('/login');
