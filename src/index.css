@@ -2845,3 +2845,62 @@ textarea:hover,
   line-height: 1.5;
 }
 @import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
+
+
+/* Estilos para páginas públicas de atividades compartilhadas */
+.public-activity-page {
+  /* Garantir que a página seja completamente independente */
+  isolation: isolate;
+}
+
+.public-activity-page * {
+  /* Reset básico para garantir consistência */
+  box-sizing: border-box;
+}
+
+/* Estilos para melhor responsividade em dispositivos móveis */
+@media (max-width: 768px) {
+  .public-activity-page {
+    font-size: 14px;
+  }
+  
+  .public-activity-page .max-w-7xl {
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Melhorar a legibilidade em telas pequenas */
+@media (max-width: 640px) {
+  .public-activity-page h1 {
+    font-size: 1.5rem;
+  }
+  
+  .public-activity-page h2 {
+    font-size: 1.25rem;
+  }
+  
+  .public-activity-page .text-2xl {
+    font-size: 1.5rem;
+  }
+}
+
+/* Estilos para impressão */
+@media print {
+  .public-activity-page header,
+  .public-activity-page footer,
+  .public-activity-page button {
+    display: none !important;
+  }
+  
+  .public-activity-page {
+    background: white !important;
+  }
+  
+  .public-activity-page * {
+    color: black !important;
+    background: white !important;
+  }
+}
+

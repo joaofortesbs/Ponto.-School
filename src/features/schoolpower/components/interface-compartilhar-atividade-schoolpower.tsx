@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import { 
   BookOpen, Download, Share2, Eye, Calendar, User, 
   Clock, ArrowLeft, ExternalLink, Copy, Check,
-  AlertCircle, Loader2, FileText, Play, Target
+  AlertCircle, Loader2, FileText, Play, Target,
+  Menu, X, Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,73 @@ import { PlanoAulaPreview } from '../activities/plano-aula/PlanoAulaPreview';
 import { SequenciaDidaticaPreview } from '../activities/sequencia-didatica/SequenciaDidaticaPreview';
 import { FlashCardsPreview } from '../activities/flash-cards/FlashCardsPreview';
 import { MapaMentalPreview } from '../activities/mapa-mental/MapaMentalPreview';
+
+// Componente de Preview Genérico para atividades não específicas
+const GenericActivityPreview: React.FC<{ data: any; activityData: any }> = ({ data, activityData }) => {
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <FileText className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">{activityData?.title || 'Atividade Educacional'}</CardTitle>
+            <p className="text-gray-600 text-sm">{activityData?.type || 'Conteúdo Educacional'}</p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Informações Básicas */}
+        {activityData?.description && (
+          <div>
+            <h3 className="font-semibold text-lg mb-2">Descrição</h3>
+            <p className="text-gray-700 leading-relaxed">{activityData.description}</p>
+          </div>
+        )}
+
+        {/* Conteúdo da Atividade */}
+        {data && Object.keys(data).length > 0 && (
+          <div>
+            <h3 className="font-semibold text-lg mb-3">Conteúdo da Atividade</h3>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+              {Object.entries(data).map(([key, value], index) => {
+                if (typeof value === 'string' || typeof value === 'number') {
+                  return (
+                    <div key={index} className="mb-3 last:mb-0">
+                      <span className="font-medium text-sm text-gray-600 dark:text-gray-400 capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                      </span>
+                      <p className="text-gray-800 dark:text-gray-200 mt-1">{String(value)}</p>
+                    </div>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Informação de Uso */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                Como usar esta atividade
+              </h4>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Esta atividade foi criada com a plataforma Ponto School e pode ser utilizada 
+                livremente para fins educacionais. Você pode adaptar o conteúdo conforme suas necessidades.
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 interface InterfaceCompartilharAtividadeProps {
   activityId?: string;
@@ -37,6 +105,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [linkCopiado, setLinkCopiado] = useState(false);
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
   // IDs finais (props ou params)
   const finalActivityId = propActivityId || activityId;
@@ -54,7 +123,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
       }
 
       try {
-        console.log('🔍 Carregando atividade compartilhada:', { finalActivityId, finalUniqueCode });
+        console.log('🔍 [PÚBLICO] Carregando atividade compartilhada:', { finalActivityId, finalUniqueCode });
         
         const atividadeEncontrada = await buscarAtividadeCompartilhada(finalActivityId, finalUniqueCode);
         
@@ -65,10 +134,13 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         }
 
         setAtividade(atividadeEncontrada);
-        console.log('✅ Atividade carregada:', atividadeEncontrada.titulo);
+        console.log('✅ [PÚBLICO] Atividade carregada:', atividadeEncontrada.titulo);
+        
+        // Configurar título da página
+        document.title = `${atividadeEncontrada.titulo} - Ponto School`;
         
       } catch (error) {
-        console.error('❌ Erro ao carregar atividade:', error);
+        console.error('❌ [PÚBLICO] Erro ao carregar atividade:', error);
         setErro('Erro ao carregar atividade compartilhada');
       } finally {
         setCarregando(false);
@@ -132,7 +204,8 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
       activityData: {
         id: atividade.id,
         title: atividade.titulo,
-        type: atividade.tipo
+        type: atividade.tipo,
+        description: `Atividade compartilhada via Ponto School`
       }
     };
 
@@ -150,17 +223,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         return <MapaMentalPreview {...previewProps} />;
       
       default:
-        return (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-semibold mb-2">Preview não disponível</h3>
-              <p className="text-gray-600">
-                O preview para este tipo de atividade ainda não está disponível.
-              </p>
-            </CardContent>
-          </Card>
-        );
+        return <GenericActivityPreview {...previewProps} />;
     }
   };
 
@@ -170,9 +233,11 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   if (carregando) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <Card className="w-96">
+        <Card className="w-96 mx-4">
           <CardContent className="p-8 text-center">
-            <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-orange-600" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Loader2 className="w-8 h-8 animate-spin text-white" />
+            </div>
             <h3 className="text-lg font-semibold mb-2">Carregando atividade...</h3>
             <p className="text-gray-600">
               Aguarde enquanto buscamos a atividade compartilhada.
@@ -186,19 +251,27 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   if (erro) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-        <Card className="w-96">
+        <Card className="w-96 mx-4">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
             <h3 className="text-lg font-semibold mb-2 text-red-700">Erro ao carregar</h3>
             <p className="text-red-600 mb-6">{erro}</p>
-            <Button 
-              onClick={() => navigate('/')}
-              variant="outline"
-              className="w-full"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao início
-            </Button>
+            <div className="space-y-3">
+              <Button 
+                onClick={() => window.location.reload()}
+                className="w-full bg-red-600 hover:bg-red-700"
+              >
+                Tentar Novamente
+              </Button>
+              <Button 
+                onClick={() => window.open('/', '_blank')}
+                variant="outline"
+                className="w-full"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                Ir para Ponto School
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -214,7 +287,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header da página pública */}
-      <div className="bg-white dark:bg-gray-800 border-b border-orange-200 dark:border-gray-700 shadow-sm">
+      <header className="bg-white dark:bg-gray-800 border-b border-orange-200 dark:border-gray-700 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo/Brand */}
@@ -225,15 +298,17 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
               <span className="text-xl font-bold text-gray-900 dark:text-white">
                 Ponto School
               </span>
+              <Badge variant="secondary" className="hidden sm:inline-flex">
+                Atividade Pública
+              </Badge>
             </div>
 
-            {/* Ações do Header */}
-            <div className="flex items-center gap-3">
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={copiarLink}
-                className="hidden sm:flex"
               >
                 {linkCopiado ? (
                   <Check className="w-4 h-4 mr-2 text-green-600" />
@@ -249,15 +324,61 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
                 onClick={() => window.open('/', '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Acessar</span> Plataforma
+                Acessar Plataforma
+              </Button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMenuMobileAberto(!menuMobileAberto)}
+              >
+                {menuMobileAberto ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
               </Button>
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {menuMobileAberto && (
+            <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copiarLink}
+                  className="w-full justify-start"
+                >
+                  {linkCopiado ? (
+                    <Check className="w-4 h-4 mr-2 text-green-600" />
+                  ) : (
+                    <Copy className="w-4 h-4 mr-2" />
+                  )}
+                  {linkCopiado ? 'Copiado!' : 'Copiar Link'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open('/', '_blank')}
+                  className="w-full justify-start"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Acessar Plataforma
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </header>
 
       {/* Conteúdo principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Cabeçalho da atividade */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -266,18 +387,18 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         >
           <Card className="mb-8">
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div className="flex items-center gap-4 flex-1">
                   <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
                     <AtividadeIcon className="w-8 h-8 text-white" />
                   </div>
                   
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                       {atividade.titulo}
                     </CardTitle>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                         {atividade.tipo.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </Badge>
@@ -293,21 +414,6 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Ações mobile */}
-                <div className="flex sm:hidden">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copiarLink}
-                  >
-                    {linkCopiado ? (
-                      <Check className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Share2 className="w-4 h-4" />
-                    )}
-                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -331,7 +437,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
                   </h4>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
                     Esta atividade foi compartilhada publicamente pela plataforma Ponto School. 
-                    Você pode visualizar e utilizar o conteúdo livremente.
+                    Você pode visualizar e utilizar o conteúdo livremente para fins educacionais.
                   </p>
                 </div>
               </div>
@@ -363,17 +469,48 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Acesse a plataforma Ponto School e crie suas próprias atividades personalizadas com IA.
               </p>
-              <Button 
-                onClick={() => window.open('/', '_blank')}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Acessar Ponto School
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button 
+                  onClick={() => window.open('/', '_blank')}
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Acessar Ponto School
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={copiarLink}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Compartilhar Atividade
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-md flex items-center justify-center">
+                <span className="text-white font-bold text-xs">PS</span>
+              </div>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                Ponto School
+              </span>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Plataforma educacional com inteligência artificial para criação de atividades personalizadas.
+            </p>
+            <p className="text-gray-500 dark:text-gray-500 text-xs mt-2">
+              © 2024 Ponto School. Todos os direitos reservados.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
