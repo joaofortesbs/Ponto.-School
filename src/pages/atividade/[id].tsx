@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Eye, BookOpen, Clock, User, Share2, Presentation, Download, AlertCircle } from 'lucide-react';
@@ -30,7 +29,7 @@ export default function PublicActivityPage() {
   useEffect(() => {
     console.log('🔍 PublicActivityPage carregada com parâmetros:', { id, code });
     console.log('🔓 Página pública carregando independentemente da autenticação');
-    
+
     if (id) {
       fetchPublicActivity(id, code);
     } else {
@@ -43,14 +42,14 @@ export default function PublicActivityPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('🔍 Buscando atividade pública:', { activityId, uniqueCode });
-      
+
       // Primeira tentativa: buscar localmente pelo código único
       if (uniqueCode && validarCodigoUnico(uniqueCode)) {
         console.log('🔍 Tentando buscar atividade localmente pelo código único...');
         const localActivity = getSharedActivityByCode(uniqueCode);
-        
+
         if (localActivity) {
           console.log('✅ Atividade encontrada localmente:', localActivity);
           setActivity({
@@ -60,8 +59,8 @@ export default function PublicActivityPage() {
             description: localActivity.description || 'Atividade educacional',
             subject: 'Educação Geral',
             activityType: localActivity.activityType,
-            content: typeof localActivity.content === 'string' 
-              ? localActivity.content 
+            content: typeof localActivity.content === 'string'
+              ? localActivity.content
               : JSON.stringify(localActivity.content, null, 2),
             createdAt: localActivity.createdAt,
             isPublic: localActivity.isPublic
@@ -70,17 +69,17 @@ export default function PublicActivityPage() {
           return;
         }
       }
-      
+
       // Segunda tentativa: buscar via API
       console.log('🌐 Tentando buscar via API...');
       try {
-        const apiUrl = uniqueCode 
+        const apiUrl = uniqueCode
           ? `/api/publicActivity/${activityId}/${uniqueCode}`
           : `/api/publicActivity/${activityId}`;
-        
+
         const response = await fetch(apiUrl);
         const result = await response.json();
-        
+
         if (result.success && result.data) {
           console.log('✅ Atividade encontrada via API:', result.data);
           setActivity(result.data);
@@ -90,7 +89,7 @@ export default function PublicActivityPage() {
       } catch (apiError) {
         console.warn('⚠️ Erro na API, tentando dados mock:', apiError);
       }
-      
+
       // Terceira tentativa: gerar dados mock como fallback
       console.log('🎭 Gerando dados mock como fallback...');
       const mockActivity: PublicActivityData = {
@@ -104,10 +103,10 @@ export default function PublicActivityPage() {
         createdAt: new Date().toISOString(),
         isPublic: true
       };
-      
+
       setActivity(mockActivity);
       setLoading(false);
-      
+
     } catch (err) {
       console.error('❌ Erro ao carregar atividade:', err);
       setError('Erro ao carregar a atividade');
@@ -267,7 +266,7 @@ A atividade foi estruturada para ser:
 
   const handleDownload = () => {
     if (!activity) return;
-    
+
     const content = `
 ATIVIDADE EDUCACIONAL
 ${activity.title}
@@ -286,7 +285,7 @@ ${activity.content}
 Compartilhado via Ponto School
 ${window.location.href}
 `;
-    
+
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -300,7 +299,7 @@ ${window.location.href}
 
   const handleShare = async () => {
     const url = window.location.href;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -356,14 +355,14 @@ ${window.location.href}
               {error || 'A atividade solicitada não existe ou não está mais disponível.'}
             </p>
             <div className="space-y-2">
-              <Button 
-                onClick={() => window.location.href = '/'} 
+              <Button
+                onClick={() => window.location.href = '/'}
                 className="w-full bg-orange-500 hover:bg-orange-600"
               >
                 Ir para Ponto School
               </Button>
-              <Button 
-                onClick={() => window.history.back()} 
+              <Button
+                onClick={() => window.history.back()}
                 variant="outline"
                 className="w-full"
               >
@@ -396,23 +395,23 @@ ${window.location.href}
           {/* Conteúdo da apresentação */}
           <div className="bg-white text-gray-900 rounded-2xl p-12 mb-8 shadow-2xl">
             <div className="prose prose-lg max-w-none">
-              <div 
+              <div
                 className="leading-relaxed"
-                dangerouslySetInnerHTML={{ 
+                dangerouslySetInnerHTML={{
                   __html: activity.content
                     .replace(/\n/g, '<br>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
                     .replace(/##\s(.*?)(?=\n|$)/g, '<h2 class="text-2xl font-bold mb-4 text-orange-600">$1</h2>')
                     .replace(/###\s(.*?)(?=\n|$)/g, '<h3 class="text-xl font-semibold mb-3 text-gray-700">$1</h3>')
-                }} 
+                }}
               />
             </div>
           </div>
 
           {/* Controles da apresentação */}
           <div className="text-center space-x-4">
-            <Button 
+            <Button
               onClick={handlePresentationMode}
               variant="secondary"
               size="lg"
@@ -442,7 +441,7 @@ ${window.location.href}
                 <p className="text-gray-600">Atividade Educacional Pública</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Button onClick={handleShare} variant="outline" size="sm" className="shadow-sm">
                 <Share2 className="w-4 h-4 mr-2" />
@@ -470,7 +469,7 @@ ${window.location.href}
                 {activity.subject}
               </Badge>
             </div>
-            
+
             <div className="flex items-center gap-6 mt-6 pt-6 border-t border-orange-400/30">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -500,9 +499,9 @@ ${window.location.href}
                   <BookOpen className="w-5 h-5 mr-2 text-orange-500" />
                   Conteúdo da Atividade
                 </h3>
-                <div 
+                <div
                   className="text-gray-700 leading-relaxed prose prose-lg max-w-none"
-                  dangerouslySetInnerHTML={{ 
+                  dangerouslySetInnerHTML={{
                     __html: activity.content
                       .replace(/\n/g, '<br>')
                       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -516,7 +515,7 @@ ${window.location.href}
 
             {/* Botão de Apresentação */}
             <div className="text-center mb-8">
-              <Button 
+              <Button
                 onClick={handlePresentationMode}
                 size="lg"
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-4 text-lg shadow-lg"
@@ -531,8 +530,8 @@ ${window.location.href}
               <Alert className="bg-blue-50 border-blue-200">
                 <AlertCircle className="h-5 w-5 text-blue-600" />
                 <AlertDescription className="text-blue-800">
-                  <strong>💡 Sobre esta atividade:</strong> Este conteúdo foi compartilhado publicamente e pode ser acessado sem necessidade de cadastro. 
-                  Para criar suas próprias atividades personalizadas e acessar recursos exclusivos, 
+                  <strong>💡 Sobre esta atividade:</strong> Este conteúdo foi compartilhado publicamente e pode ser acessado sem necessidade de cadastro.
+                  Para criar suas próprias atividades personalizadas e acessar recursos exclusivos,
                   <a href="/" className="text-blue-600 hover:text-blue-800 font-medium ml-1 underline">
                     visite a Ponto School
                   </a>.

@@ -187,10 +187,15 @@ function App() {
         if (isAuthenticated) {
           localStorage.setItem('auth_checked', 'true');
           localStorage.setItem('auth_status', 'authenticated');
+        } else {
+          localStorage.removeItem('auth_checked');
+          localStorage.removeItem('auth_status');
         }
       } catch (error) {
         console.error("Erro na verificação de autenticação:", error);
         setIsAuth(false);
+        localStorage.removeItem('auth_checked');
+        localStorage.removeItem('auth_status');
       } finally {
         setLoading(false);
         console.log("Aplicação inicializada com sucesso.");
@@ -324,128 +329,123 @@ function App() {
   if (!isAuth && !isPublicActivityRoute) {
     return (
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-        <Router>
-          <Routes>
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/register" element={<AuthPage />} />
-            <Route path="/plan-selection" element={<PlanSelection />} />
-            <Route path="/plan-selection-redesigned" element={<PlanSelectionRedesigned />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Router>
+        <Routes>
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/register" element={<AuthPage />} />
+          <Route path="/plan-selection" element={<PlanSelection />} />
+          <Route path="/plan-selection-redesigned" element={<PlanSelectionRedesigned />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
       </ThemeProvider>
     );
   }
 
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <UsernameProvider>
-        <StudyGoalProvider>
-          <ErrorBoundary>
-            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-              <Routes>
-                {/* Rota pública de atividade - DEVE vir ANTES das rotas protegidas */}
-                <Route 
-                  path="/atividade/:id/:code?" 
-                  element={
-                    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center">
-                      <div className="text-center space-y-4">
-                        <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        <p className="text-gray-600 text-lg">Carregando atividade...</p>
-                      </div>
-                    </div>}>
-                      <PublicActivityPage />
-                    </Suspense>
-                  } 
-                />
+    <Router>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <UsernameProvider>
+          <StudyGoalProvider>
+            <ErrorBoundary>
+              <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+                <Routes>
+                  {/* Rota pública de atividade - DEVE vir ANTES das rotas protegidas */}
+                  <Route 
+                    path="/atividade/:id/:code?" 
+                    element={
+                      <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center">
+                        <div className="text-center space-y-4">
+                          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                          <p className="text-gray-600 text-lg">Carregando atividade...</p>
+                        </div>
+                      </div>}>
+                        <PublicActivityPage />
+                      </Suspense>
+                    } 
+                  />
 
-                {/* Rotas de autenticação */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/select-plan" element={<PlanSelectionPage />} />
+                  {/* Rotas de autenticação */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/select-plan" element={<PlanSelectionPage />} />
 
-                {/* Página em branco - Pública para teste */}
-                <Route path="/blank" element={<BlankPage />} />
-                 {/* Rota pública para quiz */}
-                 <Route path="/quiz" element={<QuizPage />} />
+                  {/* Página em branco - Pública para teste */}
+                  <Route path="/blank" element={<BlankPage />} />
+                   {/* Rota pública para quiz */}
+                   <Route path="/quiz" element={<QuizPage />} />
 
-                {/* Main App Routes - Protegidas */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="turmas" element={<Turmas />} />
-                  <Route path="turmas/:id" element={<TurmaDetail />} />
-                  <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
-                  <Route path="turmas/grupos" element={<GruposEstudo />} />
-                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
-                  <Route path="comunidades" element={<Comunidades />} />
-                  <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
-                  <Route path="epictus-ia" element={<EpictusIAPage />} />
-                  <Route path="/school-power" element={<SchoolPowerPageIndex />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="biblioteca" element={<Biblioteca />} />
-                  <Route path="conquistas" element={<Conquistas />} />
-                  <Route path="carteira" element={<Carteira />} />
-                  <Route path="organizacao" element={<Organizacao />} />
-                  <Route path="novidades" element={<Novidades />} />
-                  <Route path="configuracoes" element={<Configuracoes />} />
-                  <Route path="planos-estudo" element={<PlanosEstudo />} />
-                  <Route path="portal" element={<Portal />} />
-                </Route>
+                  {/* Main App Routes - Protegidas */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<Dashboard />} />
+                    <Route path="turmas" element={<Turmas />} />
+                    <Route path="turmas/:id" element={<TurmaDetail />} />
+                    <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
+                    <Route path="turmas/grupos" element={<GruposEstudo />} />
+                    <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
+                    <Route path="comunidades" element={<Comunidades />} />
+                    <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
+                    <Route path="epictus-ia" element={<EpictusIAPage />} />
+                    <Route path="school-power" element={<SchoolPowerPageIndex />} />
+                    <Route path="agenda" element={<Agenda />} />
+                    <Route path="biblioteca" element={<Biblioteca />} />
+                    <Route path="conquistas" element={<Conquistas />} />
+                    <Route path="carteira" element={<Carteira />} />
+                    <Route path="organizacao" element={<Organizacao />} />
+                    <Route path="novidades" element={<Novidades />} />
+                    <Route path="configuracoes" element={<Configuracoes />} />
+                    <Route path="planos-estudo" element={<PlanosEstudo />} />
+                    <Route path="portal" element={<Portal />} />
+                  </Route>
 
-                {/* User Profile - Protegida */}
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
+                  {/* User Profile - Protegida */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Agenda standalone - Protegida */}
-                <Route path="/agenda-preview" element={
-                  <ProtectedRoute>
-                    <Agenda />
-                  </ProtectedRoute>
-                } />
-                <Route path="/agenda-standalone" element={
-                  <ProtectedRoute>
-                    <Agenda />
-                  </ProtectedRoute>
-                } />
+                  {/* Agenda standalone - Protegida */}
+                  <Route path="/agenda-preview" element={
+                    <ProtectedRoute>
+                      <Agenda />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/agenda-standalone" element={
+                    <ProtectedRoute>
+                      <Agenda />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Fallback Route - Redireciona para login se não estiver autenticado */}
-                <Route path="*" element={isAuth ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
-              </Routes>
+                  {/* Fallback Route - Redireciona para login se não estiver autenticado */}
+                  <Route path="*" element={isAuth ? <Navigate to="/" replace /> : <Navigate to="/login" replace />} />
+                </Routes>
 
-              {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
-              {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && <FloatingChatSupport />}
+                {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
+                {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && <FloatingChatSupport />}
 
-              {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
-              {!isAuthRoute &&
-                <WelcomeModal
-                  isOpen={showWelcomeModal}
-                  onClose={() => setShowWelcomeModal(false)}
-                  isFirstLogin={isFirstLogin}
-                />
-              }
-            </div>
-            <Toaster />
-          </ErrorBoundary>
-        </StudyGoalProvider>
-      </UsernameProvider>
-    </ThemeProvider>
+                {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+                {!isAuthRoute &&
+                  <WelcomeModal
+                    isOpen={showWelcomeModal}
+                    onClose={() => setShowWelcomeModal(false)}
+                    isFirstLogin={isFirstLogin}
+                  />
+                }
+              </div>
+              <Toaster />
+            </ErrorBoundary>
+          </StudyGoalProvider>
+        </UsernameProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 

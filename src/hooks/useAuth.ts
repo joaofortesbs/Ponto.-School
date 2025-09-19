@@ -23,9 +23,9 @@ export function useAuth() {
 
   // Função para atualizar o estado de autenticação
   const setAuth = useCallback((
-    user: User | null, 
-    session: Session | null, 
-    isLoading: boolean = false, 
+    user: User | null,
+    session: Session | null,
+    isLoading: boolean = false,
     error: AuthError | Error | null = null
   ) => {
     setAuthState({
@@ -89,7 +89,7 @@ export function useAuth() {
 
       // Gerar ID usando RPC function
       const { data: generatedId, error: idError } = await supabase.rpc(
-        'generate_sequential_user_id', 
+        'generate_sequential_user_id',
         { p_uf: uf, p_tipo_conta: tipoConta }
       );
 
@@ -102,7 +102,7 @@ export function useAuth() {
         // Atualizar o perfil com o novo ID
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ 
+          .update({
             user_id: generatedId,
             state: uf,
             updated_at: new Date().toISOString()
@@ -126,11 +126,24 @@ export function useAuth() {
       try {
         // Verificar se é uma rota pública
         const currentPath = window.location.pathname;
-        const isPublicRoute = currentPath.startsWith('/atividade/');
-        
+        const isPublicRoute = currentPath.startsWith('/atividade/') ||
+                              currentPath === '/login' ||
+                              currentPath === '/register' ||
+                              currentPath === '/forgot-password' ||
+                              currentPath === '/reset-password' ||
+                              currentPath === '/quiz' ||
+                              currentPath === '/blank';
+
         if (isPublicRoute) {
           console.log('🔓 Rota pública detectada, saltando verificação de autenticação');
-          setAuth(null, null, false);
+          setAuthState(prevState => ({
+            ...prevState,
+            user: null,
+            session: null,
+            isLoading: false,
+            isAuthenticated: false,
+            error: null
+          }));
           return;
         }
 
@@ -179,6 +192,17 @@ export function useAuth() {
       } catch (error) {
         console.error('Erro na verificação de autenticação:', error);
         setAuth(null, null, false, error as AuthError);
+        // Redirecionar para login apenas se não estiver em uma rota de autenticação
+        const currentPath = window.location.pathname;
+        if (!currentPath.startsWith('/atividade/') &&
+            currentPath !== '/login' &&
+            currentPath !== '/register' &&
+            currentPath !== '/forgot-password' &&
+            currentPath !== '/reset-password' &&
+            currentPath !== '/quiz' &&
+            currentPath !== '/blank') {
+          navigate('/login');
+        }
       }
     };
 
@@ -242,7 +266,7 @@ export function useAuth() {
 
             // Gerar ID usando RPC function
             const { data: generatedId, error: idError } = await supabase.rpc(
-              'generate_sequential_user_id', 
+              'generate_sequential_user_id',
               { p_uf: uf, p_tipo_conta: tipoConta }
             );
 
@@ -253,7 +277,7 @@ export function useAuth() {
               // Atualizar o perfil com o novo ID
               const { error: updateError } = await supabase
                 .from('profiles')
-                .update({ 
+                .update({
                   user_id: generatedId,
                   state: uf,
                   updated_at: new Date().toISOString()
@@ -285,12 +309,12 @@ export function useAuth() {
   const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
     try {
       setAuth(null, null, true, null);
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
+      const { data, error } = await supabase.auth.signUp({
+        email,
         password,
-        options: { 
+        options: {
           data: userData,
-          emailRedirectTo: `${window.location.origin}/auth/callback` 
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 

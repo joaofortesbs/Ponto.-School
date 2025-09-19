@@ -22,7 +22,15 @@ export const routes: RouteObject[] = [
   {
     path: "/dashboard",
     element: lazy(() => import("./pages/dashboard"))
+  },
+  {
+    path: "/school-power",
+    element: lazy(() => import("./pages/school-power"))
+  },
+  {
+    path: "/atividade/:id/:code?",
+    element: lazy(() => import("./pages/atividade/[id]"))
   }
 ];
 
-export default routes;
+export default routes;tes;

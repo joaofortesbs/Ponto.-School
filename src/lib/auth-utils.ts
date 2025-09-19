@@ -6,77 +6,60 @@ import { supabase } from "./supabase";
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    // Verificar se é uma rota pública que não precisa de autenticação
+    // Verificar se é uma rota pública de atividade
     const currentPath = window.location.pathname;
     if (currentPath.startsWith('/atividade/')) {
-      console.log('🔓 Rota pública detectada, retornando false para checkAuthentication');
+      console.log("🔓 Rota pública detectada, pulando verificação de autenticação");
+      return false; // Retornar false para não mostrar componentes autenticados
+    }
+
+    // Verificar primeiro o localStorage para melhor performance
+    const cachedAuthStatus = localStorage.getItem('auth_status');
+    const authChecked = localStorage.getItem('auth_checked');
+
+    if (cachedAuthStatus === 'authenticated' && authChecked === 'true') {
+      // Validar se a sessão ainda é válida
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error('Erro ao verificar sessão:', error);
+        localStorage.removeItem('auth_status');
+        localStorage.removeItem('auth_checked');
+        return false;
+      }
+
+      const isAuthenticated = !!session?.user;
+
+      if (!isAuthenticated) {
+        localStorage.removeItem('auth_status');
+        localStorage.removeItem('auth_checked');
+      }
+
+      console.log('Estado de autenticação:', isAuthenticated);
+      return isAuthenticated;
+    }
+
+    // Se não há cache válido, verificar sessão
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error('Erro ao verificar sessão:', error);
       return false;
     }
 
-    // Verificar cache local para resposta instantânea
-    const cachedStatus = localStorage.getItem('auth_status');
-    const cacheTime = localStorage.getItem('auth_cache_time');
-    const now = Date.now();
-    
-    // Resposta instantânea com base no cache recente (validade de 30 minutos)
-    if (cachedStatus === 'authenticated' && cacheTime && (now - parseInt(cacheTime)) < 30 * 60 * 1000) {
-      // Verificar em background após retornar resposta
-      requestAnimationFrame(() => {
-        // Usar Promise.race para limitar tempo de espera
-        Promise.race([
-          supabase.auth.getSession(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]).then(({ data }) => {
-          if (!!data?.session !== (cachedStatus === 'authenticated')) {
-            localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
-            localStorage.setItem('auth_cache_time', now.toString());
-          }
-        }).catch(() => {
-          // Ignorar erros silenciosamente na verificação em background
-        });
-      });
-      
-      return true;
-    }
-    
-    // Sem cache válido, mas tentar retornar rápido com base em cache antigo
-    if (cachedStatus === 'authenticated') {
-      // Verificar em background, mas já retornar resposta positiva
-      requestAnimationFrame(() => {
-        supabase.auth.getSession().then(({ data }) => {
-          localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
-          localStorage.setItem('auth_cache_time', now.toString());
-        }).catch(() => {});
-      });
-      
-      return true;
+    const isAuthenticated = !!session?.user;
+
+    if (isAuthenticated) {
+      localStorage.setItem('auth_status', 'authenticated');
+      localStorage.setItem('auth_checked', 'true');
     }
 
-    // Timeout para garantir que a verificação não bloqueie a UI
-    const authPromise = Promise.race([
-      supabase.auth.getSession(),
-      new Promise((resolve) => setTimeout(() => 
-        resolve({data: {session: null}}), 2000))
-    ]);
-
-    const { data } = await authPromise;
-    const isAuthenticated = !!data?.session;
-
-    // Atualizar cache
-    localStorage.setItem('auth_checked', 'true');
-    localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
-    localStorage.setItem('auth_cache_time', now.toString());
-
+    console.log('Estado de autenticação:', isAuthenticated);
     return isAuthenticated;
   } catch (error) {
-    console.error("Erro ao verificar autenticação:", error);
-    
-    // Em erro, confiar no cache existente
-    const cachedStatus = localStorage.getItem('auth_status');
-    if (cachedStatus === 'authenticated') {
-      return true;
-    }
-    
+    console.error('Erro na verificação de autenticação:', error);
+    localStorage.removeItem('auth_status');
+    localStorage.removeItem('auth_checked');
     return false;
   }
 };
@@ -133,26 +116,26 @@ export const saveUserDisplayName = (displayName?: string | null, fullName?: stri
   // Ordem de prioridade corrigida: display_name > primeiro nome do full_name > username > fallback
   const firstName = displayName || (fullName ? fullName.split(' ')[0] : null) || username || "Usuário";
   localStorage.setItem('userFirstName', firstName);
-  
+
   // Também guardar display_name separadamente para uso em outros componentes
   if (displayName) {
     localStorage.setItem('userDisplayName', displayName);
   }
-  
+
   // Garantir que o username também seja salvo corretamente
   if (username && username !== 'Usuário' && !username.startsWith('user_')) {
     localStorage.setItem('username', username);
-    
+
     // Armazenar também no sessionStorage como backup
     try {
       sessionStorage.setItem('username', username);
     } catch (e) {
       console.warn('Erro ao salvar username no sessionStorage', e);
     }
-    
+
     // Disparar evento para sincronização
-    document.dispatchEvent(new CustomEvent('usernameUpdated', { 
-      detail: { username } 
+    document.dispatchEvent(new CustomEvent('usernameUpdated', {
+      detail: { username }
     }));
   }
 };
@@ -167,20 +150,20 @@ export const repairUsernames = async (): Promise<void> => {
     const sessionUsername = sessionStorage.getItem('username');
     const userFirstName = localStorage.getItem('userFirstName');
     const userDisplayName = localStorage.getItem('userDisplayName');
-    
+
     console.log('Verificando consistência de usernames:', {
       localUsername,
       sessionUsername,
       userFirstName,
       userDisplayName
     });
-    
+
     // Verificar se existe uma sessão ativa
     const { data: sessionData } = await supabase.auth.getSession();
-    
+
     if (sessionData?.session?.user) {
       const email = sessionData.session.user.email;
-      
+
       // Buscar perfil no Supabase
       if (email) {
         const { data: profileData } = await supabase
@@ -188,10 +171,10 @@ export const repairUsernames = async (): Promise<void> => {
           .select('username, display_name, email, id')
           .eq('email', email)
           .single();
-          
+
         // Determinar o melhor username disponível
         let bestUsername = '';
-        
+
         // Prioridade: profile > localStorage > sessionStorage > email
         if (profileData?.username && profileData.username !== 'Usuário') {
           bestUsername = profileData.username;
@@ -203,29 +186,29 @@ export const repairUsernames = async (): Promise<void> => {
           // Usar parte do email como username
           bestUsername = email.split('@')[0];
         }
-        
+
         // Se encontramos um bom username, atualizar em todos os lugares
         if (bestUsername && bestUsername !== 'Usuário') {
           // Atualizar localStorage e sessionStorage
           localStorage.setItem('username', bestUsername);
           try { sessionStorage.setItem('username', bestUsername); } catch (e) {}
-          
+
           // Atualizar perfil se necessário
           if (profileData && (!profileData.username || profileData.username === 'Usuário')) {
             await supabase
               .from('profiles')
-              .update({ 
+              .update({
                 username: bestUsername,
                 updated_at: new Date().toISOString()
               })
               .eq('id', profileData.id);
-              
+
             console.log('Perfil atualizado com novo username:', bestUsername);
           }
-          
+
           // Disparar evento para notificar outros componentes
-          document.dispatchEvent(new CustomEvent('usernameRepaired', { 
-            detail: { username: bestUsername } 
+          document.dispatchEvent(new CustomEvent('usernameRepaired', {
+            detail: { username: bestUsername }
           }));
         }
       }
@@ -280,15 +263,15 @@ export const signInWithUsername = async (username: string, password: string) => 
       .single();
 
     if (profileError || !profileData?.email) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: new Error("Nome de usuário não encontrado")
       };
     }
 
     // Usar o email encontrado para fazer login
     return signInWithEmail(profileData.email, password);
-    
+
   } catch (error) {
     console.error("Erro ao fazer login com nome de usuário:", error);
     return { success: false, error };
