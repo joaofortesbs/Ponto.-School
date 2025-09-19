@@ -113,15 +113,18 @@ class GeradorLinkAtividadesSchoolPower {
   async criarAtividadeCompartilhavel(atividade: NovaAtividadeCompartilhavel): Promise<AtividadeCompartilhavel | null> {
     try {
       console.log('🔗 [GERADOR] Iniciando geração de link para:', atividade.titulo);
-      console.log('📋 [GERADOR] Dados recebidos:', {
-        id: atividade.id,
-        titulo: atividade.titulo,
-        tipo: atividade.tipo,
-        criadoPor: atividade.criadoPor
-      });
+      console.log('📋 [GERADOR] Dados recebidos completos:', atividade);
+
+      // Validar dados obrigatórios
+      if (!atividade.id) {
+        throw new Error('ID da atividade é obrigatório');
+      }
+      if (!atividade.titulo) {
+        throw new Error('Título da atividade é obrigatório');
+      }
       
       // Primeiro, verifica se já existe uma atividade compartilhável para este ID
-      console.log('🔍 [GERADOR] Verificando se já existe link...');
+      console.log('🔍 [GERADOR] Verificando se já existe link para ID:', atividade.id);
       const { data: existente, error: erroExistente } = await supabase
         .from('atividades_compartilhaveis')
         .select('*')
@@ -131,7 +134,8 @@ class GeradorLinkAtividadesSchoolPower {
 
       // Se já existe, retorna a existente
       if (!erroExistente && existente) {
-        console.log('✅ [GERADOR] Link já existe, retornando:', existente.link_publico);
+        console.log('♻️ [GERADOR] Link já existe, retornando link existente:', existente.link_publico);
+        console.log('🔑 [GERADOR] Código existente:', existente.codigo_unico);
         return {
           id: existente.atividade_id,
           titulo: existente.titulo,

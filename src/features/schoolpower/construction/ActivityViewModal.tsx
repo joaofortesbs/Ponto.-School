@@ -578,6 +578,8 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
           <UniversalActivityHeader
             activityTitle={getActivityTitle()}
             activityIcon={getActivityIcon(activityType)}
+            activityId={activity.id}
+            activityType={activityType}
             userName={userInfo.displayName || userInfo.name}
             userAvatar={userInfo.avatar}
             schoolPoints={100}

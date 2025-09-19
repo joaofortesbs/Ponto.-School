@@ -34,14 +34,21 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   // Busca ou cria o link compartilhável quando o modal abre
   useEffect(() => {
     if (isOpen && activityId && activityTitle) {
+      console.log('🚀 Modal aberto - iniciando geração de link imediatamente');
+      console.log('📋 Dados disponíveis:', { activityId, activityTitle, activityType, userInfo: userInfo.userId });
+      
       // Reset estado anterior
       setAtividade(null);
       setError(null);
+      setLoading(true);
+      
+      // Criar link imediatamente
       criarOuBuscarLink();
     }
     
     // Limpa estado quando modal fecha
     if (!isOpen) {
+      console.log('🔒 Modal fechado - limpando estado');
       setAtividade(null);
       setError(null);
       setLoading(false);
@@ -53,47 +60,49 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
     if (!activityId || !activityTitle) {
       console.error('❌ Dados obrigatórios não fornecidos:', { activityId, activityTitle });
       setError('Dados da atividade não encontrados');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    console.log('🔗 [MODAL] Iniciando criação de link compartilhável');
+    console.log('📋 [MODAL] Dados da atividade:', {
+      id: activityId,
+      titulo: activityTitle,
+      tipo: activityType || 'atividade',
+      userId: userInfo.userId || 'usuario-anonimo'
+    });
 
     try {
-      console.log('🔗 Iniciando criação de link compartilhável para:', activityTitle);
-      console.log('📋 Dados da atividade:', {
+      const dadosAtividade = {
         id: activityId,
         titulo: activityTitle,
-        tipo: activityType,
-        userInfo: userInfo.userId
-      });
-
-      const novaAtividade = await criarLinkAtividade({
-        id: activityId,
-        titulo: activityTitle,
-        tipo: activityType,
-        dados: activityData,
+        tipo: activityType || 'atividade',
+        dados: activityData || {},
         criadoPor: userInfo.userId || 'usuario-anonimo'
-      });
+      };
 
-      console.log('🔍 Resposta completa da API:', novaAtividade);
+      console.log('🚀 [MODAL] Enviando dados para API:', dadosAtividade);
 
-      if (novaAtividade) {
-        if (novaAtividade.linkPublico) {
-          setAtividade(novaAtividade);
-          console.log('✅ Link criado com sucesso:', novaAtividade.linkPublico);
-          console.log('🎯 Código único gerado:', novaAtividade.codigoUnico);
-        } else {
-          console.error('❌ Link público ausente na resposta:', novaAtividade);
-          setError('Link não foi gerado corretamente');
-        }
+      const novaAtividade = await criarLinkAtividade(dadosAtividade);
+
+      console.log('📨 [MODAL] Resposta da API:', novaAtividade);
+
+      if (novaAtividade && novaAtividade.linkPublico) {
+        setAtividade(novaAtividade);
+        console.log('✅ [MODAL] Link gerado com sucesso:', novaAtividade.linkPublico);
+        console.log('🔑 [MODAL] Código único:', novaAtividade.codigoUnico);
+        setError(null);
+      } else if (novaAtividade) {
+        console.error('❌ [MODAL] Link público ausente na resposta:', novaAtividade);
+        setError('Link não foi gerado corretamente');
       } else {
-        console.error('❌ Resposta nula da API');
-        setError('Falha na comunicação com o servidor');
+        console.error('❌ [MODAL] Resposta nula da API');
+        setError('Erro na comunicação com o servidor');
       }
     } catch (error) {
-      console.error('❌ Erro completo ao criar link:', error);
-      setError(`Erro: ${error.message || 'Falha desconhecida'}`);
+      console.error('❌ [MODAL] Erro completo ao criar link:', error);
+      console.error('❌ [MODAL] Stack trace:', error.stack);
+      setError(`Erro ao gerar link: ${error.message || 'Falha desconhecida'}`);
     } finally {
       setLoading(false);
     }
@@ -129,16 +138,29 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
 
   const shareLink = atividade?.linkPublico || '';
   
-  // Debug: Log do estado atual
+  // Debug: Log do estado atual e retry automático se necessário
   useEffect(() => {
-    console.log('🔍 Estado atual do modal:', {
-      atividade,
+    console.log('🔍 [DEBUG] Estado atual do modal:', {
+      isOpen,
+      activityId,
+      activityTitle,
+      atividade: atividade ? {
+        id: atividade.id,
+        titulo: atividade.titulo,
+        linkPublico: atividade.linkPublico,
+        codigoUnico: atividade.codigoUnico
+      } : null,
       shareLink,
       loading,
-      error,
-      isOpen
+      error
     });
-  }, [atividade, shareLink, loading, error, isOpen]);
+
+    // Se o modal está aberto, temos IDs válidos, mas não há link nem está carregando nem há erro
+    if (isOpen && activityId && activityTitle && !shareLink && !loading && !error) {
+      console.log('🔄 [RETRY] Link não gerado, tentando novamente automaticamente');
+      criarOuBuscarLink();
+    }
+  }, [atividade, shareLink, loading, error, isOpen, activityId, activityTitle]);
 
   const handleCopyLink = async () => {
     if (!shareLink) {
@@ -205,11 +227,15 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
           {/* Campo do Link */}
           <div className="space-y-4">
             {loading ? (
-              <div className="flex items-center justify-center p-8">
-                <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
-                <span className="ml-2 text-gray-600 dark:text-gray-400">
-                  Gerando link...
+              <div className="flex flex-col items-center justify-center p-8 space-y-3">
+                <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
+                <span className="text-gray-600 dark:text-gray-400 font-medium">
+                  Gerando link único...
                 </span>
+                <div className="text-xs text-gray-500 dark:text-gray-500 text-center">
+                  Criando código de compartilhamento para:<br />
+                  <span className="font-medium text-orange-600 dark:text-orange-400">{activityTitle}</span>
+                </div>
               </div>
             ) : error ? (
               <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
