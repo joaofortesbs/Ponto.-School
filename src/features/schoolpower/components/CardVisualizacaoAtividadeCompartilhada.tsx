@@ -142,11 +142,21 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   {renderActivityPreview()}
                 </div>
 
-                {/* Overlay fixo que cobre toda a pré-visualização */}
-              <div className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out">
-                {/* Ícone e texto fixos no centro da tela */}
-                <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white">
+                {/* Overlay que cobre TODA a área de pré-visualização */}
+                <div 
+                  className="absolute inset-0 z-20 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out flex items-center justify-center"
+                  style={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: '100%',
+                    height: '100%'
+                  }}
+                >
+                  {/* Ícone e texto fixos no centro da área de pré-visualização */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none">
                     {/* Ícone de play com animação aprimorada */}
                     <div className="bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-300/30 relative overflow-hidden">
                       {/* Efeito de brilho interno */}
@@ -162,7 +172,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                     </span>
                   </div>
                 </div>
-              </div>
               </div>
             </CardContent>
           </Card>
