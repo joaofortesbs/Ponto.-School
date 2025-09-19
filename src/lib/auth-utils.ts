@@ -6,11 +6,15 @@ import { supabase } from "./supabase";
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    // Verificar se é uma rota pública de atividade
+    // Verificar se é uma rota pública
     const currentPath = window.location.pathname;
-    if (currentPath.startsWith('/atividade/')) {
-      console.log("🔓 Rota pública detectada, pulando verificação de autenticação");
-      return false; // Retornar false para não mostrar componentes autenticados
+    const isPublicRoute = currentPath.startsWith('/atividade/') ||
+                          currentPath === '/quiz' ||
+                          currentPath === '/blank';
+    
+    if (isPublicRoute) {
+      console.log("🔓 Rota pública detectada, permitindo acesso sem autenticação");
+      return true; // Retornar true para permitir acesso às rotas públicas
     }
 
     // Verificar primeiro o localStorage para melhor performance

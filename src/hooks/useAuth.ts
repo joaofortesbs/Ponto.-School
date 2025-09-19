@@ -127,15 +127,16 @@ export function useAuth() {
         // Verificar se é uma rota pública
         const currentPath = window.location.pathname;
         const isPublicRoute = currentPath.startsWith('/atividade/') ||
-                              currentPath === '/login' ||
-                              currentPath === '/register' ||
-                              currentPath === '/forgot-password' ||
-                              currentPath === '/reset-password' ||
                               currentPath === '/quiz' ||
                               currentPath === '/blank';
 
+        const isAuthRoute = currentPath === '/login' ||
+                           currentPath === '/register' ||
+                           currentPath === '/forgot-password' ||
+                           currentPath === '/reset-password';
+
         if (isPublicRoute) {
-          console.log('🔓 Rota pública detectada, saltando verificação de autenticação');
+          console.log('🔓 Rota pública detectada, permitindo acesso sem autenticação');
           setAuthState(prevState => ({
             ...prevState,
             user: null,
@@ -143,6 +144,15 @@ export function useAuth() {
             isLoading: false,
             isAuthenticated: false,
             error: null
+          }));
+          return;
+        }
+
+        if (isAuthRoute) {
+          console.log('🔑 Rota de autenticação detectada');
+          setAuthState(prevState => ({
+            ...prevState,
+            isLoading: false
           }));
           return;
         }

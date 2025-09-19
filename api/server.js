@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5000', 'https://*.replit.dev', 'https://*.replit.app'],
+  origin: ['http://localhost:5000', 'http://localhost:3000', 'https://*.replit.dev'],
   credentials: true
 }));
 app.use(express.json());

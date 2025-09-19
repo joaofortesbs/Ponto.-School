@@ -67,12 +67,26 @@ import PublicActivityPage from './pages/atividade/[id]';
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Verificar se é uma rota pública primeiro
+        const currentPath = location.pathname;
+        const isPublicRoute = currentPath.startsWith('/atividade/') ||
+                              currentPath === '/quiz' ||
+                              currentPath === '/blank';
+
+        if (isPublicRoute) {
+          console.log("🔓 Rota pública detectada em ProtectedRoute, permitindo acesso");
+          setIsAuthenticated(true); // Permitir acesso
+          setIsCheckingAuth(false);
+          return;
+        }
+
         const { data } = await supabase.auth.getSession();
         const isAuth = !!data.session;
 
@@ -96,7 +110,7 @@ function ProtectedRoute({ children }) {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   if (isCheckingAuth) {
     return <TypewriterLoader />;
@@ -169,14 +183,18 @@ function App() {
       console.log("Iniciando aplicação e verificando autenticação...");
 
       try {
-        // Verificar se é uma rota pública de atividade
+        // Verificar se é uma rota pública
         const currentPath = window.location.pathname;
-        const isPublicActivityRoute = currentPath.startsWith('/atividade/');
+        const isPublicRoute = currentPath.startsWith('/atividade/') ||
+                              currentPath === '/quiz' ||
+                              currentPath === '/blank' ||
+                              currentPath.startsWith('/login') ||
+                              currentPath.startsWith('/register');
 
-        if (isPublicActivityRoute) {
-          // Para rotas públicas de atividades, não verificar autenticação
-          console.log("🔓 Rota pública de atividade detectada, permitindo acesso sem autenticação");
-          setIsAuth(false); // Definir como não autenticado para não mostrar componentes autenticados
+        if (isPublicRoute) {
+          // Para rotas públicas, não verificar autenticação
+          console.log("🔓 Rota pública detectada, permitindo acesso sem autenticação");
+          setIsAuth(false);
           setLoading(false);
           return;
         }
@@ -311,9 +329,11 @@ function App() {
     };
   }, [location.pathname]);
 
-  // Verificar se é uma rota pública de atividade
+  // Verificar se é uma rota pública
   const currentPath = window.location.pathname;
-  const isPublicActivityRoute = currentPath.startsWith('/atividade/');
+  const isPublicRoute = currentPath.startsWith('/atividade/') ||
+                        currentPath === '/quiz' ||
+                        currentPath === '/blank';
 
   if (loading) {
     return (
@@ -326,7 +346,7 @@ function App() {
     );
   }
 
-  if (!isAuth && !isPublicActivityRoute) {
+  if (!isAuth && !isPublicRoute) {
     return (
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <Routes>
