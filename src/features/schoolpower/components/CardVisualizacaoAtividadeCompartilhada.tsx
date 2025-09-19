@@ -142,18 +142,18 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   {renderActivityPreview()}
                 </div>
 
-                {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
+                {/* Container unificado SEMPRE VISÍVEL E FIXO: Overlay + Ícone + Texto */}
                 <div 
-                  className="absolute inset-0 z-40 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out flex items-center justify-center"
+                  className="fixed inset-0 z-50 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out flex items-center justify-center"
                   style={{ 
-                    position: 'absolute',
+                    position: 'fixed',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    width: '100%',
-                    height: '100%',
-                    zIndex: 10000
+                    width: '100vw',
+                    height: '100vh',
+                    zIndex: 99999
                   }}
                 >
                   {/* Container unificado com ícone e texto FIXO */}
