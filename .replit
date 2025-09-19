@@ -255,33 +255,6 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
-[[workflows.workflow]]
-name = "Backend API Fixed"
-author = 47684299
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd api && node server.js"
-
-[[workflows.workflow]]
-name = "Backend API Working"
-author = 47684299
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/server.js"
-
-[[workflows.workflow]]
-name = "Backend API Corrected"
-author = 47684299
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/server.js"
-
 [auth]
 pageEnabled = false
 buttonEnabled = false

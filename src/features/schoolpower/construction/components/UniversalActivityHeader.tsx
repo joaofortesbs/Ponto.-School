@@ -12,9 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUserInfo } from '../hooks/useUserInfo';
 import schoolPowerActivities from '../../data/schoolPowerActivities.json';
-import { gerarLinkCompartilhamento, copiarLinkCompartilhamento, compartilharAtividade } from '@/utils/generateShareLink';
-import { useToast } from '@/components/ui/toast-notification';
-import ShareActivityModal from '@/components/ui/share-activity-modal';
 import { 
   Wrench, CheckSquare, Filter, 
   Trophy, Zap, Brain, Heart, 
@@ -33,7 +30,7 @@ interface UniversalActivityHeaderProps {
   activityTitle: string;
   activityIcon?: React.ComponentType<{ className?: string }>;
   activityType?: string;
-  activityId?: string;
+  activityId?: string; // Adicionar activityId para sincronização
   userName?: string;
   userAvatar?: string;
   onMoreOptions?: () => void;
@@ -179,11 +176,9 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   onDelete
 }) => {
   const userInfo = useUserInfo();
-  const { showToast } = useToast();
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
   const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
   const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
-  const [showShareModal, setShowShareModal] = React.useState(false);
   
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
@@ -256,20 +251,6 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   };
 
-  // Função para compartilhar atividade
-  const handleCompartilharAtividade = () => {
-    console.log('🔗 Tentando compartilhar atividade com ID:', activityId);
-    
-    if (!activityId) {
-      console.error('❌ ID da atividade não encontrado');
-      showToast('ID da atividade não encontrado para compartilhamento', 'error');
-      return;
-    }
-
-    console.log('✅ Abrindo modal de compartilhamento');
-    setShowShareModal(true);
-  };
-
   const handleSPsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Permitir qualquer número positivo até 99999
@@ -296,7 +277,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
-              <Avatar className="w-6 h-6 rounded-full border-2 border-orange-400 dark:border-orange-500">
+              <Avatar className="w-7 h-7 rounded-full border-2 border-orange-400 dark:border-orange-500">
                 <AvatarImage src={finalUserAvatar} alt={`Prof. ${finalUserName}`} />
                 <AvatarFallback className="text-base bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-full">
                   {getUserInitials(finalUserName)}
@@ -372,7 +353,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
                 <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCompartilharAtividade} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+              <DropdownMenuItem onClick={onShare} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
                 <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
                 <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Compartilhar</span>
               </DropdownMenuItem>
@@ -392,15 +373,6 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Modal de Compartilhamento */}
-      <ShareActivityModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        activityId={activityId || ''}
-        activityTitle={activityTitle}
-        activityDescription={`Confira esta atividade de ${activityType || 'educação'}`}
-      />
     </div>
   );
 };

@@ -23,9 +23,9 @@ export function useAuth() {
 
   // Função para atualizar o estado de autenticação
   const setAuth = useCallback((
-    user: User | null,
-    session: Session | null,
-    isLoading: boolean = false,
+    user: User | null, 
+    session: Session | null, 
+    isLoading: boolean = false, 
     error: AuthError | Error | null = null
   ) => {
     setAuthState({
@@ -89,7 +89,7 @@ export function useAuth() {
 
       // Gerar ID usando RPC function
       const { data: generatedId, error: idError } = await supabase.rpc(
-        'generate_sequential_user_id',
+        'generate_sequential_user_id', 
         { p_uf: uf, p_tipo_conta: tipoConta }
       );
 
@@ -102,7 +102,7 @@ export function useAuth() {
         // Atualizar o perfil com o novo ID
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({
+          .update({ 
             user_id: generatedId,
             state: uf,
             updated_at: new Date().toISOString()
@@ -124,40 +124,6 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Verificar se é uma rota pública
-        const currentPath = window.location.pathname;
-        const isPublicRoute = currentPath.startsWith('/atividade/') ||
-                              currentPath === '/quiz' ||
-                              currentPath === '/blank' ||
-                              currentPath.includes('/atividade/');
-
-        const isAuthRoute = currentPath === '/login' ||
-                           currentPath === '/register' ||
-                           currentPath === '/forgot-password' ||
-                           currentPath === '/reset-password';
-
-        if (isPublicRoute) {
-          console.log('🔓 Rota pública detectada, permitindo acesso sem autenticação');
-          setAuthState(prevState => ({
-            ...prevState,
-            user: null,
-            session: null,
-            isLoading: false,
-            isAuthenticated: false,
-            error: null
-          }));
-          return;
-        }
-
-        if (isAuthRoute) {
-          console.log('🔑 Rota de autenticação detectada');
-          setAuthState(prevState => ({
-            ...prevState,
-            isLoading: false
-          }));
-          return;
-        }
-
         const { data, error } = await supabase.auth.getSession();
 
         if (error) throw error;
@@ -181,17 +147,9 @@ export function useAuth() {
             // Verificar e gerar ID quando o usuário fizer login
             if (event === 'SIGNED_IN' && user) {
               await checkAndGenerateUserId(user);
-              // Só redirecionar se não estiver em rota pública
-              const currentPath = window.location.pathname;
-              if (!currentPath.startsWith('/atividade/')) {
-                navigate('/dashboard');
-              }
+              navigate('/dashboard');
             } else if (event === 'SIGNED_OUT') {
-              // Só redirecionar se não estiver em rota pública
-              const currentPath = window.location.pathname;
-              if (!currentPath.startsWith('/atividade/')) {
-                navigate('/login');
-              }
+              navigate('/login');
             }
           }
         );
@@ -203,17 +161,6 @@ export function useAuth() {
       } catch (error) {
         console.error('Erro na verificação de autenticação:', error);
         setAuth(null, null, false, error as AuthError);
-        // Redirecionar para login apenas se não estiver em uma rota de autenticação
-        const currentPath = window.location.pathname;
-        if (!currentPath.startsWith('/atividade/') &&
-            currentPath !== '/login' &&
-            currentPath !== '/register' &&
-            currentPath !== '/forgot-password' &&
-            currentPath !== '/reset-password' &&
-            currentPath !== '/quiz' &&
-            currentPath !== '/blank') {
-          navigate('/login');
-        }
       }
     };
 
@@ -277,7 +224,7 @@ export function useAuth() {
 
             // Gerar ID usando RPC function
             const { data: generatedId, error: idError } = await supabase.rpc(
-              'generate_sequential_user_id',
+              'generate_sequential_user_id', 
               { p_uf: uf, p_tipo_conta: tipoConta }
             );
 
@@ -288,7 +235,7 @@ export function useAuth() {
               // Atualizar o perfil com o novo ID
               const { error: updateError } = await supabase
                 .from('profiles')
-                .update({
+                .update({ 
                   user_id: generatedId,
                   state: uf,
                   updated_at: new Date().toISOString()
@@ -320,12 +267,12 @@ export function useAuth() {
   const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
     try {
       setAuth(null, null, true, null);
-      const { data, error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
         password,
-        options: {
+        options: { 
           data: userData,
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/auth/callback` 
         }
       });
 
