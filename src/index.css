@@ -9,7 +9,6 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
-@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
 
 /* Utilitário para limitar linhas de texto */
 .line-clamp-3 {
@@ -2845,66 +2844,38 @@ textarea:hover,
   overflow: hidden;
   line-height: 1.5;
 }
+@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
 
-/* Ocultar scrollbar apenas no card de visualização sem afetar dimensões */
-/* Custom scrollbar padrão */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+  /* Custom scrollbar para o card de pré-visualização */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
 
-.dark .custom-scrollbar::-webkit-scrollbar-track {
-  background: #1e293b;
-}
+  .dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
 
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
-}
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
 
-.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-/* Scrollbar oculta para pré-visualização de atividades */
-.preview-no-scroll {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  overflow: hidden !important;
-  touch-action: none !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-}
-
-.preview-no-scroll::-webkit-scrollbar {
-  display: none !important;
-}
-
-.preview-no-scroll * {
-  overflow: hidden !important;
-  scroll-behavior: unset !important;
-  overscroll-behavior: none !important;
-  touch-action: none !important;
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-}
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
 
 
 /* Estilos para páginas públicas de atividades compartilhadas */

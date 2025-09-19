@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,9 +136,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden min-h-[350px] relative">
-                {/* Conteúdo da pré-visualização com interação completamente desabilitada */}
-                <div className="p-4 pointer-events-none preview-no-scroll h-full">
+              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative">
+                {/* Conteúdo da pré-visualização com interação desabilitada */}
+                <div className="p-4 pointer-events-none">
                   {renderActivityPreview()}
                 </div>
 
