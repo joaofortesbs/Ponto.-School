@@ -108,9 +108,9 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   const [linkCopiado, setLinkCopiado] = useState(false);
   const [menuMobileAberto, setMenuMobileAberto] = useState(false);
 
-  // IDs finais (props ou params)
-  const finalActivityId = propActivityId || activityId;
-  const finalUniqueCode = propUniqueCode || uniqueCode;
+  // IDs finais (props ou params)  
+  const finalActivityId = activityId;
+  const finalUniqueCode = uniqueCode;</old_str>
 
   /**
    * Carrega a atividade compartilhada
@@ -511,7 +511,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
             </Card>
           </div>
         )}
-      </div>
+      </main></old_str>
 
       {/* Footer */}
       <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 mt-16">
