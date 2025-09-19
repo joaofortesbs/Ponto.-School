@@ -5,6 +5,9 @@ import { SequenciaDidaticaPromptData } from '../../prompts/sequenciaDidaticaProm
 import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
+// Garantir uso da nova chave API
+const GEMINI_API_KEY = 'AIzaSyA8LKttDNagLm46mjd3QXUGyrr6efqfPzM';
+
 export const generateActivityAPI = async (payload: ActivityGenerationPayload): Promise<GeneratedActivity> => {
   console.log('🚀 generateActivityAPI: Iniciando geração de atividade', payload);
 

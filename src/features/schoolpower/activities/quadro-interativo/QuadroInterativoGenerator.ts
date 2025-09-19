@@ -1,4 +1,3 @@
-
 import { geminiLogger } from '@/utils/geminiDebugLogger';
 
 interface QuadroInterativoData {
@@ -30,12 +29,12 @@ export class QuadroInterativoGenerator {
 
   async generateQuadroInterativoContent(data: QuadroInterativoData): Promise<QuadroInterativoContent> {
     geminiLogger.logRequest('Gerando conteúdo de Quadro Interativo', data);
-    
+
     try {
       const prompt = this.buildPrompt(data);
       const response = await this.callGeminiAPI(prompt);
       const parsedContent = this.parseGeminiResponse(response);
-      
+
       const result: QuadroInterativoContent = {
         title: data.theme || 'Quadro Interativo',
         description: data.objectives || 'Atividade de quadro interativo',
@@ -68,13 +67,13 @@ export class QuadroInterativoGenerator {
       return result;
     } catch (error) {
       geminiLogger.logError(error as Error, { data });
-      
+
       // Fallback com conteúdo educativo melhorado
       const educationalTitle = data.theme || 'Conteúdo Educativo';
-      const educationalText = data.objectives 
+      const educationalText = data.objectives
         ? `${data.objectives} - Explore este conceito através de atividades interativas que facilitam o aprendizado e compreensão do tema.`
         : `Explore o tema "${data.theme}" de forma interativa. Este conteúdo foi desenvolvido para facilitar a compreensão e aplicação dos conceitos fundamentais da disciplina.`;
-      
+
       const fallbackResult: QuadroInterativoContent = {
         title: data.theme || 'Conteúdo Educativo',
         description: data.objectives || 'Atividade educativa interativa',
@@ -91,7 +90,7 @@ export class QuadroInterativoGenerator {
         difficultyLevel: data.difficultyLevel,
         quadroInterativoCampoEspecifico: data.quadroInterativoCampoEspecifico
       };
-      
+
       console.log('⚠️ Usando conteúdo fallback para Quadro Interativo:', fallbackResult);
       return fallbackResult;
     }
@@ -153,9 +152,9 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
 
   private async callGeminiAPI(prompt: string): Promise<any> {
     const startTime = Date.now();
-    
+
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,9 +180,9 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
 
       const data = await response.json();
       const executionTime = Date.now() - startTime;
-      
+
       geminiLogger.logResponse(data, executionTime);
-      
+
       return data;
     } catch (error) {
       geminiLogger.logError(error as Error, { prompt: prompt.substring(0, 200) });
@@ -194,7 +193,7 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
   private parseGeminiResponse(response: any): { title: string; text: string } {
     try {
       const responseText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
-      
+
       if (!responseText) {
         throw new Error('Resposta vazia da API Gemini');
       }
@@ -208,7 +207,7 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
 
       // Tentar fazer parse do JSON
       const parsedContent = JSON.parse(cleanedResponse);
-      
+
       // Validar estrutura
       if (!parsedContent.title || !parsedContent.text) {
         throw new Error('Estrutura JSON inválida na resposta');
@@ -219,18 +218,18 @@ AGORA GERE O CONTEÚDO EDUCATIVO:`;
       const text = parsedContent.text.substring(0, 450);
 
       geminiLogger.logValidation({ title, text }, true);
-      
+
       return { title, text };
-      
+
     } catch (error) {
       geminiLogger.logValidation(response, false, [error.message]);
-      
+
       // Fallback com conteúdo educativo baseado nos dados fornecidos
       const educationalTitle = data.theme || 'Conteúdo Educativo';
-      const educationalText = data.objectives 
+      const educationalText = data.objectives
         ? `${data.objectives} - Tema: ${data.theme}. Explore este conceito através de atividades interativas que facilitam o aprendizado.`
         : `Explore o tema "${data.theme}" através de atividades educativas interativas que facilitam a compreensão e aplicação dos conceitos fundamentais.`;
-      
+
       return {
         title: educationalTitle.substring(0, 70),
         text: educationalText.substring(0, 450)
