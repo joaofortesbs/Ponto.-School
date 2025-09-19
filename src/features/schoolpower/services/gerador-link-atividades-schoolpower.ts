@@ -1,394 +1,327 @@
-
 import { v4 as uuidv4 } from 'uuid';
 
-// Caracteres para geração de código único (Base62)
-const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-// Interface para os dados da atividade compartilhável
+// Interface para atividade compartilhável
 export interface AtividadeCompartilhavel {
   id: string;
   titulo: string;
   tipo: string;
   dados: any;
-  criadoPor: string;
-  criadoEm: string;
   codigoUnico: string;
   linkPublico: string;
-  ativo: boolean;
+  criadoEm: string;
+  expiracaoEm?: string;
+  visualizacoes: number;
+  ativa: boolean;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  sessaoOrigem?: string;
 }
 
-// Interface para criar nova atividade compartilhável
-export interface NovaAtividadeCompartilhavel {
-  id: string;
-  titulo: string;
-  tipo: string;
-  dados: any;
-  criadoPor: string;
+// Interface para dados de rastreamento UTM
+export interface UTMData {
+  source?: string;
+  medium?: string;
+  campaign?: string;
+  content?: string;
+  term?: string;
+  sessionId?: string;
+  referrer?: string;
+  timestamp?: string;
 }
 
-// Chave base para localStorage
-const STORAGE_KEY = 'ponto_school_atividades_compartilhaveis';
-const STORAGE_VERSION = '1.0';
-
+// Classe para gerenciar localStorage com backup robusto
 class LocalStorageManager {
-  private getStorageKey(): string {
-    return `${STORAGE_KEY}_v${STORAGE_VERSION}`;
-  }
+  private static readonly ATIVIDADES_KEY = 'pontoschool_atividades_compartilhadas';
+  private static readonly UTM_KEY = 'pontoschool_utm_tracking';
+  private static readonly BACKUP_KEY = 'pontoschool_backup_atividades';
 
-  private getAllActivities(): AtividadeCompartilhavel[] {
+  static salvarAtividade(atividade: AtividadeCompartilhavel): boolean {
     try {
-      const stored = localStorage.getItem(this.getStorageKey());
-      if (!stored) return [];
-      return JSON.parse(stored);
-    } catch (error) {
-      console.error('❌ Erro ao carregar atividades do localStorage:', error);
-      return [];
-    }
-  }
+      const atividadesExistentes = this.obterAtividades();
+      atividadesExistentes[atividade.id] = atividade;
 
-  private saveAllActivities(activities: AtividadeCompartilhavel[]): boolean {
-    try {
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(activities));
-      console.log('✅ Atividades salvas no localStorage:', activities.length);
+      const dadosSerializados = JSON.stringify(atividadesExistentes);
+
+      // Salvar nos três locais para redundância
+      localStorage.setItem(this.ATIVIDADES_KEY, dadosSerializados);
+      localStorage.setItem(this.BACKUP_KEY, dadosSerializados);
+      sessionStorage.setItem(this.ATIVIDADES_KEY, dadosSerializados);
+
+      console.log('✅ [LOCAL] Atividade salva com sucesso:', atividade.titulo);
       return true;
     } catch (error) {
-      console.error('❌ Erro ao salvar atividades no localStorage:', error);
+      console.error('❌ [LOCAL] Erro ao salvar atividade:', error);
       return false;
     }
   }
 
-  findByActivityId(activityId: string): AtividadeCompartilhavel | null {
-    const activities = this.getAllActivities();
-    return activities.find(activity => 
-      activity.id === activityId && activity.ativo === true
-    ) || null;
-  }
+  static obterAtividades(): Record<string, AtividadeCompartilhavel> {
+    try {
+      // Tentar localStorage primeiro
+      let dados = localStorage.getItem(this.ATIVIDADES_KEY);
 
-  findByCode(activityId: string, codigoUnico: string): AtividadeCompartilhavel | null {
-    const activities = this.getAllActivities();
-    return activities.find(activity => 
-      activity.id === activityId && 
-      activity.codigoUnico === codigoUnico && 
-      activity.ativo === true
-    ) || null;
-  }
+      // Se não encontrou, tentar backup
+      if (!dados) {
+        dados = localStorage.getItem(this.BACKUP_KEY);
+      }
 
-  saveActivity(activity: AtividadeCompartilhavel): boolean {
-    const activities = this.getAllActivities();
-    const existingIndex = activities.findIndex(a => a.id === activity.id);
-    
-    if (existingIndex >= 0) {
-      activities[existingIndex] = activity;
-    } else {
-      activities.push(activity);
+      // Se ainda não encontrou, tentar sessionStorage
+      if (!dados) {
+        dados = sessionStorage.getItem(this.ATIVIDADES_KEY);
+      }
+
+      return dados ? JSON.parse(dados) : {};
+    } catch (error) {
+      console.error('❌ [LOCAL] Erro ao obter atividades:', error);
+      return {};
     }
-    
-    return this.saveAllActivities(activities);
   }
 
-  updateActivity(activityId: string, updates: Partial<AtividadeCompartilhavel>): boolean {
-    const activities = this.getAllActivities();
-    const index = activities.findIndex(a => a.id === activityId);
-    
-    if (index >= 0) {
-      activities[index] = { ...activities[index], ...updates };
-      return this.saveAllActivities(activities);
+  static obterAtividade(id: string, codigoUnico: string): AtividadeCompartilhavel | null {
+    try {
+      const atividades = this.obterAtividades();
+      const atividade = atividades[id];
+
+      if (atividade && atividade.codigoUnico === codigoUnico && atividade.ativa) {
+        // Incrementar visualizações
+        atividade.visualizacoes += 1;
+        this.salvarAtividade(atividade);
+
+        console.log('✅ [LOCAL] Atividade encontrada:', atividade.titulo);
+        return atividade;
+      }
+
+      console.log('❌ [LOCAL] Atividade não encontrada ou inativa');
+      return null;
+    } catch (error) {
+      console.error('❌ [LOCAL] Erro ao buscar atividade:', error);
+      return null;
     }
-    
+  }
+
+  static salvarUTMData(utmData: UTMData): void {
+    try {
+      const utmAtual = this.obterUTMData();
+      const novoUTM = { ...utmAtual, ...utmData, timestamp: new Date().toISOString() };
+
+      localStorage.setItem(this.UTM_KEY, JSON.stringify(novoUTM));
+      sessionStorage.setItem(this.UTM_KEY, JSON.stringify(novoUTM));
+
+      console.log('✅ [UTM] Dados UTM salvos:', novoUTM);
+    } catch (error) {
+      console.error('❌ [UTM] Erro ao salvar dados UTM:', error);
+    }
+  }
+
+  static obterUTMData(): UTMData {
+    try {
+      let dados = localStorage.getItem(this.UTM_KEY);
+      if (!dados) {
+        dados = sessionStorage.getItem(this.UTM_KEY);
+      }
+
+      return dados ? JSON.parse(dados) : {};
+    } catch (error) {
+      console.error('❌ [UTM] Erro ao obter dados UTM:', error);
+      return {};
+    }
+  }
+
+  static limparDadosExpirados(): void {
+    try {
+      const atividades = this.obterAtividades();
+      const agora = new Date();
+      let removeuAlguma = false;
+
+      for (const [id, atividade] of Object.entries(atividades)) {
+        if (atividade.expiracaoEm && new Date(atividade.expiracaoEm) < agora) {
+          delete atividades[id];
+          removeuAlguma = true;
+          console.log('🗑️ [LOCAL] Atividade expirada removida:', atividade.titulo);
+        }
+      }
+
+      if (removeuAlguma) {
+        const dadosSerializados = JSON.stringify(atividades);
+        localStorage.setItem(this.ATIVIDADES_KEY, dadosSerializados);
+        localStorage.setItem(this.BACKUP_KEY, dadosSerializados);
+        sessionStorage.setItem(this.ATIVIDADES_KEY, dadosSerializados);
+      }
+    } catch (error) {
+      console.error('❌ [LOCAL] Erro ao limpar dados expirados:', error);
+    }
+  }
+}
+
+// Função para extrair dados UTM da URL
+export const extrairUTMDaURL = (): UTMData => {
+  const urlParams = new URLSearchParams(window.location.search);
+
+  return {
+    source: urlParams.get('utm_source') || undefined,
+    medium: urlParams.get('utm_medium') || undefined,
+    campaign: urlParams.get('utm_campaign') || undefined,
+    content: urlParams.get('utm_content') || undefined,
+    term: urlParams.get('utm_term') || undefined,
+    sessionId: urlParams.get('session_id') || undefined,
+    referrer: document.referrer || undefined,
+    timestamp: new Date().toISOString()
+  };
+};
+
+// Função para gerar link de compartilhamento
+export const gerarLinkCompartilhamento = async (
+  activityId: string,
+  activityTitle: string,
+  activityType: string,
+  activityData: any
+): Promise<string> => {
+  try {
+    console.log('🔗 [GERADOR] Iniciando geração de link para:', activityTitle);
+
+    // Gerar código único
+    const codigoUnico = uuidv4().replace(/-/g, '').substring(0, 16);
+
+    // Obter dados UTM atuais
+    const utmData = LocalStorageManager.obterUTMData();
+
+    // Criar objeto da atividade
+    const atividade: AtividadeCompartilhavel = {
+      id: activityId,
+      titulo: activityTitle,
+      tipo: activityType,
+      dados: activityData,
+      codigoUnico,
+      linkPublico: `${window.location.origin}/atividade/${activityId}/${codigoUnico}`,
+      criadoEm: new Date().toISOString(),
+      expiracaoEm: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
+      visualizacoes: 0,
+      ativa: true,
+      utmSource: utmData.source,
+      utmMedium: utmData.medium,
+      utmCampaign: utmData.campaign,
+      sessaoOrigem: utmData.sessionId || uuidv4()
+    };
+
+    // Salvar no localStorage
+    const sucesso = LocalStorageManager.salvarAtividade(atividade);
+
+    if (!sucesso) {
+      throw new Error('Falha ao salvar atividade no localStorage');
+    }
+
+    // Limpar dados expirados
+    LocalStorageManager.limparDadosExpirados();
+
+    console.log('✅ [GERADOR] Link gerado com sucesso:', atividade.linkPublico);
+    return atividade.linkPublico;
+
+  } catch (error) {
+    console.error('❌ [GERADOR] Erro ao gerar link:', error);
+    throw error;
+  }
+};
+
+// Função para buscar atividade compartilhada (usada na página pública)
+export const buscarAtividadeCompartilhada = async (
+  activityId: string,
+  uniqueCode: string
+): Promise<AtividadeCompartilhavel | null> => {
+  try {
+    console.log('🔍 [PÚBLICO] Buscando atividade:', { activityId, uniqueCode });
+
+    // Extrair e salvar dados UTM da URL atual
+    const utmData = extrairUTMDaURL();
+    if (Object.keys(utmData).some(key => utmData[key as keyof UTMData])) {
+      LocalStorageManager.salvarUTMData(utmData);
+      console.log('📊 [UTM] Dados UTM capturados da URL:', utmData);
+    }
+
+    // Buscar atividade no localStorage
+    const atividade = LocalStorageManager.obterAtividade(activityId, uniqueCode);
+
+    if (!atividade) {
+      console.log('❌ [PÚBLICO] Atividade não encontrada no localStorage');
+      return null;
+    }
+
+    console.log('✅ [PÚBLICO] Atividade encontrada:', atividade.titulo);
+    return atividade;
+
+  } catch (error) {
+    console.error('❌ [PÚBLICO] Erro ao buscar atividade:', error);
+    return null;
+  }
+};
+
+// Função para verificar se uma atividade existe
+export const verificarAtividadeExiste = (activityId: string, uniqueCode: string): boolean => {
+  try {
+    const atividade = LocalStorageManager.obterAtividade(activityId, uniqueCode);
+    return atividade !== null;
+  } catch (error) {
+    console.error('❌ [VERIFICAR] Erro ao verificar atividade:', error);
     return false;
   }
+};
 
-  getAllByUser(userId: string): AtividadeCompartilhavel[] {
-    const activities = this.getAllActivities();
-    return activities.filter(activity => 
-      activity.criadoPor === userId && activity.ativo === true
-    );
+// Função para obter estatísticas de uma atividade
+export const obterEstatisticasAtividade = (activityId: string): { visualizacoes: number; compartilhada: boolean } => {
+  try {
+    const atividades = LocalStorageManager.obterAtividades();
+    const atividade = atividades[activityId];
+
+    return {
+      visualizacoes: atividade?.visualizacoes || 0,
+      compartilhada: !!atividade
+    };
+  } catch (error) {
+    console.error('❌ [STATS] Erro ao obter estatísticas:', error);
+    return { visualizacoes: 0, compartilhada: false };
   }
+};
 
-  deactivateActivity(activityId: string): boolean {
-    return this.updateActivity(activityId, { 
-      ativo: false,
-      criadoEm: new Date().toISOString() // Atualizar timestamp de desativação
-    });
-  }
+// Função para capturar dados de conversão (quando usuário faz login via link)
+export const capturarConversaoLogin = (userId: string): void => {
+  try {
+    const utmData = LocalStorageManager.obterUTMData();
 
-  codeExists(codigo: string): boolean {
-    const activities = this.getAllActivities();
-    return activities.some(activity => 
-      activity.codigoUnico === codigo && activity.ativo === true
-    );
-  }
-}
-
-class GeradorLinkAtividadesSchoolPower {
-  private readonly baseUrl: string;
-  private storage: LocalStorageManager;
-
-  constructor() {
-    // URL base da plataforma
-    this.baseUrl = window.location.origin;
-    this.storage = new LocalStorageManager();
-  }
-
-  /**
-   * Gera um código único aleatório usando Base62
-   * @param tamanho - Tamanho do código (padrão: 8 caracteres)
-   * @returns Código único gerado
-   */
-  private gerarCodigoUnico(tamanho: number = 8): string {
-    let codigo = "";
-    for (let i = 0; i < tamanho; i++) {
-      codigo += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
-    }
-    return codigo;
-  }
-
-  /**
-   * Gera um código único garantindo que não existe duplicata
-   * @param tamanho - Tamanho do código
-   * @returns Código único válido
-   */
-  private gerarCodigoUnicoValidado(tamanho: number = 8): string {
-    let tentativas = 0;
-    const maxTentativas = 10;
-
-    while (tentativas < maxTentativas) {
-      const codigo = this.gerarCodigoUnico(tamanho);
-      
-      if (!this.storage.codeExists(codigo)) {
-        return codigo;
-      }
-      
-      tentativas++;
-    }
-
-    // Se chegou aqui, aumenta o tamanho e tenta novamente
-    return this.gerarCodigoUnicoValidado(tamanho + 1);
-  }
-
-  /**
-   * Cria o link público completo para uma atividade
-   * @param atividadeId - ID da atividade
-   * @param codigoUnico - Código único gerado
-   * @returns Link público completo
-   */
-  private criarLinkPublico(atividadeId: string, codigoUnico: string): string {
-    return `${this.baseUrl}/atividade/${atividadeId}/${codigoUnico}`;
-  }
-
-  /**
-   * Salva uma nova atividade compartilhável no localStorage
-   * @param atividade - Dados da atividade
-   * @returns Atividade compartilhável criada
-   */
-  async criarAtividadeCompartilhavel(atividade: NovaAtividadeCompartilhavel): Promise<AtividadeCompartilhavel | null> {
-    try {
-      console.log('🔗 [GERADOR] Iniciando geração de link para:', atividade.titulo);
-      console.log('📋 [GERADOR] Dados recebidos completos:', atividade);
-
-      // Validar dados obrigatórios
-      if (!atividade.id) {
-        throw new Error('ID da atividade é obrigatório');
-      }
-      if (!atividade.titulo) {
-        throw new Error('Título da atividade é obrigatório');
-      }
-      
-      // Primeiro, verifica se já existe uma atividade compartilhável para este ID
-      console.log('🔍 [GERADOR] Verificando se já existe link para ID:', atividade.id);
-      const existente = this.storage.findByActivityId(atividade.id);
-
-      // Se já existe, retorna a existente
-      if (existente) {
-        console.log('♻️ [GERADOR] Link já existe, retornando link existente:', existente.linkPublico);
-        console.log('🔑 [GERADOR] Código existente:', existente.codigoUnico);
-        return existente;
-      }
-
-      console.log('🆕 [GERADOR] Criando novo link...');
-      
-      // Gera código único validado
-      const codigoUnico = this.gerarCodigoUnicoValidado();
-      console.log('🎯 [GERADOR] Código único:', codigoUnico);
-      
-      // Cria o link público
-      const linkPublico = this.criarLinkPublico(atividade.id, codigoUnico);
-      console.log('🔗 [GERADOR] Link público:', linkPublico);
-
-      // Criar objeto da atividade compartilhável
-      const novaAtividade: AtividadeCompartilhavel = {
-        id: atividade.id,
-        titulo: atividade.titulo,
-        tipo: atividade.tipo,
-        dados: atividade.dados || {},
-        criadoPor: atividade.criadoPor,
-        codigoUnico: codigoUnico,
-        linkPublico: linkPublico,
-        criadoEm: new Date().toISOString(),
-        ativo: true
+    if (Object.keys(utmData).length > 0) {
+      const dadosConversao = {
+        ...utmData,
+        userId,
+        converteuEm: new Date().toISOString(),
+        tipoConversao: 'login_via_compartilhamento'
       };
 
-      console.log('💾 [GERADOR] Salvando no localStorage:', novaAtividade);
+      localStorage.setItem('pontoschool_conversao_login', JSON.stringify(dadosConversao));
 
-      // Salva no localStorage
-      const success = this.storage.saveActivity(novaAtividade);
+      console.log('📈 [CONVERSÃO] Login via compartilhamento capturado:', dadosConversao);
 
-      if (!success) {
-        throw new Error('Falha ao salvar no localStorage');
-      }
-
-      console.log('✅ [GERADOR] Sucesso! Dados salvos');
-      console.log('🎯 [GERADOR] Resultado final:', novaAtividade);
-      
-      // Validação final
-      if (!novaAtividade.linkPublico) {
-        throw new Error('Link público não foi gerado corretamente');
-      }
-
-      return novaAtividade;
-
-    } catch (error) {
-      console.error('❌ [GERADOR] Erro completo:', error);
-      throw error;
+      // Limpar dados UTM após conversão
+      localStorage.removeItem(LocalStorageManager['UTM_KEY']);
+      sessionStorage.removeItem(LocalStorageManager['UTM_KEY']);
     }
+  } catch (error) {
+    console.error('❌ [CONVERSÃO] Erro ao capturar conversão:', error);
   }
+};
 
-  /**
-   * Busca uma atividade compartilhável pelo código único
-   * @param atividadeId - ID da atividade
-   * @param codigoUnico - Código único da atividade
-   * @returns Atividade encontrada ou null
-   */
-  async buscarAtividadePorCodigo(atividadeId: string, codigoUnico: string): Promise<AtividadeCompartilhavel | null> {
-    try {
-      console.log('🔍 Buscando atividade com código:', codigoUnico);
-
-      const atividade = this.storage.findByCode(atividadeId, codigoUnico);
-
-      if (!atividade) {
-        console.log('⚠️ Atividade não encontrada');
-        return null;
-      }
-
-      console.log('✅ Atividade encontrada:', atividade.titulo);
-      return atividade;
-
-    } catch (error) {
-      console.error('❌ Erro ao buscar atividade:', error);
-      return null;
+// Inicializar sistema ao carregar o módulo
+(() => {
+  try {
+    // Extrair UTM da URL se houver
+    const utmData = extrairUTMDaURL();
+    if (Object.keys(utmData).some(key => utmData[key as keyof UTMData])) {
+      LocalStorageManager.salvarUTMData(utmData);
     }
+
+    // Limpar dados expirados
+    LocalStorageManager.limparDadosExpirados();
+
+    console.log('🚀 [INIT] Sistema de compartilhamento inicializado');
+  } catch (error) {
+    console.error('❌ [INIT] Erro na inicialização:', error);
   }
-
-  /**
-   * Atualiza o link de uma atividade existente (gera novo código)
-   * @param atividadeId - ID da atividade
-   * @returns Nova atividade compartilhável ou null
-   */
-  async regenerarLinkAtividade(atividadeId: string): Promise<AtividadeCompartilhavel | null> {
-    try {
-      console.log('🔄 Regenerando link para atividade:', atividadeId);
-
-      // Busca a atividade atual
-      const atividadeAtual = this.storage.findByActivityId(atividadeId);
-
-      if (!atividadeAtual) {
-        console.error('❌ Atividade não encontrada para regenerar link');
-        return null;
-      }
-
-      // Gera novo código único
-      const novoCodigoUnico = this.gerarCodigoUnicoValidado();
-      const novoLinkPublico = this.criarLinkPublico(atividadeId, novoCodigoUnico);
-
-      // Atualiza no localStorage
-      const success = this.storage.updateActivity(atividadeId, {
-        codigoUnico: novoCodigoUnico,
-        linkPublico: novoLinkPublico,
-        criadoEm: new Date().toISOString() // Atualizar timestamp
-      });
-
-      if (!success) {
-        console.error('❌ Erro ao regenerar link no localStorage');
-        return null;
-      }
-
-      console.log('✅ Link regenerado com sucesso:', novoLinkPublico);
-
-      // Buscar a atividade atualizada
-      const atividadeAtualizada = this.storage.findByActivityId(atividadeId);
-      return atividadeAtualizada;
-
-    } catch (error) {
-      console.error('❌ Erro ao regenerar link:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Desativa uma atividade compartilhável (remove acesso público)
-   * @param atividadeId - ID da atividade
-   * @returns True se desativado com sucesso
-   */
-  async desativarAtividade(atividadeId: string): Promise<boolean> {
-    try {
-      console.log('🚫 Desativando atividade:', atividadeId);
-
-      const success = this.storage.deactivateActivity(atividadeId);
-
-      if (success) {
-        console.log('✅ Atividade desativada com sucesso');
-      } else {
-        console.error('❌ Erro ao desativar atividade');
-      }
-
-      return success;
-
-    } catch (error) {
-      console.error('❌ Erro ao desativar atividade:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Lista todas as atividades compartilháveis de um usuário
-   * @param userId - ID do usuário
-   * @returns Lista de atividades compartilháveis
-   */
-  async listarAtividadesDoUsuario(userId: string): Promise<AtividadeCompartilhavel[]> {
-    try {
-      console.log('📋 Listando atividades do usuário:', userId);
-
-      const atividades = this.storage.getAllByUser(userId);
-      
-      // Ordenar por data de criação (mais recentes primeiro)
-      atividades.sort((a, b) => 
-        new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
-      );
-
-      return atividades;
-
-    } catch (error) {
-      console.error('❌ Erro ao listar atividades:', error);
-      return [];
-    }
-  }
-}
-
-// Instância singleton do gerador
-export const geradorLinkAtividades = new GeradorLinkAtividadesSchoolPower();
-
-// Funções utilitárias para uso fácil
-export const criarLinkAtividade = (atividade: NovaAtividadeCompartilhavel) => 
-  geradorLinkAtividades.criarAtividadeCompartilhavel(atividade);
-
-export const buscarAtividadeCompartilhada = (atividadeId: string, codigo: string) => 
-  geradorLinkAtividades.buscarAtividadePorCodigo(atividadeId, codigo);
-
-export const regenerarLinkAtividade = (atividadeId: string) => 
-  geradorLinkAtividades.regenerarLinkAtividade(atividadeId);
-
-export const desativarAtividadeCompartilhada = (atividadeId: string) => 
-  geradorLinkAtividades.desativarAtividade(atividadeId);
-
-export const listarAtividadesCompartilhadas = (userId: string) => 
-  geradorLinkAtividades.listarAtividadesDoUsuario(userId);
+})();

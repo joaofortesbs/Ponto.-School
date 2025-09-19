@@ -58,6 +58,9 @@ import SchoolPowerPageIndex from "./pages/school-power";
 import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 
+// Importar página pública de atividade compartilhada
+import AtividadeCompartilhadaPage from './pages/atividade/[activityId]/[uniqueCode]';
+
 // Componente para proteger rotas
 function ProtectedRoute({ children }) {
   const navigate = useNavigate();
@@ -278,6 +281,12 @@ function App() {
                 <Route path="/blank" element={<BlankPage />} />
                  {/* Rota pública para quiz */}
                  <Route path="/quiz" element={<QuizPage />} />
+
+                {/* Rota pública para atividades compartilhadas */}
+                <Route
+                  path="/atividade/:activityId/:uniqueCode"
+                  element={<AtividadeCompartilhadaPage />}
+                />
 
                 {/* Main App Routes - Protegidas */}
                 <Route path="/" element={
