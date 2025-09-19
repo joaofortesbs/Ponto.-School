@@ -2851,11 +2851,26 @@ textarea:hover,
 .custom-scrollbar::-webkit-scrollbar {
   width: 0px !important;
   background: transparent !important;
+  display: none !important;
 }
 
 .custom-scrollbar {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* Forçar que a área de pré-visualização não permita rolagem */
+.custom-scrollbar * {
+  overflow: hidden !important;
+  scroll-behavior: unset !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
 }
 
   /* Custom scrollbar para o card de pré-visualização */

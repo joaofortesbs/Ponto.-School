@@ -136,11 +136,18 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar min-h-[350px] relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {/* Conteúdo da pré-visualização com interação desabilitada */}
-                <div className="p-4 pointer-events-none">
+              <div className="flex-1 overflow-hidden min-h-[350px] relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {/* Conteúdo da pré-visualização com interação completamente desabilitada */}
+                <div className="p-4 pointer-events-none overflow-hidden" style={{ 
+                  overflow: 'hidden', 
+                  height: '100%',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  MozUserSelect: 'none',
+                  msUserSelect: 'none'
+                }}>
                   {renderActivityPreview()}
-                </div>
+                </div></div>
 
                 {/* Overlay que cobre TODA a área de pré-visualização */}
                 <div 
