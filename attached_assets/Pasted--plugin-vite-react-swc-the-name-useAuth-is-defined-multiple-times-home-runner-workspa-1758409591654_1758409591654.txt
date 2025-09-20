@@ -1,0 +1,215 @@
+[plugin:vite:react-swc] × the name `useAuth` is defined multiple times
+     ╭─[/home/runner/workspace/src/hooks/useAuth.ts:15:1]
+  15 │   error: string | null;
+  16 │ }
+  17 │ 
+  18 │ export function useAuth() {
+     ·                 ───┬───
+     ·                    ╰── previous definition of `useAuth` here
+  19 │   const [state, setState] = useState<AuthState>({
+  20 │     user: null,
+  21 │     loading: true,
+  22 │     error: null,
+  23 │   });
+  24 │ 
+  25 │   useEffect(() => {
+  26 │     checkAuth();
+  27 │   }, []);
+  28 │ 
+  29 │   const checkAuth = async () => {
+  30 │     try {
+  31 │       setState(prev => ({ ...prev, loading: true, error: null }));
+  32 │ 
+  33 │       // Verificar se há usuário salvo no localStorage primeiro
+  34 │       const savedUser = localStorage.getItem('currentUser');
+  35 │       if (savedUser) {
+  36 │         try {
+  37 │           const user = JSON.parse(savedUser);
+  38 │           setState({
+  39 │             user,
+  40 │             loading: false,
+  41 │             error: null,
+  42 │           });
+  43 │           return;
+  44 │         } catch (e) {
+  45 │           localStorage.removeItem('currentUser');
+  46 │         }
+  47 │       }
+  48 │ 
+  49 │       // Verificar com o backend
+  50 │       const response = await auth.getUser();
+  51 │ 
+  52 │       if (response.data.user) {
+  53 │         localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+  54 │         setState({
+  55 │           user: response.data.user,
+  56 │           loading: false,
+  57 │           error: null,
+  58 │         });
+  59 │       } else {
+  60 │         setState({
+  61 │           user: null,
+  62 │           loading: false,
+  63 │           error: null,
+  64 │         });
+  65 │       }
+  66 │     } catch (error: any) {
+  67 │       setState({
+  68 │         user: null,
+  69 │         loading: false,
+  70 │         error: error.message || 'Authentication error',
+  71 │       });
+  72 │     }
+  73 │   };
+  74 │ 
+  75 │   const signIn = async (email: string, password: string) => {
+  76 │     try {
+  77 │       setState(prev => ({ ...prev, loading: true, error: null }));
+  78 │ 
+  79 │       const response = await auth.signIn(email, password);
+  80 │ 
+  81 │       if (!response.success) {
+  82 │         setState(prev => ({ ...prev, loading: false, error: response.error }));
+  83 │         return { success: false, error: response.error };
+  84 │       }
+  85 │ 
+  86 │       localStorage.setItem('currentUser', JSON.stringify(response.user));
+  87 │       setState({
+  88 │         user: response.user,
+  89 │         loading: false,
+  90 │         error: null,
+  91 │       });
+  92 │ 
+  93 │       return { success: true, user: response.user };
+  94 │     } catch (error: any) {
+  95 │       setState({
+  96 │         user: null,
+  97 │         loading: false,
+  98 │         error: error.message || 'Sign in error',
+  99 │       });
+ 100 │       return { success: false, error: error.message };
+ 101 │     }
+ 102 │   };
+ 103 │ 
+ 104 │   const signOut = async () => {
+ 105 │     try {
+ 106 │       await auth.signOut();
+ 107 │       localStorage.removeItem('currentUser');
+ 108 │       localStorage.removeItem('auth_checked');
+ 109 │       localStorage.removeItem('auth_status');
+ 110 │       setState({
+ 111 │         user: null,
+ 112 │         loading: false,
+ 113 │         error: null,
+ 114 │       });
+ 115 │     } catch (error: any) {
+ 116 │       setState(prev => ({ ...prev, error: error.message }));
+ 117 │     }
+ 118 │   };
+ 119 │ 
+ 120 │   return {
+ 121 │     user: state.user,
+ 122 │     loading: state.loading,
+ 123 │     error: state.error,
+ 124 │     signIn,
+ 125 │     signOut,
+ 126 │     checkAuth,
+ 127 │   };
+ 128 │ }
+ 129 │ 
+ 130 │ const AuthContext = createContext<AuthContextType | undefined>(undefined);
+ 131 │ 
+ 132 │ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+ 133 │   const [user, setUser] = useState<User | null>(null);
+ 134 │   const [loading, setLoading] = useState(true);
+ 135 │ 
+ 136 │   // Caregar usuário inicial
+ 137 │   useEffect(() => {
+ 138 │     const loadUser = async () => {
+ 139 │       try {
+ 140 │         const currentUser = await auth.getUser();
+ 141 │         setUser(currentUser);
+ 142 │       } catch (error) {
+ 143 │         console.error('Erro ao carregar usuário:', error);
+ 144 │       } finally {
+ 145 │         setLoading(false);
+ 146 │       }
+ 147 │     };
+ 148 │ 
+ 149 │     loadUser();
+ 150 │   }, []);
+ 151 │ 
+ 152 │   const signIn = async (email: string, password: string) => {
+ 153 │     try {
+ 154 │       const result = await auth.signIn(email, password);
+ 155 │       if (result.success && result.user) {
+ 156 │         setUser(result.user);
+ 157 │         return { success: true };
+ 158 │       }
+ 159 │       return { success: false, error: result.error };
+ 160 │     } catch (error) {
+ 161 │       return { success: false, error: 'Erro ao fazer login' };
+ 162 │     }
+ 163 │   };
+ 164 │ 
+ 165 │   const signUp = async (email: string, password: string, userData?: any) => {
+ 166 │     try {
+ 167 │       const result = await auth.signUp(email, password, userData);
+ 168 │       if (result.success && result.user) {
+ 169 │         setUser(result.user);
+ 170 │         return { success: true };
+ 171 │       }
+ 172 │       return { success: false, error: result.error };
+ 173 │     } catch (error) {
+ 174 │       return { success: false, error: 'Erro ao criar conta' };
+ 175 │     }
+ 176 │   };
+ 177 │ 
+ 178 │   const signOut = async () => {
+ 179 │     try {
+ 180 │       await auth.signOut();
+ 181 │       setUser(null);
+ 182 │     } catch (error) {
+ 183 │       console.error('Erro ao fazer logout:', error);
+ 184 │     }
+ 185 │   };
+ 186 │ 
+ 187 │   const refreshUser = async () => {
+ 188 │     try {
+ 189 │       const currentUser = await auth.getUser();
+ 190 │       setUser(currentUser);
+ 191 │     } catch (error) {
+ 192 │       console.error('Erro ao atualizar usuário:', error);
+ 193 │     }
+ 194 │   };
+ 195 │ 
+ 196 │   const contextValue = React.useMemo<AuthContextType>(() => ({
+ 197 │     user,
+ 198 │     loading,
+ 199 │     signIn,
+ 200 │     signUp,
+ 201 │     signOut,
+ 202 │     refreshUser,
+ 203 │   }), [user, loading]);
+ 204 │ 
+ 205 │   return React.createElement(
+ 206 │     AuthContext.Provider,
+ 207 │     { value: contextValue },
+ 208 │     children
+ 209 │   );
+ 210 │ };
+ 211 │ 
+ 212 │ export const useAuth = () => {
+     ·              ───┬───
+     ·                 ╰── `useAuth` redefined here
+ 213 │   const context = useContext(AuthContext);
+ 214 │   if (context === undefined) {
+ 215 │     throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+     ╰────
+/home/runner/workspace/src/hooks/useAuth.ts:15:1
+130|  const AuthContext = createContext<AuthContextType | undefined>(undefined);
+131|  
+132|  export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+   |                                  ^
+133|    const [user, setUser] = useState<User | null>(null);
+134|    const [loading, setLoading] = useState(true);
