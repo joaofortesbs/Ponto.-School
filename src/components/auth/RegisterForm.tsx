@@ -721,6 +721,19 @@ export function RegisterForm() {
   };
 
 
+  // Limpeza de timeouts ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      // Limpar timeout de verificação de username
+      if ((window as any).usernameCheckTimeout) {
+        clearTimeout((window as any).usernameCheckTimeout);
+        (window as any).usernameCheckTimeout = null;
+      }
+      // Limpar cache
+      (window as any).lastUsernameChecked = null;
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -810,34 +823,52 @@ export function RegisterForm() {
                             username: validValue,
                           }));
 
-                          // Verificar duplicatas após pausa na digitação
+                          // Verificar duplicatas após pausa na digitação - otimizado
                           if (validValue && validValue.length >= 3) {
+                            // Limpar timeout anterior
                             clearTimeout((window as any).usernameCheckTimeout);
+                            
+                            // Verificar se já foi validado recentemente
+                            const lastChecked = (window as any).lastUsernameChecked;
+                            if (lastChecked === validValue) {
+                              return; // Evita verificação duplicada
+                            }
+
                             (window as any).usernameCheckTimeout = setTimeout(async () => {
                               try {
+                                (window as any).lastUsernameChecked = validValue;
+                                console.log(`Verificando username: ${validValue}`);
+                                
                                 const response = await authService.checkUsername(validValue);
 
-                                // Resposta sempre será um objeto agora
-                                if (!response.available) {
-                                  setError(response.error || "Este nome de usuário já está em uso. Por favor, escolha outro.");
-                                } else {
-                                  // Limpar o erro se o username está disponível
-                                  if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('username'))) {
-                                    setError("");
+                                // Verificar se o valor ainda é atual (usuário não digitou mais nada)
+                                if ((window as any).lastUsernameChecked === validValue) {
+                                  if (!response.available) {
+                                    setError(response.error || "Este nome de usuário já está em uso. Por favor, escolha outro.");
+                                  } else {
+                                    // Limpar erro específico de username
+                                    if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('username') || error.includes('uso'))) {
+                                      setError("");
+                                    }
                                   }
                                 }
                               } catch (err) {
                                 console.error("Erro ao verificar nome de usuário:", err);
-                                setError("Erro ao verificar disponibilidade do username. Verifique sua conexão.");
+                                // Só mostrar erro se ainda é o username atual
+                                if ((window as any).lastUsernameChecked === validValue) {
+                                  setError("Erro ao verificar disponibilidade do username. Verifique sua conexão.");
+                                }
                               }
-                            }, 1000); // Aumentado para 1 segundo para reduzir requisições
+                            }, 1500); // Aumentado para 1.5 segundos para reduzir requisições
                           } else if (validValue.length > 0 && validValue.length < 3) {
                             setError("Nome de usuário deve ter pelo menos 3 caracteres.");
+                            (window as any).lastUsernameChecked = null; // Reset do cache
                           } else if (validValue.length === 0) {
                             // Limpar erro quando campo estiver vazio
-                            if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('username'))) {
+                            if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('username') || error.includes('uso'))) {
                               setError("");
                             }
+                            (window as any).lastUsernameChecked = null; // Reset do cache
                           }
                         }}
                         placeholder="seunomeusuario"

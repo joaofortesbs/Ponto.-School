@@ -1,3 +1,4 @@
+
 import express from 'express';
 import { signUp, signIn, getUserFromToken, authMiddleware } from '../lib/auth.js';
 import { query } from '../lib/database.js';
@@ -84,12 +85,13 @@ router.get('/me', authMiddleware, (req, res) => {
   });
 });
 
-// Verificar se username está disponível
+// Verificar se username está disponível - versão melhorada
 router.get('/check-username/:username', async (req, res) => {
   try {
     const { username } = req.params;
     
-    if (!username || username.trim() === '') {
+    // Validações básicas
+    if (!username || typeof username !== 'string') {
       return res.status(400).json({ 
         available: false,
         error: 'Username é obrigatório' 
@@ -99,11 +101,25 @@ router.get('/check-username/:username', async (req, res) => {
     // Limpar e validar o username
     const cleanUsername = username.trim().toLowerCase();
     
-    // Verificar se o username atende aos critérios mínimos
+    // Verificar comprimento
+    if (cleanUsername.length === 0) {
+      return res.json({
+        available: false,
+        error: 'Username não pode estar vazio'
+      });
+    }
+
     if (cleanUsername.length < 3) {
       return res.json({
         available: false,
         error: 'Username deve ter pelo menos 3 caracteres'
+      });
+    }
+
+    if (cleanUsername.length > 30) {
+      return res.json({
+        available: false,
+        error: 'Username deve ter no máximo 30 caracteres'
       });
     }
 
@@ -115,24 +131,47 @@ router.get('/check-username/:username', async (req, res) => {
         error: 'Username deve conter apenas letras minúsculas, números e sublinhados'
       });
     }
+
+    // Verificar palavras reservadas
+    const reservedWords = ['admin', 'api', 'root', 'system', 'user', 'null', 'undefined', 'test', 'support'];
+    if (reservedWords.includes(cleanUsername)) {
+      return res.json({
+        available: false,
+        error: 'Este username está reservado'
+      });
+    }
     
-    // Consultar banco de dados
-    const result = await query(
-      'SELECT username FROM profiles WHERE LOWER(username) = $1 LIMIT 1',
-      [cleanUsername]
-    );
+    // Consultar banco de dados com timeout
+    console.log(`Verificando username no banco: ${cleanUsername}`);
+    
+    let result;
+    try {
+      // Usar uma query mais específica e rápida
+      result = await query(
+        'SELECT 1 FROM profiles WHERE LOWER(username) = $1 LIMIT 1',
+        [cleanUsername]
+      );
+    } catch (dbError) {
+      console.error('Erro na consulta do banco de dados:', dbError);
+      return res.status(500).json({ 
+        available: false,
+        error: 'Erro temporário no servidor. Tente novamente em alguns instantes.' 
+      });
+    }
 
     const isAvailable = result.rows.length === 0;
+
+    console.log(`Username ${cleanUsername} disponível: ${isAvailable}`);
 
     res.json({
       available: isAvailable,
       message: isAvailable ? 'Username disponível' : 'Username já está em uso'
     });
   } catch (error) {
-    console.error('Erro ao verificar username:', error);
+    console.error('Erro crítico ao verificar username:', error);
     res.status(500).json({ 
       available: false,
-      error: 'Erro interno do servidor ao verificar username' 
+      error: 'Erro interno do servidor. Por favor, tente novamente.' 
     });
   }
 });
@@ -147,8 +186,8 @@ router.post('/resolve-username', async (req, res) => {
     }
     
     const result = await query(
-      'SELECT u.email FROM profiles p JOIN users u ON p.id = u.id WHERE p.username = $1',
-      [username]
+      'SELECT u.email FROM profiles p JOIN users u ON p.id = u.id WHERE LOWER(p.username) = LOWER($1)',
+      [username.trim()]
     );
     
     if (result.rows.length === 0) {
@@ -167,6 +206,10 @@ router.post('/create-profile', authMiddleware, async (req, res) => {
   try {
     const { profileData } = req.body;
     const userId = req.user.id;
+
+    if (!profileData) {
+      return res.status(400).json({ error: 'Profile data is required' });
+    }
 
     const result = await query(`
       INSERT INTO profiles (
@@ -214,6 +257,16 @@ router.get('/check-email/:email', async (req, res) => {
   try {
     const { email } = req.params;
     
+    if (!email) {
+      return res.status(400).json({ available: false, error: 'Email is required' });
+    }
+
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.json({ available: false, error: 'Invalid email format' });
+    }
+
     const result = await query(
       'SELECT id FROM users WHERE email = $1',
       [email]
@@ -222,7 +275,7 @@ router.get('/check-email/:email', async (req, res) => {
     res.json({ available: result.rows.length === 0 });
   } catch (error) {
     console.error('Check email error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ available: false, error: 'Internal server error' });
   }
 });
 
