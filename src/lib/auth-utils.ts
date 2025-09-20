@@ -48,7 +48,7 @@ export const checkAuthentication = async (): Promise<boolean> => {
     // Timeout para garantir que a verificação não bloqueie a UI
     const authPromise = Promise.race([
       auth.getUser(),
-      new Promise((resolve) => setTimeout(() => 
+      new Promise<{data: {user: any}, error: any}>((resolve) => setTimeout(() => 
         resolve({data: {user: null}, error: null}), 2000))
     ]);
 

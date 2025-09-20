@@ -20,7 +20,7 @@ import {
   Award,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "@/lib/supabase";
+import { auth, query } from "@/lib/supabase";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
 
 interface FormData {
@@ -332,10 +332,13 @@ export function RegisterForm() {
 
             // Tentar usar a função SQL diretamente
             try {
-              const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
-                p_uf: uf,
-                p_tipo_conta: tipoConta
-              });
+              // Substituir chamada RPC por query direta
+              const sqlResult = await query(
+                'SELECT generate_user_id($1, $2) as user_id',
+                [uf, tipoConta]
+              );
+              const sqlData = sqlResult.rows[0]?.user_id;
+              const sqlError = sqlResult.rows.length === 0 ? { message: 'No data' } : null;
 
               if (sqlError) {
                 throw sqlError;
@@ -352,13 +355,11 @@ export function RegisterForm() {
 
               // Tentar buscar o último ID do controle por UF
               try {
-                const { data: controlData } = await supabase
-                  .from('user_id_control_by_uf')
-                  .select('*')
-                  .eq('uf', uf)
-                  .eq('ano_mes', anoMes)
-                  .eq('tipo_conta', tipoConta)
-                  .single();
+                const controlResult = await query(
+                  'SELECT * FROM user_id_control_by_uf WHERE uf = $1 AND ano_mes = $2 AND tipo_conta = $3',
+                  [uf, anoMes, tipoConta]
+                );
+                const controlData = controlResult.rows[0] || null;
 
                 let sequencial;
                 if (controlData && controlData.last_id) {
@@ -366,23 +367,20 @@ export function RegisterForm() {
                   sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
 
                   // Atualizar o contador no banco de dados
-                  await supabase
-                    .from('user_id_control_by_uf')
-                    .update({ 
-                      last_id: controlData.last_id + 1,
-                      updated_at: new Date().toISOString()
-                    })
-                    .eq('id', controlData.id);
+                  await query(
+                    'UPDATE user_id_control_by_uf SET last_id = $1, updated_at = NOW() WHERE id = $2',
+                    [controlData.last_id + 1, controlData.id]
+                  );
                 } else {
                   // Se não existe um controle para esta UF, criar um novo
                   try {
                     // Iniciar com ID 1
-                    const { data: insertData, error: insertError } = await supabase
-                      .from('user_id_control_by_uf')
-                      .insert([
-                        { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
-                      ])
-                      .select();
+                    const insertResult = await query(
+                      'INSERT INTO user_id_control_by_uf (uf, ano_mes, tipo_conta, last_id) VALUES ($1, $2, $3, $4) RETURNING *',
+                      [uf, anoMes, tipoConta, 1]
+                    );
+                    const insertData = insertResult.rows[0];
+                    const insertError = insertResult.rows.length === 0 ? { message: 'Insert failed' } : null;
 
                     if (insertError) throw insertError;
 
@@ -426,11 +424,11 @@ export function RegisterForm() {
 
       try {
         // Verificar novamente se o nome de usuário já existe
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('username', formData.username)
-          .single();
+        const existingUserResult = await query(
+          'SELECT username FROM profiles WHERE username = $1',
+          [formData.username]
+        );
+        const existingUser = existingUserResult.rows[0] || null;
 
         if (existingUser) {
           setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
@@ -450,22 +448,19 @@ export function RegisterForm() {
         }
 
         // Tente registrar com o Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-            data: {
-              full_name: formData.fullName,
-              username: formData.username,
-              institution: formData.institution,
-              state: formData.state,
-              birth_date: formData.birthDate,
-              plan_type: confirmedPlan, // Usa o plano confirmado
-              display_name: formData.username, // Garantir que display_name é o mesmo que username no registro
-            },
-          },
-        });
+        const { data, error } = await auth.signUp(
+          formData.email,
+          formData.password,
+          {
+            full_name: formData.fullName,
+            username: formData.username,
+            institution: formData.institution,
+            state: formData.state,
+            birth_date: formData.birthDate,
+            plan_type: confirmedPlan,
+            display_name: formData.username,
+          }
+        );
 
         userData = data;
         userError = error;
@@ -881,14 +876,15 @@ export function RegisterForm() {
 
                           // Verificar duplicatas após pausa na digitação
                           if (validValue) {
-                            clearTimeout(window.usernameCheckTimeout);
-                            window.usernameCheckTimeout = setTimeout(async () => {
+                            clearTimeout((window as any).usernameCheckTimeout);
+                            (window as any).usernameCheckTimeout = setTimeout(async () => {
                               try {
-                                const { data, error } = await supabase
-                                  .from('profiles')
-                                  .select('username')
-                                  .eq('username', validValue)
-                                  .single();
+                                const result = await query(
+                                  'SELECT username FROM profiles WHERE username = $1',
+                                  [validValue]
+                                );
+                                const data = result.rows[0] || null;
+                                const error = result.rows.length === 0 ? null : { message: 'Found' };
 
                                 if (data && !error) {
                                   setError("Este nome de usuário já está em uso. Por favor, escolha outro.");

@@ -163,10 +163,7 @@ export function LoginForm() {
       if (isEmail) {
         // Login com email
         authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: inputValue,
-            password: formData.password,
-          }),
+          auth.signIn(inputValue, formData.password),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
@@ -174,11 +171,12 @@ export function LoginForm() {
       } else {
         // Login com nome de usuário
         // Primeiro, buscar o email associado ao nome de usuário
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("username", inputValue)
-          .single();
+        const result = await query(
+          'SELECT email FROM profiles WHERE username = $1',
+          [inputValue]
+        );
+        const profileData = result.rows[0] || null;
+        const profileError = result.rows.length === 0 ? { message: 'Not found' } : null;
 
         if (profileError || !profileData?.email) {
           setSuccess(false);
@@ -194,10 +192,7 @@ export function LoginForm() {
 
         // Agora fazer login com o email encontrado
         authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: profileData.email,
-            password: formData.password,
-          }),
+          auth.signIn(profileData.email, formData.password),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
@@ -489,31 +484,4 @@ export function RegistrationForm() {
   //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
   return <div>Registration Form (Not implemented)</div>;
 }
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
-
-  // Verificar se veio do registro (para garantir exibição do modal de boas-vindas)
-  const isFromRegistration =
-    localStorage.getItem("registrationCompleted") === "true";
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
-    });
-
-    // Garantir que o flag de primeiro login esteja ativo após login bem-sucedido
-    // se o usuário acabou de se registrar
-    if (data?.user && isFromRegistration) {
-      localStorage.setItem("isFirstLogin", "true");
-
-      // Limpar flag de sessão do modal para garantir que será exibido
-      sessionStorage.removeItem("welcomeModalShown");
-      sessionStorage.removeItem(`currentSession_${data.user.id}`);
-    }
-  } catch (err) {
-    console.error("Erro ao fazer login:", err);
-  }
-};
+// Função duplicada removida - já existe uma implementação principal acima

@@ -61,11 +61,11 @@ export const UsernameProvider: React.FC<{children: React.ReactNode}> = ({ childr
         setFirstName(localFirstName);
       }
       
-      // 2. Verificar perfil do usuário no Supabase (fonte mais confiável)
-      const { data: sessionData } = await supabase.auth.getSession();
+      // 2. Verificar perfil do usuário no banco (fonte mais confiável)
+      const { data: sessionData } = await auth.getUser();
       
-      if (sessionData?.session?.user?.email) {
-        const email = sessionData.session.user.email;
+      if (sessionData?.user?.email) {
+        const email = sessionData.user.email;
         
         // Buscar perfil
         const profile = await profileService.getCurrentUserProfile();
