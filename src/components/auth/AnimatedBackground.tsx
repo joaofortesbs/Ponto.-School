@@ -74,7 +74,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
 
     return newNodes;
-  }, []); // Removendo dependencies para evitar recriação constante
+  }, [dimensions]);
 
   // Tentar obter nós salvos ou criar novos
   const initializeNodes = useCallback(() => {
@@ -120,7 +120,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     createNodes();
     isInitializedRef.current = true;
     setIsReady(true);
-  }, [dimensions]); // Usar apenas dimensions como dependência
+  }, [dimensions, createNodes]);
 
   // Inicializar as dimensões do canvas e os nós no carregamento da página
   useEffect(() => {
@@ -156,7 +156,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     };
   }, [initializeNodes]);
 
-  // Atualiza a posição dos nós com base na posição do mouse
+  // Atualiza a posição dos nós com base na posição do cursor
   const updateNodePositions = useCallback(() => {
     if (!canvasRef.current) return;
 
@@ -220,7 +220,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
       return updatedNodes;
     });
-  }, [dimensions]); // Mantenha dimensions aqui, pois é usada dentro da função
+  }, [dimensions]);
 
   // Desenha os nós e conexões no canvas
   const drawNodesAndConnections = useCallback(() => {
@@ -337,7 +337,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       ctx.fillStyle = `rgba(255, 127, 0, ${node.opacity * 0.15})`;
       ctx.fill();
     });
-  }, [nodes, dimensions, mousePosition]); // Mantenha as dependências necessárias
+  }, [nodes, dimensions, mousePosition]);
 
   // Lidar com o movimento do mouse
   useEffect(() => {
@@ -414,7 +414,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [updateNodePositions, drawNodesAndConnections]); // Dependências corretas para o loop de animação
+  }, [updateNodePositions, drawNodesAndConnections]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">

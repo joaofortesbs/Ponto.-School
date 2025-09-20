@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { auth } from "@/services/api";
+import { supabase } from "@/lib/supabase";
 
 interface FormData {
   email: string;
@@ -163,39 +163,27 @@ export function LoginForm() {
       if (isEmail) {
         // Login com email
         authResult = await Promise.race([
-          auth.signIn(inputValue, formData.password),
+          supabase.auth.signInWithPassword({
+            email: inputValue,
+            password: formData.password,
+          }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
         ]);
       } else {
-        // Login com nome de usuário - usar API backend para resolver
-        try {
-          const resolveResponse = await auth.resolveUsername(inputValue);
+        // Login com nome de usuário
+        // Primeiro, buscar o email associado ao nome de usuário
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("username", inputValue)
+          .single();
 
-          if (resolveResponse.error) {
-            setSuccess(false);
-            setError("Nome de usuário não encontrado");
-            setInvalidCredentials(true);
-            setLoading(false);
-            clearTimeout(preloadTimeout);
-            clearTimeout(authTimeout);
-            localStorage.removeItem("auth_checked");
-            localStorage.removeItem("auth_status");
-            return;
-          }
-
-          // Agora fazer login com o email encontrado
-          authResult = await Promise.race([
-            auth.signIn(resolveResponse.email, formData.password),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
-            ),
-          ]);
-        } catch (error) {
+        if (profileError || !profileData?.email) {
           setSuccess(false);
-          setError("Erro ao processar nome de usuário");
-          setInvalidCredentials(true);
+          setError("Nome de usuário não encontrado");
+          setInvalidCredentials(true); // Set invalid credentials state
           setLoading(false);
           clearTimeout(preloadTimeout);
           clearTimeout(authTimeout);
@@ -203,24 +191,37 @@ export function LoginForm() {
           localStorage.removeItem("auth_status");
           return;
         }
+
+        // Agora fazer login com o email encontrado
+        authResult = await Promise.race([
+          supabase.auth.signInWithPassword({
+            email: profileData.email,
+            password: formData.password,
+          }),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
+          ),
+        ]);
       }
+
+      const { data, error } = authResult;
 
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
 
-      if (!authResult.success) {
+      if (error) {
         setSuccess(false);
         if (
-          authResult.error && (
-            authResult.error.includes("Invalid credentials") ||
-            authResult.error.includes("Email not found") ||
-            authResult.error.includes("Invalid login")
-          )
+          error.message.includes("Invalid login credentials") ||
+          error.message.includes("Email not confirmed")
         ) {
           setError("Email ou senha inválidos");
-          setInvalidCredentials(true);
+          setInvalidCredentials(true); // Set invalid credentials state
+        } else if (error.status === 0) {
+          //Improved network error handling
+          setError("Erro de conexão. Verifique sua internet.");
         } else {
-          setError("Erro ao fazer login: " + (authResult.error || "Erro desconhecido"));
+          setError("Erro ao fazer login: " + error.message);
         }
         localStorage.removeItem("auth_checked");
         localStorage.removeItem("auth_status");
@@ -228,12 +229,9 @@ export function LoginForm() {
         return;
       }
 
-      if (authResult.user) {
+      if (data?.user) {
         localStorage.setItem("auth_checked", "true");
         localStorage.setItem("auth_status", "authenticated");
-
-        // Salvar dados do usuário para uso na aplicação
-        localStorage.setItem("currentUser", JSON.stringify(authResult.user));
 
         // Redirecionar rapidamente para melhorar percepção de velocidade
         navigate("/");
@@ -447,9 +445,9 @@ export function LoginForm() {
             >
               <path
                 stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
                 d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"
               ></path>
             </svg>
@@ -491,4 +489,31 @@ export function RegistrationForm() {
   //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
   return <div>Registration Form (Not implemented)</div>;
 }
-// Função duplicada removida - já existe uma implementação principal acima
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
+
+  // Verificar se veio do registro (para garantir exibição do modal de boas-vindas)
+  const isFromRegistration =
+    localStorage.getItem("registrationCompleted") === "true";
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    // Garantir que o flag de primeiro login esteja ativo após login bem-sucedido
+    // se o usuário acabou de se registrar
+    if (data?.user && isFromRegistration) {
+      localStorage.setItem("isFirstLogin", "true");
+
+      // Limpar flag de sessão do modal para garantir que será exibido
+      sessionStorage.removeItem("welcomeModalShown");
+      sessionStorage.removeItem(`currentSession_${data.user.id}`);
+    }
+  } catch (err) {
+    console.error("Erro ao fazer login:", err);
+  }
+};

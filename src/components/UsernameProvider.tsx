@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { auth, query } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { profileService } from '@/services/profileService';
 
 // Definir interface para o contexto
@@ -61,11 +61,11 @@ export const UsernameProvider: React.FC<{children: React.ReactNode}> = ({ childr
         setFirstName(localFirstName);
       }
       
-      // 2. Verificar perfil do usuário no banco (fonte mais confiável)
-      const { data: sessionData } = await auth.getUser();
+      // 2. Verificar perfil do usuário no Supabase (fonte mais confiável)
+      const { data: sessionData } = await supabase.auth.getSession();
       
-      if (sessionData?.user?.email) {
-        const email = sessionData.user.email;
+      if (sessionData?.session?.user?.email) {
+        const email = sessionData.session.user.email;
         
         // Buscar perfil
         const profile = await profileService.getCurrentUserProfile();

@@ -1,141 +1,348 @@
-import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { auth } from '@/services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { User, Session, AuthError } from '@supabase/supabase-js';
 
-interface User {
-  id: string;
-  email: string;
-  username?: string;
-  display_name?: string;
-  full_name?: string;
-}
-
-interface AuthContextType {
+interface AuthState {
   user: User | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, userData?: any) => Promise<{ success: boolean; error?: string }>;
-  signOut: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  session: Session | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  error: AuthError | Error | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export function useAuth() {
+  const navigate = useNavigate();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    session: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null
+  });
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Função para atualizar o estado de autenticação
+  const setAuth = useCallback((
+    user: User | null, 
+    session: Session | null, 
+    isLoading: boolean = false, 
+    error: AuthError | Error | null = null
+  ) => {
+    setAuthState({
+      user,
+      session,
+      isLoading,
+      isAuthenticated: !!user,
+      error
+    });
+  }, []);
 
-  // Caregar usuário inicial
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const response = await auth.getUser();
-        if (response.data.user) {
-          setUser(response.data.user);
+  // Função auxiliar para verificar e gerar ID do usuário
+  const checkAndGenerateUserId = useCallback(async (user: User) => {
+    if (!user) return;
+
+    try {
+      // Consultar perfil para verificar se já tem ID válido
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('user_id, state')
+        .eq('id', user.id)
+        .single();
+
+      // Se já tiver ID válido, não precisa gerar
+      if (profileData?.user_id && /^[A-Z]{2}\d{4}[1-2]\d{6}$/.test(profileData.user_id)) {
+        console.log('Usuário já possui ID válido:', profileData.user_id);
+        return;
+      }
+
+      console.log('Gerando ID para usuário existente...');
+
+      // Obter dados necessários para gerar o ID
+      let uf = profileData?.state || '';
+      const userData = user.user_metadata || {};
+
+      // Tentar diferentes fontes para obter a UF
+      if (!uf || uf.length !== 2 || uf === 'BR') {
+        // Tentar do user_metadata
+        if (userData.state && userData.state.length === 2 && userData.state !== 'BR') {
+          uf = userData.state.toUpperCase();
+        } else {
+          // Usar localStorage como fallback
+          const savedState = localStorage.getItem('selectedState');
+          if (savedState && savedState.length === 2 && savedState !== 'BR') {
+            uf = savedState.toUpperCase();
+          } else {
+            // Último recurso: usar SP como padrão
+            uf = 'SP';
+          }
         }
+      }
+
+      // Determinar tipo de conta
+      let tipoConta = 2; // Padrão: tipo básico (2)
+      if (userData.plan_type) {
+        const planLower = userData.plan_type.toLowerCase().trim();
+        if (planLower === 'premium' || planLower === 'full') {
+          tipoConta = 1; // Tipo Full/Premium
+        }
+      }
+
+      // Gerar ID usando RPC function
+      const { data: generatedId, error: idError } = await supabase.rpc(
+        'generate_sequential_user_id', 
+        { p_uf: uf, p_tipo_conta: tipoConta }
+      );
+
+      if (idError || !generatedId) {
+        console.error('Erro ao gerar ID sequencial:', idError);
+        return;
+      }
+
+      if (generatedId) {
+        // Atualizar o perfil com o novo ID
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            user_id: generatedId,
+            state: uf,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error('Erro ao atualizar perfil com ID:', updateError);
+        } else {
+          console.log('ID de usuário gerado com sucesso:', generatedId);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao verificar/gerar ID de usuário:', error);
+    }
+  }, []);
+
+  // Verificar o estado de autenticação atual
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        const { session } = data;
+        const user = session?.user || null;
+
+        setAuth(user, session, false);
+
+        // Se tiver usuário, verificar e gerar ID se necessário
+        if (user) {
+          await checkAndGenerateUserId(user);
+        }
+
+        // Configurar o listener para mudanças na autenticação
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (event, newSession) => {
+            const user = newSession?.user || null;
+            setAuth(user, newSession, false);
+
+            // Verificar e gerar ID quando o usuário fizer login
+            if (event === 'SIGNED_IN' && user) {
+              await checkAndGenerateUserId(user);
+              navigate('/dashboard');
+            } else if (event === 'SIGNED_OUT') {
+              navigate('/login');
+            }
+          }
+        );
+
+        // Limpar o listener quando o componente for desmontado
+        return () => {
+          authListener.subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      } finally {
-        setLoading(false);
+        console.error('Erro na verificação de autenticação:', error);
+        setAuth(null, null, false, error as AuthError);
       }
     };
 
-    loadUser();
-  }, []);
+    checkAuth();
+  }, [navigate, setAuth, checkAndGenerateUserId]);
 
-  const signIn = async (email: string, password: string) => {
+  // Função de login
+  const login = useCallback(async (email: string, password: string) => {
     try {
-      const result = await auth.signIn(email, password);
-      if (result.success && result.user) {
-        setUser(result.user);
-        return { success: true };
-      }
-      return { success: false, error: result.error };
-    } catch (error) {
-      return { success: false, error: 'Erro ao fazer login' };
-    }
-  };
+      setAuth(null, null, true, null);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-  const signUp = async (email: string, password: string, userData?: any) => {
-    try {
-      const result = await auth.signUp(email, password, userData);
-      if (result.success && result.user) {
-        setUser(result.user);
-        return { success: true };
-      }
-      return { success: false, error: result.error };
-    } catch (error) {
-      return { success: false, error: 'Erro ao criar conta' };
-    }
-  };
+      if (error) throw error;
 
-  const signOut = async () => {
-    try {
-      await auth.signOut();
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('auth_checked');
-      localStorage.removeItem('auth_status');
-      setUser(null);
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
+      const { user, session } = data;
+      setAuth(user, session, false);
 
-  const refreshUser = async () => {
-    try {
-      const response = await auth.getUser();
-      if (response.data.user) {
-        setUser(response.data.user);
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
-    }
-  };
+      // Verificar e gerar ID de usuário se necessário
+      if (user) {
+        try {
+          // Consultar perfil para verificar se já tem ID válido
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('user_id, state')
+            .eq('id', user.id)
+            .single();
 
-  const contextValue = React.useMemo<AuthContextType>(() => ({
-    user,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    refreshUser,
-  }), [user, loading]);
+          // Se não existir ID ou o ID não estiver no formato correto
+          if (!profileData?.user_id || !/^[A-Z]{2}\d{4}[1-2]\d{6}$/.test(profileData.user_id)) {
+            console.log('Gerando ID para novo usuário...');
 
-  return React.createElement(
-    AuthContext.Provider,
-    { value: contextValue },
-    children
-  );
-};
+            // Obter dados necessários para gerar o ID
+            let uf = profileData?.state || '';
+            const userData = user.user_metadata || {};
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
-};
+            // Tentar diferentes fontes para obter a UF
+            if (!uf || uf.length !== 2 || uf === 'BR') {
+              // Tentar do user_metadata
+              if (userData.state && userData.state.length === 2 && userData.state !== 'BR') {
+                uf = userData.state.toUpperCase();
+              } else {
+                // Usar localStorage como fallback
+                const savedState = localStorage.getItem('selectedState');
+                if (savedState && savedState.length === 2 && savedState !== 'BR') {
+                  uf = savedState.toUpperCase();
+                } else {
+                  // Último recurso: usar SP como padrão
+                  uf = 'SP';
+                }
+              }
+            }
 
-// Hook simples para compatibilidade com código existente
-export const useAuthSimple = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+            // Determinar tipo de conta
+            let tipoConta = 2; // Padrão: tipo básico (2)
+            if (userData.plan_type) {
+              const planLower = userData.plan_type.toLowerCase().trim();
+              if (planLower === 'premium' || planLower === 'full') {
+                tipoConta = 1; // Tipo Full/Premium
+              }
+            }
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const response = await auth.getUser();
-        if (response.data.user) {
-          setUser(response.data.user);
+            // Gerar ID usando RPC function
+            const { data: generatedId, error: idError } = await supabase.rpc(
+              'generate_sequential_user_id', 
+              { p_uf: uf, p_tipo_conta: tipoConta }
+            );
+
+            if (idError || !generatedId) {
+              console.error('Erro ao gerar ID sequencial:', idError);
+              // Continuar sem falhar o login
+            } else if (generatedId) {
+              // Atualizar o perfil com o novo ID
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ 
+                  user_id: generatedId,
+                  state: uf,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+              if (updateError) {
+                console.error('Erro ao atualizar perfil com ID:', updateError);
+              } else {
+                console.log('ID de usuário gerado com sucesso:', generatedId);
+              }
+            }
+          }
+        } catch (idGenError) {
+          console.error('Erro ao gerar ID de usuário:', idGenError);
+          // Continuar sem falhar o login
         }
-      } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-      } finally {
-        setLoading(false);
       }
-    };
 
-    loadUser();
+      return { user, error: null };
+    } catch (error) {
+      console.error('Erro no login:', error);
+      setAuth(null, null, false, error as AuthError);
+      return { user: null, error };
+    }
+  }, [setAuth]);
+
+  // Função de registro
+  const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
+    try {
+      setAuth(null, null, true, null);
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: { 
+          data: userData,
+          emailRedirectTo: `${window.location.origin}/auth/callback` 
+        }
+      });
+
+      if (error) throw error;
+
+      const { user, session } = data;
+      setAuth(user, session, false);
+      return { user, error: null };
+    } catch (error) {
+      console.error('Erro no registro:', error);
+      setAuth(null, null, false, error as AuthError);
+      return { user: null, error };
+    }
+  }, [setAuth]);
+
+  // Função de logout
+  const logout = useCallback(async () => {
+    try {
+      setAuth(null, null, true, null);
+      const { error } = await supabase.auth.signOut();
+
+      if (error) throw error;
+
+      setAuth(null, null, false);
+      return { error: null };
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      setAuth(authState.user, authState.session, false, error as AuthError);
+      return { error };
+    }
+  }, [authState.session, authState.user, setAuth]);
+
+  // Função para resetar senha
+  const resetPassword = useCallback(async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) throw error;
+
+      return { error: null };
+    } catch (error) {
+      console.error('Erro no reset de senha:', error);
+      return { error };
+    }
   }, []);
 
-  return { user, loading };
-};
+  // Função para atualizar senha
+  const updatePassword = useCallback(async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+      if (error) throw error;
+
+      return { error: null };
+    } catch (error) {
+      console.error('Erro na atualização de senha:', error);
+      return { error };
+    }
+  }, []);
+
+  return {
+    ...authState,
+    login,
+    register,
+    logout,
+    resetPassword,
+    updatePassword
+  };
+}
+
+export default useAuth;

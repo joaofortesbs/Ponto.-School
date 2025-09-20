@@ -20,9 +20,8 @@ import {
   Award,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "@/services/api";
+import { supabase } from "@/lib/supabase";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
-import { auth } from '@/services/api'; // Updated import
 
 interface FormData {
   fullName: string;
@@ -164,10 +163,10 @@ export function RegisterForm() {
     // Sempre garantir que as opções estejam carregadas, independente do estado anterior
     setClassOptions(preloadedClassOptions);
     setGradeOptions(preloadedGradeOptions);
-
+    
     // Definir loading como false imediatamente
     setLoadingOptions(false);
-
+    
     if (formData.institution.trim().length > 0) {
       // Mostrar seção de turmas e séries imediatamente
       setShowClassAndGrade(true);
@@ -175,7 +174,7 @@ export function RegisterForm() {
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
-
+      
       // Reset the values when institution is cleared
       setFormData((prev) => ({
         ...prev,
@@ -185,7 +184,7 @@ export function RegisterForm() {
         customGrade: "",
       }));
     }
-
+    
     // Garantir que componentes sejam mostrados com um timeout de segurança
     const timer = setTimeout(() => {
       if (formData.institution.trim().length > 0) {
@@ -193,7 +192,7 @@ export function RegisterForm() {
         setInstitutionFound(true);
       }
     }, 100);
-
+    
     return () => clearTimeout(timer);
   }, [formData.institution]);
 
@@ -317,14 +316,7 @@ export function RegisterForm() {
 
         console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta} (${confirmedPlan})`);
 
-        // TODO: Implementar geração de ID adequada no backend
-        // Por enquanto, usar ID temporário para testes
-        const timestamp = Date.now();
-        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        userId = `${uf}${timestamp.toString().slice(-6)}${tipoConta}${randomSuffix}`;
-        console.log(`ID temporário gerado para testes: ${userId}`);
-
-        /* Comentado - lógica complexa a ser implementada no backend
+        // Tentar usar a função principal de geração de ID
         try {
           userId = await generateUserId(uf, tipoConta);
           console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
@@ -340,17 +332,84 @@ export function RegisterForm() {
 
             // Tentar usar a função SQL diretamente
             try {
-              // TODO: Implementar no backend
-              throw new Error("Funcionalidade não implementada no frontend");
+              const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
+                p_uf: uf,
+                p_tipo_conta: tipoConta
+              });
+
+              if (sqlError) {
+                throw sqlError;
+              }
+
+              userId = sqlData;
+              console.log(`ID gerado com função SQL: ${userId}`);
             } catch (sqlError) {
               console.error("Erro ao gerar ID com função SQL:", sqlError);
 
-              // Último fallback: Gerar manualmente - TODO: Implementar no backend
-              throw new Error("Geração de ID deve ser implementada no backend");
+              // Último fallback: Gerar manualmente, mas mantendo a padronização
+              const dataAtual = new Date();
+              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
+
+              // Tentar buscar o último ID do controle por UF
+              try {
+                const { data: controlData } = await supabase
+                  .from('user_id_control_by_uf')
+                  .select('*')
+                  .eq('uf', uf)
+                  .eq('ano_mes', anoMes)
+                  .eq('tipo_conta', tipoConta)
+                  .single();
+
+                let sequencial;
+                if (controlData && controlData.last_id) {
+                  // Incrementar o último ID conhecido
+                  sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
+
+                  // Atualizar o contador no banco de dados
+                  await supabase
+                    .from('user_id_control_by_uf')
+                    .update({ 
+                      last_id: controlData.last_id + 1,
+                      updated_at: new Date().toISOString()
+                    })
+                    .eq('id', controlData.id);
+                } else {
+                  // Se não existe um controle para esta UF, criar um novo
+                  try {
+                    // Iniciar com ID 1
+                    const { data: insertData, error: insertError } = await supabase
+                      .from('user_id_control_by_uf')
+                      .insert([
+                        { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
+                      ])
+                      .select();
+
+                    if (insertError) throw insertError;
+
+                    sequencial = "000001"; // Primeiro ID
+                  } catch (insertError) {
+                    console.error("Erro ao criar controle de ID por UF:", insertError);
+
+                    // Último recurso: gerar um sequencial baseado em timestamp
+                    const timestamp = new Date().getTime();
+                    sequencial = (timestamp % 1000000).toString().padStart(6, "0");
+                  }
+                }
+
+                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+                console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
+              } catch (fallbackError) {
+                console.error("Erro no fallback final:", fallbackError);
+
+                // Último recurso: usar timestamp para garantir unicidade
+                const timestamp = new Date().getTime();
+                const sequencial = timestamp.toString().slice(-6).padStart(6, "0");
+                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
+                console.log(`ID gerado com timestamp como último recurso: ${userId}`);
+              }
             }
           }
         }
-        */ // Fim do código comentado
 
         console.log(`ID de usuário final: ${userId}`);
       } catch (error) {
@@ -361,24 +420,20 @@ export function RegisterForm() {
       }
 
 
-      // Registrar usuário usando a API do backend Neon
+      // Primeiro tente registrar o usuário no sistema de autenticação
       let userData = null;
       let userError = null;
 
       try {
         // Verificar novamente se o nome de usuário já existe
-        const usernameCheck = await auth.checkUsername(formData.username);
+        const { data: existingUser } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('username', formData.username)
+          .single();
 
-        if (!usernameCheck.available) {
-          setError(usernameCheck.error || "Este nome de usuário já está em uso. Por favor, escolha outro.");
-          setLoading(false);
-          return;
-        }
-
-        // Verificar se o email já existe
-        const emailCheck = await auth.checkEmail(formData.email);
-        if (!emailCheck.available) {
-          setError("Este email já está cadastrado. Tente fazer login ou usar outro email.");
+        if (existingUser) {
+          setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
           setLoading(false);
           return;
         }
@@ -394,34 +449,30 @@ export function RegisterForm() {
           console.warn('Erro ao salvar dados no localStorage:', e);
         }
 
-        // Registrar usando a API do backend Neon
-        const response = await auth.signUp(
-          formData.email,
-          formData.password,
-          {
-            full_name: formData.fullName,
-            username: formData.username,
-            institution: formData.institution,
-            state: formData.state,
-            birth_date: formData.birthDate,
-            plan_type: confirmedPlan,
-            display_name: formData.username,
-          }
-        );
+        // Tente registrar com o Supabase Auth
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/login`,
+            data: {
+              full_name: formData.fullName,
+              username: formData.username,
+              institution: formData.institution,
+              state: formData.state,
+              birth_date: formData.birthDate,
+              plan_type: confirmedPlan, // Usa o plano confirmado
+              display_name: formData.username, // Garantir que display_name é o mesmo que username no registro
+            },
+          },
+        });
 
-        if (response.success) {
-          userData = { user: response.user };
-          userError = null;
-        } else {
-          userData = null;
-          userError = { message: response.error };
-        }
+        userData = data;
+        userError = error;
       } catch (authError) {
         console.error("Auth connection error:", authError);
-        userData = null;
-        userError = { message: authError.message || "Erro de conexão" };
+        // Continue com offline fallback
       }
-
 
       // Se houver erro explícito no signup (como e-mail já existente), mostre o erro
       if (userError && userError.message && !userError.message.includes("fetch")) {
@@ -440,44 +491,47 @@ export function RegisterForm() {
           // Tente criar o perfil no banco de dados
           if (userData?.user) {
             try {
-              // NOTE: A criação de perfil agora deve usar o novo serviço de API, não o Supabase diretamente.
-              // Assumindo que existe um método `createUserProfile` no `authService` ou similar.
-              // Se não existir, você precisará implementar a lógica de inserção no Neon aqui.
-              // Exemplo hipotético:
-              const response = await authService.createUserProfile({
-                id: profileId,
-                user_id: userId,
-                full_name: formData.fullName,
-                username: formData.username,
-                email: formData.email,
-                display_name: formData.username,
-                institution: formData.institution,
-                state: formData.state,
-                birth_date: formData.birthDate,
-                plan_type: confirmedPlan,
-                level: 1,
-                rank: "Aprendiz",
-                xp: 0,
-                coins: 100
-              });
-
-              if (response.error) {
-                console.error("Profile creation error:", response.error);
-                // Se falhar ao criar, tente atualizar se o perfil já existir
-                const updateResponse = await authService.updateUserProfile({
+              const { error: insertError } = await supabase
+                .from("profiles")
+                .insert([{
                   id: profileId,
                   user_id: userId,
                   full_name: formData.fullName,
                   username: formData.username,
+                  email: formData.email,
+                  display_name: formData.username,
                   institution: formData.institution,
                   state: formData.state,
                   birth_date: formData.birthDate,
-                  plan_type: confirmedPlan,
-                  display_name: formData.username,
+                  plan_type: confirmedPlan, // Usa o plano confirmado
+                  level: 1,
+                  rank: "Aprendiz",
+                  xp: 0,
                   coins: 100
-                });
-                if (updateResponse.error) {
-                  console.error("Profile update error:", updateResponse.error);
+                }]);
+
+              if (insertError && !insertError.message.includes("fetch")) {
+                // Se houver erro diferente de conectividade, tente atualizar o perfil existente
+                console.log("Tentando atualizar perfil existente");
+                const { error: updateError } = await supabase
+                  .from("profiles")
+                  .update({
+                    user_id: userId,
+                    full_name: formData.fullName,
+                    username: formData.username,
+                    institution: formData.institution,
+                    state: formData.state,
+                    birth_date: formData.birthDate,
+                    plan_type: confirmedPlan, // Usa o plano confirmado
+                    level: 1,
+                    rank: "Aprendiz",
+                    display_name: formData.username,
+                    coins: 100
+                  })
+                  .eq("id", profileId);
+
+                if (updateError && !updateError.message.includes("fetch")) {
+                  console.error("Profile update error:", updateError);
                 }
               }
             } catch (profileError) {
@@ -519,7 +573,7 @@ export function RegisterForm() {
             localStorage.setItem('lastRegisteredEmail', formData.email);
             localStorage.setItem('lastRegisteredUsername', formData.username);
             localStorage.setItem('redirectTimer', 'active');
-
+            
             // Adicionar flag para indicar que o registro acabou de ser concluído
             // Esta flag será lida pelo App.tsx para garantir a exibição do modal de boas-vindas
             localStorage.setItem('registrationCompleted', 'true');
@@ -539,7 +593,7 @@ export function RegisterForm() {
               return null;
             }
           };
-
+          
           // Adicionar outro mecanismo de segurança para garantir o redirecionamento
           document.addEventListener('visibilitychange', function handleVisibility() {
             if (localStorage.getItem('redirectTimer') === 'active') {
@@ -636,7 +690,7 @@ export function RegisterForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Plano LITE */}
-            <div
+            <div 
               onClick={() => handlePlanConfirmation("lite")}
               className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
                 initialPlan === "lite"
@@ -680,7 +734,7 @@ export function RegisterForm() {
             </div>
 
             {/* Plano FULL */}
-            <div
+            <div 
               onClick={() => handlePlanConfirmation("full")}
               className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
                 initialPlan === "full" || initialPlan === "premium"
@@ -735,19 +789,6 @@ export function RegisterForm() {
     );
   };
 
-
-  // Limpeza de timeouts ao desmontar o componente
-  useEffect(() => {
-    return () => {
-      // Limpar timeout de verificação de username
-      if ((window as any).usernameCheckTimeout) {
-        clearTimeout((window as any).usernameCheckTimeout);
-        (window as any).usernameCheckTimeout = null;
-      }
-      // Limpar cache
-      (window as any).lastUsernameChecked = null;
-    };
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -838,52 +879,29 @@ export function RegisterForm() {
                             username: validValue,
                           }));
 
-                          // Verificar duplicatas após pausa na digitação - otimizado
-                          if (validValue && validValue.length >= 3) {
-                            // Limpar timeout anterior
-                            clearTimeout((window as any).usernameCheckTimeout);
-
-                            // Verificar se já foi validado recentemente
-                            const lastChecked = (window as any).lastUsernameChecked;
-                            if (lastChecked === validValue) {
-                              return; // Evita verificação duplicada
-                            }
-
-                            (window as any).usernameCheckTimeout = setTimeout(async () => {
+                          // Verificar duplicatas após pausa na digitação
+                          if (validValue) {
+                            clearTimeout(window.usernameCheckTimeout);
+                            window.usernameCheckTimeout = setTimeout(async () => {
                               try {
-                                (window as any).lastUsernameChecked = validValue;
-                                console.log(`Verificando username: ${validValue}`);
+                                const { data, error } = await supabase
+                                  .from('profiles')
+                                  .select('username')
+                                  .eq('username', validValue)
+                                  .single();
 
-                                const response = await authService.checkUsername(validValue);
-
-                                // Verificar se o valor ainda é atual (usuário não digitou mais nada)
-                                if ((window as any).lastUsernameChecked === validValue) {
-                                  if (!response.available) {
-                                    setError(response.error || "Este nome de usuário já está em uso. Por favor, escolha outro.");
-                                  } else {
-                                    // Limpar erro específico de username
-                                    if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('username') || error.includes('uso'))) {
-                                      setError("");
-                                    }
+                                if (data && !error) {
+                                  setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
+                                } else {
+                                  // Limpar o erro se não houver duplicata e houver um erro de nome de usuário
+                                  if (error && error.message.includes('username') && formData.username === validValue) {
+                                    setError("");
                                   }
                                 }
                               } catch (err) {
                                 console.error("Erro ao verificar nome de usuário:", err);
-                                // Só mostrar erro se ainda é o username atual
-                                if ((window as any).lastUsernameChecked === validValue) {
-                                  setError("Erro ao verificar disponibilidade do username. Verifique sua conexão.");
-                                }
                               }
-                            }, 1500); // Aumentado para 1.5 segundos para reduzir requisições
-                          } else if (validValue.length > 0 && validValue.length < 3) {
-                            setError("Nome de usuário deve ter pelo menos 3 caracteres.");
-                            (window as any).lastUsernameChecked = null; // Reset do cache
-                          } else if (validValue.length === 0) {
-                            // Limpar erro quando campo estiver vazio
-                            if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('username') || error.includes('uso'))) {
-                              setError("");
-                            }
-                            (window as any).lastUsernameChecked = null; // Reset do cache
+                            }, 500);
                           }
                         }}
                         placeholder="seunomeusuario"
