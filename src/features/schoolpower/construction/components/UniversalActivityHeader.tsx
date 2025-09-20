@@ -280,7 +280,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       className={`universal-activity-header w-full h-24 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-4 shadow-sm rounded-t-2xl ${!isSharedActivity ? 'bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20' : ''}`}
       style={headerStyle}
     >
-      <div className="flex items-center justify-between h-full"></div>
+      <div className="flex items-center justify-between h-full">
         {/* Lado Esquerdo - Ícone e Informações da Atividade */}
         <div className="flex items-center gap-4">
           {/* Ícone da Atividade */}
