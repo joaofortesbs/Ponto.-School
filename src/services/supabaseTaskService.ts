@@ -1,133 +1,114 @@
-
-import { supabase } from "@/integrations/supabase/client";
+import { query } from '@/lib/supabase';
 
 export interface TarefaSupabase {
   id: string;
   user_id: string;
   titulo: string;
-  descricao?: string;
+  descricao: string | null;
   status: boolean;
   data_criacao: string;
   data_atualizacao: string;
 }
 
 export const supabaseTaskService = {
-  // Buscar todas as tarefas do usuário atual
-  async buscarTarefas(): Promise<TarefaSupabase[]> {
+  async buscarTarefas(userId?: string): Promise<TarefaSupabase[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.log('Usuário não autenticado');
-        return [];
+      const currentUserId = userId || this.getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('Usuário não autenticado');
       }
 
-      const { data, error } = await supabase
-        .from('tarefas')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('data_criacao', { ascending: false });
+      const result = await query(`
+        SELECT id, user_id, titulo, descricao, status, data_criacao, data_atualizacao
+        FROM tarefas
+        WHERE user_id = $1
+        ORDER BY data_criacao DESC
+      `, [currentUserId]);
 
-      if (error) {
-        console.error('Erro ao buscar tarefas:', error);
-        return [];
-      }
-
-      return data || [];
+      return result.rows;
     } catch (error) {
       console.error('Erro ao buscar tarefas:', error);
-      return [];
+      throw error;
     }
   },
 
-  // Criar nova tarefa
-  async criarTarefa(titulo: string, descricao?: string): Promise<TarefaSupabase | null> {
+  async criarTarefa(titulo: string, descricao?: string, userId?: string): Promise<TarefaSupabase | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error('Usuário não autenticado');
-        return null;
+      const currentUserId = userId || this.getCurrentUserId();
+      if (!currentUserId) {
+        throw new Error('Usuário não autenticado');
       }
 
-      const { data, error } = await supabase
-        .from('tarefas')
-        .insert({
-          user_id: user.id,
-          titulo,
-          descricao: descricao || '',
-          status: false
-        })
-        .select()
-        .single();
+      const result = await query(`
+        INSERT INTO tarefas (user_id, titulo, descricao, status, data_criacao, data_atualizacao)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        RETURNING id, user_id, titulo, descricao, status, data_criacao, data_atualizacao
+      `, [currentUserId, titulo, descricao || '', false]);
 
-      if (error) {
-        console.error('Erro ao criar tarefa:', error);
-        return null;
-      }
-
-      return data;
+      return result.rows[0] || null;
     } catch (error) {
       console.error('Erro ao criar tarefa:', error);
-      return null;
+      throw error;
     }
   },
 
-  // Atualizar tarefa
-  async atualizarTarefa(id: string, updates: Partial<Pick<TarefaSupabase, 'titulo' | 'descricao' | 'status'>>): Promise<TarefaSupabase | null> {
+  async atualizarTarefa(id: string, updates: Partial<TarefaSupabase>): Promise<TarefaSupabase | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error('Usuário não autenticado');
-        return null;
+      const setFields = [];
+      const values = [];
+      let paramCount = 1;
+
+      if (updates.titulo !== undefined) {
+        setFields.push(`titulo = $${paramCount++}`);
+        values.push(updates.titulo);
+      }
+      if (updates.descricao !== undefined) {
+        setFields.push(`descricao = $${paramCount++}`);
+        values.push(updates.descricao);
+      }
+      if (updates.status !== undefined) {
+        setFields.push(`status = $${paramCount++}`);
+        values.push(updates.status);
       }
 
-      const { data, error } = await supabase
-        .from('tarefas')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erro ao atualizar tarefa:', error);
-        return null;
+      if (setFields.length === 0) {
+        throw new Error('Nenhum campo para atualizar');
       }
 
-      return data;
+      setFields.push(`data_atualizacao = NOW()`);
+      values.push(id);
+
+      const result = await query(`
+        UPDATE tarefas
+        SET ${setFields.join(', ')}
+        WHERE id = $${paramCount}
+        RETURNING id, user_id, titulo, descricao, status, data_criacao, data_atualizacao
+      `, values);
+
+      return result.rows[0] || null;
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
-      return null;
+      throw error;
     }
   },
 
-  // Deletar tarefa
   async deletarTarefa(id: string): Promise<boolean> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        console.error('Usuário não autenticado');
-        return false;
-      }
+      const result = await query(`
+        DELETE FROM tarefas
+        WHERE id = $1
+        RETURNING id
+      `, [id]);
 
-      const { error } = await supabase
-        .from('tarefas')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Erro ao deletar tarefa:', error);
-        return false;
-      }
-
-      return true;
+      return result.rows.length > 0;
     } catch (error) {
       console.error('Erro ao deletar tarefa:', error);
-      return false;
+      throw error;
     }
+  },
+
+  getCurrentUserId(): string | null {
+    // Implementar lógica de sessão
+    return localStorage.getItem('currentUserId');
   }
 };
