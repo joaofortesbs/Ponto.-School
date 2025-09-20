@@ -53,7 +53,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }
   }, [atividade]);
 
-  // State para controlar a expansão do card de descrição
+  // Estado para controlar se a descrição está expandida - inicia minimizado
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // Função para renderizar a pré-visualização baseada no tipo da atividade
@@ -242,83 +242,117 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
               className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm cursor-pointer hover:bg-gradient-to-r hover:from-orange-50/15 hover:to-orange-100/15 transition-all duration-300"
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
             >
-              <CardContent className="p-6">
+              <CardContent className={`transition-all duration-500 ease-in-out ${
+                isDescriptionExpanded ? 'p-6' : 'p-4'
+              }`}>
                 <div className="flex items-start gap-4">
+                  {/* Barra lateral indicadora */}
                   <div className={`w-2 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0 transition-all duration-500 ${
-                    isDescriptionExpanded ? 'h-auto min-h-[4rem]' : 'h-16'
+                    isDescriptionExpanded ? 'h-20' : 'h-12'
                   }`}></div>
+                  
                   <div className="flex-1">
                     {/* Cabeçalho com indicador de expansão */}
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className={`font-semibold text-white/90 flex items-center gap-2 transition-all duration-300 ${
+                        isDescriptionExpanded ? 'text-lg' : 'text-base'
+                      }`}>
                         <span className="text-orange-400">📋</span>
                         Sobre esta Atividade
                       </h3>
-                      <div className="flex items-center gap-1 text-orange-400 text-sm">
+                      <div className="flex items-center gap-1 text-orange-400 text-xs hover:text-orange-300 transition-colors">
                         {isDescriptionExpanded ? (
                           <>
-                            <span>Clique para minimizar</span>
-                            <ChevronUp className="w-4 h-4 transition-transform duration-300" />
+                            <span>Minimizar</span>
+                            <ChevronUp className="w-3 h-3 transition-transform duration-300" />
                           </>
                         ) : (
                           <>
-                            <span>Clique para expandir</span>
-                            <ChevronDown className="w-4 h-4 transition-transform duration-300" />
+                            <span>Ver mais</span>
+                            <ChevronDown className="w-3 h-3 transition-transform duration-300" />
                           </>
                         )}
                       </div>
                     </div>
 
                     {/* Container da descrição com animação suave */}
-                    <div className="relative">
-                      {/* Descrição com animação de expansão/colapso */}
-                      <div className={`overflow-hidden transition-all duration-700 ease-in-out ${
-                        isDescriptionExpanded ? 'max-h-96 opacity-100' : 'max-h-12 opacity-80'
+                    <div className="relative overflow-hidden">
+                      {/* Descrição com altura limitada quando minimizado */}
+                      <div className={`transition-all duration-700 ease-in-out ${
+                        isDescriptionExpanded 
+                          ? 'max-h-96 opacity-100' 
+                          : 'max-h-8 opacity-70 overflow-hidden'
                       }`}>
-                        <p className="text-gray-300 leading-relaxed text-sm">
+                        <p className={`text-gray-300 leading-relaxed transition-all duration-300 ${
+                          isDescriptionExpanded ? 'text-sm' : 'text-xs'
+                        }`}>
                           {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
                         </p>
                       </div>
 
-                      {/* Gradiente de fade quando minimizado */}
+                      {/* Gradiente de fade quando minimizado - mais sutil */}
                       {!isDescriptionExpanded && (
-                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-orange-50/20 via-orange-50/15 to-transparent pointer-events-none transition-opacity duration-500" />
+                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-orange-50/15 via-orange-50/10 to-transparent pointer-events-none transition-opacity duration-500" />
                       )}
                     </div>
 
-                    {/* Metadados da Atividade - sempre visíveis */}
-                    <div className={`flex flex-wrap gap-2 transition-all duration-500 ${
-                      isDescriptionExpanded ? 'mt-6' : 'mt-3'
-                    }`}>
-                      <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
-                        {(() => {
-                          const tipo = atividadeSincronizada?.tipo || '';
-                          if (tipo.includes('flash-cards')) return 'Flash Cards';
-                          if (tipo.includes('quiz')) return 'Quiz Interativo';
-                          if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
-                          if (tipo.includes('plano-aula')) return 'Plano de Aula';
-                          if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
-                          if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
-                          if (tipo.includes('mapa-mental')) return 'Mapa Mental';
-                          return 'Atividade';
-                        })()}
+                    {/* Metadados da Atividade - condicionalmente visíveis */}
+                    {isDescriptionExpanded && (
+                      <div className="flex flex-wrap gap-2 mt-4 animate-in fade-in duration-500">
+                        <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
+                          {(() => {
+                            const tipo = atividadeSincronizada?.tipo || '';
+                            if (tipo.includes('flash-cards')) return 'Flash Cards';
+                            if (tipo.includes('quiz')) return 'Quiz Interativo';
+                            if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
+                            if (tipo.includes('plano-aula')) return 'Plano de Aula';
+                            if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
+                            if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
+                            if (tipo.includes('mapa-mental')) return 'Mapa Mental';
+                            return 'Atividade';
+                          })()}
+                        </div>
+                        {atividadeSincronizada?.disciplina && (
+                          <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
+                            {atividadeSincronizada.disciplina}
+                          </div>
+                        )}
+                        {atividadeSincronizada?.nivel && (
+                          <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
+                            {atividadeSincronizada.nivel}
+                          </div>
+                        )}
+                        {atividadeSincronizada?.tempo_estimado && (
+                          <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
+                            {atividadeSincronizada.tempo_estimado} min
+                          </div>
+                        )}
                       </div>
-                      {atividadeSincronizada?.disciplina && (
-                        <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
-                          {atividadeSincronizada.disciplina}
+                    )}
+
+                    {/* Tags básicas sempre visíveis quando minimizado */}
+                    {!isDescriptionExpanded && (
+                      <div className="flex gap-2 mt-2">
+                        <div className="bg-orange-500/15 border border-orange-400/20 rounded-full px-2 py-0.5 text-xs text-orange-300 font-medium">
+                          {(() => {
+                            const tipo = atividadeSincronizada?.tipo || '';
+                            if (tipo.includes('flash-cards')) return 'Flash Cards';
+                            if (tipo.includes('quiz')) return 'Quiz';
+                            if (tipo.includes('lista-exercicios')) return 'Exercícios';
+                            if (tipo.includes('plano-aula')) return 'Plano de Aula';
+                            if (tipo.includes('sequencia-didatica')) return 'Sequência';
+                            if (tipo.includes('quadro-interativo')) return 'Quadro';
+                            if (tipo.includes('mapa-mental')) return 'Mapa Mental';
+                            return 'Atividade';
+                          })()}
                         </div>
-                      )}
-                      {atividadeSincronizada?.nivel && (
-                        <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
-                          {atividadeSincronizada.nivel}
-                        </div>
-                      )}
-                      {atividadeSincronizada?.tempo_estimado && (
-                        <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
-                          {atividadeSincronizada.tempo_estimado} min
-                        </div>
-                      )}
-                    </div>
+                        {atividadeSincronizada?.disciplina && (
+                          <div className="bg-blue-500/15 border border-blue-400/20 rounded-full px-2 py-0.5 text-xs text-blue-300 font-medium">
+                            {atividadeSincronizada.disciplina}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
