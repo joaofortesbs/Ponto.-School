@@ -2878,15 +2878,230 @@ textarea:hover,
   }
 
 
-/* Estilos para páginas públicas de atividades compartilhadas */
+/* Estilos para páginas públicas de atividades compartilhadas - TEMA ESCURO FORÇADO */
 .public-activity-page {
   /* Garantir que a página seja completamente independente */
   isolation: isolate;
+  background-color: #0f172a !important;
+  color: #ffffff !important;
 }
 
 .public-activity-page * {
   /* Reset básico para garantir consistência */
   box-sizing: border-box;
+}
+
+/* FORÇAR TEMA ESCURO ABSOLUTO para componentes de atividade compartilhada */
+.shared-activity-dark-theme,
+.shared-activity-dark-theme *,
+[data-theme="dark-forced"],
+[data-theme="dark-forced"] * {
+  background-color: inherit !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+/* Sobrescrever classes específicas do Card UI */
+.shared-activity-card,
+.shared-description-card,
+.shared-preview-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #ffffff !important;
+  border: 1px solid #334155 !important;
+}
+
+/* Forçar botões para tema escuro */
+.shared-button-primary,
+.shared-button-secondary,
+.shared-close-button {
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.shared-button-primary:hover,
+.shared-button-secondary:hover {
+  transform: scale(1.05) !important;
+}
+
+/* Forçar containers para tema escuro */
+.shared-activity-content,
+.shared-description-content,
+.shared-preview-content,
+.shared-buttons-container,
+.shared-fullscreen-container,
+.shared-fullscreen-activity {
+  background-color: inherit !important;
+  color: #ffffff !important;
+}
+
+/* Garantir que NENHUMA classe dark: do Tailwind interfira */
+.shared-activity-dark-theme .dark\:bg-card,
+.shared-activity-dark-theme .dark\:text-card-foreground,
+.shared-activity-dark-theme .dark\:border-border,
+[data-theme="dark-forced"] .dark\:bg-card,
+[data-theme="dark-forced"] .dark\:text-card-foreground,
+[data-theme="dark-forced"] .dark\:border-border {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+/* Sobrescrever qualquer estilo de tema claro */
+.shared-activity-dark-theme .bg-white,
+.shared-activity-dark-theme .bg-gray-50,
+.shared-activity-dark-theme .bg-card,
+[data-theme="dark-forced"] .bg-white,
+[data-theme="dark-forced"] .bg-gray-50,
+[data-theme="dark-forced"] .bg-card {
+  background-color: #1e293b !important;
+}
+
+.shared-activity-dark-theme .text-black,
+.shared-activity-dark-theme .text-gray-900,
+.shared-activity-dark-theme .text-card-foreground,
+[data-theme="dark-forced"] .text-black,
+[data-theme="dark-forced"] .text-gray-900,
+[data-theme="dark-forced"] .text-card-foreground {
+  color: #ffffff !important;
+}
+
+/* Isolamento total para fullscreen */
+.shared-fullscreen-container {
+  isolation: isolate !important;
+  background-color: #111827 !important;
+  color: #ffffff !important;
+}
+
+.shared-fullscreen-container *,
+.shared-fullscreen-activity * {
+  color: inherit !important;
+}
+
+/* CSS específico para interface de compartilhamento */
+.shared-interface-container,
+.shared-interface-main {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  min-height: 100vh !important;
+}
+
+.shared-loading-card,
+.shared-error-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #ffffff !important;
+  border: 1px solid #334155 !important;
+}
+
+.shared-loading-content,
+.shared-error-content,
+.shared-main-content {
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.shared-retry-button {
+  background-color: #f97316 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.shared-retry-button:hover {
+  background-color: #ea580c !important;
+}
+
+/* Forçar tema escuro em todos os elementos da interface compartilhada */
+.shared-interface-container *,
+.shared-interface-main *,
+[data-theme="dark-forced"] {
+  box-sizing: border-box;
+}
+
+/* Garantir que componentes Card e Button não herdem tema claro */
+.shared-interface-container .bg-background,
+.shared-interface-container .bg-card,
+.shared-interface-main .bg-background,
+.shared-interface-main .bg-card,
+[data-theme="dark-forced"] .bg-background,
+[data-theme="dark-forced"] .bg-card {
+  background-color: #1e293b !important;
+}
+
+.shared-interface-container .text-foreground,
+.shared-interface-container .text-card-foreground,
+.shared-interface-main .text-foreground,
+.shared-interface-main .text-card-foreground,
+[data-theme="dark-forced"] .text-foreground,
+[data-theme="dark-forced"] .text-card-foreground {
+  color: #ffffff !important;
+}
+
+/* Sobrescrever estilos de botão padrão */
+.shared-interface-container button,
+.shared-interface-main button,
+[data-theme="dark-forced"] button {
+  color: #ffffff !important;
+}
+
+/* Garantir que ícones mantenham cor correta */
+.shared-interface-container svg,
+.shared-interface-main svg,
+[data-theme="dark-forced"] svg {
+  color: inherit !important;
+}
+
+/* Isolamento TOTAL para página de atividade compartilhada */
+.shared-activity-isolated-page {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  min-height: 100vh !important;
+  isolation: isolate !important;
+  /* Criar contexto de empilhamento próprio */
+  position: relative;
+  z-index: 0;
+}
+
+.shared-activity-isolated-page *,
+.shared-activity-isolated-page *::before,
+.shared-activity-isolated-page *::after {
+  /* Garantir que NENHUM elemento herde estilos externos */
+  color: inherit !important;
+  background-color: inherit;
+}
+
+/* Sobrescrever TODAS as classes de tema claro possíveis */
+.shared-activity-isolated-page .bg-white,
+.shared-activity-isolated-page .bg-gray-50,
+.shared-activity-isolated-page .bg-gray-100,
+.shared-activity-isolated-page .bg-background,
+.shared-activity-isolated-page .bg-card {
+  background-color: #1e293b !important;
+}
+
+.shared-activity-isolated-page .text-black,
+.shared-activity-isolated-page .text-gray-900,
+.shared-activity-isolated-page .text-gray-800,
+.shared-activity-isolated-page .text-foreground,
+.shared-activity-isolated-page .text-card-foreground {
+  color: #ffffff !important;
+}
+
+.shared-activity-isolated-page .border-gray-200,
+.shared-activity-isolated-page .border-border {
+  border-color: #334155 !important;
+}
+
+/* Reset completo para garantir isolamento */
+.shared-activity-isolated-page {
+  /* Resetar todas as variáveis CSS que possam vir do tema global */
+  --background: 222.2 84% 4.9% !important;
+  --foreground: 210 40% 98% !important;
+  --card: 222.2 84% 4.9% !important;
+  --card-foreground: 210 40% 98% !important;
+  --border: 217.2 32.6% 17.5% !important;
+  --tw-bg-opacity: 1 !important;
+  --tw-text-opacity: 1 !important;
 }
 
 /* Estilos para melhor responsividade em dispositivos móveis */

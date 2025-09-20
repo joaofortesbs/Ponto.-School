@@ -69,7 +69,16 @@ const AtividadeCompartilhadaPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="public-activity-page">
+    <div 
+      className="public-activity-page shared-activity-isolated-page" 
+      style={{
+        backgroundColor: '#0f172a !important',
+        color: '#ffffff !important',
+        minHeight: '100vh !important',
+        isolation: 'isolate !important'
+      }}
+      data-theme="dark-forced"
+    >
       <InterfaceCompartilharAtividade />
     </div>
   );
