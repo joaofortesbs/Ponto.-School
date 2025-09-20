@@ -411,22 +411,26 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             </div>
           </div>
 
-          {/* Compartilhar Atividade */}
+          {/* Card de Link de Compartilhamento */}
           <div 
             onClick={handleShareActivity}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-400/30 cursor-pointer hover:from-blue-600 hover:to-blue-700 group relative"
-            title="Compartilhar atividade"
+            className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm cursor-pointer hover:from-orange-100 hover:to-orange-150 dark:hover:from-orange-800/40 dark:hover:to-orange-700/30 transition-all duration-300 hover:shadow-md hover:scale-105 relative group"
+            title="Copiar link de compartilhamento"
           >
-            <Link className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
+            <div className="flex items-center justify-center">
+              <Link className="w-4 h-4 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform duration-300" />
+            </div>
 
             {/* Animação de sucesso */}
             {showCopySuccess && (
-              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-medium shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-medium shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500 z-50">
                 Link copiado!
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-600"></div>
               </div>
             )}
           </div>
+
+          
 
           {/* Dropdown de Mais Opções - Apenas se não for página de compartilhamento */}
           {!isSharedActivity && (
