@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -184,6 +184,9 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const [showCopySuccess, setShowCopySuccess] = useState<boolean>(false);
+  const [showShareButton, setShowShareButton] = useState<boolean>(isSharedActivity);
 
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
@@ -277,7 +280,15 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   }, []);
 
-  
+  const handleShareActivity = () => {
+    const shareLink = `${window.location.origin}/activity/${activityId}?shared=true`; // Exemplo de link de compartilhamento
+    navigator.clipboard.writeText(shareLink).then(() => {
+      setShowCopySuccess(true);
+      setTimeout(() => setShowCopySuccess(false), 2000); // Esconde a mensagem após 2 segundos
+    }).catch(err => {
+      console.error('Erro ao copiar link: ', err);
+    });
+  };
 
   // Definir estilo condicional baseado na prop isSharedActivity
   const headerStyle = isSharedActivity 
@@ -374,9 +385,26 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             </div>
           </div>
 
-          
+          {/* Card de Link de Compartilhamento - Apenas para páginas compartilhadas */}
+          {showShareButton && (
+            <div 
+              onClick={handleShareActivity}
+              className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm cursor-pointer hover:from-orange-100 hover:to-orange-150 dark:hover:from-orange-800/40 dark:hover:to-orange-700/30 transition-all duration-300 hover:shadow-md hover:scale-105 relative group"
+              title="Copiar link de compartilhamento"
+            >
+              <div className="flex items-center justify-center">
+                <Link className="w-4 h-4 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform duration-300" />
+              </div>
 
-          
+              {/* Animação de sucesso */}
+              {showCopySuccess && (
+                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-medium shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500 z-50">
+                  Link copiado!
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-600"></div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Dropdown de Mais Opções - Apenas se não for página de compartilhamento */}
           {!isSharedActivity && (

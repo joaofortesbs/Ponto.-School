@@ -271,6 +271,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         onDelete={() => {
           console.log('Deletar atividade compartilhada');
         }}
+        showShareButton={true}
       />
 
       {/* Card principal com fundo escuro */}
