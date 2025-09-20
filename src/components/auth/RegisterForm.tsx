@@ -20,7 +20,7 @@ import {
   Award,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { auth } from "@/lib/supabase";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
 
 interface FormData {

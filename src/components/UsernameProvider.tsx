@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { supabase } from '@/lib/supabase';
+import { auth, query } from '@/lib/supabase';
 import { profileService } from '@/services/profileService';
 
 // Definir interface para o contexto
