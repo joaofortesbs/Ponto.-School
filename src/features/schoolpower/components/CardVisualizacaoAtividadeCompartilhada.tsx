@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Download, Eye } from 'lucide-react';
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
+import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
 
 // Import dos previews das atividades
@@ -29,15 +30,42 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   onApresentarMaterial,
   onUsarMaterial
 }) => {
+  // Sincronizar dados da atividade usando o sistema de sincronização
+  const atividadeSincronizada: AtividadeDados | null = useMemo(() => {
+    if (!atividade) return null;
+
+    try {
+      console.log('🔄 [CARD] Iniciando sincronização de dados da atividade:', atividade);
+      
+      const resultado = DataSyncService.sincronizarAtividade(atividade);
+      
+      console.log('✅ [CARD] Dados sincronizados com sucesso:', resultado);
+      
+      // Validar dados sincronizados
+      const validacao = DataSyncService.validarAtividade(resultado);
+      if (!validacao.valida) {
+        console.warn('⚠️ [CARD] Dados sincronizados com problemas:', validacao.erros);
+      }
+      
+      return resultado;
+    } catch (error) {
+      console.error('❌ [CARD] Erro na sincronização de dados:', error);
+      return null;
+    }
+  }, [atividade]);
 
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
-    if (!atividade) return null;
+    if (!atividadeSincronizada) return null;
 
-    const activityType = atividade.tipo;
-    const activityData = atividade.dados || {};
+    const activityType = atividadeSincronizada.tipo;
+    const activityData = atividadeSincronizada.dados || {};
 
-    console.log('🎯 Renderizando preview da atividade compartilhada:', { tipo: activityType, dados: activityData });
+    console.log('🎯 Renderizando preview da atividade sincronizada:', { 
+      tipo: activityType, 
+      dados: activityData,
+      atividadeSincronizada 
+    });
 
     try {
       switch (activityType) {
@@ -45,7 +73,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           return (
             <ExerciseListPreview
               data={activityData}
-              customFields={activityData.customFields}
+              customFields={atividadeSincronizada.customFields}
             />
           );
 
@@ -53,7 +81,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           return (
             <PlanoAulaPreview
               data={activityData}
-              activityData={atividade}
+              activityData={atividadeSincronizada}
             />
           );
 
@@ -61,7 +89,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           return (
             <SequenciaDidaticaPreview
               data={activityData}
-              activityData={atividade}
+              activityData={atividadeSincronizada}
             />
           );
 
@@ -85,7 +113,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           return (
             <QuadroInterativoPreview
               data={activityData}
-              activityData={atividade}
+              activityData={atividadeSincronizada}
             />
           );
 
@@ -100,7 +128,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           return (
             <ActivityPreview
               content={activityData}
-              activityData={atividade}
+              activityData={atividadeSincronizada}
             />
           );
       }
@@ -122,9 +150,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       {/* UniversalActivityHeader - Com estilo específico para página de compartilhamento */}
       <UniversalActivityHeader
         isSharedActivity={true}
-        activityTitle={atividade?.titulo || titulo}
+        activityTitle={atividadeSincronizada?.titulo || titulo}
         activityIcon={(() => {
-          const activityType = atividade?.tipo || '';
+          const activityType = atividadeSincronizada?.tipo || '';
           if (activityType.includes('flash-cards')) {
             return () => (
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
@@ -164,7 +192,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           }
         })()}
         activityType={(() => {
-          const tipo = atividade?.tipo || '';
+          const tipo = atividadeSincronizada?.tipo || '';
           if (tipo.includes('flash-cards')) return 'Flash Cards';
           if (tipo.includes('quiz')) return 'Quiz Interativo';
           if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
@@ -174,7 +202,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           if (tipo.includes('mapa-mental')) return 'Mapa Mental';
           return 'Atividade';
         })()}
-        activityId={atividade?.id || 'atividade-compartilhada'}
+        activityId={atividadeSincronizada?.id || 'atividade-compartilhada'}
         userName={atividade?.professorNome || 'Prof. João'}
         userAvatar={atividade?.professorAvatar}
         schoolPoints={atividade?.schoolPoints || 100}
@@ -218,18 +246,14 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                       Sobre esta Atividade
                     </h3>
                     <p className="text-gray-300 leading-relaxed text-sm">
-                      {atividade?.descricao || 
-                       atividade?.dados?.descricao || 
-                       atividade?.dados?.description ||
-                       atividade?.description ||
-                       'Descrição da atividade não disponível.'}
+                      {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
                     </p>
                     
                     {/* Metadados da Atividade */}
                     <div className="flex flex-wrap gap-2 mt-4">
                       <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
                         {(() => {
-                          const tipo = atividade?.tipo || '';
+                          const tipo = atividadeSincronizada?.tipo || '';
                           if (tipo.includes('flash-cards')) return 'Flash Cards';
                           if (tipo.includes('quiz')) return 'Quiz Interativo';
                           if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
@@ -240,19 +264,19 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                           return 'Atividade';
                         })()}
                       </div>
-                      {atividade?.dados?.disciplina && (
+                      {atividadeSincronizada?.disciplina && (
                         <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
-                          {atividade.dados.disciplina}
+                          {atividadeSincronizada.disciplina}
                         </div>
                       )}
-                      {atividade?.dados?.nivel && (
+                      {atividadeSincronizada?.nivel && (
                         <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
-                          {atividade.dados.nivel}
+                          {atividadeSincronizada.nivel}
                         </div>
                       )}
-                      {atividade?.dados?.tempo_estimado && (
+                      {atividadeSincronizada?.tempo_estimado && (
                         <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
-                          {atividade.dados.tempo_estimado} min
+                          {atividadeSincronizada.tempo_estimado} min
                         </div>
                       )}
                     </div>

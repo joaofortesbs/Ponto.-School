@@ -1,5 +1,7 @@
-
 import { v4 as uuidv4 } from 'uuid';
+import { generateBase62Id } from '@/lib/utils';
+import { DataSyncService } from './data-sync-service';
+import { StorageSyncService } from './storage-sync-service';
 
 // Caracteres para geração de código único (Base62)
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -8,22 +10,38 @@ const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 export interface AtividadeCompartilhavel {
   id: string;
   titulo: string;
+  descricao?: string; // Descrição sincronizada
   tipo: string;
   dados: any;
+  customFields?: any; // Campos customizados sincronizados
+  professorNome: string;
+  professorAvatar?: string;
+  schoolPoints: number;
   criadoPor: string;
   criadoEm: string;
   codigoUnico: string;
   linkPublico: string;
   ativo: boolean;
+  disciplina?: string; // Metadados adicionais sincronizados
+  nivel?: string;
+  tempo_estimado?: string;
 }
 
 // Interface para criar nova atividade compartilhável
 export interface NovaAtividadeCompartilhavel {
   id: string;
   titulo: string;
+  descricao?: string; // Descrição para sincronização
   tipo: string;
   dados: any;
+  customFields?: any; // Campos customizados para sincronização
+  professorNome?: string;
+  professorAvatar?: string;
+  schoolPoints?: number;
   criadoPor: string;
+  disciplina?: string; // Metadados para sincronização
+  nivel?: string;
+  tempo_estimado?: string;
 }
 
 // Chave base para localStorage
@@ -59,16 +77,16 @@ class LocalStorageManager {
 
   findByActivityId(activityId: string): AtividadeCompartilhavel | null {
     const activities = this.getAllActivities();
-    return activities.find(activity => 
+    return activities.find(activity =>
       activity.id === activityId && activity.ativo === true
     ) || null;
   }
 
   findByCode(activityId: string, codigoUnico: string): AtividadeCompartilhavel | null {
     const activities = this.getAllActivities();
-    return activities.find(activity => 
-      activity.id === activityId && 
-      activity.codigoUnico === codigoUnico && 
+    return activities.find(activity =>
+      activity.id === activityId &&
+      activity.codigoUnico === codigoUnico &&
       activity.ativo === true
     ) || null;
   }
@@ -76,37 +94,37 @@ class LocalStorageManager {
   saveActivity(activity: AtividadeCompartilhavel): boolean {
     const activities = this.getAllActivities();
     const existingIndex = activities.findIndex(a => a.id === activity.id);
-    
+
     if (existingIndex >= 0) {
       activities[existingIndex] = activity;
     } else {
       activities.push(activity);
     }
-    
+
     return this.saveAllActivities(activities);
   }
 
   updateActivity(activityId: string, updates: Partial<AtividadeCompartilhavel>): boolean {
     const activities = this.getAllActivities();
     const index = activities.findIndex(a => a.id === activityId);
-    
+
     if (index >= 0) {
       activities[index] = { ...activities[index], ...updates };
       return this.saveAllActivities(activities);
     }
-    
+
     return false;
   }
 
   getAllByUser(userId: string): AtividadeCompartilhavel[] {
     const activities = this.getAllActivities();
-    return activities.filter(activity => 
+    return activities.filter(activity =>
       activity.criadoPor === userId && activity.ativo === true
     );
   }
 
   deactivateActivity(activityId: string): boolean {
-    return this.updateActivity(activityId, { 
+    return this.updateActivity(activityId, {
       ativo: false,
       criadoEm: new Date().toISOString() // Atualizar timestamp de desativação
     });
@@ -114,7 +132,7 @@ class LocalStorageManager {
 
   codeExists(codigo: string): boolean {
     const activities = this.getAllActivities();
-    return activities.some(activity => 
+    return activities.some(activity =>
       activity.codigoUnico === codigo && activity.ativo === true
     );
   }
@@ -154,11 +172,11 @@ class GeradorLinkAtividadesSchoolPower {
 
     while (tentativas < maxTentativas) {
       const codigo = this.gerarCodigoUnico(tamanho);
-      
+
       if (!this.storage.codeExists(codigo)) {
         return codigo;
       }
-      
+
       tentativas++;
     }
 
@@ -193,7 +211,7 @@ class GeradorLinkAtividadesSchoolPower {
       if (!atividade.titulo) {
         throw new Error('Título da atividade é obrigatório');
       }
-      
+
       // Primeiro, verifica se já existe uma atividade compartilhável para este ID
       console.log('🔍 [GERADOR] Verificando se já existe link para ID:', atividade.id);
       const existente = this.storage.findByActivityId(atividade.id);
@@ -206,40 +224,54 @@ class GeradorLinkAtividadesSchoolPower {
       }
 
       console.log('🆕 [GERADOR] Criando novo link...');
-      
-      // Gera código único validado
-      const codigoUnico = this.gerarCodigoUnicoValidado();
-      console.log('🎯 [GERADOR] Código único:', codigoUnico);
-      
-      // Cria o link público
-      const linkPublico = this.criarLinkPublico(atividade.id, codigoUnico);
-      console.log('🔗 [GERADOR] Link público:', linkPublico);
 
-      // Criar objeto da atividade compartilhável
+      // Sincronizar dados da atividade antes de criar o link
+      console.log('🔄 [GERADOR] Sincronizando dados da atividade antes da criação');
+      const atividadeSincronizada = DataSyncService.sincronizarAtividade(atividade);
+      console.log('✅ [GERADOR] Dados sincronizados:', atividadeSincronizada);
+
+      // Gerar código único
+      const codigoUnico = this.gerarCodigoUnico();
+      console.log('🔑 [GERADOR] Código único gerado:', codigoUnico);
+
+      // Criar atividade compartilhável com dados sincronizados
       const novaAtividade: AtividadeCompartilhavel = {
-        id: atividade.id,
-        titulo: atividade.titulo,
-        tipo: atividade.tipo,
-        dados: atividade.dados || {},
-        criadoPor: atividade.criadoPor,
-        codigoUnico: codigoUnico,
-        linkPublico: linkPublico,
+        id: atividadeSincronizada.id,
+        titulo: atividadeSincronizada.titulo,
+        descricao: atividadeSincronizada.descricao, // Incluir descrição sincronizada
+        tipo: atividadeSincronizada.tipo,
+        dados: atividadeSincronizada.dados || {},
+        customFields: atividadeSincronizada.customFields || {},
+        professorNome: atividade.professorNome || 'Professor',
+        professorAvatar: atividade.professorAvatar,
+        schoolPoints: atividade.schoolPoints || 100,
+        codigoUnico,
+        linkPublico: this.criarLinkPublico(atividadeSincronizada.id, codigoUnico),
         criadoEm: new Date().toISOString(),
-        ativo: true
+        ativo: true,
+        // Metadados adicionais sincronizados
+        disciplina: atividadeSincronizada.disciplina,
+        nivel: atividadeSincronizada.nivel,
+        tempo_estimado: atividadeSincronizada.tempo_estimado
       };
 
       console.log('💾 [GERADOR] Salvando no localStorage:', novaAtividade);
 
-      // Salva no localStorage
-      const success = this.storage.saveActivity(novaAtividade);
+      // Salvar no localStorage usando sistema de sincronização
+      const sucessoStorage = this.storage.saveActivity(novaAtividade);
+      console.log('💾 [GERADOR] Resultado do salvamento principal:', { sucesso: sucessoStorage, atividade: novaAtividade.titulo });
 
-      if (!success) {
+      // Salvar também usando StorageSyncService para backup e sincronização
+      const sucessoSync = StorageSyncService.salvarAtividade(novaAtividade, 'compartilhada');
+      console.log('🔄 [GERADOR] Resultado da sincronização:', { sucesso: sucessoSync });
+
+      if (!sucessoStorage) {
         throw new Error('Falha ao salvar no localStorage');
       }
 
       console.log('✅ [GERADOR] Sucesso! Dados salvos');
       console.log('🎯 [GERADOR] Resultado final:', novaAtividade);
-      
+
       // Validação final
       if (!novaAtividade.linkPublico) {
         throw new Error('Link público não foi gerado corretamente');
@@ -359,9 +391,9 @@ class GeradorLinkAtividadesSchoolPower {
       console.log('📋 Listando atividades do usuário:', userId);
 
       const atividades = this.storage.getAllByUser(userId);
-      
+
       // Ordenar por data de criação (mais recentes primeiro)
-      atividades.sort((a, b) => 
+      atividades.sort((a, b) =>
         new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime()
       );
 
@@ -378,17 +410,17 @@ class GeradorLinkAtividadesSchoolPower {
 export const geradorLinkAtividades = new GeradorLinkAtividadesSchoolPower();
 
 // Funções utilitárias para uso fácil
-export const criarLinkAtividade = (atividade: NovaAtividadeCompartilhavel) => 
+export const criarLinkAtividade = (atividade: NovaAtividadeCompartilhavel) =>
   geradorLinkAtividades.criarAtividadeCompartilhavel(atividade);
 
-export const buscarAtividadeCompartilhada = (atividadeId: string, codigo: string) => 
+export const buscarAtividadeCompartilhada = (atividadeId: string, codigo: string) =>
   geradorLinkAtividades.buscarAtividadePorCodigo(atividadeId, codigo);
 
-export const regenerarLinkAtividade = (atividadeId: string) => 
+export const regenerarLinkAtividade = (atividadeId: string) =>
   geradorLinkAtividades.regenerarLinkAtividade(atividadeId);
 
-export const desativarAtividadeCompartilhada = (atividadeId: string) => 
+export const desativarAtividadeCompartilhada = (atividadeId: string) =>
   geradorLinkAtividades.desativarAtividade(atividadeId);
 
-export const listarAtividadesCompartilhadas = (userId: string) => 
+export const listarAtividadesCompartilhadas = (userId: string) =>
   geradorLinkAtividades.listarAtividadesDoUsuario(userId);
