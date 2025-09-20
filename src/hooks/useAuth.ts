@@ -9,122 +9,13 @@ interface User {
   full_name?: string;
 }
 
-interface AuthState {
+interface AuthContextType {
   user: User | null;
   loading: boolean;
-  error: string | null;
-}
-
-export function useAuth() {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-
-      // Verificar se há usuário salvo no localStorage primeiro
-      const savedUser = localStorage.getItem('currentUser');
-      if (savedUser) {
-        try {
-          const user = JSON.parse(savedUser);
-          setState({
-            user,
-            loading: false,
-            error: null,
-          });
-          return;
-        } catch (e) {
-          localStorage.removeItem('currentUser');
-        }
-      }
-
-      // Verificar com o backend
-      const response = await auth.getUser();
-
-      if (response.data.user) {
-        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
-        setState({
-          user: response.data.user,
-          loading: false,
-          error: null,
-        });
-      } else {
-        setState({
-          user: null,
-          loading: false,
-          error: null,
-        });
-      }
-    } catch (error: any) {
-      setState({
-        user: null,
-        loading: false,
-        error: error.message || 'Authentication error',
-      });
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
-
-      const response = await auth.signIn(email, password);
-
-      if (!response.success) {
-        setState(prev => ({ ...prev, loading: false, error: response.error }));
-        return { success: false, error: response.error };
-      }
-
-      localStorage.setItem('currentUser', JSON.stringify(response.user));
-      setState({
-        user: response.user,
-        loading: false,
-        error: null,
-      });
-
-      return { success: true, user: response.user };
-    } catch (error: any) {
-      setState({
-        user: null,
-        loading: false,
-        error: error.message || 'Sign in error',
-      });
-      return { success: false, error: error.message };
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      await auth.signOut();
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('auth_checked');
-      localStorage.removeItem('auth_status');
-      setState({
-        user: null,
-        loading: false,
-        error: null,
-      });
-    } catch (error: any) {
-      setState(prev => ({ ...prev, error: error.message }));
-    }
-  };
-
-  return {
-    user: state.user,
-    loading: state.loading,
-    error: state.error,
-    signIn,
-    signOut,
-    checkAuth,
-  };
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ success: boolean; error?: string }>;
+  signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -137,8 +28,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await auth.getUser();
-        setUser(currentUser);
+        const response = await auth.getUser();
+        if (response.data.user) {
+          setUser(response.data.user);
+        }
       } catch (error) {
         console.error('Erro ao carregar usuário:', error);
       } finally {
@@ -178,6 +71,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     try {
       await auth.signOut();
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('auth_checked');
+      localStorage.removeItem('auth_status');
       setUser(null);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
@@ -186,8 +82,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const refreshUser = async () => {
     try {
-      const currentUser = await auth.getUser();
-      setUser(currentUser);
+      const response = await auth.getUser();
+      if (response.data.user) {
+        setUser(response.data.user);
+      }
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
     }
@@ -217,7 +115,7 @@ export const useAuth = () => {
   return context;
 };
 
-// Hook simples para compatibilidade
+// Hook simples para compatibilidade com código existente
 export const useAuthSimple = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -225,8 +123,10 @@ export const useAuthSimple = () => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const currentUser = await auth.getUser();
-        setUser(currentUser);
+        const response = await auth.getUser();
+        if (response.data.user) {
+          setUser(response.data.user);
+        }
       } catch (error) {
         console.error('Erro ao carregar usuário:', error);
       } finally {
