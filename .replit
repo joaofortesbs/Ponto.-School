@@ -255,35 +255,6 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
-[[workflows.workflow]]
-name = "Migração Completa Supabase para Neon"
-author = 47684299
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "echo \"Iniciando migração completa do Supabase para Neon...\""
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/backup-supabase.js"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/setup-neon-db.js"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/migrate-data-to-neon.js"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/test-migration.js"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "echo \"Migração concluída! Verifique os logs acima para confirmar o sucesso.\""
-
 [auth]
 pageEnabled = false
 buttonEnabled = false
