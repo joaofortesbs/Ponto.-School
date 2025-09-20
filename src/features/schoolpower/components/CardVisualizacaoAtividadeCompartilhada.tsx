@@ -221,17 +221,8 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                       {atividade?.descricao || 
                        atividade?.dados?.descricao || 
                        atividade?.dados?.description ||
-                       `Esta é uma atividade do tipo ${(() => {
-                         const tipo = atividade?.tipo || '';
-                         if (tipo.includes('flash-cards')) return 'Flash Cards para estudo e memorização';
-                         if (tipo.includes('quiz')) return 'Quiz Interativo para avaliação de conhecimento';
-                         if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios para prática e fixação';
-                         if (tipo.includes('plano-aula')) return 'Plano de Aula estruturado e completo';
-                         if (tipo.includes('sequencia-didatica')) return 'Sequência Didática organizada por etapas';
-                         if (tipo.includes('quadro-interativo')) return 'Quadro Interativo para apresentações dinâmicas';
-                         if (tipo.includes('mapa-mental')) return 'Mapa Mental para organização visual de conteúdos';
-                         return 'Atividade Educacional';
-                       })()} criada especialmente para facilitar o processo de ensino-aprendizagem. Desenvolvida com metodologias pedagógicas modernas para proporcionar uma experiência educacional rica e envolvente.`}
+                       atividade?.description ||
+                       'Descrição da atividade não disponível.'}
                     </p>
                     
                     {/* Metadados da Atividade */}
