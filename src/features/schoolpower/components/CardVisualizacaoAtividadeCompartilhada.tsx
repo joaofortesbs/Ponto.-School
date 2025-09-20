@@ -410,36 +410,36 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         showShareButton={true}
       />
 
-      {/* Card principal com fundo escuro */}
-      <Card className="w-full min-h-[600px] border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0" style={{ backgroundColor: '#021321' }}>
+      {/* Card principal otimizado para modo escuro */}
+      <Card className="w-full min-h-[600px] border-slate-600/40 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0 bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-gray-900/90">
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
 
-          {/* Seção de Descrição da Atividade - Expansível com Clique */}
+          {/* Seção de Descrição da Atividade - Expansível com Clique - Otimizada para modo escuro */}
           <div className="mb-6">
             <Card 
-              className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm cursor-pointer hover:bg-gradient-to-r hover:from-orange-50/15 hover:to-orange-100/15 transition-all duration-300"
+              className="bg-gradient-to-r from-orange-500/20 to-orange-600/25 border-orange-400/30 rounded-2xl shadow-lg cursor-pointer hover:bg-gradient-to-r hover:from-orange-500/25 hover:to-orange-600/30 hover:border-orange-400/40 transition-all duration-300"
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
             >
               <CardContent className={`transition-all duration-500 ease-in-out ${
                 isDescriptionExpanded ? 'p-6' : 'p-3'
               }`}>
                 <div className="flex items-start gap-4">
-                  {/* Barra lateral indicadora */}
-                  <div className={`w-2 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0 transition-all duration-500 ${
+                  {/* Barra lateral indicadora otimizada para modo escuro */}
+                  <div className={`w-2 bg-gradient-to-b from-orange-400 to-orange-500 rounded-full flex-shrink-0 transition-all duration-500 shadow-lg shadow-orange-500/30 ${
                     isDescriptionExpanded ? 'h-20' : 'h-8'
                   }`}></div>
 
                   <div className="flex-1">
-                    {/* Cabeçalho com indicador de expansão */}
+                    {/* Cabeçalho com indicador de expansão otimizado para modo escuro */}
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className={`font-semibold text-white/90 flex items-center gap-2 transition-all duration-300 ${
+                      <h3 className={`font-semibold text-white flex items-center gap-2 transition-all duration-300 ${
                         isDescriptionExpanded ? 'text-lg' : 'text-base'
                       }`}>
-                        <span className="text-orange-400">📋</span>
+                        <span className="text-orange-300">📋</span>
                         Sobre esta Atividade
                       </h3>
-                      <div className="flex items-center gap-1 text-orange-400 text-xs hover:text-orange-300 transition-colors">
+                      <div className="flex items-center gap-1 text-orange-300 text-xs hover:text-orange-200 transition-colors">
                         {isDescriptionExpanded ? (
                           <>
                             <span>Minimizar</span>
@@ -454,22 +454,22 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                       </div>
                     </div>
 
-                    {/* Container da descrição com animação suave */}
+                    {/* Container da descrição com animação suave otimizado para modo escuro */}
                     <div className="relative overflow-hidden">
                       {/* Descrição só aparece quando expandido */}
                       {isDescriptionExpanded && (
                         <div className="transition-all duration-700 ease-in-out max-h-96 opacity-100">
-                          <p className="text-gray-300 leading-relaxed text-sm">
+                          <p className="text-gray-200 leading-relaxed text-sm">
                             {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
                           </p>
                         </div>
                       )}
                     </div>
 
-                    {/* Metadados da Atividade - só aparece quando expandido */}
+                    {/* Metadados da Atividade otimizados para modo escuro - só aparece quando expandido */}
                     {isDescriptionExpanded && (
                       <div className="flex flex-wrap gap-2 mt-4 animate-in fade-in duration-500">
-                        <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
+                        <div className="bg-orange-500/30 border border-orange-400/40 rounded-full px-3 py-1 text-xs text-orange-200 font-medium shadow-sm">
                           {(() => {
                             const tipo = atividadeSincronizada?.tipo || '';
                             if (tipo.includes('flash-cards')) return 'Flash Cards';
@@ -483,17 +483,17 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                           })()}
                         </div>
                         {atividadeSincronizada?.disciplina && (
-                          <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
+                          <div className="bg-blue-500/30 border border-blue-400/40 rounded-full px-3 py-1 text-xs text-blue-200 font-medium shadow-sm">
                             {atividadeSincronizada.disciplina}
                           </div>
                         )}
                         {atividadeSincronizada?.nivel && (
-                          <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
+                          <div className="bg-green-500/30 border border-green-400/40 rounded-full px-3 py-1 text-xs text-green-200 font-medium shadow-sm">
                             {atividadeSincronizada.nivel}
                           </div>
                         )}
                         {atividadeSincronizada?.tempo_estimado && (
-                          <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
+                          <div className="bg-purple-500/30 border border-purple-400/40 rounded-full px-3 py-1 text-xs text-purple-200 font-medium shadow-sm">
                             {atividadeSincronizada.tempo_estimado} min
                           </div>
                         )}
@@ -505,11 +505,11 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             </Card>
           </div>
 
-        {/* Card de Pré-visualização da Atividade */}
+        {/* Card de Pré-visualização da Atividade otimizado para modo escuro */}
         <div className="mb-8 flex-1 relative group">
-          <Card ref={cardRef} className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
+          <Card ref={cardRef} className="bg-gray-800/90 border-gray-600/40 rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm">
             <CardContent className="p-0 h-full flex flex-col">
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4 shadow-lg">
                 <div className="flex items-center justify-center gap-2 text-white">
                   <Eye className="w-5 h-5" />
                   <span className="font-semibold">Pré-visualização da Atividade</span>
@@ -524,10 +524,10 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   </div>
                 </div>
 
-                {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
+                {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto otimizado para modo escuro */}
                 <div 
                   onClick={handlePresentarAtividade}
-                  className="absolute inset-0 z-40 pointer-events-auto cursor-pointer bg-black/0 group-hover:bg-black/40 backdrop-blur-none group-hover:backdrop-blur-sm transition-all duration-700 ease-in-out flex items-center justify-center"
+                  className="absolute inset-0 z-40 pointer-events-auto cursor-pointer bg-black/0 group-hover:bg-black/50 backdrop-blur-none group-hover:backdrop-blur-md transition-all duration-700 ease-in-out flex items-center justify-center"
                   style={{ 
                     position: 'absolute',
                     top: 0,
@@ -539,20 +539,20 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                     zIndex: 10000
                   }}
                 >
-                  {/* Container unificado com ícone e texto FIXO */}
+                  {/* Container unificado com ícone e texto FIXO otimizado para modo escuro */}
                   <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none relative">
-                    {/* Ícone de play com animação aprimorada */}
-                    <div className="bg-gradient-to-br from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-300/30 relative overflow-hidden">
-                      {/* Efeito de brilho interno do ícone */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-                      <Play className="w-10 h-10 fill-white drop-shadow-lg relative z-10 transition-all duration-300 group-hover:scale-110" />
+                    {/* Ícone de play com animação aprimorada otimizado para modo escuro */}
+                    <div className="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-200/40 relative overflow-hidden shadow-orange-500/30">
+                      {/* Efeito de brilho interno do ícone otimizado para modo escuro */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                      <Play className="w-10 h-10 fill-white drop-shadow-xl relative z-10 transition-all duration-300 group-hover:scale-110" />
                     </div>
 
-                    {/* Texto com efeitos aprimorados */}
-                    <div className="text-xl font-bold bg-black/80 px-6 py-3 rounded-2xl backdrop-blur-lg shadow-2xl border border-white/30 text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-500/30 group-hover:border-orange-400/40 relative overflow-hidden">
-                      {/* Efeito de brilho no texto */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-                      <span className="relative z-10">Apresentar Atividade</span>
+                    {/* Texto com efeitos aprimorados otimizado para modo escuro */}
+                    <div className="text-xl font-bold bg-gray-900/90 px-6 py-3 rounded-2xl backdrop-blur-xl shadow-2xl border border-orange-400/30 text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-400/40 group-hover:border-orange-300/50 relative overflow-hidden">
+                      {/* Efeito de brilho no texto otimizado para modo escuro */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-orange-300/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                      <span className="relative z-10 text-white">Apresentar Atividade</span>
                     </div>
                   </div>
                 </div>
@@ -561,11 +561,11 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           </Card>
         </div>
 
-        {/* Botões na base do card */}
+        {/* Botões na base do card otimizados para modo escuro */}
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <Button
             onClick={handlePresentarAtividade}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+            className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-400/30"
           >
             <Play className="w-5 h-5" />
             Apresentar Material
@@ -573,7 +573,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
           <Button
             onClick={onUsarMaterial}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-400/30"
           >
             <Download className="w-5 h-5" />
             Usar Material
@@ -582,22 +582,22 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       </CardContent>
     </Card>
 
-      {/* Interface Fullscreen - Container Transform */}
+      {/* Interface Fullscreen otimizada para modo escuro - Container Transform */}
       {isFullscreenMode && (
         <div 
           ref={fullscreenRef}
-          className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-auto"
+          className="fixed inset-0 z-50 bg-gray-900 overflow-auto"
           style={{ isolation: 'isolate' }}
         >
-          {/* Header minimalista com apenas botão de fechar */}
+          {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
           <div className="absolute top-4 right-4 z-20">
             <Button
               onClick={handleCloseFullscreen}
               variant="ghost"
               size="icon"
-              className="w-12 h-12 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm"
+              className="w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700/90 backdrop-blur-md border border-gray-600/40 shadow-xl hover:shadow-2xl transition-all duration-300"
             >
-              <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+              <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
             </Button>
           </div>
 
