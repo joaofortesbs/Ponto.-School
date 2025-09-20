@@ -261,17 +261,23 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }
   };
 
-  // Função para fechar modo fullscreen com animação reversa
-  const handleCloseFullscreen = async () => {
-    if (!fullscreenRef.current || isAnimating) return;
+  // Função para fechar modo fullscreen com animação reversa otimizada
+  const handleCloseFullscreen = () => {
+    if (isAnimating) return;
 
     setIsAnimating(true);
 
-    // Obter posição do card original
+    // Obter posição do card original de forma mais eficiente
     const originalCardRect = cardRef.current?.getBoundingClientRect();
-    if (!originalCardRect) return;
+    if (!originalCardRect) {
+      // Fallback direto se não conseguir obter posição
+      setIsFullscreenMode(false);
+      setIsAnimating(false);
+      document.body.style.overflow = 'auto';
+      return;
+    }
 
-    // Criar elemento temporário para animação reversa
+    // Criar elemento temporário otimizado para animação reversa
     const animationElement = document.createElement('div');
     animationElement.style.cssText = `
       position: fixed;
@@ -279,47 +285,43 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       left: 0px;
       width: 100vw;
       height: 100vh;
-      background: white;
+      background: ${document.documentElement.classList.contains('dark') ? '#111827' : 'white'};
       border-radius: 0px;
-      z-index: 9999;
+      z-index: 10000;
       overflow: hidden;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, width, height, border-radius;
+      backface-visibility: hidden;
     `;
-    
-    // Clonar conteúdo fullscreen
-    const fullscreenClone = fullscreenRef.current.cloneNode(true) as HTMLElement;
-    animationElement.appendChild(fullscreenClone);
     
     document.body.appendChild(animationElement);
     
-    // Esconder interface fullscreen
+    // Esconder interface fullscreen imediatamente para evitar conflitos
     setIsFullscreenMode(false);
 
-    // Animar de volta para posição original
+    // Usar requestAnimationFrame duplo para garantir que o DOM esteja pronto
     requestAnimationFrame(() => {
-      animationElement.style.top = `${originalCardRect.top}px`;
-      animationElement.style.left = `${originalCardRect.left}px`;
-      animationElement.style.width = `${originalCardRect.width}px`;
-      animationElement.style.height = `${originalCardRect.height}px`;
-      animationElement.style.borderRadius = '16px';
-      
-      // Escalar conteúdo de volta
-      const clonedContent = animationElement.firstChild as HTMLElement;
-      if (clonedContent) {
-        clonedContent.style.transform = 'scale(0.75)';
-        clonedContent.style.transformOrigin = 'top left';
-      }
+      requestAnimationFrame(() => {
+        animationElement.style.top = `${originalCardRect.top}px`;
+        animationElement.style.left = `${originalCardRect.left}px`;
+        animationElement.style.width = `${originalCardRect.width}px`;
+        animationElement.style.height = `${originalCardRect.height}px`;
+        animationElement.style.borderRadius = '16px';
+        animationElement.style.opacity = '0.8';
+      });
     });
 
-    // Limpar após animação
+    // Limpar após animação com timeout reduzido
     setTimeout(() => {
-      document.body.removeChild(animationElement);
+      if (document.body.contains(animationElement)) {
+        document.body.removeChild(animationElement);
+      }
       setIsAnimating(false);
       
       // Restaurar scroll do body
       document.body.style.overflow = 'auto';
-    }, 600);
+    }, 500);
   };
 
   return (
