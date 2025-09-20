@@ -81,11 +81,12 @@ export const auth = {
     }
   },
 
-  checkUsername: async (username: string): Promise<{ available: boolean }> => {
+  checkUsername: async (username: string): Promise<boolean> => {
     try {
-      return await apiRequest(`/auth/check-username/${username}`);
+      const response = await apiRequest(`/auth/check-username/${username}`);
+      return response.available;
     } catch (error) {
-      return { available: false };
+      return false;
     }
   },
 
@@ -97,6 +98,38 @@ export const auth = {
       });
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Username not found' };
+    }
+  },
+
+  createUserProfile: async (profileData: any): Promise<{ success: boolean; error?: string; profile?: any }> => {
+    try {
+      const response = await apiRequest('/auth/create-profile', {
+        method: 'POST',
+        body: JSON.stringify({ profileData }),
+      });
+      return { success: true, profile: response.profile };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Profile creation failed' };
+    }
+  },
+
+  updateUserProfile: async (profileData: any): Promise<{ success: boolean; error?: string; profile?: any }> => {
+    try {
+      const response = await apiRequest('/auth/create-profile', {
+        method: 'POST',
+        body: JSON.stringify({ profileData }),
+      });
+      return { success: true, profile: response.profile };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Profile update failed' };
+    }
+  },
+
+  checkEmail: async (email: string): Promise<{ available: boolean }> => {
+    try {
+      return await apiRequest(`/auth/check-email/${email}`);
+    } catch (error) {
+      return { available: false };
     }
   },
 };

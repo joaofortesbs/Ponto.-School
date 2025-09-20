@@ -50,6 +50,8 @@ export const initTables = async () => {
         id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
+        email_confirmed BOOLEAN DEFAULT FALSE,
+        last_sign_in_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
@@ -57,15 +59,33 @@ export const initTables = async () => {
 
     await query(`
       CREATE TABLE IF NOT EXISTS profiles (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        email VARCHAR(255),
         username VARCHAR(50) UNIQUE,
         full_name VARCHAR(255),
         display_name VARCHAR(255),
         institution VARCHAR(255),
         state VARCHAR(2),
         birth_date DATE,
-        plan_type VARCHAR(50) DEFAULT 'free',
+        plan_type VARCHAR(50) DEFAULT 'lite',
+        level INTEGER DEFAULT 1,
+        rank VARCHAR(50) DEFAULT 'Aprendiz',
+        xp INTEGER DEFAULT 0,
+        coins INTEGER DEFAULT 100,
+        bio TEXT,
+        phone VARCHAR(20),
+        location VARCHAR(100),
+        occupation VARCHAR(100),
+        education VARCHAR(200),
+        interests TEXT,
+        website VARCHAR(255),
+        social_links JSONB DEFAULT '{}',
+        student_title TEXT,
+        activity_status VARCHAR(20) DEFAULT 'online',
+        cover_url TEXT,
+        avatar_url TEXT,
+        balance INTEGER DEFAULT 150,
+        expert_balance INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )

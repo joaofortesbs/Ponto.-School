@@ -120,7 +120,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     createNodes();
     isInitializedRef.current = true;
     setIsReady(true);
-  }, [createNodes]); // Removendo dependencies para evitar recriação constante
+  }, [dimensions]); // Usar apenas dimensions como dependência
 
   // Inicializar as dimensões do canvas e os nós no carregamento da página
   useEffect(() => {

@@ -816,14 +816,12 @@ export function RegisterForm() {
                             (window as any).usernameCheckTimeout = setTimeout(async () => {
                               try {
                                 const isAvailable = await authService.checkUsername(validValue);
-                                const data = isAvailable ? null : { username: validValue };
-                                const error = isAvailable ? null : { message: 'Found' };
 
-                                if (data && !error) {
+                                if (!isAvailable) {
                                   setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
                                 } else {
-                                  // Limpar o erro se não houver duplicata e houver um erro de nome de usuário
-                                  if (error && error.message.includes('username') && formData.username === validValue) {
+                                  // Limpar o erro se não houver duplicata
+                                  if (error && error.includes('nome de usuário')) {
                                     setError("");
                                   }
                                 }

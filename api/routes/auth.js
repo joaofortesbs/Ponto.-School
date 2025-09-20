@@ -113,7 +113,7 @@ router.post('/resolve-username', async (req, res) => {
     }
     
     const result = await query(
-      'SELECT u.email FROM profiles p JOIN users u ON p.user_id = u.id WHERE p.username = $1',
+      'SELECT u.email FROM profiles p JOIN users u ON p.id = u.id WHERE p.username = $1',
       [username]
     );
     
@@ -124,6 +124,70 @@ router.post('/resolve-username', async (req, res) => {
     res.json({ email: result.rows[0].email });
   } catch (error) {
     console.error('Error resolving username:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Criar/Atualizar perfil do usuário
+router.post('/create-profile', authMiddleware, async (req, res) => {
+  try {
+    const { profileData } = req.body;
+    const userId = req.user.id;
+
+    const result = await query(`
+      INSERT INTO profiles (
+        id, email, username, full_name, display_name, institution, state, birth_date, plan_type,
+        level, rank, xp, coins, balance, expert_balance, activity_status, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW(), NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        username = EXCLUDED.username,
+        full_name = EXCLUDED.full_name,
+        display_name = EXCLUDED.display_name,
+        institution = EXCLUDED.institution,
+        state = EXCLUDED.state,
+        birth_date = EXCLUDED.birth_date,
+        plan_type = EXCLUDED.plan_type,
+        updated_at = NOW()
+      RETURNING *
+    `, [
+      userId,
+      profileData.email || req.user.email,
+      profileData.username,
+      profileData.full_name,
+      profileData.display_name || profileData.username,
+      profileData.institution,
+      profileData.state,
+      profileData.birth_date,
+      profileData.plan_type || 'lite',
+      1, // level
+      'Aprendiz', // rank
+      0, // xp
+      100, // coins
+      150, // balance
+      0, // expert_balance
+      'online' // activity_status
+    ]);
+
+    res.json({ success: true, profile: result.rows[0] });
+  } catch (error) {
+    console.error('Error creating/updating profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Verificar disponibilidade de email
+router.get('/check-email/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    const result = await query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
+    res.json({ available: result.rows.length === 0 });
+  } catch (error) {
+    console.error('Check email error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

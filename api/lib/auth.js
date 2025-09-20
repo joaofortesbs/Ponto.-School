@@ -1,4 +1,3 @@
-
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { query } from './database.js';
@@ -179,3 +178,5 @@ export const authMiddleware = async (req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export { signUp, signIn, getUserFromToken };
