@@ -277,26 +277,17 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
                     {/* Container da descrição com animação suave */}
                     <div className="relative overflow-hidden">
-                      {/* Descrição com altura limitada quando minimizado */}
-                      <div className={`transition-all duration-700 ease-in-out ${
-                        isDescriptionExpanded 
-                          ? 'max-h-96 opacity-100' 
-                          : 'max-h-8 opacity-70 overflow-hidden'
-                      }`}>
-                        <p className={`text-gray-300 leading-relaxed transition-all duration-300 ${
-                          isDescriptionExpanded ? 'text-sm' : 'text-xs'
-                        }`}>
-                          {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
-                        </p>
-                      </div>
-
-                      {/* Gradiente de fade quando minimizado - mais sutil */}
-                      {!isDescriptionExpanded && (
-                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-orange-50/15 via-orange-50/10 to-transparent pointer-events-none transition-opacity duration-500" />
+                      {/* Descrição só aparece quando expandido */}
+                      {isDescriptionExpanded && (
+                        <div className="transition-all duration-700 ease-in-out max-h-96 opacity-100">
+                          <p className="text-gray-300 leading-relaxed text-sm">
+                            {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
+                          </p>
+                        </div>
                       )}
                     </div>
 
-                    {/* Metadados da Atividade - condicionalmente visíveis */}
+                    {/* Metadados da Atividade - só aparece quando expandido */}
                     {isDescriptionExpanded && (
                       <div className="flex flex-wrap gap-2 mt-4 animate-in fade-in duration-500">
                         <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
@@ -325,30 +316,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                         {atividadeSincronizada?.tempo_estimado && (
                           <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
                             {atividadeSincronizada.tempo_estimado} min
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Tags básicas sempre visíveis quando minimizado */}
-                    {!isDescriptionExpanded && (
-                      <div className="flex gap-2 mt-2">
-                        <div className="bg-orange-500/15 border border-orange-400/20 rounded-full px-2 py-0.5 text-xs text-orange-300 font-medium">
-                          {(() => {
-                            const tipo = atividadeSincronizada?.tipo || '';
-                            if (tipo.includes('flash-cards')) return 'Flash Cards';
-                            if (tipo.includes('quiz')) return 'Quiz';
-                            if (tipo.includes('lista-exercicios')) return 'Exercícios';
-                            if (tipo.includes('plano-aula')) return 'Plano de Aula';
-                            if (tipo.includes('sequencia-didatica')) return 'Sequência';
-                            if (tipo.includes('quadro-interativo')) return 'Quadro';
-                            if (tipo.includes('mapa-mental')) return 'Mapa Mental';
-                            return 'Atividade';
-                          })()}
-                        </div>
-                        {atividadeSincronizada?.disciplina && (
-                          <div className="bg-blue-500/15 border border-blue-400/20 rounded-full px-2 py-0.5 text-xs text-blue-300 font-medium">
-                            {atividadeSincronizada.disciplina}
                           </div>
                         )}
                       </div>
