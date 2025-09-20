@@ -325,52 +325,36 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }, 500);
   };
 
-  // Estilos forçados para tema escuro absoluto - NUNCA pode ser alterado por temas externos
-  const FORCED_DARK_THEME = {
+  // Estilos forçados para tema escuro - aplicados diretamente via CSS inline
+  const darkThemeStyles = {
     container: {
-      backgroundColor: '#0f172a !important',
-      color: '#ffffff !important',
-      colorScheme: 'dark',
-      // Forçar todos os elementos filhos para tema escuro
-      '--tw-bg-opacity': '1',
-      '--tw-text-opacity': '1'
+      backgroundColor: '#0f172a',
+      color: '#ffffff',
+      colorScheme: 'dark'
     },
     card: {
-      backgroundColor: '#1e293b !important',
-      borderColor: '#334155 !important',
-      color: '#ffffff !important',
-      border: '1px solid #334155 !important'
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      color: '#ffffff'
     },
     text: {
-      color: '#ffffff !important'
+      color: '#ffffff'
     },
     textSecondary: {
-      color: '#e5e7eb !important'
+      color: '#e5e7eb'
     },
     textMuted: {
-      color: '#9ca3af !important'
+      color: '#9ca3af'
     },
     button: {
-      color: '#ffffff !important'
-    },
-    // CSS específico para sobrescrever qualquer tema global
-    forceDarkOverride: {
-      backgroundColor: '#1e293b !important',
-      color: '#ffffff !important',
-      borderColor: '#334155 !important',
-      // Garantir que NENHUMA classe do Tailwind dark: interfira
-      filter: 'none !important'
+      color: '#ffffff'
     }
   };
 
   return (
-    <div 
-      style={FORCED_DARK_THEME.container} 
-      className="shared-activity-dark-theme w-full max-w-4xl"
-      data-theme="dark-forced"
-    >
+    <div style={darkThemeStyles.container} className="w-full max-w-4xl">
       {/* UniversalActivityHeader - Com estilo específico para página de compartilhamento */}
-      <div style={FORCED_DARK_THEME.container}>
+      <div style={darkThemeStyles.container}>
         <UniversalActivityHeader
           isSharedActivity={true}
           activityTitle={atividadeSincronizada?.titulo || titulo}
@@ -455,42 +439,23 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         />
       </div>
 
-      {/* Card principal forçado para modo escuro ABSOLUTO - independente do tema da plataforma */}
-      <Card 
-        style={{
-          ...FORCED_DARK_THEME.card,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25) !important',
-          '--tw-shadow': '0 25px 50px -12px rgba(0, 0, 0, 0.25) !important'
-        }} 
-        className="shared-activity-card w-full max-w-4xl"
-        data-theme="dark-forced"
-      >
-        <CardContent 
-          style={FORCED_DARK_THEME.forceDarkOverride} 
-          className="shared-activity-content p-8 min-h-[550px] flex flex-col"
-        >
+      {/* Card principal forçado para modo escuro - independente do tema da plataforma */}
+      <Card style={darkThemeStyles.card} className="w-full max-w-4xl shadow-xl border">
+        <CardContent style={darkThemeStyles.card} className="p-8 min-h-[550px] flex flex-col">
           {/* Seção de Descrição da Atividade - Expansível com Clique - Forçada para modo escuro */}
           <div className="mb-6">
             <Card 
               style={{
-                background: 'linear-gradient(to right, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.25)) !important',
-                borderColor: 'rgba(251, 146, 60, 0.3) !important',
-                color: '#ffffff !important',
-                border: '1px solid rgba(251, 146, 60, 0.3) !important'
+                background: 'linear-gradient(to right, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.25))',
+                borderColor: 'rgba(251, 146, 60, 0.3)',
+                color: '#ffffff'
               }}
-              className="shared-description-card rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl"
+              className="rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl"
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              data-theme="dark-forced"
             >
-              <CardContent 
-                className={`shared-description-content transition-all duration-500 ease-in-out ${
-                  isDescriptionExpanded ? 'p-6' : 'p-3'
-                }`} 
-                style={{ 
-                  color: '#ffffff !important',
-                  backgroundColor: 'transparent !important'
-                }}
-              >
+              <CardContent className={`transition-all duration-500 ease-in-out ${
+                isDescriptionExpanded ? 'p-6' : 'p-3'
+              }`} style={{ color: '#ffffff' }}>
                 <div className="flex items-start gap-4">
                   {/* Barra lateral indicadora otimizada para modo escuro */}
                   <div className={`w-2 bg-gradient-to-b from-orange-400 to-orange-500 rounded-full flex-shrink-0 transition-all duration-500 shadow-lg shadow-orange-500/30 ${
@@ -577,21 +542,13 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             <Card 
               ref={cardRef} 
               style={{
-                backgroundColor: 'rgba(31, 41, 55, 0.9) !important',
-                borderColor: 'rgba(75, 85, 99, 0.4) !important',
-                color: '#ffffff !important',
-                border: '1px solid rgba(75, 85, 99, 0.4) !important'
+                backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                borderColor: 'rgba(75, 85, 99, 0.4)',
+                color: '#ffffff'
               }}
-              className="shared-preview-card rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm"
-              data-theme="dark-forced"
+              className="rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm"
             >
-              <CardContent 
-                className="shared-preview-content p-0 h-full flex flex-col" 
-                style={{ 
-                  color: '#ffffff !important',
-                  backgroundColor: 'transparent !important'
-                }}
-              >
+              <CardContent className="p-0 h-full flex flex-col" style={{ color: '#ffffff' }}>
                 <div className="p-4 shadow-lg" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
                   <div className="flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
                     <Eye className="w-5 h-5" />
@@ -646,36 +603,32 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             </Card>
           </div>
 
-          {/* Botões na base do card forçados para modo escuro ABSOLUTO */}
-          <div className="shared-buttons-container flex flex-col sm:flex-row gap-4 mt-8">
+          {/* Botões na base do card otimizados para modo escuro */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <Button
               onClick={handlePresentarAtividade}
               style={{
-                background: 'linear-gradient(to right, #f97316, #ea580c) !important',
-                color: '#ffffff !important',
-                border: 'none !important',
-                boxShadow: '0 4px 14px 0 rgba(249, 115, 22, 0.25) !important'
+                background: 'linear-gradient(to right, #f97316, #ea580c)',
+                color: '#ffffff',
+                border: 'none'
               }}
-              className="shared-button-primary flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
-              data-theme="dark-forced"
+              className="flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-400/30"
             >
-              <Play className="w-5 h-5" style={{ color: '#ffffff !important' }} />
-              <span style={{ color: '#ffffff !important' }}>Apresentar Material</span>
+              <Play className="w-5 h-5" />
+              Apresentar Material
             </Button>
 
             <Button
               onClick={onUsarMaterial}
               style={{
-                background: 'linear-gradient(to right, #3b82f6, #2563eb) !important',
-                color: '#ffffff !important',
-                border: 'none !important',
-                boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.25) !important'
+                background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                color: '#ffffff',
+                border: 'none'
               }}
-              className="shared-button-secondary flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
-              data-theme="dark-forced"
+              className="flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-400/30"
             >
-              <Download className="w-5 h-5" style={{ color: '#ffffff !important' }} />
-              <span style={{ color: '#ffffff !important' }}>Usar Material</span>
+              <Download className="w-5 h-5" />
+              Usar Material
             </Button>
           </div>
         </CardContent>
@@ -685,17 +638,13 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       {isFullscreenMode && (
         <div 
           ref={fullscreenRef}
-          className="shared-fullscreen-container fixed inset-0 z-50 overflow-auto"
+          className="fixed inset-0 z-50 overflow-auto"
           style={{ 
-            isolation: 'isolate !important',
-            backgroundColor: '#111827 !important',
-            color: '#ffffff !important',
-            colorScheme: 'dark !important',
-            // Forçar tema escuro em todos os filhos
-            '--tw-bg-opacity': '1 !important',
-            '--tw-text-opacity': '1 !important'
+            isolation: 'isolate',
+            backgroundColor: '#111827',
+            color: '#ffffff',
+            colorScheme: 'dark'
           }}
-          data-theme="dark-forced"
         >
           {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
           <div className="absolute top-4 right-4 z-20">
@@ -703,34 +652,26 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
               onClick={handleCloseFullscreen}
               variant="ghost"
               size="icon"
-              className="shared-close-button w-12 h-12 rounded-full backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300"
+              className="w-12 h-12 rounded-full backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300"
               style={{
-                backgroundColor: 'rgba(31, 41, 55, 0.8) !important',
-                borderColor: 'rgba(75, 85, 99, 0.4) !important',
-                border: '1px solid rgba(75, 85, 99, 0.4) !important',
-                color: '#ffffff !important'
+                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                borderColor: 'rgba(75, 85, 99, 0.4)',
+                border: '1px solid',
+                color: '#ffffff'
               }}
-              data-theme="dark-forced"
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.9) !important';
+                e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.9)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.8) !important';
+                e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.8)';
               }}
             >
-              <X className="w-6 h-6" style={{ color: '#e5e7eb !important' }} />
+              <X className="w-6 h-6" style={{ color: '#e5e7eb' }} />
             </Button>
           </div>
 
-          {/* Atividade em Tela Cheia - Totalmente Funcional com tema escuro FORÇADO */}
-          <div 
-            className="shared-fullscreen-activity w-full h-full" 
-            style={{
-              ...FORCED_DARK_THEME.container,
-              minHeight: '100vh !important'
-            }}
-            data-theme="dark-forced"
-          >
+          {/* Atividade em Tela Cheia - Totalmente Funcional */}
+          <div className="w-full h-full" style={darkThemeStyles.container}>
             {renderActivityPreview()}
           </div>
         </div>
