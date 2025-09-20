@@ -13,7 +13,7 @@ import Home from "@/components/home";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
-import { auth, checkDatabaseConnection } from "@/lib/supabase";
+import { auth } from "@/services/api";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider";
@@ -124,17 +124,17 @@ function App() {
     const checkConnection = async () => {
       try {
         try {
-          const { checkDatabaseConnection } = await import('@/lib/supabase');
+          const { checkDatabaseConnection } = await import('@/services/api');
           
           const isConnected = await checkDatabaseConnection();
 
           if (!isConnected) {
-            console.warn("Aviso: Falha na conexão com o banco PostgreSQL. A aplicação continuará funcionando com dados locais.");
+            console.warn("Aviso: Falha na conexão com a API. A aplicação continuará funcionando com dados locais.");
           } else {
-            console.log("Conexão com banco PostgreSQL estabelecida com sucesso!");
+            console.log("Conexão com API estabelecida com sucesso!");
           }
         } catch (connectionError) {
-          console.warn("Aviso: Erro ao verificar conexão com banco PostgreSQL:", connectionError);
+          console.warn("Aviso: Erro ao verificar conexão com API:", connectionError);
         }
       } catch (error) {
         console.error("Connection check error:", error);

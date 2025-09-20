@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { auth } from "@/lib/supabase";
+import { auth } from "@/services/api";
 
 interface FormData {
   email: string;

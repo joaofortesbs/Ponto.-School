@@ -20,7 +20,7 @@ import {
   Award,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { auth, query } from "@/lib/supabase";
+import { authService } from "@/services/api";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
 
 interface FormData {
@@ -316,7 +316,14 @@ export function RegisterForm() {
 
         console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta} (${confirmedPlan})`);
 
-        // Tentar usar a função principal de geração de ID
+        // TODO: Implementar geração de ID adequada no backend
+        // Por enquanto, usar ID temporário para testes
+        const timestamp = Date.now();
+        const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        userId = `${uf}${timestamp.toString().slice(-6)}${tipoConta}${randomSuffix}`;
+        console.log(`ID temporário gerado para testes: ${userId}`);
+        
+        /* Comentado - lógica complexa a ser implementada no backend
         try {
           userId = await generateUserId(uf, tipoConta);
           console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
@@ -332,82 +339,17 @@ export function RegisterForm() {
 
             // Tentar usar a função SQL diretamente
             try {
-              // Substituir chamada RPC por query direta
-              const sqlResult = await query(
-                'SELECT generate_user_id($1, $2) as user_id',
-                [uf, tipoConta]
-              );
-              const sqlData = sqlResult.rows[0]?.user_id;
-              const sqlError = sqlResult.rows.length === 0 ? { message: 'No data' } : null;
-
-              if (sqlError) {
-                throw sqlError;
-              }
-
-              userId = sqlData;
-              console.log(`ID gerado com função SQL: ${userId}`);
+              // TODO: Implementar no backend
+              throw new Error("Funcionalidade não implementada no frontend");
             } catch (sqlError) {
               console.error("Erro ao gerar ID com função SQL:", sqlError);
 
-              // Último fallback: Gerar manualmente, mas mantendo a padronização
-              const dataAtual = new Date();
-              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
-
-              // Tentar buscar o último ID do controle por UF
-              try {
-                const controlResult = await query(
-                  'SELECT * FROM user_id_control_by_uf WHERE uf = $1 AND ano_mes = $2 AND tipo_conta = $3',
-                  [uf, anoMes, tipoConta]
-                );
-                const controlData = controlResult.rows[0] || null;
-
-                let sequencial;
-                if (controlData && controlData.last_id) {
-                  // Incrementar o último ID conhecido
-                  sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
-
-                  // Atualizar o contador no banco de dados
-                  await query(
-                    'UPDATE user_id_control_by_uf SET last_id = $1, updated_at = NOW() WHERE id = $2',
-                    [controlData.last_id + 1, controlData.id]
-                  );
-                } else {
-                  // Se não existe um controle para esta UF, criar um novo
-                  try {
-                    // Iniciar com ID 1
-                    const insertResult = await query(
-                      'INSERT INTO user_id_control_by_uf (uf, ano_mes, tipo_conta, last_id) VALUES ($1, $2, $3, $4) RETURNING *',
-                      [uf, anoMes, tipoConta, 1]
-                    );
-                    const insertData = insertResult.rows[0];
-                    const insertError = insertResult.rows.length === 0 ? { message: 'Insert failed' } : null;
-
-                    if (insertError) throw insertError;
-
-                    sequencial = "000001"; // Primeiro ID
-                  } catch (insertError) {
-                    console.error("Erro ao criar controle de ID por UF:", insertError);
-
-                    // Último recurso: gerar um sequencial baseado em timestamp
-                    const timestamp = new Date().getTime();
-                    sequencial = (timestamp % 1000000).toString().padStart(6, "0");
-                  }
-                }
-
-                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-                console.log(`ID gerado manualmente com sequencial controlado: ${userId}`);
-              } catch (fallbackError) {
-                console.error("Erro no fallback final:", fallbackError);
-
-                // Último recurso: usar timestamp para garantir unicidade
-                const timestamp = new Date().getTime();
-                const sequencial = timestamp.toString().slice(-6).padStart(6, "0");
-                userId = `${uf}${anoMes}${tipoConta}${sequencial}`;
-                console.log(`ID gerado com timestamp como último recurso: ${userId}`);
-              }
+              // Último fallback: Gerar manualmente - TODO: Implementar no backend
+              throw new Error("Geração de ID deve ser implementada no backend");
             }
           }
         }
+        */ // Fim do código comentado
 
         console.log(`ID de usuário final: ${userId}`);
       } catch (error) {
@@ -424,13 +366,9 @@ export function RegisterForm() {
 
       try {
         // Verificar novamente se o nome de usuário já existe
-        const existingUserResult = await query(
-          'SELECT username FROM profiles WHERE username = $1',
-          [formData.username]
-        );
-        const existingUser = existingUserResult.rows[0] || null;
-
-        if (existingUser) {
+        const isUsernameAvailable = await authService.checkUsername(formData.username);
+        
+        if (!isUsernameAvailable) {
           setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
           setLoading(false);
           return;
@@ -448,10 +386,10 @@ export function RegisterForm() {
         }
 
         // Tente registrar com o Supabase Auth
-        const { data, error } = await auth.signUp(
-          formData.email,
-          formData.password,
-          {
+        const { data, error } = await authService.signUp({
+          email: formData.email,
+          password: formData.password,
+          userData: {
             full_name: formData.fullName,
             username: formData.username,
             institution: formData.institution,
@@ -460,7 +398,7 @@ export function RegisterForm() {
             plan_type: confirmedPlan,
             display_name: formData.username,
           }
-        );
+        });
 
         userData = data;
         userError = error;
@@ -879,12 +817,9 @@ export function RegisterForm() {
                             clearTimeout((window as any).usernameCheckTimeout);
                             (window as any).usernameCheckTimeout = setTimeout(async () => {
                               try {
-                                const result = await query(
-                                  'SELECT username FROM profiles WHERE username = $1',
-                                  [validValue]
-                                );
-                                const data = result.rows[0] || null;
-                                const error = result.rows.length === 0 ? null : { message: 'Found' };
+                                const isAvailable = await authService.checkUsername(validValue);
+                                const data = isAvailable ? null : { username: validValue };
+                                const error = isAvailable ? null : { message: 'Found' };
 
                                 if (data && !error) {
                                   setError("Este nome de usuário já está em uso. Por favor, escolha outro.");

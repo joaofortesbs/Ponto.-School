@@ -2,7 +2,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import emailRoutes from './enviar-email.js';
+import authRoutes from './routes/auth.js';
+import { checkDatabaseConnection, initTables } from './lib/database.js';
 
 dotenv.config();
 
@@ -10,11 +13,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5000', 'http://127.0.0.1:5000'],
+  credentials: true // Para permitir cookies
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // Rotas
 app.use('/api', emailRoutes);
+app.use('/api/auth', authRoutes);
 
 // Rota raiz
 app.get('/', (req, res) => {
@@ -50,11 +58,29 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'Servidor de API funcionando corretamente!' });
 });
 
-// Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor de API rodando na porta ${PORT}`);
-  console.log(`Acesse em: http://0.0.0.0:${PORT}/api/status`);
-});
+// Inicializar banco e servidor
+const startServer = async () => {
+  try {
+    console.log('🔄 Verificando conexão com banco de dados...');
+    const dbConnected = await checkDatabaseConnection();
+    
+    if (dbConnected) {
+      console.log('🔄 Inicializando tabelas...');
+      await initTables();
+    }
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
+      console.log(`📊 Status: http://0.0.0.0:${PORT}/api/status`);
+      console.log(`🔐 Auth: http://0.0.0.0:${PORT}/api/auth/me`);
+    });
+  } catch (error) {
+    console.error('❌ Erro ao iniciar servidor:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // Tratamento global de erros para evitar que o servidor caia
 process.on('uncaughtException', (error) => {
