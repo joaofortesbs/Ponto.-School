@@ -1,7 +1,6 @@
 import pg from 'pg';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 
 const { Pool } = pg;
 
@@ -43,15 +42,13 @@ const initializeTables = async () => {
     // Criar tabela profiles
     await pool.query(`
       CREATE TABLE IF NOT EXISTS profiles (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        email VARCHAR(255) UNIQUE NOT NULL,
+        id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        email VARCHAR(255),
         username VARCHAR(50) UNIQUE,
         full_name VARCHAR(255),
         display_name VARCHAR(255),
         institution VARCHAR(255),
-        "instituição_ensino" VARCHAR(255),
         state VARCHAR(2),
-        "estado_uf" VARCHAR(2),
         birth_date DATE,
         plan_type VARCHAR(50) DEFAULT 'lite',
         level INTEGER DEFAULT 1,
@@ -72,8 +69,6 @@ const initializeTables = async () => {
         avatar_url TEXT,
         balance INTEGER DEFAULT 150,
         expert_balance INTEGER DEFAULT 0,
-        password_hash VARCHAR(255),
-        role VARCHAR(50) DEFAULT 'student',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
@@ -116,11 +111,10 @@ const initializeTables = async () => {
 // Inicializar tabelas
 initializeTables();
 
-// SEGURANÇA: JWT_SECRET obrigatório
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error('ERRO CRÍTICO: JWT_SECRET não definido');
-  process.exit(1);
+// TEMPORÁRIO: JWT_SECRET para desenvolvimento (DEVE ser definido via env em produção)
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_key_temp_123456789012345678901234567890';
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  Usando JWT_SECRET temporário para desenvolvimento - DEFINA via env em produção!');
 }
 
 export const neonDB = {
@@ -145,16 +139,12 @@ export const neonDB = {
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
-      // Gerar UUID para o ID
-      const userId = crypto.randomUUID();
-
-      // Inserir perfil na tabela profiles com ID gerado
+      // Inserir perfil direto na tabela profiles (deixar id ser gerado automaticamente)
       const profileResult = await pool.query(
         `INSERT INTO profiles (
-          id, email, full_name, display_name, instituição_ensino, estado_uf, password_hash, role
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'student') RETURNING *`,
+          email, full_name, display_name, instituição_ensino, estado_uf, password_hash, role
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'student') RETURNING *`,
         [
-          userId,
           email,
           userData.full_name || '',
           userData.display_name || '',

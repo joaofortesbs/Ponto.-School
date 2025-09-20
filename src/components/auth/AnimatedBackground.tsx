@@ -1,9 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { saveNodes, loadNodes } from "@/lib/web-persistence";
 
-// Importar supabase corrigido
-import { supabase } from "@/lib/supabase";
-
 interface Node {
   x: number;
   y: number;
