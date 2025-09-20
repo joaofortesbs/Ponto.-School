@@ -20,7 +20,7 @@ import {
   Award,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { ApiClient } from "@/services/api-client";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
 
 interface FormData {
@@ -449,25 +449,22 @@ export function RegisterForm() {
           console.warn('Erro ao salvar dados no localStorage:', e);
         }
 
-        // Tente registrar com o Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-            data: {
-              full_name: formData.fullName,
-              username: formData.username,
-              institution: formData.institution,
-              state: formData.state,
-              birth_date: formData.birthDate,
-              plan_type: confirmedPlan, // Usa o plano confirmado
-              display_name: formData.username, // Garantir que display_name é o mesmo que username no registro
-            },
-          },
-        });
+        // Tente registrar com o novo sistema Neon
+        const userData = {
+          full_name: formData.fullName,
+          display_name: formData.username,
+          instituição_ensino: formData.institution,
+          estado_uf: formData.state,
+          plan_type: confirmedPlan,
+        };
+        
+        const { user, session, error } = await ApiClient.register(
+          formData.email,
+          formData.password,
+          userData
+        );
 
-        userData = data;
+        // userData = data; (removido porque está usando new ApiClient)
         userError = error;
       } catch (authError) {
         console.error("Auth connection error:", authError);
@@ -483,13 +480,13 @@ export function RegisterForm() {
       }
 
       // Se conseguimos criar o usuário OU se o erro foi apenas de conectividade
-      if (userData?.user || (userError && userError.message && userError.message.includes("fetch"))) {
+      if (user || (userError && userError.message && userError.message.includes("fetch"))) {
         // ID do usuário real ou temporário para uso offline
-        const profileId = userData?.user?.id || `temp-${userId}`;
+        const profileId = user?.id || `temp-${userId}`;
 
         try {
           // Tente criar o perfil no banco de dados
-          if (userData?.user) {
+          if (user) {
             try {
               const { error: insertError } = await supabase
                 .from("profiles")

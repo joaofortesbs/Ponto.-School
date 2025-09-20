@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { ApiClient } from "@/services/api-client";
 
 interface FormData {
   email: string;
@@ -163,10 +163,7 @@ export function LoginForm() {
       if (isEmail) {
         // Login com email
         authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: inputValue,
-            password: formData.password,
-          }),
+          ApiClient.signInWithPassword(inputValue, formData.password),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
@@ -174,8 +171,7 @@ export function LoginForm() {
       } else {
         // Login com nome de usuário
         // Primeiro, buscar o email associado ao nome de usuário
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
+        const { data: profileData, error: profileError } = await ApiClient.from("profiles")
           .select("email")
           .eq("username", inputValue)
           .single();
@@ -194,17 +190,14 @@ export function LoginForm() {
 
         // Agora fazer login com o email encontrado
         authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: profileData.email,
-            password: formData.password,
-          }),
+          ApiClient.signInWithPassword(profileData.email, formData.password),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
         ]);
       }
 
-      const { data, error } = authResult;
+      const { user, session, error } = authResult;
 
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
@@ -229,7 +222,7 @@ export function LoginForm() {
         return;
       }
 
-      if (data?.user) {
+      if (user) {
         localStorage.setItem("auth_checked", "true");
         localStorage.setItem("auth_status", "authenticated");
 
