@@ -464,7 +464,7 @@ export function RegisterForm() {
           userData
         );
 
-        // userData = data; (removido porque está usando new ApiClient)
+        // Resultado já armazenado nas variáveis user, session, error
         userError = error;
       } catch (authError) {
         console.error("Auth connection error:", authError);

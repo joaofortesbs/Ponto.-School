@@ -1,5 +1,5 @@
 import express from 'express';
-import { neonDB } from '../src/lib/neon-db.js';
+import { neonDB } from './neon-db.js';
 
 const router = express.Router();
 
@@ -53,7 +53,7 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const { user, error } = await neonDB.signUp(email, password, userData);
+    const { user, session, error } = await neonDB.register(email, password, userData);
 
     if (error) {
       return res.status(400).json({ error: error.message });
@@ -64,9 +64,9 @@ router.post('/register', async (req, res) => {
     }
 
     // Fazer login automaticamente após registro
-    const { user: loginUser, session, error: loginError } = await neonDB.signInWithPassword(email, password);
+    const { user: loginUser, session: loginSession, error: loginError } = await neonDB.signInWithPassword(email, password);
 
-    if (loginError || !session) {
+    if (loginError || !loginSession) {
       // Usuário foi criado mas login falhou
       return res.status(201).json({ 
         user,
@@ -76,7 +76,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       user: loginUser,
-      session,
+      session: loginSession,
       message: 'Registro realizado com sucesso'
     });
 
