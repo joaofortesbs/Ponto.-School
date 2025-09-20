@@ -141,7 +141,11 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden" style={{ backgroundColor: "rgb(15, 23, 42)" }}>
+    <div className="relative min-h-screen w-full overflow-hidden" style={{ 
+      backgroundColor: "rgb(15, 23, 42)",
+      colorScheme: 'dark',
+      color: '#ffffff'
+    }}>
       {/* Background de partículas - igual ao School Power */}
       <ParticlesBackground isDarkTheme={true} />
       

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect, useState, useRef } from 'react'; // Import useState, useEffect and useRef
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -204,7 +203,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
     // Obter posição inicial do card
     const cardRect = cardRef.current.getBoundingClientRect();
-    
+
     // Criar elemento temporário para animação
     const animationElement = document.createElement('div');
     animationElement.style.cssText = `
@@ -221,13 +220,13 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       transform-origin: center;
       transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     `;
-    
+
     // Clonar conteúdo do card original
     const cardClone = cardRef.current.cloneNode(true) as HTMLElement;
     cardClone.style.transform = 'scale(0.75)';
     cardClone.style.transformOrigin = 'top left';
     animationElement.appendChild(cardClone);
-    
+
     document.body.appendChild(animationElement);
 
     // Animar para tela cheia
@@ -237,7 +236,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       animationElement.style.width = '100vw';
       animationElement.style.height = '100vh';
       animationElement.style.borderRadius = '0px';
-      
+
       // Escalar conteúdo para tamanho normal
       const clonedContent = animationElement.firstChild as HTMLElement;
       if (clonedContent) {
@@ -251,7 +250,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       setIsFullscreenMode(true);
       document.body.removeChild(animationElement);
       setIsAnimating(false);
-      
+
       // Prevenir scroll do body
       document.body.style.overflow = 'hidden';
     }, 600);
@@ -295,9 +294,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       will-change: transform, width, height, border-radius;
       backface-visibility: hidden;
     `;
-    
+
     document.body.appendChild(animationElement);
-    
+
     // Esconder interface fullscreen imediatamente para evitar conflitos
     setIsFullscreenMode(false);
 
@@ -319,7 +318,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         document.body.removeChild(animationElement);
       }
       setIsAnimating(false);
-      
+
       // Restaurar scroll do body
       document.body.style.overflow = 'auto';
     }, 500);
@@ -412,7 +411,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       />
 
       {/* Card principal forçado para modo escuro - independente do tema da plataforma */}
-      <Card className="w-full min-h-[600px] border-slate-600/40 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0 bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-gray-900/90 dark">
+      <Card className="w-full max-w-4xl dark" style={{ colorScheme: 'dark' }}>
         <CardContent className="p-8 min-h-[550px] flex flex-col dark">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
 
@@ -586,18 +585,34 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       {/* Interface Fullscreen forçada para modo escuro - Container Transform */}
       {isFullscreenMode && (
         <div 
-          ref={fullscreenRef}
-          className="fixed inset-0 z-50 bg-gray-900 overflow-auto dark"
-          style={{ isolation: 'isolate' }}
-        >
+            ref={fullscreenRef}
+            className="fixed inset-0 z-50 overflow-auto"
+            style={{ 
+              isolation: 'isolate',
+              backgroundColor: '#111827',
+              color: '#ffffff'
+            }}
+          >
           {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
           <div className="absolute top-4 right-4 z-20">
             <Button
-              onClick={handleCloseFullscreen}
-              variant="ghost"
-              size="icon"
-              className="w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700/90 backdrop-blur-md border border-gray-600/40 shadow-xl hover:shadow-2xl transition-all duration-300"
-            >
+                onClick={handleCloseFullscreen}
+                variant="ghost"
+                size="icon"
+                className="w-12 h-12 rounded-full backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300"
+                style={{
+                  backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                  borderColor: 'rgba(75, 85, 99, 0.4)',
+                  border: '1px solid',
+                  color: '#ffffff'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.9)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.8)';
+                }}
+              >
               <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
             </Button>
           </div>
