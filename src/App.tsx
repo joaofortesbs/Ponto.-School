@@ -5,7 +5,6 @@ import {
   Navigate,
   useLocation,
   useNavigate,
-  BrowserRouter as Router,
 } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import routes from "./tempo-routes";
@@ -315,8 +314,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
-        <Router>
-          <StudyGoalProvider>
+        <StudyGoalProvider>
             <ErrorBoundary>
               <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
                 <Routes>
@@ -402,7 +400,6 @@ function App() {
               <Toaster />
             </ErrorBoundary>
           </StudyGoalProvider>
-        </Router>
       </AuthProvider>
     </ThemeProvider>
   );

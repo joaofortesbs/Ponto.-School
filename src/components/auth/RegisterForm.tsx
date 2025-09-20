@@ -387,10 +387,10 @@ export function RegisterForm() {
         }
 
         // Tente registrar com o novo serviço de autenticação
-        const { data, error } = await auth.register({ // Usando o novo serviço de autenticação
-          email: formData.email,
-          password: formData.password,
-          userData: {
+        const { user, error } = await auth.signUp( // Usando o novo serviço de autenticação
+          formData.email,
+          formData.password,
+          {
             full_name: formData.fullName,
             username: formData.username,
             institution: formData.institution,
@@ -399,9 +399,9 @@ export function RegisterForm() {
             plan_type: confirmedPlan,
             display_name: formData.username,
           }
-        });
+        );
 
-        userData = data;
+        userData = { user };
         userError = error;
       } catch (authError) {
         console.error("Auth connection error:", authError);

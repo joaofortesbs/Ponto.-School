@@ -72,12 +72,12 @@ export const auth = {
     }
   },
 
-  getUser: async (): Promise<User | null> => {
+  getUser: async (): Promise<{ data: { user: User | null } }> => {
     try {
       const response = await apiRequest('/auth/me');
-      return response.user || null;
+      return { data: { user: response.user || null } };
     } catch (error) {
-      return null;
+      return { data: { user: null } };
     }
   },
 
