@@ -206,6 +206,70 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
         
+          {/* Seção de Descrição da Atividade */}
+          <div className="mb-6">
+            <Card className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-2 h-16 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0"></div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-white/90 mb-3 flex items-center gap-2">
+                      <span className="text-orange-400">📋</span>
+                      Sobre esta Atividade
+                    </h3>
+                    <p className="text-gray-300 leading-relaxed text-sm">
+                      {atividade?.descricao || 
+                       atividade?.dados?.descricao || 
+                       atividade?.dados?.description ||
+                       `Esta é uma atividade do tipo ${(() => {
+                         const tipo = atividade?.tipo || '';
+                         if (tipo.includes('flash-cards')) return 'Flash Cards para estudo e memorização';
+                         if (tipo.includes('quiz')) return 'Quiz Interativo para avaliação de conhecimento';
+                         if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios para prática e fixação';
+                         if (tipo.includes('plano-aula')) return 'Plano de Aula estruturado e completo';
+                         if (tipo.includes('sequencia-didatica')) return 'Sequência Didática organizada por etapas';
+                         if (tipo.includes('quadro-interativo')) return 'Quadro Interativo para apresentações dinâmicas';
+                         if (tipo.includes('mapa-mental')) return 'Mapa Mental para organização visual de conteúdos';
+                         return 'Atividade Educacional';
+                       })()} criada especialmente para facilitar o processo de ensino-aprendizagem. Desenvolvida com metodologias pedagógicas modernas para proporcionar uma experiência educacional rica e envolvente.`}
+                    </p>
+                    
+                    {/* Metadados da Atividade */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
+                        {(() => {
+                          const tipo = atividade?.tipo || '';
+                          if (tipo.includes('flash-cards')) return 'Flash Cards';
+                          if (tipo.includes('quiz')) return 'Quiz Interativo';
+                          if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
+                          if (tipo.includes('plano-aula')) return 'Plano de Aula';
+                          if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
+                          if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
+                          if (tipo.includes('mapa-mental')) return 'Mapa Mental';
+                          return 'Atividade';
+                        })()}
+                      </div>
+                      {atividade?.dados?.disciplina && (
+                        <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
+                          {atividade.dados.disciplina}
+                        </div>
+                      )}
+                      {atividade?.dados?.nivel && (
+                        <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
+                          {atividade.dados.nivel}
+                        </div>
+                      )}
+                      {atividade?.dados?.tempo_estimado && (
+                        <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
+                          {atividade.dados.tempo_estimado} min
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Card de Pré-visualização da Atividade */}
         <div className="mb-8 flex-1 relative group">
