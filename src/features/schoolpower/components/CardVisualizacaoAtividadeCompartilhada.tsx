@@ -232,12 +232,12 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       />
 
       {/* Card principal com fundo escuro */}
-      <Card className="w-full min-h-[450px] border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0" style={{ backgroundColor: '#021321' }}>
-        <CardContent className="p-6 min-h-[400px] flex flex-col">
+      <Card className="w-full min-h-[600px] border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0" style={{ backgroundColor: '#021321' }}>
+        <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
 
           {/* Seção de Descrição da Atividade - Expansível com Clique */}
-          <div className="mb-4">
+          <div className="mb-6">
             <Card 
               className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm cursor-pointer hover:bg-gradient-to-r hover:from-orange-50/15 hover:to-orange-100/15 transition-all duration-300"
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
@@ -327,7 +327,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           </div>
 
         {/* Card de Pré-visualização da Atividade */}
-        <div className="mb-6 flex-1 relative group">
+        <div className="mb-8 flex-1 relative group">
           <Card className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
             <CardContent className="p-0 h-full flex flex-col">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
@@ -337,7 +337,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden min-h-[250px] max-h-[250px] relative">
+              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
                 {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
                 <div className="p-4 pointer-events-none overflow-hidden h-full">
                   <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
@@ -382,7 +382,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
 
         {/* Botões na base do card */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-4">
+        <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <Button
             onClick={onApresentarMaterial}
             className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
