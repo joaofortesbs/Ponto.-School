@@ -314,7 +314,7 @@ export default function GeminiApiMonitor() {
             <button
               onClick={async () => {
                 try {
-                  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBHSqe2PLstOR-M9pBn45DQFcuAN3msYmw`, {
+                  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -12,7 +12,7 @@ import { geminiLogger } from '../../../utils/geminiDebugLogger';
 // Usar API Key centralizada
 import { API_KEYS, API_URLS } from '@/config/apiKeys';
 
-const GEMINI_API_KEY = API_KEYS.GEMINI;
+const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
 const GEMINI_API_URL = API_URLS.GEMINI;
 
 interface GeminiResponse {

@@ -1,7 +1,7 @@
 
 // Configuração centralizada das chaves de API
 export const API_KEYS = {
-  GEMINI: 'AIzaSyCTFP7NXclzBjV5M2JzhealO_SQ8rDrzDg',
+  GEMINI: 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs',
   CLAUDE: '', // Adicionar quando disponível
 } as const;
 

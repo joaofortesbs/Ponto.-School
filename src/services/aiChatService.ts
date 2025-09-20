@@ -3,7 +3,7 @@ import axios from 'axios';
 // Chaves de API
 const XAI_API_KEY = 'xai-PGLSB6snVtQm82k7xEmfCSo3RjkO41ICX4dUagAp5bz2GY02NTVqO6XWEXuNK5HCYWpYBYuz7WP2ENFP';
 // Usar a chave da API do Gemini
-const GEMINI_API_KEY = 'AIzaSyCTFP7NXclzBjV5M2JzhealO_SQ8rDrzDg';
+const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
 
 // URLs base
 const XAI_BASE_URL = 'https://api.x.ai/v1/chat/completions';

@@ -69,7 +69,7 @@ export const clearChatHistory = (sessionId: string): void => {
 };
 
 // Chave da API Gemini
-const GEMINI_API_KEY = 'AIzaSyCTFP7NXclzBjV5M2JzhealO_SQ8rDrzDg';
+const GEMINI_API_KEY = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // Função para gerar sugestões de foco com base no perfil do usuário e dados da agenda

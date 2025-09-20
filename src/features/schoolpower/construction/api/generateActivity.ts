@@ -2,7 +2,6 @@ import { ActivityGenerationPayload, GeneratedActivity } from '../types/ActivityT
 import { generateActivityByType } from '../generationStrategies/generateActivityByType';
 import { sequenciaDidaticaGenerator } from '../../activities/sequencia-didatica/SequenciaDidaticaGenerator';
 import { SequenciaDidaticaPromptData } from '../../prompts/sequenciaDidaticaPrompt';
-import { API_KEYS } from '../../../../config/apiKeys';
 import { GeminiClient } from '../../../../utils/api/geminiClient';
 
 export const generateActivityAPI = async (payload: ActivityGenerationPayload): Promise<GeneratedActivity> => {

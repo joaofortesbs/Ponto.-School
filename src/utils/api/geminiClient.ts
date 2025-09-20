@@ -23,7 +23,7 @@ export class GeminiClient {
   private baseUrl: string;
 
   constructor() {
-    this.apiKey = API_KEYS.GEMINI;
+    this.apiKey = 'AIzaSyCEjk916YUa6wove13VEHou853eJULp6gs';
     this.baseUrl = API_URLS.GEMINI;
   }
 
