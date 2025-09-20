@@ -126,6 +126,143 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           </h2>
         </div>
 
+        {/* Cabeçalho da Atividade - Duplicata do Modal de Visualização */}
+        <div className="mb-6">
+          <div className="universal-activity-header w-full h-24 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20 border-2 border-orange-200 dark:border-orange-800/50 px-6 py-4 shadow-sm rounded-2xl">
+            <div className="flex items-center justify-between h-full">
+              {/* Lado Esquerdo - Ícone e Informações da Atividade */}
+              <div className="flex items-center gap-4">
+                {/* Ícone da Atividade */}
+                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg border border-orange-200 dark:border-orange-700/50">
+                  <div className="w-6 h-6 text-white">
+                    {(() => {
+                      const activityType = atividade?.tipo || '';
+                      if (activityType.includes('flash-cards')) {
+                        return (
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                          </svg>
+                        );
+                      } else if (activityType.includes('quiz')) {
+                        return (
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                          </svg>
+                        );
+                      } else if (activityType.includes('lista-exercicios')) {
+                        return (
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                          </svg>
+                        );
+                      } else if (activityType.includes('plano-aula')) {
+                        return (
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                          </svg>
+                        );
+                      } else if (activityType.includes('sequencia-didatica')) {
+                        return (
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h-1.11c-.86-.86-1.98-1.31-3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33V9h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
+                          </svg>
+                        );
+                      } else {
+                        return (
+                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                          </svg>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+
+                {/* Informações da Atividade */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h1 className="text-lg font-bold text-gray-900 dark:text-white truncate max-w-md">
+                      {atividade?.titulo || 'Atividade Educacional'}
+                    </h1>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-full">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                        {(() => {
+                          const tipo = atividade?.tipo || '';
+                          if (tipo.includes('flash-cards')) return 'Flash Cards';
+                          if (tipo.includes('quiz')) return 'Quiz Interativo';
+                          if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
+                          if (tipo.includes('plano-aula')) return 'Plano de Aula';
+                          if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
+                          if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
+                          if (tipo.includes('mapa-mental')) return 'Mapa Mental';
+                          return 'Atividade';
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    {/* Informações do Professor */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-xs font-semibold text-white">
+                          {atividade?.professorNome ? atividade.professorNome.charAt(0).toUpperCase() : 'P'}
+                        </span>
+                      </div>
+                      <span className="font-medium">
+                        {atividade?.professorNome || 'Prof. João'}
+                      </span>
+                    </div>
+
+                    {/* Informações da Disciplina */}
+                    {(atividade?.dados?.subject || atividade?.dados?.disciplina) && (
+                      <div className="flex items-center gap-1">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                        </svg>
+                        <span>{atividade.dados.subject || atividade.dados.disciplina}</span>
+                      </div>
+                    )}
+
+                    {/* Informações do Ano/Série */}
+                    {(atividade?.dados?.schoolYear || atividade?.dados?.anoSerie) && (
+                      <div className="flex items-center gap-1">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                          <path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+                        </svg>
+                        <span>{atividade.dados.schoolYear || atividade.dados.anoSerie}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Lado Direito - Informações e Ações */}
+              <div className="flex items-center gap-3">
+                {/* Badge de School Points */}
+                <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 rounded-full border border-yellow-400/30">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-yellow-600">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
+                    {atividade?.schoolPoints || '100'} SPs
+                  </span>
+                </div>
+
+                {/* Menu de Opções */}
+                <div className="flex items-center gap-1">
+                  <button className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-gray-600 dark:text-gray-400">
+                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Card de Pré-visualização da Atividade */}
         <div className="mb-8 flex-1 relative group">
           <Card className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
