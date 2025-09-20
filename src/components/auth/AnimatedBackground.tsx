@@ -156,7 +156,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     };
   }, [initializeNodes]);
 
-  // Atualiza a posição dos nós com base na posição do cursor
+  // Atualiza a posição dos nós com base na posição do mouse
   const updateNodePositions = useCallback(() => {
     if (!canvasRef.current) return;
 

@@ -361,16 +361,24 @@ export function RegisterForm() {
       }
 
 
-      // Primeiro tente registrar o usuário no sistema de autenticação
+      // Registrar usuário usando a API do backend Neon
       let userData = null;
       let userError = null;
 
       try {
         // Verificar novamente se o nome de usuário já existe
-        const usernameCheck = await authService.checkUsername(formData.username);
+        const usernameCheck = await auth.checkUsername(formData.username);
 
         if (!usernameCheck.available) {
           setError(usernameCheck.error || "Este nome de usuário já está em uso. Por favor, escolha outro.");
+          setLoading(false);
+          return;
+        }
+
+        // Verificar se o email já existe
+        const emailCheck = await auth.checkEmail(formData.email);
+        if (!emailCheck.available) {
+          setError("Este email já está cadastrado. Tente fazer login ou usar outro email.");
           setLoading(false);
           return;
         }
@@ -386,8 +394,8 @@ export function RegisterForm() {
           console.warn('Erro ao salvar dados no localStorage:', e);
         }
 
-        // Tente registrar com o novo serviço de autenticação
-        const { user, error } = await auth.signUp( // Usando o novo serviço de autenticação
+        // Registrar usando a API do backend Neon
+        const response = await auth.signUp(
           formData.email,
           formData.password,
           {
@@ -401,12 +409,19 @@ export function RegisterForm() {
           }
         );
 
-        userData = { user };
-        userError = error;
+        if (response.success) {
+          userData = { user: response.user };
+          userError = null;
+        } else {
+          userData = null;
+          userError = { message: response.error };
+        }
       } catch (authError) {
         console.error("Auth connection error:", authError);
-        // Continue com offline fallback
+        userData = null;
+        userError = { message: authError.message || "Erro de conexão" };
       }
+
 
       // Se houver erro explícito no signup (como e-mail já existente), mostre o erro
       if (userError && userError.message && !userError.message.includes("fetch")) {
@@ -827,7 +842,7 @@ export function RegisterForm() {
                           if (validValue && validValue.length >= 3) {
                             // Limpar timeout anterior
                             clearTimeout((window as any).usernameCheckTimeout);
-                            
+
                             // Verificar se já foi validado recentemente
                             const lastChecked = (window as any).lastUsernameChecked;
                             if (lastChecked === validValue) {
@@ -838,7 +853,7 @@ export function RegisterForm() {
                               try {
                                 (window as any).lastUsernameChecked = validValue;
                                 console.log(`Verificando username: ${validValue}`);
-                                
+
                                 const response = await authService.checkUsername(validValue);
 
                                 // Verificar se o valor ainda é atual (usuário não digitou mais nada)

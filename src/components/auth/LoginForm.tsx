@@ -171,14 +171,9 @@ export function LoginForm() {
       } else {
         // Login com nome de usuário - usar API backend para resolver
         try {
-          const emailResponse = await fetch('/api/auth/resolve-username', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: inputValue }),
-            credentials: 'include'
-          });
+          const resolveResponse = await auth.resolveUsername(inputValue);
 
-          if (!emailResponse.ok) {
+          if (resolveResponse.error) {
             setSuccess(false);
             setError("Nome de usuário não encontrado");
             setInvalidCredentials(true);
@@ -190,11 +185,9 @@ export function LoginForm() {
             return;
           }
 
-          const { email } = await emailResponse.json();
-
           // Agora fazer login com o email encontrado
           authResult = await Promise.race([
-            auth.signIn(email, formData.password),
+            auth.signIn(resolveResponse.email, formData.password),
             new Promise((_, reject) =>
               setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
             ),
@@ -212,24 +205,22 @@ export function LoginForm() {
         }
       }
 
-      const { data, error } = authResult;
-
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
 
-      if (error) {
+      if (!authResult.success) {
         setSuccess(false);
         if (
-          error.message.includes("Invalid login credentials") ||
-          error.message.includes("Email not confirmed")
+          authResult.error && (
+            authResult.error.includes("Invalid credentials") ||
+            authResult.error.includes("Email not found") ||
+            authResult.error.includes("Invalid login")
+          )
         ) {
           setError("Email ou senha inválidos");
-          setInvalidCredentials(true); // Set invalid credentials state
-        } else if (error.status === 0) {
-          //Improved network error handling
-          setError("Erro de conexão. Verifique sua internet.");
+          setInvalidCredentials(true);
         } else {
-          setError("Erro ao fazer login: " + error.message);
+          setError("Erro ao fazer login: " + (authResult.error || "Erro desconhecido"));
         }
         localStorage.removeItem("auth_checked");
         localStorage.removeItem("auth_status");
@@ -237,9 +228,12 @@ export function LoginForm() {
         return;
       }
 
-      if (data?.user) {
+      if (authResult.user) {
         localStorage.setItem("auth_checked", "true");
         localStorage.setItem("auth_status", "authenticated");
+
+        // Salvar dados do usuário para uso na aplicação
+        localStorage.setItem("currentUser", JSON.stringify(authResult.user));
 
         // Redirecionar rapidamente para melhorar percepção de velocidade
         navigate("/");

@@ -52,8 +52,14 @@ export const signUp = async (email, password, userData = {}) => {
     // Verificar se o username já existe (se fornecido)
     if (userData.username) {
       const cleanUsername = userData.username.trim().toLowerCase();
+      
+      // Verificar se não é vazio após limpeza
+      if (!cleanUsername) {
+        return { success: false, error: 'Username cannot be empty' };
+      }
+
       const existingUsername = await query(
-        'SELECT username FROM profiles WHERE LOWER(username) = $1',
+        'SELECT username FROM profiles WHERE LOWER(TRIM(username)) = $1',
         [cleanUsername]
       );
 
@@ -73,30 +79,68 @@ export const signUp = async (email, password, userData = {}) => {
 
     const user = userResult.rows[0];
 
+    // Preparar username único
+    let finalUsername = userData.username || email.split('@')[0];
+    
+    // Se o username não foi fornecido ou está vazio, gerar um único
+    if (!finalUsername || finalUsername.trim() === '') {
+      finalUsername = email.split('@')[0];
+      
+      // Verificar se este username baseado em email já existe
+      let usernameExists = true;
+      let counter = 1;
+      let testUsername = finalUsername;
+      
+      while (usernameExists) {
+        const existingCheck = await query(
+          'SELECT username FROM profiles WHERE LOWER(TRIM(username)) = $1',
+          [testUsername.toLowerCase()]
+        );
+        
+        if (existingCheck.rows.length === 0) {
+          usernameExists = false;
+          finalUsername = testUsername;
+        } else {
+          testUsername = `${finalUsername}${counter}`;
+          counter++;
+        }
+      }
+    }
+
     // Criar perfil
     await query(
       'INSERT INTO profiles (id, email, display_name, full_name, username, institution, state, birth_date, plan_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())',
       [
         user.id,
         email,
-        userData.display_name || userData.username || userData.full_name || email.split('@')[0],
+        userData.display_name || finalUsername || userData.full_name || email.split('@')[0],
         userData.full_name || '',
-        userData.username || email.split('@')[0],
+        finalUsername,
         userData.institution || '',
         userData.state || '',
         userData.birth_date || null,
-        userData.plan_type || 'free'
+        userData.plan_type || 'lite'
       ]
     );
 
-    const token = generateToken(user);
+    // Buscar dados completos do perfil criado
+    const profileResult = await query(
+      'SELECT u.id, u.email, u.created_at, p.username, p.display_name, p.full_name FROM users u LEFT JOIN profiles p ON u.id = p.id WHERE u.id = $1',
+      [user.id]
+    );
+
+    const fullUser = profileResult.rows[0] || user;
+    const token = generateToken(fullUser);
 
     return {
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        created_at: user.created_at
+        id: fullUser.id,
+        email: fullUser.email,
+        username: fullUser.username,
+        display_name: fullUser.display_name,
+        full_name: fullUser.full_name,
+        created_at: fullUser.created_at
       },
       token
     };

@@ -1,14 +1,130 @@
-
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { auth, User } from '@/services/api';
+import { auth } from '@/services/api';
 
-interface AuthContextType {
+interface User {
+  id: string;
+  email: string;
+  username?: string;
+  display_name?: string;
+  full_name?: string;
+}
+
+interface AuthState {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, userData?: any) => Promise<{ success: boolean; error?: string }>;
-  signOut: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  error: string | null;
+}
+
+export function useAuth() {
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      // Verificar se há usuário salvo no localStorage primeiro
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          setState({
+            user,
+            loading: false,
+            error: null,
+          });
+          return;
+        } catch (e) {
+          localStorage.removeItem('currentUser');
+        }
+      }
+
+      // Verificar com o backend
+      const response = await auth.getUser();
+
+      if (response.data.user) {
+        localStorage.setItem('currentUser', JSON.stringify(response.data.user));
+        setState({
+          user: response.data.user,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setState({
+          user: null,
+          loading: false,
+          error: null,
+        });
+      }
+    } catch (error: any) {
+      setState({
+        user: null,
+        loading: false,
+        error: error.message || 'Authentication error',
+      });
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+
+      const response = await auth.signIn(email, password);
+
+      if (!response.success) {
+        setState(prev => ({ ...prev, loading: false, error: response.error }));
+        return { success: false, error: response.error };
+      }
+
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      setState({
+        user: response.user,
+        loading: false,
+        error: null,
+      });
+
+      return { success: true, user: response.user };
+    } catch (error: any) {
+      setState({
+        user: null,
+        loading: false,
+        error: error.message || 'Sign in error',
+      });
+      return { success: false, error: error.message };
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await auth.signOut();
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('auth_checked');
+      localStorage.removeItem('auth_status');
+      setState({
+        user: null,
+        loading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      setState(prev => ({ ...prev, error: error.message }));
+    }
+  };
+
+  return {
+    user: state.user,
+    loading: state.loading,
+    error: state.error,
+    signIn,
+    signOut,
+    checkAuth,
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
