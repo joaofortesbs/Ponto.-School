@@ -280,14 +280,113 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   }, []);
 
-  const handleShareActivity = () => {
-    const shareLink = `${window.location.origin}/activity/${activityId}?shared=true`; // Exemplo de link de compartilhamento
-    navigator.clipboard.writeText(shareLink).then(() => {
+  const handleShareActivity = async () => {
+    try {
+      console.log('🔗 [HEADER] Iniciando geração de link para atividade:', activityId);
+      
+      // Buscar dados da atividade compartilhada existente no localStorage
+      const storageKey = 'ponto_school_atividades_compartilhaveis_v1.0';
+      const atividadesCompartilhadas = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      
+      // Procurar atividade já compartilhada
+      const atividadeExistente = atividadesCompartilhadas.find((ativ: any) => 
+        ativ.id === activityId && ativ.ativo === true
+      );
+
+      let shareLink = '';
+      
+      if (atividadeExistente) {
+        // Se já existe, usar o link existente
+        shareLink = atividadeExistente.linkPublico;
+        console.log('✅ [HEADER] Link existente encontrado:', shareLink);
+      } else {
+        // Se não existe, gerar novo link usando o serviço de geração
+        console.log('🆕 [HEADER] Gerando novo link para atividade...');
+        
+        // Importar dinamicamente o serviço de geração
+        const { criarLinkAtividade } = await import('../../services/gerador-link-atividades-schoolpower');
+        
+        // Buscar dados da atividade do localStorage
+        const possiveisChaves = [
+          `constructedActivity_${activityId}`,
+          `activity_${activityId}`,
+          `schoolpower_activity_${activityId}`,
+          activityId
+        ];
+
+        let dadosAtividade = null;
+        for (const chave of possiveisChaves) {
+          try {
+            const dados = localStorage.getItem(chave);
+            if (dados) {
+              dadosAtividade = JSON.parse(dados);
+              console.log('📋 [HEADER] Dados encontrados em:', chave);
+              break;
+            }
+          } catch (e) {
+            console.log('⚠️ [HEADER] Erro ao buscar chave:', chave);
+          }
+        }
+
+        if (!dadosAtividade) {
+          console.error('❌ [HEADER] Dados da atividade não encontrados');
+          shareLink = `${window.location.origin}/atividade/${activityId}/compartilhada`;
+        } else {
+          // Preparar dados para criação do link
+          const dadosParaCompartilhamento = {
+            id: activityId,
+            titulo: activityTitle || dadosAtividade.titulo || dadosAtividade.title || 'Atividade',
+            descricao: dadosAtividade.descricao || dadosAtividade.description || '',
+            tipo: dadosAtividade.tipo || dadosAtividade.type || 'atividade',
+            dados: dadosAtividade.dados || dadosAtividade,
+            customFields: dadosAtividade.customFields || {},
+            professorNome: finalUserName || 'Professor',
+            professorAvatar: finalUserAvatar,
+            schoolPoints: currentSPs || 100,
+            criadoPor: userInfo.userId || userInfo.name || 'usuario-anonimo',
+            disciplina: dadosAtividade.disciplina,
+            nivel: dadosAtividade.nivel,
+            tempo_estimado: dadosAtividade.tempo_estimado
+          };
+
+          console.log('🚀 [HEADER] Criando link com dados:', dadosParaCompartilhamento);
+
+          try {
+            const novaAtividade = await criarLinkAtividade(dadosParaCompartilhamento);
+            if (novaAtividade && novaAtividade.linkPublico) {
+              shareLink = novaAtividade.linkPublico;
+              console.log('✅ [HEADER] Link criado com sucesso:', shareLink);
+            } else {
+              console.error('❌ [HEADER] Falha na criação do link');
+              shareLink = `${window.location.origin}/atividade/${activityId}/erro`;
+            }
+          } catch (error) {
+            console.error('❌ [HEADER] Erro ao criar link:', error);
+            shareLink = `${window.location.origin}/atividade/${activityId}/erro`;
+          }
+        }
+      }
+
+      // Copiar link para área de transferência
+      await navigator.clipboard.writeText(shareLink);
       setShowCopySuccess(true);
-      setTimeout(() => setShowCopySuccess(false), 2000); // Esconde a mensagem após 2 segundos
-    }).catch(err => {
-      console.error('Erro ao copiar link: ', err);
-    });
+      setTimeout(() => setShowCopySuccess(false), 2000);
+      
+      console.log('📋 [HEADER] Link copiado:', shareLink);
+      
+    } catch (err) {
+      console.error('❌ [HEADER] Erro ao copiar link:', err);
+      
+      // Fallback: copiar pelo menos a URL atual
+      const fallbackLink = window.location.href;
+      try {
+        await navigator.clipboard.writeText(fallbackLink);
+        setShowCopySuccess(true);
+        setTimeout(() => setShowCopySuccess(false), 2000);
+      } catch (fallbackError) {
+        console.error('❌ [HEADER] Erro no fallback:', fallbackError);
+      }
+    }
   };
 
   // Definir estilo condicional baseado na prop isSharedActivity

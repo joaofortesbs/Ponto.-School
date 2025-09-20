@@ -195,6 +195,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       <UniversalActivityHeader
         isSharedActivity={true}
         activityTitle={atividadeSincronizada?.titulo || titulo}
+        activityId={atividadeSincronizada?.id || atividade?.id}
         activityIcon={(() => {
           const activityType = atividadeSincronizada?.tipo || '';
           if (activityType.includes('flash-cards')) {

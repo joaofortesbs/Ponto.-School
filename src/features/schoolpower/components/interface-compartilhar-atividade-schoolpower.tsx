@@ -35,10 +35,30 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
       try {
         console.log('🔍 [PÚBLICO] Carregando atividade:', { finalActivityId, finalUniqueCode });
+        console.log('🌐 [PÚBLICO] URL completa:', window.location.href);
         
         const atividadeEncontrada = await buscarAtividadeCompartilhada(finalActivityId, finalUniqueCode);
         
         if (!atividadeEncontrada) {
+          console.error('❌ [PÚBLICO] Atividade não encontrada com parâmetros:', { finalActivityId, finalUniqueCode });
+          
+          // Tentar buscar no localStorage como fallback
+          const storageKey = 'ponto_school_atividades_compartilhaveis_v1.0';
+          const todasAtividades = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          console.log('📋 [PÚBLICO] Atividades no localStorage:', todasAtividades);
+          
+          // Buscar por ID da atividade
+          const atividadeFallback = todasAtividades.find((ativ: any) => 
+            ativ.id === finalActivityId && ativ.ativo === true
+          );
+          
+          if (atividadeFallback) {
+            console.log('✅ [PÚBLICO] Atividade encontrada via fallback:', atividadeFallback);
+            setAtividade(atividadeFallback);
+            setCarregando(false);
+            return;
+          }
+          
           setErro('Atividade não encontrada ou link expirado');
           setCarregando(false);
           return;

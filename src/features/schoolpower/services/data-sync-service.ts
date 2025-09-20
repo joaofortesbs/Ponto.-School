@@ -158,11 +158,24 @@ export class DataSyncService {
    * Sincroniza dados completos de uma atividade
    */
   static sincronizarAtividade(atividade: any): AtividadeDados {
-    this.debugLog('Iniciando sincronização de atividade', { id: atividade?.id, tipo: atividade?.tipo });
+    console.log('🔄 [SYNC] Iniciando sincronização de atividade:', atividade);
 
     if (!atividade) {
-      throw new Error('Atividade é obrigatória para sincronização');
+      console.warn('⚠️ [SYNC] Atividade não fornecida');
+      return {
+        id: 'atividade-desconhecida',
+        titulo: 'Atividade Desconhecida',
+        descricao: '',
+        tipo: 'atividade',
+        dados: {}
+      };
     }
+
+    // Garantir que o ID seja preservado corretamente
+    const atividadeId = atividade.id || atividade.activityId || 'atividade-sem-id';
+    console.log('🔑 [SYNC] ID da atividade identificado:', atividadeId);
+
+    this.debugLog('Iniciando sincronização de atividade', { id: atividade?.id, tipo: atividade?.tipo });
 
     const atividadeSincronizada: AtividadeDados = {
       id: atividade.id || `atividade-${Date.now()}`,

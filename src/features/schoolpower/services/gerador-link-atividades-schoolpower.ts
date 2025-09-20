@@ -235,18 +235,26 @@ class GeradorLinkAtividadesSchoolPower {
       console.log('🔑 [GERADOR] Código único gerado:', codigoUnico);
 
       // Criar atividade compartilhável com dados sincronizados
+      const linkPublico = this.criarLinkPublico(atividadeSincronizada.id, codigoUnico);
+      
       const novaAtividade: AtividadeCompartilhavel = {
         id: atividadeSincronizada.id,
         titulo: atividadeSincronizada.titulo,
         descricao: atividadeSincronizada.descricao, // Incluir descrição sincronizada
         tipo: atividadeSincronizada.tipo,
-        dados: atividadeSincronizada.dados || {},
+        dados: {
+          ...atividadeSincronizada.dados,
+          // Preservar dados originais da atividade
+          originalData: atividade.dados || atividade,
+          syncTimestamp: new Date().toISOString()
+        },
         customFields: atividadeSincronizada.customFields || {},
         professorNome: atividade.professorNome || 'Professor',
         professorAvatar: atividade.professorAvatar,
         schoolPoints: atividade.schoolPoints || 100,
         codigoUnico,
-        linkPublico: this.criarLinkPublico(atividadeSincronizada.id, codigoUnico),
+        linkPublico,
+        criadoPor: atividade.criadoPor,
         criadoEm: new Date().toISOString(),
         ativo: true,
         // Metadados adicionais sincronizados
@@ -254,6 +262,9 @@ class GeradorLinkAtividadesSchoolPower {
         nivel: atividadeSincronizada.nivel,
         tempo_estimado: atividadeSincronizada.tempo_estimado
       };
+
+      console.log('🔗 [GERADOR] Link público gerado:', linkPublico);
+      console.log('📋 [GERADOR] Dados completos da atividade:', novaAtividade);
 
       console.log('💾 [GERADOR] Salvando no localStorage:', novaAtividade);
 
