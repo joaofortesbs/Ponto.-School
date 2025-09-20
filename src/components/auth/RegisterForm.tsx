@@ -22,6 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ApiClient } from "@/services/api-client";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
+import { supabase } from "@/lib/supabaseClient"; // Importar supabase
 
 interface FormData {
   fullName: string;
@@ -163,10 +164,10 @@ export function RegisterForm() {
     // Sempre garantir que as opções estejam carregadas, independente do estado anterior
     setClassOptions(preloadedClassOptions);
     setGradeOptions(preloadedGradeOptions);
-    
+
     // Definir loading como false imediatamente
     setLoadingOptions(false);
-    
+
     if (formData.institution.trim().length > 0) {
       // Mostrar seção de turmas e séries imediatamente
       setShowClassAndGrade(true);
@@ -174,7 +175,7 @@ export function RegisterForm() {
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
-      
+
       // Reset the values when institution is cleared
       setFormData((prev) => ({
         ...prev,
@@ -184,7 +185,7 @@ export function RegisterForm() {
         customGrade: "",
       }));
     }
-    
+
     // Garantir que componentes sejam mostrados com um timeout de segurança
     const timer = setTimeout(() => {
       if (formData.institution.trim().length > 0) {
@@ -192,7 +193,7 @@ export function RegisterForm() {
         setInstitutionFound(true);
       }
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [formData.institution]);
 
@@ -457,7 +458,7 @@ export function RegisterForm() {
           estado_uf: formData.state,
           plan_type: confirmedPlan,
         };
-        
+
         const { user, session, error } = await ApiClient.register(
           formData.email,
           formData.password,
@@ -570,7 +571,7 @@ export function RegisterForm() {
             localStorage.setItem('lastRegisteredEmail', formData.email);
             localStorage.setItem('lastRegisteredUsername', formData.username);
             localStorage.setItem('redirectTimer', 'active');
-            
+
             // Adicionar flag para indicar que o registro acabou de ser concluído
             // Esta flag será lida pelo App.tsx para garantir a exibição do modal de boas-vindas
             localStorage.setItem('registrationCompleted', 'true');
@@ -590,7 +591,7 @@ export function RegisterForm() {
               return null;
             }
           };
-          
+
           // Adicionar outro mecanismo de segurança para garantir o redirecionamento
           document.addEventListener('visibilitychange', function handleVisibility() {
             if (localStorage.getItem('redirectTimer') === 'active') {
@@ -1013,7 +1014,7 @@ export function RegisterForm() {
 
                 {/* Turma e Série - Mostrados apenas quando a instituição é preenchida */}
                 {showClassAndGrade && (
-                  <div className="space-y-6 border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800/40 shadow-sm transition-all duration-300">
+                  <div className="space-y-6 border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800/50 shadow-sm transition-all duration-300">
                     <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
                       <h3 className="text-base font-semibold text-brand-black dark:text-white flex items-center">
                         <GraduationCap className="h-5 w-5 mr-2 text-brand-primary" /> Informações Acadêmicas
