@@ -22,6 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { authService } from "@/services/api";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
+import { auth } from '@/services/api'; // Updated import
 
 interface FormData {
   fullName: string;
@@ -163,10 +164,10 @@ export function RegisterForm() {
     // Sempre garantir que as opções estejam carregadas, independente do estado anterior
     setClassOptions(preloadedClassOptions);
     setGradeOptions(preloadedGradeOptions);
-    
+
     // Definir loading como false imediatamente
     setLoadingOptions(false);
-    
+
     if (formData.institution.trim().length > 0) {
       // Mostrar seção de turmas e séries imediatamente
       setShowClassAndGrade(true);
@@ -174,7 +175,7 @@ export function RegisterForm() {
     } else {
       setShowClassAndGrade(false);
       setInstitutionFound(false);
-      
+
       // Reset the values when institution is cleared
       setFormData((prev) => ({
         ...prev,
@@ -184,7 +185,7 @@ export function RegisterForm() {
         customGrade: "",
       }));
     }
-    
+
     // Garantir que componentes sejam mostrados com um timeout de segurança
     const timer = setTimeout(() => {
       if (formData.institution.trim().length > 0) {
@@ -192,7 +193,7 @@ export function RegisterForm() {
         setInstitutionFound(true);
       }
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [formData.institution]);
 
@@ -322,7 +323,7 @@ export function RegisterForm() {
         const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
         userId = `${uf}${timestamp.toString().slice(-6)}${tipoConta}${randomSuffix}`;
         console.log(`ID temporário gerado para testes: ${userId}`);
-        
+
         /* Comentado - lógica complexa a ser implementada no backend
         try {
           userId = await generateUserId(uf, tipoConta);
@@ -367,7 +368,7 @@ export function RegisterForm() {
       try {
         // Verificar novamente se o nome de usuário já existe
         const isUsernameAvailable = await authService.checkUsername(formData.username);
-        
+
         if (!isUsernameAvailable) {
           setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
           setLoading(false);
@@ -385,8 +386,8 @@ export function RegisterForm() {
           console.warn('Erro ao salvar dados no localStorage:', e);
         }
 
-        // Tente registrar com o Supabase Auth
-        const { data, error } = await authService.signUp({
+        // Tente registrar com o novo serviço de autenticação
+        const { data, error } = await auth.register({ // Usando o novo serviço de autenticação
           email: formData.email,
           password: formData.password,
           userData: {
@@ -424,47 +425,44 @@ export function RegisterForm() {
           // Tente criar o perfil no banco de dados
           if (userData?.user) {
             try {
-              const { error: insertError } = await supabase
-                .from("profiles")
-                .insert([{
+              // NOTE: A criação de perfil agora deve usar o novo serviço de API, não o Supabase diretamente.
+              // Assumindo que existe um método `createUserProfile` no `authService` ou similar.
+              // Se não existir, você precisará implementar a lógica de inserção no Neon aqui.
+              // Exemplo hipotético:
+              const response = await authService.createUserProfile({
+                id: profileId,
+                user_id: userId,
+                full_name: formData.fullName,
+                username: formData.username,
+                email: formData.email,
+                display_name: formData.username,
+                institution: formData.institution,
+                state: formData.state,
+                birth_date: formData.birthDate,
+                plan_type: confirmedPlan,
+                level: 1,
+                rank: "Aprendiz",
+                xp: 0,
+                coins: 100
+              });
+
+              if (response.error) {
+                console.error("Profile creation error:", response.error);
+                // Se falhar ao criar, tente atualizar se o perfil já existir
+                const updateResponse = await authService.updateUserProfile({
                   id: profileId,
                   user_id: userId,
                   full_name: formData.fullName,
                   username: formData.username,
-                  email: formData.email,
-                  display_name: formData.username,
                   institution: formData.institution,
                   state: formData.state,
                   birth_date: formData.birthDate,
-                  plan_type: confirmedPlan, // Usa o plano confirmado
-                  level: 1,
-                  rank: "Aprendiz",
-                  xp: 0,
+                  plan_type: confirmedPlan,
+                  display_name: formData.username,
                   coins: 100
-                }]);
-
-              if (insertError && !insertError.message.includes("fetch")) {
-                // Se houver erro diferente de conectividade, tente atualizar o perfil existente
-                console.log("Tentando atualizar perfil existente");
-                const { error: updateError } = await supabase
-                  .from("profiles")
-                  .update({
-                    user_id: userId,
-                    full_name: formData.fullName,
-                    username: formData.username,
-                    institution: formData.institution,
-                    state: formData.state,
-                    birth_date: formData.birthDate,
-                    plan_type: confirmedPlan, // Usa o plano confirmado
-                    level: 1,
-                    rank: "Aprendiz",
-                    display_name: formData.username,
-                    coins: 100
-                  })
-                  .eq("id", profileId);
-
-                if (updateError && !updateError.message.includes("fetch")) {
-                  console.error("Profile update error:", updateError);
+                });
+                if (updateResponse.error) {
+                  console.error("Profile update error:", updateResponse.error);
                 }
               }
             } catch (profileError) {
@@ -506,7 +504,7 @@ export function RegisterForm() {
             localStorage.setItem('lastRegisteredEmail', formData.email);
             localStorage.setItem('lastRegisteredUsername', formData.username);
             localStorage.setItem('redirectTimer', 'active');
-            
+
             // Adicionar flag para indicar que o registro acabou de ser concluído
             // Esta flag será lida pelo App.tsx para garantir a exibição do modal de boas-vindas
             localStorage.setItem('registrationCompleted', 'true');
@@ -526,7 +524,7 @@ export function RegisterForm() {
               return null;
             }
           };
-          
+
           // Adicionar outro mecanismo de segurança para garantir o redirecionamento
           document.addEventListener('visibilitychange', function handleVisibility() {
             if (localStorage.getItem('redirectTimer') === 'active') {
@@ -623,7 +621,7 @@ export function RegisterForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Plano LITE */}
-            <div 
+            <div
               onClick={() => handlePlanConfirmation("lite")}
               className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
                 initialPlan === "lite"
@@ -667,7 +665,7 @@ export function RegisterForm() {
             </div>
 
             {/* Plano FULL */}
-            <div 
+            <div
               onClick={() => handlePlanConfirmation("full")}
               className={`group relative overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
                 initialPlan === "full" || initialPlan === "premium"

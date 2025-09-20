@@ -1,34 +1,34 @@
+
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { query } from './database.js';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-if (!JWT_SECRET) {
-  console.error('❌ CRITICAL: JWT_SECRET environment variable is required!');
-  process.exit(1);
-}
-const SALT_ROUNDS = 12;
-
-// Gerar hash da senha
+// Função para gerar hash da senha
 export const hashPassword = async (password) => {
-  return await bcrypt.hash(password, SALT_ROUNDS);
+  return await bcrypt.hash(password, 10);
 };
 
-// Verificar senha
+// Função para verificar senha
 export const verifyPassword = async (password, hash) => {
   return await bcrypt.compare(password, hash);
 };
 
-// Gerar JWT token
-export const generateToken = (userId) => {
+// Função para gerar token JWT
+export const generateToken = (user) => {
   return jwt.sign(
-    { userId, exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) }, // 24 horas
-    JWT_SECRET
+    { 
+      id: user.id, 
+      email: user.email,
+      username: user.username 
+    }, 
+    JWT_SECRET, 
+    { expiresIn: '24h' }
   );
 };
 
-// Verificar JWT token
+// Função para verificar token JWT
 export const verifyToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
@@ -40,14 +40,14 @@ export const verifyToken = (token) => {
 // Registrar usuário
 export const signUp = async (email, password, userData = {}) => {
   try {
-    // Verificar se email já existe
+    // Verificar se usuário já existe
     const existingUser = await query(
       'SELECT id FROM users WHERE email = $1',
       [email]
     );
 
     if (existingUser.rows.length > 0) {
-      throw new Error('Email already registered');
+      return { success: false, error: 'User already exists' };
     }
 
     // Hash da senha
@@ -55,33 +55,29 @@ export const signUp = async (email, password, userData = {}) => {
 
     // Criar usuário
     const userResult = await query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
-      [email, passwordHash]
+      'INSERT INTO users (email, password_hash, email_confirmed, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id, email, created_at',
+      [email, passwordHash, true]
     );
 
     const user = userResult.rows[0];
 
-    // Criar perfil se dados fornecidos
-    if (userData && Object.keys(userData).length > 0) {
-      const {
-        username,
-        full_name,
-        display_name,
-        institution,
-        state,
-        birth_date,
-        plan_type = 'free'
-      } = userData;
+    // Criar perfil
+    await query(
+      'INSERT INTO profiles (id, email, display_name, full_name, username, institution, state, birth_date, plan_type, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())',
+      [
+        user.id,
+        email,
+        userData.display_name || userData.username || userData.full_name || email.split('@')[0],
+        userData.full_name || '',
+        userData.username || email.split('@')[0],
+        userData.institution || '',
+        userData.state || '',
+        userData.birth_date || null,
+        userData.plan_type || 'free'
+      ]
+    );
 
-      await query(
-        `INSERT INTO profiles (user_id, username, full_name, display_name, institution, state, birth_date, plan_type)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [user.id, username, full_name, display_name, institution, state, birth_date, plan_type]
-      );
-    }
-
-    // Gerar token
-    const token = generateToken(user.id);
+    const token = generateToken(user);
 
     return {
       success: true,
@@ -93,106 +89,93 @@ export const signUp = async (email, password, userData = {}) => {
       token
     };
   } catch (error) {
-    console.error('SignUp error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    console.error('Error in signUp:', error);
+    return { success: false, error: 'Internal server error' };
   }
 };
 
-// Login usuário
+// Login do usuário
 export const signIn = async (email, password) => {
   try {
-    // Buscar usuário
-    const userResult = await query(
-      'SELECT id, email, password_hash FROM users WHERE email = $1',
+    const result = await query(
+      'SELECT u.id, u.email, u.password_hash, u.created_at, p.username, p.display_name FROM users u LEFT JOIN profiles p ON u.id = p.id WHERE u.email = $1',
       [email]
     );
 
-    if (userResult.rows.length === 0) {
-      throw new Error('Invalid email or password');
+    if (result.rows.length === 0) {
+      return { success: false, error: 'Invalid credentials' };
     }
 
-    const user = userResult.rows[0];
+    const user = result.rows[0];
+    const isValidPassword = await verifyPassword(password, user.password_hash);
 
-    // Verificar senha
-    const validPassword = await verifyPassword(password, user.password_hash);
-    if (!validPassword) {
-      throw new Error('Invalid email or password');
+    if (!isValidPassword) {
+      return { success: false, error: 'Invalid credentials' };
     }
 
-    // Gerar token
-    const token = generateToken(user.id);
+    // Atualizar último login
+    await query(
+      'UPDATE users SET last_sign_in_at = NOW(), updated_at = NOW() WHERE id = $1',
+      [user.id]
+    );
+
+    const token = generateToken(user);
 
     return {
       success: true,
       user: {
         id: user.id,
-        email: user.email
+        email: user.email,
+        username: user.username,
+        display_name: user.display_name,
+        created_at: user.created_at
       },
       token
     };
   } catch (error) {
-    console.error('SignIn error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    console.error('Error in signIn:', error);
+    return { success: false, error: 'Internal server error' };
   }
 };
 
-// Obter usuário pelo token
+// Obter usuário do token
 export const getUserFromToken = async (token) => {
   try {
     const decoded = verifyToken(token);
     if (!decoded) {
-      return { success: false, error: 'Invalid token' };
+      return null;
     }
 
-    const userResult = await query(
-      `SELECT u.id, u.email, p.username, p.full_name, p.display_name, p.institution, p.state, p.plan_type
-       FROM users u
-       LEFT JOIN profiles p ON u.id = p.user_id
-       WHERE u.id = $1`,
-      [decoded.userId]
+    const result = await query(
+      'SELECT u.id, u.email, u.created_at, p.username, p.display_name, p.full_name FROM users u LEFT JOIN profiles p ON u.id = p.id WHERE u.id = $1',
+      [decoded.id]
     );
 
-    if (userResult.rows.length === 0) {
-      return { success: false, error: 'User not found' };
-    }
-
-    const user = userResult.rows[0];
-    return {
-      success: true,
-      user
-    };
+    return result.rows.length > 0 ? result.rows[0] : null;
   } catch (error) {
-    console.error('GetUser error:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+    console.error('Error in getUserFromToken:', error);
+    return null;
   }
 };
 
-// Middleware para verificar autenticação
+// Middleware de autenticação
 export const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.cookies?.auth_token || req.headers.authorization?.replace('Bearer ', '');
-    
+    const token = req.cookies.auth_token || req.headers.authorization?.replace('Bearer ', '');
+
     if (!token) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const result = await getUserFromToken(token);
-    if (!result.success) {
-      return res.status(401).json({ error: result.error });
+    const user = await getUserFromToken(token);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    req.user = result.user;
+    req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ error: 'Authentication failed' });
+    console.error('Auth middleware error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

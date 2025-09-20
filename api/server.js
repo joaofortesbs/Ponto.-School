@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import emailRoutes from './enviar-email.js';
 import authRoutes from './routes/auth.js';
+import taskRoutes from './routes/tasks.js';
 import { checkDatabaseConnection, initTables } from './lib/database.js';
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use(cookieParser());
 // Rotas
 app.use('/api', emailRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Rota raiz
 app.get('/', (req, res) => {

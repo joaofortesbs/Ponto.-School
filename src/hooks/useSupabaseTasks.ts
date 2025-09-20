@@ -1,37 +1,18 @@
-
 import { useState, useEffect } from 'react';
-import { supabaseTaskService, TarefaSupabase } from '@/services/supabaseTaskService';
+import { taskService, TaskForUI } from '@/services/taskService';
 
-export interface TaskForUI {
-  id: string;
-  title: string;
-  description?: string;
-  completed: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export interface Task extends TaskForUI {}
 
 export const useSupabaseTasks = () => {
   const [tasks, setTasks] = useState<TaskForUI[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Converter tarefa do Supabase para formato da UI
-  const convertToUIFormat = (tarefaSupabase: TarefaSupabase): TaskForUI => ({
-    id: tarefaSupabase.id,
-    title: tarefaSupabase.titulo,
-    description: tarefaSupabase.descricao,
-    completed: tarefaSupabase.status,
-    createdAt: tarefaSupabase.data_criacao,
-    updatedAt: tarefaSupabase.data_atualizacao
-  });
-
-  // Carregar tarefas do Supabase
+  // Carregar tarefas
   const loadTasks = async () => {
     setLoading(true);
     try {
-      const tarefas = await supabaseTaskService.buscarTarefas();
-      const tasksForUI = tarefas.map(convertToUIFormat);
-      setTasks(tasksForUI);
+      const fetchedTasks = await taskService.getTasks();
+      setTasks(fetchedTasks);
     } catch (error) {
       console.error('Erro ao carregar tarefas:', error);
     } finally {
@@ -42,11 +23,10 @@ export const useSupabaseTasks = () => {
   // Adicionar nova tarefa
   const addTask = async (title: string, description?: string) => {
     try {
-      const novaTarefa = await supabaseTaskService.criarTarefa(title, description);
-      if (novaTarefa) {
-        const taskForUI = convertToUIFormat(novaTarefa);
-        setTasks(prev => [taskForUI, ...prev]);
-        return taskForUI;
+      const newTask = await taskService.createTask(title, description);
+      if (newTask) {
+        setTasks(prev => [newTask, ...prev]);
+        return newTask;
       }
     } catch (error) {
       console.error('Erro ao adicionar tarefa:', error);
@@ -55,18 +35,12 @@ export const useSupabaseTasks = () => {
   };
 
   // Atualizar tarefa
-  const updateTask = async (id: string, updates: Partial<Pick<TaskForUI, 'title' | 'description' | 'completed'>>) => {
+  const updateTask = async (id: string, updates: Partial<TaskForUI>) => {
     try {
-      const supabaseUpdates: any = {};
-      if (updates.title !== undefined) supabaseUpdates.titulo = updates.title;
-      if (updates.description !== undefined) supabaseUpdates.descricao = updates.description;
-      if (updates.completed !== undefined) supabaseUpdates.status = updates.completed;
-
-      const tarefaAtualizada = await supabaseTaskService.atualizarTarefa(id, supabaseUpdates);
-      if (tarefaAtualizada) {
-        const taskForUI = convertToUIFormat(tarefaAtualizada);
-        setTasks(prev => prev.map(task => task.id === id ? taskForUI : task));
-        return taskForUI;
+      const updatedTask = await taskService.updateTask(id, updates);
+      if (updatedTask) {
+        setTasks(prev => prev.map(task => task.id === id ? updatedTask : task));
+        return updatedTask;
       }
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
@@ -77,8 +51,8 @@ export const useSupabaseTasks = () => {
   // Deletar tarefa
   const deleteTask = async (id: string) => {
     try {
-      const sucesso = await supabaseTaskService.deletarTarefa(id);
-      if (sucesso) {
+      const success = await taskService.deleteTask(id);
+      if (success) {
         setTasks(prev => prev.filter(task => task.id !== id));
         return true;
       }
@@ -90,9 +64,14 @@ export const useSupabaseTasks = () => {
 
   // Alternar status de conclusão
   const toggleTaskCompletion = async (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-      return await updateTask(id, { completed: !task.completed });
+    try {
+      const updatedTask = await taskService.toggleTaskCompletion(id);
+      if (updatedTask) {
+        setTasks(prev => prev.map(task => task.id === id ? updatedTask : task));
+        return updatedTask;
+      }
+    } catch (error) {
+      console.error('Erro ao alternar status da tarefa:', error);
     }
     return null;
   };
@@ -112,3 +91,6 @@ export const useSupabaseTasks = () => {
     loadTasks
   };
 };
+
+// Exportar também como useTasks para compatibilidade
+export const useTasks = useSupabaseTasks;

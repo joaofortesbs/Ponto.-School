@@ -177,7 +177,7 @@ export function LoginForm() {
             body: JSON.stringify({ username: inputValue }),
             credentials: 'include'
           });
-          
+
           if (!emailResponse.ok) {
             setSuccess(false);
             setError("Nome de usuário não encontrado");
@@ -189,9 +189,9 @@ export function LoginForm() {
             localStorage.removeItem("auth_status");
             return;
           }
-          
+
           const { email } = await emailResponse.json();
-          
+
           // Agora fazer login com o email encontrado
           authResult = await Promise.race([
             auth.signIn(email, formData.password),

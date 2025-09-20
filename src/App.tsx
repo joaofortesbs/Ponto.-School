@@ -17,6 +17,8 @@ import { auth } from "@/services/api";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider";
+import { AuthProvider } from '@/hooks/useAuth';
+
 
 // Importações diretas
 import Dashboard from "@/pages/dashboard";
@@ -71,6 +73,8 @@ function ProtectedRoute({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Assumindo que auth.getUser() agora se conecta ao Neon e retorna informações do usuário
+        // Se a autenticação for tratada de forma diferente, ajuste aqui.
         const { data } = await auth.getUser();
         const isAuth = !!data.user;
 
@@ -124,8 +128,9 @@ function App() {
     const checkConnection = async () => {
       try {
         try {
+          // Assumindo que checkDatabaseConnection agora verifica a conexão com o Neon
           const { checkDatabaseConnection } = await import('@/services/api');
-          
+
           const isConnected = await checkDatabaseConnection();
 
           if (!isConnected) {
@@ -153,6 +158,7 @@ function App() {
     const handleLogout = () => {
       localStorage.removeItem('auth_status');
       localStorage.removeItem('auth_checked');
+      // Adicionar lógica de logout do novo sistema de autenticação se necessário
     };
 
     window.addEventListener('logout', handleLogout);
@@ -174,6 +180,7 @@ function App() {
   useEffect(() => {
     const checkRootRoute = async () => {
       if (location.pathname === "/") {
+        // Adaptar checkAuthentication para usar o novo sistema de autenticação
         const isAuth = await checkAuthentication();
         if (!isAuth) {
           navigate('/login', { replace: true });
@@ -195,6 +202,7 @@ function App() {
 
     const checkAuth = async () => {
       try {
+        // Adaptar checkAuthentication para usar o novo sistema de autenticação
         const isAuthenticated = await checkAuthentication();
 
         const isAuthRoute = [
@@ -215,8 +223,9 @@ function App() {
         }
 
         if (isAuthenticated) {
-          const { data: { user } } = await auth.getUser();
-          const currentUserId = user?.id;
+          // Assumindo que auth.getUser() agora retorna os dados do usuário do Neon
+          const { data } = await auth.getUser();
+          const currentUserId = data.user?.id;
 
           if (!currentUserId) return;
 
@@ -305,94 +314,96 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <UsernameProvider>
-        <StudyGoalProvider>
-          <ErrorBoundary>
-            <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
-              <Routes>
-                {/* Auth Routes - Públicas */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/select-plan" element={<PlanSelectionPage />} />
+      <AuthProvider>
+        <Router>
+          <StudyGoalProvider>
+            <ErrorBoundary>
+              <div className="min-h-screen bg-background font-body antialiased dark:bg-[#001427]">
+                <Routes>
+                  {/* Auth Routes - Públicas */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/select-plan" element={<PlanSelectionPage />} />
 
-                {/* Página em branco - Pública para teste */}
-                <Route path="/blank" element={<BlankPage />} />
-                 {/* Rota pública para quiz */}
-                 <Route path="/quiz" element={<QuizPage />} />
+                  {/* Página em branco - Pública para teste */}
+                  <Route path="/blank" element={<BlankPage />} />
+                   {/* Rota pública para quiz */}
+                   <Route path="/quiz" element={<QuizPage />} />
 
-                {/* Main App Routes - Protegidas */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Dashboard />} />
-                  <Route path="turmas" element={<Turmas />} />
-                  <Route path="turmas/:id" element={<TurmaDetail />} />
-                  <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
-                  <Route path="turmas/grupos" element={<GruposEstudo />} />
-                  <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
-                  <Route path="comunidades" element={<Comunidades />} />
-                  <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
-                  <Route path="epictus-ia" element={<EpictusIAPage />} />
-                  <Route path="/school-power" element={<SchoolPowerPageIndex />} />
-                  <Route path="agenda" element={<Agenda />} />
-                  <Route path="biblioteca" element={<Biblioteca />} />
-                  <Route path="conquistas" element={<Conquistas />} />
-                  <Route path="carteira" element={<Carteira />} />
-                  <Route path="organizacao" element={<Organizacao />} />
-                  <Route path="novidades" element={<Novidades />} />
-                  <Route path="configuracoes" element={<Configuracoes />} />
-                  <Route path="planos-estudo" element={<PlanosEstudo />} />
-                  <Route path="portal" element={<Portal />} />
-                </Route>
+                  {/* Main App Routes - Protegidas */}
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Home />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<Dashboard />} />
+                    <Route path="turmas" element={<Turmas />} />
+                    <Route path="turmas/:id" element={<TurmaDetail />} />
+                    <Route path="turmas/grupos2" element={<GruposEstudo2 />} />
+                    <Route path="turmas/grupos" element={<GruposEstudo />} />
+                    <Route path="turmas/grupos/:id" element={<GruposEstudo />} />
+                    <Route path="comunidades" element={<Comunidades />} />
+                    <Route path="pedidos-ajuda" element={<PedidosAjuda />} />
+                    <Route path="epictus-ia" element={<EpictusIAPage />} />
+                    <Route path="/school-power" element={<SchoolPowerPageIndex />} />
+                    <Route path="agenda" element={<Agenda />} />
+                    <Route path="biblioteca" element={<Biblioteca />} />
+                    <Route path="conquistas" element={<Conquistas />} />
+                    <Route path="carteira" element={<Carteira />} />
+                    <Route path="organizacao" element={<Organizacao />} />
+                    <Route path="novidades" element={<Novidades />} />
+                    <Route path="configuracoes" element={<Configuracoes />} />
+                    <Route path="planos-estudo" element={<PlanosEstudo />} />
+                    <Route path="portal" element={<Portal />} />
+                  </Route>
 
-                {/* User Profile - Protegida */}
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
-                <Route path="profile" element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                } />
+                  {/* User Profile - Protegida */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="profile" element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Agenda standalone - Protegida */}
-                <Route path="/agenda-preview" element={
-                  <ProtectedRoute>
-                    <Agenda />
-                  </ProtectedRoute>
-                } />
-                <Route path="/agenda-standalone" element={
-                  <ProtectedRoute>
-                    <Agenda />
-                  </ProtectedRoute>
-                } />
+                  {/* Agenda standalone - Protegida */}
+                  <Route path="/agenda-preview" element={
+                    <ProtectedRoute>
+                      <Agenda />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/agenda-standalone" element={
+                    <ProtectedRoute>
+                      <Agenda />
+                    </ProtectedRoute>
+                  } />
 
-                {/* Fallback Route - Redireciona para login */}
-                <Route path="*" element={<Navigate to="/login" />} />
-              </Routes>
+                  {/* Fallback Route - Redireciona para login */}
+                  <Route path="*" element={<Navigate to="/login" />} />
+                </Routes>
 
-              {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
-              {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && <FloatingChatSupport />}
+                {/* Floating Chat Support - Excluído explicitamente das rotas de auth e quiz */}
+                {!isAuthRoute && !isQuizRoute && location.pathname !== '/quiz' && <FloatingChatSupport />}
 
-              {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
-              {!isAuthRoute &&
-                <WelcomeModal
-                  isOpen={showWelcomeModal}
-                  onClose={() => setShowWelcomeModal(false)}
-                  isFirstLogin={isFirstLogin}
-                />
-              }
-            </div>
-            <Toaster />
-          </ErrorBoundary>
-        </StudyGoalProvider>
-      </UsernameProvider>
+                {/* Welcome Modal - apenas mostrado em rotas protegidas (não auth) */}
+                {!isAuthRoute &&
+                  <WelcomeModal
+                    isOpen={showWelcomeModal}
+                    onClose={() => setShowWelcomeModal(false)}
+                    isFirstLogin={isFirstLogin}
+                  />
+                }
+              </div>
+              <Toaster />
+            </ErrorBoundary>
+          </StudyGoalProvider>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

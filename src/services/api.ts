@@ -1,154 +1,128 @@
 // Serviço de API para comunicação com o backend
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? '/api' 
-  : 'http://localhost:3001/api';
 
-// Configuração fetch com credentials para cookies
-const fetchWithCredentials = async (url: string, options: RequestInit = {}) => {
-  const config: RequestInit = {
-    credentials: 'include', // Para enviar cookies httpOnly
+// Serviços de API usando endpoints do backend com Neon PostgreSQL
+
+const API_BASE_URL = '/api';
+
+// Tipos
+export interface User {
+  id: string;
+  email: string;
+  username?: string;
+  display_name?: string;
+  full_name?: string;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  user?: User;
+  error?: string;
+}
+
+// Utilitário para fazer requisições
+const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
     },
     ...options,
-  };
+  });
 
-  const response = await fetch(`${API_BASE_URL}${url}`, config);
-  
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Network error' }));
-    throw new Error(errorData.error || `HTTP ${response.status}`);
+    const error = await response.json().catch(() => ({ error: 'Network error' }));
+    throw new Error(error.error || 'Request failed');
   }
-  
+
   return response.json();
 };
 
-// Interface para dados do usuário
-export interface User {
-  id: number;
-  email: string;
-  username?: string;
-  full_name?: string;
-  display_name?: string;
-  institution?: string;
-  state?: string;
-  plan_type?: string;
-}
-
-// Interface para dados de registro
-export interface SignUpData {
-  email: string;
-  password: string;
-  userData?: {
-    username?: string;
-    full_name?: string;
-    display_name?: string;
-    institution?: string;
-    state?: string;
-    birth_date?: string;
-    plan_type?: string;
-  };
-}
-
 // Serviços de autenticação
-export const authService = {
-  // Registrar usuário
-  async signUp(data: SignUpData) {
+export const auth = {
+  signUp: async (email: string, password: string, userData?: any): Promise<AuthResponse> => {
     try {
-      const result = await fetchWithCredentials('/auth/signup', {
+      return await apiRequest('/auth/signup', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ email, password, userData }),
       });
-      return { data: result, error: null };
     } catch (error) {
-      return { data: null, error: { message: (error as Error).message } };
+      return { success: false, error: error instanceof Error ? error.message : 'Signup failed' };
     }
   },
 
-  // Login usuário
-  async signIn(email: string, password: string) {
+  signIn: async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      const result = await fetchWithCredentials('/auth/signin', {
+      return await apiRequest('/auth/signin', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      return { data: result, error: null };
     } catch (error) {
-      return { data: null, error: { message: (error as Error).message } };
+      return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
     }
   },
 
-  // Logout usuário
-  async signOut() {
+  signOut: async (): Promise<{ success: boolean }> => {
     try {
-      await fetchWithCredentials('/auth/signout', {
+      await apiRequest('/auth/signout', { method: 'POST' });
+      return { success: true };
+    } catch (error) {
+      return { success: false };
+    }
+  },
+
+  getUser: async (): Promise<User | null> => {
+    try {
+      const response = await apiRequest('/auth/me');
+      return response.user || null;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  checkUsername: async (username: string): Promise<{ available: boolean }> => {
+    try {
+      return await apiRequest(`/auth/check-username/${username}`);
+    } catch (error) {
+      return { available: false };
+    }
+  },
+
+  resolveUsername: async (username: string): Promise<{ email?: string; error?: string }> => {
+    try {
+      return await apiRequest('/auth/resolve-username', {
         method: 'POST',
+        body: JSON.stringify({ username }),
       });
-      // Limpar localStorage
-      localStorage.removeItem('username');
-      localStorage.removeItem('userDisplayName');
-      localStorage.removeItem('userFirstName');
-      localStorage.removeItem('currentUserId');
-      localStorage.removeItem('auth_checked');
-      localStorage.removeItem('auth_status');
-      return { data: { success: true }, error: null };
     } catch (error) {
-      return { data: null, error: { message: (error as Error).message } };
+      return { error: error instanceof Error ? error.message : 'Username not found' };
     }
   },
-
-  // Obter usuário atual
-  async getUser() {
-    try {
-      const result = await fetchWithCredentials('/auth/me');
-      return { data: { user: result.user }, error: null };
-    } catch (error) {
-      return { data: { user: null }, error: { message: (error as Error).message } };
-    }
-  },
-
-  // Verificar se username está disponível
-  async checkUsername(username: string) {
-    try {
-      const result = await fetchWithCredentials(`/auth/check-username/${username}`);
-      return result.available;
-    } catch (error) {
-      console.error('Erro ao verificar username:', error);
-      return false;
-    }
-  }
 };
 
-// Função auxiliar para verificar autenticação (compatibilidade)
-export const checkAuthentication = async (): Promise<boolean> => {
-  try {
-    const result = await authService.getUser();
-    return !!result.data?.user;
-  } catch {
-    return false;
-  }
-};
-
-// Mock do objeto auth para compatibilidade com código existente
-export const auth = {
-  signUp: authService.signUp,
-  signIn: authService.signIn,
-  signOut: authService.signOut,
-  getUser: authService.getUser,
-};
-
-// Mock da função query (substituirá as chamadas diretas de banco)
-export const query = async (sql: string, params: any[]) => {
-  throw new Error('Direct database queries not allowed in client. Use API endpoints instead.');
-};
-
-// Verificação de conexão (agora será uma verificação da API)
+// Verificação de conexão com banco
 export const checkDatabaseConnection = async (): Promise<boolean> => {
   try {
     const response = await fetch(`${API_BASE_URL}/status`);
     return response.ok;
-  } catch {
+  } catch (error) {
     return false;
   }
+};
+
+// Verificação de autenticação
+export const checkAuthentication = async (): Promise<boolean> => {
+  const user = await auth.getUser();
+  return user !== null;
+};
+
+// Serviço de autenticação para compatibilidade
+export const authService = auth;
+
+// Export para compatibilidade com código antigo
+export default {
+  auth,
+  checkDatabaseConnection,
+  checkAuthentication,
 };

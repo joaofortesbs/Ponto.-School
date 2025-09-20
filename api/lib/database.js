@@ -84,6 +84,18 @@ export const initTables = async () => {
       )
     `);
 
+    await query(`
+      CREATE TABLE IF NOT EXISTS tarefas (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        titulo TEXT NOT NULL,
+        descricao TEXT,
+        status BOOLEAN DEFAULT FALSE,
+        data_criacao TIMESTAMP DEFAULT NOW(),
+        data_atualizacao TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     console.log('✅ Database tables initialized successfully');
     return true;
   } catch (error) {
