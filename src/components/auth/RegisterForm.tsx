@@ -832,14 +832,15 @@ export function RegisterForm() {
 
                                 if (response && typeof response === 'object') {
                                   if (!response.available) {
-                                    if (response.error) {
+                                    if (response.error && !response.error.includes('Erro ao verificar')) {
                                       setError(response.error);
-                                    } else {
+                                    } else if (!response.error) {
                                       setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
                                     }
+                                    // Se o erro for de conectividade, não mostrar erro
                                   } else {
                                     // Limpar o erro se o username está disponível
-                                    if (error && (error.includes('nome de usuário') || error.includes('Username'))) {
+                                    if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('já está em uso'))) {
                                       setError("");
                                     }
                                   }
@@ -848,7 +849,7 @@ export function RegisterForm() {
                                   if (!response) {
                                     setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
                                   } else {
-                                    if (error && (error.includes('nome de usuário') || error.includes('Username'))) {
+                                    if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('já está em uso'))) {
                                       setError("");
                                     }
                                   }
@@ -856,6 +857,10 @@ export function RegisterForm() {
                               } catch (err) {
                                 console.error("Erro ao verificar nome de usuário:", err);
                                 // Não mostrar erro de conexão para não confundir o usuário
+                                // Se houver erro de conexão, limpar mensagens de erro de username
+                                if (error && (error.includes('nome de usuário') || error.includes('Username') || error.includes('já está em uso'))) {
+                                  setError("");
+                                }
                               }
                             }, 800);
                           } else if (validValue.length > 0 && validValue.length < 3) {
