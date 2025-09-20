@@ -119,8 +119,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
   return (
     <div className="w-full max-w-4xl">
-      {/* UniversalActivityHeader - Duplicata exata do modal de visualização */}
+      {/* UniversalActivityHeader - Com estilo específico para página de compartilhamento */}
       <UniversalActivityHeader
+        isSharedActivity={true}
         activityTitle={atividade?.titulo || titulo}
         activityIcon={(() => {
           const activityType = atividade?.tipo || '';

@@ -42,6 +42,7 @@ interface UniversalActivityHeaderProps {
   onSendMaterial?: () => void;
   onMakePrivate?: () => void;
   onDelete?: () => void;
+  isSharedActivity?: boolean; // Nova prop para identificar página de compartilhamento
 }
 
 // Sistema de sincronização de ícones - EXATAMENTE igual ao CardDeConstrucao.tsx
@@ -174,7 +175,8 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   onShare,
   onSendMaterial,
   onMakePrivate,
-  onDelete
+  onDelete,
+  isSharedActivity = false // Nova prop com valor padrão
 }) => {
   const userInfo = useUserInfo();
   const [isEditingSPs, setIsEditingSPs] = React.useState(false);
@@ -268,9 +270,17 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   };
 
+  // Definir estilo condicional baseado na prop isSharedActivity
+  const headerStyle = isSharedActivity 
+    ? { backgroundColor: '#021321' }
+    : {};
+
   return (
-    <div className="universal-activity-header w-full h-24 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-4 shadow-sm rounded-t-2xl" style={{ backgroundColor: '#021321' }}>
-      <div className="flex items-center justify-between h-full">
+    <div 
+      className={`universal-activity-header w-full h-24 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-4 shadow-sm rounded-t-2xl ${!isSharedActivity ? 'bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20' : ''}`}
+      style={headerStyle}
+    >
+      <div className="flex items-center justify-between h-full"></div>
         {/* Lado Esquerdo - Ícone e Informações da Atividade */}
         <div className="flex items-center gap-4">
           {/* Ícone da Atividade */}
