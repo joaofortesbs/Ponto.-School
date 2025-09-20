@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect, useState, useRef } from 'react'; // Import useState, useEffect and useRef
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -505,63 +506,63 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             </Card>
           </div>
 
-        {/* Card de Pré-visualização da Atividade forçado para modo escuro */}
+          {/* Card de Pré-visualização da Atividade forçado para modo escuro */}
           <div className="mb-8 flex-1 relative group">
             <Card ref={cardRef} className="dark bg-gray-800/90 border-gray-600/40 rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm">
               <CardContent className="p-0 h-full flex flex-col">
-              <div className="p-4 shadow-lg" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
-                <div className="flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
-                  <Eye className="w-5 h-5" />
-                  <span className="font-semibold">Pré-visualização da Atividade</span>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
-                {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
-                <div className="p-4 pointer-events-none overflow-hidden h-full">
-                  <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
-                    {renderActivityPreview()}
+                <div className="p-4 shadow-lg" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
+                  <div className="flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
+                    <Eye className="w-5 h-5" />
+                    <span className="font-semibold">Pré-visualização da Atividade</span>
                   </div>
                 </div>
 
-                {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto otimizado para modo escuro */}
-                <div 
-                  onClick={handlePresentarAtividade}
-                  className="absolute inset-0 z-40 pointer-events-auto cursor-pointer bg-black/0 group-hover:bg-black/50 backdrop-blur-none group-hover:backdrop-blur-md transition-all duration-700 ease-in-out flex items-center justify-center"
-                  style={{ 
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: '100%',
-                    height: '100%',
-                    zIndex: 10000
-                  }}
-                >
-                  {/* Container unificado com ícone e texto FIXO otimizado para modo escuro */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none relative">
-                    {/* Ícone de play com animação aprimorada otimizado para modo escuro */}
-                    <div className="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-200/40 relative overflow-hidden shadow-orange-500/30">
-                      {/* Efeito de brilho interno do ícone otimizado para modo escuro */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-                      <Play className="w-10 h-10 fill-white drop-shadow-xl relative z-10 transition-all duration-300 group-hover:scale-110" />
+                <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
+                  {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
+                  <div className="p-4 pointer-events-none overflow-hidden h-full">
+                    <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
+                      {renderActivityPreview()}
                     </div>
+                  </div>
 
-                    {/* Texto com efeitos aprimorados forçado para modo escuro */}
-                    <div className="text-xl font-bold px-6 py-3 rounded-2xl backdrop-blur-xl shadow-2xl text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-400/40 group-hover:border-orange-300/50 relative overflow-hidden" style={{ backgroundColor: 'rgba(17, 24, 39, 0.9)', borderColor: 'rgba(251, 146, 60, 0.3)', border: '1px solid' }}>
-                      {/* Efeito de brilho no texto forçado para modo escuro */}
-                      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000" style={{ background: 'linear-gradient(to right, transparent, rgba(251, 191, 36, 0.15), transparent)' }}></div>
-                      <span className="relative z-10" style={{ color: '#ffffff' }}>Apresentar Atividade</span>
-                    </div></div>
+                  {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto otimizado para modo escuro */}
+                  <div 
+                    onClick={handlePresentarAtividade}
+                    className="absolute inset-0 z-40 pointer-events-auto cursor-pointer bg-black/0 group-hover:bg-black/50 backdrop-blur-none group-hover:backdrop-blur-md transition-all duration-700 ease-in-out flex items-center justify-center"
+                    style={{ 
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      width: '100%',
+                      height: '100%',
+                      zIndex: 10000
+                    }}
+                  >
+                    {/* Container unificado com ícone e texto FIXO otimizado para modo escuro */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none relative">
+                      {/* Ícone de play com animação aprimorada otimizado para modo escuro */}
+                      <div className="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-200/40 relative overflow-hidden shadow-orange-500/30">
+                        {/* Efeito de brilho interno do ícone otimizado para modo escuro */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
+                        <Play className="w-10 h-10 fill-white drop-shadow-xl relative z-10 transition-all duration-300 group-hover:scale-110" />
+                      </div>
+
+                      {/* Texto com efeitos aprimorados forçado para modo escuro */}
+                      <div className="text-xl font-bold px-6 py-3 rounded-2xl backdrop-blur-xl shadow-2xl text-center whitespace-nowrap transform transition-all duration-600 ease-out group-hover:shadow-orange-400/40 group-hover:border-orange-300/50 relative overflow-hidden" style={{ backgroundColor: 'rgba(17, 24, 39, 0.9)', borderColor: 'rgba(251, 146, 60, 0.3)', border: '1px solid' }}>
+                        {/* Efeito de brilho no texto forçado para modo escuro */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000" style={{ background: 'linear-gradient(to right, transparent, rgba(251, 191, 36, 0.15), transparent)' }}></div>
+                        <span className="relative z-10" style={{ color: '#ffffff' }}>Apresentar Atividade</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
               </CardContent>
             </Card>
           </div>
 
-        {/* Botões na base do card otimizados para modo escuro */}
+          {/* Botões na base do card otimizados para modo escuro */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <Button
               onClick={handlePresentarAtividade}
@@ -583,32 +584,32 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       </Card>
 
       {/* Interface Fullscreen forçada para modo escuro - Container Transform */}
-        {isFullscreenMode && (
-          <div 
-            ref={fullscreenRef}
-            className="fixed inset-0 z-50 bg-gray-900 overflow-auto dark"
-            style={{ isolation: 'isolate' }}
-          >
-            {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
-            <div className="absolute top-4 right-4 z-20">
-              <Button
-                onClick={handleCloseFullscreen}
-                variant="ghost"
-                size="icon"
-                className="w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700/90 backdrop-blur-md border border-gray-600/40 shadow-xl hover:shadow-2xl transition-all duration-300"
-              >
-                <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
-              </Button>
-            </div>
-
-            {/* Atividade em Tela Cheia - Totalmente Funcional */}
-            <div className="w-full h-full">
-              {renderActivityPreview()}
-            </div>
+      {isFullscreenMode && (
+        <div 
+          ref={fullscreenRef}
+          className="fixed inset-0 z-50 bg-gray-900 overflow-auto dark"
+          style={{ isolation: 'isolate' }}
+        >
+          {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
+          <div className="absolute top-4 right-4 z-20">
+            <Button
+              onClick={handleCloseFullscreen}
+              variant="ghost"
+              size="icon"
+              className="w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700/90 backdrop-blur-md border border-gray-600/40 shadow-xl hover:shadow-2xl transition-all duration-300"
+            >
+              <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
+            </Button>
           </div>
-        )}
-      </div>
-    );
-  };
+
+          {/* Atividade em Tela Cheia - Totalmente Funcional */}
+          <div className="w-full h-full">
+            {renderActivityPreview()}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default CardVisualizacaoAtividadeCompartilhada;
