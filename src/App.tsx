@@ -13,7 +13,7 @@ import Home from "@/components/home";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
-import { supabase } from "@/lib/supabase";
+import { auth, checkDatabaseConnection } from "@/lib/supabase";
 import { checkAuthentication } from "@/lib/auth-utils";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider";
@@ -71,8 +71,8 @@ function ProtectedRoute({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        const isAuth = !!data.session;
+        const { data } = await auth.getUser();
+        const isAuth = !!data.user;
 
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
@@ -124,21 +124,17 @@ function App() {
     const checkConnection = async () => {
       try {
         try {
-          const { checkSupabaseConnection, setupSupabaseHealthCheck } = await import('@/lib/supabase');
-
-          if (import.meta.env.MODE === 'development') {
-            await setupSupabaseHealthCheck();
-          }
-
-          const isConnected = await checkSupabaseConnection();
+          const { checkDatabaseConnection } = await import('@/lib/supabase');
+          
+          const isConnected = await checkDatabaseConnection();
 
           if (!isConnected) {
-            console.warn("Aviso: Falha na conexão com o Supabase. A aplicação continuará funcionando com dados locais.");
+            console.warn("Aviso: Falha na conexão com o banco PostgreSQL. A aplicação continuará funcionando com dados locais.");
           } else {
-            console.log("Conexão com Supabase estabelecida com sucesso!");
+            console.log("Conexão com banco PostgreSQL estabelecida com sucesso!");
           }
         } catch (connectionError) {
-          console.warn("Aviso: Erro ao verificar conexão com Supabase:", connectionError);
+          console.warn("Aviso: Erro ao verificar conexão com banco PostgreSQL:", connectionError);
         }
       } catch (error) {
         console.error("Connection check error:", error);
@@ -219,8 +215,8 @@ function App() {
         }
 
         if (isAuthenticated) {
-          const { data: { session } } = await supabase.auth.getSession();
-          const currentUserId = session?.user?.id;
+          const { data: { user } } = await auth.getUser();
+          const currentUserId = user?.id;
 
           if (!currentUserId) return;
 

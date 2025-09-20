@@ -1,8 +1,8 @@
-import { supabase } from "./supabase";
+import { auth, query } from "./supabase";
 
 /**
  * Verifica se o usuário está autenticado na aplicação
- * Consulta o localStorage primeiro e, se necessário, o Supabase
+ * Consulta o localStorage primeiro e, se necessário, o banco PostgreSQL
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
@@ -17,11 +17,11 @@ export const checkAuthentication = async (): Promise<boolean> => {
       requestAnimationFrame(() => {
         // Usar Promise.race para limitar tempo de espera
         Promise.race([
-          supabase.auth.getSession(),
+          auth.getUser(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
         ]).then(({ data }) => {
-          if (!!data?.session !== (cachedStatus === 'authenticated')) {
-            localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
+          if (!!data?.user !== (cachedStatus === 'authenticated')) {
+            localStorage.setItem('auth_status', !!data?.user ? 'authenticated' : 'unauthenticated');
             localStorage.setItem('auth_cache_time', now.toString());
           }
         }).catch(() => {
@@ -36,8 +36,8 @@ export const checkAuthentication = async (): Promise<boolean> => {
     if (cachedStatus === 'authenticated') {
       // Verificar em background, mas já retornar resposta positiva
       requestAnimationFrame(() => {
-        supabase.auth.getSession().then(({ data }) => {
-          localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
+        auth.getUser().then(({ data }) => {
+          localStorage.setItem('auth_status', !!data?.user ? 'authenticated' : 'unauthenticated');
           localStorage.setItem('auth_cache_time', now.toString());
         }).catch(() => {});
       });
@@ -47,13 +47,13 @@ export const checkAuthentication = async (): Promise<boolean> => {
 
     // Timeout para garantir que a verificação não bloqueie a UI
     const authPromise = Promise.race([
-      supabase.auth.getSession(),
+      auth.getUser(),
       new Promise((resolve) => setTimeout(() => 
-        resolve({data: {session: null}}), 2000))
+        resolve({data: {user: null}, error: null}), 2000))
     ]);
 
-    const { data } = await authPromise;
-    const isAuthenticated = !!data?.session;
+    const authResult = await authPromise;
+    const isAuthenticated = !!authResult?.data?.user;
 
     // Atualizar cache
     localStorage.setItem('auth_checked', 'true');
@@ -169,18 +169,18 @@ export const repairUsernames = async (): Promise<void> => {
     });
     
     // Verificar se existe uma sessão ativa
-    const { data: sessionData } = await supabase.auth.getSession();
+    const { data: sessionData } = await auth.getUser();
     
-    if (sessionData?.session?.user) {
-      const email = sessionData.session.user.email;
+    if (sessionData?.user) {
+      const email = sessionData.user.email;
       
-      // Buscar perfil no Supabase
+      // Buscar perfil no banco
       if (email) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('username, display_name, email, id')
-          .eq('email', email)
-          .single();
+        const result = await query(
+          'SELECT username, display_name, email, id FROM profiles WHERE email = $1',
+          [email]
+        );
+        const profileData = result.rows[0] || null;
           
         // Determinar o melhor username disponível
         let bestUsername = '';
@@ -205,13 +205,10 @@ export const repairUsernames = async (): Promise<void> => {
           
           // Atualizar perfil se necessário
           if (profileData && (!profileData.username || profileData.username === 'Usuário')) {
-            await supabase
-              .from('profiles')
-              .update({ 
-                username: bestUsername,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', profileData.id);
+            await query(
+              'UPDATE profiles SET username = $1, updated_at = NOW() WHERE id = $2',
+              [bestUsername, profileData.id]
+            );
               
             console.log('Perfil atualizado com novo username:', bestUsername);
           }
@@ -238,16 +235,14 @@ export const getUserDisplayName = (): string => {
 
 export const signInWithEmail = async (email: string, password: string) => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await auth.signIn(email, password);
 
     if (error) throw error;
 
     if (data?.user) {
       localStorage.setItem('auth_checked', 'true');
       localStorage.setItem('auth_status', 'authenticated');
+      localStorage.setItem('currentUserId', data.user.id);
 
       // Não armazenamos mais timestamp de sessão para que o modal sempre apareça
     }
@@ -266,21 +261,21 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signInWithUsername = async (username: string, password: string) => {
   try {
     // Primeiro, buscar o email associado ao nome de usuário
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('username', username)
-      .single();
+    const result = await query(
+      'SELECT email FROM profiles WHERE username = $1',
+      [username]
+    );
 
-    if (profileError || !profileData?.email) {
+    if (result.rows.length === 0) {
       return { 
         success: false, 
         error: new Error("Nome de usuário não encontrado")
       };
     }
 
+    const email = result.rows[0].email;
     // Usar o email encontrado para fazer login
-    return signInWithEmail(profileData.email, password);
+    return signInWithEmail(email, password);
     
   } catch (error) {
     console.error("Erro ao fazer login com nome de usuário:", error);
