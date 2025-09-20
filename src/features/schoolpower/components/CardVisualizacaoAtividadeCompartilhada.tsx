@@ -1,8 +1,7 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react'; // Import useState
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Download, Eye } from 'lucide-react';
+import { Play, Download, Eye, ChevronDown, ChevronUp } from 'lucide-react'; // Import ChevronDown and ChevronUp
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
@@ -36,23 +35,26 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
     try {
       console.log('🔄 [CARD] Iniciando sincronização de dados da atividade:', atividade);
-      
+
       const resultado = DataSyncService.sincronizarAtividade(atividade);
-      
+
       console.log('✅ [CARD] Dados sincronizados com sucesso:', resultado);
-      
+
       // Validar dados sincronizados
       const validacao = DataSyncService.validarAtividade(resultado);
       if (!validacao.valida) {
         console.warn('⚠️ [CARD] Dados sincronizados com problemas:', validacao.erros);
       }
-      
+
       return resultado;
     } catch (error) {
       console.error('❌ [CARD] Erro na sincronização de dados:', error);
       return null;
     }
   }, [atividade]);
+
+  // State para controlar a expansão do card de descrição
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
@@ -180,7 +182,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           } else if (activityType.includes('sequencia-didatica')) {
             return () => (
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h-1.11c-.86-.86-1.98-1.31-3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33V9h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
+                <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
               </svg>
             );
           } else {
@@ -233,24 +235,61 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       <Card className="w-full min-h-[600px] border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0" style={{ backgroundColor: '#021321' }}>
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
-        
-          {/* Seção de Descrição da Atividade */}
+
+          {/* Seção de Descrição da Atividade - Expansível com Clique */}
           <div className="mb-6">
-            <Card className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm">
+            <Card 
+              className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm cursor-pointer hover:bg-gradient-to-r hover:from-orange-50/15 hover:to-orange-100/15 transition-all duration-300"
+              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+            >
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-2 h-16 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0"></div>
+                  <div className={`w-2 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0 transition-all duration-500 ${
+                    isDescriptionExpanded ? 'h-auto min-h-[4rem]' : 'h-16'
+                  }`}></div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-white/90 mb-3 flex items-center gap-2">
-                      <span className="text-orange-400">📋</span>
-                      Sobre esta Atividade
-                    </h3>
-                    <p className="text-gray-300 leading-relaxed text-sm">
-                      {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
-                    </p>
-                    
-                    {/* Metadados da Atividade */}
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    {/* Cabeçalho com indicador de expansão */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2">
+                        <span className="text-orange-400">📋</span>
+                        Sobre esta Atividade
+                      </h3>
+                      <div className="flex items-center gap-1 text-orange-400 text-sm">
+                        {isDescriptionExpanded ? (
+                          <>
+                            <span>Clique para minimizar</span>
+                            <ChevronUp className="w-4 h-4 transition-transform duration-300" />
+                          </>
+                        ) : (
+                          <>
+                            <span>Clique para expandir</span>
+                            <ChevronDown className="w-4 h-4 transition-transform duration-300" />
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Container da descrição com animação suave */}
+                    <div className="relative">
+                      {/* Descrição com animação de expansão/colapso */}
+                      <div className={`overflow-hidden transition-all duration-700 ease-in-out ${
+                        isDescriptionExpanded ? 'max-h-96 opacity-100' : 'max-h-12 opacity-80'
+                      }`}>
+                        <p className="text-gray-300 leading-relaxed text-sm">
+                          {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
+                        </p>
+                      </div>
+
+                      {/* Gradiente de fade quando minimizado */}
+                      {!isDescriptionExpanded && (
+                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-orange-50/20 via-orange-50/15 to-transparent pointer-events-none transition-opacity duration-500" />
+                      )}
+                    </div>
+
+                    {/* Metadados da Atividade - sempre visíveis */}
+                    <div className={`flex flex-wrap gap-2 transition-all duration-500 ${
+                      isDescriptionExpanded ? 'mt-6' : 'mt-3'
+                    }`}>
                       <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
                         {(() => {
                           const tipo = atividadeSincronizada?.tipo || '';
