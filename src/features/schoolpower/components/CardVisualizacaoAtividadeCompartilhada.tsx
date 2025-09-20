@@ -243,12 +243,12 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
             >
               <CardContent className={`transition-all duration-500 ease-in-out ${
-                isDescriptionExpanded ? 'p-6' : 'p-4'
+                isDescriptionExpanded ? 'p-6' : 'p-3'
               }`}>
                 <div className="flex items-start gap-4">
                   {/* Barra lateral indicadora */}
                   <div className={`w-2 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0 transition-all duration-500 ${
-                    isDescriptionExpanded ? 'h-20' : 'h-12'
+                    isDescriptionExpanded ? 'h-20' : 'h-8'
                   }`}></div>
                   
                   <div className="flex-1">
