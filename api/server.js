@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
+import authRoutes from './auth-routes.js';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // Rotas
 app.use('/api', emailRoutes);
+app.use('/api/auth', authRoutes);
 
 // Rota raiz
 app.get('/', (req, res) => {
@@ -39,6 +41,27 @@ app.get('/', (req, res) => {
         </div>
         <div class="endpoint">
           <p><strong>POST /api/enviar-email</strong> - Enviar email</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>POST /api/auth/register</strong> - Registrar novo usuário</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>POST /api/auth/login</strong> - Fazer login</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>GET /api/auth/verify</strong> - Verificar token</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>GET /api/auth/profile</strong> - Buscar perfil do usuário</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>PUT /api/auth/profile</strong> - Atualizar perfil do usuário</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>POST /api/auth/logout</strong> - Fazer logout</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>GET /api/auth/test-db</strong> - Testar conexão com banco Neon</p>
         </div>
       </body>
     </html>
