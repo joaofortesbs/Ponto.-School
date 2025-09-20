@@ -7,6 +7,8 @@
   box-shadow: 0 4px 12px rgba(255, 107, 0, 0.08);
   transition: all 0.3s ease;
   min-height: 96px; /* 24 * 4 = 96px para h-24 */
+  border-top-left-radius: 1rem; /* rounded-t-2xl - padrão universal */
+  border-top-right-radius: 1rem; /* rounded-t-2xl - padrão universal */
 }
 
 /* Dark mode support */
