@@ -74,7 +74,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     document.dispatchEvent(new CustomEvent('WebTeiasProntas'));
 
     return newNodes;
-  }, [dimensions]);
+  }, []); // Removendo dependencies para evitar recriação constante
 
   // Tentar obter nós salvos ou criar novos
   const initializeNodes = useCallback(() => {
@@ -120,7 +120,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     createNodes();
     isInitializedRef.current = true;
     setIsReady(true);
-  }, [dimensions, createNodes]);
+  }, [createNodes]); // Removendo dependencies para evitar recriação constante
 
   // Inicializar as dimensões do canvas e os nós no carregamento da página
   useEffect(() => {
@@ -220,7 +220,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
 
       return updatedNodes;
     });
-  }, [dimensions]);
+  }, [dimensions]); // Mantenha dimensions aqui, pois é usada dentro da função
 
   // Desenha os nós e conexões no canvas
   const drawNodesAndConnections = useCallback(() => {
@@ -337,7 +337,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       ctx.fillStyle = `rgba(255, 127, 0, ${node.opacity * 0.15})`;
       ctx.fill();
     });
-  }, [nodes, dimensions, mousePosition]);
+  }, [nodes, dimensions, mousePosition]); // Mantenha as dependências necessárias
 
   // Lidar com o movimento do mouse
   useEffect(() => {
@@ -414,7 +414,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [updateNodePositions, drawNodesAndConnections]);
+  }, [updateNodePositions, drawNodesAndConnections]); // Dependências corretas para o loop de animação
 
   return (
     <div className="absolute inset-0 overflow-hidden">
