@@ -329,9 +329,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
               {isSharedActivity ? (
                 // Para página de compartilhamento - com ícone de cifrão
                 <div className="flex items-center gap-1">
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">$</span>
-                  </div>
+                  <span className="text-green-600 dark:text-green-400 text-sm font-bold">$</span>
                   <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
                     {currentSPs} SPs
                   </span>
