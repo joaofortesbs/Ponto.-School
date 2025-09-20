@@ -83,23 +83,11 @@ export const auth = {
 
   checkUsername: async (username: string): Promise<{ available: boolean; error?: string } | boolean> => {
     try {
-      if (!username || username.trim().length < 3) {
-        return { available: false, error: 'Username deve ter pelo menos 3 caracteres' };
-      }
-
-      const cleanUsername = username.trim().toLowerCase();
-      const response = await apiRequest(`/auth/check-username/${encodeURIComponent(cleanUsername)}`);
+      const response = await apiRequest(`/auth/check-username/${encodeURIComponent(username)}`);
       return response;
     } catch (error) {
       console.error('Username check error:', error);
-      
-      // Se o erro for de conectividade, assumir que o username está disponível temporariamente
-      if (error instanceof Error && error.message.includes('fetch')) {
-        console.warn('Conectividade com backend indisponível, assumindo username disponível temporariamente');
-        return { available: true };
-      }
-      
-      return { available: false, error: 'Erro ao verificar disponibilidade do username. Tente novamente.' };
+      return { available: false, error: 'Erro ao verificar disponibilidade do username' };
     }
   },
 

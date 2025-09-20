@@ -192,3 +192,4 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
+export { signUp, signIn, getUserFromToken };

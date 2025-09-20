@@ -54,7 +54,7 @@ localPort = 41579
 externalPort = 6800
 
 [workflows]
-runButton = "Backend API Fixed"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -283,15 +283,6 @@ args = "node scripts/test-migration.js"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "echo \"Migração concluída! Verifique os logs acima para confirmar o sucesso.\""
-
-[[workflows.workflow]]
-name = "Backend API Fixed"
-author = 47684299
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/server.js"
 
 [auth]
 pageEnabled = false

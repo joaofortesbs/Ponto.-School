@@ -92,7 +92,7 @@ router.get('/check-username/:username', async (req, res) => {
     if (!username || username.trim() === '') {
       return res.status(400).json({ 
         available: false,
-        error: 'Username é obrigatório' 
+        error: 'Username is required' 
       });
     }
 
@@ -116,15 +116,6 @@ router.get('/check-username/:username', async (req, res) => {
       });
     }
     
-    // Verificar usernames reservados
-    const reservedUsernames = ['admin', 'root', 'user', 'test', 'demo', 'api', 'www', 'mail', 'ftp'];
-    if (reservedUsernames.includes(cleanUsername)) {
-      return res.json({
-        available: false,
-        error: 'Este username está reservado'
-      });
-    }
-    
     const result = await query(
       'SELECT username FROM profiles WHERE LOWER(username) = $1',
       [cleanUsername]
@@ -133,14 +124,13 @@ router.get('/check-username/:username', async (req, res) => {
     const isAvailable = result.rows.length === 0;
 
     res.json({
-      available: isAvailable,
-      message: isAvailable ? 'Username disponível' : 'Username já está em uso'
+      available: isAvailable
     });
   } catch (error) {
     console.error('Check username error:', error);
-    res.status(200).json({ 
-      available: true,
-      message: 'Verificação temporariamente indisponível, username considerado disponível'
+    res.status(500).json({ 
+      available: false,
+      error: 'Internal server error' 
     });
   }
 });
