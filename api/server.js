@@ -10,9 +10,24 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Middleware de segurança
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-production-domain.com'] 
+    : true, // Para desenvolvimento, permite qualquer origem
+  credentials: true
+}));
+
+// Limite de tamanho do JSON para prevenir ataques DoS
+app.use(express.json({ limit: '10mb' }));
+
+// Headers de segurança básicos
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
 
 // Rotas
 app.use('/api', emailRoutes);
