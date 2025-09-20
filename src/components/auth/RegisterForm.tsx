@@ -362,8 +362,7 @@ export function RegisterForm() {
 
 
       // Primeiro tente registrar o usuário no sistema de autenticação
-      let userData = null;
-      let userError = null;
+      let authResult = null;
 
       try {
         // Verificar novamente se o nome de usuário já existe
@@ -386,92 +385,68 @@ export function RegisterForm() {
           console.warn('Erro ao salvar dados no localStorage:', e);
         }
 
+        // Preparar dados do usuário
+        const userData = {
+          full_name: formData.fullName,
+          fullName: formData.fullName, // Compatibilidade
+          username: formData.username,
+          institution: formData.institution,
+          state: formData.state,
+          birth_date: formData.birthDate,
+          birthDate: formData.birthDate, // Compatibilidade
+          plan_type: confirmedPlan,
+          plan: confirmedPlan, // Compatibilidade
+          display_name: formData.username,
+        };
+
         // Tente registrar com o novo serviço de autenticação
-        const { user, error } = await auth.signUp( // Usando o novo serviço de autenticação
+        authResult = await auth.signUp(
           formData.email,
           formData.password,
-          {
-            full_name: formData.fullName,
-            username: formData.username,
-            institution: formData.institution,
-            state: formData.state,
-            birth_date: formData.birthDate,
-            plan_type: confirmedPlan,
-            display_name: formData.username,
-          }
+          userData
         );
 
-        userData = { user };
-        userError = error;
+        console.log('Auth result:', authResult);
       } catch (authError) {
         console.error("Auth connection error:", authError);
-        // Continue com offline fallback
-      }
-
-      // Se houver erro explícito no signup (como e-mail já existente), mostre o erro
-      if (userError && userError.message && !userError.message.includes("fetch")) {
-        console.error("Signup error:", userError);
-        setError(userError.message || "Erro ao criar conta. Por favor, tente novamente.");
+        setError("Erro de conexão. Tente novamente.");
         setLoading(false);
         return;
       }
 
-      // Se conseguimos criar o usuário OU se o erro foi apenas de conectividade
-      if (userData?.user || (userError && userError.message && userError.message.includes("fetch"))) {
-        // ID do usuário real ou temporário para uso offline
-        const profileId = userData?.user?.id || `temp-${userId}`;
+      // Verificar se houve erro no signup
+      if (!authResult.success) {
+        console.error("Signup error:", authResult.error);
+        setError(authResult.error || "Erro ao criar conta. Por favor, tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      // Se conseguimos criar o usuário
+      if (authResult.success && authResult.user) {
+        // ID do usuário real
+        const profileId = authResult.user.id;
 
         try {
-          // Tente criar o perfil no banco de dados
-          if (userData?.user) {
-            try {
-              // NOTE: A criação de perfil agora deve usar o novo serviço de API, não o Supabase diretamente.
-              // Assumindo que existe um método `createUserProfile` no `authService` ou similar.
-              // Se não existir, você precisará implementar a lógica de inserção no Neon aqui.
-              // Exemplo hipotético:
-              const response = await authService.createUserProfile({
-                id: profileId,
-                user_id: userId,
-                full_name: formData.fullName,
-                username: formData.username,
-                email: formData.email,
-                display_name: formData.username,
-                institution: formData.institution,
-                state: formData.state,
-                birth_date: formData.birthDate,
-                plan_type: confirmedPlan,
-                level: 1,
-                rank: "Aprendiz",
-                xp: 0,
-                coins: 100
-              });
+          // Tente criar/atualizar o perfil no banco de dados se necessário
+          const profileData = {
+            username: formData.username,
+            full_name: formData.fullName,
+            display_name: formData.username,
+            institution: formData.institution,
+            state: formData.state,
+            birth_date: formData.birthDate,
+            plan_type: confirmedPlan,
+          };
 
-              if (response.error) {
-                console.error("Profile creation error:", response.error);
-                // Se falhar ao criar, tente atualizar se o perfil já existir
-                const updateResponse = await authService.updateUserProfile({
-                  id: profileId,
-                  user_id: userId,
-                  full_name: formData.fullName,
-                  username: formData.username,
-                  institution: formData.institution,
-                  state: formData.state,
-                  birth_date: formData.birthDate,
-                  plan_type: confirmedPlan,
-                  display_name: formData.username,
-                  coins: 100
-                });
-                if (updateResponse.error) {
-                  console.error("Profile update error:", updateResponse.error);
-                }
-              }
-            } catch (profileError) {
-              console.log("Profile operation failed, continuing to success state:", profileError);
-            }
+          // Verificar se o perfil foi criado durante o signup
+          // Se não, criar agora
+          const profileResult = await authService.createUserProfile(profileData);
+          
+          if (!profileResult.success) {
+            console.log("Profile creation during signup might have failed, but continuing...");
           }
-
-          // Armazenar temporariamente os dados do usuário no localStorage para uso offline
-          // Isso permite que a aplicação mostre os dados do usuário mesmo sem conexão
+            // Armazenar dados do usuário no localStorage para uso rápido
           try {
             localStorage.setItem('tempUserProfile', JSON.stringify({
               id: profileId,
@@ -483,7 +458,7 @@ export function RegisterForm() {
               institution: formData.institution,
               state: formData.state,
               birth_date: formData.birthDate,
-              plan_type: confirmedPlan, // Usa o plano confirmado
+              plan_type: confirmedPlan,
               level: 1,
               rank: "Aprendiz",
               xp: 0,

@@ -128,4 +128,140 @@ router.post('/resolve-username', async (req, res) => {
   }
 });
 
+// Criar perfil de usuário
+router.post('/create-profile', authMiddleware, async (req, res) => {
+  try {
+    const { 
+      username, 
+      full_name, 
+      display_name, 
+      institution, 
+      state, 
+      birth_date, 
+      plan_type 
+    } = req.body;
+
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // Verificar se username já existe
+    const existingUsername = await query(
+      'SELECT id FROM profiles WHERE username = $1',
+      [username]
+    );
+
+    if (existingUsername.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    // Verificar se perfil já existe para este usuário
+    const existingProfile = await query(
+      'SELECT id FROM profiles WHERE user_id = $1',
+      [req.user.userId]
+    );
+
+    if (existingProfile.rows.length > 0) {
+      return res.status(400).json({ error: 'Profile already exists' });
+    }
+
+    // Criar perfil
+    const result = await query(
+      `INSERT INTO profiles (
+        user_id, username, full_name, display_name, 
+        institution, state, birth_date, plan_type
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id, username, full_name, display_name, institution, state, birth_date, plan_type, created_at`,
+      [
+        req.user.userId,
+        username,
+        full_name || null,
+        display_name || username,
+        institution || null,
+        state || null,
+        birth_date || null,
+        plan_type || 'lite'
+      ]
+    );
+
+    res.json({
+      success: true,
+      profile: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Create profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Atualizar perfil de usuário
+router.put('/update-profile', authMiddleware, async (req, res) => {
+  try {
+    const { 
+      username, 
+      full_name, 
+      display_name, 
+      institution, 
+      state, 
+      birth_date, 
+      plan_type 
+    } = req.body;
+
+    // Verificar se perfil existe
+    const existingProfile = await query(
+      'SELECT id FROM profiles WHERE user_id = $1',
+      [req.user.userId]
+    );
+
+    if (existingProfile.rows.length === 0) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Se username está sendo alterado, verificar se já existe
+    if (username) {
+      const existingUsername = await query(
+        'SELECT id FROM profiles WHERE username = $1 AND user_id != $2',
+        [username, req.user.userId]
+      );
+
+      if (existingUsername.rows.length > 0) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+    }
+
+    // Atualizar perfil
+    const result = await query(
+      `UPDATE profiles SET 
+        username = COALESCE($2, username),
+        full_name = COALESCE($3, full_name),
+        display_name = COALESCE($4, display_name),
+        institution = COALESCE($5, institution),
+        state = COALESCE($6, state),
+        birth_date = COALESCE($7, birth_date),
+        plan_type = COALESCE($8, plan_type),
+        updated_at = NOW()
+      WHERE user_id = $1
+      RETURNING id, username, full_name, display_name, institution, state, birth_date, plan_type, updated_at`,
+      [
+        req.user.userId,
+        username,
+        full_name,
+        display_name,
+        institution,
+        state,
+        birth_date,
+        plan_type
+      ]
+    );
+
+    res.json({
+      success: true,
+      profile: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
