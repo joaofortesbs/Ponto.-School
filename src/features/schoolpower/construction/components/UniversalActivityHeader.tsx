@@ -277,7 +277,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
   return (
     <div 
-      className={`universal-activity-header w-full h-24 border-b-2 border-orange-200 dark:border-orange-800/50 px-6 py-4 shadow-sm rounded-t-2xl ${!isSharedActivity ? 'bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20' : ''}`}
+      className={`universal-activity-header w-full h-24 ${!isSharedActivity ? 'border-b-2 border-orange-200 dark:border-orange-800/50' : ''} px-6 py-4 shadow-sm rounded-t-2xl ${!isSharedActivity ? 'bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20' : ''}`}
       style={headerStyle}
     >
       <div className="flex items-center justify-between h-full">
@@ -317,13 +317,16 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         <div className="flex items-center gap-3">
           {/* Card de Trilha */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
-            <Route className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+            <div className="flex items-center gap-2">
+              <Route className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+              <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">0</span>
+            </div>
           </div>
 
-          {/* Card de School Points */}
+          {/* Card de School Points - Apenas visualização para página de compartilhamento */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-2">
-              {isEditingSPs ? (
+              {!isSharedActivity && isEditingSPs ? (
                 <div className="flex items-center gap-1">
                   <input
                     type="number"
@@ -343,53 +346,57 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                   {currentSPs} SPs
                 </span>
               )}
-              <button onClick={handleEditSPs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
-                <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
-              </button>
+              {!isSharedActivity && (
+                <button onClick={handleEditSPs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
+                  <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Dropdown de Mais Opções */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
+          {/* Dropdown de Mais Opções - Apenas se não for página de compartilhamento */}
+          {!isSharedActivity && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-10 h-10 rounded-2xl hover:bg-orange-100 dark:hover:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700/50 shadow-sm"
+                >
+                  <MoreHorizontal className="w-5 h-5 rotate-90" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-52 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
               >
-                <MoreHorizontal className="w-5 h-5 rotate-90" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end" 
-              className="w-52 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700/50 shadow-lg p-2"
-            >
-              <DropdownMenuItem onClick={onAddToClass} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
-                <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-90 transition-all duration-200" />
-                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Adicionar à aula</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDownload} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
-                <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
-                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShareClick} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
-                <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
-                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Compartilhar</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onSendMaterial} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
-                <Send className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:translate-x-1 transition-all duration-200" />
-                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Enviar material</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onMakePrivate} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
-                <Lock className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-200" />
-                <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Tornar privado</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDelete} className="group cursor-pointer rounded-xl px-3 py-3 hover:bg-red-200/80 dark:hover:bg-red-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
-                <Trash2 className="w-4 h-4 mr-3 text-red-600 dark:text-red-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
-                <span className="text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 font-medium">Deletar atividade</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={onAddToClass} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                  <Plus className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-90 transition-all duration-200" />
+                  <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Adicionar à aula</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDownload} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                  <Download className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-200" />
+                  <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Baixar</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleShareClick} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                  <Share2 className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
+                  <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Compartilhar</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onSendMaterial} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                  <Send className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:translate-x-1 transition-all duration-200" />
+                  <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Enviar material</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onMakePrivate} className="group cursor-pointer rounded-xl px-3 py-3 mb-2 hover:bg-orange-200/80 dark:hover:bg-orange-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                  <Lock className="w-4 h-4 mr-3 text-orange-600 dark:text-orange-400 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-200" />
+                  <span className="text-gray-800 dark:text-gray-200 group-hover:text-orange-800 dark:group-hover:text-orange-200 font-medium">Tornar privado</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="group cursor-pointer rounded-xl px-3 py-3 hover:bg-red-200/80 dark:hover:bg-red-600/40 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200">
+                  <Trash2 className="w-4 h-4 mr-3 text-red-600 dark:text-red-400 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
+                  <span className="text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 font-medium">Deletar atividade</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
       
