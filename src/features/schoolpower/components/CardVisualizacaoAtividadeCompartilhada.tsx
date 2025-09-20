@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'; // Import useState
+import React, { useMemo, useEffect, useState } from 'react'; // Import useState and useEffect
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Download, Eye, ChevronDown, ChevronUp } from 'lucide-react'; // Import ChevronDown and ChevronUp
@@ -29,27 +29,69 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   onApresentarMaterial,
   onUsarMaterial
 }) => {
-  // Sincronizar dados da atividade usando o sistema de sincronização
-  const atividadeSincronizada: AtividadeDados | null = useMemo(() => {
-    if (!atividade) return null;
+  // Estado para armazenar a atividade sincronizada
+  const [atividadeSincronizada, setAtividadeSincronizada] = useState<AtividadeDados | null>(null);
 
-    try {
-      console.log('🔄 [CARD] Iniciando sincronização de dados da atividade:', atividade);
+  // Efeito para sincronizar dados da atividade quando o componente é montado ou a atividade muda
+  useEffect(() => {
+    console.log('🔍 [CARD] Sincronizando dados da atividade compartilhada');
+    console.log('📋 [CARD] Atividade recebida:', atividade);
 
-      const resultado = DataSyncService.sincronizarAtividade(atividade);
+    if (atividade) {
+      // Sincronizar dados usando o serviço com dados completos
+      const dadosParaSincronizar = {
+        ...atividade,
+        // Garantir que todos os campos essenciais estejam presentes
+        id: atividade.id,
+        titulo: atividade.titulo || atividade.title,
+        tipo: atividade.tipo || atividade.type,
+        descricao: atividade.descricao || atividade.description || atividade.dados?.descricao || atividade.dados?.description,
+        dados: atividade.dados || {},
+        customFields: atividade.customFields || {}
+      };
 
-      console.log('✅ [CARD] Dados sincronizados com sucesso:', resultado);
+      console.log('🔄 [CARD] Dados preparados para sincronização:', dadosParaSincronizar);
 
-      // Validar dados sincronizados
-      const validacao = DataSyncService.validarAtividade(resultado);
-      if (!validacao.valida) {
-        console.warn('⚠️ [CARD] Dados sincronizados com problemas:', validacao.erros);
+      const atividadeSincronizada = DataSyncService.sincronizarAtividade(dadosParaSincronizar);
+      setAtividadeSincronizada(atividadeSincronizada);
+
+      console.log('✅ [CARD] Dados sincronizados finais:', {
+        id: atividadeSincronizada.id,
+        titulo: atividadeSincronizada.titulo,
+        descricao: atividadeSincronizada.descricao?.substring(0, 100) + '...',
+        temDescricao: !!atividadeSincronizada.descricao
+      });
+
+      // Verificar se a descrição foi sincronizada corretamente
+      if (!atividadeSincronizada.descricao) {
+        console.warn('⚠️ [CARD] Descrição não encontrada após sincronização, tentando buscar diretamente');
+
+        // Tentar buscar descrição diretamente do localStorage
+        const chavesParaBuscar = [
+          `constructedActivity_${atividade.id}`,
+          `activity_${atividade.id}`,
+          `schoolpower_activity_${atividade.id}`
+        ];
+
+        for (const chave of chavesParaBuscar) {
+          try {
+            const dados = localStorage.getItem(chave);
+            if (dados) {
+              const dadosParseados = JSON.parse(dados);
+              if (dadosParseados.descricao || dadosParseados.description) {
+                console.log('✅ [CARD] Descrição encontrada em:', chave);
+                setAtividadeSincronizada(prev => ({
+                  ...prev,
+                  descricao: dadosParseados.descricao || dadosParseados.description
+                }));
+                break;
+              }
+            }
+          } catch (e) {
+            console.log('⚠️ [CARD] Erro ao buscar em:', chave, e);
+          }
+        }
       }
-
-      return resultado;
-    } catch (error) {
-      console.error('❌ [CARD] Erro na sincronização de dados:', error);
-      return null;
     }
   }, [atividade]);
 
@@ -250,7 +292,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   <div className={`w-2 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0 transition-all duration-500 ${
                     isDescriptionExpanded ? 'h-20' : 'h-8'
                   }`}></div>
-                  
+
                   <div className="flex-1">
                     {/* Cabeçalho com indicador de expansão */}
                     <div className="flex items-center justify-between mb-2">

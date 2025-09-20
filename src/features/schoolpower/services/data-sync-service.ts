@@ -1,4 +1,3 @@
-
 /**
  * Serviço de Sincronização de Dados para Atividades Compartilhadas
  * Sistema completo de mapeamento e sincronização de dados entre diferentes fontes
@@ -207,8 +206,8 @@ export class DataSyncService {
    * Método genérico para extrair dados com hierarquia
    */
   private static extrairDadoComHierarquia(
-    atividade: any, 
-    fontes: FonteDados[], 
+    atividade: any,
+    fontes: FonteDados[],
     tipoDado: string
   ): string {
     this.debugLog(`Extraindo ${tipoDado} com hierarquia de fontes`);
@@ -219,7 +218,7 @@ export class DataSyncService {
     for (const fonte of fontesOrdenadas) {
       try {
         const valor = fonte.extrair(atividade);
-        
+
         if (valor && fonte.validar(valor)) {
           this.debugLog(`${tipoDado} extraído da fonte prioritária ${fonte.prioridade}`, valor);
           return valor;
@@ -237,9 +236,9 @@ export class DataSyncService {
    * Extrai tipo da atividade
    */
   private static extrairTipo(atividade: any): string {
-    return atividade?.tipo || 
-           atividade?.type || 
-           atividade?.activityType || 
+    return atividade?.tipo ||
+           atividade?.type ||
+           atividade?.activityType ||
            atividade?.dados?.tipo ||
            'atividade-generica';
   }

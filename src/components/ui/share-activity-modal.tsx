@@ -58,7 +58,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
 
   const criarOuBuscarLink = async () => {
     if (!activityId || !activityTitle) {
-      console.error('❌ Dados obrigatórios não fornecidos:', { activityId, activityTitle });
+      console.error('❌ [MODAL] Dados obrigatórios não fornecidos:', { activityId, activityTitle });
       setError('Dados da atividade não encontrados');
       setLoading(false);
       return;
@@ -69,26 +69,61 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       id: activityId,
       titulo: activityTitle,
       tipo: activityType || 'atividade',
-      userId: userInfo.userId || 'usuario-anonimo'
+      userId: userInfo.userId || 'usuario-anonimo',
+      activityData
     });
 
     try {
-      // Preparar dados da atividade com fallbacks robustos
+      // Buscar dados completos da atividade do localStorage
+      console.log('🔍 [MODAL] Buscando dados completos da atividade no localStorage');
+      
+      let dadosCompletos = null;
+      
+      // Tentar buscar em diferentes locais do localStorage
+      const locaisParaBuscar = [
+        `constructedActivity_${activityId}`,
+        `activity_${activityId}`,
+        activityId
+      ];
+
+      for (const chave of locaisParaBuscar) {
+        try {
+          const dados = localStorage.getItem(chave);
+          if (dados) {
+            dadosCompletos = JSON.parse(dados);
+            console.log('✅ [MODAL] Dados encontrados em:', chave, dadosCompletos);
+            break;
+          }
+        } catch (e) {
+          console.log('⚠️ [MODAL] Erro ao buscar dados em:', chave, e);
+        }
+      }
+
+      // Preparar dados da atividade com sincronização completa
       const dadosAtividade = {
         id: activityId,
         titulo: activityTitle || 'Atividade sem título',
+        descricao: dadosCompletos?.descricao || dadosCompletos?.description || activityData?.descricao || '',
         tipo: activityType || 'atividade',
         dados: {
           ...activityData,
+          ...dadosCompletos,
           // Garantir dados mínimos
           title: activityTitle,
           type: activityType || 'atividade',
           timestamp: new Date().toISOString()
         },
+        customFields: dadosCompletos?.customFields || activityData?.customFields || {},
+        professorNome: userInfo.name || 'Professor',
+        professorAvatar: userInfo.avatar,
+        schoolPoints: dadosCompletos?.schoolPoints || 100,
+        disciplina: dadosCompletos?.disciplina || activityData?.disciplina,
+        nivel: dadosCompletos?.nivel || activityData?.nivel,
+        tempo_estimado: dadosCompletos?.tempo_estimado || activityData?.tempo_estimado,
         criadoPor: userInfo.userId || userInfo.name || 'usuario-anonimo'
       };
 
-      console.log('🚀 [MODAL] Enviando dados para localStorage:', dadosAtividade);
+      console.log('🚀 [MODAL] Enviando dados sincronizados para geração de link:', dadosAtividade);
 
       const novaAtividade = await criarLinkAtividade(dadosAtividade);
 

@@ -280,11 +280,51 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
   const handleShareActivity = useCallback(async () => {
     try {
-      // Gerar link de compartilhamento baseado no activityId
-      const shareLink = `${window.location.origin}/atividade/${activityId}/${Date.now().toString(36)}`;
+      console.log('🔗 [HEADER] Iniciando geração de link de compartilhamento');
+      console.log('📋 [HEADER] Dados disponíveis:', { 
+        activityId, 
+        activityTitle, 
+        activityType,
+        userName: finalUserName 
+      });
+
+      if (!activityId || !activityTitle) {
+        console.error('❌ [HEADER] Dados obrigatórios faltando para gerar link');
+        return;
+      }
+
+      // Importar sistema de geração de links dinamicamente
+      const { criarLinkAtividade } = await import('../../services/gerador-link-atividades-schoolpower');
+
+      // Preparar dados da atividade para sincronização
+      const dadosAtividade = {
+        id: activityId,
+        titulo: activityTitle,
+        tipo: activityType || 'atividade',
+        dados: {
+          title: activityTitle,
+          type: activityType || 'atividade',
+          timestamp: new Date().toISOString()
+        },
+        professorNome: finalUserName,
+        professorAvatar: finalUserAvatar,
+        schoolPoints: currentSPs,
+        criadoPor: userInfo.userId || userInfo.name || 'usuario-anonimo'
+      };
+
+      console.log('🚀 [HEADER] Criando atividade compartilhável:', dadosAtividade);
+
+      // Criar ou buscar link existente
+      const atividadeCompartilhada = await criarLinkAtividade(dadosAtividade);
+
+      if (!atividadeCompartilhada) {
+        throw new Error('Falha ao gerar link de compartilhamento');
+      }
+
+      console.log('✅ [HEADER] Link gerado com sucesso:', atividadeCompartilhada.linkPublico);
 
       // Copiar para área de transferência
-      await navigator.clipboard.writeText(shareLink);
+      await navigator.clipboard.writeText(atividadeCompartilhada.linkPublico);
 
       // Mostrar animação de sucesso
       setShowCopySuccess(true);
@@ -294,27 +334,41 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         setShowCopySuccess(false);
       }, 3000);
 
-      console.log('✅ Link de compartilhamento copiado:', shareLink);
+      console.log('✅ [HEADER] Link copiado para área de transferência:', atividadeCompartilhada.linkPublico);
 
     } catch (error) {
-      console.error('❌ Erro ao copiar link:', error);
+      console.error('❌ [HEADER] Erro ao gerar/copiar link:', error);
 
-      // Fallback para casos onde a clipboard API não funciona
-      const textArea = document.createElement('textarea');
-      const shareLink = `${window.location.origin}/atividade/${activityId}/${Date.now().toString(36)}`;
-      textArea.value = shareLink;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
+      // Fallback: gerar link simples
+      try {
+        const fallbackLink = `${window.location.origin}/atividade/${activityId}/${Date.now().toString(36)}`;
+        
+        // Tentar clipboard API primeiro
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(fallbackLink);
+        } else {
+          // Fallback para execCommand
+          const textArea = document.createElement('textarea');
+          textArea.value = fallbackLink;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
 
-      // Mostrar animação de sucesso mesmo no fallback
-      setShowCopySuccess(true);
-      setTimeout(() => {
-        setShowCopySuccess(false);
-      }, 3000);
+        // Mostrar animação de sucesso mesmo no fallback
+        setShowCopySuccess(true);
+        setTimeout(() => {
+          setShowCopySuccess(false);
+        }, 3000);
+
+        console.log('✅ [HEADER] Link fallback copiado:', fallbackLink);
+
+      } catch (fallbackError) {
+        console.error('❌ [HEADER] Erro crítico ao copiar link:', fallbackError);
+      }
     }
-  }, [activityId]);
+  }, [activityId, activityTitle, activityType, finalUserName, finalUserAvatar, currentSPs, userInfo]);
 
   // Definir estilo condicional baseado na prop isSharedActivity
   const headerStyle = isSharedActivity 
