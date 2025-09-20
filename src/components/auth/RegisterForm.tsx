@@ -573,34 +573,15 @@ export function RegisterForm() {
             localStorage.setItem('lastRegisteredEmail', formData.email);
             localStorage.setItem('lastRegisteredUsername', formData.username);
             localStorage.setItem('redirectTimer', 'active');
-            
-            // Adicionar flag para indicar que o registro acabou de ser concluído
-            // Esta flag será lida pelo App.tsx para garantir a exibição do modal de boas-vindas
-            localStorage.setItem('registrationCompleted', 'true');
-            localStorage.setItem('isFirstLogin', 'true');
           } catch (e) {
             console.error("Erro ao salvar dados no localStorage:", e);
           }
 
-          // Redirecionamento imediato
-          console.log("Redirecionando para a página de login...");
-          navigate("/login", { state: { newAccount: true, email: formData.email } });
-
-          // Garantir redireção mesmo se o componente desmontar
-          window.onbeforeunload = () => {
-            if (localStorage.getItem('redirectTimer') === 'active') {
-              window.location.href = '/login?newAccount=true';
-              return null;
-            }
-          };
-          
-          // Adicionar outro mecanismo de segurança para garantir o redirecionamento
-          document.addEventListener('visibilitychange', function handleVisibility() {
-            if (localStorage.getItem('redirectTimer') === 'active') {
-              navigate("/login", { state: { newAccount: true } });
-              document.removeEventListener('visibilitychange', handleVisibility);
-            }
-          });
+          // Redirecionamento após 3 segundos
+          setTimeout(() => {
+            console.log("Redirecionando para a página de login...");
+            navigate("/login", { state: { newAccount: true, email: formData.email } });
+          }, 3000);
 
         } catch (err) {
           console.error("Error in profile operations:", err);
@@ -618,22 +599,8 @@ export function RegisterForm() {
       }
     } catch (err) {
       console.error("Unexpected error:", err);
-      // Mesmo com erro inesperado, vamos permitir o fluxo continuar para melhorar a experiência do usuário
-      setSuccess(true);
+      setError("Erro ao criar conta. Tente novamente.");
       setLoading(false);
-
-      // Configurar redirecionamento mais robusto
-      try {
-        localStorage.setItem('redirectTimer', 'active');
-        localStorage.setItem('lastRegisteredUsername', formData.username || '');
-      } catch (e) {
-        console.error("Erro ao salvar dados no localStorage:", e);
-      }
-
-      setTimeout(() => {
-        console.log("Redirecionando após tratamento de erro...");
-        navigate("/login", { state: { newAccount: true } });
-      }, 2000);
     } finally {
       setLoading(false);
     }
