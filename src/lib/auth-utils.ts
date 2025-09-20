@@ -2,88 +2,86 @@ import { supabase } from "./supabase";
 
 /**
  * Verifica se o usuário está autenticado na aplicação
- * Consulta cookies, localStorage e Supabase para máxima precisão
+ * Verificação otimizada que funciona entre múltiplas abas
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    console.log('🔍 [AUTH] Iniciando verificação completa de autenticação...');
+    console.log('🔍 [AUTH] Iniciando verificação de autenticação entre abas...');
     
-    // 1. Verificar cookies do navegador para sessões persistentes
-    const hasSupabaseCookies = document.cookie.includes('sb-') || 
-                              document.cookie.includes('supabase-auth-token') ||
-                              document.cookie.includes('auth-token');
+    // 1. Primeiro, sempre verificar a sessão ativa do Supabase
+    // Isso garante que funcione mesmo em novas abas
+    const { data: sessionData, error } = await supabase.auth.getSession();
     
-    console.log('🍪 [AUTH] Cookies de autenticação encontrados:', hasSupabaseCookies);
-    
-    // 2. Verificar cache local para resposta rápida
-    const cachedStatus = localStorage.getItem('auth_status');
-    const cacheTime = localStorage.getItem('auth_cache_time');
-    const now = Date.now();
-    
-    console.log('💾 [AUTH] Status em cache:', cachedStatus, 'Tempo:', cacheTime);
-    
-    // 3. Se há cache recente e cookies, provavelmente está autenticado
-    if (cachedStatus === 'authenticated' && hasSupabaseCookies && cacheTime && 
-        (now - parseInt(cacheTime)) < 30 * 60 * 1000) {
-      console.log('✅ [AUTH] Cache válido + cookies presentes = autenticado');
+    if (error) {
+      console.error('❌ [AUTH] Erro ao obter sessão do Supabase:', error);
       
-      // Verificar em background para manter sincronização
-      requestAnimationFrame(() => {
-        supabase.auth.getSession().then(({ data }) => {
-          const currentlyAuth = !!data?.session;
-          if (currentlyAuth !== (cachedStatus === 'authenticated')) {
-            localStorage.setItem('auth_status', currentlyAuth ? 'authenticated' : 'unauthenticated');
-            localStorage.setItem('auth_cache_time', now.toString());
-            console.log('🔄 [AUTH] Cache atualizado em background:', currentlyAuth);
-          }
-        }).catch(() => {});
-      });
+      // Em caso de erro, verificar cookies como fallback
+      const hasSupabaseCookies = document.cookie.includes('sb-') || 
+                                document.cookie.includes('supabase-auth-token');
       
-      return true;
-    }
-    
-    // 4. Se não há cookies, provavelmente não está autenticado
-    if (!hasSupabaseCookies) {
-      console.log('❌ [AUTH] Sem cookies de autenticação - não autenticado');
-      localStorage.setItem('auth_status', 'unauthenticated');
-      localStorage.setItem('auth_cache_time', now.toString());
+      if (hasSupabaseCookies) {
+        console.log('⚠️ [AUTH] Erro no Supabase, mas cookies presentes - assumindo autenticado');
+        return true;
+      }
+      
       return false;
     }
 
-    // 5. Verificação definitiva com Supabase (com timeout)
-    console.log('🔍 [AUTH] Verificando sessão no Supabase...');
-    const authPromise = Promise.race([
-      supabase.auth.getSession(),
-      new Promise((resolve) => setTimeout(() => 
-        resolve({data: {session: null}}), 3000))
-    ]);
+    const isAuthenticated = !!sessionData?.session;
+    console.log('📋 [AUTH] Sessão ativa encontrada:', isAuthenticated);
 
-    const { data } = await authPromise;
-    const isAuthenticated = !!data?.session;
-
-    console.log('📋 [AUTH] Resultado da verificação Supabase:', isAuthenticated);
-
-    // 6. Atualizar cache com resultado definitivo
+    // 2. Atualizar cache local para otimizar próximas verificações
+    const now = Date.now();
     localStorage.setItem('auth_checked', 'true');
     localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
     localStorage.setItem('auth_cache_time', now.toString());
 
+    // 3. Se autenticado, disparar evento para sincronizar outras abas
+    if (isAuthenticated) {
+      // Usar localStorage para comunicação entre abas
+      localStorage.setItem('auth_sync_timestamp', now.toString());
+      
+      // Disparar evento customizado para outras abas
+      try {
+        const event = new StorageEvent('storage', {
+          key: 'auth_sync_timestamp',
+          newValue: now.toString(),
+          url: window.location.href
+        });
+        window.dispatchEvent(event);
+      } catch (e) {
+        console.log('⚠️ [AUTH] Não foi possível disparar evento de sincronização:', e);
+      }
+      
+      console.log('✅ [AUTH] Usuário autenticado - sessão válida encontrada');
+    } else {
+      console.log('❌ [AUTH] Usuário não autenticado - nenhuma sessão ativa');
+    }
+
     return isAuthenticated;
+
   } catch (error) {
-    console.error("❌ [AUTH] Erro ao verificar autenticação:", error);
+    console.error("❌ [AUTH] Erro crítico na verificação de autenticação:", error);
     
-    // Em caso de erro, usar estratégia conservadora
+    // Fallback: verificar cookies e cache local
     const hasSupabaseCookies = document.cookie.includes('sb-') || 
                               document.cookie.includes('supabase-auth-token');
     const cachedStatus = localStorage.getItem('auth_status');
+    const cacheTime = localStorage.getItem('auth_cache_time');
     
-    // Se há cookies E cache positivo, assumir autenticado
-    if (hasSupabaseCookies && cachedStatus === 'authenticated') {
-      console.log('⚠️ [AUTH] Erro, mas cookies + cache indicam autenticado');
-      return true;
+    // Se temos cookies recentes E cache positivo, assumir autenticado
+    if (hasSupabaseCookies && cachedStatus === 'authenticated' && cacheTime) {
+      const now = Date.now();
+      const timeDiff = now - parseInt(cacheTime);
+      
+      // Se o cache tem menos de 10 minutos, considerar válido
+      if (timeDiff < 10 * 60 * 1000) {
+        console.log('⚠️ [AUTH] Erro, mas cookies + cache recente indicam autenticado');
+        return true;
+      }
     }
     
-    console.log('❌ [AUTH] Erro sem indicações de autenticação - não autenticado');
+    console.log('❌ [AUTH] Erro e sem indicações confiáveis de autenticação');
     return false;
   }
 };

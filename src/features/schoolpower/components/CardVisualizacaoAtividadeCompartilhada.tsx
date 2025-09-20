@@ -203,35 +203,68 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   const handlePresentarAtividade = async () => {
     if (isAnimating) return;
 
-    console.log('🔐 [AUTH] Verificando autenticação do usuário...');
+    console.log('🔐 [AUTH] Verificando autenticação do usuário para atividade compartilhada...');
     
     try {
-      // Verificar se o usuário está autenticado
-      const isAuthenticated = await checkAuthentication();
+      // Verificação melhorada que funciona entre abas
+      console.log('🔄 [AUTH] Verificando sessão ativa no Supabase...');
+      
+      // Verificar diretamente no Supabase sem depender de cache
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ [AUTH] Erro ao verificar sessão:', sessionError);
+        throw new Error('Erro de autenticação');
+      }
+
+      const isAuthenticated = !!sessionData?.session;
       
       if (!isAuthenticated) {
-        console.log('❌ [AUTH] Usuário não autenticado, redirecionando para login');
+        console.log('❌ [AUTH] Nenhuma sessão ativa encontrada, redirecionando para login');
         
         // Salvar URL atual para retornar após login
         const currentUrl = window.location.href;
         localStorage.setItem('redirectAfterLogin', currentUrl);
+        
+        // Limpar possíveis caches inválidos
+        localStorage.removeItem('auth_status');
+        localStorage.removeItem('auth_cache_time');
         
         // Redirecionar para página de login
         navigate('/login');
         return;
       }
 
-      console.log('✅ [AUTH] Usuário autenticado, iniciando apresentação da atividade');
+      console.log('✅ [AUTH] Sessão ativa confirmada, iniciando apresentação da atividade');
+      console.log('👤 [AUTH] Usuário logado:', sessionData.session.user.email);
 
       // Se autenticado, prosseguir com a apresentação
       await iniciarApresentacaoAtividade();
 
     } catch (error) {
-      console.error('❌ [AUTH] Erro ao verificar autenticação:', error);
+      console.error('❌ [AUTH] Erro crítico ao verificar autenticação:', error);
       
-      // Em caso de erro, redirecionar para login por segurança
+      // Em caso de erro, tentar fallback com cookies
+      const hasSupabaseCookies = document.cookie.includes('sb-') || 
+                                document.cookie.includes('supabase-auth-token');
+      
+      if (hasSupabaseCookies) {
+        console.log('⚠️ [AUTH] Erro na verificação, mas cookies encontrados. Tentando prosseguir...');
+        
+        try {
+          await iniciarApresentacaoAtividade();
+          return;
+        } catch (presentationError) {
+          console.error('❌ [AUTH] Falha na apresentação mesmo com cookies:', presentationError);
+        }
+      }
+      
+      // Se chegou até aqui, redirecionar para login
       const currentUrl = window.location.href;
       localStorage.setItem('redirectAfterLogin', currentUrl);
+      
+      // Mostrar mensagem mais específica para o usuário
+      console.log('🔄 [AUTH] Redirecionando para login devido a problemas de autenticação');
       navigate('/login');
     }
   };
