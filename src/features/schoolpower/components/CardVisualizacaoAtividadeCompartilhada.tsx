@@ -1,8 +1,8 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Download, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Download, Eye } from 'lucide-react';
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
@@ -30,9 +30,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   onApresentarMaterial,
   onUsarMaterial
 }) => {
-  // Estado para controlar se a descrição está expandida
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
   // Sincronizar dados da atividade usando o sistema de sincronização
   const atividadeSincronizada: AtividadeDados | null = useMemo(() => {
     if (!atividade) return null;
@@ -237,52 +234,22 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
         
-          {/* Seção de Descrição da Atividade - Expansível */}
+          {/* Seção de Descrição da Atividade */}
           <div className="mb-6">
             <Card className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="w-2 h-16 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0"></div>
                   <div className="flex-1">
-                    {/* Cabeçalho com botão de expansão */}
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                        <span className="text-orange-400">📋</span>
-                        Sobre esta Atividade
-                      </h3>
-                      <button
-                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                        className="flex items-center gap-1 text-orange-400 hover:text-orange-300 transition-colors duration-200 text-sm"
-                      >
-                        {isDescriptionExpanded ? (
-                          <>
-                            <span>Minimizar</span>
-                            <ChevronUp className="w-4 h-4" />
-                          </>
-                        ) : (
-                          <>
-                            <span>Ver mais</span>
-                            <ChevronDown className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Descrição com animação de expansão/colapso */}
-                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                      isDescriptionExpanded ? 'max-h-96 opacity-100' : 'max-h-16 opacity-75'
-                    }`}>
-                      <p className="text-gray-300 leading-relaxed text-sm">
-                        {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
-                      </p>
-                    </div>
-
-                    {/* Gradiente de fade quando minimizado */}
-                    {!isDescriptionExpanded && (
-                      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-orange-50/10 to-transparent pointer-events-none" />
-                    )}
+                    <h3 className="text-lg font-semibold text-white/90 mb-3 flex items-center gap-2">
+                      <span className="text-orange-400">📋</span>
+                      Sobre esta Atividade
+                    </h3>
+                    <p className="text-gray-300 leading-relaxed text-sm">
+                      {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
+                    </p>
                     
-                    {/* Metadados da Atividade - sempre visíveis */}
+                    {/* Metadados da Atividade */}
                     <div className="flex flex-wrap gap-2 mt-4">
                       <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
                         {(() => {
