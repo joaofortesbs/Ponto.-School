@@ -111,7 +111,12 @@ const initializeTables = async () => {
 // Inicializar tabelas
 initializeTables();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+// SEGURANÇA: JWT_SECRET obrigatório
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('ERRO CRÍTICO: JWT_SECRET não definido');
+  process.exit(1);
+}
 
 export const neonDB = {
   // Função para registrar usuário

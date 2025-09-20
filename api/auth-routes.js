@@ -156,12 +156,29 @@ router.get('/profile', authenticateToken, async (req, res) => {
 // Rota para atualizar perfil do usuário
 router.put('/profile', authenticateToken, async (req, res) => {
   try {
-    const updates = req.body;
-
-    // Remover campos que não devem ser atualizados diretamente
-    delete updates.id;
-    delete updates.password_hash;
-    delete updates.created_at;
+    // SEGURANÇA: Whitelist de campos permitidos para atualização
+    const allowedFields = [
+      'display_name', 
+      'bio', 
+      'avatar_url', 
+      'instituição_ensino', 
+      'estado_uf',
+      'full_name'
+    ];
+    
+    const updates = {};
+    
+    // Aplicar apenas campos permitidos
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+    
+    // Validar se há campos para atualizar
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo válido fornecido para atualização' });
+    }
 
     const { data: updatedProfile, error } = await neonDB.updateProfile(req.user.id, updates);
 
