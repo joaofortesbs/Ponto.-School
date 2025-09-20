@@ -587,96 +587,21 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-auto"
           style={{ isolation: 'isolate' }}
         >
-          {/* Header da Apresentação */}
-          <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
-                  <Play className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                    Apresentação da Atividade
-                  </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {atividadeSincronizada?.titulo || titulo}
-                  </p>
-                </div>
-              </div>
-              
-              <Button
-                onClick={handleCloseFullscreen}
-                variant="ghost"
-                size="icon"
-                className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+          {/* Header minimalista com apenas botão de fechar */}
+          <div className="absolute top-4 right-4 z-20">
+            <Button
+              onClick={handleCloseFullscreen}
+              variant="ghost"
+              size="icon"
+              className="w-12 h-12 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 backdrop-blur-sm"
+            >
+              <X className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+            </Button>
           </div>
 
-          {/* Conteúdo da Apresentação */}
-          <div className="p-6">
-            {/* Informações da Atividade */}
-            <div className="mb-8">
-              <Card className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-3 h-20 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white/90 mb-2 flex items-center gap-2">
-                        <span className="text-orange-400">📋</span>
-                        Sobre esta Atividade
-                      </h3>
-                      <p className="text-gray-300 leading-relaxed">
-                        {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
-                      </p>
-                      
-                      {/* Metadados */}
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
-                          {(() => {
-                            const tipo = atividadeSincronizada?.tipo || '';
-                            if (tipo.includes('flash-cards')) return 'Flash Cards';
-                            if (tipo.includes('quiz')) return 'Quiz Interativo';
-                            if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
-                            if (tipo.includes('plano-aula')) return 'Plano de Aula';
-                            if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
-                            if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
-                            if (tipo.includes('mapa-mental')) return 'Mapa Mental';
-                            return 'Atividade';
-                          })()}
-                        </div>
-                        {atividadeSincronizada?.disciplina && (
-                          <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
-                            {atividadeSincronizada.disciplina}
-                          </div>
-                        )}
-                        {atividadeSincronizada?.nivel && (
-                          <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
-                            {atividadeSincronizada.nivel}
-                          </div>
-                        )}
-                        {atividadeSincronizada?.tempo_estimado && (
-                          <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
-                            {atividadeSincronizada.tempo_estimado} min
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Atividade em Tela Cheia */}
-            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
-              <CardContent className="p-8">
-                <div className="min-h-[70vh]">
-                  {renderActivityPreview()}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Atividade em Tela Cheia - Totalmente Funcional */}
+          <div className="w-full h-full">
+            {renderActivityPreview()}
           </div>
         </div>
       )}
