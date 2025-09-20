@@ -89,17 +89,49 @@ router.get('/check-username/:username', async (req, res) => {
   try {
     const { username } = req.params;
     
+    if (!username || username.trim() === '') {
+      return res.status(400).json({ 
+        available: false,
+        error: 'Username is required' 
+      });
+    }
+
+    // Limpar e validar o username
+    const cleanUsername = username.trim().toLowerCase();
+    
+    // Verificar se o username atende aos critérios mínimos
+    if (cleanUsername.length < 3) {
+      return res.json({
+        available: false,
+        error: 'Username deve ter pelo menos 3 caracteres'
+      });
+    }
+
+    // Verificar se contém apenas caracteres válidos
+    const validPattern = /^[a-z0-9_]+$/;
+    if (!validPattern.test(cleanUsername)) {
+      return res.json({
+        available: false,
+        error: 'Username deve conter apenas letras minúsculas, números e sublinhados'
+      });
+    }
+    
     const result = await query(
-      'SELECT username FROM profiles WHERE username = $1',
-      [username]
+      'SELECT username FROM profiles WHERE LOWER(username) = $1',
+      [cleanUsername]
     );
 
+    const isAvailable = result.rows.length === 0;
+
     res.json({
-      available: result.rows.length === 0
+      available: isAvailable
     });
   } catch (error) {
     console.error('Check username error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      available: false,
+      error: 'Internal server error' 
+    });
   }
 });
 

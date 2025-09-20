@@ -39,14 +39,27 @@ export const verifyToken = (token) => {
 // Registrar usuário
 export const signUp = async (email, password, userData = {}) => {
   try {
-    // Verificar se usuário já existe
+    // Verificar se o email já existe
     const existingUser = await query(
       'SELECT id FROM users WHERE email = $1',
       [email]
     );
 
     if (existingUser.rows.length > 0) {
-      return { success: false, error: 'User already exists' };
+      return { success: false, error: 'Email already registered' };
+    }
+
+    // Verificar se o username já existe (se fornecido)
+    if (userData.username) {
+      const cleanUsername = userData.username.trim().toLowerCase();
+      const existingUsername = await query(
+        'SELECT username FROM profiles WHERE LOWER(username) = $1',
+        [cleanUsername]
+      );
+
+      if (existingUsername.rows.length > 0) {
+        return { success: false, error: 'Username already taken' };
+      }
     }
 
     // Hash da senha

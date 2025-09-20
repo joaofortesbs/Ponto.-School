@@ -81,12 +81,13 @@ export const auth = {
     }
   },
 
-  checkUsername: async (username: string): Promise<boolean> => {
+  checkUsername: async (username: string): Promise<{ available: boolean; error?: string } | boolean> => {
     try {
-      const response = await apiRequest(`/auth/check-username/${username}`);
-      return response.available;
+      const response = await apiRequest(`/auth/check-username/${encodeURIComponent(username)}`);
+      return response;
     } catch (error) {
-      return false;
+      console.error('Username check error:', error);
+      return { available: false, error: 'Erro ao verificar disponibilidade do username' };
     }
   },
 

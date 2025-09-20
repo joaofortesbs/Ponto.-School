@@ -367,7 +367,20 @@ export function RegisterForm() {
 
       try {
         // Verificar novamente se o nome de usuário já existe
-        const isUsernameAvailable = await authService.checkUsername(formData.username);
+        const usernameCheck = await authService.checkUsername(formData.username);
+
+        // Lidar com diferentes formatos de resposta
+        let isUsernameAvailable = false;
+        if (typeof usernameCheck === 'boolean') {
+          isUsernameAvailable = usernameCheck;
+        } else if (usernameCheck && typeof usernameCheck === 'object') {
+          isUsernameAvailable = usernameCheck.available;
+          if (!isUsernameAvailable && usernameCheck.error) {
+            setError(usernameCheck.error);
+            setLoading(false);
+            return;
+          }
+        }
 
         if (!isUsernameAvailable) {
           setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
@@ -811,24 +824,47 @@ export function RegisterForm() {
                           }));
 
                           // Verificar duplicatas após pausa na digitação
-                          if (validValue) {
+                          if (validValue && validValue.length >= 3) {
                             clearTimeout((window as any).usernameCheckTimeout);
                             (window as any).usernameCheckTimeout = setTimeout(async () => {
                               try {
-                                const isAvailable = await authService.checkUsername(validValue);
+                                const response = await authService.checkUsername(validValue);
 
-                                if (!isAvailable) {
-                                  setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
-                                } else {
-                                  // Limpar o erro se não houver duplicata
-                                  if (error && error.includes('nome de usuário')) {
-                                    setError("");
+                                if (response && typeof response === 'object') {
+                                  if (!response.available) {
+                                    if (response.error) {
+                                      setError(response.error);
+                                    } else {
+                                      setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
+                                    }
+                                  } else {
+                                    // Limpar o erro se o username está disponível
+                                    if (error && (error.includes('nome de usuário') || error.includes('Username'))) {
+                                      setError("");
+                                    }
+                                  }
+                                } else if (typeof response === 'boolean') {
+                                  // Compatibilidade com resposta antiga
+                                  if (!response) {
+                                    setError("Este nome de usuário já está em uso. Por favor, escolha outro.");
+                                  } else {
+                                    if (error && (error.includes('nome de usuário') || error.includes('Username'))) {
+                                      setError("");
+                                    }
                                   }
                                 }
                               } catch (err) {
                                 console.error("Erro ao verificar nome de usuário:", err);
+                                // Não mostrar erro de conexão para não confundir o usuário
                               }
-                            }, 500);
+                            }, 800);
+                          } else if (validValue.length > 0 && validValue.length < 3) {
+                            setError("Nome de usuário deve ter pelo menos 3 caracteres.");
+                          } else if (validValue.length === 0) {
+                            // Limpar erro quando campo estiver vazio
+                            if (error && (error.includes('nome de usuário') || error.includes('Username'))) {
+                              setError("");
+                            }
                           }
                         }}
                         placeholder="seunomeusuario"
