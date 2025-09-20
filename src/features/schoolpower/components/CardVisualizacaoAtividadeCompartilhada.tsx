@@ -439,7 +439,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                         <span style={{ color: '#fed7aa' }}>📋</span>
                         Sobre esta Atividade
                       </h3>
-                      <div className="flex items-center gap-1 text-xs hover:text-orange-200 transition-colors" style={{ color: '#fed7aa' }}></div>
+                      <div className="flex items-center gap-1 text-xs hover:text-orange-200 transition-colors" style={{ color: '#fed7aa' }}>
                         {isDescriptionExpanded ? (
                           <>
                             <span>Minimizar</span>
@@ -496,7 +496,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                           <div className="rounded-full px-3 py-1 text-xs font-medium shadow-sm" style={{ backgroundColor: 'rgba(168, 85, 247, 0.3)', borderColor: 'rgba(196, 181, 253, 0.4)', color: '#e9d5ff', border: '1px solid' }}>
                             {atividadeSincronizada.tempo_estimado} min
                           </div>
-                        )}</div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -583,32 +583,32 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       </Card>
 
       {/* Interface Fullscreen forçada para modo escuro - Container Transform */}
-      {isFullscreenMode && (
-        <div 
-          ref={fullscreenRef}
-          className="fixed inset-0 z-50 bg-gray-900 overflow-auto dark"
-          style={{ isolation: 'isolate' }}
-        >
-          {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
-          <div className="absolute top-4 right-4 z-20">
-            <Button
-              onClick={handleCloseFullscreen}
-              variant="ghost"
-              size="icon"
-              className="w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700/90 backdrop-blur-md border border-gray-600/40 shadow-xl hover:shadow-2xl transition-all duration-300"
-            >
-              <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
-            </Button>
-          </div>
+        {isFullscreenMode && (
+          <div 
+            ref={fullscreenRef}
+            className="fixed inset-0 z-50 bg-gray-900 overflow-auto dark"
+            style={{ isolation: 'isolate' }}
+          >
+            {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
+            <div className="absolute top-4 right-4 z-20">
+              <Button
+                onClick={handleCloseFullscreen}
+                variant="ghost"
+                size="icon"
+                className="w-12 h-12 rounded-full bg-gray-800/80 hover:bg-gray-700/90 backdrop-blur-md border border-gray-600/40 shadow-xl hover:shadow-2xl transition-all duration-300"
+              >
+                <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
+              </Button>
+            </div>
 
-          {/* Atividade em Tela Cheia - Totalmente Funcional */}
-          <div className="w-full h-full">
-            {renderActivityPreview()}
+            {/* Atividade em Tela Cheia - Totalmente Funcional */}
+            <div className="w-full h-full">
+              {renderActivityPreview()}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
 export default CardVisualizacaoAtividadeCompartilhada;
