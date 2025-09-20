@@ -192,4 +192,4 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
-export { signUp, signIn, getUserFromToken };
+// Exports já definidos acima, removendo duplicação

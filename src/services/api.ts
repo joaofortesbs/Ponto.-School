@@ -81,12 +81,41 @@ export const auth = {
     }
   },
 
-  checkUsername: async (username: string): Promise<{ available: boolean; error?: string } | boolean> => {
+  checkUsername: async (username: string): Promise<{ available: boolean; error?: string }> => {
     try {
-      const response = await apiRequest(`/auth/check-username/${encodeURIComponent(username)}`);
-      return response;
+      if (!username || username.trim() === '') {
+        return { available: false, error: 'Username é obrigatório' };
+      }
+
+      const cleanUsername = username.trim().toLowerCase();
+      
+      // Validação local antes de enviar para o servidor
+      if (cleanUsername.length < 3) {
+        return { available: false, error: 'Username deve ter pelo menos 3 caracteres' };
+      }
+
+      if (!/^[a-z0-9_]+$/.test(cleanUsername)) {
+        return { available: false, error: 'Username deve conter apenas letras minúsculas, números e sublinhados' };
+      }
+
+      const response = await apiRequest(`/auth/check-username/${encodeURIComponent(cleanUsername)}`);
+      return {
+        available: response.available || false,
+        error: response.error || (!response.available ? 'Username já está em uso' : undefined)
+      };
     } catch (error) {
-      console.error('Username check error:', error);
+      console.error('Erro ao verificar username:', error);
+      
+      // Tratamento específico para diferentes tipos de erro
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          return { available: false, error: 'Erro de conexão. Verifique sua internet e tente novamente.' };
+        }
+        if (error.message.includes('500')) {
+          return { available: false, error: 'Erro no servidor. Tente novamente em alguns instantes.' };
+        }
+      }
+      
       return { available: false, error: 'Erro ao verificar disponibilidade do username' };
     }
   },

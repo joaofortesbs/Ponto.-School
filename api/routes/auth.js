@@ -92,7 +92,7 @@ router.get('/check-username/:username', async (req, res) => {
     if (!username || username.trim() === '') {
       return res.status(400).json({ 
         available: false,
-        error: 'Username is required' 
+        error: 'Username é obrigatório' 
       });
     }
 
@@ -116,21 +116,23 @@ router.get('/check-username/:username', async (req, res) => {
       });
     }
     
+    // Consultar banco de dados
     const result = await query(
-      'SELECT username FROM profiles WHERE LOWER(username) = $1',
+      'SELECT username FROM profiles WHERE LOWER(username) = $1 LIMIT 1',
       [cleanUsername]
     );
 
     const isAvailable = result.rows.length === 0;
 
     res.json({
-      available: isAvailable
+      available: isAvailable,
+      message: isAvailable ? 'Username disponível' : 'Username já está em uso'
     });
   } catch (error) {
-    console.error('Check username error:', error);
+    console.error('Erro ao verificar username:', error);
     res.status(500).json({ 
       available: false,
-      error: 'Internal server error' 
+      error: 'Erro interno do servidor ao verificar username' 
     });
   }
 });
