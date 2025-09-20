@@ -402,7 +402,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                     height: '100%',
                     zIndex: 10000
                   }}
-                ></div>
+                >
                   {/* Container unificado com ícone e texto FIXO */}
                   <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none relative">
                     {/* Ícone de play com animação aprimorada */}
