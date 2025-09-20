@@ -64,10 +64,14 @@ const startServer = async () => {
     console.log('🔄 Verificando conexão com banco de dados...');
     const dbConnected = await checkDatabaseConnection();
     
-    if (dbConnected) {
-      console.log('🔄 Inicializando tabelas...');
-      await initTables();
+    if (!dbConnected) {
+      console.error('❌ FATAL: Database connection failed. Exiting...');
+      process.exit(1);
     }
+
+    console.log('🔄 Inicializando tabelas...');
+    await initTables();
+    console.log('✅ Database tables initialized successfully');
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor de API rodando na porta ${PORT}`);

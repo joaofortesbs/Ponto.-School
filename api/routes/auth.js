@@ -103,4 +103,29 @@ router.get('/check-username/:username', async (req, res) => {
   }
 });
 
+// Resolver username → email para login
+router.post('/resolve-username', async (req, res) => {
+  try {
+    const { username } = req.body;
+    
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    
+    const result = await query(
+      'SELECT u.email FROM profiles p JOIN users u ON p.user_id = u.id WHERE p.username = $1',
+      [username]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Username not found' });
+    }
+    
+    res.json({ email: result.rows[0].email });
+  } catch (error) {
+    console.error('Error resolving username:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

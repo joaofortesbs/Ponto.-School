@@ -748,24 +748,24 @@ export default function Header() {
         const result = e.target?.result as string;
 
         try {
-          // Get current version from Supabase
-          const { data, error } = await supabase
-            .from("platform_settings")
-            .select("logo_version")
-            .single();
-
-          // Increment version
+          // TODO: Implementar API endpoint para platform_settings
+          console.warn('Platform settings update disabled - implement API endpoint');
+          const newVersion = 1; // Placeholder
+          
+          /*
+          // Get current version from API
+          const { data, error } = await fetch('/api/platform-settings');
           const newVersion = (data?.logo_version || 1) + 1;
 
-          // Update logo in Supabase with new version
-          await supabase.from("platform_settings").upsert(
-            {
-              id: 1,
+          // Update logo via API
+          await fetch('/api/platform-settings', {
+            method: 'POST',
+            body: JSON.stringify({
               logo_url: result,
               logo_version: newVersion,
-            },
-            { onConflict: "id" },
-          );
+            })
+          });
+          */
 
           // Import dynamically to avoid circular dependencies
           const { getVersionedLogoUrl, saveLogoToLocalStorage } = await import(
@@ -806,16 +806,27 @@ export default function Header() {
       // Import dynamically to avoid circular dependencies
       const { DEFAULT_LOGO } = await import("@/lib/logo-utils");
 
-      // Get current version from Supabase
-      const { data, error } = await supabase
-        .from("platform_settings")
-        .select("logo_version")
-        .single();
-
-      // Increment version
+      // TODO: Implementar API endpoint para platform_settings
+      console.warn('Platform settings update disabled - implement API endpoint');
+      const newVersion = 1; // Placeholder
+      
+      /*
+      // Get current version from API
+      const response = await fetch('/api/platform-settings');
+      const data = await response.json();
       const newVersion = (data?.logo_version || 1) + 1;
 
-      // Update logo in Supabase with default logo and new version
+      // Update logo via API
+      await fetch('/api/platform-settings', {
+        method: 'POST',
+        body: JSON.stringify({
+          logo_url: DEFAULT_LOGO,
+          logo_version: newVersion,
+        })
+      });
+      */
+
+      /*
       await supabase.from("platform_settings").upsert(
         {
           id: 1,
@@ -824,6 +835,7 @@ export default function Header() {
         },
         { onConflict: "id" },
       );
+      */
 
       // Clear localStorage
       localStorage.removeItem("customLogo");

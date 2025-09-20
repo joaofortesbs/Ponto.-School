@@ -6,12 +6,13 @@ dotenv.config();
 const { Pool } = pkg;
 
 // Configuração do pool de conexões
+const isNeonDB = process.env.DATABASE_URL?.includes('neon.tech');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: isNeonDB ? { rejectUnauthorized: false } : false, // Neon sempre requer SSL
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 15000, // Aumentado para Neon cold starts
 });
 
 // Função para executar queries

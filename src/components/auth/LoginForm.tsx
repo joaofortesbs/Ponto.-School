@@ -169,19 +169,40 @@ export function LoginForm() {
           ),
         ]);
       } else {
-        // Login com nome de usuário
-        // Primeiro, buscar o email associado ao nome de usuário
-        const result = await query(
-          'SELECT email FROM profiles WHERE username = $1',
-          [inputValue]
-        );
-        const profileData = result.rows[0] || null;
-        const profileError = result.rows.length === 0 ? { message: 'Not found' } : null;
-
-        if (profileError || !profileData?.email) {
+        // Login com nome de usuário - usar API backend para resolver
+        try {
+          const emailResponse = await fetch('/api/auth/resolve-username', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: inputValue }),
+            credentials: 'include'
+          });
+          
+          if (!emailResponse.ok) {
+            setSuccess(false);
+            setError("Nome de usuário não encontrado");
+            setInvalidCredentials(true);
+            setLoading(false);
+            clearTimeout(preloadTimeout);
+            clearTimeout(authTimeout);
+            localStorage.removeItem("auth_checked");
+            localStorage.removeItem("auth_status");
+            return;
+          }
+          
+          const { email } = await emailResponse.json();
+          
+          // Agora fazer login com o email encontrado
+          authResult = await Promise.race([
+            auth.signIn(email, formData.password),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
+            ),
+          ]);
+        } catch (error) {
           setSuccess(false);
-          setError("Nome de usuário não encontrado");
-          setInvalidCredentials(true); // Set invalid credentials state
+          setError("Erro ao processar nome de usuário");
+          setInvalidCredentials(true);
           setLoading(false);
           clearTimeout(preloadTimeout);
           clearTimeout(authTimeout);
@@ -189,14 +210,6 @@ export function LoginForm() {
           localStorage.removeItem("auth_status");
           return;
         }
-
-        // Agora fazer login com o email encontrado
-        authResult = await Promise.race([
-          auth.signIn(profileData.email, formData.password),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
-          ),
-        ]);
       }
 
       const { data, error } = authResult;

@@ -1,151 +1,53 @@
+// MIGRADO: Este arquivo agora redireciona para a nova API
+// Todas as chamadas diretas ao banco foram movidas para o backend
 
-import { Client, Pool } from 'pg';
+// Importar dos novos serviços de API
+import { 
+  auth, 
+  authService,
+  checkDatabaseConnection,
+  checkAuthentication,
+  User 
+} from '@/services/api';
 
-const databaseUrl = process.env.DATABASE_URL;
+// Re-exportar para compatibilidade com código existente
+export { auth, checkDatabaseConnection, checkAuthentication };
+export type { User };
 
-if (!databaseUrl) {
-  console.error('DATABASE_URL não configurada. Configure o banco PostgreSQL no Replit.');
-}
-
-// Pool de conexões para melhor performance
-export const pool = new Pool({
-  connectionString: databaseUrl,
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
-
-// Cliente único para operações simples
-export const client = new Client({
-  connectionString: databaseUrl
-});
-
-// Função auxiliar para verificar a conexão
-export const checkDatabaseConnection = async () => {
-  try {
-    const client = await pool.connect();
-    
-    try {
-      const result = await client.query('SELECT NOW()');
-      console.log('Conexão com PostgreSQL estabelecida com sucesso!');
-      return true;
-    } finally {
-      client.release();
-    }
-  } catch (error) {
-    console.error('Erro ao conectar com PostgreSQL:', error);
-    return false;
-  }
-};
-
-// Função para executar queries
-export const query = async (text: string, params?: any[]) => {
-  const client = await pool.connect();
-  try {
-    const result = await client.query(text, params);
-    return result;
-  } finally {
-    client.release();
-  }
-};
-
-// Função para autenticação (substituindo Supabase Auth)
-export const auth = {
-  signUp: async (email: string, password: string, userData?: any) => {
-    try {
-      const hashedPassword = await hashPassword(password);
-      
-      const userResult = await query(`
-        INSERT INTO users (email, password_hash, email_confirmed)
-        VALUES ($1, $2, $3)
-        RETURNING id, email, created_at
-      `, [email, hashedPassword, false]);
-      
-      const user = userResult.rows[0];
-      
-      // Criar perfil
-      await query(`
-        INSERT INTO profiles (id, email, display_name, full_name, username)
-        VALUES ($1, $2, $3, $4, $5)
-      `, [
-        user.id,
-        email,
-        userData?.display_name || userData?.username || userData?.full_name || email,
-        userData?.full_name,
-        userData?.username
-      ]);
-      
-      return { data: { user }, error: null };
-    } catch (error) {
-      return { data: null, error };
-    }
+// Exportação de compatibilidade temporária para arquivos antigos
+export const supabase = {
+  auth: {
+    signUp: auth.signUp,
+    signIn: auth.signIn,
+    signOut: auth.signOut,
+    getUser: auth.getUser,
+    getSession: auth.getUser, // Alias para compatibilidade
   },
-  
-  signIn: async (email: string, password: string) => {
-    try {
-      const result = await query(`
-        SELECT id, email, password_hash, created_at
-        FROM users
-        WHERE email = $1
-      `, [email]);
-      
-      if (result.rows.length === 0) {
-        return { data: null, error: { message: 'Usuário não encontrado' } };
-      }
-      
-      const user = result.rows[0];
-      const isValidPassword = await verifyPassword(password, user.password_hash);
-      
-      if (!isValidPassword) {
-        return { data: null, error: { message: 'Senha incorreta' } };
-      }
-      
-      // Atualizar último login
-      await query(`
-        UPDATE users SET last_sign_in_at = NOW()
-        WHERE id = $1
-      `, [user.id]);
-      
-      return { data: { user: { id: user.id, email: user.email } }, error: null };
-    } catch (error) {
-      return { data: null, error };
-    }
+  from: (table: string) => {
+    console.warn(`supabase.from('${table}') is deprecated. Use API services instead.`);
+    return {
+      select: () => Promise.reject(new Error('Use API services instead of supabase.from()')),
+      insert: () => Promise.reject(new Error('Use API services instead of supabase.from()')),
+      update: () => Promise.reject(new Error('Use API services instead of supabase.from()')),
+      delete: () => Promise.reject(new Error('Use API services instead of supabase.from()')),
+      upsert: () => Promise.reject(new Error('Use API services instead of supabase.from()')),
+    };
   },
-  
-  getUser: async () => {
-    // Implementar lógica de sessão aqui
-    const userId = getCurrentUserId(); // Implementar função de sessão
-    if (!userId) return { data: { user: null }, error: null };
-    
-    try {
-      const result = await query(`
-        SELECT id, email, created_at
-        FROM users
-        WHERE id = $1
-      `, [userId]);
-      
-      return { data: { user: result.rows[0] || null }, error: null };
-    } catch (error) {
-      return { data: { user: null }, error };
-    }
-  }
+  rpc: (fn: string) => {
+    console.warn(`supabase.rpc('${fn}') is deprecated. Use API services instead.`);
+    return Promise.reject(new Error('Use API services instead of supabase.rpc()'));
+  },
 };
 
-// Funções auxiliares para hash de senha
-const hashPassword = async (password: string): Promise<string> => {
-  const bcrypt = require('bcrypt');
-  return await bcrypt.hash(password, 10);
+// Mock da função query (não deve ser usada no frontend)
+export const query = async (sql: string, params?: any[]) => {
+  console.error('Direct database queries not allowed in frontend. Use API endpoints instead.');
+  throw new Error('Direct database queries not allowed in client. Use API endpoints instead.');
 };
 
-const verifyPassword = async (password: string, hash: string): Promise<boolean> => {
-  const bcrypt = require('bcrypt');
-  return await bcrypt.compare(password, hash);
-};
+// Outras exportações para compatibilidade
+export const pool = null; // Não disponível no frontend
+export const client = null; // Não disponível no frontend
 
-// Função para gerenciar sessão (implementar conforme necessário)
-const getCurrentUserId = (): string | null => {
-  // Implementar lógica de sessão (JWT, cookies, etc.)
-  return localStorage.getItem('currentUserId');
-};
-
-export default { pool, client, query, auth, checkDatabaseConnection };
+// Export default para compatibilidade
+export default supabase;

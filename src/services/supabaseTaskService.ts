@@ -1,4 +1,5 @@
-import { query } from '@/lib/supabase';
+// MIGRADO: Agora usa API endpoints em vez de acesso direto ao banco
+// TODO: Implementar endpoints de API para tarefas
 
 export interface TarefaSupabase {
   id: string;
@@ -12,24 +13,9 @@ export interface TarefaSupabase {
 
 export const supabaseTaskService = {
   async buscarTarefas(userId?: string): Promise<TarefaSupabase[]> {
-    try {
-      const currentUserId = userId || this.getCurrentUserId();
-      if (!currentUserId) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const result = await query(`
-        SELECT id, user_id, titulo, descricao, status, data_criacao, data_atualizacao
-        FROM tarefas
-        WHERE user_id = $1
-        ORDER BY data_criacao DESC
-      `, [currentUserId]);
-
-      return result.rows;
-    } catch (error) {
-      console.error('Erro ao buscar tarefas:', error);
-      throw error;
-    }
+    // TODO: Implementar endpoint de API para buscar tarefas
+    console.warn('supabaseTaskService.buscarTarefas: Use API endpoint instead');
+    throw new Error('Use API endpoint instead of direct database access');
   },
 
   async criarTarefa(titulo: string, descricao?: string, userId?: string): Promise<TarefaSupabase | null> {
