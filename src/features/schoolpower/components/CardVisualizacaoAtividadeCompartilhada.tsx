@@ -5,6 +5,8 @@ import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react'; /
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
+import { checkAuthentication } from '@/lib/auth-utils';
+import { useNavigate } from 'react-router-dom';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -29,6 +31,8 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   onApresentarMaterial,
   onUsarMaterial
 }) => {
+  const navigate = useNavigate();
+  
   // Estado para armazenar a atividade sincronizada
   const [atividadeSincronizada, setAtividadeSincronizada] = useState<AtividadeDados | null>(null);
 
@@ -195,8 +199,45 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }
   };
 
-  // Função para iniciar Container Transform (expansão do card)
+  // Função para verificar autenticação e iniciar apresentação
   const handlePresentarAtividade = async () => {
+    if (isAnimating) return;
+
+    console.log('🔐 [AUTH] Verificando autenticação do usuário...');
+    
+    try {
+      // Verificar se o usuário está autenticado
+      const isAuthenticated = await checkAuthentication();
+      
+      if (!isAuthenticated) {
+        console.log('❌ [AUTH] Usuário não autenticado, redirecionando para login');
+        
+        // Salvar URL atual para retornar após login
+        const currentUrl = window.location.href;
+        localStorage.setItem('redirectAfterLogin', currentUrl);
+        
+        // Redirecionar para página de login
+        navigate('/login');
+        return;
+      }
+
+      console.log('✅ [AUTH] Usuário autenticado, iniciando apresentação da atividade');
+
+      // Se autenticado, prosseguir com a apresentação
+      await iniciarApresentacaoAtividade();
+
+    } catch (error) {
+      console.error('❌ [AUTH] Erro ao verificar autenticação:', error);
+      
+      // Em caso de erro, redirecionar para login por segurança
+      const currentUrl = window.location.href;
+      localStorage.setItem('redirectAfterLogin', currentUrl);
+      navigate('/login');
+    }
+  };
+
+  // Função para iniciar Container Transform (expansão do card) - separada da verificação de auth
+  const iniciarApresentacaoAtividade = async () => {
     if (!cardRef.current || isAnimating) return;
 
     setIsAnimating(true);
