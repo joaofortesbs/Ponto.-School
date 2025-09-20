@@ -306,7 +306,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                 {userInfo.isLoading ? (
                   <div className="w-24 h-5 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
                 ) : (
-                  `Prof. ${finalUserName}`
+                  finalUserName.startsWith('Prof.') ? finalUserName : `Prof. ${finalUserName}`
                 )}
               </span>
             </div>
@@ -326,26 +326,31 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           {/* Card de School Points - Apenas visualização para página de compartilhamento */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/20 rounded-2xl px-3 py-2 border border-orange-200 dark:border-orange-700/50 shadow-sm">
             <div className="flex items-center gap-2">
-              {!isSharedActivity && isEditingSPs ? (
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={tempSPs}
-                    onChange={handleSPsChange}
-                    onKeyDown={handleKeyPress}
-                    onBlur={handleSaveSPs}
-                    min="0"
-                    max="99999"
-                    className="w-16 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                    autoFocus
-                  />
-                  <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SPs</span>
+              <div className="flex items-center gap-1">
+                <div className="w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">$</span>
                 </div>
-              ) : (
-                <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
-                  {currentSPs} SPs
-                </span>
-              )}
+                {!isSharedActivity && isEditingSPs ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      value={tempSPs}
+                      onChange={handleSPsChange}
+                      onKeyDown={handleKeyPress}
+                      onBlur={handleSaveSPs}
+                      min="0"
+                      max="99999"
+                      className="w-16 text-sm font-semibold text-orange-700 dark:text-orange-400 bg-transparent border-none outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      autoFocus
+                    />
+                    <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">SPs</span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+                    {currentSPs} SPs
+                  </span>
+                )}
+              </div>
               {!isSharedActivity && (
                 <button onClick={handleEditSPs} className="hover:bg-orange-200/50 dark:hover:bg-orange-700/30 p-1 rounded transition-colors">
                   <Pencil className="w-3 h-3 text-orange-600 dark:text-orange-400" />
