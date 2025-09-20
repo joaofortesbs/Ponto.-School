@@ -1,7 +1,8 @@
-import React, { useMemo, useEffect, useState, useRef } from 'react'; // Import useState, useEffect and useRef
+
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react'; // Import ChevronDown, ChevronUp and X
+import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
@@ -185,10 +186,10 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     } catch (error) {
       console.error('❌ Erro ao renderizar preview da atividade compartilhada:', error);
       return (
-        <div className="flex items-center justify-center p-8 text-white">
+        <div className="flex items-center justify-center p-8" style={{ color: '#ffffff' }}>
           <div className="text-center">
-            <Eye className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-300">Erro ao carregar pré-visualização</p>
+            <Eye className="w-12 h-12 mx-auto mb-4" style={{ color: '#9ca3af' }} />
+            <p style={{ color: '#d1d5db' }}>Erro ao carregar pré-visualização</p>
           </div>
         </div>
       );
@@ -212,7 +213,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       left: ${cardRect.left}px;
       width: ${cardRect.width}px;
       height: ${cardRect.height}px;
-      background: white;
+      background: #111827;
       border-radius: 16px;
       z-index: 9999;
       overflow: hidden;
@@ -285,7 +286,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       left: 0px;
       width: 100vw;
       height: 100vh;
-      background: ${document.documentElement.classList.contains('dark') ? '#111827' : 'white'};
+      background: #111827;
       border-radius: 0px;
       z-index: 10000;
       overflow: hidden;
@@ -324,106 +325,137 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }, 500);
   };
 
+  // Estilos forçados para tema escuro - aplicados diretamente via CSS inline
+  const darkThemeStyles = {
+    container: {
+      backgroundColor: '#0f172a',
+      color: '#ffffff',
+      colorScheme: 'dark'
+    },
+    card: {
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      color: '#ffffff'
+    },
+    text: {
+      color: '#ffffff'
+    },
+    textSecondary: {
+      color: '#e5e7eb'
+    },
+    textMuted: {
+      color: '#9ca3af'
+    },
+    button: {
+      color: '#ffffff'
+    }
+  };
+
   return (
-    <div className="w-full max-w-4xl dark" style={{ colorScheme: 'dark' }}>
+    <div style={darkThemeStyles.container} className="w-full max-w-4xl">
       {/* UniversalActivityHeader - Com estilo específico para página de compartilhamento */}
-      <UniversalActivityHeader
-        isSharedActivity={true}
-        activityTitle={atividadeSincronizada?.titulo || titulo}
-        activityId={atividadeSincronizada?.id || atividade?.id}
-        activityIcon={(() => {
-          const activityType = atividadeSincronizada?.tipo || '';
-          if (activityType.includes('flash-cards')) {
-            return () => (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-              </svg>
-            );
-          } else if (activityType.includes('quiz')) {
-            return () => (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            );
-          } else if (activityType.includes('lista-exercicios')) {
-            return () => (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
-              </svg>
-            );
-          } else if (activityType.includes('plano-aula')) {
-            return () => (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
-              </svg>
-            );
-          } else if (activityType.includes('sequencia-didatica')) {
-            return () => (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
-              </svg>
-            );
-          } else {
-            return () => (
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-            );
-          }
-        })()}
-        activityType={(() => {
-          const tipo = atividadeSincronizada?.tipo || '';
-          if (tipo.includes('flash-cards')) return 'Flash Cards';
-          if (tipo.includes('quiz')) return 'Quiz Interativo';
-          if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
-          if (tipo.includes('plano-aula')) return 'Plano de Aula';
-          if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
-          if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
-          if (tipo.includes('mapa-mental')) return 'Mapa Mental';
-          return 'Atividade';
-        })()}
-        activityId={atividadeSincronizada?.id || 'atividade-compartilhada'}
-        userName={atividade?.professorNome || 'Prof. João'}
-        userAvatar={atividade?.professorAvatar}
-        schoolPoints={atividade?.schoolPoints || 100}
-        onMoreOptions={() => {
-          console.log('Menu de opções na atividade compartilhada');
-        }}
-        onAddToClass={() => {
-          console.log('Adicionar à aula - atividade compartilhada');
-        }}
-        onDownload={() => {
-          console.log('Download da atividade compartilhada');
-        }}
-        onShare={() => {
-          console.log('Compartilhar atividade');
-        }}
-        onSendMaterial={() => {
-          console.log('Enviar material da atividade compartilhada');
-        }}
-        onMakePrivate={() => {
-          console.log('Tornar atividade privada');
-        }}
-        onDelete={() => {
-          console.log('Deletar atividade compartilhada');
-        }}
-        showShareButton={true}
-      />
+      <div style={darkThemeStyles.container}>
+        <UniversalActivityHeader
+          isSharedActivity={true}
+          activityTitle={atividadeSincronizada?.titulo || titulo}
+          activityId={atividadeSincronizada?.id || atividade?.id}
+          activityIcon={(() => {
+            const activityType = atividadeSincronizada?.tipo || '';
+            if (activityType.includes('flash-cards')) {
+              return () => (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                </svg>
+              );
+            } else if (activityType.includes('quiz')) {
+              return () => (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              );
+            } else if (activityType.includes('lista-exercicios')) {
+              return () => (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                </svg>
+              );
+            } else if (activityType.includes('plano-aula')) {
+              return () => (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/>
+                </svg>
+              );
+            } else if (activityType.includes('sequencia-didatica')) {
+              return () => (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
+                </svg>
+              );
+            } else {
+              return () => (
+                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+              );
+            }
+          })()}
+          activityType={(() => {
+            const tipo = atividadeSincronizada?.tipo || '';
+            if (tipo.includes('flash-cards')) return 'Flash Cards';
+            if (tipo.includes('quiz')) return 'Quiz Interativo';
+            if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
+            if (tipo.includes('plano-aula')) return 'Plano de Aula';
+            if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
+            if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
+            if (tipo.includes('mapa-mental')) return 'Mapa Mental';
+            return 'Atividade';
+          })()}
+          activityId={atividadeSincronizada?.id || 'atividade-compartilhada'}
+          userName={atividade?.professorNome || 'Prof. João'}
+          userAvatar={atividade?.professorAvatar}
+          schoolPoints={atividade?.schoolPoints || 100}
+          onMoreOptions={() => {
+            console.log('Menu de opções na atividade compartilhada');
+          }}
+          onAddToClass={() => {
+            console.log('Adicionar à aula - atividade compartilhada');
+          }}
+          onDownload={() => {
+            console.log('Download da atividade compartilhada');
+          }}
+          onShare={() => {
+            console.log('Compartilhar atividade');
+          }}
+          onSendMaterial={() => {
+            console.log('Enviar material da atividade compartilhada');
+          }}
+          onMakePrivate={() => {
+            console.log('Tornar atividade privada');
+          }}
+          onDelete={() => {
+            console.log('Deletar atividade compartilhada');
+          }}
+          showShareButton={true}
+        />
+      </div>
 
       {/* Card principal forçado para modo escuro - independente do tema da plataforma */}
-      <Card className="w-full max-w-4xl dark" style={{ colorScheme: 'dark' }}>
-        <CardContent className="p-8 min-h-[550px] flex flex-col dark">
-          {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
-
+      <Card style={darkThemeStyles.card} className="w-full max-w-4xl shadow-xl border">
+        <CardContent style={darkThemeStyles.card} className="p-8 min-h-[550px] flex flex-col">
           {/* Seção de Descrição da Atividade - Expansível com Clique - Forçada para modo escuro */}
           <div className="mb-6">
             <Card 
-              className="dark bg-gradient-to-r from-orange-500/20 to-orange-600/25 border-orange-400/30 rounded-2xl shadow-lg cursor-pointer hover:bg-gradient-to-r hover:from-orange-500/25 hover:to-orange-600/30 hover:border-orange-400/40 transition-all duration-300"
+              style={{
+                background: 'linear-gradient(to right, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.25))',
+                borderColor: 'rgba(251, 146, 60, 0.3)',
+                color: '#ffffff'
+              }}
+              className="rounded-2xl shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl"
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
             >
               <CardContent className={`transition-all duration-500 ease-in-out ${
                 isDescriptionExpanded ? 'p-6' : 'p-3'
-              }`}>
+              }`} style={{ color: '#ffffff' }}>
                 <div className="flex items-start gap-4">
                   {/* Barra lateral indicadora otimizada para modo escuro */}
                   <div className={`w-2 bg-gradient-to-b from-orange-400 to-orange-500 rounded-full flex-shrink-0 transition-all duration-500 shadow-lg shadow-orange-500/30 ${
@@ -507,8 +539,16 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
           {/* Card de Pré-visualização da Atividade forçado para modo escuro */}
           <div className="mb-8 flex-1 relative group">
-            <Card ref={cardRef} className="dark bg-gray-800/90 border-gray-600/40 rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm">
-              <CardContent className="p-0 h-full flex flex-col">
+            <Card 
+              ref={cardRef} 
+              style={{
+                backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                borderColor: 'rgba(75, 85, 99, 0.4)',
+                color: '#ffffff'
+              }}
+              className="rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm"
+            >
+              <CardContent className="p-0 h-full flex flex-col" style={{ color: '#ffffff' }}>
                 <div className="p-4 shadow-lg" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
                   <div className="flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
                     <Eye className="w-5 h-5" />
@@ -518,9 +558,11 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
                 <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
                   {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
-                  <div className="p-4 pointer-events-none overflow-hidden h-full">
+                  <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ color: '#ffffff' }}>
                     <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
-                      {renderActivityPreview()}
+                      <div style={darkThemeStyles.container}>
+                        {renderActivityPreview()}
+                      </div>
                     </div>
                   </div>
 
@@ -540,7 +582,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                     }}
                   >
                     {/* Container unificado com ícone e texto FIXO otimizado para modo escuro */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 text-white pointer-events-none relative">
+                    <div className="opacity-0 group-hover:opacity-100 transition-all duration-800 ease-out transform scale-75 group-hover:scale-100 translate-y-4 group-hover:translate-y-0 flex flex-col items-center gap-4 pointer-events-none relative" style={{ color: '#ffffff' }}>
                       {/* Ícone de play com animação aprimorada otimizado para modo escuro */}
                       <div className="bg-gradient-to-br from-orange-400 to-orange-600 hover:from-orange-300 hover:to-orange-500 rounded-full p-5 shadow-2xl transition-all duration-500 ease-out transform group-hover:rotate-[360deg] group-hover:scale-110 border-2 border-orange-200/40 relative overflow-hidden shadow-orange-500/30">
                         {/* Efeito de brilho interno do ícone otimizado para modo escuro */}
@@ -565,7 +607,12 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <Button
               onClick={handlePresentarAtividade}
-              className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-400/30"
+              style={{
+                background: 'linear-gradient(to right, #f97316, #ea580c)',
+                color: '#ffffff',
+                border: 'none'
+              }}
+              className="flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-400/30"
             >
               <Play className="w-5 h-5" />
               Apresentar Material
@@ -573,7 +620,12 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
             <Button
               onClick={onUsarMaterial}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-400/30"
+              style={{
+                background: 'linear-gradient(to right, #3b82f6, #2563eb)',
+                color: '#ffffff',
+                border: 'none'
+              }}
+              className="flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-400/30"
             >
               <Download className="w-5 h-5" />
               Usar Material
@@ -585,40 +637,41 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       {/* Interface Fullscreen forçada para modo escuro - Container Transform */}
       {isFullscreenMode && (
         <div 
-            ref={fullscreenRef}
-            className="fixed inset-0 z-50 overflow-auto"
-            style={{ 
-              isolation: 'isolate',
-              backgroundColor: '#111827',
-              color: '#ffffff'
-            }}
-          >
+          ref={fullscreenRef}
+          className="fixed inset-0 z-50 overflow-auto"
+          style={{ 
+            isolation: 'isolate',
+            backgroundColor: '#111827',
+            color: '#ffffff',
+            colorScheme: 'dark'
+          }}
+        >
           {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
           <div className="absolute top-4 right-4 z-20">
             <Button
-                onClick={handleCloseFullscreen}
-                variant="ghost"
-                size="icon"
-                className="w-12 h-12 rounded-full backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300"
-                style={{
-                  backgroundColor: 'rgba(31, 41, 55, 0.8)',
-                  borderColor: 'rgba(75, 85, 99, 0.4)',
-                  border: '1px solid',
-                  color: '#ffffff'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.9)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.8)';
-                }}
-              >
-              <X className="w-6 h-6 text-gray-200 hover:text-white transition-colors duration-300" />
+              onClick={handleCloseFullscreen}
+              variant="ghost"
+              size="icon"
+              className="w-12 h-12 rounded-full backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300"
+              style={{
+                backgroundColor: 'rgba(31, 41, 55, 0.8)',
+                borderColor: 'rgba(75, 85, 99, 0.4)',
+                border: '1px solid',
+                color: '#ffffff'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(55, 65, 81, 0.9)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(31, 41, 55, 0.8)';
+              }}
+            >
+              <X className="w-6 h-6" style={{ color: '#e5e7eb' }} />
             </Button>
           </div>
 
           {/* Atividade em Tela Cheia - Totalmente Funcional */}
-          <div className="w-full h-full">
+          <div className="w-full h-full" style={darkThemeStyles.container}>
             {renderActivityPreview()}
           </div>
         </div>
