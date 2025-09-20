@@ -5,8 +5,6 @@ import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react'; /
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
-import { checkAuthentication } from '@/lib/auth-utils';
-import { LoginForm } from '@/components/auth/LoginForm';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -106,10 +104,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   const cardRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
 
-  // Estados para controle de autenticação e interface de login
-  const [showLoginInterface, setShowLoginInterface] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
-
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
     if (!atividadeSincronizada) return null;
@@ -201,75 +195,14 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }
   };
 
-  /**
-   * Função para verificar autenticação baseada em cookies
-   * Verifica se existe uma sessão válida antes de permitir apresentar a atividade
-   */
-  const verificarAutenticacao = async (): Promise<boolean> => {
-    try {
-      setIsCheckingAuth(true);
-      
-      // Utilizar a função de verificação de autenticação já existente
-      // que verifica cookies, localStorage e sessão do Supabase
-      const isAuthenticated = await checkAuthentication();
-      
-      console.log('🔐 [AUTH] Verificação de autenticação:', { isAuthenticated });
-      
-      return isAuthenticated;
-    } catch (error) {
-      console.error('❌ [AUTH] Erro ao verificar autenticação:', error);
-      
-      // Em caso de erro, considerar como não autenticado para segurança
-      return false;
-    } finally {
-      setIsCheckingAuth(false);
-    }
-  };
-
-  /**
-   * Função principal para apresentar atividade com verificação de autenticação
-   * Primeiro verifica se o usuário está autenticado antes de proceder
-   */
+  // Função para iniciar Container Transform (expansão do card)
   const handlePresentarAtividade = async () => {
-    // Verificar se não está em processo de animação
-    if (!cardRef.current || isAnimating || isCheckingAuth) return;
+    if (!cardRef.current || isAnimating) return;
 
-    try {
-      console.log('🎯 [APRESENTAR] Iniciando verificação de autenticação...');
-      
-      // Verificar autenticação baseada em cookies/sessão
-      const isUserAuthenticated = await verificarAutenticacao();
-      
-      if (!isUserAuthenticated) {
-        console.log('🚫 [AUTH] Usuário não autenticado - redirecionando para login');
-        
-        // Usuário não autenticado: mostrar interface de login
-        setShowLoginInterface(true);
-        return;
-      }
-      
-      console.log('✅ [AUTH] Usuário autenticado - prosseguindo com apresentação');
-      
-      // Usuário autenticado: prosseguir com a lógica original de apresentação
-      await executarApresentacaoAtividade();
-      
-    } catch (error) {
-      console.error('❌ [APRESENTAR] Erro durante processo de apresentação:', error);
-      
-      // Em caso de erro, redirecionar para login por segurança
-      setShowLoginInterface(true);
-    }
-  };
-
-  /**
-   * Função que executa a lógica original de apresentação da atividade
-   * Isolada para manter a organização do código
-   */
-  const executarApresentacaoAtividade = async () => {
     setIsAnimating(true);
 
     // Obter posição inicial do card
-    const cardRect = cardRef.current!.getBoundingClientRect();
+    const cardRect = cardRef.current.getBoundingClientRect();
     
     // Criar elemento temporário para animação
     const animationElement = document.createElement('div');
@@ -289,7 +222,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     `;
     
     // Clonar conteúdo do card original
-    const cardClone = cardRef.current!.cloneNode(true) as HTMLElement;
+    const cardClone = cardRef.current.cloneNode(true) as HTMLElement;
     cardClone.style.transform = 'scale(0.75)';
     cardClone.style.transformOrigin = 'top left';
     animationElement.appendChild(cardClone);
@@ -390,61 +323,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       document.body.style.overflow = 'auto';
     }, 500);
   };
-
-  /**
-   * Função para fechar a interface de login e voltar para a atividade
-   * Chamada quando o usuário cancela o login ou após login bem-sucedido
-   */
-  const handleCloseLogin = () => {
-    console.log('🔙 [LOGIN] Fechando interface de login');
-    setShowLoginInterface(false);
-  };
-
-  /**
-   * Função chamada após login bem-sucedido
-   * Fecha a interface de login e inicia apresentação da atividade
-   */
-  const handleLoginSuccess = async () => {
-    console.log('✅ [LOGIN] Login realizado com sucesso - iniciando apresentação');
-    setShowLoginInterface(false);
-    
-    // Aguardar um breve momento para garantir que o estado seja atualizado
-    setTimeout(async () => {
-      await executarApresentacaoAtividade();
-    }, 100);
-  };
-
-  // Renderizar interface de login se usuário não estiver autenticado
-  if (showLoginInterface) {
-    return (
-      <div className="w-full max-w-4xl min-h-screen flex items-center justify-center">
-        <div className="w-full max-w-md">
-          <div className="mb-6 text-center">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Acesso Necessário
-            </h2>
-            <p className="text-gray-300">
-              Para apresentar esta atividade, você precisa estar logado na plataforma.
-            </p>
-          </div>
-          
-          <div className="bg-white/95 dark:bg-gray-900/95 rounded-2xl p-6 shadow-2xl">
-            <LoginForm onLoginSuccess={handleLoginSuccess} />
-            
-            <div className="mt-4 text-center">
-              <Button
-                onClick={handleCloseLogin}
-                variant="ghost"
-                className="text-gray-600 hover:text-gray-800"
-              >
-                Voltar para Atividade
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-4xl">
@@ -687,20 +565,10 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <Button
             onClick={handlePresentarAtividade}
-            disabled={isCheckingAuth || isAnimating}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 flex items-center justify-center gap-2"
+            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
           >
-            {isCheckingAuth ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Verificando...
-              </>
-            ) : (
-              <>
-                <Play className="w-5 h-5" />
-                Apresentar Material
-              </>
-            )}
+            <Play className="w-5 h-5" />
+            Apresentar Material
           </Button>
 
           <Button
