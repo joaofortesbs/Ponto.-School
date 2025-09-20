@@ -16,6 +16,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [accountCreated, setAccountCreated] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,8 +30,10 @@ export function LoginForm() {
   useEffect(() => {
     // Verificar se veio da tela de registro
     if (location.state && location.state.newAccount) {
-      // Clear the state to prevent showing any messages on refresh
-      window.history.replaceState({}, document.title);
+      setAccountCreated(true);
+      setTimeout(() => {
+        setAccountCreated(false);
+      }, 8000); // Aumentado para 8 segundos para dar mais tempo de leitura
 
       // Limpar flag de redirecionamento
       localStorage.removeItem("redirectTimer");
@@ -65,8 +68,10 @@ export function LoginForm() {
     // Verificar o parâmetro na URL também
     const params = new URLSearchParams(location.search);
     if (params.get("newAccount") === "true") {
-      // Clear the state to prevent showing any messages on refresh
-      window.history.replaceState({}, document.title);
+      setAccountCreated(true);
+      setTimeout(() => {
+        setAccountCreated(false);
+      }, 8000); // Aumentado para 8 segundos
 
       // Limpar flag de redirecionamento
       localStorage.removeItem("redirectTimer");
@@ -81,8 +86,8 @@ export function LoginForm() {
     // Executar sempre na montagem do componente para verificar se existe um redirecionamento pendente
     const pendingRedirect = localStorage.getItem("redirectTimer");
     if (pendingRedirect === "active") {
-      // Clear the state to prevent showing any messages on refresh
-      window.history.replaceState({}, document.title);
+      setAccountCreated(true);
+      localStorage.removeItem("redirectTimer");
 
       const lastUsername = localStorage.getItem("lastRegisteredUsername");
       if (lastUsername) {
@@ -250,6 +255,20 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6 rounded-2xl">
+      {accountCreated && (
+        <div className="bg-green-100/80 dark:bg-green-900/30 border border-green-500/70 dark:border-green-600/70 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md backdrop-blur-sm">
+          <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
+            <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
+            <p className="text-sm mt-1">
+              Sua conta foi criada e seus dados foram salvos com sucesso. Use
+              suas credenciais para fazer login.
+            </p>
+          </div>
+        </div>
+      )}
       {success && (
         <div className="bg-white/30 dark:bg-[#0A2540]/30 border border-green-500/50 backdrop-blur-md mb-4 rounded-lg p-4 shadow-md">
           <div className="flex items-center gap-3">

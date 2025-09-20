@@ -25,20 +25,6 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   const finalActivityId = propActivityId || activityId;
   const finalUniqueCode = propUniqueCode || uniqueCode;
 
-  // Estilos forçados para tema escuro
-  const darkThemeStyles = {
-    container: {
-      backgroundColor: '#0f172a',
-      color: '#ffffff',
-      colorScheme: 'dark' as const
-    },
-    card: {
-      backgroundColor: '#1e293b',
-      borderColor: '#334155',
-      color: '#ffffff'
-    }
-  };
-
   useEffect(() => {
     const carregarAtividade = async () => {
       if (!finalActivityId || !finalUniqueCode) {
@@ -94,17 +80,17 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
   if (carregando) {
     return (
-      <div className="relative min-h-screen w-full overflow-hidden" style={darkThemeStyles.container}>
+      <div className="relative min-h-screen w-full overflow-hidden" style={{ backgroundColor: "rgb(15, 23, 42)" }}>
         {/* Background de partículas */}
         <ParticlesBackground isDarkTheme={true} />
         
         {/* Conteúdo centralizado */}
         <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-          <Card style={darkThemeStyles.card} className="w-full max-w-md shadow-xl">
-            <CardContent className="p-8 text-center" style={{ color: '#ffffff' }}>
-              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: '#f97316' }} />
-              <h3 className="text-lg font-semibold mb-2" style={{ color: '#ffffff' }}>Carregando atividade...</h3>
-              <p style={{ color: '#d1d5db' }}>
+          <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+            <CardContent className="p-8 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-orange-500" />
+              <h3 className="text-lg font-semibold mb-2 text-white">Carregando atividade...</h3>
+              <p className="text-slate-300">
                 Aguarde enquanto buscamos a atividade compartilhada.
               </p>
             </CardContent>
@@ -116,25 +102,20 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
   if (erro) {
     return (
-      <div className="relative min-h-screen w-full overflow-hidden" style={darkThemeStyles.container}>
+      <div className="relative min-h-screen w-full overflow-hidden" style={{ backgroundColor: "rgb(15, 23, 42)" }}>
         {/* Background de partículas */}
         <ParticlesBackground isDarkTheme={true} />
         
         {/* Conteúdo centralizado */}
         <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
-          <Card style={darkThemeStyles.card} className="w-full max-w-md shadow-xl">
-            <CardContent className="p-8 text-center" style={{ color: '#ffffff' }}>
-              <AlertCircle className="w-12 h-12 mx-auto mb-4" style={{ color: '#ef4444' }} />
-              <h3 className="text-lg font-semibold mb-2" style={{ color: '#ef4444' }}>Erro ao carregar</h3>
-              <p style={{ color: '#fca5a5' }} className="mb-6">{erro}</p>
+          <Card className="w-full max-w-md bg-slate-800/90 border-slate-700">
+            <CardContent className="p-8 text-center">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
+              <h3 className="text-lg font-semibold mb-2 text-red-400">Erro ao carregar</h3>
+              <p className="text-red-300 mb-6">{erro}</p>
               <Button 
                 onClick={() => window.location.reload()}
-                style={{
-                  backgroundColor: '#f97316',
-                  color: '#ffffff',
-                  border: 'none'
-                }}
-                className="w-full hover:bg-orange-700 transition-colors"
+                className="w-full bg-orange-600 hover:bg-orange-700"
               >
                 Tentar Novamente
               </Button>
@@ -160,7 +141,7 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden" style={darkThemeStyles.container}>
+    <div className="relative min-h-screen w-full overflow-hidden" style={{ backgroundColor: "rgb(15, 23, 42)" }}>
       {/* Background de partículas - igual ao School Power */}
       <ParticlesBackground isDarkTheme={true} />
       
