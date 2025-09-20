@@ -1,7 +1,17 @@
-import { Pool } from 'pg';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+// ⚠️ ARQUIVO DESABILITADO POR SEGURANÇA ⚠️
+// ESTE CÓDIGO NÃO DEVE SER EXECUTADO NO FRONTEND
+// DATABASE_URL e outras credenciais não devem ser expostas no cliente
+throw new Error('neon-db.ts foi desabilitado por segurança. Use api-client.ts para autenticação.');
+
+/* 
+PROBLEMAS DE SEGURANÇA CRÍTICOS IDENTIFICADOS:
+1. Pool de PostgreSQL importado no frontend expõe DATABASE_URL
+2. bcrypt e JWT executando no cliente
+3. Credentials de banco acessíveis via bundle JavaScript
+4. Duplicação desnecessária de lógica já implementada no backend
+
+SOLUÇÃO: Use src/services/api-client.ts para todas operações de autenticação
+*/
 
 // Configuração do pool de conexões com Neon
 const pool = new Pool({

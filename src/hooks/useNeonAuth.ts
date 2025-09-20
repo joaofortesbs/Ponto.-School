@@ -1,6 +1,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { neonDB, User, Session } from '@/lib/neon-db';
+import { ApiClient } from '@/services/api-client';
+
+// Interfaces locais (removidas de neon-db.ts por segurança)
+interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  role?: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  display_name?: string;
+  bio?: string;
+  user_id?: string;
+  instituição_ensino?: string;
+  estado_uf?: string;
+}
+
+interface Session {
+  access_token: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -36,60 +56,6 @@ export function useNeonAuth() {
     });
   }, []);
 
-  // Função auxiliar para verificar e gerar ID do usuário (adaptada do useAuth original)
-  const checkAndGenerateUserId = useCallback(async (user: User) => {
-    if (!user) return;
-
-    try {
-      // Se já tiver ID válido, não precisa gerar
-      if (user.user_id && /^[A-Z]{2}\d{4}[1-2]\d{6}$/.test(user.user_id)) {
-        console.log('Usuário já possui ID válido:', user.user_id);
-        return;
-      }
-
-      console.log('Gerando ID para usuário existente...');
-
-      // Obter dados necessários para gerar o ID
-      let uf = user.estado_uf || '';
-
-      // Tentar diferentes fontes para obter a UF
-      if (!uf || uf.length !== 2 || uf === 'BR') {
-        // Usar localStorage como fallback
-        const savedState = localStorage.getItem('selectedState');
-        if (savedState && savedState.length === 2 && savedState !== 'BR') {
-          uf = savedState.toUpperCase();
-        } else {
-          // Último recurso: usar SP como padrão
-          uf = 'SP';
-        }
-      }
-
-      // Determinar tipo de conta
-      let tipoConta = 2; // Padrão: tipo básico (2)
-      
-      // Gerar ID usando nossa função
-      const generatedId = await neonDB.generateSequentialUserId(uf, tipoConta);
-
-      if (generatedId) {
-        // Atualizar o perfil com o novo ID
-        const { error: updateError } = await neonDB.updateProfile(user.id, {
-          user_id: generatedId,
-          estado_uf: uf,
-        });
-
-        if (updateError) {
-          console.error('Erro ao atualizar perfil com ID:', updateError);
-        } else {
-          console.log('ID de usuário gerado com sucesso:', generatedId);
-          // Atualizar o estado local
-          setAuth({ ...user, user_id: generatedId, estado_uf: uf }, authState.session, false);
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao verificar/gerar ID de usuário:', error);
-    }
-  }, [authState.session, setAuth]);
-
   // Verificar token existente ao carregar
   useEffect(() => {
     const checkStoredAuth = async () => {
@@ -100,26 +66,26 @@ export function useNeonAuth() {
           return;
         }
 
-        // Verificar se o token ainda é válido
-        const { user, error } = await neonDB.verifyToken(token);
+        // Verificar se o token ainda é válido via API
+        const response = await fetch('/api/auth/verify', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         
-        if (error || !user) {
+        if (!response.ok) {
           localStorage.removeItem('neon_auth_token');
           setAuth(null, null, false);
           return;
         }
 
+        const { user } = await response.json();
+        
         const session: Session = {
-          access_token: token,
-          user
+          access_token: token
         };
 
         setAuth(user, session, false);
-
-        // Verificar e gerar ID se necessário
-        if (user) {
-          await checkAndGenerateUserId(user);
-        }
       } catch (error) {
         console.error('Erro na verificação de autenticação:', error);
         localStorage.removeItem('neon_auth_token');
@@ -128,14 +94,14 @@ export function useNeonAuth() {
     };
 
     checkStoredAuth();
-  }, [checkAndGenerateUserId, setAuth]);
+  }, [setAuth]);
 
   // Função de login
   const login = useCallback(async (email: string, password: string) => {
     try {
       setAuth(null, null, true, null);
       
-      const { user, session, error } = await neonDB.signInWithPassword(email, password);
+      const { user, session, error } = await ApiClient.signInWithPassword(email, password);
 
       if (error || !user || !session) {
         setAuth(null, null, false, error);
@@ -147,35 +113,37 @@ export function useNeonAuth() {
       
       setAuth(user, session, false);
 
-      // Verificar e gerar ID de usuário se necessário
-      if (user) {
-        await checkAndGenerateUserId(user);
-      }
-
       return { user, error: null };
     } catch (error) {
       console.error('Erro no login:', error);
       setAuth(null, null, false, error);
       return { user: null, error };
     }
-  }, [setAuth, checkAndGenerateUserId]);
+  }, [setAuth]);
 
   // Função de registro
   const register = useCallback(async (email: string, password: string, userData?: Record<string, any>) => {
     try {
       setAuth(null, null, true, null);
       
-      const { user, error } = await neonDB.signUp(email, password, userData);
+      const { user, session, error } = await ApiClient.register(email, password, userData);
 
       if (error || !user) {
         setAuth(null, null, false, error);
         return { user: null, error };
       }
 
-      // Após registro bem-sucedido, fazer login automaticamente
-      const loginResult = await login(email, password);
+      // Se o registro incluiu login automático
+      if (session) {
+        localStorage.setItem('neon_auth_token', session.access_token);
+        setAuth(user, session, false);
+      } else {
+        // Caso contrário, fazer login separadamente
+        const loginResult = await login(email, password);
+        return loginResult;
+      }
       
-      return loginResult;
+      return { user, error: null };
     } catch (error) {
       console.error('Erro no registro:', error);
       setAuth(null, null, false, error);
@@ -191,56 +159,61 @@ export function useNeonAuth() {
       // Remover token do localStorage
       localStorage.removeItem('neon_auth_token');
       
-      const { error } = await neonDB.signOut();
+      // Chamar endpoint de logout no backend (opcional)
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (e) {
+        // Ignorar erros do logout no backend - o importante é limpar o cliente
+      }
 
       setAuth(null, null, false);
       navigate('/login');
       
-      return { error };
+      return { error: null };
     } catch (error) {
       console.error('Erro no logout:', error);
-      setAuth(authState.user, authState.session, false, error);
+      setAuth(null, null, false, error);
       return { error };
     }
-  }, [authState.session, authState.user, setAuth, navigate]);
+  }, [setAuth, navigate]);
 
-  // Função para resetar senha (implementação básica)
-  const resetPassword = useCallback(async (email: string) => {
+  // Função para atualizar perfil
+  const updateProfile = useCallback(async (updates: Partial<User>) => {
     try {
-      // Por enquanto, apenas uma implementação placeholder
-      // Em uma implementação completa, você enviaria um email com link de reset
-      console.log('Reset de senha solicitado para:', email);
-      return { error: null };
-    } catch (error) {
-      console.error('Erro no reset de senha:', error);
-      return { error };
-    }
-  }, []);
-
-  // Função para atualizar senha
-  const updatePassword = useCallback(async (newPassword: string) => {
-    try {
-      if (!authState.user) {
-        return { error: { message: 'Usuário não autenticado' } };
+      if (!authState.user || !authState.session) {
+        throw new Error('Usuário não autenticado');
       }
 
-      // Por enquanto, placeholder - em implementação completa você atualizaria a senha no banco
-      console.log('Atualização de senha para usuário:', authState.user.id);
-      return { error: null };
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authState.session.access_token}`
+        },
+        body: JSON.stringify(updates)
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao atualizar perfil');
+      }
+
+      const { user } = await response.json();
+      
+      setAuth(user, authState.session, false);
+      
+      return { user, error: null };
     } catch (error) {
-      console.error('Erro na atualização de senha:', error);
-      return { error };
+      console.error('Erro ao atualizar perfil:', error);
+      return { user: null, error };
     }
-  }, [authState.user]);
+  }, [authState.user, authState.session, setAuth]);
 
   return {
     ...authState,
     login,
     register,
     logout,
-    resetPassword,
-    updatePassword
+    updateProfile,
+    setAuth
   };
 }
-
-export default useNeonAuth;
