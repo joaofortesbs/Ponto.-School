@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2 } from 'lucide-react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { MoreHorizontal, Pencil, Route, Plus, Download, Share2, Send, Lock, Trash2, Link } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -183,7 +182,10 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
   const [currentSPs, setCurrentSPs] = React.useState(schoolPoints);
   const [tempSPs, setTempSPs] = React.useState(schoolPoints.toString());
   const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
-  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   // Usar dados do hook se não forem fornecidos via props
   const finalUserName = userName || userInfo.name || 'Usuário';
   const finalUserAvatar = userAvatar || userInfo.avatar;
@@ -195,13 +197,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
       console.log('🎯 UniversalActivityHeader: Usando ícone sincronizado para activityId:', activityId);
       return getIconByActivityId(activityId);
     }
-    
+
     // PRIORIDADE 2: Se ActivityIcon foi passado diretamente
     if (ActivityIcon) {
       console.log('🎯 UniversalActivityHeader: Usando ícone passado via props');
       return ActivityIcon;
     }
-    
+
     // PRIORIDADE 3: Buscar no schoolPowerActivities por activityType
     if (activityType && schoolPowerActivities) {
       const activity = schoolPowerActivities.find(act => 
@@ -212,14 +214,14 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
         return getIconByActivityId(activity.id);
       }
     }
-    
+
     // FALLBACK: Ícone padrão
     console.log('🎯 UniversalActivityHeader: Usando ícone padrão (BookOpen)');
     return BookOpen;
   };
 
   const FinalActivityIcon = getActivityIcon();
-  
+
   // Função para obter as iniciais do nome do usuário
   const getUserInitials = (name: string) => {
     return name
@@ -270,6 +272,50 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     }
   };
 
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setIsDropdownOpen(false);
+    }
+  }, []);
+
+  const handleShareActivity = useCallback(async () => {
+    try {
+      // Gerar link de compartilhamento baseado no activityId
+      const shareLink = `${window.location.origin}/atividade/${activityId}/${Date.now().toString(36)}`;
+
+      // Copiar para área de transferência
+      await navigator.clipboard.writeText(shareLink);
+
+      // Mostrar animação de sucesso
+      setShowCopySuccess(true);
+
+      // Esconder animação após 3 segundos
+      setTimeout(() => {
+        setShowCopySuccess(false);
+      }, 3000);
+
+      console.log('✅ Link de compartilhamento copiado:', shareLink);
+
+    } catch (error) {
+      console.error('❌ Erro ao copiar link:', error);
+
+      // Fallback para casos onde a clipboard API não funciona
+      const textArea = document.createElement('textarea');
+      const shareLink = `${window.location.origin}/atividade/${activityId}/${Date.now().toString(36)}`;
+      textArea.value = shareLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      // Mostrar animação de sucesso mesmo no fallback
+      setShowCopySuccess(true);
+      setTimeout(() => {
+        setShowCopySuccess(false);
+      }, 3000);
+    }
+  }, [activityId]);
+
   // Definir estilo condicional baseado na prop isSharedActivity
   const headerStyle = isSharedActivity 
     ? { backgroundColor: '#021321' }
@@ -293,7 +339,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             <h1 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
               {activityTitle}
             </h1>
-            
+
             {/* Linha do Professor */}
             <div className="flex items-center gap-2 mt-1">
               <Avatar className="w-7 h-7 rounded-full border-2 border-orange-400 dark:border-orange-500">
@@ -365,6 +411,23 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
             </div>
           </div>
 
+          {/* Compartilhar Atividade */}
+          <div 
+            onClick={handleShareActivity}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 border border-blue-400/30 cursor-pointer hover:from-blue-600 hover:to-blue-700 group relative"
+            title="Compartilhar atividade"
+          >
+            <Link className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
+
+            {/* Animação de sucesso */}
+            {showCopySuccess && (
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-medium shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
+                Link copiado!
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-600"></div>
+              </div>
+            )}
+          </div>
+
           {/* Dropdown de Mais Opções - Apenas se não for página de compartilhamento */}
           {!isSharedActivity && (
             <DropdownMenu>
@@ -410,7 +473,7 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
           )}
         </div>
       </div>
-      
+
       {/* Modal de Compartilhar */}
       <ShareActivityModal
         isOpen={isShareModalOpen}
