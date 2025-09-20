@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -151,7 +150,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           } else if (activityType.includes('sequencia-didatica')) {
             return () => (
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h-1.11c-.86-.86-1.98-1.31-3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33V9h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
+                <path d="M9 4v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05l3.33 3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V15H8v1.38c-.83-.33-1.72-.5-2.61-.5-1.79 0-3.58.68-4.95 2.05L3.77 21.3c.69.69 1.73.69 2.42 0l3.33-3.33h1.11v1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36V9h-1v1.56c-1.13.05-2.25.5-3.11 1.36v1.11H9.89l-3.33-3.33c-.69-.69-1.73-.69-2.42 0L.81 12.03c-.69.69-.69 1.73 0 2.42l3.33 3.33v1.11h1.11c.86.86 1.98 1.31 3.11 1.36V22h1v-1.56c1.13-.05 2.25-.5 3.11-1.36v-1.11h1.11l3.33 3.33c.69.69 1.73.69 2.42 0l3.33-3.33c.69-.69.69-1.73 0-2.42l-3.33-3.33v-1.11h1.11c.86.86 1.98 1.31 3.11 1.36V9h-1.11c-.86-.86-1.98-1.31-3.11-1.36V4h-1z"/>
               </svg>
             );
           } else {
@@ -200,11 +199,11 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         }}
       />
 
-      {/* Card principal com fundo escuro */}
-      <Card className="w-full min-h-[600px] bg-slate-800/90 border-slate-700 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0">
+      {/* Card principal com fundo fosco borrado */}
+      <Card className="w-full min-h-[600px] bg-slate-800/87 border-slate-700 backdrop-blur-lg rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0">
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
-        
+
 
         {/* Card de Pré-visualização da Atividade */}
         <div className="mb-8 flex-1 relative group">
@@ -226,9 +225,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
 
                 {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
-                <div 
+                <div
                   className="absolute inset-0 z-40 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 transition-all duration-700 ease-in-out flex items-center justify-center"
-                  style={{ 
+                  style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
