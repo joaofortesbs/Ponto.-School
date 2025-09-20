@@ -22,7 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ApiClient } from "@/services/api-client";
 import { generateUserId, generateUserIdByPlan, isValidUserId } from "@/lib/generate-user-id";
-import { supabase } from "@/lib/supabaseClient"; // Importar supabase
+import { supabase } from "@/lib/supabase"; // Importar supabase
 
 interface FormData {
   fullName: string;
