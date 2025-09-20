@@ -200,7 +200,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       />
 
       {/* Card principal com fundo fosco borrado */}
-      <Card className="w-full min-h-[600px] bg-slate-800/87 border-slate-700 backdrop-blur-lg rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0">
+      <Card className="w-full min-h-[600px] border-slate-700 backdrop-blur-lg rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0" style={{ backgroundColor: '#021321' }}>
         <CardContent className="p-8 min-h-[550px] flex flex-col">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
 

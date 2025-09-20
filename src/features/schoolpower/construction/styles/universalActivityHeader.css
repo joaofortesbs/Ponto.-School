@@ -2,7 +2,7 @@
 /* Estilos para o Cabeçalho Universal das Atividades */
 .universal-activity-header {
   position: relative;
-  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 50%, #fff7ed 100%);
+  background: #021321 !important;
   border-bottom: 2px solid #fed7aa;
   box-shadow: 0 4px 12px rgba(255, 107, 0, 0.08);
   transition: all 0.3s ease;
@@ -13,7 +13,7 @@
 
 /* Dark mode support */
 .dark .universal-activity-header {
-  background: linear-gradient(135deg, rgba(255, 107, 0, 0.05) 0%, #1e293b 50%, rgba(255, 107, 0, 0.05) 100%);
+  background: #021321 !important;
   border-bottom-color: rgba(255, 107, 0, 0.3);
   box-shadow: 0 4px 12px rgba(255, 107, 0, 0.15);
 }
