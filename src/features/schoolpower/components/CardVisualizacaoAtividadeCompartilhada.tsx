@@ -325,7 +325,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   };
 
   return (
-    <div className="w-full max-w-4xl dark" style={{ colorScheme: 'dark' }}></div>
+    <div className="w-full max-w-4xl dark" style={{ colorScheme: 'dark' }}>
       {/* UniversalActivityHeader - Com estilo específico para página de compartilhamento */}
       <UniversalActivityHeader
         isSharedActivity={true}
