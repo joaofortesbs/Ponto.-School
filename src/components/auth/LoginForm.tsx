@@ -233,19 +233,7 @@ export function LoginForm() {
         localStorage.setItem("auth_checked", "true");
         localStorage.setItem("auth_status", "authenticated");
 
-        // Se o usuário clicou em "Apresentar Atividade" e não estava logado,
-        // ele será redirecionado para esta página de login.
-        // Após o login bem-sucedido, verificamos se há um redirect pendente.
-        const redirectUrl = localStorage.getItem('redirectAfterLogin');
-
-        if (redirectUrl && redirectUrl.includes('/atividade/')) {
-          console.log("🔄 Redirecionando para atividade compartilhada após login:", redirectUrl);
-          localStorage.removeItem('redirectAfterLogin'); // Limpa o item após o uso
-          window.location.href = redirectUrl; // Usa window.location.href para um redirecionamento completo
-          return; // Interrompe a execução aqui para evitar o navigate padrão
-        }
-
-        // Se não houver um redirect específico para atividade, segue o fluxo normal
+        // Redirecionar rapidamente para melhorar percepção de velocidade
         navigate("/");
       } else {
         setSuccess(false);

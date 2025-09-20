@@ -2,86 +2,74 @@ import { supabase } from "./supabase";
 
 /**
  * Verifica se o usuário está autenticado na aplicação
- * Verificação otimizada que funciona entre múltiplas abas
+ * Consulta o localStorage primeiro e, se necessário, o Supabase
  */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    console.log('🔍 [AUTH] Iniciando verificação de autenticação entre abas...');
+    // Verificar cache local para resposta instantânea
+    const cachedStatus = localStorage.getItem('auth_status');
+    const cacheTime = localStorage.getItem('auth_cache_time');
+    const now = Date.now();
     
-    // 1. Primeiro, sempre verificar a sessão ativa do Supabase
-    // Isso garante que funcione mesmo em novas abas
-    const { data: sessionData, error } = await supabase.auth.getSession();
+    // Resposta instantânea com base no cache recente (validade de 30 minutos)
+    if (cachedStatus === 'authenticated' && cacheTime && (now - parseInt(cacheTime)) < 30 * 60 * 1000) {
+      // Verificar em background após retornar resposta
+      requestAnimationFrame(() => {
+        // Usar Promise.race para limitar tempo de espera
+        Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]).then(({ data }) => {
+          if (!!data?.session !== (cachedStatus === 'authenticated')) {
+            localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
+            localStorage.setItem('auth_cache_time', now.toString());
+          }
+        }).catch(() => {
+          // Ignorar erros silenciosamente na verificação em background
+        });
+      });
+      
+      return true;
+    }
     
-    if (error) {
-      console.error('❌ [AUTH] Erro ao obter sessão do Supabase:', error);
+    // Sem cache válido, mas tentar retornar rápido com base em cache antigo
+    if (cachedStatus === 'authenticated') {
+      // Verificar em background, mas já retornar resposta positiva
+      requestAnimationFrame(() => {
+        supabase.auth.getSession().then(({ data }) => {
+          localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
+          localStorage.setItem('auth_cache_time', now.toString());
+        }).catch(() => {});
+      });
       
-      // Em caso de erro, verificar cookies como fallback
-      const hasSupabaseCookies = document.cookie.includes('sb-') || 
-                                document.cookie.includes('supabase-auth-token');
-      
-      if (hasSupabaseCookies) {
-        console.log('⚠️ [AUTH] Erro no Supabase, mas cookies presentes - assumindo autenticado');
-        return true;
-      }
-      
-      return false;
+      return true;
     }
 
-    const isAuthenticated = !!sessionData?.session;
-    console.log('📋 [AUTH] Sessão ativa encontrada:', isAuthenticated);
+    // Timeout para garantir que a verificação não bloqueie a UI
+    const authPromise = Promise.race([
+      supabase.auth.getSession(),
+      new Promise((resolve) => setTimeout(() => 
+        resolve({data: {session: null}}), 2000))
+    ]);
 
-    // 2. Atualizar cache local para otimizar próximas verificações
-    const now = Date.now();
+    const { data } = await authPromise;
+    const isAuthenticated = !!data?.session;
+
+    // Atualizar cache
     localStorage.setItem('auth_checked', 'true');
     localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
     localStorage.setItem('auth_cache_time', now.toString());
 
-    // 3. Se autenticado, disparar evento para sincronizar outras abas
-    if (isAuthenticated) {
-      // Usar localStorage para comunicação entre abas
-      localStorage.setItem('auth_sync_timestamp', now.toString());
-      
-      // Disparar evento customizado para outras abas
-      try {
-        const event = new StorageEvent('storage', {
-          key: 'auth_sync_timestamp',
-          newValue: now.toString(),
-          url: window.location.href
-        });
-        window.dispatchEvent(event);
-      } catch (e) {
-        console.log('⚠️ [AUTH] Não foi possível disparar evento de sincronização:', e);
-      }
-      
-      console.log('✅ [AUTH] Usuário autenticado - sessão válida encontrada');
-    } else {
-      console.log('❌ [AUTH] Usuário não autenticado - nenhuma sessão ativa');
-    }
-
     return isAuthenticated;
-
   } catch (error) {
-    console.error("❌ [AUTH] Erro crítico na verificação de autenticação:", error);
+    console.error("Erro ao verificar autenticação:", error);
     
-    // Fallback: verificar cookies e cache local
-    const hasSupabaseCookies = document.cookie.includes('sb-') || 
-                              document.cookie.includes('supabase-auth-token');
+    // Em erro, confiar no cache existente
     const cachedStatus = localStorage.getItem('auth_status');
-    const cacheTime = localStorage.getItem('auth_cache_time');
-    
-    // Se temos cookies recentes E cache positivo, assumir autenticado
-    if (hasSupabaseCookies && cachedStatus === 'authenticated' && cacheTime) {
-      const now = Date.now();
-      const timeDiff = now - parseInt(cacheTime);
-      
-      // Se o cache tem menos de 10 minutos, considerar válido
-      if (timeDiff < 10 * 60 * 1000) {
-        console.log('⚠️ [AUTH] Erro, mas cookies + cache recente indicam autenticado');
-        return true;
-      }
+    if (cachedStatus === 'authenticated') {
+      return true;
     }
     
-    console.log('❌ [AUTH] Erro e sem indicações confiáveis de autenticação');
     return false;
   }
 };

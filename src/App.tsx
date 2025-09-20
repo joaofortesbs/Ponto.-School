@@ -116,7 +116,6 @@ function App() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const isPublicRoute = useIsPublicRoute();
-  const [isInitializing, setIsInitializing] = useState(true);
 
 
   useEffect(() => {
@@ -149,43 +148,22 @@ function App() {
     };
 
     const loadingTimeout = setTimeout(() => {
-      setIsInitializing(false);
-    }, 2000);
+      setIsLoading(false);
+      console.log("Timeout de carregamento atingido. Forçando renderização.");
+    }, 3000);
 
-    const handleNetworkConnection = () => {
-      console.log('Conexão de rede detectada');
-    };
+    checkConnection();
 
     const handleLogout = () => {
       localStorage.removeItem('auth_status');
       localStorage.removeItem('auth_checked');
     };
 
-    // Listener para sincronização de autenticação entre abas
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth_sync_timestamp' && e.newValue) {
-        console.log('🔄 [AUTH] Sincronização entre abas detectada');
-
-        // Verificar se há uma sessão ativa e atualizar estado local
-        supabase.auth.getSession().then(({ data }) => {
-          const isAuth = !!data?.session;
-          localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
-          localStorage.setItem('auth_cache_time', Date.now().toString());
-
-          console.log('✅ [AUTH] Estado sincronizado entre abas:', isAuth);
-        }).catch(error => {
-          console.error('❌ [AUTH] Erro na sincronização entre abas:', error);
-        });
-      }
-    };
-
     window.addEventListener('logout', handleLogout);
-    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       clearTimeout(loadingTimeout);
       window.removeEventListener('logout', handleLogout);
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -317,7 +295,7 @@ function App() {
   }
 
   // If not a public route, proceed with authentication check
-  if (isInitializing) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
         <div className="text-center">

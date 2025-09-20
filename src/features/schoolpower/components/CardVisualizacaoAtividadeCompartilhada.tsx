@@ -5,8 +5,6 @@ import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react'; /
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
-import { checkAuthentication } from '@/lib/auth-utils';
-import { useNavigate } from 'react-router-dom';
 
 // Import dos previews das atividades
 import ActivityPreview from '../activities/default/ActivityPreview';
@@ -31,8 +29,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   onApresentarMaterial,
   onUsarMaterial
 }) => {
-  const navigate = useNavigate();
-  
   // Estado para armazenar a atividade sincronizada
   const [atividadeSincronizada, setAtividadeSincronizada] = useState<AtividadeDados | null>(null);
 
@@ -199,78 +195,8 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
     }
   };
 
-  // Função para verificar autenticação e iniciar apresentação
+  // Função para iniciar Container Transform (expansão do card)
   const handlePresentarAtividade = async () => {
-    if (isAnimating) return;
-
-    console.log('🔐 [AUTH] Verificando autenticação do usuário para atividade compartilhada...');
-    
-    try {
-      // Verificação melhorada que funciona entre abas
-      console.log('🔄 [AUTH] Verificando sessão ativa no Supabase...');
-      
-      // Verificar diretamente no Supabase sem depender de cache
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('❌ [AUTH] Erro ao verificar sessão:', sessionError);
-        throw new Error('Erro de autenticação');
-      }
-
-      const isAuthenticated = !!sessionData?.session;
-      
-      if (!isAuthenticated) {
-        console.log('❌ [AUTH] Nenhuma sessão ativa encontrada, redirecionando para login');
-        
-        // Salvar URL atual para retornar após login
-        const currentUrl = window.location.href;
-        localStorage.setItem('redirectAfterLogin', currentUrl);
-        
-        // Limpar possíveis caches inválidos
-        localStorage.removeItem('auth_status');
-        localStorage.removeItem('auth_cache_time');
-        
-        // Redirecionar para página de login
-        navigate('/login');
-        return;
-      }
-
-      console.log('✅ [AUTH] Sessão ativa confirmada, iniciando apresentação da atividade');
-      console.log('👤 [AUTH] Usuário logado:', sessionData.session.user.email);
-
-      // Se autenticado, prosseguir com a apresentação
-      await iniciarApresentacaoAtividade();
-
-    } catch (error) {
-      console.error('❌ [AUTH] Erro crítico ao verificar autenticação:', error);
-      
-      // Em caso de erro, tentar fallback com cookies
-      const hasSupabaseCookies = document.cookie.includes('sb-') || 
-                                document.cookie.includes('supabase-auth-token');
-      
-      if (hasSupabaseCookies) {
-        console.log('⚠️ [AUTH] Erro na verificação, mas cookies encontrados. Tentando prosseguir...');
-        
-        try {
-          await iniciarApresentacaoAtividade();
-          return;
-        } catch (presentationError) {
-          console.error('❌ [AUTH] Falha na apresentação mesmo com cookies:', presentationError);
-        }
-      }
-      
-      // Se chegou até aqui, redirecionar para login
-      const currentUrl = window.location.href;
-      localStorage.setItem('redirectAfterLogin', currentUrl);
-      
-      // Mostrar mensagem mais específica para o usuário
-      console.log('🔄 [AUTH] Redirecionando para login devido a problemas de autenticação');
-      navigate('/login');
-    }
-  };
-
-  // Função para iniciar Container Transform (expansão do card) - separada da verificação de auth
-  const iniciarApresentacaoAtividade = async () => {
     if (!cardRef.current || isAnimating) return;
 
     setIsAnimating(true);
