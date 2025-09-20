@@ -1,7 +1,7 @@
-import React, { useMemo, useEffect, useState } from 'react'; // Import useState and useEffect
+import React, { useMemo, useEffect, useState, useRef } from 'react'; // Import useState, useEffect and useRef
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Download, Eye, ChevronDown, ChevronUp } from 'lucide-react'; // Import ChevronDown and ChevronUp
+import { Play, Download, Eye, ChevronDown, ChevronUp, X } from 'lucide-react'; // Import ChevronDown, ChevronUp and X
 import { AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import { DataSyncService, AtividadeDados } from '../services/data-sync-service';
 import { UniversalActivityHeader } from '../construction/components/UniversalActivityHeader';
@@ -98,6 +98,12 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
   // Estado para controlar se a descrição está expandida - inicia minimizado
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
+  // Estados para Container Transform (Shared Element Transition)
+  const [isFullscreenMode, setIsFullscreenMode] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
+
   // Função para renderizar a pré-visualização baseada no tipo da atividade
   const renderActivityPreview = () => {
     if (!atividadeSincronizada) return null;
@@ -187,6 +193,133 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
       );
     }
+  };
+
+  // Função para iniciar Container Transform (expansão do card)
+  const handlePresentarAtividade = async () => {
+    if (!cardRef.current || isAnimating) return;
+
+    setIsAnimating(true);
+
+    // Obter posição inicial do card
+    const cardRect = cardRef.current.getBoundingClientRect();
+    
+    // Criar elemento temporário para animação
+    const animationElement = document.createElement('div');
+    animationElement.style.cssText = `
+      position: fixed;
+      top: ${cardRect.top}px;
+      left: ${cardRect.left}px;
+      width: ${cardRect.width}px;
+      height: ${cardRect.height}px;
+      background: white;
+      border-radius: 16px;
+      z-index: 9999;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      transform-origin: center;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    `;
+    
+    // Clonar conteúdo do card original
+    const cardClone = cardRef.current.cloneNode(true) as HTMLElement;
+    cardClone.style.transform = 'scale(0.75)';
+    cardClone.style.transformOrigin = 'top left';
+    animationElement.appendChild(cardClone);
+    
+    document.body.appendChild(animationElement);
+
+    // Animar para tela cheia
+    requestAnimationFrame(() => {
+      animationElement.style.top = '0px';
+      animationElement.style.left = '0px';
+      animationElement.style.width = '100vw';
+      animationElement.style.height = '100vh';
+      animationElement.style.borderRadius = '0px';
+      
+      // Escalar conteúdo para tamanho normal
+      const clonedContent = animationElement.firstChild as HTMLElement;
+      if (clonedContent) {
+        clonedContent.style.transform = 'scale(1)';
+        clonedContent.style.height = '100vh';
+      }
+    });
+
+    // Após animação, mostrar interface fullscreen
+    setTimeout(() => {
+      setIsFullscreenMode(true);
+      document.body.removeChild(animationElement);
+      setIsAnimating(false);
+      
+      // Prevenir scroll do body
+      document.body.style.overflow = 'hidden';
+    }, 600);
+
+    // Chamar função original se existir
+    if (onApresentarMaterial) {
+      onApresentarMaterial();
+    }
+  };
+
+  // Função para fechar modo fullscreen com animação reversa
+  const handleCloseFullscreen = async () => {
+    if (!fullscreenRef.current || isAnimating) return;
+
+    setIsAnimating(true);
+
+    // Obter posição do card original
+    const originalCardRect = cardRef.current?.getBoundingClientRect();
+    if (!originalCardRect) return;
+
+    // Criar elemento temporário para animação reversa
+    const animationElement = document.createElement('div');
+    animationElement.style.cssText = `
+      position: fixed;
+      top: 0px;
+      left: 0px;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      border-radius: 0px;
+      z-index: 9999;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    `;
+    
+    // Clonar conteúdo fullscreen
+    const fullscreenClone = fullscreenRef.current.cloneNode(true) as HTMLElement;
+    animationElement.appendChild(fullscreenClone);
+    
+    document.body.appendChild(animationElement);
+    
+    // Esconder interface fullscreen
+    setIsFullscreenMode(false);
+
+    // Animar de volta para posição original
+    requestAnimationFrame(() => {
+      animationElement.style.top = `${originalCardRect.top}px`;
+      animationElement.style.left = `${originalCardRect.left}px`;
+      animationElement.style.width = `${originalCardRect.width}px`;
+      animationElement.style.height = `${originalCardRect.height}px`;
+      animationElement.style.borderRadius = '16px';
+      
+      // Escalar conteúdo de volta
+      const clonedContent = animationElement.firstChild as HTMLElement;
+      if (clonedContent) {
+        clonedContent.style.transform = 'scale(0.75)';
+        clonedContent.style.transformOrigin = 'top left';
+      }
+    });
+
+    // Limpar após animação
+    setTimeout(() => {
+      document.body.removeChild(animationElement);
+      setIsAnimating(false);
+      
+      // Restaurar scroll do body
+      document.body.style.overflow = 'auto';
+    }, 600);
   };
 
   return (
@@ -372,7 +505,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
         {/* Card de Pré-visualização da Atividade */}
         <div className="mb-8 flex-1 relative group">
-          <Card className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
+          <Card ref={cardRef} className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
             <CardContent className="p-0 h-full flex flex-col">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
                 <div className="flex items-center justify-center gap-2 text-white">
@@ -391,7 +524,8 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
                 {/* Container unificado SEMPRE VISÍVEL: Overlay + Ícone + Texto */}
                 <div 
-                  className="absolute inset-0 z-40 pointer-events-auto cursor-default bg-black/0 group-hover:bg-black/40 backdrop-blur-none group-hover:backdrop-blur-sm transition-all duration-700 ease-in-out flex items-center justify-center"
+                  onClick={handlePresentarAtividade}
+                  className="absolute inset-0 z-40 pointer-events-auto cursor-pointer bg-black/0 group-hover:bg-black/40 backdrop-blur-none group-hover:backdrop-blur-sm transition-all duration-700 ease-in-out flex items-center justify-center"
                   style={{ 
                     position: 'absolute',
                     top: 0,
@@ -428,7 +562,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         {/* Botões na base do card */}
         <div className="flex flex-col sm:flex-row gap-4 mt-8">
           <Button
-            onClick={onApresentarMaterial}
+            onClick={handlePresentarAtividade}
             className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5" />
@@ -445,6 +579,107 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         </div>
       </CardContent>
     </Card>
+
+      {/* Interface Fullscreen - Container Transform */}
+      {isFullscreenMode && (
+        <div 
+          ref={fullscreenRef}
+          className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-auto"
+          style={{ isolation: 'isolate' }}
+        >
+          {/* Header da Apresentação */}
+          <div className="sticky top-0 z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
+                  <Play className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                    Apresentação da Atividade
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {atividadeSincronizada?.titulo || titulo}
+                  </p>
+                </div>
+              </div>
+              
+              <Button
+                onClick={handleCloseFullscreen}
+                variant="ghost"
+                size="icon"
+                className="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Conteúdo da Apresentação */}
+          <div className="p-6">
+            {/* Informações da Atividade */}
+            <div className="mb-8">
+              <Card className="bg-gradient-to-r from-orange-50/10 to-orange-100/10 border-orange-200/20 dark:border-orange-700/30 rounded-2xl">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-3 h-20 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white/90 mb-2 flex items-center gap-2">
+                        <span className="text-orange-400">📋</span>
+                        Sobre esta Atividade
+                      </h3>
+                      <p className="text-gray-300 leading-relaxed">
+                        {atividadeSincronizada?.descricao || 'Descrição da atividade não disponível.'}
+                      </p>
+                      
+                      {/* Metadados */}
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        <div className="bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs text-orange-300 font-medium">
+                          {(() => {
+                            const tipo = atividadeSincronizada?.tipo || '';
+                            if (tipo.includes('flash-cards')) return 'Flash Cards';
+                            if (tipo.includes('quiz')) return 'Quiz Interativo';
+                            if (tipo.includes('lista-exercicios')) return 'Lista de Exercícios';
+                            if (tipo.includes('plano-aula')) return 'Plano de Aula';
+                            if (tipo.includes('sequencia-didatica')) return 'Sequência Didática';
+                            if (tipo.includes('quadro-interativo')) return 'Quadro Interativo';
+                            if (tipo.includes('mapa-mental')) return 'Mapa Mental';
+                            return 'Atividade';
+                          })()}
+                        </div>
+                        {atividadeSincronizada?.disciplina && (
+                          <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs text-blue-300 font-medium">
+                            {atividadeSincronizada.disciplina}
+                          </div>
+                        )}
+                        {atividadeSincronizada?.nivel && (
+                          <div className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-xs text-green-300 font-medium">
+                            {atividadeSincronizada.nivel}
+                          </div>
+                        )}
+                        {atividadeSincronizada?.tempo_estimado && (
+                          <div className="bg-purple-500/20 border border-purple-400/30 rounded-full px-3 py-1 text-xs text-purple-300 font-medium">
+                            {atividadeSincronizada.tempo_estimado} min
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Atividade em Tela Cheia */}
+            <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
+              <CardContent className="p-8">
+                <div className="min-h-[70vh]">
+                  {renderActivityPreview()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
