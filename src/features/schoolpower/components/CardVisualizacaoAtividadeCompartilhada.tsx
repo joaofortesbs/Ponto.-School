@@ -411,8 +411,8 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
       />
 
       {/* Card principal forçado para modo escuro - independente do tema da plataforma */}
-      <Card className="w-full min-h-[600px] border-slate-600/40 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0 bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-gray-900/90 dark"></Card>
-        <CardContent className="p-8 min-h-[550px] flex flex-col dark"></CardContent>
+      <Card className="w-full min-h-[600px] border-slate-600/40 backdrop-blur-sm rounded-2xl shadow-2xl mt-0 rounded-t-none border-t-0 bg-gradient-to-br from-slate-800/90 via-slate-900/95 to-gray-900/90 dark">
+        <CardContent className="p-8 min-h-[550px] flex flex-col dark">
           {/* Cabeçalho da Atividade - Removido pois agora está no UniversalActivityHeader */}
 
           {/* Seção de Descrição da Atividade - Expansível com Clique - Forçada para modo escuro */}
@@ -420,7 +420,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             <Card 
               className="dark bg-gradient-to-r from-orange-500/20 to-orange-600/25 border-orange-400/30 rounded-2xl shadow-lg cursor-pointer hover:bg-gradient-to-r hover:from-orange-500/25 hover:to-orange-600/30 hover:border-orange-400/40 transition-all duration-300"
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-            ></Card>
+            >
               <CardContent className={`transition-all duration-500 ease-in-out ${
                 isDescriptionExpanded ? 'p-6' : 'p-3'
               }`}>
@@ -506,9 +506,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           </div>
 
         {/* Card de Pré-visualização da Atividade forçado para modo escuro */}
-        <div className="mb-8 flex-1 relative group">
-          <Card ref={cardRef} className="dark bg-gray-800/90 border-gray-600/40 rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm"></Card>
-            <CardContent className="p-0 h-full flex flex-col">
+          <div className="mb-8 flex-1 relative group">
+            <Card ref={cardRef} className="dark bg-gray-800/90 border-gray-600/40 rounded-2xl shadow-xl overflow-hidden h-full backdrop-blur-sm">
+              <CardContent className="p-0 h-full flex flex-col">
               <div className="p-4 shadow-lg" style={{ background: 'linear-gradient(to right, #f97316, #ea580c)' }}>
                 <div className="flex items-center justify-center gap-2" style={{ color: '#ffffff' }}>
                   <Eye className="w-5 h-5" />
@@ -557,30 +557,30 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Botões na base do card otimizados para modo escuro */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-8">
-          <Button
-            onClick={handlePresentarAtividade}
-            className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-400/30"
-          >
-            <Play className="w-5 h-5" />
-            Apresentar Material
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <Button
+              onClick={handlePresentarAtividade}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-orange-400/30"
+            >
+              <Play className="w-5 h-5" />
+              Apresentar Material
+            </Button>
 
-          <Button
-            onClick={onUsarMaterial}
-            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-400/30"
-          >
-            <Download className="w-5 h-5" />
-            Usar Material
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            <Button
+              onClick={onUsarMaterial}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-400/30"
+            >
+              <Download className="w-5 h-5" />
+              Usar Material
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Interface Fullscreen forçada para modo escuro - Container Transform */}
       {isFullscreenMode && (
@@ -588,7 +588,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           ref={fullscreenRef}
           className="fixed inset-0 z-50 bg-gray-900 overflow-auto dark"
           style={{ isolation: 'isolate' }}
-        ></div>
+        >
           {/* Header minimalista com apenas botão de fechar otimizado para modo escuro */}
           <div className="absolute top-4 right-4 z-20">
             <Button
