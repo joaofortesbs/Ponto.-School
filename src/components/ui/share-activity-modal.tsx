@@ -31,6 +31,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isPermissionsExpanded, setIsPermissionsExpanded] = useState(false);
   const [editorTemas, setEditorTemas] = useState(false);
+  const [editorMaterial, setEditorMaterial] = useState(false);
   const userInfo = useUserInfo();
 
   // Busca ou cria o link compartilhável quando o modal abre
@@ -301,7 +302,7 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
           </div>
 
           {/* Campo do Link */}
-          <div className="space-y-4">
+          <div className="space-y-4 relative">
             {loading ? (
               <div className="flex flex-col items-center justify-center p-8 space-y-3">
                 <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
@@ -361,18 +362,21 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                 </div>
 
                 {/* Card de Permissões */}
-                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl border-2 border-orange-200 dark:border-orange-700 overflow-hidden h-12 flex items-center">
                   <button
                     onClick={() => setIsPermissionsExpanded(!isPermissionsExpanded)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-orange-100/50 dark:hover:bg-orange-800/30 transition-all duration-200 h-full"
                   >
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Permissões
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                        Permissões
+                      </span>
+                    </div>
                     {isPermissionsExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <ChevronUp className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                      <ChevronDown className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                     )}
                   </button>
                   
@@ -383,22 +387,38 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="border-t border-gray-200 dark:border-gray-600"
+                        className="absolute top-full left-0 right-0 mt-1 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-2 border-orange-200 dark:border-orange-700 rounded-xl z-10 shadow-lg"
                       >
-                        <div className="p-3 space-y-3">
-                          <div className="flex items-center space-x-2">
+                        <div className="p-4 space-y-4">
+                          <div className="flex items-center space-x-3">
                             <input
                               type="checkbox"
                               id="editor-temas"
                               checked={editorTemas}
                               onChange={(e) => setEditorTemas(e.target.checked)}
-                              className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                              className="w-4 h-4 text-orange-600 bg-white border-orange-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-orange-900/30 dark:border-orange-600"
                             />
                             <label 
                               htmlFor="editor-temas" 
-                              className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                              className="text-sm font-medium text-orange-800 dark:text-orange-200 cursor-pointer"
                             >
                               Editor de temas
+                            </label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              id="editor-material"
+                              checked={editorMaterial}
+                              onChange={(e) => setEditorMaterial(e.target.checked)}
+                              className="w-4 h-4 text-orange-600 bg-white border-orange-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-orange-900/30 dark:border-orange-600"
+                            />
+                            <label 
+                              htmlFor="editor-material" 
+                              className="text-sm font-medium text-orange-800 dark:text-orange-200 cursor-pointer"
+                            >
+                              Editar Material
                             </label>
                           </div>
                         </div>
