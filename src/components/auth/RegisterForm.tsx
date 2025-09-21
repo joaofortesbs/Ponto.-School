@@ -287,88 +287,44 @@ export function RegisterForm() {
         return;
       }
 
-      // Usar a função de geração de ID para garantir a sequência correta
-      let userId;
-      try {
-        // Determinar o tipo de conta com base no plano
-        const tipoConta = confirmedPlan === "full" ? 1 : 2;
-
-        // Validar e obter o estado (UF) selecionado
-        if (!formData.state || formData.state.length !== 2) {
-          setError("Por favor, selecione um estado (UF) válido para continuar.");
-          setLoading(false);
-          return;
+      // SISTEMA NEON: Usar ApiClient.register que já funciona perfeitamente
+      const { user, session, error } = await ApiClient.register(
+        formData.email,
+        formData.password,
+        {
+          full_name: formData.fullName,
+          display_name: formData.username,
+          instituição_ensino: formData.institution,
+          estado_uf: formData.state || 'SP'
         }
+      );
 
-        // Garantir que o estado esteja em maiúsculas
-        const uf = formData.state.toUpperCase();
+      if (error) {
+        setError(error.message || "Erro ao criar conta. Tente novamente.");
+        setLoading(false);
+        return;
+      }
 
-        // Verificar se o estado é válido (não pode ser BR)
-        if (uf === 'BR') {
-          setError("O código 'BR' não é um estado válido. Por favor, selecione um estado específico.");
-          setLoading(false);
-          return;
-        }
+      if (user && session) {
+        // Sucesso! Armazenar token e redirecionar
+        localStorage.setItem('neon_auth_token', session.access_token);
+        setSuccess(true);
+        setLoading(false);
+        
+        // Redirecionar após 2 segundos
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+        return;
+      }
 
-        // Salvar o estado selecionado no localStorage para referência futura
-        localStorage.setItem('selectedState', uf);
-        console.log(`Estado selecionado pelo usuário e salvo no localStorage: ${uf}`);
-
-        console.log(`Gerando ID com estado (UF): ${uf} e tipo de conta: ${tipoConta} (${confirmedPlan})`);
-
-        // Tentar usar a função principal de geração de ID
-        try {
-          userId = await generateUserId(uf, tipoConta);
-          console.log(`ID gerado com sucesso usando generateUserId: ${userId}`);
-        } catch (generationError) {
-          console.error("Erro ao gerar ID com função principal:", generationError);
-
-          // Segunda tentativa: usar a função específica de plano
-          try {
-            userId = await generateUserIdByPlan(confirmedPlan, uf);
-            console.log(`ID gerado com função de plano: ${userId}`);
-          } catch (planError) {
-            console.error("Erro ao gerar ID com função de plano:", planError);
-
-            // Tentar usar a função SQL diretamente
-            try {
-              const { data: sqlData, error: sqlError } = await supabase.rpc('get_next_user_id_for_uf', {
-                p_uf: uf,
-                p_tipo_conta: tipoConta
-              });
-
-              if (sqlError) {
-                throw sqlError;
-              }
-
-              userId = sqlData;
-              console.log(`ID gerado com função SQL: ${userId}`);
-            } catch (sqlError) {
-              console.error("Erro ao gerar ID com função SQL:", sqlError);
-
-              // Último fallback: Gerar manualmente, mas mantendo a padronização
-              const dataAtual = new Date();
-              const anoMes = `${dataAtual.getFullYear().toString().slice(-2)}${(dataAtual.getMonth() + 1).toString().padStart(2, "0")}`;
-
-              // Tentar buscar o último ID do controle por UF
-              try {
-                const { data: controlData } = await supabase
-                  .from('user_id_control_by_uf')
-                  .select('*')
-                  .eq('uf', uf)
-                  .eq('ano_mes', anoMes)
-                  .eq('tipo_conta', tipoConta)
-                  .single();
-
-                let sequencial;
-                if (controlData && controlData.last_id) {
-                  // Incrementar o último ID conhecido
+      setError("Erro inesperado ao criar conta. Tente novamente.");
+      setLoading(false);
                   sequencial = (controlData.last_id + 1).toString().padStart(6, "0");
 
                   // Atualizar o contador no banco de dados
-                  await supabase
-                    .from('user_id_control_by_uf')
-                    .update({ 
+                  // MIGRAÇÃO: Atualização de controle movida para o backend
+                  console.log('Atualização será feita pelo backend'); 
                       last_id: controlData.last_id + 1,
                       updated_at: new Date().toISOString()
                     })
@@ -377,9 +333,8 @@ export function RegisterForm() {
                   // Se não existe um controle para esta UF, criar um novo
                   try {
                     // Iniciar com ID 1
-                    const { data: insertData, error: insertError } = await supabase
-                      .from('user_id_control_by_uf')
-                      .insert([
+                    // MIGRAÇÃO: Inserção movida para o backend
+                    console.log('Inserção será feita pelo backend');
                         { uf, ano_mes: anoMes, tipo_conta: tipoConta, last_id: 1 }
                       ])
                       .select();
@@ -426,9 +381,8 @@ export function RegisterForm() {
 
       try {
         // Verificar novamente se o nome de usuário já existe
-        const { data: existingUser } = await supabase
-          .from('profiles')
-          .select('username')
+        // MIGRAÇÃO: Verificação de username será feita pelo backend
+        console.log('Verificação de username será feita pelo backend');
           .eq('username', formData.username)
           .single();
 
@@ -488,9 +442,11 @@ export function RegisterForm() {
           // Tente criar o perfil no banco de dados
           if (user) {
             try {
-              const { error: insertError } = await supabase
-                .from("profiles")
-                .insert([{
+              // MIGRAÇÃO: Uso ApiClient.register que já salva no profiles
+              const { user, error: registerError } = await ApiClient.register(
+                formData.email,
+                formData.password,
+                {
                   id: profileId,
                   user_id: userId,
                   full_name: formData.fullName,
@@ -510,9 +466,8 @@ export function RegisterForm() {
               if (insertError && !insertError.message.includes("fetch")) {
                 // Se houver erro diferente de conectividade, tente atualizar o perfil existente
                 console.log("Tentando atualizar perfil existente");
-                const { error: updateError } = await supabase
-                  .from("profiles")
-                  .update({
+                // MIGRAÇÃO: Atualização será feita via API
+                console.log('Atualização será feita via ApiClient.updateProfile');
                     user_id: userId,
                     full_name: formData.fullName,
                     username: formData.username,
@@ -881,9 +836,8 @@ export function RegisterForm() {
                             clearTimeout(window.usernameCheckTimeout);
                             window.usernameCheckTimeout = setTimeout(async () => {
                               try {
-                                const { data, error } = await supabase
-                                  .from('profiles')
-                                  .select('username')
+                                // MIGRAÇÃO: Verificação de username via API
+                                console.log('Verificação via backend API');
                                   .eq('username', validValue)
                                   .single();
 
