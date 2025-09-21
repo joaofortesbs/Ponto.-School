@@ -477,6 +477,24 @@ class NeonDBManager {
       content
     } = activityData;
 
+    console.log('📝 Criando atividade no Neon:', {
+      user_id,
+      activity_code,
+      type,
+      title: title || 'Sem título',
+      contentSize: JSON.stringify(content).length
+    });
+
+    // Validar dados obrigatórios
+    if (!user_id || !activity_code || !type || !content) {
+      console.error('❌ Dados obrigatórios faltando:', { user_id, activity_code, type, content: !!content });
+      return {
+        success: false,
+        error: 'Campos obrigatórios: user_id, activity_code, type, content',
+        data: []
+      };
+    }
+
     const query = `
       INSERT INTO activities (
         user_id, activity_code, type, title, content
@@ -493,7 +511,15 @@ class NeonDBManager {
       JSON.stringify(content)
     ];
 
-    return await this.executeQuery(query, params);
+    const result = await this.executeQuery(query, params);
+    
+    if (result.success && result.data.length > 0) {
+      console.log('✅ Atividade criada com sucesso no Neon:', result.data[0].activity_code);
+    } else {
+      console.error('❌ Falha ao criar atividade no Neon:', result.error);
+    }
+
+    return result;
   }
 
   // Buscar atividade por código

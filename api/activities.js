@@ -18,11 +18,33 @@ router.post('/', async (req, res) => {
       content
     } = req.body;
 
-    // Validação básica
+    // Validação básica aprimorada
     if (!user_id || !activity_code || !type || !content) {
+      console.error('❌ Validação falhou - campos obrigatórios:', {
+        user_id: !!user_id,
+        activity_code: !!activity_code,
+        type: !!type,
+        content: !!content
+      });
+      
       return res.status(400).json({
         success: false,
-        error: 'Campos obrigatórios: user_id, activity_code, type, content'
+        error: 'Campos obrigatórios: user_id, activity_code, type, content',
+        details: {
+          user_id: !user_id ? 'Campo obrigatório' : 'OK',
+          activity_code: !activity_code ? 'Campo obrigatório' : 'OK',
+          type: !type ? 'Campo obrigatório' : 'OK',
+          content: !content ? 'Campo obrigatório' : 'OK'
+        }
+      });
+    }
+
+    // Validar formato do content
+    if (typeof content !== 'object') {
+      console.error('❌ Content deve ser um objeto:', typeof content);
+      return res.status(400).json({
+        success: false,
+        error: 'Content deve ser um objeto válido'
       });
     }
 

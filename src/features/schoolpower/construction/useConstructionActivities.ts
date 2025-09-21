@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { ConstructionActivity } from './types';
+import { useActivities } from './useActivities'; // Assumindo que useActivities exporta saveActivity
 
 interface UseConstructionActivitiesReturn {
   activities: ConstructionActivity[];
   loading: boolean;
   refreshActivities: () => void;
+  updateActivity: (id: string, updates: Partial<ConstructionActivity>) => Promise<void>;
 }
 
 export function useConstructionActivities(approvedActivities: any[]): UseConstructionActivitiesReturn {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const { saveActivity } = useActivities(); // Importando saveActivity de useActivities
 
   const convertToConstructionActivity = (activity: any): ConstructionActivity => {
     console.log('🔄 Convertendo atividade:', activity);
@@ -94,9 +97,79 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
     };
   }, []);
 
+  const updateActivity = async (id: string, updates: Partial<ConstructionActivity>) => {
+    setActivities(prev =>
+      prev.map(activity => {
+        const updatedActivity = activity.id === id ? { ...activity, ...updates } : activity;
+
+        // Auto-save quando atividade for concluída
+        if (updatedActivity.id === id && updates.status === 'completed') {
+          handleAutoSaveActivity(updatedActivity);
+        }
+
+        return updatedActivity;
+      })
+    );
+  };
+
+  const handleAutoSaveActivity = async (activity: ConstructionActivity) => {
+    try {
+      console.log('🔄 Auto-salvando atividade construída via hook:', activity.id);
+
+      const activityCode = `sp-${activity.type}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      const userId = localStorage.getItem('user_id') || localStorage.getItem('current_user_id') || 'anonymous';
+
+      const activityData = {
+        user_id: userId,
+        activity_code: activityCode,
+        type: activity.type,
+        title: activity.title,
+        content: {
+          ...activity.originalData,
+          constructedAt: new Date().toISOString(),
+          schoolPowerGenerated: true,
+          activityId: activity.id,
+          progress: activity.progress,
+          status: activity.status,
+          description: activity.description
+        }
+      };
+
+      const result = await saveActivity(activityData);
+
+      if (result) {
+        console.log('✅ Atividade salva automaticamente no Neon:', activityCode);
+
+        // Armazenar referência local
+        const savedActivityRef = {
+          activityCode,
+          savedAt: new Date().toISOString(),
+          title: activity.title,
+          type: activity.type,
+          neonSaved: true
+        };
+
+        localStorage.setItem(`constructed_${activity.id}`, JSON.stringify(savedActivityRef));
+
+        // Atualizar lista de atividades salvas
+        const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
+        savedActivities.push(savedActivityRef);
+        localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
+
+      } else {
+        console.error('❌ Falha ao auto-salvar atividade');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro no auto-save via hook:', error);
+    }
+  };
+
+
   return {
     activities,
     loading,
-    refreshActivities
+    refreshActivities,
+    updateActivity
   };
 }

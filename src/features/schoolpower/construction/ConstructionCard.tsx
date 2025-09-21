@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react'; // Importado useEffect
 import { motion } from 'framer-motion';
 import { 
   Clock, 
@@ -51,6 +50,10 @@ import { Badge } from '@/components/ui/badge';
 import { ProgressCircle } from './ProgressCircle';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 
+// Supondo que useActivities() retorne uma função saveActivity e um estado de loading/error
+// Se a estrutura for diferente, ajuste esta chamada.
+import { useActivities } from '@/hooks/useActivities'; // Ajuste o caminho conforme necessário
+
 interface ConstructionActivityProps {
   id: string;
   title: string;
@@ -59,8 +62,9 @@ interface ConstructionActivityProps {
   type: string;
   status: 'draft' | 'in-progress' | 'completed' | 'pending';
   onEdit: () => void;
-  onView: (activityData?: any) => void;
+  onView: () => void; // Alterado para ser um callback sem parâmetros, se necessário, ou mantenha se 'activityData' for usado.
   onShare: (activityId: string) => void;
+  originalData?: any; // Adicionado para ter acesso aos dados originais para salvamento
 }
 
 // Mapeamento de ícones idêntico ao CardDeConstrucao.tsx
@@ -202,8 +206,93 @@ export function ConstructionCard({
   status,
   onView,
   onShare,
-  onEdit
+  onEdit,
+  originalData // Recebendo originalData
 }: ConstructionActivityProps) {
+  const { saveActivity } = useActivities();
+
+  // Auto-save quando atividade for marcada como completa
+  useEffect(() => {
+    // Verifica se a atividade está completa E se temos originalData para salvar
+    if (status === 'completed' && originalData) {
+      handleAutoSave();
+    }
+  }, [status, originalData]); // Dependências para reexecutar o efeito
+
+  const handleAutoSave = async () => {
+    try {
+      console.log('🔄 Auto-salvando atividade construída:', id);
+
+      // Gerar código único para a atividade
+      const activityCode = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Obter ID do usuário (você pode ajustar conforme seu sistema de auth)
+      // Se o ID do usuário não estiver em localStorage, pode ser necessário buscar de um contexto de autenticação.
+      const userId = localStorage.getItem('user_id') || 'anonymous';
+
+      // Preparar dados da atividade para salvar
+      const activityData = {
+        user_id: userId,
+        activity_code: activityCode,
+        type: type,
+        title: title,
+        content: {
+          ...originalData, // Usando originalData aqui
+          constructedAt: new Date().toISOString(),
+          schoolPowerGenerated: true,
+          activityId: id, // Referência ao ID original do School Power
+          progress: progress,
+          status: status
+        }
+      };
+
+      const result = await saveActivity(activityData);
+
+      if (result) {
+        console.log('✅ Atividade salva automaticamente no banco Neon:', activityCode);
+
+        // Salvar referência local para futura consulta
+        localStorage.setItem(`constructed_activity_${id}`, JSON.stringify({
+          activityCode,
+          savedAt: new Date().toISOString(),
+          title: title,
+          type: type
+        }));
+
+        // Feedback visual simples (pode ser substituído por um sistema de notificações mais robusto)
+        const notificationId = `notification-${id}`;
+        if (!document.getElementById(notificationId)) {
+          const notification = document.createElement('div');
+          notification.id = notificationId;
+          notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn'; // Adicionado classe para animação
+          notification.textContent = `✅ ${title} salva automaticamente!`;
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            const existingNotification = document.getElementById(notificationId);
+            if (existingNotification) {
+              existingNotification.classList.remove('animate-fadeIn');
+              existingNotification.classList.add('animate-fadeOut');
+              existingNotification.addEventListener('animationend', () => {
+                if (document.body.contains(existingNotification)) {
+                  document.body.removeChild(existingNotification);
+                }
+              }, { once: true });
+            }
+          }, 3000);
+        }
+
+      } else {
+        console.error('❌ Falha ao salvar atividade automaticamente');
+        // Adicionar feedback de erro aqui se necessário
+      }
+
+    } catch (error) {
+      console.error('❌ Erro no auto-save da atividade:', error);
+      // Adicionar feedback de erro aqui se necessário
+    }
+  };
+
   const isCompleted = status === 'completed' || progress >= 100;
   const ActivityIcon = getIconByActivityId(id);
   const activityName = getActivityNameById(id);
@@ -265,7 +354,7 @@ export function ConstructionCard({
         `}>
           {/* Ícone original */}
           <ActivityIcon className={`h-8 w-8 ${cardTheme.iconColor} ${isCompleted ? 'group-hover:opacity-0 transition-opacity duration-0' : ''}`} />
-          
+
           {/* Ícone de visualizar no hover - só para atividades construídas */}
           {isCompleted && (
             <Eye className={`h-8 w-8 ${cardTheme.iconColor} absolute opacity-0 group-hover:opacity-100 transition-opacity duration-0`} />

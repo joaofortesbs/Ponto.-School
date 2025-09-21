@@ -154,12 +154,32 @@ export function useActivities(userId?: string): UseActivitiesState & UseActiviti
 
   // Salvar atividade (criar ou atualizar)
   const saveActivity = useCallback(async (data: CreateActivityData): Promise<boolean> => {
+    console.log('💾 useActivities: Iniciando salvamento de:', data.activity_code);
     updateState({ saving: true, error: null });
     
     try {
+      // Validação adicional antes de enviar
+      if (!data.user_id || !data.activity_code || !data.type || !data.content) {
+        console.error('❌ useActivities: Dados incompletos:', {
+          user_id: !!data.user_id,
+          activity_code: !!data.activity_code,
+          type: !!data.type,
+          content: !!data.content
+        });
+        
+        updateState({ 
+          saving: false, 
+          error: 'Dados incompletos para salvamento' 
+        });
+        return false;
+      }
+
+      console.log('📤 useActivities: Enviando para activitiesService...');
       const result = await activitiesService.saveActivity(data);
       
       if (result.success && result.data) {
+        console.log('✅ useActivities: Salvamento bem-sucedido:', result.data.activity_code);
+        
         // Atualizar a lista de atividades
         const existingIndex = state.activities.findIndex(
           activity => activity.activity_code === data.activity_code
@@ -170,9 +190,11 @@ export function useActivities(userId?: string): UseActivitiesState & UseActiviti
           // Atualizar existente
           newActivities = [...state.activities];
           newActivities[existingIndex] = result.data;
+          console.log('🔄 useActivities: Atividade atualizada na lista');
         } else {
           // Adicionar nova
           newActivities = [result.data, ...state.activities];
+          console.log('➕ useActivities: Nova atividade adicionada à lista');
         }
         
         updateState({ 
@@ -180,8 +202,10 @@ export function useActivities(userId?: string): UseActivitiesState & UseActiviti
           activities: newActivities,
           currentActivity: result.data
         });
+        
         return true;
       } else {
+        console.error('❌ useActivities: Falha no salvamento:', result.error);
         updateState({ 
           saving: false, 
           error: result.error || 'Erro ao salvar atividade' 
@@ -189,6 +213,7 @@ export function useActivities(userId?: string): UseActivitiesState & UseActiviti
         return false;
       }
     } catch (error) {
+      console.error('❌ useActivities: Erro inesperado:', error);
       updateState({ 
         saving: false, 
         error: 'Erro inesperado ao salvar atividade' 

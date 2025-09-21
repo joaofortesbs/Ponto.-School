@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
+import { autoSaveService } from './services/autoSaveService';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -165,28 +166,31 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   }, [refreshActivities]);
 
   useEffect(() => {
-    console.log('🎯 ConstructionGrid - Verificando status das atividades');
+    console.log('🏗️ ConstructionGrid: approvedActivities atualizadas:', approvedActivities);
 
-    // Verificar e atualizar status de atividades construídas do localStorage
-    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-    let hasChanges = false;
+    // Configurar auto-save service
+    autoSaveService.configure({
+      enabled: true,
+      delayMs: 1500, // 1.5 segundos
+      retryAttempts: 3
+    });
 
-    activities.forEach(activity => {
-      if (constructedActivities[activity.id] && !activity.isBuilt) {
-        console.log(`📝 Atualizando status da atividade ${activity.id} para construída`);
-        activity.isBuilt = true;
-        activity.builtAt = constructedActivities[activity.id].builtAt;
-        activity.progress = 100;
-        activity.status = 'completed';
-        hasChanges = true;
+    // Monitorar atividades completas para auto-save
+    approvedActivities.forEach(activity => {
+      if (activity.status === 'completed' && activity.progress === 100) {
+        autoSaveService.scheduleAutoSave({
+          id: activity.id,
+          type: activity.type || 'generic',
+          title: activity.title,
+          description: activity.description,
+          progress: activity.progress,
+          status: activity.status,
+          originalData: activity.originalData || {}
+        });
       }
     });
 
-    if (hasChanges && refreshActivities) {
-      console.log('🔄 Forçando refresh das atividades devido a mudanças');
-      refreshActivities();
-    }
-  }, [activities, refreshActivities]);
+  }, [approvedActivities]);
 
   if (loading) {
     return (

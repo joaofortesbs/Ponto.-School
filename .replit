@@ -291,6 +291,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/create-activities-table.js"
 
+[[workflows.workflow]]
+name = "Testar Tabela Activities"
+author = 47684299
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/test-activities-table.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
