@@ -83,6 +83,17 @@ const initializeTables = async () => {
       )
     `);
 
+    // Criar tabela bio (NOVA TABELA)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS bio (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        descript TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     console.log('✅ Database tables initialized successfully');
   } catch (error) {
     console.error('❌ Error initializing tables:', error);
