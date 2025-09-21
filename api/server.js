@@ -3,8 +3,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
-import { neonDB } from './neon-db.js';
+import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
+
+const { neonDB } = neonDBModule;
 
 dotenv.config();
 

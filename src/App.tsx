@@ -13,8 +13,8 @@ import Home from "@/components/home";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import FloatingChatSupport from "@/components/chat/FloatingChatSupport";
-import { supabase } from "@/lib/supabase";
 import { checkAuthentication } from "@/lib/auth-utils";
+import { useNeonAuth } from "@/hooks/useNeonAuth";
 import { StudyGoalProvider } from "@/components/dashboard/StudyGoalContext";
 import UsernameProvider from "./components/UsernameProvider";
 
@@ -71,9 +71,8 @@ function ProtectedRoute({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        const isAuth = !!data.session;
-
+        const isAuth = await checkAuthentication();
+        
         localStorage.setItem('auth_checked', 'true');
         localStorage.setItem('auth_status', isAuth ? 'authenticated' : 'unauthenticated');
 
@@ -123,26 +122,11 @@ function App() {
 
     const checkConnection = async () => {
       try {
-        try {
-          const { checkSupabaseConnection, setupSupabaseHealthCheck } = await import('@/lib/supabase');
-
-          if (import.meta.env.MODE === 'development') {
-            await setupSupabaseHealthCheck();
-          }
-
-          const isConnected = await checkSupabaseConnection();
-
-          if (!isConnected) {
-            console.warn("Aviso: Falha na conexão com o Supabase. A aplicação continuará funcionando com dados locais.");
-          } else {
-            console.log("Conexão com Supabase estabelecida com sucesso!");
-          }
-        } catch (connectionError) {
-          console.warn("Aviso: Erro ao verificar conexão com Supabase:", connectionError);
-        }
+        console.log("Verificando conexão com banco de dados Neon...");
+        // Conexão será verificada pela API do Neon
+        setIsLoading(false);
       } catch (error) {
         console.error("Connection check error:", error);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -219,10 +203,7 @@ function App() {
         }
 
         if (isAuthenticated) {
-          const { data: { session } } = await supabase.auth.getSession();
-          const currentUserId = session?.user?.id;
-
-          if (!currentUserId) return;
+          const currentUserId = localStorage.getItem('user_id') || 'guest';
 
           const userLoginKey = `hasLoggedInBefore_${currentUserId}`;
           const sessionKey = `currentSession_${currentUserId}`;

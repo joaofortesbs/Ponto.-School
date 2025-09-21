@@ -1,75 +1,25 @@
-import { supabase } from "./supabase";
-
-/**
- * Verifica se o usuário está autenticado na aplicação
- * Consulta o localStorage primeiro e, se necessário, o Supabase
- */
 export const checkAuthentication = async (): Promise<boolean> => {
   try {
-    // Verificar cache local para resposta instantânea
-    const cachedStatus = localStorage.getItem('auth_status');
-    const cacheTime = localStorage.getItem('auth_cache_time');
-    const now = Date.now();
-    
-    // Resposta instantânea com base no cache recente (validade de 30 minutos)
-    if (cachedStatus === 'authenticated' && cacheTime && (now - parseInt(cacheTime)) < 30 * 60 * 1000) {
-      // Verificar em background após retornar resposta
-      requestAnimationFrame(() => {
-        // Usar Promise.race para limitar tempo de espera
-        Promise.race([
-          supabase.auth.getSession(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
-        ]).then(({ data }) => {
-          if (!!data?.session !== (cachedStatus === 'authenticated')) {
-            localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
-            localStorage.setItem('auth_cache_time', now.toString());
-          }
-        }).catch(() => {
-          // Ignorar erros silenciosamente na verificação em background
-        });
-      });
-      
-      return true;
-    }
-    
-    // Sem cache válido, mas tentar retornar rápido com base em cache antigo
-    if (cachedStatus === 'authenticated') {
-      // Verificar em background, mas já retornar resposta positiva
-      requestAnimationFrame(() => {
-        supabase.auth.getSession().then(({ data }) => {
-          localStorage.setItem('auth_status', !!data?.session ? 'authenticated' : 'unauthenticated');
-          localStorage.setItem('auth_cache_time', now.toString());
-        }).catch(() => {});
-      });
-      
-      return true;
+    // Verificar se existe um token de autenticação local
+    const authToken = localStorage.getItem('auth_token');
+    const userId = localStorage.getItem('user_id');
+
+    if (!authToken || !userId) {
+      return false;
     }
 
-    // Timeout para garantir que a verificação não bloqueie a UI
-    const authPromise = Promise.race([
-      supabase.auth.getSession(),
-      new Promise((resolve) => setTimeout(() => 
-        resolve({data: {session: null}}), 2000))
-    ]);
+    // Verificar se o token ainda é válido (opcional)
+    const tokenExpiry = localStorage.getItem('auth_token_expiry');
+    if (tokenExpiry && new Date() > new Date(tokenExpiry)) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_token_expiry');
+      localStorage.removeItem('user_id');
+      return false;
+    }
 
-    const { data } = await authPromise;
-    const isAuthenticated = !!data?.session;
-
-    // Atualizar cache
-    localStorage.setItem('auth_checked', 'true');
-    localStorage.setItem('auth_status', isAuthenticated ? 'authenticated' : 'unauthenticated');
-    localStorage.setItem('auth_cache_time', now.toString());
-
-    return isAuthenticated;
+    return true;
   } catch (error) {
-    console.error("Erro ao verificar autenticação:", error);
-    
-    // Em erro, confiar no cache existente
-    const cachedStatus = localStorage.getItem('auth_status');
-    if (cachedStatus === 'authenticated') {
-      return true;
-    }
-    
+    console.error('Erro na verificação de autenticação:', error);
     return false;
   }
 };
@@ -126,23 +76,23 @@ export const saveUserDisplayName = (displayName?: string | null, fullName?: stri
   // Ordem de prioridade corrigida: display_name > primeiro nome do full_name > username > fallback
   const firstName = displayName || (fullName ? fullName.split(' ')[0] : null) || username || "Usuário";
   localStorage.setItem('userFirstName', firstName);
-  
+
   // Também guardar display_name separadamente para uso em outros componentes
   if (displayName) {
     localStorage.setItem('userDisplayName', displayName);
   }
-  
+
   // Garantir que o username também seja salvo corretamente
   if (username && username !== 'Usuário' && !username.startsWith('user_')) {
     localStorage.setItem('username', username);
-    
+
     // Armazenar também no sessionStorage como backup
     try {
       sessionStorage.setItem('username', username);
     } catch (e) {
       console.warn('Erro ao salvar username no sessionStorage', e);
     }
-    
+
     // Disparar evento para sincronização
     document.dispatchEvent(new CustomEvent('usernameUpdated', { 
       detail: { username } 
@@ -160,20 +110,20 @@ export const repairUsernames = async (): Promise<void> => {
     const sessionUsername = sessionStorage.getItem('username');
     const userFirstName = localStorage.getItem('userFirstName');
     const userDisplayName = localStorage.getItem('userDisplayName');
-    
+
     console.log('Verificando consistência de usernames:', {
       localUsername,
       sessionUsername,
       userFirstName,
       userDisplayName
     });
-    
+
     // Verificar se existe uma sessão ativa
     const { data: sessionData } = await supabase.auth.getSession();
-    
+
     if (sessionData?.session?.user) {
       const email = sessionData.session.user.email;
-      
+
       // Buscar perfil no Supabase
       if (email) {
         const { data: profileData } = await supabase
@@ -181,10 +131,10 @@ export const repairUsernames = async (): Promise<void> => {
           .select('username, display_name, email, id')
           .eq('email', email)
           .single();
-          
+
         // Determinar o melhor username disponível
         let bestUsername = '';
-        
+
         // Prioridade: profile > localStorage > sessionStorage > email
         if (profileData?.username && profileData.username !== 'Usuário') {
           bestUsername = profileData.username;
@@ -196,13 +146,13 @@ export const repairUsernames = async (): Promise<void> => {
           // Usar parte do email como username
           bestUsername = email.split('@')[0];
         }
-        
+
         // Se encontramos um bom username, atualizar em todos os lugares
         if (bestUsername && bestUsername !== 'Usuário') {
           // Atualizar localStorage e sessionStorage
           localStorage.setItem('username', bestUsername);
           try { sessionStorage.setItem('username', bestUsername); } catch (e) {}
-          
+
           // Atualizar perfil se necessário
           if (profileData && (!profileData.username || profileData.username === 'Usuário')) {
             await supabase
@@ -212,10 +162,10 @@ export const repairUsernames = async (): Promise<void> => {
                 updated_at: new Date().toISOString()
               })
               .eq('id', profileData.id);
-              
+
             console.log('Perfil atualizado com novo username:', bestUsername);
           }
-          
+
           // Disparar evento para notificar outros componentes
           document.dispatchEvent(new CustomEvent('usernameRepaired', { 
             detail: { username: bestUsername } 
@@ -281,7 +231,7 @@ export const signInWithUsername = async (username: string, password: string) => 
 
     // Usar o email encontrado para fazer login
     return signInWithEmail(profileData.email, password);
-    
+
   } catch (error) {
     console.error("Erro ao fazer login com nome de usuário:", error);
     return { success: false, error };

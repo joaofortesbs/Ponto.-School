@@ -1,4 +1,3 @@
-
 import { Client } from 'pg';
 
 class NeonDBManager {
@@ -17,7 +16,7 @@ class NeonDBManager {
   // Executar query com gerenciamento de conexão
   async executeQuery(query, params = []) {
     const client = this.createClient();
-    
+
     try {
       await client.connect();
       const result = await client.query(query, params);
@@ -46,7 +45,7 @@ class NeonDBManager {
         AND table_name = $1
       );
     `;
-    
+
     const result = await this.executeQuery(query, [tableName]);
     return result.success && result.data[0]?.exists;
   }
@@ -70,16 +69,16 @@ class NeonDBManager {
     `;
 
     const result = await this.executeQuery(createTableQuery);
-    
+
     if (result.success) {
       console.log('✅ Tabela "perfis" criada com sucesso');
-      
+
       // Criar índices para melhor performance
       await this.createPerfilsIndexes();
-      
+
       // Criar trigger para atualizar updated_at
       await this.createUpdateTrigger();
-      
+
       return true;
     } else {
       console.error('❌ Erro ao criar tabela "perfis":', result.error);
@@ -102,7 +101,7 @@ class NeonDBManager {
         console.error('❌ Erro ao criar índice:', result.error);
       }
     }
-    
+
     console.log('✅ Índices da tabela "perfis" criados com sucesso');
   }
 
@@ -152,7 +151,7 @@ class NeonDBManager {
   // Inicializar banco de dados (criar tabelas necessárias)
   async initializeDatabase() {
     console.log('🚀 Inicializando banco de dados...');
-    
+
     // Testar conexão primeiro
     const connectionOk = await this.testConnection();
     if (!connectionOk) {
@@ -161,7 +160,7 @@ class NeonDBManager {
 
     // Verificar se a tabela perfis existe
     const perfilsExists = await this.tableExists('perfis');
-    
+
     if (!perfilsExists) {
       console.log('📝 Tabela "perfis" não existe, criando...');
       await this.createPerfilsTable();
@@ -330,4 +329,5 @@ class NeonDBManager {
 // Instância singleton do gerenciador
 const neonDB = new NeonDBManager();
 
-export { NeonDBManager, neonDB };
+export { neonDB };
+export default { neonDB };
