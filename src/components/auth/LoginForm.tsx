@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ApiClient } from "@/services/api-client";
+import { supabase } from "@/lib/supabase";
 
 interface FormData {
   email: string;
@@ -163,7 +163,10 @@ export function LoginForm() {
       if (isEmail) {
         // Login com email
         authResult = await Promise.race([
-          ApiClient.signInWithPassword(inputValue, formData.password),
+          supabase.auth.signInWithPassword({
+            email: inputValue,
+            password: formData.password,
+          }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
@@ -171,7 +174,8 @@ export function LoginForm() {
       } else {
         // Login com nome de usuário
         // Primeiro, buscar o email associado ao nome de usuário
-        const { data: profileData, error: profileError } = await ApiClient.from("profiles")
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
           .select("email")
           .eq("username", inputValue)
           .single();
@@ -190,14 +194,17 @@ export function LoginForm() {
 
         // Agora fazer login com o email encontrado
         authResult = await Promise.race([
-          ApiClient.signInWithPassword(profileData.email, formData.password),
+          supabase.auth.signInWithPassword({
+            email: profileData.email,
+            password: formData.password,
+          }),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
           ),
         ]);
       }
 
-      const { user, session, error } = authResult;
+      const { data, error } = authResult;
 
       clearTimeout(preloadTimeout);
       clearTimeout(authTimeout);
@@ -222,7 +229,7 @@ export function LoginForm() {
         return;
       }
 
-      if (user) {
+      if (data?.user) {
         localStorage.setItem("auth_checked", "true");
         localStorage.setItem("auth_status", "authenticated");
 
@@ -237,19 +244,8 @@ export function LoginForm() {
     } catch (err: any) {
       clearTimeout(authTimeout);
       setSuccess(false);
+      setError("Erro ao fazer login, tente novamente");
       console.error("Erro ao logar:", err);
-      
-      // Tratamento específico para diferentes tipos de erro
-      if (err.message === "Tempo limite excedido" || err.code === 'ECONNABORTED') {
-        setError("Conexão lenta. Tente novamente.");
-      } else if (err.response?.status === 0 || err.code === 'NETWORK_ERROR') {
-        setError("Erro de rede. Verifique sua conexão com a internet.");
-      } else if (err.response?.status >= 500) {
-        setError("Erro no servidor. Tente novamente em alguns instantes.");
-      } else {
-        setError("Erro ao fazer login. Verifique suas credenciais e tente novamente.");
-      }
-      
       localStorage.removeItem("auth_checked");
       localStorage.removeItem("auth_status");
     } finally {
