@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { useNeonAuth } from "@/hooks/useNeonAuth";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Eye,
   EyeOff,
   Mail,
@@ -17,51 +24,38 @@ import {
   Users,
 } from "lucide-react";
 
-interface FormData {
-  nomeCompleto: string;
-  nomeUsuario: string;
-  email: string;
-  senha: string;
-  confirmarSenha: string;
-  tipoConta: string;
-  pais: string;
-  estado: string;
-  instituicaoEnsino: string;
-}
+const ESTADOS_BRASIL = [
+  "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará",
+  "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
+  "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará",
+  "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro",
+  "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia",
+  "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"
+];
 
 export function RegisterForm() {
   const navigate = useNavigate();
   const { register, isLoading, error } = useNeonAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState({
     nomeCompleto: "",
     nomeUsuario: "",
     email: "",
     senha: "",
-    confirmarSenha: "",
+    confirmSenha: "",
     tipoConta: "",
     pais: "Brasil",
     estado: "",
     instituicaoEnsino: "",
   });
 
-  const estadosBrasil = [
-    "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
-    "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
-    "RS", "RO", "RR", "SC", "SP", "SE", "TO"
-  ];
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-
-    // Limpar erro de validação quando o usuário começar a digitar
-    if (validationErrors[name]) {
-      setValidationErrors(prev => ({ ...prev, [name]: "" }));
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Limpar erro do campo quando usuário começar a digitar
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -74,16 +68,12 @@ export function RegisterForm() {
 
     if (!formData.nomeUsuario.trim()) {
       errors.nomeUsuario = "Nome de usuário é obrigatório";
-    } else if (formData.nomeUsuario.length < 3) {
-      errors.nomeUsuario = "Nome de usuário deve ter pelo menos 3 caracteres";
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.nomeUsuario)) {
-      errors.nomeUsuario = "Nome de usuário pode conter apenas letras, números e underscore";
     }
 
     if (!formData.email.trim()) {
-      errors.email = "Email é obrigatório";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Email inválido";
+      errors.email = "E-mail é obrigatório";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "E-mail inválido";
     }
 
     if (!formData.senha) {
@@ -92,8 +82,10 @@ export function RegisterForm() {
       errors.senha = "Senha deve ter pelo menos 6 caracteres";
     }
 
-    if (formData.senha !== formData.confirmarSenha) {
-      errors.confirmarSenha = "Senhas não coincidem";
+    if (!formData.confirmSenha) {
+      errors.confirmSenha = "Confirmação de senha é obrigatória";
+    } else if (formData.senha !== formData.confirmSenha) {
+      errors.confirmSenha = "Senhas não coincidem";
     }
 
     if (!formData.tipoConta) {
@@ -108,7 +100,7 @@ export function RegisterForm() {
       errors.instituicaoEnsino = "Instituição de ensino é obrigatória";
     }
 
-    setValidationErrors(errors);
+    setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
@@ -119,330 +111,239 @@ export function RegisterForm() {
       return;
     }
 
-    const result = await register({
-      nomeCompleto: formData.nomeCompleto,
-      nomeUsuario: formData.nomeUsuario,
-      email: formData.email,
-      senha: formData.senha,
-      tipoConta: formData.tipoConta,
-      pais: formData.pais,
-      estado: formData.estado,
-      instituicaoEnsino: formData.instituicaoEnsino,
-    });
+    try {
+      const result = await register({
+        nome_completo: formData.nomeCompleto,
+        nome_usuario: formData.nomeUsuario,
+        email: formData.email,
+        senha: formData.senha,
+        tipo_conta: formData.tipoConta,
+        pais: formData.pais,
+        estado: formData.estado,
+        instituicao_ensino: formData.instituicaoEnsino,
+      });
 
-    if (result.success) {
-      setSuccess(true);
-      setTimeout(() => {
+      if (result.success) {
         navigate("/dashboard");
-      }, 2000);
+      }
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
     }
   };
 
-  if (success) {
-    return (
-      <div className="bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-600 text-green-800 dark:text-green-300 p-6 rounded-lg mb-6 animate-fade-in flex items-center gap-4 shadow-md">
-        <div className="rounded-full bg-green-200 dark:bg-green-800 p-3 flex-shrink-0">
-          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-bold">Conta criada com sucesso!</h3>
-          <p className="text-sm mt-1">
-            Bem-vindo à plataforma! Você será redirecionado para o dashboard em instantes...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight text-brand-black dark:text-white">
-          Criar nova conta
-        </h1>
-        <p className="text-sm text-brand-muted dark:text-white/60">
-          Preencha os dados abaixo para se cadastrar na plataforma
-        </p>
+    <div className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
+      <div className="text-center mb-8">
+        <div className="flex justify-center mb-4">
+          <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+            <Users className="h-8 w-8 text-white" />
+          </div>
+        </div>
+        <h2 className="text-3xl font-bold text-white mb-2">Criar Conta</h2>
+        <p className="text-white/70">Junte-se à nossa plataforma educacional</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-white/40 dark:bg-gray-800/20 backdrop-blur-2xl p-6 rounded-lg border border-white/20 dark:border-gray-700/50 shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-brand-black dark:text-white">
-            Informações Pessoais
-          </h2>
-
-          <div className="space-y-4">
-            {/* Nome Completo */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                Nome Completo *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  name="nomeCompleto"
-                  value={formData.nomeCompleto}
-                  onChange={handleChange}
-                  placeholder="Digite seu nome completo"
-                  className="pl-10 h-11"
-                  required
-                />
-              </div>
-              {validationErrors.nomeCompleto && (
-                <p className="text-sm text-red-600">{validationErrors.nomeCompleto}</p>
-              )}
-            </div>
-
-            {/* Nome de Usuário */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                Nome de Usuário *
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  name="nomeUsuario"
-                  value={formData.nomeUsuario}
-                  onChange={handleChange}
-                  placeholder="@seunomeusuario"
-                  className="pl-10 h-11"
-                  required
-                />
-              </div>
-              {validationErrors.nomeUsuario && (
-                <p className="text-sm text-red-600">{validationErrors.nomeUsuario}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                E-mail *
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Digite seu e-mail"
-                  className="pl-10 h-11"
-                  required
-                />
-              </div>
-              {validationErrors.email && (
-                <p className="text-sm text-red-600">{validationErrors.email}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/40 dark:bg-gray-800/20 backdrop-blur-2xl p-6 rounded-lg border border-white/20 dark:border-gray-700/50 shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-brand-black dark:text-white">
-            Informações Acadêmicas
-          </h2>
-
-          <div className="space-y-4">
-            {/* Tipo de Conta */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                Tipo de Conta *
-              </label>
-              <div className="relative">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <select
-                  name="tipoConta"
-                  value={formData.tipoConta}
-                  onChange={handleChange}
-                  className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-                  required
-                >
-                  <option value="">Selecione o tipo de conta</option>
-                  <option value="Aluno">Aluno</option>
-                  <option value="Professor">Professor</option>
-                  <option value="Coordenador">Coordenador</option>
-                </select>
-              </div>
-              {validationErrors.tipoConta && (
-                <p className="text-sm text-red-600">{validationErrors.tipoConta}</p>
-              )}
-            </div>
-
-            {/* País e Estado */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black dark:text-white">
-                  País
-                </label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    name="pais"
-                    value={formData.pais}
-                    onChange={handleChange}
-                    className="pl-10 h-11"
-                    readOnly
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-brand-black dark:text-white">
-                  Estado *
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <select
-                    name="estado"
-                    value={formData.estado}
-                    onChange={handleChange}
-                    className="w-full pl-10 h-11 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary focus-visible:border-brand-primary"
-                    required
-                  >
-                    <option value="">Selecione o estado</option>
-                    {estadosBrasil.map(estado => (
-                      <option key={estado} value={estado}>{estado}</option>
-                    ))}
-                  </select>
-                </div>
-                {validationErrors.estado && (
-                  <p className="text-sm text-red-600">{validationErrors.estado}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Instituição de Ensino */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                Instituição de Ensino *
-              </label>
-              <div className="relative">
-                <School className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  name="instituicaoEnsino"
-                  value={formData.instituicaoEnsino}
-                  onChange={handleChange}
-                  placeholder="Digite o nome da sua instituição"
-                  className="pl-10 h-11"
-                  required
-                />
-              </div>
-              {validationErrors.instituicaoEnsino && (
-                <p className="text-sm text-red-600">{validationErrors.instituicaoEnsino}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/40 dark:bg-gray-800/20 backdrop-blur-2xl p-6 rounded-lg border border-white/20 dark:border-gray-700/50 shadow-lg">
-          <h2 className="text-lg font-semibold mb-4 text-brand-black dark:text-white">
-            Segurança
-          </h2>
-
-          <div className="space-y-4">
-            {/* Senha */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                Senha *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="senha"
-                  value={formData.senha}
-                  onChange={handleChange}
-                  placeholder="Digite sua senha"
-                  className="pl-10 pr-10 h-11"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-              {validationErrors.senha && (
-                <p className="text-sm text-red-600">{validationErrors.senha}</p>
-              )}
-            </div>
-
-            {/* Confirmar Senha */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-brand-black dark:text-white">
-                Confirmar Senha *
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmarSenha"
-                  value={formData.confirmarSenha}
-                  onChange={handleChange}
-                  placeholder="Confirme sua senha"
-                  className="pl-10 pr-10 h-11"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-              {validationErrors.confirmarSenha && (
-                <p className="text-sm text-red-600">{validationErrors.confirmarSenha}</p>
-              )}
-            </div>
-          </div>
-        </div>
-
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-md text-sm">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-300 text-sm">
             {error}
           </div>
         )}
 
+        {/* Nome Completo */}
+        <div>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Nome completo"
+              value={formData.nomeCompleto}
+              onChange={(e) => handleInputChange("nomeCompleto", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+            />
+          </div>
+          {formErrors.nomeCompleto && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.nomeCompleto}</p>
+          )}
+        </div>
+
+        {/* Nome de Usuário */}
+        <div>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Nome de usuário"
+              value={formData.nomeUsuario}
+              onChange={(e) => handleInputChange("nomeUsuario", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+            />
+          </div>
+          {formErrors.nomeUsuario && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.nomeUsuario}</p>
+          )}
+        </div>
+
+        {/* E-mail */}
+        <div>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type="email"
+              placeholder="E-mail"
+              value={formData.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+            />
+          </div>
+          {formErrors.email && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>
+          )}
+        </div>
+
+        {/* Senha */}
+        <div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Senha"
+              value={formData.senha}
+              onChange={(e) => handleInputChange("senha", e.target.value)}
+              className="pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+          {formErrors.senha && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.senha}</p>
+          )}
+        </div>
+
+        {/* Confirmar Senha */}
+        <div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type="password"
+              placeholder="Confirmar senha"
+              value={formData.confirmSenha}
+              onChange={(e) => handleInputChange("confirmSenha", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+            />
+          </div>
+          {formErrors.confirmSenha && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.confirmSenha}</p>
+          )}
+        </div>
+
+        {/* Tipo de Conta */}
+        <div>
+          <div className="relative">
+            <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5 z-10" />
+            <Select value={formData.tipoConta} onValueChange={(value) => handleInputChange("tipoConta", value)}>
+              <SelectTrigger className="pl-10 bg-white/5 border-white/20 text-white focus:border-blue-400">
+                <SelectValue placeholder="Tipo de conta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Professor">Professor</SelectItem>
+                <SelectItem value="Aluno">Aluno</SelectItem>
+                <SelectItem value="Coordenador">Coordenador</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {formErrors.tipoConta && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.tipoConta}</p>
+          )}
+        </div>
+
+        {/* País */}
+        <div>
+          <div className="relative">
+            <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type="text"
+              value={formData.pais}
+              readOnly
+              className="pl-10 bg-white/5 border-white/20 text-white/70 cursor-not-allowed"
+            />
+          </div>
+        </div>
+
+        {/* Estado */}
+        <div>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5 z-10" />
+            <Select value={formData.estado} onValueChange={(value) => handleInputChange("estado", value)}>
+              <SelectTrigger className="pl-10 bg-white/5 border-white/20 text-white focus:border-blue-400">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                {ESTADOS_BRASIL.map((estado) => (
+                  <SelectItem key={estado} value={estado}>
+                    {estado}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {formErrors.estado && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.estado}</p>
+          )}
+        </div>
+
+        {/* Instituição de Ensino */}
+        <div>
+          <div className="relative">
+            <School className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Instituição de ensino"
+              value={formData.instituicaoEnsino}
+              onChange={(e) => handleInputChange("instituicaoEnsino", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+            />
+          </div>
+          {formErrors.instituicaoEnsino && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.instituicaoEnsino}</p>
+          )}
+        </div>
+
         <Button
           type="submit"
-          className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white"
           disabled={isLoading}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? "Criando conta..." : "Criar conta"}
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Criando conta...
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Criar Conta
+            </div>
+          )}
         </Button>
+      </form>
 
-        <p className="text-center text-sm text-brand-muted dark:text-white/60">
+      <div className="text-center mt-6">
+        <p className="text-white/70">
           Já tem uma conta?{" "}
-          <Button
-            type="button"
-            variant="link"
-            className="text-brand-primary hover:text-brand-primary/90 p-0 h-auto"
-            onClick={() => navigate("/login")}
+          <button
+            onClick={() => navigate("/auth/login")}
+            className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
           >
             Fazer login
-          </Button>
+          </button>
         </p>
-      </form>
+      </div>
     </div>
   );
 }

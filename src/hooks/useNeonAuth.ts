@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { executeQuery } from '@/lib/neon-db';
 import bcrypt from 'bcryptjs';
@@ -46,7 +45,7 @@ export function useNeonAuth() {
       const userId = localStorage.getItem('user_id');
       if (userId) {
         const result = await executeQuery('SELECT * FROM perfis WHERE id = $1', [userId]);
-        
+
         if (result.success && result.data.length > 0) {
           setAuthState({
             user: result.data[0],
@@ -67,14 +66,14 @@ export function useNeonAuth() {
   };
 
   const register = async (userData: {
-    nomeCompleto: string;
-    nomeUsuario: string;
+    nome_completo: string;
+    nome_usuario: string;
     email: string;
     senha: string;
-    tipoConta: string;
+    tipo_conta: string;
     pais: string;
     estado: string;
-    instituicaoEnsino: string;
+    instituicao_ensino: string;
   }) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -97,30 +96,30 @@ export function useNeonAuth() {
       // Inserir novo usuário
       const insertQuery = `
         INSERT INTO perfis (
-          nome_completo, nome_usuario, email, senha_hash, 
+          nome_completo, nome_usuario, email, senha_hash,
           tipo_conta, pais, estado, instituicao_ensino
-        ) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, created_at
       `;
 
       const result = await executeQuery(insertQuery, [
-        userData.nomeCompleto,
-        userData.nomeUsuario,
+        userData.nome_completo,
+        userData.nome_usuario,
         userData.email,
         hashedPassword,
-        userData.tipoConta,
+        userData.tipo_conta,
         userData.pais,
         userData.estado,
-        userData.instituicaoEnsino
+        userData.instituicao_ensino
       ]);
 
       if (result.success && result.data.length > 0) {
         const newUser = result.data[0];
-        
+
         // Gerar token simples (em produção, use JWT)
         const token = btoa(`${newUser.id}:${Date.now()}`);
-        
+
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_id', newUser.id);
 
@@ -148,7 +147,7 @@ export function useNeonAuth() {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
       const result = await executeQuery('SELECT * FROM perfis WHERE email = $1', [email]);
-      
+
       if (!result.success || result.data.length === 0) {
         throw new Error('Email ou senha incorretos');
       }
@@ -162,7 +161,7 @@ export function useNeonAuth() {
 
       // Gerar token
       const token = btoa(`${user.id}:${Date.now()}`);
-      
+
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user_id', user.id);
 
