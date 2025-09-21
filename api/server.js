@@ -32,6 +32,9 @@ app.use(express.urlencoded({
 // Middleware para logs de requisições
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  if (req.method === 'POST' && req.path === '/api/perfis') {
+    console.log('📝 Dados recebidos para cadastro:', { ...req.body, senha: '[HIDDEN]' });
+  }
   next();
 });
 

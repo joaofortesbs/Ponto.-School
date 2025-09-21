@@ -111,38 +111,29 @@ export function RegisterForm() {
       return;
     }
 
-    try {
-      console.log("📝 Iniciando processo de cadastro...");
-      
-      const result = await register({
-        nome_completo: formData.nomeCompleto,
-        nome_usuario: formData.nomeUsuario,
-        email: formData.email,
-        senha: formData.senha,
-        tipo_conta: formData.tipoConta,
-        pais: formData.pais,
-        estado: formData.estado,
-        instituicao_ensino: formData.instituicaoEnsino,
-      });
+    console.log("📝 Iniciando processo de cadastro...");
+    
+    const result = await register({
+      nome_completo: formData.nomeCompleto.trim(),
+      nome_usuario: formData.nomeUsuario.trim(),
+      email: formData.email.trim().toLowerCase(),
+      senha: formData.senha,
+      tipo_conta: formData.tipoConta,
+      pais: formData.pais,
+      estado: formData.estado,
+      instituicao_ensino: formData.instituicaoEnsino.trim(),
+    });
 
-      if (result.success) {
-        console.log("✅ Cadastro realizado com sucesso!");
-        // Salvar dados para redirecionamento
-        localStorage.setItem("lastRegisteredEmail", formData.email);
-        localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
-        
-        // Se precisar de login manual, avisar o usuário
-        if (result.needsManualLogin) {
-          navigate("/auth/login?message=account_created");
-        } else {
-          navigate("/dashboard");
-        }
+    if (result.success) {
+      console.log("✅ Cadastro realizado com sucesso!");
+      localStorage.setItem("lastRegisteredEmail", formData.email);
+      localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
+      
+      if (result.needsManualLogin) {
+        navigate("/auth/login?message=account_created");
       } else {
-        console.error("❌ Erro no cadastro:", result.error);
-        // O erro já está sendo exibido pelo hook useNeonAuth
+        navigate("/dashboard");
       }
-    } catch (error) {
-      console.error("❌ Erro inesperado no cadastro:", error);
     }
   };
 
