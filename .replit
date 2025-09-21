@@ -282,6 +282,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node scripts/start-full-platform.js"
 
+[[workflows.workflow]]
+name = "Configurar Activities DB"
+author = 47684299
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/create-activities-table.js"
+
 [auth]
 pageEnabled = false
 buttonEnabled = false
