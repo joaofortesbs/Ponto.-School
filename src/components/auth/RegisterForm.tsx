@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,95 +22,58 @@ import {
   CheckCircle,
   Globe,
   Users,
-  AlertCircle,
-  Wifi,
-  WifiOff
 } from "lucide-react";
 
-export default function RegisterForm() {
+const ESTADOS_BRASIL = [
+  "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará",
+  "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão",
+  "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará",
+  "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro",
+  "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia",
+  "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"
+];
+
+export function RegisterForm() {
   const navigate = useNavigate();
   const { register, isLoading, error } = useNeonAuth();
-
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    nome_completo: "",
-    nome_usuario: "",
+    nomeCompleto: "",
+    nomeUsuario: "",
     email: "",
     senha: "",
-    confirmar_senha: "",
-    tipo_conta: "",
+    confirmSenha: "",
+    tipoConta: "",
     pais: "Brasil",
     estado: "",
-    instituicao_ensino: ""
+    instituicaoEnsino: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-
-  const estadosBrasil = [
-    "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", 
-    "Distrito Federal", "Espírito Santo", "Goiás", "Maranhão", 
-    "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", 
-    "Paraíba", "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", 
-    "Rio Grande do Norte", "Rio Grande do Sul", "Rondônia", 
-    "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"
-  ];
-
-  React.useEffect(() => {
-    checkConnection();
-  }, []);
-
-  const checkConnection = async () => {
-    setConnectionStatus('checking');
-    try {
-      const response = await fetch('http://0.0.0.0:3001/api/status', {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000)
-      });
-      setConnectionStatus(response.ok ? 'online' : 'offline');
-    } catch {
-      try {
-        const response = await fetch('http://localhost:3001/api/status', {
-          method: 'GET',
-          signal: AbortSignal.timeout(3000)
-        });
-        setConnectionStatus(response.ok ? 'online' : 'offline');
-      } catch {
-        setConnectionStatus('offline');
-      }
-    }
-  };
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+    // Limpar erro do campo quando usuário começar a digitar
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (!formData.nome_completo.trim()) {
-      errors.nome_completo = "Nome completo é obrigatório";
+    if (!formData.nomeCompleto.trim()) {
+      errors.nomeCompleto = "Nome completo é obrigatório";
     }
 
-    if (!formData.nome_usuario.trim()) {
-      errors.nome_usuario = "Nome de usuário é obrigatório";
-    } else if (formData.nome_usuario.length < 3) {
-      errors.nome_usuario = "Nome de usuário deve ter pelo menos 3 caracteres";
+    if (!formData.nomeUsuario.trim()) {
+      errors.nomeUsuario = "Nome de usuário é obrigatório";
     }
 
     if (!formData.email.trim()) {
-      errors.email = "Email é obrigatório";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Email inválido";
+      errors.email = "E-mail é obrigatório";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "E-mail inválido";
     }
 
     if (!formData.senha) {
@@ -120,265 +82,224 @@ export default function RegisterForm() {
       errors.senha = "Senha deve ter pelo menos 6 caracteres";
     }
 
-    if (!formData.confirmar_senha) {
-      errors.confirmar_senha = "Confirmação de senha é obrigatória";
-    } else if (formData.senha !== formData.confirmar_senha) {
-      errors.confirmar_senha = "Senhas não coincidem";
+    if (!formData.confirmSenha) {
+      errors.confirmSenha = "Confirmação de senha é obrigatória";
+    } else if (formData.senha !== formData.confirmSenha) {
+      errors.confirmSenha = "Senhas não coincidem";
     }
 
-    if (!formData.tipo_conta) {
-      errors.tipo_conta = "Tipo de conta é obrigatório";
+    if (!formData.tipoConta) {
+      errors.tipoConta = "Tipo de conta é obrigatório";
     }
 
     if (!formData.estado) {
       errors.estado = "Estado é obrigatório";
     }
 
-    if (!formData.instituicao_ensino.trim()) {
-      errors.instituicao_ensino = "Instituição de ensino é obrigatória";
+    if (!formData.instituicaoEnsino.trim()) {
+      errors.instituicaoEnsino = "Instituição de ensino é obrigatória";
     }
 
-    setValidationErrors(errors);
+    setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
-    if (connectionStatus === 'offline') {
-      setValidationErrors({ general: "Sem conexão com o servidor. Verifique sua internet." });
-      return;
-    }
-
-    setIsSubmitting(true);
-
     try {
-      console.log('📝 Enviando dados de registro:', formData);
+      console.log("📝 Iniciando processo de cadastro...");
       
-      const registerData = {
-        nome_completo: formData.nome_completo.trim(),
-        nome_usuario: formData.nome_usuario.trim().toLowerCase(),
-        email: formData.email.trim().toLowerCase(),
+      const result = await register({
+        nome_completo: formData.nomeCompleto,
+        nome_usuario: formData.nomeUsuario,
+        email: formData.email,
         senha: formData.senha,
-        tipo_conta: formData.tipo_conta,
+        tipo_conta: formData.tipoConta,
         pais: formData.pais,
         estado: formData.estado,
-        instituicao_ensino: formData.instituicao_ensino.trim()
-      };
+        instituicao_ensino: formData.instituicaoEnsino,
+      });
 
-      const result = await register(registerData);
-      
       if (result.success) {
-        console.log('✅ Cadastro realizado com sucesso');
-        navigate('/dashboard');
+        console.log("✅ Cadastro realizado com sucesso!");
+        // Salvar dados para redirecionamento
+        localStorage.setItem("lastRegisteredEmail", formData.email);
+        localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
+        
+        // Se precisar de login manual, avisar o usuário
+        if (result.needsManualLogin) {
+          navigate("/auth/login?message=account_created");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
-        console.error('❌ Erro no cadastro:', result.error);
-        setValidationErrors({ general: result.error || "Erro no cadastro" });
+        console.error("❌ Erro no cadastro:", result.error);
+        // O erro já está sendo exibido pelo hook useNeonAuth
       }
     } catch (error) {
-      console.error('❌ Erro inesperado:', error);
-      setValidationErrors({ general: "Erro inesperado. Tente novamente." });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getConnectionIcon = () => {
-    switch (connectionStatus) {
-      case 'online': return <Wifi className="h-4 w-4 text-green-500" />;
-      case 'offline': return <WifiOff className="h-4 w-4 text-red-500" />;
-      default: return <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />;
-    }
-  };
-
-  const getConnectionText = () => {
-    switch (connectionStatus) {
-      case 'online': return 'Conectado';
-      case 'offline': return 'Sem conexão';
-      default: return 'Verificando...';
+      console.error("❌ Erro inesperado no cadastro:", error);
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Users className="h-8 w-8 text-white" />
+        <div className="flex justify-center mb-4">
+          <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+            <Users className="h-8 w-8 text-white" />
+          </div>
         </div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-blue-600 bg-clip-text text-transparent mb-2">
-          Criar Conta
-        </h1>
-        <p className="text-gray-600">Junte-se à nossa plataforma educacional</p>
-        
-        <div className="flex items-center justify-center gap-2 mt-4 text-sm">
-          {getConnectionIcon()}
-          <span className={`${connectionStatus === 'online' ? 'text-green-600' : connectionStatus === 'offline' ? 'text-red-600' : 'text-blue-600'}`}>
-            {getConnectionText()}
-          </span>
-        </div>
+        <h2 className="text-3xl font-bold text-white mb-2">Criar Conta</h2>
+        <p className="text-white/70">Junte-se à nossa plataforma educacional</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {(validationErrors.general || error) && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
-            <span className="text-red-600 text-sm">{validationErrors.general || error}</span>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-300 text-sm">
+            {error}
           </div>
         )}
 
-        <div className="space-y-2">
+        {/* Nome Completo */}
+        <div>
           <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
               type="text"
               placeholder="Nome completo"
-              value={formData.nome_completo}
-              onChange={(e) => handleInputChange('nome_completo', e.target.value)}
-              className={`pl-10 ${validationErrors.nome_completo ? 'border-red-500' : ''}`}
-              disabled={isSubmitting}
+              value={formData.nomeCompleto}
+              onChange={(e) => handleInputChange("nomeCompleto", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
             />
           </div>
-          {validationErrors.nome_completo && (
-            <p className="text-red-500 text-xs">{validationErrors.nome_completo}</p>
+          {formErrors.nomeCompleto && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.nomeCompleto}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* Nome de Usuário */}
+        <div>
           <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
               type="text"
               placeholder="Nome de usuário"
-              value={formData.nome_usuario}
-              onChange={(e) => handleInputChange('nome_usuario', e.target.value)}
-              className={`pl-10 ${validationErrors.nome_usuario ? 'border-red-500' : ''}`}
-              disabled={isSubmitting}
+              value={formData.nomeUsuario}
+              onChange={(e) => handleInputChange("nomeUsuario", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
             />
           </div>
-          {validationErrors.nome_usuario && (
-            <p className="text-red-500 text-xs">{validationErrors.nome_usuario}</p>
+          {formErrors.nomeUsuario && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.nomeUsuario}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* E-mail */}
+        <div>
           <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="E-mail"
               value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`pl-10 ${validationErrors.email ? 'border-red-500' : ''}`}
-              disabled={isSubmitting}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
             />
           </div>
-          {validationErrors.email && (
-            <p className="text-red-500 text-xs">{validationErrors.email}</p>
+          {formErrors.email && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.email}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* Senha */}
+        <div>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
               type={showPassword ? "text" : "password"}
               placeholder="Senha"
               value={formData.senha}
-              onChange={(e) => handleInputChange('senha', e.target.value)}
-              className={`pl-10 pr-10 ${validationErrors.senha ? 'border-red-500' : ''}`}
-              disabled={isSubmitting}
+              onChange={(e) => handleInputChange("senha", e.target.value)}
+              className="pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
-              disabled={isSubmitting}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white"
             >
-              {showPassword ? <EyeOff /> : <Eye />}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </div>
-          {validationErrors.senha && (
-            <p className="text-red-500 text-xs">{validationErrors.senha}</p>
+          {formErrors.senha && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.senha}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* Confirmar Senha */}
+        <div>
           <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
-              type={showConfirmPassword ? "text" : "password"}
+              type="password"
               placeholder="Confirmar senha"
-              value={formData.confirmar_senha}
-              onChange={(e) => handleInputChange('confirmar_senha', e.target.value)}
-              className={`pl-10 pr-10 ${validationErrors.confirmar_senha ? 'border-red-500' : ''}`}
-              disabled={isSubmitting}
+              value={formData.confirmSenha}
+              onChange={(e) => handleInputChange("confirmSenha", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
             />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
-              disabled={isSubmitting}
-            >
-              {showConfirmPassword ? <EyeOff /> : <Eye />}
-            </button>
           </div>
-          {validationErrors.confirmar_senha && (
-            <p className="text-red-500 text-xs">{validationErrors.confirmar_senha}</p>
+          {formErrors.confirmSenha && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.confirmSenha}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* Tipo de Conta */}
+        <div>
           <div className="relative">
-            <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Select
-              value={formData.tipo_conta}
-              onValueChange={(value) => handleInputChange('tipo_conta', value)}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger className={`pl-10 ${validationErrors.tipo_conta ? 'border-red-500' : ''}`}>
+            <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5 z-10" />
+            <Select value={formData.tipoConta} onValueChange={(value) => handleInputChange("tipoConta", value)}>
+              <SelectTrigger className="pl-10 bg-white/5 border-white/20 text-white focus:border-blue-400">
                 <SelectValue placeholder="Tipo de conta" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Aluno">Aluno</SelectItem>
                 <SelectItem value="Professor">Professor</SelectItem>
+                <SelectItem value="Aluno">Aluno</SelectItem>
                 <SelectItem value="Coordenador">Coordenador</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {validationErrors.tipo_conta && (
-            <p className="text-red-500 text-xs">{validationErrors.tipo_conta}</p>
+          {formErrors.tipoConta && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.tipoConta}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* País */}
+        <div>
           <div className="relative">
-            <Globe className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
               type="text"
-              value="Brasil"
-              disabled
-              className="pl-10 bg-gray-50"
+              value={formData.pais}
+              readOnly
+              className="pl-10 bg-white/5 border-white/20 text-white/70 cursor-not-allowed"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
+        {/* Estado */}
+        <div>
           <div className="relative">
-            <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Select
-              value={formData.estado}
-              onValueChange={(value) => handleInputChange('estado', value)}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger className={`pl-10 ${validationErrors.estado ? 'border-red-500' : ''}`}>
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5 z-10" />
+            <Select value={formData.estado} onValueChange={(value) => handleInputChange("estado", value)}>
+              <SelectTrigger className="pl-10 bg-white/5 border-white/20 text-white focus:border-blue-400">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                {estadosBrasil.map((estado) => (
+                {ESTADOS_BRASIL.map((estado) => (
                   <SelectItem key={estado} value={estado}>
                     {estado}
                   </SelectItem>
@@ -386,58 +307,58 @@ export default function RegisterForm() {
               </SelectContent>
             </Select>
           </div>
-          {validationErrors.estado && (
-            <p className="text-red-500 text-xs">{validationErrors.estado}</p>
+          {formErrors.estado && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.estado}</p>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* Instituição de Ensino */}
+        <div>
           <div className="relative">
-            <School className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <School className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
             <Input
               type="text"
               placeholder="Instituição de ensino"
-              value={formData.instituicao_ensino}
-              onChange={(e) => handleInputChange('instituicao_ensino', e.target.value)}
-              className={`pl-10 ${validationErrors.instituicao_ensino ? 'border-red-500' : ''}`}
-              disabled={isSubmitting}
+              value={formData.instituicaoEnsino}
+              onChange={(e) => handleInputChange("instituicaoEnsino", e.target.value)}
+              className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
             />
           </div>
-          {validationErrors.instituicao_ensino && (
-            <p className="text-red-500 text-xs">{validationErrors.instituicao_ensino}</p>
+          {formErrors.instituicaoEnsino && (
+            <p className="text-red-400 text-xs mt-1">{formErrors.instituicaoEnsino}</p>
           )}
         </div>
 
         <Button
           type="submit"
-          disabled={isSubmitting || connectionStatus === 'offline'}
-          className="w-full bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? (
-            <>
-              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Criando conta...
-            </>
+            </div>
           ) : (
-            <>
-              <CheckCircle className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5" />
               Criar Conta
-            </>
+            </div>
           )}
         </Button>
+      </form>
 
-        <p className="text-center text-sm text-gray-600">
+      <div className="text-center mt-6">
+        <p className="text-white/70">
           Já tem uma conta?{" "}
           <button
-            type="button"
-            onClick={() => navigate('/auth/login')}
-            className="text-blue-600 hover:text-blue-800 font-semibold"
-            disabled={isSubmitting}
+            onClick={() => navigate("/auth/login")}
+            className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
           >
             Fazer login
           </button>
         </p>
-      </form>
+      </div>
     </div>
   );
 }

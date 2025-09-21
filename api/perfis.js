@@ -1,4 +1,3 @@
-
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import neonDBModule from './neon-db.js';
@@ -6,23 +5,21 @@ import neonDBModule from './neon-db.js';
 const { neonDB } = neonDBModule;
 const router = express.Router();
 
-// Buscar perfil por email, username ou ID
+// Buscar perfil por email
 router.get('/', async (req, res) => {
   try {
-    const { email, username, id } = req.query;
+    const { email, id } = req.query;
 
-    if (!email && !username && !id) {
+    if (!email && !id) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Email, username ou ID é obrigatório' 
+        error: 'Email ou ID é obrigatório' 
       });
     }
 
     let result;
     if (id) {
       result = await neonDB.findProfileById(id);
-    } else if (username) {
-      result = await neonDB.findProfileByUsername(username);
     } else {
       result = await neonDB.findProfileByEmail(email);
     }
@@ -42,7 +39,7 @@ router.get('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Erro ao buscar perfil:', error);
+    console.error('Erro ao buscar perfil:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Erro interno do servidor',
@@ -67,13 +64,12 @@ router.post('/', async (req, res) => {
       instituicao_ensino
     } = req.body;
 
-    // Validar campos obrigatórios
+    // Validações básicas
     if (!nome_completo || !nome_usuario || !email || !senha || !tipo_conta || !estado || !instituicao_ensino) {
-      console.log('❌ Campos obrigatórios faltando');
+      console.log('❌ Campos obrigatórios ausentes');
       return res.status(400).json({ 
-        success: false, 
         error: 'Todos os campos são obrigatórios',
-        missing: {
+        missingFields: {
           nome_completo: !nome_completo,
           nome_usuario: !nome_usuario,
           email: !email,
@@ -85,36 +81,43 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Verificar se email já existe
-    console.log('🔍 Verificando se email já existe:', email);
-    const emailExists = await neonDB.findProfileByEmail(email);
-    if (emailExists.success && emailExists.data.length > 0) {
-      console.log('❌ Email já existe');
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email já está em uso' 
-      });
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('❌ Email inválido:', email);
+      return res.status(400).json({ error: 'Email inválido' });
     }
 
-    // Verificar se username já existe
-    console.log('🔍 Verificando se username já existe:', nome_usuario);
+    // Validar tipo de conta
+    const tiposPermitidos = ['Professor', 'Aluno', 'Coordenador'];
+    if (!tiposPermitidos.includes(tipo_conta)) {
+      console.log('❌ Tipo de conta inválido:', tipo_conta);
+      return res.status(400).json({ error: 'Tipo de conta inválido' });
+    }
+
+    // Verificar se email já existe
+    console.log('🔍 Verificando se email já existe...');
+    const emailExists = await neonDB.findProfileByEmail(email);
+    if (emailExists.success && emailExists.data.length > 0) {
+      console.log('❌ Email já em uso:', email);
+      return res.status(409).json({ error: 'Email já está em uso' });
+    }
+
+    // Verificar se nome de usuário já existe
+    console.log('🔍 Verificando se nome de usuário já existe...');
     const usernameExists = await neonDB.findProfileByUsername(nome_usuario);
     if (usernameExists.success && usernameExists.data.length > 0) {
-      console.log('❌ Username já existe');
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Nome de usuário já está em uso' 
-      });
+      console.log('❌ Nome de usuário já em uso:', nome_usuario);
+      return res.status(409).json({ error: 'Nome de usuário já está em uso' });
     }
 
     // Criptografar senha
     console.log('🔒 Criptografando senha...');
-    const saltRounds = 12;
-    const senha_hash = await bcrypt.hash(senha, saltRounds);
+    const senha_hash = await bcrypt.hash(senha, 12);
 
     // Criar perfil
-    console.log('💾 Criando perfil no banco...');
-    const profileData = {
+    console.log('💾 Criando perfil no banco de dados...');
+    const result = await neonDB.createProfile({
       nome_completo,
       nome_usuario,
       email,
@@ -123,210 +126,83 @@ router.post('/', async (req, res) => {
       pais,
       estado,
       instituicao_ensino
-    };
-
-    const result = await neonDB.createProfile(profileData);
+    });
 
     if (result.success && result.data.length > 0) {
       const newProfile = result.data[0];
+      // Não retornar a senha
+      delete newProfile.senha_hash;
       console.log('✅ Perfil criado com sucesso:', newProfile.id);
       
-      res.status(201).json({
+      return res.status(201).json({ 
         success: true,
         message: 'Perfil criado com sucesso',
-        data: {
-          id: newProfile.id,
-          nome_completo: newProfile.nome_completo,
-          nome_usuario: newProfile.nome_usuario,
-          email: newProfile.email,
-          tipo_conta: newProfile.tipo_conta,
-          pais: newProfile.pais,
-          estado: newProfile.estado,
-          instituicao_ensino: newProfile.instituicao_ensino,
-          created_at: newProfile.created_at
-        }
+        profile: newProfile 
       });
     } else {
-      console.error('❌ Erro ao criar perfil:', result.error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Erro ao criar perfil',
+      console.log('❌ Falha ao criar perfil no banco:', result.error);
+      return res.status(500).json({ 
+        success: false,
+        error: 'Erro ao criar perfil no banco de dados',
         details: result.error 
       });
     }
+
   } catch (error) {
-    console.error('❌ Erro interno ao criar perfil:', error);
-    res.status(500).json({ 
-      success: false, 
+    console.error('❌ Erro ao criar perfil:', error);
+    return res.status(500).json({ 
+      success: false,
       error: 'Erro interno do servidor',
       details: error.message 
     });
   }
 });
 
-// Login
+// Login - verificar credenciais
 router.post('/login', async (req, res) => {
   try {
-    console.log('🔑 Tentativa de login:', req.body.email);
-    
+    console.log('🔐 Tentativa de login para:', req.body.email);
+
     const { email, senha } = req.body;
 
     if (!email || !senha) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email e senha são obrigatórios' 
-      });
+      console.log('❌ Email ou senha ausentes');
+      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
 
-    // Buscar usuário
+    // Buscar perfil por email
+    console.log('🔍 Buscando perfil por email...');
     const result = await neonDB.findProfileByEmail(email);
-    
+
     if (!result.success || result.data.length === 0) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Email ou senha incorretos' 
-      });
+      console.log('❌ Perfil não encontrado para email:', email);
+      return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const user = result.data[0];
-    
+    const profile = result.data[0];
+
     // Verificar senha
-    const senhaValida = await bcrypt.compare(senha, user.senha_hash);
-    
+    console.log('🔒 Verificando senha...');
+    const senhaValida = await bcrypt.compare(senha, profile.senha_hash);
+
     if (!senhaValida) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Email ou senha incorretos' 
-      });
+      console.log('❌ Senha inválida para:', email);
+      return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
     // Login bem-sucedido
-    delete user.senha_hash; // Não enviar a senha
+    delete profile.senha_hash;
+    console.log('✅ Login realizado com sucesso para:', email);
     
-    console.log('✅ Login realizado com sucesso:', user.id);
-    
-    res.json({
+    res.json({ 
       success: true,
       message: 'Login realizado com sucesso',
-      data: user
+      profile 
     });
-    
+
   } catch (error) {
     console.error('❌ Erro no login:', error);
     res.status(500).json({ 
-      success: false, 
-      error: 'Erro interno do servidor',
-      details: error.message 
-    });
-  }
-});
-
-// Atualizar perfil
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
-    
-    // Remover campos que não devem ser atualizados diretamente
-    delete updateData.id;
-    delete updateData.senha_hash;
-    delete updateData.created_at;
-    
-    const result = await neonDB.updateProfile(id, updateData);
-    
-    if (result.success && result.data.length > 0) {
-      res.json({
-        success: true,
-        message: 'Perfil atualizado com sucesso',
-        data: result.data[0]
-      });
-    } else {
-      res.status(404).json({ 
-        success: false, 
-        error: 'Perfil não encontrado ou erro na atualização',
-        details: result.error 
-      });
-    }
-  } catch (error) {
-    console.error('❌ Erro ao atualizar perfil:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Erro interno do servidor',
-      details: error.message 
-    });
-  }
-});
-
-// Deletar perfil
-router.delete('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const result = await neonDB.deleteProfile(id);
-    
-    if (result.success && result.data.length > 0) {
-      res.json({
-        success: true,
-        message: 'Perfil deletado com sucesso'
-      });
-    } else {
-      res.status(404).json({ 
-        success: false, 
-        error: 'Perfil não encontrado' 
-      });
-    }
-  } catch (error) {
-    console.error('❌ Erro ao deletar perfil:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Erro interno do servidor',
-      details: error.message 
-    });
-  }
-});
-
-// Listar perfis
-router.get('/list', async (req, res) => {
-  try {
-    const { 
-      tipo_conta, 
-      estado, 
-      pais, 
-      limit = 50, 
-      offset = 0 
-    } = req.query;
-    
-    const filters = {};
-    if (tipo_conta) filters.tipo_conta = tipo_conta;
-    if (estado) filters.estado = estado;
-    if (pais) filters.pais = pais;
-    
-    const result = await neonDB.listProfiles(filters, parseInt(limit), parseInt(offset));
-    
-    if (result.success) {
-      const total = await neonDB.countProfiles(filters);
-      
-      res.json({
-        success: true,
-        data: result.data,
-        pagination: {
-          total,
-          limit: parseInt(limit),
-          offset: parseInt(offset),
-          pages: Math.ceil(total / parseInt(limit))
-        }
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        error: 'Erro ao listar perfis',
-        details: result.error 
-      });
-    }
-  } catch (error) {
-    console.error('❌ Erro ao listar perfis:', error);
-    res.status(500).json({ 
-      success: false, 
       error: 'Erro interno do servidor',
       details: error.message 
     });
