@@ -29,16 +29,6 @@ export function useNeonAuth() {
     error: null
   });
 
-  // Declarações de estado para setUser, setIsLoading e setError devem ser feitas aqui
-  // Se este hook for usado em um contexto onde esses estados já existem, 
-  // você precisará ajustá-lo para receber esses estados como parâmetros ou 
-  // removê-los se a lógica de estado já estiver sendo tratada externamente.
-  // Por enquanto, vamos simular a existência deles para que a lógica do `register` funcione.
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
 
   useEffect(() => {
     checkAuthStatus();
@@ -94,8 +84,7 @@ export function useNeonAuth() {
     instituicao_ensino: string;
   }) => {
     try {
-      setIsLoading(true);
-      setError("");
+      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
       // Verificar se o servidor está rodando
       try {
@@ -110,7 +99,11 @@ export function useNeonAuth() {
           throw new Error("Servidor não está respondendo");
         }
       } catch (healthError) {
-        setError("Servidor indisponível. Tente novamente em alguns segundos.");
+        setAuthState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: "Servidor indisponível. Tente novamente em alguns segundos." 
+        }));
         return { success: false, error: "Servidor indisponível" };
       }
 
@@ -135,7 +128,7 @@ export function useNeonAuth() {
           console.error("Erro ao processar resposta:", parseError);
         }
 
-        setError(errorMessage);
+        setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
         return { success: false, error: errorMessage };
       }
 
@@ -165,14 +158,18 @@ export function useNeonAuth() {
           console.error("Erro ao processar resposta de login:", parseError);
         }
 
-        setError(loginErrorMessage);
+        setAuthState(prev => ({ ...prev, isLoading: false, error: loginErrorMessage }));
         return { success: false, error: loginErrorMessage };
       }
 
       const loginData = await loginResponse.json();
 
-      setUser(loginData.profile);
-      setIsAuthenticated(true);
+      setAuthState({
+        user: loginData.profile,
+        isLoading: false,
+        isAuthenticated: true,
+        error: null
+      });
 
       // Salvar dados no localStorage
       localStorage.setItem("neon_user", JSON.stringify(loginData.profile));
@@ -183,10 +180,8 @@ export function useNeonAuth() {
     } catch (error) {
       console.error("Erro na requisição:", error);
       const errorMessage = error instanceof Error ? error.message : "Erro de conexão com o servidor";
-      setError(errorMessage);
+      setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return { success: false, error: errorMessage };
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -257,7 +252,10 @@ export function useNeonAuth() {
   };
 
   return {
-    ...authState,
+    user: authState.user,
+    isLoading: authState.isLoading,
+    isAuthenticated: authState.isAuthenticated,
+    error: authState.error,
     register,
     login,
     logout,

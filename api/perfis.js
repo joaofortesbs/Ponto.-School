@@ -116,14 +116,15 @@ router.post('/', async (req, res) => {
       delete newProfile.senha_hash;
       console.log('✅ Perfil criado com sucesso:', newProfile.id);
       
-      res.status(201).json({ 
+      return res.status(201).json({ 
         success: true,
         message: 'Perfil criado com sucesso',
         profile: newProfile 
       });
     } else {
       console.log('❌ Falha ao criar perfil no banco:', result.error);
-      res.status(500).json({ 
+      return res.status(500).json({ 
+        success: false,
         error: 'Erro ao criar perfil no banco de dados',
         details: result.error 
       });
@@ -131,7 +132,8 @@ router.post('/', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Erro ao criar perfil:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
+      success: false,
       error: 'Erro interno do servidor',
       details: error.message 
     });
