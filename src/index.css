@@ -9,6 +9,7 @@
 @import "./styles/rotina-calendar.css";
 @import "./styles/groups-header-transitions.css";
 @import "./styles/chat-responsive.css";
+@import "./features/schoolpower/construction/styles/universalActivityHeader.css";
 
 /* Utilitário para limitar linhas de texto */
 .line-clamp-3 {
@@ -2844,7 +2845,6 @@ textarea:hover,
   overflow: hidden;
   line-height: 1.5;
 }
-@import url('./features/schoolpower/construction/styles/universalActivityHeader.css');
 
   /* Custom scrollbar para o card de pré-visualização */
   .custom-scrollbar::-webkit-scrollbar {
