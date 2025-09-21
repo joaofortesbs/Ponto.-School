@@ -86,27 +86,47 @@ export function useNeonAuth() {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Verificar se o servidor está rodando com timeout
+      // Verificar se o servidor está rodando com timeout e fallback de URLs
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-        const healthCheck = await fetch("http://localhost:3001/api/status", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          signal: controller.signal
-        });
+        const backendUrls = [
+          "http://0.0.0.0:3001/api/status",
+          "http://localhost:3001/api/status",
+          "http://127.0.0.1:3001/api/status"
+        ];
+
+        let healthCheck;
+        let lastError;
+
+        for (const url of backendUrls) {
+          try {
+            healthCheck = await fetch(url, {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              signal: controller.signal
+            });
+
+            if (healthCheck.ok) {
+              const healthData = await healthCheck.json();
+              console.log("✅ Servidor disponível em:", url, healthData);
+              break;
+            }
+          } catch (error) {
+            lastError = error;
+            console.log("Tentando próxima URL...", error.message);
+            continue;
+          }
+        }
 
         clearTimeout(timeoutId);
 
-        if (!healthCheck.ok) {
-          throw new Error("Servidor não está respondendo");
+        if (!healthCheck || !healthCheck.ok) {
+          throw lastError || new Error("Servidor não está respondendo");
         }
-
-        const healthData = await healthCheck.json();
-        console.log("✅ Servidor disponível:", healthData);
 
       } catch (healthError) {
         console.error("❌ Erro de conectividade:", healthError);
@@ -120,14 +140,36 @@ export function useNeonAuth() {
 
       console.log("📤 Enviando dados de cadastro:", { ...userData, senha: "[HIDDEN]" });
 
-      const response = await fetch("http://localhost:3001/api/perfis", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      const backendUrls = [
+        "http://0.0.0.0:3001/api/perfis",
+        "http://localhost:3001/api/perfis",
+        "http://127.0.0.1:3001/api/perfis"
+      ];
+
+      let response;
+      let lastError;
+
+      for (const url of backendUrls) {
+        try {
+          response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify(userData),
+          });
+
+          if (response.ok || response.status < 500) {
+            console.log("✅ Conexão estabelecida com:", url);
+            break;
+          }
+        } catch (error) {
+          lastError = error;
+          console.log("Tentando próxima URL para registro...", error.message);
+          continue;
+        }
+      }
 
       console.log("📥 Status da resposta:", response.status, response.statusText);
 
@@ -157,17 +199,40 @@ export function useNeonAuth() {
 
       // Login automático após cadastro bem-sucedido
       console.log("🔐 Tentando login automático...");
-      const loginResponse = await fetch("http://localhost:3001/api/perfis/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({
-          email: userData.email,
-          senha: userData.senha,
-        }),
-      });
+      
+      const loginUrls = [
+        "http://0.0.0.0:3001/api/perfis/login",
+        "http://localhost:3001/api/perfis/login",
+        "http://127.0.0.1:3001/api/perfis/login"
+      ];
+
+      let loginResponse;
+      let loginLastError;
+
+      for (const url of loginUrls) {
+        try {
+          loginResponse = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+            },
+            body: JSON.stringify({
+              email: userData.email,
+              senha: userData.senha,
+            }),
+          });
+
+          if (loginResponse.ok || loginResponse.status < 500) {
+            console.log("✅ Login conectado em:", url);
+            break;
+          }
+        } catch (error) {
+          loginLastError = error;
+          console.log("Tentando próxima URL para login...", error.message);
+          continue;
+        }
+      }
 
       if (!loginResponse.ok) {
         let loginErrorMessage = "Erro no login automático";

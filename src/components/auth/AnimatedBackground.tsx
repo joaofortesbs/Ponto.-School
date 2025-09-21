@@ -121,7 +121,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     createNodes();
     isInitializedRef.current = true;
     setIsReady(true);
-  }, [dimensions, createNodes]);
+  }, [dimensions.width, dimensions.height]);
 
   // Inicializar as dimensões do canvas e os nós no carregamento da página
   useEffect(() => {
@@ -136,26 +136,35 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
-    // Inicializar as teias imediatamente
+    // Limpar
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, []);
+
+  // Separar a inicialização dos nós
+  useEffect(() => {
+    if (!mounted) return;
+    
+    // Inicializar as teias apenas uma vez
     initializeNodes();
 
     // Forçar atualização das teias quando solicitado
     const handleForceUpdate = () => {
       console.log("Atualizando teias forçadamente");
+      isInitializedRef.current = false;
       initializeNodes();
     };
 
     document.addEventListener('ForceWebTeiaUpdate', handleForceUpdate);
 
-    // Limpar
     return () => {
-      window.removeEventListener('resize', updateDimensions);
       document.removeEventListener('ForceWebTeiaUpdate', handleForceUpdate);
-      if (requestRef.current !== null) {
-        cancelAnimationFrame(requestRef.current);
-      }
     };
-  }, [initializeNodes]);
+  }, [mounted, initializeNodes]);
 
   // Atualiza a posição dos nós com base na posição do cursor
   const updateNodePositions = useCallback(() => {
