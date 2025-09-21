@@ -1,49 +1,37 @@
+import neonDBModule from './neon-db.js';
 
-const { neonDB } = require('./neon-db.js');
+const { neonDB } = neonDBModule;
 
-async function handler(req, res) {
-  // Configurar CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: 'Método não permitido' });
-  }
-
+// Função para inicializar o banco de dados
+export const initializeDatabase = async () => {
   try {
-    const { query, params = [] } = req.body;
-
-    if (!query) {
-      return res.status(400).json({ success: false, error: 'Query é obrigatória' });
-    }
-
-    const result = await neonDB.executeQuery(query, params);
-
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        data: result.data,
-        rowCount: result.rowCount
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: result.error || 'Erro interno do servidor'
-      });
-    }
-
+    console.log('🚀 Inicializando banco de dados...');
+    await neonDB.initializeDatabase();
+    console.log('✅ Banco de dados inicializado com sucesso!');
+    return true;
   } catch (error) {
-    console.error('Erro na query do banco de dados:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Erro interno do servidor'
-    });
+    console.error('❌ Erro ao inicializar banco de dados:', error);
+    throw error;
   }
-}
+};
 
-module.exports = handler;
+// Função para testar conexão
+export const testConnection = async () => {
+  try {
+    const isConnected = await neonDB.testConnection();
+    return isConnected;
+  } catch (error) {
+    console.error('❌ Erro ao testar conexão:', error);
+    throw error;
+  }
+};
+
+// Exportar instância do neonDB
+export { neonDB };
+
+// Export padrão
+export default {
+  neonDB,
+  initializeDatabase,
+  testConnection
+};

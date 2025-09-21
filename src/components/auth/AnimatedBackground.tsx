@@ -22,6 +22,7 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
   const [dimensions, setDimensions] = useState({ width: window.innerWidth || 1280, height: window.innerHeight || 800 });
   const [mousePosition, setMousePosition] = useState({ x: dimensions.width / 2, y: dimensions.height / 2 });
   const [isReady, setIsReady] = useState(false);
+  const [mounted, setMounted] = useState(false); // Added state for mount tracking
   const requestRef = useRef<number | null>(null);
   const previousTimeRef = useRef<number | null>(null);
   const isInitializedRef = useRef(false);
@@ -415,6 +416,13 @@ export function AnimatedBackground({ children }: AnimatedBackgroundProps) {
       }
     };
   }, [updateNodePositions, drawNodesAndConnections]);
+
+  // Effect para garantir que initializeNodes seja chamado apenas uma vez após o mount
+  useEffect(() => {
+    if (!mounted) {
+      setMounted(true);
+    }
+  }, [mounted]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">

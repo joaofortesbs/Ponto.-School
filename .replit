@@ -54,7 +54,7 @@ localPort = 41579
 externalPort = 6800
 
 [workflows]
-runButton = "Backend API Neon"
+runButton = "Plataforma Completa"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -272,6 +272,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node api/server.js"
+
+[[workflows.workflow]]
+name = "Plataforma Completa"
+author = 47684299
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/start-full-platform.js"
 
 [auth]
 pageEnabled = false
