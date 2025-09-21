@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Share2, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { X, Copy, Check, Share2, Loader2, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
@@ -29,6 +29,8 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [atividade, setAtividade] = useState<AtividadeCompartilhavel | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isPermissionsExpanded, setIsPermissionsExpanded] = useState(false);
+  const [editorTemas, setEditorTemas] = useState(false);
   const userInfo = useUserInfo();
 
   // Busca ou cria o link compartilhável quando o modal abre
@@ -334,16 +336,6 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                     placeholder={shareLink ? shareLink : "Gerando link..."}
                     className="pr-24 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm"
                   />
-                  {/* Status do Link */}
-                  {shareLink ? (
-                    <div className="absolute -bottom-6 left-0 text-xs text-green-600 dark:text-green-400">
-                      ✓ Link pronto para compartilhar ({shareLink.length} caracteres)
-                    </div>
-                  ) : (
-                    <div className="absolute -bottom-6 left-0 text-xs text-blue-600 dark:text-blue-400">
-                      ⏳ Gerando link único...
-                    </div>
-                  )}
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button
                       onClick={regenerarLink}
@@ -368,13 +360,52 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                   </div>
                 </div>
 
-                {/* Informações adicionais */}
-                {atividade && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Link criado em {new Date(atividade.criadoEm).toLocaleDateString('pt-BR')} • 
-                    Código: {atividade.codigoUnico}
-                  </div>
-                )}
+                {/* Card de Permissões */}
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden">
+                  <button
+                    onClick={() => setIsPermissionsExpanded(!isPermissionsExpanded)}
+                    className="w-full flex items-center justify-between p-3 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Permissões
+                    </span>
+                    {isPermissionsExpanded ? (
+                      <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {isPermissionsExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        className="border-t border-gray-200 dark:border-gray-600"
+                      >
+                        <div className="p-3 space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="editor-temas"
+                              checked={editorTemas}
+                              onChange={(e) => setEditorTemas(e.target.checked)}
+                              className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                            />
+                            <label 
+                              htmlFor="editor-temas" 
+                              className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
+                            >
+                              Editor de temas
+                            </label>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Feedback de Cópia */}
                 <AnimatePresence>
