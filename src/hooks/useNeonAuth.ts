@@ -42,11 +42,9 @@ export function useNeonAuth() {
 
       const userId = localStorage.getItem('user_id');
       if (userId) {
-        // Tentar múltiplas URLs para o backend
+        // Usar proxy do Vite para conectar ao backend
         const backendUrls = [
-          `http://0.0.0.0:3001/api/perfis?id=${userId}`,
-          `http://localhost:3001/api/perfis?id=${userId}`,
-          `http://127.0.0.1:3001/api/perfis?id=${userId}`
+          `/api/perfis?id=${userId}`
         ];
 
         let response;
@@ -112,9 +110,7 @@ export function useNeonAuth() {
       console.log("📤 Enviando dados de cadastro:", { ...userData, senha: "[HIDDEN]" });
 
       const backendUrls = [
-        "http://0.0.0.0:3001/api/perfis",
-        "http://localhost:3001/api/perfis",
-        "http://127.0.0.1:3001/api/perfis"
+        "/api/perfis"
       ];
 
       let response;
@@ -178,9 +174,7 @@ export function useNeonAuth() {
       console.log("🔐 Tentando login automático...");
       
       const loginUrls = [
-        "http://0.0.0.0:3001/api/perfis/login",
-        "http://localhost:3001/api/perfis/login",
-        "http://127.0.0.1:3001/api/perfis/login"
+        "/api/perfis/login"
       ];
 
       let loginResponse;
@@ -258,9 +252,7 @@ export function useNeonAuth() {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
       const loginUrls = [
-        "http://0.0.0.0:3001/api/perfis/login",
-        "http://localhost:3001/api/perfis/login", 
-        "http://127.0.0.1:3001/api/perfis/login"
+        "/api/perfis/login"
       ];
 
       let response;
