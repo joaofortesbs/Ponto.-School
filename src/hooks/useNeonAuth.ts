@@ -29,6 +29,17 @@ export function useNeonAuth() {
     error: null
   });
 
+  // Declarações de estado para setUser, setIsLoading e setError devem ser feitas aqui
+  // Se este hook for usado em um contexto onde esses estados já existem, 
+  // você precisará ajustá-lo para receber esses estados como parâmetros ou 
+  // removê-los se a lógica de estado já estiver sendo tratada externamente.
+  // Por enquanto, vamos simular a existência deles para que a lógica do `register` funcione.
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+
   useEffect(() => {
     checkAuthStatus();
   }, []);
@@ -83,44 +94,99 @@ export function useNeonAuth() {
     instituicao_ensino: string;
   }) => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+      setIsLoading(true);
+      setError("");
 
-      // Usar o endpoint específico de perfis
-      const response = await fetch('/api/perfis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        const newUser = result.data;
-
-        // Gerar token simples (em produção, use JWT)
-        const token = btoa(`${newUser.id}:${Date.now()}`);
-
-        localStorage.setItem('auth_token', token);
-        localStorage.setItem('user_id', newUser.id);
-
-        setAuthState({
-          user: newUser,
-          isLoading: false,
-          isAuthenticated: true,
-          error: null
+      // Verificar se o servidor está rodando
+      try {
+        const healthCheck = await fetch("http://localhost:3001/api/status", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
-        return { success: true, user: newUser };
-      } else {
-        throw new Error(result.error || 'Erro ao criar conta');
+        if (!healthCheck.ok) {
+          throw new Error("Servidor não está respondendo");
+        }
+      } catch (healthError) {
+        setError("Servidor indisponível. Tente novamente em alguns segundos.");
+        return { success: false, error: "Servidor indisponível" };
       }
+
+      const response = await fetch("http://localhost:3001/api/perfis", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        // Tentar ler a resposta como texto primeiro, depois como JSON
+        let errorMessage = "Erro ao criar conta";
+        try {
+          const errorText = await response.text();
+          if (errorText) {
+            const errorData = JSON.parse(errorText);
+            errorMessage = errorData.error || errorMessage;
+          }
+        } catch (parseError) {
+          console.error("Erro ao processar resposta:", parseError);
+        }
+
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      const data = await response.json();
+
+      // Login automático após cadastro bem-sucedido
+      const loginResponse = await fetch("http://localhost:3001/api/perfis/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          senha: userData.senha,
+        }),
+      });
+
+      if (!loginResponse.ok) {
+        const loginErrorText = await loginResponse.text();
+        let loginErrorMessage = "Erro no login automático";
+        try {
+          if (loginErrorText) {
+            const loginErrorData = JSON.parse(loginErrorText);
+            loginErrorMessage = loginErrorData.error || loginErrorMessage;
+          }
+        } catch (parseError) {
+          console.error("Erro ao processar resposta de login:", parseError);
+        }
+
+        setError(loginErrorMessage);
+        return { success: false, error: loginErrorMessage };
+      }
+
+      const loginData = await loginResponse.json();
+
+      setUser(loginData.profile);
+      setIsAuthenticated(true);
+
+      // Salvar dados no localStorage
+      localStorage.setItem("neon_user", JSON.stringify(loginData.profile));
+      localStorage.setItem("neon_authenticated", "true");
+
+      return { success: true, profile: loginData.profile };
+
     } catch (error) {
-      console.error('Erro no cadastro:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao criar conta';
-      setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+      console.error("Erro na requisição:", error);
+      const errorMessage = error instanceof Error ? error.message : "Erro de conexão com o servidor";
+      setError(errorMessage);
       return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -146,7 +212,7 @@ export function useNeonAuth() {
 
       // Verificar senha usando o endpoint de database
       const passwordCheckResult = await executeQuery('SELECT senha_hash FROM perfis WHERE email = $1', [email]);
-      
+
       if (!passwordCheckResult.success || passwordCheckResult.data.length === 0) {
         throw new Error('Email ou senha incorretos');
       }
