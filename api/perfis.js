@@ -1,6 +1,6 @@
 
-const { neonDB } = require('./neon-db.js');
-const bcrypt = require('bcryptjs');
+import { neonDB } from './neon-db.js';
+import bcrypt from 'bcryptjs';
 
 async function handler(req, res) {
   // Configurar CORS
@@ -30,7 +30,7 @@ async function handler(req, res) {
         res.status(405).json({ success: false, error: 'Método não permitido' });
     }
   } catch (error) {
-    console.error('Erro no endpoint de perfis:', error);
+    console.error('❌ Erro no endpoint de perfis:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Erro interno do servidor'
@@ -240,4 +240,4 @@ async function handleDelete(req, res) {
   }
 }
 
-module.exports = handler;
+export default handler;

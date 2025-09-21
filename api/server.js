@@ -3,7 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
-const { neonDB } = require('./neon-db.js');
+import { neonDB } from './neon-db.js';
+import perfilsHandler from './perfis.js';
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ app.use(express.json());
 
 // Rotas
 app.use('/api', emailRoutes);
-app.use('/api/perfis', require('./perfis.js'));
+app.use('/api/perfis', perfilsHandler);
 
 // Rota raiz
 app.get('/', (req, res) => {
@@ -42,6 +43,12 @@ app.get('/', (req, res) => {
         <div class="endpoint">
           <p><strong>POST /api/enviar-email</strong> - Enviar email</p>
         </div>
+        <div class="endpoint">
+          <p><strong>GET /api/perfis</strong> - Buscar perfil</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>POST /api/perfis</strong> - Criar perfil</p>
+        </div>
       </body>
     </html>
   `);
@@ -56,12 +63,13 @@ app.get('/api/status', (req, res) => {
 async function startServer() {
   try {
     // Inicializar banco de dados
+    console.log('🔄 Inicializando banco de dados...');
     await neonDB.initializeDatabase();
     
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Servidor de API rodando na porta ${PORT}`);
-      console.log(`Acesse em: http://0.0.0.0:${PORT}/api/status`);
+      console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
+      console.log(`🌐 Acesse em: http://0.0.0.0:${PORT}/api/status`);
     });
   } catch (error) {
     console.error('❌ Erro ao inicializar servidor:', error);
@@ -73,5 +81,9 @@ startServer();
 
 // Tratamento global de erros para evitar que o servidor caia
 process.on('uncaughtException', (error) => {
-  console.error('Erro não tratado no servidor:', error);
+  console.error('❌ Erro não tratado no servidor:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Promise rejeitada não tratada:', reason);
 });

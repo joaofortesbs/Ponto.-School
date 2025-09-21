@@ -1,5 +1,5 @@
 
-const { Client } = require('pg');
+import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
@@ -27,7 +27,7 @@ class NeonDBManager {
         rowCount: result.rowCount
       };
     } catch (error) {
-      console.error('Erro ao executar query:', error);
+      console.error('❌ Erro ao executar query:', error);
       return {
         success: false,
         error: error.message
@@ -99,7 +99,7 @@ class NeonDBManager {
     for (const indexQuery of indexes) {
       const result = await this.executeQuery(indexQuery);
       if (!result.success) {
-        console.error('Erro ao criar índice:', result.error);
+        console.error('❌ Erro ao criar índice:', result.error);
       }
     }
     
@@ -330,7 +330,4 @@ class NeonDBManager {
 // Instância singleton do gerenciador
 const neonDB = new NeonDBManager();
 
-module.exports = {
-  NeonDBManager,
-  neonDB
-};
+export { NeonDBManager, neonDB };

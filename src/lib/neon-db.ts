@@ -1,26 +1,13 @@
 
-// Configuração do banco Neon para o ambiente client-side
-const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || process.env.DATABASE_URL;
-
-interface QueryResult {
-  success: boolean;
-  data?: any[];
-  error?: string;
-  rowCount?: number;
-}
-
-// Função para fazer requisições HTTP para a API do banco
-async function executeHttpQuery(query: string, params: any[] = []): Promise<QueryResult> {
+// Cliente TypeScript para interagir com a API Neon
+export async function executeQuery(query: string, params: any[] = []) {
   try {
     const response = await fetch('/api/database', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        query,
-        params
-      })
+      body: JSON.stringify({ query, params })
     });
 
     if (!response.ok) {
@@ -30,36 +17,99 @@ async function executeHttpQuery(query: string, params: any[] = []): Promise<Quer
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('Erro ao executar query:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erro desconhecido' 
+    console.error('❌ Erro ao executar query:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     };
   }
 }
 
-// Função para testar a conexão
-export async function testConnection() {
+// Verificar se uma tabela existe
+export async function tableExists(tableName: string): Promise<boolean> {
+  const query = `
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = $1
+    );
+  `;
+  
+  const result = await executeQuery(query, [tableName]);
+  return result.success && result.data?.[0]?.exists;
+}
+
+// Funções específicas para perfis
+export async function findProfileByEmail(email: string) {
   try {
-    const result = await executeHttpQuery('SELECT NOW() as timestamp');
-    if (result.success && result.data?.[0]) {
-      return { success: true, timestamp: result.data[0].timestamp };
-    }
-    return { success: false, error: 'Falha na conexão' };
+    const response = await fetch(`/api/perfis?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    return await response.json();
   } catch (error) {
-    console.error('Erro na conexão com o banco:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Erro na conexão' 
-    };
+    console.error('❌ Erro ao buscar perfil por email:', error);
+    return { success: false, error: 'Erro ao buscar perfil' };
   }
 }
 
-// Função para executar queries
-export async function executeQuery(query: string, params: any[] = []): Promise<QueryResult> {
-  return executeHttpQuery(query, params);
+export async function findProfileByUsername(username: string) {
+  try {
+    const response = await fetch(`/api/perfis?username=${encodeURIComponent(username)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('❌ Erro ao buscar perfil por username:', error);
+    return { success: false, error: 'Erro ao buscar perfil' };
+  }
 }
 
-// Pool e Client placeholders para compatibilidade (não usados no browser)
-export const pool = null;
-export const createClient = () => null;
+export async function findProfileById(id: string) {
+  try {
+    const response = await fetch(`/api/perfis?id=${encodeURIComponent(id)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('❌ Erro ao buscar perfil por ID:', error);
+    return { success: false, error: 'Erro ao buscar perfil' };
+  }
+}
+
+export async function createProfile(profileData: {
+  nome_completo: string;
+  nome_usuario: string;
+  email: string;
+  senha: string;
+  tipo_conta: string;
+  pais?: string;
+  estado: string;
+  instituicao_ensino: string;
+}) {
+  try {
+    const response = await fetch('/api/perfis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('❌ Erro ao criar perfil:', error);
+    return { success: false, error: 'Erro ao criar perfil' };
+  }
+}
