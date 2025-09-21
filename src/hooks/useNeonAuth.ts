@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 interface User {
@@ -172,7 +171,7 @@ export function useNeonAuth() {
 
       // Login automático após cadastro bem-sucedido
       console.log("🔐 Tentando login automático...");
-      
+
       const loginUrls = [
         "/api/perfis/login"
       ];
@@ -231,7 +230,7 @@ export function useNeonAuth() {
     } catch (error) {
       console.error("❌ Erro geral na requisição:", error);
       let errorMessage = "Erro de conexão com o servidor";
-      
+
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           errorMessage = "Timeout na conexão. Tente novamente.";
@@ -241,7 +240,7 @@ export function useNeonAuth() {
           errorMessage = error.message;
         }
       }
-      
+
       setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return { success: false, error: errorMessage };
     }
@@ -319,7 +318,7 @@ export function useNeonAuth() {
     localStorage.removeItem('user_id');
     localStorage.removeItem("neon_user");
     localStorage.removeItem("neon_authenticated");
-    
+
     setAuthState({
       user: null,
       isLoading: false,

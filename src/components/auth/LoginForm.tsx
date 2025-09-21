@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import { useNeonAuth } from "@/hooks/useNeonAuth";
 
 interface FormData {
   email: string;
@@ -14,18 +14,18 @@ interface FormData {
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [accountCreated, setAccountCreated] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
-  const [success, setSuccess] = useState(false); // Added success state
-  const [invalidCredentials, setInvalidCredentials] = useState(false); // Track invalid credentials
+  const [success, setSuccess] = useState(false);
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
+  const { login, isLoading, error } = useNeonAuth();
 
   useEffect(() => {
     // Verificar se veio da tela de registro
@@ -33,7 +33,7 @@ export function LoginForm() {
       setAccountCreated(true);
       setTimeout(() => {
         setAccountCreated(false);
-      }, 8000); // Aumentado para 8 segundos para dar mais tempo de leitura
+      }, 8000);
 
       // Limpar flag de redirecionamento
       localStorage.removeItem("redirectTimer");
@@ -41,10 +41,7 @@ export function LoginForm() {
       // Verificar se temos o email direto do state (redirecionamento imediato)
       if (location.state.email) {
         setFormData((prev) => ({ ...prev, email: location.state.email }));
-        console.log(
-          "Preenchendo campo de email do state:",
-          location.state.email,
-        );
+        console.log("Preenchendo campo de email do state:", location.state.email);
       } else {
         // Usar email registrado (preferencial)
         const lastRegisteredEmail = localStorage.getItem("lastRegisteredEmail");
@@ -56,10 +53,7 @@ export function LoginForm() {
           const lastUsername = localStorage.getItem("lastRegisteredUsername");
           if (lastUsername) {
             setFormData((prev) => ({ ...prev, email: lastUsername }));
-            console.log(
-              "Preenchendo campo de email com username:",
-              lastUsername,
-            );
+            console.log("Preenchendo campo de email com username:", lastUsername);
           }
         }
       }
@@ -71,7 +65,7 @@ export function LoginForm() {
       setAccountCreated(true);
       setTimeout(() => {
         setAccountCreated(false);
-      }, 8000); // Aumentado para 8 segundos
+      }, 8000);
 
       // Limpar flag de redirecionamento
       localStorage.removeItem("redirectTimer");
@@ -97,8 +91,7 @@ export function LoginForm() {
   }, [location]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value =
-      e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setFormData((prev) => ({ ...prev, [e.target.name]: value }));
 
     // Clear invalid credentials state when user starts typing in email or password fields
@@ -108,7 +101,7 @@ export function LoginForm() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !loading) {
+    if (e.key === "Enter" && !isLoading) {
       e.preventDefault();
       const form = e.currentTarget.closest("form");
       if (form) {
@@ -119,137 +112,39 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-    setSuccess(false); // Reset success on submit
 
     // Basic field validation
     if (!formData.email || !formData.password) {
-      setError("Preencha todos os campos");
-      setLoading(false);
+      setInvalidCredentials(true);
       return;
     }
 
-    // Feedback visual imediato para melhorar a percepção
-    setSuccess(true);
-    localStorage.setItem("auth_checked", "pending");
-    localStorage.setItem("auth_status", "authenticating");
-
-    // Iniciar redirecionamento antecipado para melhorar percepção de velocidade
-    // Um timeout curto para dar percepção de resposta instantânea
-    const preloadTimeout = setTimeout(() => {
-      if (localStorage.getItem("auth_status") === "authenticating") {
-        // Pré-carregar a rota de dashboard enquanto aguarda autenticação
-        const preloadLink = document.createElement("link");
-        preloadLink.rel = "prefetch";
-        preloadLink.href = "/dashboard";
-        document.head.appendChild(preloadLink);
-      }
-    }, 300);
-
-    // Timeout mais curto (5 segundos) para feedback em caso de lentidão
-    const authTimeout = setTimeout(() => {
-      if (localStorage.getItem("auth_status") === "authenticating") {
-        // Não cancelar o login, apenas mostrar feedback
-        setError("Estamos processando seu login, aguarde um momento...");
-      }
-    }, 5000);
+    console.log("🔐 Tentando login com Neon Auth...");
 
     try {
-      let authResult;
-      const inputValue = formData.email;
-      const isEmail = inputValue.includes("@");
+      const result = await login(formData.email, formData.password);
 
-      if (isEmail) {
-        // Login com email
-        authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: inputValue,
-            password: formData.password,
-          }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
-          ),
-        ]);
+      if (result.success) {
+        console.log("✅ Login realizado com sucesso!");
+        setSuccess(true);
+
+        // Limpar dados de registro
+        localStorage.removeItem("lastRegisteredEmail");
+        localStorage.removeItem("lastRegisteredUsername");
+
+        // Redirecionar para dashboard
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1000);
       } else {
-        // Login com nome de usuário
-        // Primeiro, buscar o email associado ao nome de usuário
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("email")
-          .eq("username", inputValue)
-          .single();
-
-        if (profileError || !profileData?.email) {
-          setSuccess(false);
-          setError("Nome de usuário não encontrado");
-          setInvalidCredentials(true); // Set invalid credentials state
-          setLoading(false);
-          clearTimeout(preloadTimeout);
-          clearTimeout(authTimeout);
-          localStorage.removeItem("auth_checked");
-          localStorage.removeItem("auth_status");
-          return;
-        }
-
-        // Agora fazer login com o email encontrado
-        authResult = await Promise.race([
-          supabase.auth.signInWithPassword({
-            email: profileData.email,
-            password: formData.password,
-          }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido")), 8000),
-          ),
-        ]);
+        console.error("❌ Erro no login:", result.error);
+        setInvalidCredentials(true);
+        // The error from useNeonAuth might be a string or an object, ensure it's displayed correctly
+        // For simplicity, we'll just set invalidCredentials to true which handles the red border
       }
-
-      const { data, error } = authResult;
-
-      clearTimeout(preloadTimeout);
-      clearTimeout(authTimeout);
-
-      if (error) {
-        setSuccess(false);
-        if (
-          error.message.includes("Invalid login credentials") ||
-          error.message.includes("Email not confirmed")
-        ) {
-          setError("Email ou senha inválidos");
-          setInvalidCredentials(true); // Set invalid credentials state
-        } else if (error.status === 0) {
-          //Improved network error handling
-          setError("Erro de conexão. Verifique sua internet.");
-        } else {
-          setError("Erro ao fazer login: " + error.message);
-        }
-        localStorage.removeItem("auth_checked");
-        localStorage.removeItem("auth_status");
-        setLoading(false);
-        return;
-      }
-
-      if (data?.user) {
-        localStorage.setItem("auth_checked", "true");
-        localStorage.setItem("auth_status", "authenticated");
-
-        // Redirecionar rapidamente para melhorar percepção de velocidade
-        navigate("/");
-      } else {
-        setSuccess(false);
-        setError("Erro ao completar login");
-        localStorage.removeItem("auth_checked");
-        localStorage.removeItem("auth_status");
-      }
-    } catch (err: any) {
-      clearTimeout(authTimeout);
-      setSuccess(false);
-      setError("Erro ao fazer login, tente novamente");
-      console.error("Erro ao logar:", err);
-      localStorage.removeItem("auth_checked");
-      localStorage.removeItem("auth_status");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("❌ Erro inesperado no login:", err);
+      setInvalidCredentials(true);
     }
   };
 
@@ -269,6 +164,7 @@ export function LoginForm() {
           </div>
         </div>
       )}
+
       {success && (
         <div className="bg-white/30 dark:bg-[#0A2540]/30 border border-green-500/50 backdrop-blur-md mb-4 rounded-lg p-4 shadow-md">
           <div className="flex items-center gap-3">
@@ -286,6 +182,7 @@ export function LoginForm() {
           </div>
         </div>
       )}
+
       <div className="text-center space-y-2">
         <div className="flex justify-center mb-4">
           <img
@@ -398,7 +295,7 @@ export function LoginForm() {
               }}
             ></div>
           </div>
-          <div className="flex justify-between items-center mt-8"></div>
+
           <div className="flex justify-between items-center mt-8">
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -429,9 +326,23 @@ export function LoginForm() {
           </div>
         </div>
 
-        {error && (
-          <div className="text-sm text-red-500 text-center">{error}</div>
+        {/* The error state is now managed by the hook, so we might not need this custom error display if the hook's error message is sufficient.
+            However, to maintain consistency with the original structure and handle potential specific error messages from the hook,
+            we'll keep this conditional rendering, but it might need adjustment based on the actual error format from useNeonAuth.
+            If `error` from the hook is directly usable as a string message, this part might be simplified or removed.
+            For now, we check if `error` exists and display it, otherwise show the invalidCredentials message. */}
+        {error ? (
+          <div className="text-sm text-red-500 text-center">
+            {typeof error === "string" ? error : "Credenciais inválidas. Verifique seu email e senha."}
+          </div>
+        ) : (
+          invalidCredentials && (
+            <div className="text-sm text-red-500 text-center">
+              Credenciais inválidas. Verifique seu email e senha.
+            </div>
+          )
         )}
+
 
         {/* Divisão com asterisco */}
         <div className="mt-10 mb-6 flex items-center">
@@ -445,9 +356,9 @@ export function LoginForm() {
             >
               <path
                 stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M12 2v20m7.0711-17.071L4.9289 19.071M22 12H2m17.0711 7.0711L4.9289 4.9289"
               ></path>
             </svg>
@@ -458,10 +369,10 @@ export function LoginForm() {
         <Button
           type="submit"
           className="w-full h-11 text-base bg-brand-primary hover:bg-brand-primary/90 text-white transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-brand-primary/20 relative overflow-hidden group"
-          disabled={loading}
+          disabled={isLoading}
         >
           <span className="relative z-10 font-bold">
-            {loading ? "Entrando..." : "Acessar minha conta"}
+            {isLoading ? "Entrando..." : "Acessar minha conta"}
           </span>
           <span className="absolute inset-0 bg-gradient-to-r from-brand-primary to-[#FF8C40] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
         </Button>
@@ -483,37 +394,3 @@ export function LoginForm() {
     </div>
   );
 }
-
-//This is a placeholder for the registration form. A complete implementation would require a separate component.
-export function RegistrationForm() {
-  //Implementation for registration form here.  This would include fields for name, email, password, etc., and a submit handler to create a new user account in Supabase.  Error handling and success messages would also be necessary.
-  return <div>Registration Form (Not implemented)</div>;
-}
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError("");
-
-  // Verificar se veio do registro (para garantir exibição do modal de boas-vindas)
-  const isFromRegistration =
-    localStorage.getItem("registrationCompleted") === "true";
-
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
-    });
-
-    // Garantir que o flag de primeiro login esteja ativo após login bem-sucedido
-    // se o usuário acabou de se registrar
-    if (data?.user && isFromRegistration) {
-      localStorage.setItem("isFirstLogin", "true");
-
-      // Limpar flag de sessão do modal para garantir que será exibido
-      sessionStorage.removeItem("welcomeModalShown");
-      sessionStorage.removeItem(`currentSession_${data.user.id}`);
-    }
-  } catch (err) {
-    console.error("Erro ao fazer login:", err);
-  }
-};

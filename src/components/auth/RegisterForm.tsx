@@ -131,11 +131,19 @@ export function RegisterForm() {
         localStorage.setItem("lastRegisteredEmail", formData.email);
         localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
         
-        // Se precisar de login manual, avisar o usuário
-        if (result.needsManualLogin) {
-          navigate("/auth/login?message=account_created");
-        } else {
+        // Se o login automático funcionou, ir direto ao dashboard
+        if (!result.needsManualLogin) {
+          console.log("🎉 Login automático realizado, redirecionando para dashboard...");
           navigate("/dashboard");
+        } else {
+          // Se precisar de login manual, ir para login com dados preenchidos
+          console.log("⚠️ Login automático falhou, redirecionando para login...");
+          navigate("/login", { 
+            state: { 
+              newAccount: true, 
+              email: formData.email 
+            } 
+          });
         }
       } else {
         console.error("❌ Erro no cadastro:", result.error);
