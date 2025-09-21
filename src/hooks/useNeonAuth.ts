@@ -42,7 +42,6 @@ export function useNeonAuth() {
 
       const userId = localStorage.getItem('user_id');
       if (userId) {
-        // Tentar múltiplas URLs para o backend
         const backendUrls = [
           `http://0.0.0.0:3001/api/perfis?id=${userId}`,
           `http://localhost:3001/api/perfis?id=${userId}`,
@@ -61,18 +60,16 @@ export function useNeonAuth() {
             });
 
             if (response.ok) {
-              console.log("✅ Conexão estabelecida com:", url);
               break;
             }
           } catch (error) {
             lastError = error;
-            console.log("Tentando próxima URL...", error.message);
             continue;
           }
         }
 
         if (!response || !response.ok) {
-          throw lastError || new Error("Nenhuma URL de backend respondeu");
+          throw lastError || new Error("Backend não está disponível");
         }
 
         const result = await response.json();
@@ -92,7 +89,7 @@ export function useNeonAuth() {
       }
     } catch (error) {
       console.error('Erro ao verificar autenticação:', error);
-      setAuthState(prev => ({ ...prev, isLoading: false, error: null })); // Não mostrar erro na verificação
+      setAuthState(prev => ({ ...prev, isLoading: false, error: null }));
     }
   };
 
@@ -109,7 +106,34 @@ export function useNeonAuth() {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      console.log("📤 Enviando dados de cadastro:", { ...userData, senha: "[HIDDEN]" });
+      // Primeira verificação: backend está rodando?
+      const statusUrls = [
+        "http://0.0.0.0:3001/api/status",
+        "http://localhost:3001/api/status",
+        "http://127.0.0.1:3001/api/status"
+      ];
+
+      let backendAvailable = false;
+      for (const url of statusUrls) {
+        try {
+          const statusResponse = await fetch(url, {
+            method: 'GET',
+            signal: AbortSignal.timeout(2000)
+          });
+          if (statusResponse.ok) {
+            backendAvailable = true;
+            break;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      if (!backendAvailable) {
+        const errorMessage = "Servidor indisponível. Verifique se o backend está rodando.";
+        setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+        return { success: false, error: errorMessage };
+      }
 
       const backendUrls = [
         "http://0.0.0.0:3001/api/perfis",
@@ -120,7 +144,6 @@ export function useNeonAuth() {
       let response;
       let lastError;
 
-      // Tentar registrar com cada URL
       for (const url of backendUrls) {
         try {
           response = await fetch(url, {
@@ -134,21 +157,19 @@ export function useNeonAuth() {
           });
 
           if (response.ok || response.status < 500) {
-            console.log("✅ Conexão de registro estabelecida com:", url);
             break;
           }
         } catch (error) {
           lastError = error;
-          console.log("Tentando próxima URL para registro...", error.message);
           continue;
         }
       }
 
       if (!response) {
-        throw lastError || new Error("Não foi possível conectar ao servidor");
+        const errorMessage = "Não foi possível conectar ao servidor. Verifique sua conexão.";
+        setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
+        return { success: false, error: errorMessage };
       }
-
-      console.log("📥 Status da resposta:", response.status, response.statusText);
 
       if (!response.ok) {
         let errorMessage = "Erro ao criar conta";
@@ -162,21 +183,16 @@ export function useNeonAuth() {
             errorMessage = errorText || errorMessage;
           }
         } catch (parseError) {
-          console.error("Erro ao processar resposta de erro:", parseError);
           errorMessage = `Erro HTTP ${response.status}: ${response.statusText}`;
         }
 
-        console.error("❌ Erro no cadastro:", errorMessage);
         setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
         return { success: false, error: errorMessage };
       }
 
       const data = await response.json();
-      console.log("✅ Cadastro realizado com sucesso:", data);
 
-      // Login automático após cadastro bem-sucedido
-      console.log("🔐 Tentando login automático...");
-      
+      // Login automático após cadastro
       const loginUrls = [
         "http://0.0.0.0:3001/api/perfis/login",
         "http://localhost:3001/api/perfis/login",
@@ -184,8 +200,6 @@ export function useNeonAuth() {
       ];
 
       let loginResponse;
-      let loginLastError;
-
       for (const url of loginUrls) {
         try {
           loginResponse = await fetch(url, {
@@ -201,25 +215,18 @@ export function useNeonAuth() {
             signal: AbortSignal.timeout(5000)
           });
 
-          if (loginResponse.ok || loginResponse.status < 500) {
-            console.log("✅ Login conectado em:", url);
-            break;
-          }
+          if (loginResponse.ok) break;
         } catch (error) {
-          loginLastError = error;
-          console.log("Tentando próxima URL para login...", error.message);
           continue;
         }
       }
 
       if (!loginResponse || !loginResponse.ok) {
-        console.warn("⚠️ Login automático falhou, mas cadastro foi bem-sucedido");
         setAuthState(prev => ({ ...prev, isLoading: false, error: "Conta criada! Faça login manualmente." }));
         return { success: true, profile: data.profile, needsManualLogin: true };
       }
 
       const loginData = await loginResponse.json();
-      console.log("✅ Login automático realizado com sucesso:", loginData);
 
       setAuthState({
         user: loginData.profile,
@@ -228,14 +235,13 @@ export function useNeonAuth() {
         error: null
       });
 
-      // Salvar dados no localStorage
       localStorage.setItem("neon_user", JSON.stringify(loginData.profile));
       localStorage.setItem("neon_authenticated", "true");
 
       return { success: true, profile: loginData.profile };
 
     } catch (error) {
-      console.error("❌ Erro geral na requisição:", error);
+      console.error("Erro geral na requisição:", error);
       let errorMessage = "Erro de conexão com o servidor";
       
       if (error instanceof Error) {
@@ -276,7 +282,6 @@ export function useNeonAuth() {
           });
 
           if (response.ok || response.status < 500) {
-            console.log("✅ Login conectado em:", url);
             break;
           }
         } catch (error) {
@@ -297,8 +302,6 @@ export function useNeonAuth() {
       }
 
       const user = result.profile;
-
-      // Gerar token
       const token = btoa(`${user.id}:${Date.now()}`);
 
       localStorage.setItem('auth_token', token);

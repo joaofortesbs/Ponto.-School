@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -29,13 +30,19 @@ app.use(express.urlencoded({
   limit: '50mb' 
 }));
 
-// Middleware para logs de requisições
+// Middleware para logs detalhados
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  const timestamp = new Date().toISOString();
+  console.log(`${timestamp} - ${req.method} ${req.path}`);
+  
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`Body keys: ${Object.keys(req.body).join(', ')}`);
+  }
+  
   next();
 });
 
-// Middleware para adicionar headers CORS adicionais
+// Middleware para CORS adicional
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -52,69 +59,163 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     console.error('❌ Erro de JSON malformado:', err);
-    return res.status(400).json({ error: 'JSON malformado na requisição' });
+    return res.status(400).json({ 
+      success: false,
+      error: 'JSON malformado na requisição',
+      details: err.message 
+    });
   }
   next();
+});
+
+// Health check route
+app.get('/api/status', (req, res) => {
+  res.json({ 
+    status: 'Servidor de API funcionando corretamente!',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: 'Neon PostgreSQL'
+  });
 });
 
 // Rotas
 app.use('/api', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
 
-// Rota raiz
+// Rota raiz com informações do servidor
 app.get('/', (req, res) => {
   res.send(`
     <html>
       <head>
-        <title>API Epictus</title>
+        <title>API Ponto.School</title>
         <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          h1 { color: #FF6B00; }
-          .endpoint { background: #f4f4f4; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
-          code { background: #e0e0e0; padding: 2px 4px; border-radius: 3px; }
+          body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+          }
+          .header { 
+            background: linear-gradient(135deg, #FF6B00, #29335C);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+          }
+          h1 { color: #FF6B00; margin: 0; }
+          .endpoint { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 10px;
+            border-left: 4px solid #FF6B00;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          code { 
+            background: #e0e0e0; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+            font-family: monospace;
+          }
+          .status { 
+            background: #4CAF50; 
+            color: white; 
+            padding: 10px; 
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+          }
         </style>
       </head>
       <body>
-        <h1>Servidor API Epictus</h1>
-        <p>O servidor está funcionando corretamente!</p>
-        <h2>Endpoints disponíveis:</h2>
+        <div class="header">
+          <h1>🚀 API Ponto.School</h1>
+          <p>Servidor backend para plataforma educacional</p>
+        </div>
+        
+        <div class="status">
+          ✅ Servidor funcionando normalmente - ${new Date().toLocaleString('pt-BR')}
+        </div>
+        
+        <h2>📡 Endpoints Disponíveis:</h2>
+        
         <div class="endpoint">
           <p><strong>GET /api/status</strong> - Verificar status do servidor</p>
           <p>Exemplo: <code>${req.protocol}://${req.get('host')}/api/status</code></p>
         </div>
+        
+        <div class="endpoint">
+          <p><strong>POST /api/perfis</strong> - Criar novo perfil de usuário</p>
+          <p>Body: nome_completo, nome_usuario, email, senha, tipo_conta, pais, estado, instituicao_ensino</p>
+        </div>
+        
+        <div class="endpoint">
+          <p><strong>POST /api/perfis/login</strong> - Fazer login</p>
+          <p>Body: email, senha</p>
+        </div>
+        
+        <div class="endpoint">
+          <p><strong>GET /api/perfis?id={userId}</strong> - Buscar perfil por ID</p>
+        </div>
+        
         <div class="endpoint">
           <p><strong>POST /api/enviar-email</strong> - Enviar email</p>
         </div>
-        <div class="endpoint">
-          <p><strong>GET /api/perfis</strong> - Buscar perfil</p>
-        </div>
-        <div class="endpoint">
-          <p><strong>POST /api/perfis</strong> - Criar perfil</p>
-        </div>
+        
+        <h2>🔧 Informações do Sistema:</h2>
+        <ul>
+          <li><strong>Porta:</strong> ${PORT}</li>
+          <li><strong>Banco de dados:</strong> Neon PostgreSQL</li>
+          <li><strong>CORS:</strong> Habilitado</li>
+          <li><strong>Limite de upload:</strong> 50MB</li>
+          <li><strong>Uptime:</strong> ${Math.floor(process.uptime())} segundos</li>
+        </ul>
       </body>
     </html>
   `);
 });
 
-// Rota de teste
-app.get('/api/status', (req, res) => {
-  res.json({ status: 'Servidor de API funcionando corretamente!' });
+// Tratamento de rotas não encontradas
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Rota não encontrada',
+    path: req.path,
+    method: req.method
+  });
 });
 
 // Inicializar banco de dados e iniciar servidor
 async function startServer() {
   try {
+    console.log('🔄 Inicializando servidor da API...');
+    
     // Inicializar banco de dados
     console.log('🔄 Inicializando banco de dados...');
     await neonDB.initializeDatabase();
+    console.log('✅ Banco de dados inicializado!');
 
     // Iniciar servidor
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
       console.log(`🌐 Acesse em: http://0.0.0.0:${PORT}/api/status`);
+      console.log(`📊 Dashboard: http://0.0.0.0:${PORT}/`);
+      console.log('✅ Servidor pronto para receber requisições!');
     });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('🔄 Recebido SIGTERM, fechando servidor...');
+      server.close(() => {
+        console.log('✅ Servidor fechado com sucesso');
+        process.exit(0);
+      });
+    });
+
   } catch (error) {
     console.error('❌ Erro ao inicializar servidor:', error);
+    console.error('Stack trace:', error.stack);
     process.exit(1);
   }
 }
@@ -124,8 +225,10 @@ startServer();
 // Tratamento global de erros para evitar que o servidor caia
 process.on('uncaughtException', (error) => {
   console.error('❌ Erro não tratado no servidor:', error);
+  console.error('Stack trace:', error.stack);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Promise rejeitada não tratada:', reason);
+  console.error('Promise:', promise);
 });

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,9 @@ import {
   CheckCircle,
   Globe,
   Users,
+  AlertCircle,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 
 const ESTADOS_BRASIL = [
@@ -37,6 +41,7 @@ export function RegisterForm() {
   const navigate = useNavigate();
   const { register, isLoading, error } = useNeonAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const [formData, setFormData] = useState({
     nomeCompleto: "",
     nomeUsuario: "",
@@ -51,9 +56,27 @@ export function RegisterForm() {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  // Verificar status da conexão periodicamente
+  React.useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const response = await fetch('http://0.0.0.0:3001/api/status', {
+          signal: AbortSignal.timeout(2000)
+        });
+        setConnectionStatus(response.ok ? 'connected' : 'disconnected');
+      } catch (error) {
+        setConnectionStatus('disconnected');
+      }
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 10000); // Verificar a cada 10s
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Limpar erro do campo quando usuário começar a digitar
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: "" }));
     }
@@ -68,6 +91,8 @@ export function RegisterForm() {
 
     if (!formData.nomeUsuario.trim()) {
       errors.nomeUsuario = "Nome de usuário é obrigatório";
+    } else if (formData.nomeUsuario.length < 3) {
+      errors.nomeUsuario = "Nome de usuário deve ter pelo menos 3 caracteres";
     }
 
     if (!formData.email.trim()) {
@@ -111,9 +136,13 @@ export function RegisterForm() {
       return;
     }
 
+    // Verificar conexão antes de enviar
+    if (connectionStatus === 'disconnected') {
+      setFormErrors({ submit: "Servidor indisponível. Verifique se o backend está rodando." });
+      return;
+    }
+
     try {
-      console.log("📝 Iniciando processo de cadastro...");
-      
       const result = await register({
         nome_completo: formData.nomeCompleto,
         nome_usuario: formData.nomeUsuario,
@@ -126,23 +155,40 @@ export function RegisterForm() {
       });
 
       if (result.success) {
-        console.log("✅ Cadastro realizado com sucesso!");
-        // Salvar dados para redirecionamento
         localStorage.setItem("lastRegisteredEmail", formData.email);
         localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
         
-        // Se precisar de login manual, avisar o usuário
         if (result.needsManualLogin) {
           navigate("/auth/login?message=account_created");
         } else {
           navigate("/dashboard");
         }
-      } else {
-        console.error("❌ Erro no cadastro:", result.error);
-        // O erro já está sendo exibido pelo hook useNeonAuth
       }
     } catch (error) {
-      console.error("❌ Erro inesperado no cadastro:", error);
+      console.error("Erro inesperado no cadastro:", error);
+      setFormErrors({ submit: "Erro inesperado. Tente novamente." });
+    }
+  };
+
+  const getConnectionIcon = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return <Wifi className="h-4 w-4 text-green-400" />;
+      case 'disconnected':
+        return <WifiOff className="h-4 w-4 text-red-400" />;
+      default:
+        return <Wifi className="h-4 w-4 text-yellow-400 animate-pulse" />;
+    }
+  };
+
+  const getConnectionMessage = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return "Conectado ao servidor";
+      case 'disconnected':
+        return "Servidor indisponível";
+      default:
+        return "Verificando conexão...";
     }
   };
 
@@ -156,12 +202,25 @@ export function RegisterForm() {
         </div>
         <h2 className="text-3xl font-bold text-white mb-2">Criar Conta</h2>
         <p className="text-white/70">Junte-se à nossa plataforma educacional</p>
+        
+        {/* Status da conexão */}
+        <div className="flex items-center justify-center gap-2 mt-4 p-2 rounded-lg bg-white/5">
+          {getConnectionIcon()}
+          <span className={`text-xs ${
+            connectionStatus === 'connected' ? 'text-green-400' :
+            connectionStatus === 'disconnected' ? 'text-red-400' : 'text-yellow-400'
+          }`}>
+            {getConnectionMessage()}
+          </span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-300 text-sm">
-            {error}
+        {/* Erro geral ou de conexão */}
+        {(error || formErrors.submit) && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-300 text-sm flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <span>{error || formErrors.submit}</span>
           </div>
         )}
 
@@ -175,6 +234,7 @@ export function RegisterForm() {
               value={formData.nomeCompleto}
               onChange={(e) => handleInputChange("nomeCompleto", e.target.value)}
               className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+              disabled={isLoading}
             />
           </div>
           {formErrors.nomeCompleto && (
@@ -192,6 +252,7 @@ export function RegisterForm() {
               value={formData.nomeUsuario}
               onChange={(e) => handleInputChange("nomeUsuario", e.target.value)}
               className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+              disabled={isLoading}
             />
           </div>
           {formErrors.nomeUsuario && (
@@ -209,6 +270,7 @@ export function RegisterForm() {
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+              disabled={isLoading}
             />
           </div>
           {formErrors.email && (
@@ -226,11 +288,13 @@ export function RegisterForm() {
               value={formData.senha}
               onChange={(e) => handleInputChange("senha", e.target.value)}
               className="pl-10 pr-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+              disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white"
+              disabled={isLoading}
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
@@ -250,6 +314,7 @@ export function RegisterForm() {
               value={formData.confirmSenha}
               onChange={(e) => handleInputChange("confirmSenha", e.target.value)}
               className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+              disabled={isLoading}
             />
           </div>
           {formErrors.confirmSenha && (
@@ -261,7 +326,11 @@ export function RegisterForm() {
         <div>
           <div className="relative">
             <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5 z-10" />
-            <Select value={formData.tipoConta} onValueChange={(value) => handleInputChange("tipoConta", value)}>
+            <Select 
+              value={formData.tipoConta} 
+              onValueChange={(value) => handleInputChange("tipoConta", value)}
+              disabled={isLoading}
+            >
               <SelectTrigger className="pl-10 bg-white/5 border-white/20 text-white focus:border-blue-400">
                 <SelectValue placeholder="Tipo de conta" />
               </SelectTrigger>
@@ -294,7 +363,11 @@ export function RegisterForm() {
         <div>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5 z-10" />
-            <Select value={formData.estado} onValueChange={(value) => handleInputChange("estado", value)}>
+            <Select 
+              value={formData.estado} 
+              onValueChange={(value) => handleInputChange("estado", value)}
+              disabled={isLoading}
+            >
               <SelectTrigger className="pl-10 bg-white/5 border-white/20 text-white focus:border-blue-400">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -322,6 +395,7 @@ export function RegisterForm() {
               value={formData.instituicaoEnsino}
               onChange={(e) => handleInputChange("instituicaoEnsino", e.target.value)}
               className="pl-10 bg-white/5 border-white/20 text-white placeholder-white/50 focus:border-blue-400"
+              disabled={isLoading}
             />
           </div>
           {formErrors.instituicaoEnsino && (
@@ -331,13 +405,18 @@ export function RegisterForm() {
 
         <Button
           type="submit"
-          disabled={isLoading}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading || connectionStatus === 'disconnected'}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           {isLoading ? (
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Criando conta...
+            </div>
+          ) : connectionStatus === 'disconnected' ? (
+            <div className="flex items-center gap-2">
+              <WifiOff className="h-5 w-5" />
+              Servidor indisponível
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -354,6 +433,7 @@ export function RegisterForm() {
           <button
             onClick={() => navigate("/auth/login")}
             className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+            disabled={isLoading}
           >
             Fazer login
           </button>
