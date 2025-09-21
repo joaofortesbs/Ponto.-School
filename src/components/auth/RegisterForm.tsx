@@ -134,7 +134,7 @@ export function RegisterForm() {
         // Se o login automático funcionou, ir direto ao dashboard
         if (!result.needsManualLogin) {
           console.log("🎉 Login automático realizado, redirecionando para dashboard...");
-          navigate("/dashboard");
+          navigate("/", { replace: true });
         } else {
           // Se precisar de login manual, ir para login com dados preenchidos
           console.log("⚠️ Login automático falhou, redirecionando para login...");

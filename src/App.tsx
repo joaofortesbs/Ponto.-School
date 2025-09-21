@@ -165,6 +165,11 @@ function App() {
         const isAuth = await checkAuthentication();
         if (!isAuth) {
           navigate('/login', { replace: true });
+        } else {
+          // Se está autenticado e na rota raiz, garantir que está no dashboard
+          if (location.pathname === "/") {
+            console.log("✅ Usuário autenticado, redirecionando para dashboard");
+          }
         }
       }
     };

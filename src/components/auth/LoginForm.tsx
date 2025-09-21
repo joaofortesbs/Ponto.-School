@@ -134,7 +134,7 @@ export function LoginForm() {
 
         // Redirecionar para dashboard
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/", { replace: true });
         }, 1000);
       } else {
         console.error("❌ Erro no login:", result.error);
