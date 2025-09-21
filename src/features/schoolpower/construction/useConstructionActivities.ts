@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ConstructionActivity } from './types';
-import { useActivities } from './useActivities'; // Assumindo que useActivities exporta saveActivity
+import { useActivities } from '@/hooks/useActivities'; // Importando do hooks correto
 
 interface UseConstructionActivitiesReturn {
   activities: ConstructionActivity[];
@@ -12,7 +12,10 @@ interface UseConstructionActivitiesReturn {
 export function useConstructionActivities(approvedActivities: any[]): UseConstructionActivitiesReturn {
   const [activities, setActivities] = useState<ConstructionActivity[]>([]);
   const [loading, setLoading] = useState(true);
-  const { saveActivity } = useActivities(); // Importando saveActivity de useActivities
+  
+  // Obter userId do localStorage
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('current_user_id') || 'anonymous';
+  const { saveActivity } = useActivities(userId); // Importando saveActivity de useActivities
 
   const convertToConstructionActivity = (activity: any): ConstructionActivity => {
     console.log('🔄 Convertendo atividade:', activity);
