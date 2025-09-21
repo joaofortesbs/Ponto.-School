@@ -436,6 +436,13 @@ export class AutoBuildService {
     try {
       console.log(`💾 [AUTO-BUILD] Salvando atividade no Neon: ${activity.title}`);
 
+      // Verificar se já foi salva
+      const alreadySaved = localStorage.getItem(`neon_auto_saved_${activity.id}`);
+      if (alreadySaved) {
+        console.log(`ℹ️ [AUTO-BUILD] Atividade já salva: ${activity.id}`);
+        return;
+      }
+
       const { activitiesService } = await import('@/services/activitiesService');
       
       // Obter ID do usuário
@@ -457,10 +464,10 @@ export class AutoBuildService {
           originalData: activity.customFields || {},
           
           // Dados do formulário usado para gerar
-          formData: formData,
+          formData: formData || {},
           
           // Conteúdo gerado pela IA
-          generatedContent: generatedContent,
+          generatedContent: generatedContent || {},
           
           // Metadados do School Power
           schoolPowerMetadata: {
@@ -471,10 +478,20 @@ export class AutoBuildService {
             status: activity.status,
             description: activity.description,
             isBuilt: true,
-            source: 'schoolpower_auto_build'
+            source: 'schoolpower_auto_build',
+            hasFormData: !!(formData && Object.keys(formData).length > 0),
+            hasGeneratedContent: !!(generatedContent && Object.keys(generatedContent).length > 0),
+            saveAttempt: new Date().toISOString()
           }
         }
       };
+
+      console.log(`📝 [AUTO-BUILD] Dados para salvar:`, {
+        activityCode,
+        title: activity.title,
+        hasFormData: !!(formData && Object.keys(formData).length > 0),
+        hasGeneratedContent: !!(generatedContent && Object.keys(generatedContent).length > 0)
+      });
 
       const result = await activitiesService.saveActivity(saveData);
 
@@ -487,28 +504,52 @@ export class AutoBuildService {
           savedAt: new Date().toISOString(),
           title: activity.title,
           type: activity.type,
-          neonSaved: true
+          neonSaved: true,
+          userId: userId
         }));
 
         // Atualizar lista global de atividades salvas
         const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        savedActivities.push({
+        
+        // Evitar duplicatas
+        const existingIndex = savedActivities.findIndex((item: any) => item.activityId === activity.id);
+        const newSaveData = {
           activityCode,
           savedAt: new Date().toISOString(),
           title: activity.title,
           type: activity.type,
           activityId: activity.id,
           neonSaved: true,
-          autoBuilt: true
-        });
+          autoBuilt: true,
+          source: 'auto_build'
+        };
+
+        if (existingIndex >= 0) {
+          savedActivities[existingIndex] = newSaveData;
+        } else {
+          savedActivities.push(newSaveData);
+        }
+        
         localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
 
       } else {
         console.error(`❌ [AUTO-BUILD] Falha ao salvar no Neon: ${result?.error}`);
+        
+        // Tentar novamente em 5 segundos
+        setTimeout(() => {
+          console.log(`🔄 [AUTO-BUILD] Tentando salvar novamente: ${activity.title}`);
+          this.saveActivityToNeon(activity, formData, generatedContent);
+        }, 5000);
       }
 
     } catch (error) {
       console.error(`❌ [AUTO-BUILD] Erro ao salvar no Neon:`, error);
+      
+      // Tentar novamente em 10 segundos
+      setTimeout(() => {
+        console.log(`🔄 [AUTO-BUILD] Tentando salvar após erro: ${activity.title}`);
+        this.saveActivityToNeon(activity, formData, generatedContent);
+      }, 10000);
     }
   }
 

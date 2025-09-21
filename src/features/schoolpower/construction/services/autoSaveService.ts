@@ -5,6 +5,7 @@ export interface AutoSaveConfig {
   enabled: boolean;
   delayMs: number;
   retryAttempts: number;
+  forceNeonSave: boolean;
 }
 
 export interface ActivityConstructionData {
@@ -15,13 +16,16 @@ export interface ActivityConstructionData {
   progress: number;
   status: 'draft' | 'in-progress' | 'completed';
   originalData: any;
+  isBuilt?: boolean;
+  builtAt?: string;
 }
 
 class AutoSaveService {
   private config: AutoSaveConfig = {
     enabled: true,
-    delayMs: 2000, // 2 segundos de delay
-    retryAttempts: 3
+    delayMs: 1000, // 1 segundo de delay para ser mais rápido
+    retryAttempts: 5, // Mais tentativas
+    forceNeonSave: true // Força salvamento no Neon
   };
 
   private saveQueue = new Map<string, NodeJS.Timeout>();
@@ -39,7 +43,21 @@ class AutoSaveService {
    * Agenda o salvamento automático de uma atividade
    */
   scheduleAutoSave(activity: ActivityConstructionData) {
-    if (!this.config.enabled || activity.status !== 'completed') {
+    if (!this.config.enabled) {
+      return;
+    }
+
+    // Aceitar atividades completas OU construídas
+    const shouldSave = activity.status === 'completed' || 
+                      activity.progress >= 100 || 
+                      activity.isBuilt === true;
+
+    if (!shouldSave) {
+      console.log(`⚠️ Atividade ${activity.title} não atende critérios para auto-save:`, {
+        status: activity.status,
+        progress: activity.progress,
+        isBuilt: activity.isBuilt
+      });
       return;
     }
 

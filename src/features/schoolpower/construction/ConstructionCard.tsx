@@ -211,20 +211,40 @@ export function ConstructionCard({
 }: ConstructionActivityProps) {
   const { saveActivity } = useActivities();
 
-  // Auto-save quando atividade for marcada como completa
+  // Auto-save quando atividade for marcada como completa ou construída
   useEffect(() => {
-    // Verifica se a atividade está completa
-    if (status === 'completed' && progress >= 100) {
-      handleAutoSave();
+    // Verifica se a atividade está completa OU construída
+    const shouldAutoSave = (status === 'completed' && progress >= 100) || 
+                          (progress >= 100) ||
+                          (status === 'completed');
+
+    if (shouldAutoSave) {
+      console.log(`🎯 [CARD] Atividade elegível para auto-save: ${title}`, {
+        status,
+        progress,
+        shouldAutoSave
+      });
+      
+      // Pequeno delay para garantir que dados estão salvos no localStorage
+      setTimeout(() => {
+        handleAutoSave();
+      }, 500);
     }
-  }, [status, progress]); // Dependências para reexecutar o efeito
+  }, [status, progress, id]); // Incluir id nas dependências
 
   const handleAutoSave = async () => {
     try {
-      console.log('🔄 Auto-salvando atividade construída:', id);
+      console.log('🔄 [CARD] Auto-salvando atividade construída:', id);
+
+      // Verificar se já foi salva
+      const alreadySaved = localStorage.getItem(`neon_saved_${id}`);
+      if (alreadySaved) {
+        console.log('ℹ️ [CARD] Atividade já foi salva no Neon:', id);
+        return;
+      }
 
       // Gerar código único para a atividade
-      const activityCode = `sp-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const activityCode = `sp-card-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Obter ID do usuário
       const userId = localStorage.getItem('user_id') || 
@@ -232,17 +252,40 @@ export function ConstructionCard({
                      localStorage.getItem('neon_user_id') ||
                      'anonymous';
 
-      // Buscar dados construídos do localStorage
+      // Buscar dados construídos de TODAS as fontes possíveis
       const constructedData = localStorage.getItem(`activity_${id}`);
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const activityConstructionData = constructedActivities[id];
+      const autoActivityData = localStorage.getItem(`auto_activity_data_${id}`);
+      const quadroInterativo = localStorage.getItem(`constructed_quadro-interativo_${id}`);
       
       let generatedContent = {};
+      let formData = {};
+
+      // Consolidar dados de todas as fontes
       if (constructedData) {
         try {
           generatedContent = JSON.parse(constructedData);
         } catch (e) {
           console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
+        }
+      }
+
+      if (autoActivityData) {
+        try {
+          const autoData = JSON.parse(autoActivityData);
+          formData = autoData.formData || {};
+        } catch (e) {
+          console.warn('⚠️ Erro ao fazer parse dos dados auto:', e);
+        }
+      }
+
+      if (quadroInterativo) {
+        try {
+          const quadroData = JSON.parse(quadroInterativo);
+          formData = { ...formData, ...quadroData.formData };
+        } catch (e) {
+          console.warn('⚠️ Erro ao fazer parse dos dados do quadro:', e);
         }
       }
 
@@ -255,6 +298,9 @@ export function ConstructionCard({
         content: {
           // Dados originais da atividade
           originalData: originalData || {},
+          
+          // Dados do formulário
+          formData: formData,
           
           // Conteúdo gerado pela IA
           generatedContent: generatedContent,
@@ -271,23 +317,27 @@ export function ConstructionCard({
             status: status,
             description: description,
             isBuilt: true,
-            source: 'schoolpower_construction_card'
+            source: 'schoolpower_construction_card',
+            hasGeneratedContent: Object.keys(generatedContent).length > 0,
+            hasFormData: Object.keys(formData).length > 0,
+            saveAttempt: new Date().toISOString()
           }
         }
       };
 
-      console.log('💾 Salvando atividade construída no Neon:', {
+      console.log('💾 [CARD] Dados preparados para salvar:', {
         activityCode,
         title,
         type,
-        hasGeneratedContent: !!generatedContent,
+        hasGeneratedContent: Object.keys(generatedContent).length > 0,
+        hasFormData: Object.keys(formData).length > 0,
         hasOriginalData: !!originalData
       });
 
       const result = await saveActivity(activityData);
 
       if (result && result.success) {
-        console.log('✅ Atividade salva automaticamente no banco Neon:', activityCode);
+        console.log('✅ [CARD] Atividade salva automaticamente no banco Neon:', activityCode);
 
         // Salvar referência local para futura consulta
         localStorage.setItem(`neon_saved_${id}`, JSON.stringify({
@@ -295,32 +345,56 @@ export function ConstructionCard({
           savedAt: new Date().toISOString(),
           title: title,
           type: type,
-          neonSaved: true
+          neonSaved: true,
+          userId: userId
         }));
 
         // Atualizar lista global de atividades salvas
         const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        savedActivities.push({
+        
+        // Evitar duplicatas
+        const existingIndex = savedActivities.findIndex((item: any) => item.activityId === id);
+        const newSaveData = {
           activityCode,
           savedAt: new Date().toISOString(),
           title: title,
           type: type,
           activityId: id,
-          neonSaved: true
-        });
+          neonSaved: true,
+          source: 'construction_card'
+        };
+
+        if (existingIndex >= 0) {
+          savedActivities[existingIndex] = newSaveData;
+        } else {
+          savedActivities.push(newSaveData);
+        }
+
         localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
 
         // Feedback visual
         showSuccessNotification(title);
 
       } else {
-        console.error('❌ Falha ao salvar atividade automaticamente:', result?.error);
+        console.error('❌ [CARD] Falha ao salvar atividade automaticamente:', result?.error);
         showErrorNotification(title);
+        
+        // Tentar novamente em 5 segundos
+        setTimeout(() => {
+          console.log('🔄 [CARD] Tentando salvar novamente...');
+          handleAutoSave();
+        }, 5000);
       }
 
     } catch (error) {
-      console.error('❌ Erro no auto-save da atividade:', error);
+      console.error('❌ [CARD] Erro no auto-save da atividade:', error);
       showErrorNotification(title);
+      
+      // Tentar novamente em 10 segundos
+      setTimeout(() => {
+        console.log('🔄 [CARD] Tentando salvar após erro...');
+        handleAutoSave();
+      }, 10000);
     }
   };
 
