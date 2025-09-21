@@ -130,9 +130,16 @@ export function RegisterForm() {
         // Salvar dados para redirecionamento
         localStorage.setItem("lastRegisteredEmail", formData.email);
         localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
-        navigate("/dashboard");
+        
+        // Se precisar de login manual, avisar o usuário
+        if (result.needsManualLogin) {
+          navigate("/auth/login?message=account_created");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         console.error("❌ Erro no cadastro:", result.error);
+        // O erro já está sendo exibido pelo hook useNeonAuth
       }
     } catch (error) {
       console.error("❌ Erro inesperado no cadastro:", error);
