@@ -112,6 +112,8 @@ export function RegisterForm() {
     }
 
     try {
+      console.log("📝 Iniciando processo de cadastro...");
+      
       const result = await register({
         nome_completo: formData.nomeCompleto,
         nome_usuario: formData.nomeUsuario,
@@ -124,10 +126,16 @@ export function RegisterForm() {
       });
 
       if (result.success) {
+        console.log("✅ Cadastro realizado com sucesso!");
+        // Salvar dados para redirecionamento
+        localStorage.setItem("lastRegisteredEmail", formData.email);
+        localStorage.setItem("lastRegisteredUsername", formData.nomeUsuario);
         navigate("/dashboard");
+      } else {
+        console.error("❌ Erro no cadastro:", result.error);
       }
     } catch (error) {
-      console.error("Erro no cadastro:", error);
+      console.error("❌ Erro inesperado no cadastro:", error);
     }
   };
 

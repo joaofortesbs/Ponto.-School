@@ -174,20 +174,48 @@ class NeonDBManager {
 
   // Buscar perfil por email
   async findProfileByEmail(email) {
-    const query = 'SELECT * FROM perfis WHERE email = $1';
-    return await this.executeQuery(query, [email]);
-  }
+    try {
+      console.log('🔍 Buscando perfil por email:', email);
+      const query = 'SELECT * FROM perfis WHERE email = $1';
+      const result = await this.executeQuery(query, [email]);
 
-  // Buscar perfil por nome de usuário
-  async findProfileByUsername(username) {
-    const query = 'SELECT * FROM perfis WHERE nome_usuario = $1';
-    return await this.executeQuery(query, [username]);
+      console.log('📊 Resultado da busca:', result.rows.length > 0 ? 'Encontrado' : 'Não encontrado');
+
+      return {
+        success: true,
+        data: result.rows
+      };
+    } catch (error) {
+      console.error('❌ Erro ao buscar perfil por email:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: []
+      };
+    }
   }
 
   // Buscar perfil por ID
   async findProfileById(id) {
-    const query = 'SELECT * FROM perfis WHERE id = $1';
-    return await this.executeQuery(query, [id]);
+    try {
+      console.log('🔍 Buscando perfil por ID:', id);
+      const query = 'SELECT * FROM perfis WHERE id = $1';
+      const result = await this.executeQuery(query, [id]);
+
+      console.log('📊 Resultado da busca:', result.rows.length > 0 ? 'Encontrado' : 'Não encontrado');
+
+      return {
+        success: true,
+        data: result.rows
+      };
+    } catch (error) {
+      console.error('❌ Erro ao buscar perfil por ID:', error);
+      return {
+        success: false,
+        error: error.message,
+        data: []
+      };
+    }
   }
 
   // Criar novo perfil

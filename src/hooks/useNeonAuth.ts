@@ -86,59 +86,82 @@ export function useNeonAuth() {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Verificar se o servidor está rodando
+      // Verificar se o servidor está rodando com timeout
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         const healthCheck = await fetch("http://localhost:3001/api/status", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!healthCheck.ok) {
           throw new Error("Servidor não está respondendo");
         }
+
+        const healthData = await healthCheck.json();
+        console.log("✅ Servidor disponível:", healthData);
+
       } catch (healthError) {
+        console.error("❌ Erro de conectividade:", healthError);
         setAuthState(prev => ({ 
           ...prev, 
           isLoading: false, 
-          error: "Servidor indisponível. Tente novamente em alguns segundos." 
+          error: "Servidor indisponível. Verifique se o backend está rodando." 
         }));
         return { success: false, error: "Servidor indisponível" };
       }
+
+      console.log("📤 Enviando dados de cadastro:", { ...userData, senha: "[HIDDEN]" });
 
       const response = await fetch("http://localhost:3001/api/perfis", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify(userData),
       });
 
+      console.log("📥 Status da resposta:", response.status, response.statusText);
+
       if (!response.ok) {
-        // Tentar ler a resposta como texto primeiro, depois como JSON
         let errorMessage = "Erro ao criar conta";
         try {
-          const errorText = await response.text();
-          if (errorText) {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.error || errorMessage;
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.message || errorMessage;
+          } else {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
           }
         } catch (parseError) {
-          console.error("Erro ao processar resposta:", parseError);
+          console.error("Erro ao processar resposta de erro:", parseError);
+          errorMessage = `Erro HTTP ${response.status}: ${response.statusText}`;
         }
 
+        console.error("❌ Erro no cadastro:", errorMessage);
         setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
         return { success: false, error: errorMessage };
       }
 
       const data = await response.json();
+      console.log("✅ Cadastro realizado com sucesso:", data);
 
       // Login automático após cadastro bem-sucedido
+      console.log("🔐 Tentando login automático...");
       const loginResponse = await fetch("http://localhost:3001/api/perfis/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify({
           email: userData.email,
@@ -147,22 +170,28 @@ export function useNeonAuth() {
       });
 
       if (!loginResponse.ok) {
-        const loginErrorText = await loginResponse.text();
         let loginErrorMessage = "Erro no login automático";
         try {
-          if (loginErrorText) {
-            const loginErrorData = JSON.parse(loginErrorText);
+          const contentType = loginResponse.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const loginErrorData = await loginResponse.json();
             loginErrorMessage = loginErrorData.error || loginErrorMessage;
+          } else {
+            const loginErrorText = await loginResponse.text();
+            loginErrorMessage = loginErrorText || loginErrorMessage;
           }
         } catch (parseError) {
           console.error("Erro ao processar resposta de login:", parseError);
+          loginErrorMessage = `Erro HTTP ${loginResponse.status}: ${loginResponse.statusText}`;
         }
 
+        console.error("❌ Erro no login automático:", loginErrorMessage);
         setAuthState(prev => ({ ...prev, isLoading: false, error: loginErrorMessage }));
         return { success: false, error: loginErrorMessage };
       }
 
       const loginData = await loginResponse.json();
+      console.log("✅ Login automático realizado com sucesso:", loginData);
 
       setAuthState({
         user: loginData.profile,
@@ -178,8 +207,19 @@ export function useNeonAuth() {
       return { success: true, profile: loginData.profile };
 
     } catch (error) {
-      console.error("Erro na requisição:", error);
-      const errorMessage = error instanceof Error ? error.message : "Erro de conexão com o servidor";
+      console.error("❌ Erro geral na requisição:", error);
+      let errorMessage = "Erro de conexão com o servidor";
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "Timeout na conexão com o servidor";
+        } else if (error.message.includes('fetch')) {
+          errorMessage = "Erro de rede. Verifique sua conexão.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       setAuthState(prev => ({ ...prev, isLoading: false, error: errorMessage }));
       return { success: false, error: errorMessage };
     }

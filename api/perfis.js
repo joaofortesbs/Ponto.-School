@@ -8,25 +8,43 @@ const router = express.Router();
 // Buscar perfil por email
 router.get('/', async (req, res) => {
   try {
-    const { email } = req.query;
+    const { email, id } = req.query;
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email é obrigatório' });
+    if (!email && !id) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email ou ID é obrigatório' 
+      });
     }
 
-    const result = await neonDB.findProfileByEmail(email);
+    let result;
+    if (id) {
+      result = await neonDB.findProfileById(id);
+    } else {
+      result = await neonDB.findProfileByEmail(email);
+    }
 
     if (result.success && result.data.length > 0) {
       const profile = result.data[0];
       // Não retornar a senha
       delete profile.senha_hash;
-      res.json({ profile });
+      res.json({ 
+        success: true, 
+        data: profile 
+      });
     } else {
-      res.status(404).json({ error: 'Perfil não encontrado' });
+      res.status(404).json({ 
+        success: false, 
+        error: 'Perfil não encontrado' 
+      });
     }
   } catch (error) {
     console.error('Erro ao buscar perfil:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    });
   }
 });
 
