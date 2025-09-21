@@ -362,69 +362,85 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
                 </div>
 
                 {/* Card de Permissões */}
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl border-2 border-orange-200 dark:border-orange-700 overflow-hidden h-12 flex items-center">
-                  <button
-                    onClick={() => setIsPermissionsExpanded(!isPermissionsExpanded)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-orange-100/50 dark:hover:bg-orange-800/30 transition-all duration-200 h-full"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                      <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
-                        Permissões
-                      </span>
-                    </div>
-                    {isPermissionsExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                    )}
-                  </button>
-                  
-                  <AnimatePresence>
-                    {isPermissionsExpanded && (
+                <div className="relative">
+                  <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl border-2 border-orange-200 dark:border-orange-700 overflow-hidden">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsPermissionsExpanded(!isPermissionsExpanded);
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-orange-100/50 dark:hover:bg-orange-800/30 transition-all duration-200 h-12"
+                      type="button"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                          Permissões
+                        </span>
+                      </div>
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="absolute top-full left-0 right-0 mt-1 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-2 border-orange-200 dark:border-orange-700 rounded-xl z-10 shadow-lg"
+                        animate={{ rotate: isPermissionsExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
                       >
-                        <div className="p-4 space-y-4">
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="checkbox"
-                              id="editor-temas"
-                              checked={editorTemas}
-                              onChange={(e) => setEditorTemas(e.target.checked)}
-                              className="w-4 h-4 text-orange-600 bg-white border-orange-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-orange-900/30 dark:border-orange-600"
-                            />
-                            <label 
-                              htmlFor="editor-temas" 
-                              className="text-sm font-medium text-orange-800 dark:text-orange-200 cursor-pointer"
-                            >
-                              Editor de temas
-                            </label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="checkbox"
-                              id="editor-material"
-                              checked={editorMaterial}
-                              onChange={(e) => setEditorMaterial(e.target.checked)}
-                              className="w-4 h-4 text-orange-600 bg-white border-orange-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-orange-900/30 dark:border-orange-600"
-                            />
-                            <label 
-                              htmlFor="editor-material" 
-                              className="text-sm font-medium text-orange-800 dark:text-orange-200 cursor-pointer"
-                            >
-                              Editar Material
-                            </label>
-                          </div>
-                        </div>
+                        <ChevronDown className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                       </motion.div>
-                    )}
-                  </AnimatePresence>
+                    </button>
+                    
+                    <AnimatePresence>
+                      {isPermissionsExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-4 space-y-4 border-t border-orange-200 dark:border-orange-700 pt-4">
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="checkbox"
+                                id="editor-temas"
+                                checked={editorTemas}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setEditorTemas(e.target.checked);
+                                }}
+                                className="w-4 h-4 text-orange-600 bg-white border-orange-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-orange-900/30 dark:border-orange-600"
+                              />
+                              <label 
+                                htmlFor="editor-temas" 
+                                className="text-sm font-medium text-orange-800 dark:text-orange-200 cursor-pointer select-none"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                Editor de temas
+                              </label>
+                            </div>
+                            
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="checkbox"
+                                id="editor-material"
+                                checked={editorMaterial}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  setEditorMaterial(e.target.checked);
+                                }}
+                                className="w-4 h-4 text-orange-600 bg-white border-orange-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-orange-900/30 dark:border-orange-600"
+                              />
+                              <label 
+                                htmlFor="editor-material" 
+                                className="text-sm font-medium text-orange-800 dark:text-orange-200 cursor-pointer select-none"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                Editar Material
+                              </label>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 {/* Feedback de Cópia */}
