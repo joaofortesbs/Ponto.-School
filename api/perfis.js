@@ -51,8 +51,7 @@ router.get('/', async (req, res) => {
 // Criar novo perfil
 router.post('/', async (req, res) => {
   try {
-    console.log('📝 Recebida requisição de criação de perfil');
-    console.log('📋 Campos recebidos:', Object.keys(req.body));
+    console.log('📝 Recebida requisição de criação de perfil:', req.body);
 
     const {
       nome_completo,
@@ -66,21 +65,19 @@ router.post('/', async (req, res) => {
     } = req.body;
 
     // Validações básicas
-    const missingFields = [];
-    if (!nome_completo?.trim()) missingFields.push('nome_completo');
-    if (!nome_usuario?.trim()) missingFields.push('nome_usuario');
-    if (!email?.trim()) missingFields.push('email');
-    if (!senha?.trim()) missingFields.push('senha');
-    if (!tipo_conta?.trim()) missingFields.push('tipo_conta');
-    if (!estado?.trim()) missingFields.push('estado');
-    if (!instituicao_ensino?.trim()) missingFields.push('instituicao_ensino');
-
-    if (missingFields.length > 0) {
-      console.log('❌ Campos obrigatórios ausentes:', missingFields);
+    if (!nome_completo || !nome_usuario || !email || !senha || !tipo_conta || !estado || !instituicao_ensino) {
+      console.log('❌ Campos obrigatórios ausentes');
       return res.status(400).json({ 
-        success: false,
-        error: `Campos obrigatórios ausentes: ${missingFields.join(', ')}`,
-        missingFields
+        error: 'Todos os campos são obrigatórios',
+        missingFields: {
+          nome_completo: !nome_completo,
+          nome_usuario: !nome_usuario,
+          email: !email,
+          senha: !senha,
+          tipo_conta: !tipo_conta,
+          estado: !estado,
+          instituicao_ensino: !instituicao_ensino
+        }
       });
     }
 
