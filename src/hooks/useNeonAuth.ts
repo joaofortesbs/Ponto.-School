@@ -44,11 +44,18 @@ export function useNeonAuth() {
       // Verificar se o token é válido
       const userId = localStorage.getItem('user_id');
       if (userId) {
-        const result = await executeQuery('SELECT * FROM perfis WHERE id = $1', [userId]);
+        const response = await fetch(`/api/perfis?id=${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
-        if (result.success && result.data.length > 0) {
+        const result = await response.json();
+
+        if (result.success) {
           setAuthState({
-            user: result.data[0],
+            user: result.data,
             isLoading: false,
             isAuthenticated: true,
             error: null
@@ -78,44 +85,19 @@ export function useNeonAuth() {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      // Verificar se o email já existe
-      const emailCheck = await executeQuery('SELECT id FROM perfis WHERE email = $1', [userData.email]);
-      if (emailCheck.success && emailCheck.data.length > 0) {
-        throw new Error('Este email já está cadastrado');
-      }
+      // Usar o endpoint específico de perfis
+      const response = await fetch('/api/perfis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData)
+      });
 
-      // Verificar se o nome de usuário já existe
-      const userCheck = await executeQuery('SELECT id FROM perfis WHERE nome_usuario = $1', [userData.nomeUsuario]);
-      if (userCheck.success && userCheck.data.length > 0) {
-        throw new Error('Este nome de usuário já está em uso');
-      }
+      const result = await response.json();
 
-      // Hash da senha
-      const hashedPassword = await bcrypt.hash(userData.senha, 12);
-
-      // Inserir novo usuário
-      const insertQuery = `
-        INSERT INTO perfis (
-          nome_completo, nome_usuario, email, senha_hash,
-          tipo_conta, pais, estado, instituicao_ensino
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, created_at
-      `;
-
-      const result = await executeQuery(insertQuery, [
-        userData.nome_completo,
-        userData.nome_usuario,
-        userData.email,
-        hashedPassword,
-        userData.tipo_conta,
-        userData.pais,
-        userData.estado,
-        userData.instituicao_ensino
-      ]);
-
-      if (result.success && result.data.length > 0) {
-        const newUser = result.data[0];
+      if (result.success) {
+        const newUser = result.data;
 
         // Gerar token simples (em produção, use JWT)
         const token = btoa(`${newUser.id}:${Date.now()}`);
@@ -132,7 +114,7 @@ export function useNeonAuth() {
 
         return { success: true, user: newUser };
       } else {
-        throw new Error('Erro ao criar conta');
+        throw new Error(result.error || 'Erro ao criar conta');
       }
     } catch (error) {
       console.error('Erro no cadastro:', error);
@@ -146,14 +128,30 @@ export function useNeonAuth() {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
-      const result = await executeQuery('SELECT * FROM perfis WHERE email = $1', [email]);
+      // Primeiro buscar o usuário
+      const response = await fetch(`/api/perfis?email=${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
 
-      if (!result.success || result.data.length === 0) {
+      const result = await response.json();
+
+      if (!result.success) {
         throw new Error('Email ou senha incorretos');
       }
 
-      const user = result.data[0];
-      const isValidPassword = await bcrypt.compare(senha, user.senha_hash);
+      const user = result.data;
+
+      // Verificar senha usando o endpoint de database
+      const passwordCheckResult = await executeQuery('SELECT senha_hash FROM perfis WHERE email = $1', [email]);
+      
+      if (!passwordCheckResult.success || passwordCheckResult.data.length === 0) {
+        throw new Error('Email ou senha incorretos');
+      }
+
+      const isValidPassword = await bcrypt.compare(senha, passwordCheckResult.data[0].senha_hash);
 
       if (!isValidPassword) {
         throw new Error('Email ou senha incorretos');
@@ -165,17 +163,14 @@ export function useNeonAuth() {
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user_id', user.id);
 
-      // Remover senha do objeto user
-      const { senha_hash, ...userWithoutPassword } = user;
-
       setAuthState({
-        user: userWithoutPassword,
+        user,
         isLoading: false,
         isAuthenticated: true,
         error: null
       });
 
-      return { success: true, user: userWithoutPassword };
+      return { success: true, user };
     } catch (error) {
       console.error('Erro no login:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';

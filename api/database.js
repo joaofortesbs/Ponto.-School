@@ -1,11 +1,5 @@
 
-const { Client } = require('pg');
-
-// Configuração da conexão com o banco Neon
-const connectionConfig = {
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-};
+const { neonDB } = require('./neon-db.js');
 
 async function handler(req, res) {
   // Configurar CORS
@@ -21,8 +15,6 @@ async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Método não permitido' });
   }
 
-  const client = new Client(connectionConfig);
-
   try {
     const { query, params = [] } = req.body;
 
@@ -30,14 +22,20 @@ async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Query é obrigatória' });
     }
 
-    await client.connect();
-    const result = await client.query(query, params);
+    const result = await neonDB.executeQuery(query, params);
 
-    res.status(200).json({
-      success: true,
-      data: result.rows,
-      rowCount: result.rowCount
-    });
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        rowCount: result.rowCount
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Erro interno do servidor'
+      });
+    }
 
   } catch (error) {
     console.error('Erro na query do banco de dados:', error);
@@ -45,8 +43,6 @@ async function handler(req, res) {
       success: false,
       error: error.message || 'Erro interno do servidor'
     });
-  } finally {
-    await client.end();
   }
 }
 
