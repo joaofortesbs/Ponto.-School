@@ -119,8 +119,25 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
     try {
       console.log('🔄 Auto-salvando atividade construída via hook:', activity.id);
 
-      const activityCode = `sp-${activity.type}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      const userId = localStorage.getItem('user_id') || localStorage.getItem('current_user_id') || 'anonymous';
+      const activityCode = `sp-hook-${activity.type}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      const userId = localStorage.getItem('user_id') || 
+                     localStorage.getItem('current_user_id') || 
+                     localStorage.getItem('neon_user_id') ||
+                     'anonymous';
+
+      // Buscar dados construídos do localStorage
+      const constructedData = localStorage.getItem(`activity_${activity.id}`);
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const activityConstructionData = constructedActivities[activity.id];
+      
+      let generatedContent = {};
+      if (constructedData) {
+        try {
+          generatedContent = JSON.parse(constructedData);
+        } catch (e) {
+          console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
+        }
+      }
 
       const activityData = {
         user_id: userId,
@@ -128,19 +145,40 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
         type: activity.type,
         title: activity.title,
         content: {
-          ...activity.originalData,
-          constructedAt: new Date().toISOString(),
-          schoolPowerGenerated: true,
-          activityId: activity.id,
-          progress: activity.progress,
-          status: activity.status,
-          description: activity.description
+          // Dados originais da atividade
+          originalData: activity.customFields || {},
+          
+          // Conteúdo gerado pela IA
+          generatedContent: generatedContent,
+          
+          // Dados de construção
+          constructionData: activityConstructionData || {},
+          
+          // Metadados do School Power
+          schoolPowerMetadata: {
+            constructedAt: new Date().toISOString(),
+            autoSaved: true,
+            activityId: activity.id,
+            progress: activity.progress,
+            status: activity.status,
+            description: activity.description,
+            isBuilt: true,
+            source: 'schoolpower_hook'
+          }
         }
       };
 
+      console.log('💾 Salvando atividade via hook no Neon:', {
+        activityCode,
+        title: activity.title,
+        type: activity.type,
+        hasGeneratedContent: !!generatedContent,
+        hasOriginalData: !!activity.customFields
+      });
+
       const result = await saveActivity(activityData);
 
-      if (result) {
+      if (result && result.success) {
         console.log('✅ Atividade salva automaticamente no Neon:', activityCode);
 
         // Armazenar referência local
@@ -149,18 +187,28 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
           savedAt: new Date().toISOString(),
           title: activity.title,
           type: activity.type,
-          neonSaved: true
+          activityId: activity.id,
+          neonSaved: true,
+          source: 'hook'
         };
 
-        localStorage.setItem(`constructed_${activity.id}`, JSON.stringify(savedActivityRef));
+        localStorage.setItem(`neon_hook_saved_${activity.id}`, JSON.stringify(savedActivityRef));
 
         // Atualizar lista de atividades salvas
         const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        savedActivities.push(savedActivityRef);
+        
+        // Evitar duplicatas
+        const existingIndex = savedActivities.findIndex((item: any) => item.activityId === activity.id);
+        if (existingIndex >= 0) {
+          savedActivities[existingIndex] = savedActivityRef;
+        } else {
+          savedActivities.push(savedActivityRef);
+        }
+        
         localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
 
       } else {
-        console.error('❌ Falha ao auto-salvar atividade');
+        console.error('❌ Falha ao auto-salvar atividade:', result?.error);
       }
 
     } catch (error) {

@@ -71,33 +71,68 @@ class AutoSaveService {
       const userId = this.getUserId();
       const activityCode = this.generateActivityCode(activity);
       
+      // Buscar dados construídos do localStorage
+      const constructedData = localStorage.getItem(`activity_${activity.id}`);
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const activityConstructionData = constructedActivities[activity.id];
+      
+      let generatedContent = {};
+      if (constructedData) {
+        try {
+          generatedContent = JSON.parse(constructedData);
+        } catch (e) {
+          console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
+        }
+      }
+      
       const saveData: CreateActivityData = {
         user_id: userId,
         activity_code: activityCode,
         type: activity.type,
         title: activity.title,
         content: {
-          ...activity.originalData,
+          // Dados originais da atividade
+          originalData: activity.originalData || {},
+          
+          // Conteúdo gerado pela IA
+          generatedContent: generatedContent,
+          
+          // Dados de construção
+          constructionData: activityConstructionData || {},
+          
+          // Metadados do School Power
           schoolPowerMetadata: {
             constructedAt: new Date().toISOString(),
             autoSaved: true,
             activityId: activity.id,
             progress: activity.progress,
             status: activity.status,
-            description: activity.description
+            description: activity.description,
+            isBuilt: true,
+            source: 'schoolpower_construction'
           }
         }
       };
+
+      console.log('💾 Salvando atividade no Neon:', {
+        activityCode,
+        title: activity.title,
+        type: activity.type,
+        hasGeneratedContent: !!generatedContent,
+        hasOriginalData: !!activity.originalData
+      });
 
       const result = await activitiesService.saveActivity(saveData);
       
       if (result.success && result.data) {
         await this.handleSaveSuccess(activity, activityCode, result.data);
       } else {
+        console.error('❌ Falha no salvamento:', result.error);
         await this.handleSaveError(activity, result.error || 'Erro desconhecido');
       }
       
     } catch (error) {
+      console.error('❌ Erro no performAutoSave:', error);
       await this.handleSaveError(activity, error instanceof Error ? error.message : 'Erro inesperado');
     }
   }

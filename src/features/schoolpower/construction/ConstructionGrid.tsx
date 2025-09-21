@@ -149,8 +149,15 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   // Listener para atualizações de atividades construídas
   useEffect(() => {
-    const handleActivityBuilt = (event: CustomEvent) => {
+    const handleActivityBuilt = async (event: CustomEvent) => {
       console.log('🎯 Evento de atividade construída recebido:', event.detail);
+
+      const { activityId } = event.detail;
+
+      // Salvar automaticamente no Neon quando atividade for construída
+      if (activityId) {
+        await handleAutoSaveAfterBuild(activityId);
+      }
 
       // Forçar atualização das atividades
       if (refreshActivities) {
@@ -164,6 +171,99 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       window.removeEventListener('activity-built', handleActivityBuilt as EventListener);
     };
   }, [refreshActivities]);
+
+  const handleAutoSaveAfterBuild = async (activityId: string) => {
+    try {
+      console.log('💾 [GRID] Auto-salvando atividade após construção:', activityId);
+
+      // Encontrar a atividade na lista
+      const activity = activities.find(act => act.id === activityId);
+      if (!activity) {
+        console.warn('⚠️ [GRID] Atividade não encontrada para auto-save:', activityId);
+        return;
+      }
+
+      // Obter dados construídos
+      const constructedData = localStorage.getItem(`activity_${activityId}`);
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const activityConstructionData = constructedActivities[activityId];
+
+      if (!constructedData && !activityConstructionData) {
+        console.warn('⚠️ [GRID] Não há dados construídos para salvar:', activityId);
+        return;
+      }
+
+      // Gerar código único
+      const activityCode = `sp-grid-${activity.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Obter ID do usuário
+      const userId = localStorage.getItem('user_id') || 
+                     localStorage.getItem('current_user_id') || 
+                     localStorage.getItem('neon_user_id') ||
+                     'anonymous';
+
+      let generatedContent = {};
+      if (constructedData) {
+        try {
+          generatedContent = JSON.parse(constructedData);
+        } catch (e) {
+          console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
+        }
+      }
+
+      const { activitiesService } = await import('@/services/activitiesService');
+
+      const saveData = {
+        user_id: userId,
+        activity_code: activityCode,
+        type: activity.type,
+        title: activity.title,
+        content: {
+          // Dados originais da atividade
+          originalData: activity.customFields || {},
+          
+          // Conteúdo gerado pela IA
+          generatedContent: generatedContent,
+          
+          // Dados de construção
+          constructionData: activityConstructionData || {},
+          
+          // Metadados do School Power
+          schoolPowerMetadata: {
+            constructedAt: new Date().toISOString(),
+            autoSaved: true,
+            activityId: activity.id,
+            progress: activity.progress,
+            status: activity.status,
+            description: activity.description,
+            isBuilt: true,
+            source: 'schoolpower_grid'
+          }
+        }
+      };
+
+      const result = await activitiesService.saveActivity(saveData);
+
+      if (result && result.success) {
+        console.log('✅ [GRID] Atividade salva no Neon após construção:', activityCode);
+
+        // Salvar referência local
+        localStorage.setItem(`neon_grid_saved_${activityId}`, JSON.stringify({
+          activityCode,
+          savedAt: new Date().toISOString(),
+          title: activity.title,
+          type: activity.type,
+          neonSaved: true
+        }));
+
+      } else {
+        console.error('❌ [GRID] Falha ao salvar atividade no Neon:', result?.error);
+      }
+
+    } catch (error) {
+      console.error('❌ [GRID] Erro no auto-save após construção:', error);
+    }
+  };
 
   useEffect(() => {
     console.log('🏗️ ConstructionGrid: approvedActivities atualizadas:', approvedActivities);

@@ -213,22 +213,38 @@ export function ConstructionCard({
 
   // Auto-save quando atividade for marcada como completa
   useEffect(() => {
-    // Verifica se a atividade está completa E se temos originalData para salvar
-    if (status === 'completed' && originalData) {
+    // Verifica se a atividade está completa
+    if (status === 'completed' && progress >= 100) {
       handleAutoSave();
     }
-  }, [status, originalData]); // Dependências para reexecutar o efeito
+  }, [status, progress]); // Dependências para reexecutar o efeito
 
   const handleAutoSave = async () => {
     try {
       console.log('🔄 Auto-salvando atividade construída:', id);
 
       // Gerar código único para a atividade
-      const activityCode = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const activityCode = `sp-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Obter ID do usuário (você pode ajustar conforme seu sistema de auth)
-      // Se o ID do usuário não estiver em localStorage, pode ser necessário buscar de um contexto de autenticação.
-      const userId = localStorage.getItem('user_id') || 'anonymous';
+      // Obter ID do usuário
+      const userId = localStorage.getItem('user_id') || 
+                     localStorage.getItem('current_user_id') || 
+                     localStorage.getItem('neon_user_id') ||
+                     'anonymous';
+
+      // Buscar dados construídos do localStorage
+      const constructedData = localStorage.getItem(`activity_${id}`);
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const activityConstructionData = constructedActivities[id];
+      
+      let generatedContent = {};
+      if (constructedData) {
+        try {
+          generatedContent = JSON.parse(constructedData);
+        } catch (e) {
+          console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
+        }
+      }
 
       // Preparar dados da atividade para salvar
       const activityData = {
@@ -237,59 +253,133 @@ export function ConstructionCard({
         type: type,
         title: title,
         content: {
-          ...originalData, // Usando originalData aqui
-          constructedAt: new Date().toISOString(),
-          schoolPowerGenerated: true,
-          activityId: id, // Referência ao ID original do School Power
-          progress: progress,
-          status: status
+          // Dados originais da atividade
+          originalData: originalData || {},
+          
+          // Conteúdo gerado pela IA
+          generatedContent: generatedContent,
+          
+          // Dados de construção
+          constructionData: activityConstructionData || {},
+          
+          // Metadados do School Power
+          schoolPowerMetadata: {
+            constructedAt: new Date().toISOString(),
+            autoSaved: true,
+            activityId: id,
+            progress: progress,
+            status: status,
+            description: description,
+            isBuilt: true,
+            source: 'schoolpower_construction_card'
+          }
         }
       };
 
+      console.log('💾 Salvando atividade construída no Neon:', {
+        activityCode,
+        title,
+        type,
+        hasGeneratedContent: !!generatedContent,
+        hasOriginalData: !!originalData
+      });
+
       const result = await saveActivity(activityData);
 
-      if (result) {
+      if (result && result.success) {
         console.log('✅ Atividade salva automaticamente no banco Neon:', activityCode);
 
         // Salvar referência local para futura consulta
-        localStorage.setItem(`constructed_activity_${id}`, JSON.stringify({
+        localStorage.setItem(`neon_saved_${id}`, JSON.stringify({
           activityCode,
           savedAt: new Date().toISOString(),
           title: title,
-          type: type
+          type: type,
+          neonSaved: true
         }));
 
-        // Feedback visual simples (pode ser substituído por um sistema de notificações mais robusto)
-        const notificationId = `notification-${id}`;
-        if (!document.getElementById(notificationId)) {
-          const notification = document.createElement('div');
-          notification.id = notificationId;
-          notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn'; // Adicionado classe para animação
-          notification.textContent = `✅ ${title} salva automaticamente!`;
-          document.body.appendChild(notification);
+        // Atualizar lista global de atividades salvas
+        const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
+        savedActivities.push({
+          activityCode,
+          savedAt: new Date().toISOString(),
+          title: title,
+          type: type,
+          activityId: id,
+          neonSaved: true
+        });
+        localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
 
-          setTimeout(() => {
-            const existingNotification = document.getElementById(notificationId);
-            if (existingNotification) {
-              existingNotification.classList.remove('animate-fadeIn');
-              existingNotification.classList.add('animate-fadeOut');
-              existingNotification.addEventListener('animationend', () => {
-                if (document.body.contains(existingNotification)) {
-                  document.body.removeChild(existingNotification);
-                }
-              }, { once: true });
-            }
-          }, 3000);
-        }
+        // Feedback visual
+        showSuccessNotification(title);
 
       } else {
-        console.error('❌ Falha ao salvar atividade automaticamente');
-        // Adicionar feedback de erro aqui se necessário
+        console.error('❌ Falha ao salvar atividade automaticamente:', result?.error);
+        showErrorNotification(title);
       }
 
     } catch (error) {
       console.error('❌ Erro no auto-save da atividade:', error);
-      // Adicionar feedback de erro aqui se necessário
+      showErrorNotification(title);
+    }
+  };
+
+  const showSuccessNotification = (activityTitle: string) => {
+    const notificationId = `notification-success-${id}`;
+    if (!document.getElementById(notificationId)) {
+      const notification = document.createElement('div');
+      notification.id = notificationId;
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn';
+      notification.innerHTML = `
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="font-medium">${activityTitle}</span>
+          <span class="text-green-200">salva no Neon!</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        const existingNotification = document.getElementById(notificationId);
+        if (existingNotification) {
+          existingNotification.classList.remove('animate-fadeIn');
+          existingNotification.classList.add('animate-fadeOut');
+          setTimeout(() => {
+            if (document.body.contains(existingNotification)) {
+              document.body.removeChild(existingNotification);
+            }
+          }, 300);
+        }
+      }, 4000);
+    }
+  };
+
+  const showErrorNotification = (activityTitle: string) => {
+    const notificationId = `notification-error-${id}`;
+    if (!document.getElementById(notificationId)) {
+      const notification = document.createElement('div');
+      notification.id = notificationId;
+      notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+      notification.innerHTML = `
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="font-medium">Erro ao salvar ${activityTitle}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        const existingNotification = document.getElementById(notificationId);
+        if (existingNotification && document.body.contains(existingNotification)) {
+          document.body.removeChild(existingNotification);
+        }
+      }, 5000);
     }
   };
 
