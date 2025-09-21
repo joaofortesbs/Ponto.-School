@@ -102,14 +102,19 @@ if (!process.env.JWT_SECRET) {
 export const neonDB = {
   // Função para registrar usuário
   async register(email, password, userData = {}) {
+    console.log('🔄 Iniciando registro para:', email);
+    console.log('📝 Dados do usuário:', userData);
+    
     try {
       // Verificar se usuário já existe na tabela users
+      console.log('🔍 Verificando se usuário já existe...');
       const existingUser = await pool.query(
         'SELECT id FROM users WHERE email = $1',
         [email]
       );
 
       if (existingUser.rows.length > 0) {
+        console.log('❌ Usuário já existe com este email');
         return {
           user: null,
           session: null,
@@ -117,19 +122,24 @@ export const neonDB = {
         };
       }
 
+      console.log('✅ Email disponível, criando usuário...');
+
       // Hash da senha
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
       // 1. Inserir usuário na tabela users (email + password)
+      console.log('📝 Inserindo na tabela users...');
       const userResult = await pool.query(
         `INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *`,
         [email, passwordHash]
       );
 
       const user = userResult.rows[0];
+      console.log('✅ Usuário criado com ID:', user.id);
 
       // 2. Inserir perfil na tabela profiles (dados complementares)
+      console.log('📝 Inserindo perfil na tabela profiles...');
       const profileResult = await pool.query(
         `INSERT INTO profiles (
           user_id, email, full_name, display_name, instituição_ensino, estado_uf, role
@@ -146,6 +156,7 @@ export const neonDB = {
       );
 
       const profile = profileResult.rows[0];
+      console.log('✅ Perfil criado com sucesso:', profile.id);
 
       // Gerar token JWT
       const token = jwt.sign(
@@ -153,6 +164,8 @@ export const neonDB = {
         JWT_SECRET,
         { expiresIn: '7d' }
       );
+
+      console.log('✅ Registro concluído com sucesso!');
 
       return {
         user: {
@@ -167,11 +180,12 @@ export const neonDB = {
       };
 
     } catch (error) {
-      console.error('Erro no registro:', error);
+      console.error('❌ Erro no registro:', error);
+      console.error('❌ Stack trace:', error.stack);
       return {
         user: null,
         session: null,
-        error: { message: 'Erro interno do servidor' }
+        error: { message: 'Erro interno do servidor: ' + error.message }
       };
     }
   },

@@ -237,8 +237,19 @@ export function LoginForm() {
     } catch (err: any) {
       clearTimeout(authTimeout);
       setSuccess(false);
-      setError("Erro ao fazer login, tente novamente");
       console.error("Erro ao logar:", err);
+      
+      // Tratamento específico para diferentes tipos de erro
+      if (err.message === "Tempo limite excedido" || err.code === 'ECONNABORTED') {
+        setError("Conexão lenta. Tente novamente.");
+      } else if (err.response?.status === 0 || err.code === 'NETWORK_ERROR') {
+        setError("Erro de rede. Verifique sua conexão com a internet.");
+      } else if (err.response?.status >= 500) {
+        setError("Erro no servidor. Tente novamente em alguns instantes.");
+      } else {
+        setError("Erro ao fazer login. Verifique suas credenciais e tente novamente.");
+      }
+      
       localStorage.removeItem("auth_checked");
       localStorage.removeItem("auth_status");
     } finally {

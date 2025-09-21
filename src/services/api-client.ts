@@ -3,7 +3,7 @@ import axios, { AxiosResponse } from 'axios';
 // Configuração da base URL da API
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-url.com/api' 
-  : 'http://localhost:3001/api';
+  : 'http://0.0.0.0:3001/api';
 
 // Interface para resposta da API
 interface ApiResponse<T = any> {
