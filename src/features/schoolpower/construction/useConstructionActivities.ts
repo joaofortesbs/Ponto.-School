@@ -119,21 +119,8 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
     try {
       console.log('🔄 Auto-salvando atividade construída via hook:', activity.id);
 
-      // Verificar se a atividade tem dados suficientes para salvar
-      const savedActivityData = localStorage.getItem(`activity_${activity.id}`);
-      if (!savedActivityData) {
-        console.warn('⚠️ Dados da atividade não encontrados no localStorage');
-        return;
-      }
-
-      const parsedActivityData = JSON.parse(savedActivityData);
       const activityCode = `sp-${activity.type}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      const userId = localStorage.getItem('user_id') || 
-                     localStorage.getItem('current_user_id') || 
-                     localStorage.getItem('neon_user_id') ||
-                     'anonymous';
-
-      console.log('👤 Usuário identificado para salvamento:', userId);
+      const userId = localStorage.getItem('user_id') || localStorage.getItem('current_user_id') || 'anonymous';
 
       const activityData = {
         user_id: userId,
@@ -141,26 +128,15 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
         type: activity.type,
         title: activity.title,
         content: {
-          ...parsedActivityData,
           ...activity.originalData,
           constructedAt: new Date().toISOString(),
           schoolPowerGenerated: true,
           activityId: activity.id,
           progress: activity.progress,
           status: activity.status,
-          description: activity.description,
-          autoSaved: true,
-          hookSaved: true
+          description: activity.description
         }
       };
-
-      console.log('📋 Dados preparados para salvamento:', {
-        user_id: activityData.user_id,
-        activity_code: activityData.activity_code,
-        type: activityData.type,
-        title: activityData.title,
-        hasContent: !!activityData.content
-      });
 
       const result = await saveActivity(activityData);
 
@@ -173,81 +149,23 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
           savedAt: new Date().toISOString(),
           title: activity.title,
           type: activity.type,
-          neonSaved: true,
-          userId: userId,
-          activityId: activity.id
+          neonSaved: true
         };
 
         localStorage.setItem(`constructed_${activity.id}`, JSON.stringify(savedActivityRef));
 
         // Atualizar lista de atividades salvas
         const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        
-        // Evitar duplicatas
-        const existingIndex = savedActivities.findIndex((item: any) => item.activityId === activity.id);
-        if (existingIndex >= 0) {
-          savedActivities[existingIndex] = savedActivityRef;
-        } else {
-          savedActivities.push(savedActivityRef);
-        }
-        
+        savedActivities.push(savedActivityRef);
         localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
 
-        // Mostrar notificação de sucesso
-        this.showSaveSuccessNotification(activity.title);
-
       } else {
-        console.error('❌ Falha ao auto-salvar atividade - resultado falso');
-        throw new Error('Falha no salvamento');
+        console.error('❌ Falha ao auto-salvar atividade');
       }
 
     } catch (error) {
       console.error('❌ Erro no auto-save via hook:', error);
-      
-      // Fallback: salvar no localStorage para sincronização posterior
-      const fallbackData = {
-        activityId: activity.id,
-        title: activity.title,
-        type: activity.type,
-        needsSync: true,
-        errorAt: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Erro desconhecido'
-      };
-      
-      const pendingSync = JSON.parse(localStorage.getItem('pending_neon_sync') || '[]');
-      pendingSync.push(fallbackData);
-      localStorage.setItem('pending_neon_sync', JSON.stringify(pendingSync));
-      
-      console.log('💾 Atividade adicionada à fila de sincronização');
     }
-  };
-
-  // Método auxiliar para mostrar notificação de sucesso
-  const showSaveSuccessNotification = (title: string) => {
-    const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-slide-in';
-    notification.innerHTML = `
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-        </svg>
-        <span class="font-medium">${title}</span>
-        <span class="text-green-200">salva no Neon!</span>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      if (document.body.contains(notification)) {
-        notification.classList.add('animate-fade-out');
-        setTimeout(() => {
-          if (document.body.contains(notification)) {
-            document.body.removeChild(notification);
-          }
-        }, 300);
-      }
-    }, 4000);
   };
 
 

@@ -223,25 +223,12 @@ export function ConstructionCard({
     try {
       console.log('🔄 Auto-salvando atividade construída:', id);
 
-      // Verificar se a atividade foi realmente construída
-      const constructedData = localStorage.getItem(`activity_${id}`);
-      if (!constructedData) {
-        console.warn('⚠️ Atividade não foi construída ainda, pulando auto-save');
-        return;
-      }
-
-      const parsedConstructedData = JSON.parse(constructedData);
-
       // Gerar código único para a atividade
-      const activityCode = `sp-card-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const activityCode = `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      // Obter ID do usuário com múltiplas fontes de fallback
-      const userId = localStorage.getItem('user_id') || 
-                     localStorage.getItem('current_user_id') || 
-                     localStorage.getItem('neon_user_id') ||
-                     'anonymous';
-
-      console.log('👤 Auto-save - Usuário identificado:', userId);
+      // Obter ID do usuário (você pode ajustar conforme seu sistema de auth)
+      // Se o ID do usuário não estiver em localStorage, pode ser necessário buscar de um contexto de autenticação.
+      const userId = localStorage.getItem('user_id') || 'anonymous';
 
       // Preparar dados da atividade para salvar
       const activityData = {
@@ -250,25 +237,14 @@ export function ConstructionCard({
         type: type,
         title: title,
         content: {
-          ...parsedConstructedData, // Dados construídos do localStorage
-          ...originalData, // Dados originais se disponíveis
+          ...originalData, // Usando originalData aqui
           constructedAt: new Date().toISOString(),
           schoolPowerGenerated: true,
           activityId: id, // Referência ao ID original do School Power
           progress: progress,
-          status: status,
-          autoSavedFrom: 'ConstructionCard',
-          version: '1.0'
+          status: status
         }
       };
-
-      console.log('📤 Enviando para saveActivity:', {
-        user_id: activityData.user_id,
-        activity_code: activityData.activity_code,
-        type: activityData.type,
-        title: activityData.title,
-        hasContent: !!activityData.content
-      });
 
       const result = await saveActivity(activityData);
 
@@ -276,90 +252,44 @@ export function ConstructionCard({
         console.log('✅ Atividade salva automaticamente no banco Neon:', activityCode);
 
         // Salvar referência local para futura consulta
-        const saveReference = {
+        localStorage.setItem(`constructed_activity_${id}`, JSON.stringify({
           activityCode,
           savedAt: new Date().toISOString(),
           title: title,
-          type: type,
-          userId: userId,
-          neonSaved: true,
-          source: 'ConstructionCard'
-        };
+          type: type
+        }));
 
-        localStorage.setItem(`constructed_activity_${id}`, JSON.stringify(saveReference));
+        // Feedback visual simples (pode ser substituído por um sistema de notificações mais robusto)
+        const notificationId = `notification-${id}`;
+        if (!document.getElementById(notificationId)) {
+          const notification = document.createElement('div');
+          notification.id = notificationId;
+          notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn'; // Adicionado classe para animação
+          notification.textContent = `✅ ${title} salva automaticamente!`;
+          document.body.appendChild(notification);
 
-        // Atualizar lista global de atividades salvas
-        const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        
-        // Evitar duplicatas
-        const existingIndex = savedActivities.findIndex((item: any) => item.activityId === id);
-        if (existingIndex >= 0) {
-          savedActivities[existingIndex] = { ...saveReference, activityId: id };
-        } else {
-          savedActivities.push({ ...saveReference, activityId: id });
+          setTimeout(() => {
+            const existingNotification = document.getElementById(notificationId);
+            if (existingNotification) {
+              existingNotification.classList.remove('animate-fadeIn');
+              existingNotification.classList.add('animate-fadeOut');
+              existingNotification.addEventListener('animationend', () => {
+                if (document.body.contains(existingNotification)) {
+                  document.body.removeChild(existingNotification);
+                }
+              }, { once: true });
+            }
+          }, 3000);
         }
-        
-        localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
-
-        // Feedback visual melhorado
-        this.showSuccessNotification(title, activityCode);
 
       } else {
-        console.error('❌ Falha ao salvar atividade automaticamente - resultado falso');
-        throw new Error('Resultado negativo do saveActivity');
+        console.error('❌ Falha ao salvar atividade automaticamente');
+        // Adicionar feedback de erro aqui se necessário
       }
 
     } catch (error) {
       console.error('❌ Erro no auto-save da atividade:', error);
-      
-      // Salvar na fila de sincronização para tentar novamente depois
-      const pendingSync = JSON.parse(localStorage.getItem('pending_neon_sync') || '[]');
-      pendingSync.push({
-        activityId: id,
-        title: title,
-        type: type,
-        status: 'failed_auto_save',
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('pending_neon_sync', JSON.stringify(pendingSync));
-      
-      console.log('💾 Atividade adicionada à fila de sincronização pendente');
-    }
-  };
-
-  // Método auxiliar para mostrar notificação de sucesso
-  const showSuccessNotification = (title: string, activityCode: string) => {
-    const notificationId = `notification-${id}`;
-    if (!document.getElementById(notificationId)) {
-      const notification = document.createElement('div');
-      notification.id = notificationId;
-      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-in max-w-md';
-      notification.innerHTML = `
-        <div class="flex items-center gap-3">
-          <svg class="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-          </svg>
-          <div class="flex-1">
-            <div class="font-medium">${title}</div>
-            <div class="text-green-200 text-sm">Salva no Neon: ${activityCode}</div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        const existingNotification = document.getElementById(notificationId);
-        if (existingNotification) {
-          existingNotification.classList.remove('animate-slide-in');
-          existingNotification.classList.add('animate-fade-out');
-          setTimeout(() => {
-            if (document.body.contains(existingNotification)) {
-              document.body.removeChild(existingNotification);
-            }
-          }, 300);
-        }
-      }, 5000);
+      // Adicionar feedback de erro aqui se necessário
     }
   };
 

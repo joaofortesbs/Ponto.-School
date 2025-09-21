@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 import { autoSaveService } from './services/autoSaveService';
-import { constructionMonitorService } from './services/constructionMonitorService';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -136,19 +135,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       setIsBuilding(false);
 
       // Aguardar um pouco antes de fechar para mostrar resultado
-      setTimeout(async () => {
+      setTimeout(() => {
         setShowProgressModal(false);
         setBuildProgress(null);
-
-        // Forçar verificação de salvamento pelo monitor
-        await constructionMonitorService.forceSaveCheck();
 
         // Forçar refresh completo das atividades
         if (refreshActivities) {
           refreshActivities();
         }
-
-        console.log('🎉 Processo de construção e salvamento finalizado completamente');
       }, 3000);
     }
   };
@@ -174,52 +168,29 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   useEffect(() => {
     console.log('🏗️ ConstructionGrid: approvedActivities atualizadas:', approvedActivities);
 
-    // Configurar auto-save service com configurações otimizadas
+    // Configurar auto-save service
     autoSaveService.configure({
       enabled: true,
-      delayMs: 1000, // 1 segundo - mais rápido para garantir salvamento
-      retryAttempts: 5 // Mais tentativas para garantir sucesso
+      delayMs: 1500, // 1.5 segundos
+      retryAttempts: 3
     });
-
-    // Iniciar serviço de monitoramento
-    constructionMonitorService.startMonitoring();
 
     // Monitorar atividades completas para auto-save
     approvedActivities.forEach(activity => {
-      const isConstructed = activities.find(act => act.id === activity.id && act.isBuilt);
-      
-      if (isConstructed && (activity.status === 'completed' || activity.progress === 100)) {
-        console.log(`🎯 Agendando auto-save para atividade construída: ${activity.title}`);
-        
-        // Obter dados construídos do localStorage
-        const constructedData = localStorage.getItem(`activity_${activity.id}`);
-        const originalData = constructedData ? JSON.parse(constructedData) : activity.originalData || {};
-        
+      if (activity.status === 'completed' && activity.progress === 100) {
         autoSaveService.scheduleAutoSave({
           id: activity.id,
           type: activity.type || 'generic',
           title: activity.title,
-          description: activity.description || 'Atividade construída via School Power',
-          progress: 100,
-          status: 'completed',
-          originalData: {
-            ...originalData,
-            constructionMetadata: {
-              constructedAt: new Date().toISOString(),
-              source: 'ConstructionGrid',
-              activityId: activity.id
-            }
-          }
+          description: activity.description,
+          progress: activity.progress,
+          status: activity.status,
+          originalData: activity.originalData || {}
         });
       }
     });
 
-    // Cleanup function para parar o monitoramento quando o componente desmontar
-    return () => {
-      constructionMonitorService.stopMonitoring();
-    };
-
-  }, [approvedActivities, activities]);
+  }, [approvedActivities]);
 
   if (loading) {
     return (

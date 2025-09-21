@@ -1,6 +1,5 @@
 import { ConstructionActivity } from '../types';
 import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
-import { autoSaveService } from './autoSaveService';
 
 export interface AutoBuildProgress {
   current: number;
@@ -59,26 +58,26 @@ export class AutoBuildService {
           description: activity.description,
 
           // Campos específicos do Quadro Interativo
-          subject: activity.customFields?.['Disciplina / Área de conhecimento'] ||
-                   activity.customFields?.['Disciplina'] ||
+          subject: activity.customFields?.['Disciplina / Área de conhecimento'] || 
+                   activity.customFields?.['Disciplina'] || 
                    'Matemática',
 
-          schoolYear: activity.customFields?.['Ano / Série'] ||
-                      activity.customFields?.['Ano'] ||
+          schoolYear: activity.customFields?.['Ano / Série'] || 
+                      activity.customFields?.['Ano'] || 
                       '6º Ano',
 
-          theme: activity.customFields?.['Tema ou Assunto da aula'] ||
-                 activity.title ||
+          theme: activity.customFields?.['Tema ou Assunto da aula'] || 
+                 activity.title || 
                  'Tema da Aula',
 
-          objectives: activity.customFields?.['Objetivo de aprendizagem da aula'] ||
-                      activity.description ||
+          objectives: activity.customFields?.['Objetivo de aprendizagem da aula'] || 
+                      activity.description || 
                       'Objetivos de aprendizagem',
 
-          difficultyLevel: activity.customFields?.['Nível de Dificuldade'] ||
+          difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 
                            'Intermediário',
 
-          quadroInterativoCampoEspecifico: activity.customFields?.['Atividade mostrada'] ||
+          quadroInterativoCampoEspecifico: activity.customFields?.['Atividade mostrada'] || 
                                            'Atividade interativa no quadro',
 
           // Marcar como auto-build
@@ -358,15 +357,15 @@ export class AutoBuildService {
         console.log('🚀 [QUADRO INTERATIVO] Disparando eventos de auto-geração');
 
         window.dispatchEvent(new CustomEvent('quadro-interativo-auto-build', {
-          detail: {
-            activityId: activity.id,
+          detail: { 
+            activityId: activity.id, 
             data: constructedData
           }
         }));
 
         window.dispatchEvent(new CustomEvent('quadro-interativo-build-trigger', {
-          detail: {
-            activityId: activity.id,
+          detail: { 
+            activityId: activity.id, 
             data: constructedData
           }
         }));
@@ -396,26 +395,26 @@ export class AutoBuildService {
     const customFields = activity.customFields || {};
 
     return {
-      subject: customFields['Disciplina / Área de conhecimento'] ||
-               customFields['Disciplina'] ||
+      subject: customFields['Disciplina / Área de conhecimento'] || 
+               customFields['Disciplina'] || 
                'Matemática',
 
-      schoolYear: customFields['Ano / Série'] ||
-                  customFields['Ano'] ||
+      schoolYear: customFields['Ano / Série'] || 
+                  customFields['Ano'] || 
                   '6º Ano',
 
-      theme: customFields['Tema ou Assunto da aula'] ||
-             activity.title ||
+      theme: customFields['Tema ou Assunto da aula'] || 
+             activity.title || 
              'Tema da Aula',
 
-      objectives: customFields['Objetivo de aprendizagem da aula'] ||
-                  activity.description ||
+      objectives: customFields['Objetivo de aprendizagem da aula'] || 
+                  activity.description || 
                   'Objetivos de aprendizagem',
 
-      difficultyLevel: customFields['Nível de Dificuldade'] ||
+      difficultyLevel: customFields['Nível de Dificuldade'] || 
                        'Intermediário',
 
-      quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] ||
+      quadroInterativoCampoEspecifico: customFields['Atividade mostrada'] || 
                                        'Atividade interativa no quadro',
 
       title: activity.title,
@@ -477,56 +476,6 @@ export class AutoBuildService {
       try {
         await this.buildActivityWithExactModalLogic(activity);
 
-        // Implementar salvamento automático após construção
-        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-        const builtActivityData = {
-          isBuilt: true,
-          builtAt: new Date().toISOString(),
-          title: activity.title,
-          type: activity.type,
-          // Incluir generatedContent e originalActivity se disponíveis
-          ...(constructedActivities[activity.id]?.generatedContent && { generatedContent: constructedActivities[activity.id].generatedContent }),
-          ...(constructedActivities[activity.id]?.formData && { formData: constructedActivities[activity.id].formData }),
-          schoolPowerGenerated: true,
-          autoBuilt: true
-        };
-
-        localStorage.setItem(`activity_${activity.id}`, JSON.stringify(builtActivityData));
-        constructedActivities[activity.id] = builtActivityData;
-        localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
-
-        console.log(`✅ Atividade ${activity.title} construída com sucesso`);
-
-        // INTEGRAÇÃO COM AUTO-SAVE: Salvar automaticamente no banco Neon
-        try {
-          console.log(`💾 Iniciando auto-save para atividade construída: ${activity.title}`);
-
-          await autoSaveService.scheduleAutoSave({
-            id: activity.id,
-            type: activity.type || 'generic',
-            title: activity.title,
-            description: activity.description || '',
-            progress: 100,
-            status: 'completed',
-            originalData: {
-              ...builtActivityData,
-              constructionMetadata: {
-                constructedAt: new Date().toISOString(),
-                autoBuilt: true,
-                generatedContent: constructedActivities[activity.id]?.generatedContent,
-                formData: constructedActivities[activity.id]?.formData,
-                originalActivity: activity
-              }
-            }
-          });
-
-          console.log(`✅ Auto-save agendado para ${activity.title}`);
-
-        } catch (autoSaveError) {
-          console.error(`❌ Erro no auto-save para ${activity.title}:`, autoSaveError);
-          // Não interromper o processo de construção por erro de save
-        }
-
         processedCount++;
         console.log(`✅ [AUTO-BUILD] Atividade ${i + 1}/${activities.length} construída: ${activity.title}`);
 
@@ -575,7 +524,7 @@ export class AutoBuildService {
 
       // Disparar evento global de construção finalizada
       window.dispatchEvent(new CustomEvent('schoolpower-build-all-completed', {
-        detail: {
+        detail: { 
           totalActivities: activities.length,
           successCount: activities.length - errors.length,
           errorCount: errors.length
@@ -589,9 +538,9 @@ export class AutoBuildService {
 
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('quadro-interativo-force-generation', {
-            detail: {
+            detail: { 
               activityId: activity.id,
-              activity: activity
+              activity: activity 
             }
           }));
         }, 1000);

@@ -71,11 +71,6 @@ class AutoSaveService {
       const userId = this.getUserId();
       const activityCode = this.generateActivityCode(activity);
       
-      // Validar dados antes de salvar
-      if (!userId || !activityCode || !activity.type || !activity.originalData) {
-        throw new Error('Dados incompletos para salvamento');
-      }
-      
       const saveData: CreateActivityData = {
         user_id: userId,
         activity_code: activityCode,
@@ -89,31 +84,20 @@ class AutoSaveService {
             activityId: activity.id,
             progress: activity.progress,
             status: activity.status,
-            description: activity.description,
-            autoBuilt: true,
-            version: '1.0'
+            description: activity.description
           }
         }
       };
 
-      console.log('📤 Enviando dados para activitiesService:', {
-        user_id: saveData.user_id,
-        activity_code: saveData.activity_code,
-        type: saveData.type,
-        title: saveData.title,
-        contentSize: JSON.stringify(saveData.content).length
-      });
-
       const result = await activitiesService.saveActivity(saveData);
       
-      if (result) {
-        await this.handleSaveSuccess(activity, activityCode, { activity_code: activityCode });
+      if (result.success && result.data) {
+        await this.handleSaveSuccess(activity, activityCode, result.data);
       } else {
-        await this.handleSaveError(activity, 'Falha no salvamento - resultado negativo');
+        await this.handleSaveError(activity, result.error || 'Erro desconhecido');
       }
       
     } catch (error) {
-      console.error('❌ Erro crítico no performAutoSave:', error);
       await this.handleSaveError(activity, error instanceof Error ? error.message : 'Erro inesperado');
     }
   }
