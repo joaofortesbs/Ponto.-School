@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import emailRoutes from './enviar-email.js';
 import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
-import activitiesHandler from './activities.js';
 
 const { neonDB } = neonDBModule;
 
@@ -61,7 +60,6 @@ app.use((err, req, res, next) => {
 // Rotas
 app.use('/api', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
-app.use('/api/activities', activitiesHandler);
 
 // Rota raiz
 app.get('/', (req, res) => {

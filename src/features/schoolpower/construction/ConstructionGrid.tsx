@@ -10,8 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
-import { autoSaveService } from './services/autoSaveService';
-import { constructionMonitorService } from './services/constructionMonitorService';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
@@ -150,15 +148,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   // Listener para atualizações de atividades construídas
   useEffect(() => {
-    const handleActivityBuilt = async (event: CustomEvent) => {
+    const handleActivityBuilt = (event: CustomEvent) => {
       console.log('🎯 Evento de atividade construída recebido:', event.detail);
-
-      const { activityId } = event.detail;
-
-      // Salvar automaticamente no Neon quando atividade for construída
-      if (activityId) {
-        await handleAutoSaveAfterBuild(activityId);
-      }
 
       // Forçar atualização das atividades
       if (refreshActivities) {
@@ -173,215 +164,29 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     };
   }, [refreshActivities]);
 
-  const handleAutoSaveAfterBuild = async (activityId: string) => {
-    try {
-      console.log('💾 [GRID] Auto-salvando atividade após construção:', activityId);
-
-      // Encontrar a atividade na lista
-      const activity = activities.find(act => act.id === activityId);
-      if (!activity) {
-        console.warn('⚠️ [GRID] Atividade não encontrada para auto-save:', activityId);
-        return;
-      }
-
-      // Verificar se já foi salva no Neon
-      const alreadySaved = localStorage.getItem(`neon_grid_saved_${activityId}`);
-      if (alreadySaved) {
-        console.log('ℹ️ [GRID] Atividade já foi salva no Neon:', activityId);
-        return;
-      }
-
-      // Obter dados construídos de TODAS as fontes possíveis
-      const constructedData = localStorage.getItem(`activity_${activityId}`);
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const activityConstructionData = constructedActivities[activityId];
-      const autoActivityData = localStorage.getItem(`auto_activity_data_${activityId}`);
-      const quadroInterativo = localStorage.getItem(`constructed_quadro-interativo_${activityId}`);
-
-      let generatedContent = {};
-      let formData = {};
-
-      // Consolidar todos os dados disponíveis
-      if (constructedData) {
-        try {
-          generatedContent = JSON.parse(constructedData);
-        } catch (e) {
-          console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
-        }
-      }
-
-      if (autoActivityData) {
-        try {
-          const autoData = JSON.parse(autoActivityData);
-          formData = autoData.formData || {};
-        } catch (e) {
-          console.warn('⚠️ Erro ao fazer parse dos dados auto:', e);
-        }
-      }
-
-      if (quadroInterativo) {
-        try {
-          const quadroData = JSON.parse(quadroInterativo);
-          formData = { ...formData, ...quadroData.formData };
-        } catch (e) {
-          console.warn('⚠️ Erro ao fazer parse dos dados do quadro:', e);
-        }
-      }
-
-      // Se não há dados construídos, ainda assim salvar os dados originais
-      const hasData = Object.keys(generatedContent).length > 0 || 
-                     Object.keys(formData).length > 0 || 
-                     activityConstructionData ||
-                     activity.isBuilt;
-
-      if (!hasData) {
-        console.warn('⚠️ [GRID] Não há dados construídos para salvar, salvando dados básicos:', activityId);
-      }
-
-      // Gerar código único
-      const activityCode = `sp-grid-${activity.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Obter ID do usuário
-      const userId = localStorage.getItem('user_id') || 
-                     localStorage.getItem('current_user_id') || 
-                     localStorage.getItem('neon_user_id') ||
-                     'anonymous';
-
-      const { activitiesService } = await import('@/services/activitiesService');
-
-      const saveData = {
-        user_id: userId,
-        activity_code: activityCode,
-        type: activity.type,
-        title: activity.title,
-        content: {
-          // Dados originais da atividade
-          originalData: activity.customFields || {},
-          
-          // Dados do formulário
-          formData: formData,
-          
-          // Conteúdo gerado pela IA
-          generatedContent: generatedContent,
-          
-          // Dados de construção
-          constructionData: activityConstructionData || {},
-          
-          // Metadados do School Power
-          schoolPowerMetadata: {
-            constructedAt: new Date().toISOString(),
-            autoSaved: true,
-            activityId: activity.id,
-            progress: activity.progress,
-            status: activity.status,
-            description: activity.description,
-            isBuilt: activity.isBuilt || true,
-            source: 'schoolpower_grid',
-            hasGeneratedContent: Object.keys(generatedContent).length > 0,
-            hasFormData: Object.keys(formData).length > 0,
-            saveAttempt: new Date().toISOString()
-          }
-        }
-      };
-
-      console.log('💾 [GRID] Dados preparados para salvar:', {
-        activityCode,
-        title: activity.title,
-        hasGeneratedContent: Object.keys(generatedContent).length > 0,
-        hasFormData: Object.keys(formData).length > 0,
-        hasConstructionData: !!activityConstructionData
-      });
-
-      const result = await activitiesService.saveActivity(saveData);
-
-      if (result && result.success) {
-        console.log('✅ [GRID] Atividade salva no Neon após construção:', activityCode);
-
-        // Salvar referência local
-        localStorage.setItem(`neon_grid_saved_${activityId}`, JSON.stringify({
-          activityCode,
-          savedAt: new Date().toISOString(),
-          title: activity.title,
-          type: activity.type,
-          neonSaved: true,
-          userId: userId
-        }));
-
-        // Atualizar lista global
-        const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        savedActivities.push({
-          activityCode,
-          savedAt: new Date().toISOString(),
-          title: activity.title,
-          type: activity.type,
-          activityId: activity.id,
-          neonSaved: true,
-          source: 'grid_auto_save'
-        });
-        localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
-
-      } else {
-        console.error('❌ [GRID] Falha ao salvar atividade no Neon:', result?.error);
-        
-        // Tentar novamente em 5 segundos
-        setTimeout(() => {
-          console.log('🔄 [GRID] Tentando salvar novamente...');
-          handleAutoSaveAfterBuild(activityId);
-        }, 5000);
-      }
-
-    } catch (error) {
-      console.error('❌ [GRID] Erro no auto-save após construção:', error);
-      
-      // Tentar novamente em 10 segundos
-      setTimeout(() => {
-        console.log('🔄 [GRID] Tentando salvar após erro...');
-        handleAutoSaveAfterBuild(activityId);
-      }, 10000);
-    }
-  };
-
   useEffect(() => {
-    console.log('🏗️ ConstructionGrid: approvedActivities atualizadas:', approvedActivities);
+    console.log('🎯 ConstructionGrid - Verificando status das atividades');
 
-    // Configurar auto-save service
-    autoSaveService.configure({
-      enabled: true,
-      delayMs: 1000, // 1 segundo
-      retryAttempts: 5,
-      forceNeonSave: true
-    });
+    // Verificar e atualizar status de atividades construídas do localStorage
+    const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+    let hasChanges = false;
 
-    // Iniciar sistema de monitoramento
-    constructionMonitorService.startMonitoring();
-
-    // Monitorar atividades completas para auto-save
-    approvedActivities.forEach(activity => {
-      const shouldSchedule = activity.status === 'completed' || 
-                             activity.progress >= 100 ||
-                             activity.isBuilt === true;
-
-      if (shouldSchedule) {
-        autoSaveService.scheduleAutoSave({
-          id: activity.id,
-          type: activity.type || 'generic',
-          title: activity.title,
-          description: activity.description,
-          progress: activity.progress,
-          status: activity.status,
-          originalData: activity.originalData || {},
-          isBuilt: activity.isBuilt,
-          builtAt: activity.builtAt
-        });
+    activities.forEach(activity => {
+      if (constructedActivities[activity.id] && !activity.isBuilt) {
+        console.log(`📝 Atualizando status da atividade ${activity.id} para construída`);
+        activity.isBuilt = true;
+        activity.builtAt = constructedActivities[activity.id].builtAt;
+        activity.progress = 100;
+        activity.status = 'completed';
+        hasChanges = true;
       }
     });
 
-    // Cleanup na desmontagem
-    return () => {
-      constructionMonitorService.stopMonitoring();
-    };
-
-  }, [approvedActivities]);
+    if (hasChanges && refreshActivities) {
+      console.log('🔄 Forçando refresh das atividades devido a mudanças');
+      refreshActivities();
+    }
+  }, [activities, refreshActivities]);
 
   if (loading) {
     return (

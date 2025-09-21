@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'; // Importado useEffect
+
+import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Clock, 
@@ -50,10 +51,6 @@ import { Badge } from '@/components/ui/badge';
 import { ProgressCircle } from './ProgressCircle';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 
-// Supondo que useActivities() retorne uma função saveActivity e um estado de loading/error
-// Se a estrutura for diferente, ajuste esta chamada.
-import { useActivities } from '@/hooks/useActivities'; // Ajuste o caminho conforme necessário
-
 interface ConstructionActivityProps {
   id: string;
   title: string;
@@ -62,9 +59,8 @@ interface ConstructionActivityProps {
   type: string;
   status: 'draft' | 'in-progress' | 'completed' | 'pending';
   onEdit: () => void;
-  onView: () => void; // Alterado para ser um callback sem parâmetros, se necessário, ou mantenha se 'activityData' for usado.
+  onView: (activityData?: any) => void;
   onShare: (activityId: string) => void;
-  originalData?: any; // Adicionado para ter acesso aos dados originais para salvamento
 }
 
 // Mapeamento de ícones idêntico ao CardDeConstrucao.tsx
@@ -206,257 +202,8 @@ export function ConstructionCard({
   status,
   onView,
   onShare,
-  onEdit,
-  originalData // Recebendo originalData
+  onEdit
 }: ConstructionActivityProps) {
-  const { saveActivity } = useActivities();
-
-  // Auto-save quando atividade for marcada como completa ou construída
-  useEffect(() => {
-    // Verifica se a atividade está completa OU construída
-    const shouldAutoSave = (status === 'completed' && progress >= 100) || 
-                          (progress >= 100) ||
-                          (status === 'completed');
-
-    if (shouldAutoSave) {
-      console.log(`🎯 [CARD] Atividade elegível para auto-save: ${title}`, {
-        status,
-        progress,
-        shouldAutoSave
-      });
-      
-      // Pequeno delay para garantir que dados estão salvos no localStorage
-      setTimeout(() => {
-        handleAutoSave();
-      }, 500);
-    }
-  }, [status, progress, id]); // Incluir id nas dependências
-
-  const handleAutoSave = async () => {
-    try {
-      console.log('🔄 [CARD] Auto-salvando atividade construída:', id);
-
-      // Verificar se já foi salva
-      const alreadySaved = localStorage.getItem(`neon_saved_${id}`);
-      if (alreadySaved) {
-        console.log('ℹ️ [CARD] Atividade já foi salva no Neon:', id);
-        return;
-      }
-
-      // Gerar código único para a atividade
-      const activityCode = `sp-card-${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-      // Obter ID do usuário
-      const userId = localStorage.getItem('user_id') || 
-                     localStorage.getItem('current_user_id') || 
-                     localStorage.getItem('neon_user_id') ||
-                     'anonymous';
-
-      // Buscar dados construídos de TODAS as fontes possíveis
-      const constructedData = localStorage.getItem(`activity_${id}`);
-      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
-      const activityConstructionData = constructedActivities[id];
-      const autoActivityData = localStorage.getItem(`auto_activity_data_${id}`);
-      const quadroInterativo = localStorage.getItem(`constructed_quadro-interativo_${id}`);
-      
-      let generatedContent = {};
-      let formData = {};
-
-      // Consolidar dados de todas as fontes
-      if (constructedData) {
-        try {
-          generatedContent = JSON.parse(constructedData);
-        } catch (e) {
-          console.warn('⚠️ Erro ao fazer parse do conteúdo construído:', e);
-        }
-      }
-
-      if (autoActivityData) {
-        try {
-          const autoData = JSON.parse(autoActivityData);
-          formData = autoData.formData || {};
-        } catch (e) {
-          console.warn('⚠️ Erro ao fazer parse dos dados auto:', e);
-        }
-      }
-
-      if (quadroInterativo) {
-        try {
-          const quadroData = JSON.parse(quadroInterativo);
-          formData = { ...formData, ...quadroData.formData };
-        } catch (e) {
-          console.warn('⚠️ Erro ao fazer parse dos dados do quadro:', e);
-        }
-      }
-
-      // Preparar dados da atividade para salvar
-      const activityData = {
-        user_id: userId,
-        activity_code: activityCode,
-        type: type,
-        title: title,
-        content: {
-          // Dados originais da atividade
-          originalData: originalData || {},
-          
-          // Dados do formulário
-          formData: formData,
-          
-          // Conteúdo gerado pela IA
-          generatedContent: generatedContent,
-          
-          // Dados de construção
-          constructionData: activityConstructionData || {},
-          
-          // Metadados do School Power
-          schoolPowerMetadata: {
-            constructedAt: new Date().toISOString(),
-            autoSaved: true,
-            activityId: id,
-            progress: progress,
-            status: status,
-            description: description,
-            isBuilt: true,
-            source: 'schoolpower_construction_card',
-            hasGeneratedContent: Object.keys(generatedContent).length > 0,
-            hasFormData: Object.keys(formData).length > 0,
-            saveAttempt: new Date().toISOString()
-          }
-        }
-      };
-
-      console.log('💾 [CARD] Dados preparados para salvar:', {
-        activityCode,
-        title,
-        type,
-        hasGeneratedContent: Object.keys(generatedContent).length > 0,
-        hasFormData: Object.keys(formData).length > 0,
-        hasOriginalData: !!originalData
-      });
-
-      const result = await saveActivity(activityData);
-
-      if (result && result.success) {
-        console.log('✅ [CARD] Atividade salva automaticamente no banco Neon:', activityCode);
-
-        // Salvar referência local para futura consulta
-        localStorage.setItem(`neon_saved_${id}`, JSON.stringify({
-          activityCode,
-          savedAt: new Date().toISOString(),
-          title: title,
-          type: type,
-          neonSaved: true,
-          userId: userId
-        }));
-
-        // Atualizar lista global de atividades salvas
-        const savedActivities = JSON.parse(localStorage.getItem('school_power_saved_activities') || '[]');
-        
-        // Evitar duplicatas
-        const existingIndex = savedActivities.findIndex((item: any) => item.activityId === id);
-        const newSaveData = {
-          activityCode,
-          savedAt: new Date().toISOString(),
-          title: title,
-          type: type,
-          activityId: id,
-          neonSaved: true,
-          source: 'construction_card'
-        };
-
-        if (existingIndex >= 0) {
-          savedActivities[existingIndex] = newSaveData;
-        } else {
-          savedActivities.push(newSaveData);
-        }
-
-        localStorage.setItem('school_power_saved_activities', JSON.stringify(savedActivities));
-
-        // Feedback visual
-        showSuccessNotification(title);
-
-      } else {
-        console.error('❌ [CARD] Falha ao salvar atividade automaticamente:', result?.error);
-        showErrorNotification(title);
-        
-        // Tentar novamente em 5 segundos
-        setTimeout(() => {
-          console.log('🔄 [CARD] Tentando salvar novamente...');
-          handleAutoSave();
-        }, 5000);
-      }
-
-    } catch (error) {
-      console.error('❌ [CARD] Erro no auto-save da atividade:', error);
-      showErrorNotification(title);
-      
-      // Tentar novamente em 10 segundos
-      setTimeout(() => {
-        console.log('🔄 [CARD] Tentando salvar após erro...');
-        handleAutoSave();
-      }, 10000);
-    }
-  };
-
-  const showSuccessNotification = (activityTitle: string) => {
-    const notificationId = `notification-success-${id}`;
-    if (!document.getElementById(notificationId)) {
-      const notification = document.createElement('div');
-      notification.id = notificationId;
-      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fadeIn';
-      notification.innerHTML = `
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-          </svg>
-          <span class="font-medium">${activityTitle}</span>
-          <span class="text-green-200">salva no Neon!</span>
-        </div>
-      `;
-      
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        const existingNotification = document.getElementById(notificationId);
-        if (existingNotification) {
-          existingNotification.classList.remove('animate-fadeIn');
-          existingNotification.classList.add('animate-fadeOut');
-          setTimeout(() => {
-            if (document.body.contains(existingNotification)) {
-              document.body.removeChild(existingNotification);
-            }
-          }, 300);
-        }
-      }, 4000);
-    }
-  };
-
-  const showErrorNotification = (activityTitle: string) => {
-    const notificationId = `notification-error-${id}`;
-    if (!document.getElementById(notificationId)) {
-      const notification = document.createElement('div');
-      notification.id = notificationId;
-      notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      notification.innerHTML = `
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-          </svg>
-          <span class="font-medium">Erro ao salvar ${activityTitle}</span>
-        </div>
-      `;
-      
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        const existingNotification = document.getElementById(notificationId);
-        if (existingNotification && document.body.contains(existingNotification)) {
-          document.body.removeChild(existingNotification);
-        }
-      }, 5000);
-    }
-  };
-
   const isCompleted = status === 'completed' || progress >= 100;
   const ActivityIcon = getIconByActivityId(id);
   const activityName = getActivityNameById(id);
@@ -518,7 +265,7 @@ export function ConstructionCard({
         `}>
           {/* Ícone original */}
           <ActivityIcon className={`h-8 w-8 ${cardTheme.iconColor} ${isCompleted ? 'group-hover:opacity-0 transition-opacity duration-0' : ''}`} />
-
+          
           {/* Ícone de visualizar no hover - só para atividades construídas */}
           {isCompleted && (
             <Eye className={`h-8 w-8 ${cardTheme.iconColor} absolute opacity-0 group-hover:opacity-100 transition-opacity duration-0`} />
