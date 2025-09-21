@@ -219,14 +219,15 @@ router.post('/logout', authenticateToken, async (req, res) => {
   }
 });
 
-// Rota de teste de conexão com banco
+// Rota de teste de conexão com banco (CORRIGIDO)
 router.get('/test-db', async (req, res) => {
   try {
-    const isConnected = await neonDB.testConnection();
+    const result = await neonDB.testConnection();
     
     res.json({
-      database: isConnected ? 'conectado' : 'desconectado',
-      message: isConnected ? 'Banco Neon funcionando corretamente' : 'Erro na conexão com banco Neon'
+      database: result.success ? 'conectado' : 'desconectado',
+      message: result.success ? 'Banco Neon funcionando corretamente' : 'Erro na conexão com banco Neon',
+      data: result.data
     });
 
   } catch (error) {

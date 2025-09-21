@@ -16,6 +16,8 @@ interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  database?: string;
+  success?: boolean;
 }
 
 // Interface para usuário

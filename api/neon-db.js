@@ -26,51 +26,33 @@ const initializeTables = async () => {
   console.log('🔄 Inicializando tabelas...');
   
   try {
-    // Criar tabela users (compatível com estrutura existente)
+    // Criar tabela users (SCHEMA REAL - INTEGER)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id SERIAL PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        email_confirmed BOOLEAN DEFAULT FALSE,
-        last_sign_in_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    // Criar tabela profiles
+    // Criar tabela profiles (SCHEMA REAL - com colunas corretas)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS profiles (
-        id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-        email VARCHAR(255),
-        username VARCHAR(50) UNIQUE,
-        full_name VARCHAR(255),
-        display_name VARCHAR(255),
-        institution VARCHAR(255),
-        state VARCHAR(2),
-        birth_date DATE,
-        plan_type VARCHAR(50) DEFAULT 'lite',
-        level INTEGER DEFAULT 1,
-        rank VARCHAR(50) DEFAULT 'Aprendiz',
-        xp INTEGER DEFAULT 0,
-        coins INTEGER DEFAULT 100,
-        bio TEXT,
-        phone VARCHAR(20),
-        location VARCHAR(100),
-        occupation VARCHAR(100),
-        education VARCHAR(200),
-        interests TEXT,
-        website VARCHAR(255),
-        social_links JSONB DEFAULT '{}',
-        student_title TEXT,
-        activity_status VARCHAR(20) DEFAULT 'online',
-        cover_url TEXT,
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        email TEXT NOT NULL,
+        full_name TEXT,
+        display_name TEXT,
+        instituição_ensino TEXT,
+        estado_uf TEXT,
+        role TEXT DEFAULT 'student',
         avatar_url TEXT,
-        balance INTEGER DEFAULT 150,
-        expert_balance INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+        bio TEXT,
+        password_hash TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       )
     `);
 
@@ -88,7 +70,7 @@ const initializeTables = async () => {
       )
     `);
 
-    // Criar tabela de tarefas
+    // Criar tabela de tarefas (SCHEMA REAL - consistente)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tarefas (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -121,9 +103,9 @@ export const neonDB = {
   // Função para registrar usuário
   async register(email, password, userData = {}) {
     try {
-      // Verificar se usuário já existe
+      // Verificar se usuário já existe na tabela users
       const existingUser = await pool.query(
-        'SELECT id FROM profiles WHERE email = $1',
+        'SELECT id FROM users WHERE email = $1',
         [email]
       );
 
@@ -139,22 +121,31 @@ export const neonDB = {
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
-      // Inserir perfil direto na tabela profiles (deixar id ser gerado automaticamente)
+      // 1. Inserir usuário na tabela users (email + password)
+      const userResult = await pool.query(
+        `INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *`,
+        [email, passwordHash]
+      );
+
+      const user = userResult.rows[0];
+
+      // 2. Inserir perfil na tabela profiles (dados complementares)
       const profileResult = await pool.query(
         `INSERT INTO profiles (
-          email, full_name, display_name, instituição_ensino, estado_uf, password_hash, role
+          user_id, email, full_name, display_name, instituição_ensino, estado_uf, role
         ) VALUES ($1, $2, $3, $4, $5, $6, 'student') RETURNING *`,
         [
+          user.id,  // FK para users
           email,
           userData.full_name || '',
           userData.display_name || '',
           userData.instituição_ensino || '',
-          userData.estado_uf || '',
-          passwordHash
+          userData.estado_uf || 'SP'
+          // role 'student' já está hardcoded no SQL
         ]
       );
 
-      const user = profileResult.rows[0];
+      const profile = profileResult.rows[0];
 
       // Gerar token JWT
       const token = jwt.sign(
@@ -167,9 +158,9 @@ export const neonDB = {
         user: {
           id: user.id,
           email: user.email,
-          full_name: user.full_name,
-          display_name: user.display_name,
-          role: user.role
+          full_name: profile.full_name,
+          display_name: profile.display_name,
+          role: profile.role
         },
         session: { access_token: token },
         error: null
@@ -188,9 +179,9 @@ export const neonDB = {
   // Função para fazer login
   async signInWithPassword(email, password) {
     try {
-      // Buscar usuário na tabela profiles
+      // Buscar usuário na tabela users (para verificar password_hash)
       const userResult = await pool.query(
-        'SELECT * FROM profiles WHERE email = $1',
+        'SELECT * FROM users WHERE email = $1',
         [email]
       );
 
@@ -204,15 +195,6 @@ export const neonDB = {
 
       const user = userResult.rows[0];
 
-      // Verificar se tem senha (usuários criados pelo sistema novo)
-      if (!user.password_hash) {
-        return {
-          user: null,
-          session: null,
-          error: { message: 'Usuário não tem senha configurada. Use a recuperação de senha.' }
-        };
-      }
-
       // Verificar senha
       const passwordValid = await bcrypt.compare(password, user.password_hash);
       if (!passwordValid) {
@@ -223,9 +205,20 @@ export const neonDB = {
         };
       }
 
+      // Buscar dados do perfil
+      const profileResult = await pool.query(
+        'SELECT * FROM profiles WHERE user_id = $1',
+        [user.id]
+      );
+
+      let profile = null;
+      if (profileResult.rows.length > 0) {
+        profile = profileResult.rows[0];
+      }
+
       // Atualizar último login
       await pool.query(
-        'UPDATE profiles SET updated_at = NOW() WHERE id = $1',
+        'UPDATE users SET updated_at = NOW() WHERE id = $1',
         [user.id]
       );
 
@@ -240,9 +233,9 @@ export const neonDB = {
         user: {
           id: user.id,
           email: user.email,
-          full_name: user.full_name,
-          display_name: user.display_name,
-          role: user.role
+          full_name: profile?.full_name || '',
+          display_name: profile?.display_name || '',
+          role: profile?.role || 'student'
         },
         session: { access_token: token },
         error: null
@@ -263,9 +256,19 @@ export const neonDB = {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       
-      // Buscar dados atualizados do usuário
+      // CRÍTICO: Buscar por users.id (INTEGER) que está no JWT, não profile.id (UUID)
       const userResult = await pool.query(
-        'SELECT * FROM profiles WHERE id = $1',
+        `SELECT 
+          u.id as user_id, 
+          u.email, 
+          p.full_name, 
+          p.display_name, 
+          p.role,
+          p.avatar_url,
+          p.bio
+        FROM users u 
+        LEFT JOIN profiles p ON u.id = p.user_id 
+        WHERE u.id = $1`,
         [decoded.userId]
       );
 
@@ -276,14 +279,16 @@ export const neonDB = {
         };
       }
 
-      const user = userResult.rows[0];
+      const userData = userResult.rows[0];
       return {
         user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          display_name: user.display_name,
-          role: user.role
+          id: userData.user_id, // RETORNA INTEGER (users.id) NÃO UUID!
+          email: userData.email,
+          full_name: userData.full_name || '',
+          display_name: userData.display_name || '',
+          role: userData.role || 'student',
+          avatar_url: userData.avatar_url,
+          bio: userData.bio
         },
         error: null
       };
@@ -296,11 +301,11 @@ export const neonDB = {
     }
   },
 
-  // Função para buscar perfil
+  // Função para buscar perfil (CORRIGIDO - usa user_id)
   async getProfile(userId) {
     try {
       const result = await pool.query(
-        'SELECT * FROM profiles WHERE id = $1',
+        'SELECT * FROM profiles WHERE user_id = $1',
         [userId]
       );
 
@@ -321,6 +326,70 @@ export const neonDB = {
       return {
         data: null,
         error: { message: 'Erro interno do servidor' }
+      };
+    }
+  },
+
+  // Função para atualizar perfil (IMPLEMENTADO)
+  async updateProfile(userId, updates) {
+    try {
+      const setClause = Object.keys(updates)
+        .map((key, index) => `${key} = $${index + 2}`)
+        .join(', ');
+      
+      const values = [userId, ...Object.values(updates)];
+      
+      const result = await pool.query(
+        `UPDATE profiles SET ${setClause}, updated_at = NOW() WHERE user_id = $1 RETURNING *`,
+        values
+      );
+
+      if (result.rows.length === 0) {
+        return {
+          data: null,
+          error: { message: 'Usuário não encontrado' }
+        };
+      }
+
+      return {
+        data: result.rows[0],
+        error: null
+      };
+
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      return {
+        data: null,
+        error: { message: 'Erro interno do servidor' }
+      };
+    }
+  },
+
+  // Função para logout (IMPLEMENTADO)
+  async signOut() {
+    // JWT stateless - apenas retorna sucesso
+    // Em implementação mais avançada, poderia invalidar tokens
+    return {
+      error: null,
+      message: 'Logout realizado com sucesso'
+    };
+  },
+
+  // Função para testar conexão (IMPLEMENTADO)
+  async testConnection() {
+    try {
+      const result = await pool.query('SELECT NOW() as timestamp, version() as version');
+      return {
+        success: true,
+        data: result.rows[0],
+        error: null
+      };
+    } catch (error) {
+      console.error('Erro na conexão:', error);
+      return {
+        success: false,
+        data: null,
+        error: { message: 'Erro na conexão com banco de dados' }
       };
     }
   }
