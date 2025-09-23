@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, CheckCircle2, FileText, Download, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ConstructionActivity } from './types';
+import { ConstructionCard } from './ConstructionCard';
 import schoolPowerActivitiesData from '../data/schoolPowerActivities.json';
 
 interface HistoricoAtividadesCriadasProps {
@@ -17,21 +16,6 @@ interface AtividadeHistorico extends ConstructionActivity {
   criadaEm: string;
   atualizadaEm?: string;
 }
-
-// Função para obter ícone da atividade (mesma lógica do CardDeConstrucao)
-const getIconByActivityId = (activityId: string) => {
-  const uniqueIconMapping: { [key: string]: any } = {
-    "flash-cards": FileText,
-    "quiz-interativo": CheckCircle2,
-    "plano-aula": FileText,
-    "sequencia-didatica": FileText,
-    "lista-exercicios": FileText,
-    "prova": CheckCircle2,
-    // ... outros mapeamentos podem ser adicionados conforme necessário
-  };
-
-  return uniqueIconMapping[activityId] || FileText;
-};
 
 // Função para obter nome da atividade
 const getActivityNameById = (activityId: string): string => {
@@ -70,7 +54,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
               const parsedData = JSON.parse(activityData);
               const constructedInfo = constructedActivities[activityId];
               
-              // Criar objeto da atividade histórica
+              // Criar objeto da atividade histórica compatível com ConstructionCard
               const atividadeHistorica: AtividadeHistorico = {
                 id: activityId,
                 title: parsedData.title || getActivityNameById(activityId),
@@ -84,7 +68,15 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                 isBuilt: true,
                 builtAt: constructedInfo?.builtAt || new Date().toISOString(),
                 criadaEm: constructedInfo?.builtAt || new Date().toISOString(),
-                atualizadaEm: constructedInfo?.updatedAt
+                atualizadaEm: constructedInfo?.updatedAt,
+                // Campos adicionais necessários para ConstructionActivity
+                categoryId: activityId,
+                categoryName: getActivityNameById(activityId),
+                icon: activityId,
+                tags: [],
+                difficulty: 'Médio',
+                estimatedTime: '30 min',
+                originalData: parsedData
               };
               
               atividades.push(atividadeHistorica);
@@ -121,6 +113,22 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     
     // Atualizar estado local
     setAtividadesHistorico(prev => prev.filter(atividade => atividade.id !== activityId));
+  };
+
+  const handleViewActivity = (atividade: AtividadeHistorico) => {
+    console.log('👁️ Visualizando atividade do histórico:', atividade.title);
+    // A funcionalidade de visualização será a mesma do ConstructionCard
+    // Os dados já estão salvos no localStorage e serão carregados automaticamente
+  };
+
+  const handleEditActivity = (atividade: AtividadeHistorico) => {
+    console.log('✏️ Editando atividade do histórico:', atividade.title);
+    // A funcionalidade de edição será a mesma do ConstructionCard
+  };
+
+  const handleShareActivity = (activityId: string) => {
+    console.log('📤 Compartilhando atividade do histórico:', activityId);
+    // A funcionalidade de compartilhamento será a mesma do ConstructionCard
   };
 
   const formatarData = (dataString: string) => {
@@ -192,7 +200,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
 
       <Separator />
 
-      {/* Lista de Atividades */}
+      {/* Lista de Atividades usando ConstructionCard */}
       {atividadesHistorico.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -206,90 +214,45 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {atividadesHistorico.map((atividade, index) => {
-            const ActivityIcon = getIconByActivityId(atividade.id);
-            
-            return (
-              <motion.div
-                key={atividade.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-              >
-                <Card className="relative overflow-hidden border-2 border-green-300 dark:border-green-600 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 hover:shadow-lg transition-all duration-300 group">
-                  <CardContent className="p-4">
-                    {/* Botão de remoção */}
-                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleRemoverAtividade(atividade.id)}
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-2">
+          {atividadesHistorico.map((atividade, index) => (
+            <motion.div
+              key={atividade.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2, delay: index * 0.05 }}
+              className="relative group"
+            >
+              {/* Botão de remoção no canto superior direito */}
+              <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoverAtividade(atividade.id);
+                  }}
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-md"
+                  title="Remover do histórico"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
 
-                    <div className="flex flex-col items-center text-center space-y-3">
-                      {/* Ícone da atividade */}
-                      <div className="relative w-12 h-12 rounded-xl bg-green-500 dark:bg-green-600 flex items-center justify-center shadow-md">
-                        <ActivityIcon className="h-6 w-6 text-white" />
-                        <div className="absolute -bottom-1 -right-1 bg-white dark:bg-gray-800 rounded-full p-0.5">
-                          <CheckCircle2 className="h-3 w-3 text-green-500 dark:text-green-400" />
-                        </div>
-                      </div>
-
-                      {/* Título da atividade */}
-                      <h3 className="text-sm font-bold text-green-800 dark:text-green-200 leading-tight line-clamp-2">
-                        {atividade.title}
-                      </h3>
-
-                      {/* Descrição */}
-                      <p className="text-xs text-green-600 dark:text-green-300 leading-relaxed line-clamp-2 min-h-[2rem]">
-                        {atividade.description}
-                      </p>
-
-                      {/* Data de criação */}
-                      <div className="w-full">
-                        <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700 text-xs">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formatarData(atividade.criadaEm)}
-                        </Badge>
-                      </div>
-
-                      {/* Ações */}
-                      <div className="flex gap-2 w-full">
-                        <Button
-                          size="sm"
-                          className="flex-1 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white text-xs"
-                          onClick={() => {
-                            // Aqui você pode implementar a visualização da atividade
-                            console.log('👁️ Visualizar atividade:', atividade.id);
-                          }}
-                        >
-                          <FileText className="h-3 w-3 mr-1" />
-                          Ver
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/30 text-xs"
-                          onClick={() => {
-                            // Aqui você pode implementar o compartilhamento
-                            console.log('📤 Compartilhar atividade:', atividade.id);
-                          }}
-                        >
-                          <Share2 className="h-3 w-3 mr-1" />
-                          Compartilhar
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+              {/* Card usando o componente ConstructionCard exato */}
+              <ConstructionCard
+                id={atividade.id}
+                title={atividade.title}
+                description={atividade.description}
+                progress={atividade.progress}
+                type={atividade.type}
+                status={atividade.status}
+                onEdit={() => handleEditActivity(atividade)}
+                onView={(activityData) => handleViewActivity(activityData || atividade)}
+                onShare={() => handleShareActivity(atividade.id)}
+              />
+            </motion.div>
+          ))}
         </div>
       )}
     </motion.div>
