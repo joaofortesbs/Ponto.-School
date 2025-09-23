@@ -306,24 +306,26 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
-          {/* Botão de Voltar ao Início */}
+          {/* Botão de Voltar ao Início - apenas ícone */}
           <Button
             onClick={() => window.location.href = '/school-power'}
             variant="outline"
-            className="inline-flex items-center gap-2 px-4 py-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            size="icon"
+            className="w-10 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            title="Voltar ao Início"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Voltar ao Início</span>
           </Button>
 
-          {/* Botão de Histórico */}
+          {/* Botão de Histórico - apenas ícone */}
           <Button
             onClick={handleShowHistorico}
             variant="outline"
-            className="inline-flex items-center gap-2 px-4 py-2 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            size="icon"
+            className="w-10 h-10 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            title="Histórico de Atividades Criadas"
           >
             <Clock className="w-4 h-4" />
-            <span>Histórico de Atividades Criadas</span>
           </Button>
 
           {/* Botão Construir Todas */}
