@@ -257,30 +257,26 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     }
   }, [flowData, saveData]);
 
-  // Reset do fluxo
+  // Função para resetar o fluxo
   const resetFlow = useCallback(() => {
     console.log('🔄 Resetando School Power Flow...');
-
-    const resetData: SchoolPowerFlowData = {
+    setFlowState('idle');
+    setFlowData({
       initialMessage: null,
       contextualizationData: null,
       actionPlan: [],
+      manualActivities: [],
       timestamp: Date.now()
-    };
-
-    setFlowData(resetData);
-    setFlowState('idle');
+    });
     setIsLoading(false);
 
-    // Limpar localStorage
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      console.log('🗑️ LocalStorage limpo');
-    } catch (error) {
-      console.error('❌ Erro ao limpar localStorage:', error);
-    }
+    // Limpar dados do localStorage do fluxo atual
+    localStorage.removeItem(STORAGE_KEY);
 
-    console.log('✅ School Power Flow resetado completamente');
+    // Manter apenas atividades que estão efetivamente construídas no histórico
+    // As atividades pendentes ou em progresso serão perdidas (comportamento desejado)
+
+    console.log('✅ School Power Flow resetado - atividades construídas preservadas no histórico');
   }, []);
 
   return {

@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
 import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo modal
+import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Loader2, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
@@ -28,6 +29,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   // Novos estados para o modal de visualização
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewActivity, setViewActivity] = useState<ConstructionActivity | null>(null);
+
+  // Estado para controlar a visualização do histórico
+  const [showHistorico, setShowHistorico] = useState(false);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
@@ -54,6 +58,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('👁️ Fechando modal de visualização');
     setIsViewModalOpen(false);
     setViewActivity(null);
+  };
+
+  const handleShowHistorico = () => {
+    console.log('📚 Abrindo histórico de atividades criadas');
+    setShowHistorico(true);
+  };
+
+  const handleBackFromHistorico = () => {
+    console.log('🔙 Voltando do histórico para construção');
+    setShowHistorico(false);
   };
 
   const handleShare = (id: string) => {
@@ -265,6 +279,11 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     activity.progress < 100
   );
 
+  // Se está mostrando histórico, renderizar componente de histórico
+  if (showHistorico) {
+    return <HistoricoAtividadesCriadas onBack={handleBackFromHistorico} />;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -285,9 +304,21 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           </div>
         </div>
 
-        {/* Botão Construir Todas */}
-        {activitiesNeedingBuild.length > 0 && (
-          <div className="flex items-center gap-2">
+        {/* Botões de Ação */}
+        <div className="flex items-center gap-2">
+          {/* Botão de Histórico */}
+          <Button
+            onClick={handleShowHistorico}
+            variant="outline"
+            className="inline-flex items-center gap-2 px-4 py-2 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            title="Histórico de Atividades Criadas"
+          >
+            <History className="w-4 h-4" />
+            Histórico
+          </Button>
+
+          {/* Botão Construir Todas */}
+          {activitiesNeedingBuild.length > 0 && (
             <Button
               onClick={handleBuildAll}
               disabled={isBuilding || buildProgress?.status === 'running'}
@@ -305,8 +336,8 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
                 </>
               )}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Grid com layout otimizado para os novos cards */}

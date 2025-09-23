@@ -14,15 +14,15 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
   const convertToConstructionActivity = (activity: any): ConstructionActivity => {
     console.log('🔄 Convertendo atividade:', activity);
 
-    // Verificar se atividade está registrada como construída
+    // Verificar se atividade está registrada como construída (apenas construídas persistem)
     const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
     const isRegisteredAsBuilt = constructedActivities[activity.id];
 
-    // Verificar se existe conteúdo salvo
+    // Verificar se existe conteúdo salvo (apenas para atividades realmente construídas)
     const savedContent = localStorage.getItem(`activity_${activity.id}`);
-    const hasGeneratedContent = savedContent !== null;
+    const hasGeneratedContent = savedContent !== null && isRegisteredAsBuilt;
 
-    const isBuilt = isRegisteredAsBuilt?.isBuilt || hasGeneratedContent;
+    const isBuilt = isRegisteredAsBuilt?.isBuilt && hasGeneratedContent;
 
     console.log(`🎯 Atividade ${activity.id} - Registrada: ${!!isRegisteredAsBuilt}, Content: ${hasGeneratedContent}, isBuilt: ${isBuilt}`);
     console.log(`🔍 Verificando status de construção para ${activity.id}:`, {
