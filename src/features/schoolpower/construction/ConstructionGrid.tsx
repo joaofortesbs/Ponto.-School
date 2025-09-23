@@ -10,7 +10,7 @@ import useSchoolPowerFlow from '../hooks/useSchoolPowerFlow'; // Hook para naveg
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, Clock } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft, Clock } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
@@ -72,7 +72,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     setShowHistorico(false);
   };
 
-  
+  const handleBackToHome = () => {
+    console.log('🏠 Voltando para o início do School Power');
+    
+    // Executar reset do fluxo para voltar ao estado inicial
+    resetFlow();
+    
+    console.log('🏠 Reset executado - voltando para interface inicial');
+  };
 
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
@@ -310,6 +317,17 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
+          {/* Botão de Voltar ao Início - apenas ícone */}
+          <Button
+            onClick={handleBackToHome}
+            variant="outline"
+            size="icon"
+            className="w-10 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            title="Voltar ao Início"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+
           {/* Botão de Histórico - apenas ícone */}
           <Button
             onClick={handleShowHistorico}
