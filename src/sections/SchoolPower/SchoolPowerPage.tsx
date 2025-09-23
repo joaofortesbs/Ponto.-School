@@ -77,13 +77,9 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const handleBack = () => {
     console.log("🔄 Voltando ao início");
     
-    // Limpar localStorage antes do reset
-    localStorage.removeItem('schoolpower_flow_data');
-    
-    // Reset do hook
+    // Reset do hook - isso irá atualizar a interface internamente
     handleResetFlowHook();
     
-    // Log para debug
     console.log("🏠 Reset executado - componentes devem voltar ao estado inicial");
   };
 
