@@ -107,11 +107,32 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         }));
       }, 150);
       
-      // Verificação adicional
+      // Verificação adicional e comunicação com interface principal
       setTimeout(() => {
         console.log('🔍 Verificação final do estado após reset');
         const currentData = localStorage.getItem('schoolpower_flow_data');
         console.log('💾 Dados no localStorage após reset:', currentData ? 'AINDA EXISTEM' : 'REMOVIDOS');
+        
+        // Força comunicação com a interface principal
+        window.dispatchEvent(new CustomEvent('construction-grid-reset-complete', {
+          detail: { 
+            component: 'ConstructionGrid',
+            action: 'back-to-home-completed',
+            timestamp: Date.now()
+          }
+        }));
+        
+        // Verificar se a interface principal está recebendo o reset
+        setTimeout(() => {
+          console.log('📡 Enviando sinal adicional para interface principal...');
+          window.dispatchEvent(new CustomEvent('schoolpower-force-refresh', {
+            detail: { 
+              reason: 'construction-grid-back-button',
+              timestamp: Date.now()
+            }
+          }));
+        }, 50);
+        
       }, 300);
       
     } catch (error) {

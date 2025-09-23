@@ -360,43 +360,66 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       window.dispatchEvent(resetEvent);
       console.log('📡 Evento schoolpower-flow-reset disparado');
       
-      // Verificação com delay para garantir sincronização
-      setTimeout(() => {
-        console.log('🔍 Verificação pós-reset (150ms):');
-        
-        // Remover timestamp de reset
-        localStorage.removeItem('schoolpower_reset_timestamp');
-        
-        // Verificar se localStorage está realmente limpo
-        const remainingData = localStorage.getItem(STORAGE_KEY);
-        console.log('💾 Dados remanescentes no localStorage:', remainingData ? 'AINDA EXISTE' : 'LIMPO ✅');
-        
-        // Verificar estado atual
-        console.log('📊 Estado atual do hook:', {
-          currentFlowState: flowState,
-          shouldBeIdle: true,
-          dataEmpty: !flowData.initialMessage
-        });
-        
-        // Força adicional se necessário
-        if (flowState !== 'idle') {
-          console.log('🔧 FORÇANDO estado idle - estado atual não é idle');
-          setFlowState('idle');
-          setFlowData(cleanState);
-        }
-        
-        console.log('🎯 [RESET FINALIZADO] Estado deve estar em IDLE agora');
-        
-        // Evento final de confirmação
-        window.dispatchEvent(new CustomEvent('schoolpower-reset-complete', {
-          detail: { 
-            finalState: 'idle',
-            timestamp: Date.now(),
-            success: true
+      // Múltiplas verificações para garantir sincronização completa
+      const verificationChecks = [50, 100, 200];
+      
+      verificationChecks.forEach((delay, index) => {
+        setTimeout(() => {
+          console.log(`🔍 Verificação pós-reset (${delay}ms):`, index + 1);
+          
+          // Remover timestamp de reset apenas na primeira verificação
+          if (index === 0) {
+            localStorage.removeItem('schoolpower_reset_timestamp');
           }
-        }));
-        
-      }, 150);
+          
+          // Verificar se localStorage está realmente limpo
+          const remainingData = localStorage.getItem(STORAGE_KEY);
+          console.log('💾 Dados remanescentes no localStorage:', remainingData ? 'AINDA EXISTE' : 'LIMPO ✅');
+          
+          // Verificar estado atual
+          console.log('📊 Estado atual do hook:', {
+            currentFlowState: flowState,
+            shouldBeIdle: true,
+            dataEmpty: !flowData.initialMessage,
+            checkNumber: index + 1
+          });
+          
+          // Força adicional se necessário
+          if (flowState !== 'idle') {
+            console.log(`🔧 FORÇANDO estado idle - tentativa ${index + 1}`);
+            startTransition(() => {
+              setFlowState('idle');
+              setFlowData(cleanState);
+            });
+          }
+          
+          // Disparar evento de reset na verificação final
+          if (index === verificationChecks.length - 1) {
+            console.log('🎯 [RESET FINALIZADO] Estado deve estar em IDLE agora');
+            
+            // Evento final de confirmação com força máxima
+            window.dispatchEvent(new CustomEvent('schoolpower-reset-complete', {
+              detail: { 
+                finalState: 'idle',
+                timestamp: Date.now(),
+                success: true,
+                forceRefresh: true
+              }
+            }));
+            
+            // Evento adicional para forçar atualização da interface
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('schoolpower-interface-force-update', {
+                detail: { 
+                  action: 'reset-to-idle',
+                  timestamp: Date.now()
+                }
+              }));
+            }, 10);
+          }
+          
+        }, delay);
+      });
       
     } catch (error) {
       console.error('❌ [ERRO CRÍTICO] Durante reset do School Power Flow:', error);
