@@ -6,7 +6,7 @@ import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo moda
 import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
-import { useSchoolPowerFlow } from '../hooks/useSchoolPowerFlow'; // Hook para navegação interna
+import useSchoolPowerFlow from '../hooks/useSchoolPowerFlow'; // Hook para navegação interna
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';

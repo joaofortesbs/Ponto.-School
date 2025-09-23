@@ -48,7 +48,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   }, []);
 
   // Carrega dados do localStorage apenas na inicialização
-  const loadStoredData = useCallback((): SchoolPowerFlowData | null => {
+  const loadStoredData = (): SchoolPowerFlowData | null => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -68,30 +68,41 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       localStorage.removeItem(STORAGE_KEY);
     }
     return null;
-  }, []);
+  };
 
   // Inicializar com dados salvos se existirem
   React.useEffect(() => {
     const storedData = loadStoredData();
     if (storedData) {
+      console.log('📥 Carregando dados salvos:', storedData);
       setFlowData(storedData);
 
       // Definir estado baseado nos dados carregados
       if (storedData.initialMessage && !storedData.contextualizationData) {
+        console.log('🔄 Estado definido: contextualizing');
         setFlowState('contextualizing');
-      } else if (storedData.initialMessage && storedData.contextualizationData && !storedData.actionPlan) {
+      } else if (storedData.initialMessage && storedData.contextualizationData && (!storedData.actionPlan || storedData.actionPlan.length === 0)) {
+        console.log('🔄 Estado definido: actionplan');
         setFlowState('actionplan');
-      } else if (storedData.initialMessage && storedData.contextualizationData && storedData.actionPlan) {
+      } else if (storedData.initialMessage && storedData.contextualizationData && storedData.actionPlan && storedData.actionPlan.length > 0) {
         // Verificar se temos atividades aprovadas
         const hasApprovedActivities = storedData.actionPlan.some(item => item.approved);
         if (hasApprovedActivities) {
+          console.log('🔄 Estado definido: activities - atividades aprovadas encontradas');
           setFlowState('activities');
         } else {
+          console.log('🔄 Estado definido: actionplan - nenhuma atividade aprovada');
           setFlowState('actionplan');
         }
+      } else {
+        console.log('🔄 Estado definido: idle - dados incompletos');
+        setFlowState('idle');
       }
+    } else {
+      console.log('🔄 Nenhum dado salvo encontrado - mantendo idle');
+      setFlowState('idle');
     }
-  }, [loadStoredData]);
+  }, []);
 
   // Envia mensagem inicial e inicia processo de contextualização
   const sendInitialMessage = useCallback((message: string) => {
@@ -222,30 +233,27 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     try {
       setIsLoading(true);
 
+      // Garantir que temos uma mensagem inicial
+      const currentMessage = flowData.initialMessage || 'Atividades educacionais';
+
       const newFlowData = {
         ...flowData,
-        actionPlan: approvedItems,
+        initialMessage: currentMessage, // Garantir que a mensagem está preservada
+        actionPlan: approvedItems.map(item => ({
+          ...item,
+          approved: true // Garantir que todas estão marcadas como aprovadas
+        })),
         timestamp: Date.now()
       };
 
+      console.log('💾 Salvando dados do plano aprovado:', newFlowData);
+      
       setFlowData(newFlowData);
       saveData(newFlowData);
 
-      // Transição imediata para activities sem geração automática
+      // Transição imediata para activities
       console.log('🎯 Transitando imediatamente para interface de construção...');
       setFlowState('activities');
-      setIsLoading(false);
-
-      // Opcional: Se quiser manter a automação, pode fazer em background
-      // setTimeout(async () => {
-      //   try {
-      //     const AutomationController = (await import('../construction/automationController')).default;
-      //     const controller = AutomationController.getInstance();
-      //     // Processo de automação em background...
-      //   } catch (error) {
-      //     console.error('Erro na automação em background:', error);
-      //   }
-      // }, 100);
 
       console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
