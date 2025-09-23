@@ -6,7 +6,6 @@ import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo moda
 import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
-import { useSchoolPowerFlow } from '../hooks/useSchoolPowerFlow'; // Hook para navegação interna
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,7 +22,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
-  const { setCurrentState } = useSchoolPowerFlow(); // Hook para navegação interna
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
@@ -70,11 +68,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const handleBackFromHistorico = () => {
     console.log('🔙 Voltando do histórico para construção');
     setShowHistorico(false);
-  };
-
-  const handleBackToHome = () => {
-    console.log('🏠 Voltando para o início do School Power');
-    setCurrentState('idle'); // Volta para o estado inicial do School Power
   };
 
   const handleShare = (id: string) => {
@@ -315,7 +308,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         <div className="flex items-center gap-2">
           {/* Botão de Voltar ao Início - apenas ícone */}
           <Button
-            onClick={handleBackToHome}
+            onClick={() => window.location.href = '/school-power'}
             variant="outline"
             size="icon"
             className="w-10 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
