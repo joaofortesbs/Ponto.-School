@@ -72,13 +72,38 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     setShowHistorico(false);
   };
 
-  const handleBackToHome = () => {
+  const handleBackToHome = (e?: React.MouseEvent) => {
+    // Prevenir comportamento padrão e propagação do evento
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     console.log('🏠 Voltando para o início do School Power');
+    console.log('🔄 Estado atual antes do reset:', { flowState: 'activities', hasActivities: activities?.length || 0 });
     
-    // Executar reset do fluxo para voltar ao estado inicial
-    resetFlow();
-    
-    console.log('🏠 Reset executado - voltando para interface inicial');
+    try {
+      // Executar reset do fluxo para voltar ao estado inicial
+      resetFlow();
+      
+      console.log('✅ Reset executado com sucesso - voltando para interface inicial');
+      
+      // Forçar atualização da interface após um pequeno delay
+      setTimeout(() => {
+        console.log('🔄 Verificando se interface foi atualizada...');
+        window.dispatchEvent(new CustomEvent('schoolpower-reset-complete'));
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Erro ao executar reset do School Power:', error);
+      // Tentar reset alternativo em caso de erro
+      try {
+        localStorage.removeItem('schoolpower_flow_data');
+        window.location.reload();
+      } catch (fallbackError) {
+        console.error('❌ Erro no fallback reset:', fallbackError);
+      }
+    }
   };
 
   const handleShare = (id: string) => {
@@ -317,15 +342,26 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
-          {/* Botão de Voltar ao Início - apenas ícone */}
+          {/* Botão de Voltar ao Início - completamente clicável */}
           <Button
             onClick={handleBackToHome}
             variant="outline"
             size="icon"
-            className="w-10 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-            title="Voltar ao Início"
+            className="w-12 h-12 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer select-none"
+            title="Voltar ao Início do School Power"
+            style={{
+              minWidth: '48px',
+              minHeight: '48px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
+            }}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5 pointer-events-none" />
           </Button>
 
           {/* Botão de Histórico - apenas ícone */}

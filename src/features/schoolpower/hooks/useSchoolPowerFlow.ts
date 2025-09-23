@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, startTransition } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
@@ -279,43 +279,84 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Função para resetar o fluxo
   const resetFlow = useCallback(() => {
     console.log('🔄 Resetando School Power Flow...');
+    console.log('📊 Estado antes do reset:', { flowState, flowData });
     
-    // Limpar TODOS os dados relacionados ao School Power
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('schoolpower_activities'); 
-    localStorage.removeItem('schoolpower_construction_data');
-    
-    // Marcar timestamp do reset para evitar restauração automática
-    localStorage.setItem('schoolpower_reset_timestamp', Date.now().toString());
-    
-    // Resetar todos os estados de forma síncrona e imediata
-    const cleanState = {
-      initialMessage: null,
-      contextualizationData: null,
-      actionPlan: [],
-      manualActivities: [],
-      timestamp: Date.now()
-    };
-    
-    // Força a atualização dos estados em ordem específica
-    setIsLoading(false);
-    setFlowState('idle'); // Primeiro muda o estado
-    setFlowData(cleanState); // Depois limpa os dados
-
-    console.log('✅ School Power Flow resetado COMPLETAMENTE - voltando para interface inicial');
-    console.log('🏠 Estado após reset:', { flowState: 'idle', flowData: cleanState });
-    
-    // Verificação adicional para garantir que o reset foi efetivo
-    setTimeout(() => {
-      localStorage.removeItem('schoolpower_reset_timestamp');
+    try {
+      // Limpar TODOS os dados relacionados ao School Power
+      const keysToRemove = [
+        STORAGE_KEY,
+        'schoolpower_activities',
+        'schoolpower_construction_data',
+        'constructedActivities',
+        'schoolpower_action_plan',
+        'auto_activity_data_flash-cards',
+        'auto_activity_data_quiz-interativo'
+      ];
       
-      // Verificação final - se ainda não estiver em idle, forçar novamente
-      if (flowState !== 'idle') {
-        console.log('🔧 Forçando estado idle após reset');
-        setFlowState('idle');
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+          console.log(`🗑️ Removido: ${key}`);
+        } catch (error) {
+          console.warn(`⚠️ Erro ao remover ${key}:`, error);
+        }
+      });
+      
+      // Marcar timestamp do reset para evitar restauração automática
+      localStorage.setItem('schoolpower_reset_timestamp', Date.now().toString());
+      
+      // Resetar todos os estados de forma síncrona e imediata
+      const cleanState: SchoolPowerFlowData = {
+        initialMessage: null,
+        contextualizationData: null,
+        actionPlan: [],
+        manualActivities: [],
+        timestamp: Date.now()
+      };
+      
+      // Força a atualização dos estados em ordem específica
+      setIsLoading(false);
+      
+      // Usar startTransition para garantir que a atualização seja prioritária
+      startTransition(() => {
+        setFlowState('idle'); // Primeiro muda o estado
+        setFlowData(cleanState); // Depois limpa os dados
+      });
+
+      console.log('✅ School Power Flow resetado COMPLETAMENTE - voltando para interface inicial');
+      console.log('🏠 Estado após reset:', { flowState: 'idle', flowData: cleanState });
+      
+      // Disparar evento customizado para notificar outros componentes
+      window.dispatchEvent(new CustomEvent('schoolpower-flow-reset', {
+        detail: { previousState: flowState, newState: 'idle' }
+      }));
+      
+      // Verificação adicional para garantir que o reset foi efetivo
+      setTimeout(() => {
+        localStorage.removeItem('schoolpower_reset_timestamp');
+        
+        // Verificação final - se ainda não estiver em idle, forçar novamente
+        if (flowState !== 'idle') {
+          console.log('🔧 Forçando estado idle após reset');
+          setFlowState('idle');
+          setFlowData(cleanState);
+        }
+        
+        console.log('🎯 Reset finalizado - estado deve estar em idle');
+      }, 150);
+      
+    } catch (error) {
+      console.error('❌ Erro durante reset do School Power Flow:', error);
+      
+      // Fallback em caso de erro
+      try {
+        localStorage.clear();
+        window.location.reload();
+      } catch (fallbackError) {
+        console.error('❌ Erro no fallback de reset:', fallbackError);
       }
-    }, 100);
-  }, []);
+    }
+  }, [flowState, flowData]);
 
   return {
     flowState,
