@@ -72,39 +72,70 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     setShowHistorico(false);
   };
 
-  const handleBackToHome = (e?: React.MouseEvent) => {
-    // Prevenir comportamento padrão e propagação do evento
+  const handleBackToHome = React.useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
+    console.log('🏠 [BOTÃO CLICADO] Iniciando processo de voltar ao início');
+    
+    // Prevenir comportamento padrão e propagação
     if (e) {
       e.preventDefault();
       e.stopPropagation();
+      console.log('🔄 Evento de clique interceptado e controlado');
     }
     
-    console.log('🏠 Voltando para o início do School Power');
-    console.log('🔄 Estado atual antes do reset:', { flowState: 'activities', hasActivities: activities?.length || 0 });
+    console.log('📊 Estado atual antes do reset:', { 
+      flowState: 'activities', 
+      hasActivities: activities?.length || 0,
+      timestamp: new Date().toISOString()
+    });
     
     try {
+      console.log('⚡ Executando resetFlow...');
+      
       // Executar reset do fluxo para voltar ao estado inicial
       resetFlow();
       
-      console.log('✅ Reset executado com sucesso - voltando para interface inicial');
+      console.log('✅ resetFlow() executado com sucesso');
       
-      // Forçar atualização da interface após um pequeno delay
+      // Forçar atualização da interface
       setTimeout(() => {
-        console.log('🔄 Verificando se interface foi atualizada...');
-        window.dispatchEvent(new CustomEvent('schoolpower-reset-complete'));
-      }, 100);
+        console.log('🔄 Disparando evento de reset completo...');
+        window.dispatchEvent(new CustomEvent('schoolpower-reset-complete', {
+          detail: { 
+            source: 'construction-grid-back-button',
+            timestamp: Date.now()
+          }
+        }));
+      }, 150);
+      
+      // Verificação adicional
+      setTimeout(() => {
+        console.log('🔍 Verificação final do estado após reset');
+        const currentData = localStorage.getItem('schoolpower_flow_data');
+        console.log('💾 Dados no localStorage após reset:', currentData ? 'AINDA EXISTEM' : 'REMOVIDOS');
+      }, 300);
       
     } catch (error) {
-      console.error('❌ Erro ao executar reset do School Power:', error);
-      // Tentar reset alternativo em caso de erro
+      console.error('❌ Erro crítico ao executar reset:', error);
+      
+      // Fallback mais robusto
       try {
-        localStorage.removeItem('schoolpower_flow_data');
+        console.log('🔧 Executando fallback de emergência...');
+        
+        // Limpar todos os dados relacionados
+        ['schoolpower_flow_data', 'schoolpower_activities', 'constructedActivities'].forEach(key => {
+          localStorage.removeItem(key);
+          console.log(`🗑️ Removido: ${key}`);
+        });
+        
+        // Recarregar página como último recurso
+        console.log('🔄 Recarregando página...');
         window.location.reload();
+        
       } catch (fallbackError) {
-        console.error('❌ Erro no fallback reset:', fallbackError);
+        console.error('❌ Erro no fallback de emergência:', fallbackError);
       }
     }
-  };
+  }, [resetFlow, activities]);
 
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
@@ -342,13 +373,26 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
-          {/* Botão de Voltar ao Início - completamente clicável */}
+          {/* Botão de Voltar ao Início - GARANTIDAMENTE CLICÁVEL */}
           <Button
+            type="button"
             onClick={handleBackToHome}
+            onMouseDown={(e) => {
+              console.log('🖱️ MouseDown detectado no botão Voltar');
+              e.preventDefault();
+            }}
+            onMouseUp={(e) => {
+              console.log('🖱️ MouseUp detectado no botão Voltar');
+              e.preventDefault();
+            }}
             variant="outline"
             size="icon"
-            className="w-12 h-12 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer select-none"
+            disabled={false}
+            className="w-12 h-12 border-2 border-gray-400 dark:border-gray-500 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-500 dark:hover:border-gray-400 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer select-none relative z-10"
             title="Voltar ao Início do School Power"
+            aria-label="Voltar ao Início do School Power"
+            tabIndex={0}
+            role="button"
             style={{
               minWidth: '48px',
               minHeight: '48px',
@@ -358,10 +402,21 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
               userSelect: 'none',
               WebkitUserSelect: 'none',
               MozUserSelect: 'none',
-              msUserSelect: 'none'
+              msUserSelect: 'none',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              position: 'relative',
+              zIndex: 10,
+              touchAction: 'manipulation'
             }}
           >
-            <ArrowLeft className="w-5 h-5 pointer-events-none" />
+            <ArrowLeft 
+              className="w-5 h-5" 
+              style={{ 
+                pointerEvents: 'none',
+                userSelect: 'none'
+              }} 
+            />
           </Button>
 
           {/* Botão de Histórico - apenas ícone */}

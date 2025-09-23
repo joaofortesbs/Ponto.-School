@@ -276,36 +276,51 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     }
   }, [flowData, saveData]);
 
-  // Função para resetar o fluxo
+  // Função para resetar o fluxo - VERSÃO OTIMIZADA
   const resetFlow = useCallback(() => {
-    console.log('🔄 Resetando School Power Flow...');
-    console.log('📊 Estado antes do reset:', { flowState, flowData });
+    console.log('🔄 [RESET INICIADO] School Power Flow Reset...');
+    console.log('📊 Estado ANTES do reset:', { 
+      flowState, 
+      hasInitialMessage: !!flowData.initialMessage,
+      hasContextualization: !!flowData.contextualizationData,
+      actionPlanLength: flowData.actionPlan?.length || 0,
+      timestamp: new Date().toISOString()
+    });
     
     try {
-      // Limpar TODOS os dados relacionados ao School Power
+      console.log('🧹 Iniciando limpeza completa do localStorage...');
+      
+      // Lista COMPLETA de chaves para remover
       const keysToRemove = [
         STORAGE_KEY,
         'schoolpower_activities',
-        'schoolpower_construction_data',
+        'schoolpower_construction_data', 
         'constructedActivities',
         'schoolpower_action_plan',
         'auto_activity_data_flash-cards',
-        'auto_activity_data_quiz-interativo'
+        'auto_activity_data_quiz-interativo',
+        'schoolpower_contextualization',
+        'schoolpower_initial_message',
+        'schoolpower_generated_plan'
       ];
       
+      // Remover todas as chaves com verificação
       keysToRemove.forEach(key => {
         try {
+          const existed = localStorage.getItem(key) !== null;
           localStorage.removeItem(key);
-          console.log(`🗑️ Removido: ${key}`);
+          console.log(`🗑️ ${existed ? 'REMOVIDO' : 'NÃO EXISTIA'}: ${key}`);
         } catch (error) {
           console.warn(`⚠️ Erro ao remover ${key}:`, error);
         }
       });
       
-      // Marcar timestamp do reset para evitar restauração automática
-      localStorage.setItem('schoolpower_reset_timestamp', Date.now().toString());
+      // Marcar timestamp do reset
+      const resetTimestamp = Date.now().toString();
+      localStorage.setItem('schoolpower_reset_timestamp', resetTimestamp);
+      console.log(`⏰ Timestamp de reset definido: ${resetTimestamp}`);
       
-      // Resetar todos os estados de forma síncrona e imediata
+      // Estado limpo
       const cleanState: SchoolPowerFlowData = {
         initialMessage: null,
         contextualizationData: null,
@@ -314,49 +329,96 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
         timestamp: Date.now()
       };
       
-      // Força a atualização dos estados em ordem específica
+      console.log('🔄 Atualizando estados do React...');
+      
+      // Resetar loading primeiro
       setIsLoading(false);
       
-      // Usar startTransition para garantir que a atualização seja prioritária
+      // Usar startTransition para atualização prioritária e SÍNCRONA
       startTransition(() => {
-        setFlowState('idle'); // Primeiro muda o estado
-        setFlowData(cleanState); // Depois limpa os dados
+        console.log('⚡ Executando transição de estado...');
+        setFlowState('idle');
+        setFlowData(cleanState);
+        console.log('✅ Estados React atualizados para idle + dados limpos');
       });
 
-      console.log('✅ School Power Flow resetado COMPLETAMENTE - voltando para interface inicial');
-      console.log('🏠 Estado após reset:', { flowState: 'idle', flowData: cleanState });
+      // Verificação imediata
+      console.log('🎯 Verificação imediata pós-reset:');
+      console.log('   - flowState deve ser: idle');
+      console.log('   - flowData deve estar limpo');
       
-      // Disparar evento customizado para notificar outros componentes
-      window.dispatchEvent(new CustomEvent('schoolpower-flow-reset', {
-        detail: { previousState: flowState, newState: 'idle' }
-      }));
+      // Disparar eventos de notificação
+      const resetEvent = new CustomEvent('schoolpower-flow-reset', {
+        detail: { 
+          previousState: flowState, 
+          newState: 'idle',
+          timestamp: resetTimestamp,
+          source: 'resetFlow-function'
+        }
+      });
       
-      // Verificação adicional para garantir que o reset foi efetivo
+      window.dispatchEvent(resetEvent);
+      console.log('📡 Evento schoolpower-flow-reset disparado');
+      
+      // Verificação com delay para garantir sincronização
       setTimeout(() => {
+        console.log('🔍 Verificação pós-reset (150ms):');
+        
+        // Remover timestamp de reset
         localStorage.removeItem('schoolpower_reset_timestamp');
         
-        // Verificação final - se ainda não estiver em idle, forçar novamente
+        // Verificar se localStorage está realmente limpo
+        const remainingData = localStorage.getItem(STORAGE_KEY);
+        console.log('💾 Dados remanescentes no localStorage:', remainingData ? 'AINDA EXISTE' : 'LIMPO ✅');
+        
+        // Verificar estado atual
+        console.log('📊 Estado atual do hook:', {
+          currentFlowState: flowState,
+          shouldBeIdle: true,
+          dataEmpty: !flowData.initialMessage
+        });
+        
+        // Força adicional se necessário
         if (flowState !== 'idle') {
-          console.log('🔧 Forçando estado idle após reset');
+          console.log('🔧 FORÇANDO estado idle - estado atual não é idle');
           setFlowState('idle');
           setFlowData(cleanState);
         }
         
-        console.log('🎯 Reset finalizado - estado deve estar em idle');
+        console.log('🎯 [RESET FINALIZADO] Estado deve estar em IDLE agora');
+        
+        // Evento final de confirmação
+        window.dispatchEvent(new CustomEvent('schoolpower-reset-complete', {
+          detail: { 
+            finalState: 'idle',
+            timestamp: Date.now(),
+            success: true
+          }
+        }));
+        
       }, 150);
       
     } catch (error) {
-      console.error('❌ Erro durante reset do School Power Flow:', error);
+      console.error('❌ [ERRO CRÍTICO] Durante reset do School Power Flow:', error);
       
-      // Fallback em caso de erro
+      // Fallback de emergência MÁS ROBUSTO
       try {
+        console.log('🚨 Executando fallback de emergência...');
+        
+        // Limpar TODO o localStorage
+        const storageLength = localStorage.length;
+        console.log(`🧹 Limpando ${storageLength} itens do localStorage...`);
         localStorage.clear();
+        
+        // Recarregar página
+        console.log('🔄 Recarregando página como último recurso...');
         window.location.reload();
+        
       } catch (fallbackError) {
-        console.error('❌ Erro no fallback de reset:', fallbackError);
+        console.error('❌ [ERRO FATAL] No fallback de reset:', fallbackError);
       }
     }
-  }, [flowState, flowData]);
+  }, [flowState, flowData, setFlowState, setFlowData, setIsLoading]);
 
   return {
     flowState,
