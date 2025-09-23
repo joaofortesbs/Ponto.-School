@@ -171,7 +171,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-          
+
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -238,12 +238,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-                
+
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-                
+
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -789,6 +789,7 @@ interface CardDeConstrucaoProps {
   onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
   onResetFlow: () => void;
   isLoading?: boolean;
+  hideBackButton?: boolean; // Prop para esconder o botão de voltar
 }
 
 export function CardDeConstrucao({ 
@@ -798,7 +799,8 @@ export function CardDeConstrucao({
   onSubmitContextualization, 
   onApproveActionPlan, 
   onResetFlow,
-  isLoading 
+  isLoading,
+  hideBackButton // Recebe a nova prop
 }: CardDeConstrucaoProps) {
   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
     materias: '',
@@ -1744,7 +1746,7 @@ export function CardDeConstrucao({
         >
           <div className="flex items-center justify-end mb-4">
             {/* Back button - hidden in Quiz mode */}
-            {!isQuizMode && (
+            {!isQuizMode && !hideBackButton && ( // Condição para esconder o botão de voltar
               <div className="absolute top-4 right-4 z-20">
                 <button
                   onClick={onResetFlow}
