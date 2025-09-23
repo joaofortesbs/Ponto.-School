@@ -227,6 +227,13 @@ export function ConstructionCard({
     buttonStyle: 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white'
   };
 
+  // Função para lidar com clique no card
+  const handleCardClick = () => {
+    if (isCompleted && onView) {
+      onView();
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ y: -2, scale: 1.02 }}
@@ -237,10 +244,10 @@ export function ConstructionCard({
         hover:shadow-lg dark:hover:shadow-2xl ${isCompleted ? 'cursor-pointer' : 'cursor-not-allowed opacity-75'} group
         bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm
       `}
-    onClick={() => isCompleted && onView()}
+      onClick={handleCardClick}
     >
       {/* Botão de edição - só aparece quando construído */}
-      {isCompleted && (
+      {isCompleted && onEdit && (
         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <Button
             size="sm"

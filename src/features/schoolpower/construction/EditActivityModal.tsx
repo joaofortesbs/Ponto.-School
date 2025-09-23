@@ -1227,6 +1227,7 @@ const EditActivityModal = ({
   useEffect(() => {
     if (activity && isOpen) {
       console.log(`🔍 Verificando conteúdo construído para atividade: ${activity.id}`);
+      console.log(`📋 Dados da atividade recebida:`, activity);
 
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
       const savedContent = localStorage.getItem(`activity_${activity.id}`);
@@ -1246,7 +1247,8 @@ const EditActivityModal = ({
         hasQuadroInterativoSpecificData: !!quadroInterativoSpecificData,
         hasQuizInterativoSavedContent: !!quizInterativoSavedContent,
         hasFlashCardsSavedContent: !!flashCardsSavedContent,
-        activityId: activity.id
+        activityId: activity.id,
+        activityOriginalData: activity.originalData
       });
 
       let contentToLoad = null;

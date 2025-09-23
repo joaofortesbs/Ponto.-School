@@ -96,12 +96,19 @@ export function ActivityViewModal({ isOpen, activity, onClose }: ActivityViewMod
       setQuizInterativoContent(null);
       setFlashCardsContent(null);
 
+      console.log('🔍 ActivityViewModal: Carregando dados para atividade:', activity);
+
       // Se for plano-aula, tentar carregar dados específicos
       if (activity?.type === 'plano-aula' || activity?.id === 'plano-aula') {
         const planoData = loadPlanoAulaData(activity.id);
         if (planoData) {
           console.log('📚 Dados do plano-aula carregados com sucesso:', planoData);
         }
+      }
+
+      // Verificar se é uma atividade do histórico e garantir que os dados estejam sincronizados
+      if (activity.isBuilt && activity.originalData) {
+        console.log('📋 Carregando dados de atividade do histórico:', activity.originalData);
       }
     }
   }, [isOpen, activity?.id]); // Usar apenas activity.id para evitar loops
