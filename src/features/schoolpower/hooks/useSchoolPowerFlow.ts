@@ -268,23 +268,28 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   // Função para resetar o fluxo
   const resetFlow = useCallback(() => {
     console.log('🔄 Resetando School Power Flow...');
-    setFlowState('idle');
-    setFlowData({
+    
+    // Limpar dados do localStorage do fluxo atual PRIMEIRO
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // Resetar todos os estados de forma síncrona
+    const cleanState = {
       initialMessage: null,
       contextualizationData: null,
       actionPlan: [],
       manualActivities: [],
       timestamp: Date.now()
-    });
+    };
+    
+    setFlowData(cleanState);
+    setFlowState('idle');
     setIsLoading(false);
-
-    // Limpar dados do localStorage do fluxo atual
-    localStorage.removeItem(STORAGE_KEY);
 
     // Manter apenas atividades que estão efetivamente construídas no histórico
     // As atividades pendentes ou em progresso serão perdidas (comportamento desejado)
 
     console.log('✅ School Power Flow resetado - atividades construídas preservadas no histórico');
+    console.log('🏠 Estado após reset:', { flowState: 'idle', flowData: cleanState });
   }, []);
 
   return {

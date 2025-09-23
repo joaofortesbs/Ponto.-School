@@ -74,7 +74,15 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const handleBackToHome = () => {
     console.log('🏠 Voltando para o início do School Power');
-    resetFlow(); // Reseta o fluxo e volta para o estado inicial
+    
+    // Limpar dados do localStorage para forçar reset completo
+    localStorage.removeItem('schoolpower_flow_data');
+    
+    // Reset do fluxo
+    resetFlow();
+    
+    // Forçar navegação para garantir reset da interface
+    window.location.reload();
   };
 
   const handleShare = (id: string) => {

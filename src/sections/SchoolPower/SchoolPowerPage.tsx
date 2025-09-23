@@ -76,13 +76,25 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   // Função para voltar
   const handleBack = () => {
     console.log("🔄 Voltando ao início");
+    
+    // Limpar localStorage antes do reset
+    localStorage.removeItem('schoolpower_flow_data');
+    
+    // Reset do hook
     handleResetFlowHook();
+    
+    // Log para debug
+    console.log("🏠 Reset executado - componentes devem voltar ao estado inicial");
   };
 
   // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle';
-  console.log('👁️ Componentes padrão visíveis:', componentsVisible);
-  console.log('🏗️ Estado atual do fluxo:', flowState);
+  
+  // Log apenas quando há mudanças reais de estado
+  React.useEffect(() => {
+    console.log('👁️ Componentes padrão visíveis:', componentsVisible);
+    console.log('🏗️ Estado atual do fluxo:', flowState);
+  }, [componentsVisible, flowState]);
 
   return (
     <div
