@@ -73,10 +73,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   };
 
   const handleBackToHome = () => {
-    console.log('🏠 Voltando para o início do School Power');
+    console.log('🏠 FORÇANDO volta para o início do School Power');
     
-    // Reset do fluxo - isso irá atualizar a interface internamente
+    // Reset COMPLETO e IMEDIATO do fluxo
     resetFlow();
+    
+    console.log('🏠 Reset executado - interface deve atualizar IMEDIATAMENTE');
   };
 
   const handleShare = (id: string) => {

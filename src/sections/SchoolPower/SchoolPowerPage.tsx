@@ -75,21 +75,25 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   // Função para voltar
   const handleBack = () => {
-    console.log("🔄 Voltando ao início");
+    console.log("🔄 Voltando ao início do School Power");
     
-    // Reset do hook - isso irá atualizar a interface internamente
+    // Reset IMEDIATO e COMPLETO do hook
     handleResetFlowHook();
     
-    console.log("🏠 Reset executado - componentes devem voltar ao estado inicial");
+    console.log("🏠 Reset executado - interface deve voltar ao estado inicial IMEDIATAMENTE");
   };
 
   // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle';
   
-  // Log apenas quando há mudanças reais de estado
+  // Log e forçar re-render quando o estado muda para idle
   React.useEffect(() => {
     console.log('👁️ Componentes padrão visíveis:', componentsVisible);
     console.log('🏗️ Estado atual do fluxo:', flowState);
+    
+    if (flowState === 'idle') {
+      console.log('🏠 Estado IDLE detectado - interface inicial deve aparecer AGORA');
+    }
   }, [componentsVisible, flowState]);
 
   return (
@@ -164,8 +168,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </>
       )}
 
-      {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
-      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
+      {/* Card de Construção unificado - aparece baseado no flowState e DESAPARECE quando idle */}
+      {flowState !== 'idle' && (flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
           className="absolute inset-0 flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
