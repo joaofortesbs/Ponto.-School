@@ -139,8 +139,6 @@ class ProfileService {
         }
         return null;
       }
-
-      return data;
     } catch (error) {
       console.error('Erro ao carregar perfil do usuário:', error);
 

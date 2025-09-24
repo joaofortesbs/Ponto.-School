@@ -47,23 +47,27 @@ export class AutoBuildService {
     try {
       // 1. Obter o perfil do usuário atual
       console.log('🔍 [AUTO-SAVE] Tentando obter perfil do usuário...');
-      let profile = await profileService.getCurrentUserProfile();
+      const profile = await profileService.getCurrentUserProfile();
       console.log('📋 [AUTO-SAVE] Perfil retornado:', profile);
       
-      // FALLBACK TEMPORÁRIO PARA TESTE: Usar usuário real se não encontrar perfil
-      if (!profile || !profile.user_id) {
-        console.warn('⚠️ [AUTO-SAVE] Profile não encontrado, usando usuário de teste...');
-        profile = {
-          id: '1a0b75e2-d142-442d-b384-5fd42777775c',
-          user_id: '1a0b75e2-d142-442d-b384-5fd42777775c', // Usar UUID, não string personalizada
-          email: 'joaomarcelofortesempresa@gmail.com',
-          nome_completo: 'João Fortes',
-          nome_usuario: 'joaofortes'
-        };
-        console.log('🧪 [AUTO-SAVE] Usando perfil de teste:', profile);
+      if (!profile || !profile.id) {
+        console.error('❌ [AUTO-SAVE] PROBLEMA: Usuário não encontrado ou não autenticado');
+        console.error('❌ [AUTO-SAVE] Profile:', profile);
+        
+        // Salvar erro para debug
+        localStorage.setItem(`auto_save_error_${activity.id}`, JSON.stringify({
+          error: 'Usuário não autenticado ou perfil não encontrado',
+          errorAt: new Date().toISOString(),
+          profile: profile,
+          activity: {
+            id: activity.id,
+            title: activity.title
+          }
+        }));
+        return;
       }
 
-      console.log('✅ [AUTO-SAVE] Usuário identificado:', profile.user_id);
+      console.log('✅ [AUTO-SAVE] Usuário identificado:', profile.id);
       console.log('✅ [AUTO-SAVE] Email do usuário:', profile.email);
 
       // 2. Gerar código único REAL para a instância (não reusar template ID)
@@ -99,7 +103,7 @@ export class AutoBuildService {
       };
 
       console.log('📋 [AUTO-SAVE] Dados preparados para sincronização:', {
-        user_id: profile.user_id,
+        user_id: profile.id, // Usar profile.id que é o UUID da tabela perfis
         codigo_unico: codigoUnico,
         tipo: activity.id, // Template ID
         titulo: activity.title,
@@ -108,7 +112,7 @@ export class AutoBuildService {
 
       // 4. Preparar dados para criação da atividade no formato correto da API
       const apiData = {
-        user_id: profile.user_id,
+        user_id: profile.id, // Usar profile.id que é o UUID da tabela perfis
         codigo_unico: codigoUnico,
         tipo: activity.id, // Template ID 
         titulo: activity.title,
