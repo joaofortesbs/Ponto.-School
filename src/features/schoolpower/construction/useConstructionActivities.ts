@@ -18,8 +18,8 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
   const loadBuiltActivitiesCache = async () => {
     try {
       const profile = await profileService.getCurrentUserProfile();
-      if (profile?.id) {
-        const apiResponse = await activitiesApi.getUserActivities(profile.id);
+      if (profile?.user_id) {
+        const apiResponse = await activitiesApi.getUserActivities(profile.user_id);
         if (apiResponse.success && apiResponse.data) {
           const builtActivityTypes = new Set(apiResponse.data.map(activity => activity.tipo));
           setBuiltActivitiesCache(builtActivityTypes);

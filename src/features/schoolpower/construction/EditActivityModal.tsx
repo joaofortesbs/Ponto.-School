@@ -511,9 +511,6 @@ const EditActivityModal = ({
   const [buildProgress, setBuildProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [builtContent, setBuiltContent] = useState<any>(null);
-  // State to control modal visibility
-  const [isModalOpen, setIsModalOpen] = useState(isOpen);
-
 
   const { toast } = useToast();
 
@@ -844,7 +841,7 @@ const EditActivityModal = ({
   // Função para gerar conteúdo de Flash Cards
   const handleGenerateFlashCards = useCallback(async () => {
     if (isBuilding) return; // Evitar múltiplas execuções simultâneas
-
+    
     try {
       setIsBuilding(true);
       setGenerationError(null);
@@ -957,7 +954,7 @@ const EditActivityModal = ({
       } catch (apiError) {
         clearInterval(progressTimer);
         console.warn('⚠️ Erro na API, gerando fallback:', apiError);
-
+        
         // Gerar conteúdo de fallback
         const topicos = formData.topicos?.split('\n').filter(t => t.trim()) || [];
         const maxCards = Math.min(numberOfCards, Math.max(topicos.length, 5));
@@ -965,7 +962,7 @@ const EditActivityModal = ({
         const fallbackCards = [];
         for (let i = 0; i < maxCards; i++) {
           const topic = topicos[i % topicos.length] || `Conceito ${i + 1} de ${formData.theme}`;
-
+          
           fallbackCards.push({
             id: i + 1,
             front: `O que é ${topic.trim()}?`,
@@ -1308,11 +1305,11 @@ const EditActivityModal = ({
           console.log('🃏 Flash Cards - Conteúdo parseado:', contentToLoad);
 
           // Validar se o conteúdo tem cards válidos
-          const hasValidCards = contentToLoad &&
-                               contentToLoad.cards &&
-                               Array.isArray(contentToLoad.cards) &&
+          const hasValidCards = contentToLoad && 
+                               contentToLoad.cards && 
+                               Array.isArray(contentToLoad.cards) && 
                                contentToLoad.cards.length > 0 &&
-                               contentToLoad.cards.every(card =>
+                               contentToLoad.cards.every(card => 
                                  card && card.front && card.back
                                );
 
@@ -1550,11 +1547,11 @@ const EditActivityModal = ({
                 // Sobrescrever com dados automáticos se existirem e forem válidos
                 ...(autoFormData.title && { title: autoFormData.title }),
                 ...(autoFormData.description && { description: autoFormData.description }),
-                ...(autoFormData.subject && autoFormData.subject !== 'Matemática' && { subject: autoFormData.subject }),
-                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º Ano' && { schoolYear: autoFormData.schoolYear }),
+                ...(autoFormData.subject && autoFormData.subject !== 'Português' && { subject: autoFormData.subject }),
+                ...(autoFormData.schoolYear && autoFormData.schoolYear !== '6º ano' && { schoolYear: autoFormData.schoolYear }),
                 ...(autoFormData.theme && autoFormData.theme !== 'Conteúdo Geral' && { theme: autoFormData.theme }),
                 ...(autoFormData.objectives && { objectives: autoFormData.objectives }),
-                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Intermediário' && { difficultyLevel: autoFormData.difficultyLevel }),
+                ...(autoFormData.difficultyLevel && autoFormData.difficultyLevel !== 'Médio' && { difficultyLevel: autoFormData.difficultyLevel }),
                 ...(autoFormData.quadroInterativoCampoEspecifico && { quadroInterativoCampoEspecifico: autoFormData.quadroInterativoCampoEspecifico }),
                 ...(autoFormData.materials && { materials: autoFormData.materials }),
                 ...(autoFormData.instructions && { instructions: autoFormData.instructions }),
@@ -1583,8 +1580,8 @@ const EditActivityModal = ({
               console.log('🃏 Processando dados específicos de Flash Cards');
               enrichedFormData = {
                 ...formData,
-                title: activityData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
-                description: activityData.description || autoFormData.description || customFields['Descrição'] || '',
+                title: consolidatedData.title || autoFormData.title || customFields['Título'] || 'Flash Cards',
+                description: consolidatedData.description || autoFormData.description || customFields['Descrição'] || '',
                 theme: customFields['Tema'] || customFields['tema'] || customFields['Tema dos Flash Cards'] || autoFormData.theme || '',
                 topicos: customFields['Tópicos Principais'] || customFields['Tópicos'] || customFields['topicos'] || customFields['tópicos'] || autoFormData.topicos || '',
                 numberOfFlashcards: customFields['Número de Flash Cards'] || customFields['numeroFlashcards'] || customFields['Quantidade de Flash Cards'] || autoFormData.numberOfFlashcards || '10',
@@ -2281,11 +2278,11 @@ const EditActivityModal = ({
       return () => clearTimeout(timer);
     }
   }, [
-    activity?.id,
-    isOpen,
-    formData.theme,
-    formData.topicos,
-    formData.numberOfFlashcards,
+    activity?.id, 
+    isOpen, 
+    formData.theme, 
+    formData.topicos, 
+    formData.numberOfFlashcards, 
     formData.context,
     formData.subject,
     formData.schoolYear,
@@ -2769,30 +2766,6 @@ const EditActivityModal = ({
                                     className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                   />
                                 </div>
-                                {activity?.id === 'flash-cards' && (
-                                  <>
-                                    <div>
-                                      <Label htmlFor="subject" className="text-sm">Disciplina</Label>
-                                      <Input
-                                        id="subject"
-                                        value={formData.subject}
-                                        onChange={(e) => handleInputChange('subject', e.target.value)}
-                                        placeholder="Ex: Biologia, História"
-                                        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="schoolYear" className="text-sm">Ano/Série</Label>
-                                      <Input
-                                        id="schoolYear"
-                                        value={formData.schoolYear}
-                                        onChange={(e) => handleInputChange('schoolYear', e.target.value)}
-                                        placeholder="Ex: 9º Ano"
-                                        className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                                      />
-                                    </div>
-                                  </>
-                                )}
                               </div>
                             )}
                           </>
