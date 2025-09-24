@@ -1,0 +1,135 @@
+Quero que você crie um sistema completo de salvamento de atividades no banco de dados Neon (Postgres), substituindo totalmente o uso do LocalStorage que já existe na minha plataforma.
+
+Atualmente, cada atividade é acessada por um link no formato:
+/atividade/{tipo}/{codigoUnico}
+Exemplo:
+/atividade/flash-cards/12a1n13j
+
+Esse {codigoUnico} precisa ser o identificador único da atividade dentro do banco de dados.
+
+Objetivos do sistema
+
+Toda atividade criada dentro da interface de “Construção de Atividades” (School Power) deve ser salva no Neon.
+
+Cada atividade precisa estar vinculada ao user_id (identificação do usuário dono).
+
+Cada atividade deve ter um codigo_unico (string curta gerada automaticamente) que sincroniza com todos os dados dessa atividade.
+
+Todas as modificações/edições feitas pelo usuário devem atualizar corretamente os dados no banco.
+
+As atividades salvas precisam aparecer dentro da interface “Histórico de Atividades Criadas”, carregando os dados diretamente do banco Neon (não mais do LocalStorage).
+
+O sistema deve suportar diferentes tipos de atividades (Plano de Aula, Lista de Exercícios, Sequência Didática, Flash Cards, etc).
+
+Estrutura do Banco (Neon/Postgres)
+
+Crie uma tabela activities com os seguintes campos:
+
+CREATE TABLE activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL, -- id do usuário dono da atividade
+  codigo_unico TEXT UNIQUE NOT NULL, -- ex: 12a1n13j
+  tipo TEXT NOT NULL, -- flash-cards, plano-aula, lista-exercicios, etc
+  titulo TEXT,
+  descricao TEXT,
+  conteudo JSONB NOT NULL, -- todos os dados estruturados da atividade
+  criado_em TIMESTAMPTZ DEFAULT now(),
+  atualizado_em TIMESTAMPTZ DEFAULT now()
+);
+
+Endpoints da API (Node.js + Express)
+
+Implemente os seguintes endpoints:
+
+Salvar nova atividade
+POST /api/atividades
+Body esperado:
+
+{
+  "user_id": "uuid-do-usuario",
+  "codigo_unico": "12a1n13j",
+  "tipo": "flash-cards",
+  "titulo": "Atividade de História",
+  "descricao": "Flash cards sobre Revolução Francesa",
+  "conteudo": { "cards": [ { "front": "1789", "back": "Início da Revolução Francesa" } ] }
+}
+
+
+Esse endpoint deve:
+
+Inserir no banco a atividade.
+
+Retornar id e codigo_unico.
+
+Atualizar atividade existente
+PUT /api/atividades/:codigo_unico
+Body esperado:
+
+{
+  "titulo": "Atividade de História Atualizada",
+  "descricao": "Flash cards atualizados",
+  "conteudo": { "cards": [ { "front": "1799", "back": "Fim da Revolução Francesa" } ] }
+}
+
+
+Esse endpoint deve:
+
+Atualizar os dados da atividade cujo codigo_unico corresponde ao parâmetro da URL.
+
+Atualizar também o campo atualizado_em.
+
+Buscar atividades do usuário (Histórico de Atividades Criadas)
+GET /api/atividades/usuario/:user_id
+Esse endpoint deve:
+
+Retornar todas as atividades do usuário, ordenadas por atualizado_em DESC.
+
+Esses dados serão usados na interface “Histórico de Atividades Criadas”.
+
+Buscar atividade por código único (para exibição pública)
+GET /api/atividades/:codigo_unico
+Esse endpoint deve:
+
+Retornar todos os dados da atividade vinculada a esse código único.
+
+Isso substitui o carregamento pelo LocalStorage quando alguém acessa /atividade/{tipo}/{codigo}.
+
+Fluxo esperado
+
+Quando o usuário cria uma atividade:
+
+O frontend gera ou recebe um codigo_unico (ex.: função generateCode(8) que retorna 12a1n13j).
+
+Envia POST /api/atividades com todos os dados para o backend.
+
+O backend insere no Neon.
+
+Quando o usuário edita sua atividade:
+
+O frontend envia PUT /api/atividades/:codigo_unico com os novos dados.
+
+O backend atualiza no Neon.
+
+Quando o usuário acessa “Histórico de Atividades Criadas”:
+
+O frontend faz GET /api/atividades/usuario/:user_id.
+
+Renderiza a lista diretamente com os dados do Neon.
+
+Quando alguém acessa /atividade/{tipo}/{codigo}:
+
+O frontend chama GET /api/atividades/:codigo_unico.
+
+Renderiza a atividade com os dados salvos no Neon.
+
+Considerações importantes
+
+Garanta que o histórico nunca dependa de LocalStorage, apenas do banco.
+
+O codigo_unico deve ser imutável para cada atividade (mesmo após edições).
+
+O campo conteudo pode armazenar qualquer estrutura JSON, pois cada tipo de atividade tem informações diferentes.
+
+Sempre registrar user_id para vincular corretamente ao dono da atividade.
+
+Criar índice no campo user_id e codigo_unico para consultas rápidas.
