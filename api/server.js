@@ -58,15 +58,19 @@ app.use((err, req, res, next) => {
 });
 
 // Rotas
-app.use('/api', emailRoutes);
+app.use('/api/email', emailRoutes);  // Mover para prefixo específico para não interferir com outras rotas
 app.use('/api/perfis', perfilsHandler);
 
 // =================
-// ROTAS PARA ATIVIDADES
+// FUNÇÃO PARA REGISTRAR ROTAS DE ATIVIDADES
 // =================
 
-// Criar nova atividade
-app.post('/api/atividades', async (req, res) => {
+function registerActivityRoutes() {
+  console.log('🔧 Registrando rotas de atividades...');
+
+
+  // Criar nova atividade
+  app.post('/api/atividades', async (req, res) => {
   try {
     console.log('📝 POST /api/atividades - Nova atividade:', req.body);
     
@@ -266,6 +270,9 @@ app.delete('/api/atividades/:codigo_unico', async (req, res) => {
   }
 });
 
+console.log('✅ Todas as rotas de atividades registradas com sucesso!');
+}
+
 // Rota raiz
 app.get('/', (req, res) => {
   res.send(`
@@ -322,12 +329,17 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'Servidor de API funcionando corretamente!' });
 });
 
+// Rotas de atividades foram registradas com sucesso na função registerActivityRoutes()
+
 // Inicializar banco de dados e iniciar servidor
 async function startServer() {
   try {
     // Inicializar banco de dados
     console.log('🔄 Inicializando banco de dados...');
     await neonDB.initializeDatabase();
+
+    // REGISTRAR ROTAS APÓS INICIALIZAÇÃO DO BANCO
+    registerActivityRoutes();
 
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {

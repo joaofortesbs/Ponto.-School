@@ -14,8 +14,16 @@ localPort = 3001
 externalPort = 3001
 
 [[ports]]
+localPort = 3002
+externalPort = 8000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
 
 [[ports]]
 localPort = 5175
@@ -54,7 +62,7 @@ localPort = 41579
 externalPort = 6800
 
 [workflows]
-runButton = "Plataforma Completa"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -235,25 +243,13 @@ args = "Frontend"
 name = "Backend API"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/server.js"
-waitForPort = 3001
-
 [workflows.workflow.metadata]
 outputType = "console"
 
-[[workflows.workflow]]
-name = "Frontend"
-author = "agent"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
-waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "cd api && node server.js"
+waitForPort = 3001
 
 [[workflows.workflow]]
 name = "Configurar Banco Neon"
@@ -281,6 +277,18 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/start-full-platform.js"
+
+[[workflows.workflow]]
+name = "Frontend"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev -- --port 5000"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [auth]
 pageEnabled = false
