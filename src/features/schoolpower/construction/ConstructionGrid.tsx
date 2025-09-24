@@ -9,7 +9,7 @@ import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
@@ -68,14 +68,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const handleBackFromHistorico = () => {
     console.log('🔙 Voltando do histórico para construção');
     setShowHistorico(false);
-  };
-
-  const handleBackToHome = () => {
-    console.log('🏠 Voltando para a página inicial');
-    // Implementar a navegação para a página inicial, se necessário.
-    // Exemplo: window.location.href = '/';
-    // Ou usar uma biblioteca de roteamento como React Router:
-    // navigate('/');
   };
 
   const handleShare = (id: string) => {
@@ -314,18 +306,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
-          {/* Botão de Voltar ao Início - apenas ícone */}
-          <Button
-            onClick={handleBackToHome}
-            variant="outline"
-            size="icon"
-            className="w-10 h-10 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-            title="Voltar ao Início"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-
-          {/* Botão de Histórico - apenas ícone */}
+          {/* Botão de Histórico */}
           <Button
             onClick={handleShowHistorico}
             variant="outline"
