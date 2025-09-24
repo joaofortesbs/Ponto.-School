@@ -90,37 +90,54 @@ class ProfileService {
         }
       }
 
-      // Se não tiver cache válido, buscar do Supabase
+      // Buscar do banco Neon via API (não do Supabase)
       const { data: session } = await supabase.auth.getSession();
 
       if (!session?.session?.user) {
+        console.log('🔐 [PROFILE] Usuário não logado no Supabase');
         return null;
       }
 
-      const { data, error } = await supabase
-        .from('perfis')
-        .select('*')
-        .eq('id', session.session.user.id)
-        .single();
+      // Buscar perfil no banco Neon pela email do usuário logado
+      const userEmail = session.session.user.email;
+      console.log('🔍 [PROFILE] Buscando perfil no Neon para email:', userEmail);
+      
+      try {
+        const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
 
-      if (error) {
-        if (error.message.includes('network') && profile) {
-          // Se for erro de rede e tivermos um cache, usá-lo
+        const result = await response.json();
+        console.log('📋 [PROFILE] Resultado da busca no Neon:', result);
+
+        if (result.success && result.data) {
+          const neonProfile = result.data;
+          
+          // Atualizar cache
+          localStorage.setItem('userProfile', JSON.stringify(neonProfile));
+          localStorage.setItem('userProfileCacheTime', Date.now().toString());
+          
+          // Disparar evento para notificar componentes sobre a atualização
+          document.dispatchEvent(new CustomEvent('profile-updated', {
+            detail: { profile: neonProfile }
+          }));
+
+          console.log('✅ [PROFILE] Perfil encontrado no Neon:', neonProfile.id);
+          return neonProfile;
+        } else {
+          console.warn('⚠️ [PROFILE] Perfil não encontrado no Neon para email:', userEmail);
+          return profile || null; // Retornar cache se disponível
+        }
+      } catch (error) {
+        console.error('❌ [PROFILE] Erro ao buscar perfil no Neon:', error);
+        if (profile) {
+          // Se tivermos cache, usá-lo em caso de erro
           return profile;
         }
-        console.error('Erro ao buscar perfil:', error);
-        return profile || null; // Retornar cache mesmo que seja antigo, se disponível
-      }
-
-      // Atualizar cache
-      if (data) {
-        localStorage.setItem('userProfile', JSON.stringify(data));
-        localStorage.setItem('userProfileCacheTime', Date.now().toString());
-        
-        // Disparar evento para notificar componentes sobre a atualização
-        document.dispatchEvent(new CustomEvent('profile-updated', {
-          detail: { profile: data }
-        }));
+        return null;
       }
 
       return data;
