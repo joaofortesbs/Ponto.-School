@@ -9,15 +9,16 @@ import { useEditActivityModal } from './useEditActivityModal';
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
   approvedActivities: any[];
   handleEditActivity?: (activity: any) => void;
+  onResetFlow?: () => void;
 }
 
-export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity }: ConstructionGridProps) {
+export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity, onResetFlow }: ConstructionGridProps) {
   console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
@@ -306,6 +307,24 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
+          {/* Botão Voltar ao Início */}
+          <Button
+            onClick={() => {
+              if (onResetFlow) {
+                onResetFlow();
+              } else {
+                // Fallback: disparar evento para resetar o fluxo
+                window.dispatchEvent(new CustomEvent('reset-schoolpower-flow'));
+              }
+            }}
+            variant="outline"
+            className="inline-flex items-center gap-2 px-4 py-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            title="Voltar ao Início"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar ao Início
+          </Button>
+
           {/* Botão de Histórico */}
           <Button
             onClick={handleShowHistorico}
