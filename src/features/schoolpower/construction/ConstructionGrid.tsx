@@ -310,21 +310,20 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           {/* Botão Voltar ao Início */}
           <button
             onClick={onResetFlow}
-            className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+            title="Voltar ao Início"
           >
-            Voltar ao início
+            <ArrowLeft className="w-4 h-4" />
           </button>
 
           {/* Botão de Histórico */}
-          <Button
+          <button
             onClick={handleShowHistorico}
-            variant="outline"
-            className="inline-flex items-center gap-2 px-4 py-2 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 transition-all duration-200 shadow-sm hover:shadow-md"
             title="Histórico de Atividades Criadas"
           >
             <History className="w-4 h-4" />
-            Histórico
-          </Button>
+          </button>
 
           {/* Botão Construir Todas */}
           {activitiesNeedingBuild.length > 0 && (
