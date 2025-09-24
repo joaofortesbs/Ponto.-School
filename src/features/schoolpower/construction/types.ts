@@ -17,6 +17,10 @@ export interface ConstructionActivity {
   preenchidoAutomaticamente?: boolean;
   isBuilt?: boolean;
   builtAt?: string;
+  // Propriedades adicionais para controle de construção
+  progress?: number;
+  status?: 'draft' | 'in_progress' | 'completed' | 'pending' | 'error';
+  type?: string;
 }
 
 export interface ConstructionActivityProps {

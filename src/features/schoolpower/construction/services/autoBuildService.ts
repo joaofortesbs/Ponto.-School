@@ -1,5 +1,7 @@
 import { ConstructionActivity } from '../types';
 import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
+import { activitiesApi } from '../../../../services/activitiesApiService';
+import { profileService } from '../../../../services/profileService';
 
 export interface AutoBuildProgress {
   current: number;
@@ -29,6 +31,162 @@ export class AutoBuildService {
 
   setOnActivityBuilt(callback: (activityId: string) => void) {
     this.onActivityBuilt = callback;
+  }
+
+  /**
+   * Salva automaticamente a atividade no banco de dados quando ela fica concluída
+   */
+  private async saveActivityToDatabase(activity: ConstructionActivity): Promise<void> {
+    console.log('💾 [AUTO-SAVE] Iniciando salvamento automático da atividade:', activity.title);
+    
+    try {
+      // 1. Obter o perfil do usuário atual
+      const profile = await profileService.getCurrentUserProfile();
+      if (!profile || !profile.user_id) {
+        console.warn('⚠️ [AUTO-SAVE] Usuário não encontrado ou sem user_id, pulando salvamento');
+        return;
+      }
+
+      console.log('👤 [AUTO-SAVE] Usuário identificado:', profile.user_id);
+
+      // 2. Gerar código único para a atividade se não existir
+      const codigoUnico = activity.id || activitiesApi.generateUniqueCode();
+      console.log('🔑 [AUTO-SAVE] Código único:', codigoUnico);
+
+      // 3. Preparar dados para salvamento
+      const activityData = {
+        user_id: profile.user_id,
+        codigo_unico: codigoUnico,
+        tipo: activity.id || 'atividade-geral',
+        titulo: activity.title,
+        descricao: activity.description,
+        conteudo: {
+          // Dados básicos da atividade
+          id: activity.id,
+          title: activity.title,
+          description: activity.description,
+          type: activity.id,
+          progress: 100, // Sempre 100% quando salva automaticamente (atividade concluída)
+          status: 'completed', // Sempre completed quando salva automaticamente
+          isBuilt: activity.isBuilt,
+          builtAt: activity.builtAt,
+          
+          // Campos customizados da construção
+          customFields: activity.customFields,
+          originalData: activity.originalData,
+          
+          // Dados do localStorage se existirem
+          generatedContent: this.getGeneratedContentFromStorage(activity.id),
+          constructedData: this.getConstructedDataFromStorage(activity.id),
+          
+          // Metadados do salvamento automático
+          autoSaved: true,
+          autoSavedAt: new Date().toISOString(),
+          autoSaveSource: 'construction-interface'
+        }
+      };
+
+      console.log('📋 [AUTO-SAVE] Dados preparados para salvamento:', {
+        codigo_unico: activityData.codigo_unico,
+        tipo: activityData.tipo,
+        titulo: activityData.titulo,
+        hasContent: !!activityData.conteudo
+      });
+
+      // 4. Tentar salvar no banco de dados
+      const response = await activitiesApi.createActivity(activityData);
+
+      if (response.success) {
+        console.log('✅ [AUTO-SAVE] Atividade salva com sucesso no banco:', response.data);
+        
+        // 5. Marcar que foi salva automaticamente
+        localStorage.setItem(`auto_saved_${activity.id}`, JSON.stringify({
+          saved: true,
+          savedAt: new Date().toISOString(),
+          codigoUnico: codigoUnico,
+          databaseId: response.data?.id
+        }));
+
+        // 6. Disparar evento de salvamento automático
+        window.dispatchEvent(new CustomEvent('activity-auto-saved', {
+          detail: {
+            activityId: activity.id,
+            codigoUnico: codigoUnico,
+            databaseId: response.data?.id,
+            savedAt: new Date().toISOString()
+          }
+        }));
+
+      } else {
+        console.error('❌ [AUTO-SAVE] Falha ao salvar atividade:', response.error);
+        
+        // Marcar tentativa de salvamento falhada para retry posterior
+        localStorage.setItem(`auto_save_failed_${activity.id}`, JSON.stringify({
+          failed: true,
+          failedAt: new Date().toISOString(),
+          error: response.error,
+          activityData: activityData
+        }));
+      }
+
+    } catch (error) {
+      console.error('❌ [AUTO-SAVE] Erro inesperado no salvamento automático:', error);
+      
+      // Salvar erro para debug
+      localStorage.setItem(`auto_save_error_${activity.id}`, JSON.stringify({
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        errorAt: new Date().toISOString(),
+        activity: {
+          id: activity.id,
+          title: activity.title,
+          status: 'completed'
+        }
+      }));
+    }
+  }
+
+  /**
+   * Recupera conteúdo gerado do localStorage
+   */
+  private getGeneratedContentFromStorage(activityId: string): any {
+    try {
+      const storageKey = `activity_${activityId}`;
+      const content = localStorage.getItem(storageKey);
+      return content ? JSON.parse(content) : null;
+    } catch (error) {
+      console.warn('⚠️ [AUTO-SAVE] Erro ao recuperar conteúdo gerado:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Recupera dados construídos do localStorage
+   */
+  private getConstructedDataFromStorage(activityId: string): any {
+    try {
+      const storageKey = `constructed_${activityId}`;
+      const content = localStorage.getItem(storageKey);
+      if (content) return JSON.parse(content);
+
+      // Tentar chaves alternativas
+      const alternativeKeys = [
+        `constructed_${activityId}_${activityId}`,
+        `schoolpower_${activityId}_content`,
+        `generated_content_${activityId}`
+      ];
+
+      for (const key of alternativeKeys) {
+        const altContent = localStorage.getItem(key);
+        if (altContent) {
+          return JSON.parse(altContent);
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.warn('⚠️ [AUTO-SAVE] Erro ao recuperar dados construídos:', error);
+      return null;
+    }
   }
 
   private updateProgress(progress: Partial<AutoBuildProgress>) {
@@ -108,14 +266,8 @@ export class AutoBuildService {
     const formData = {
       title: activity.title || '',
       description: activity.description || '',
-      subject: activity.customFields?.['Disciplina'] || 'Português',
-      theme: activity.customFields?.['Tema'] || 'Conteúdo Geral',
-      schoolYear: activity.customFields?.['Ano de Escolaridade'] || '6º ano',
-      numberOfQuestions: activity.customFields?.['Quantidade de Questões'] || '10',
-      difficultyLevel: activity.customFields?.['Nível de Dificuldade'] || 'Médio',
-      questionModel: activity.customFields?.['Modelo de Questões'] || 'Múltipla escolha',
-
-      // Campos padrão com fallbacks EXATOS do modal
+      
+      // Campos principais com fallbacks
       subject: activity.customFields?.['Disciplina'] ||
                activity.customFields?.['disciplina'] ||
                'Português',
@@ -301,6 +453,10 @@ export class AutoBuildService {
         activity.progress = 100;
         activity.status = 'completed';
 
+        // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+        console.log('💾 [AUTO-BUILD] Atividade concluída, iniciando salvamento automático...');
+        await this.saveActivityToDatabase(activity);
+
         if (this.onActivityBuilt) {
           this.onActivityBuilt(activity.id);
         }
@@ -346,6 +502,10 @@ export class AutoBuildService {
       activity.builtAt = new Date().toISOString();
       activity.progress = 100;
       activity.status = 'completed';
+
+      // ETAPA 3.5: SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+      console.log('💾 [QUADRO INTERATIVO] Atividade concluída, iniciando salvamento automático...');
+      await this.saveActivityToDatabase(activity);
 
       // ETAPA 4: Marcar no constructedActivities
       const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
