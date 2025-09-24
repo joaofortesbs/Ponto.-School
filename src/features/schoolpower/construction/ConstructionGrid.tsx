@@ -308,22 +308,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
           {/* Botão Voltar ao Início */}
-          <Button
-            onClick={() => {
-              if (onResetFlow) {
-                onResetFlow();
-              } else {
-                // Fallback: disparar evento para resetar o fluxo
-                window.dispatchEvent(new CustomEvent('reset-schoolpower-flow'));
-              }
-            }}
-            variant="outline"
-            className="inline-flex items-center gap-2 px-4 py-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
-            title="Voltar ao Início"
+          <button
+            onClick={onResetFlow}
+            className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar ao Início
-          </Button>
+            Voltar ao início
+          </button>
 
           {/* Botão de Histórico */}
           <Button

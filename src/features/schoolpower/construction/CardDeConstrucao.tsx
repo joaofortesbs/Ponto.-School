@@ -1750,7 +1750,8 @@ export function CardDeConstrucao({
             {console.log('🎯 CardDeConstrucao: Passando atividades para ConstructionInterface:', selectedActivities.length > 0 ? selectedActivities : selectedActivities2)}
             <ConstructionInterface 
               approvedActivities={selectedActivities.length > 0 ? selectedActivities : selectedActivities2} 
-              handleEditActivity={handleEditActivity} 
+              handleEditActivity={handleEditActivity}
+              onResetFlow={onResetFlow}
             />
 
             {/* Timer and Lifetime Access Button - Only on Quiz page */}

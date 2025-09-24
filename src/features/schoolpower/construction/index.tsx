@@ -17,7 +17,7 @@ export interface ConstructionActivity {
   originalData?: any;
 }
 
-export function ConstructionInterface({ approvedActivities, handleEditActivity }: ConstructionInterfaceProps) {
+export function ConstructionInterface({ approvedActivities, handleEditActivity, onResetFlow }: ConstructionInterfaceProps & { onResetFlow?: () => void }) {
   console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
 
   return (
@@ -25,6 +25,7 @@ export function ConstructionInterface({ approvedActivities, handleEditActivity }
       <ConstructionGrid 
         approvedActivities={approvedActivities}
         handleEditActivity={handleEditActivity}
+        onResetFlow={onResetFlow}
       />
     </div>
   );
