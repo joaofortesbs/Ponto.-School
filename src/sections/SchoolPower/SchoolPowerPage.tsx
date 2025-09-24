@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   TopHeader,
@@ -25,7 +25,6 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
   const [isDarkTheme] = useState(true);
   const [isCentralExpanded, setIsCentralExpanded] = useState(false);
   const isMobile = useIsMobile();
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Estado para forçar re-renderização
 
   // Hook para gerenciar o fluxo do School Power
   const {
@@ -76,73 +75,14 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
 
   // Função para voltar
   const handleBack = () => {
-    console.log("🔄 Voltando ao início do School Power");
-
-    // Reset IMEDIATO e COMPLETO do hook
+    console.log("🔄 Voltando ao início");
     handleResetFlowHook();
-
-    console.log("🏠 Reset executado - interface deve voltar ao estado inicial IMEDIATAMENTE");
   };
 
   // Determina se os componentes padrão devem estar visíveis
   const componentsVisible = flowState === 'idle';
-
-  // Log e forçar re-render quando o estado muda para idle
-  React.useEffect(() => {
-    console.log('👁️ Componentes padrão visíveis:', componentsVisible);
-    console.log('🏗️ Estado atual do fluxo:', flowState);
-
-    if (flowState === 'idle') {
-      console.log('🏠 Estado IDLE detectado - interface inicial deve aparecer AGORA');
-    }
-  }, [componentsVisible, flowState]);
-
-  // Listener para mudanças no fluxo
-  useEffect(() => {
-    const handleFlowChange = () => {
-      console.log('🔄 Mudança no fluxo detectada - recarregando dados...');
-      if (refreshTrigger < 10) {
-        setRefreshTrigger(prev => prev + 1);
-      }
-    };
-
-    const handleSchoolPowerReset = (event: CustomEvent) => {
-      console.log('🏠 [RESET EVENT] Recebido evento de reset do School Power:', event.detail);
-
-      // Forçar atualização imediata da interface para estado inicial
-      setTimeout(() => {
-        console.log('⚡ Forçando refresh para estado inicial...');
-        setRefreshTrigger(prev => prev + 1);
-
-        // Disparar evento adicional para garantir sincronização
-        window.dispatchEvent(new CustomEvent('schoolpower-interface-reset', {
-          detail: { timestamp: Date.now() }
-        }));
-      }, 50);
-    };
-
-    // Escutar por mudanças nas atividades construídas
-    window.addEventListener('activity-built', handleFlowChange);
-    window.addEventListener('schoolpower-activities-updated', handleFlowChange);
-
-    // Escutar por eventos de reset do School Power
-    window.addEventListener('schoolpower-flow-reset', handleSchoolPowerReset as EventListener);
-    window.addEventListener('schoolpower-reset-complete', handleSchoolPowerReset as EventListener);
-    window.addEventListener('schoolpower-force-refresh', handleSchoolPowerReset as EventListener);
-    window.addEventListener('construction-grid-reset-complete', handleSchoolPowerReset as EventListener);
-    window.addEventListener('schoolpower-interface-force-update', handleSchoolPowerReset as EventListener);
-
-    return () => {
-      window.removeEventListener('activity-built', handleFlowChange);
-      window.removeEventListener('schoolpower-activities-updated', handleFlowChange);
-      window.removeEventListener('schoolpower-flow-reset', handleSchoolPowerReset as EventListener);
-      window.removeEventListener('schoolpower-reset-complete', handleSchoolPowerReset as EventListener);
-      window.removeEventListener('schoolpower-force-refresh', handleSchoolPowerReset as EventListener);
-      window.removeEventListener('construction-grid-reset-complete', handleSchoolPowerReset as EventListener);
-      window.removeEventListener('schoolpower-interface-force-update', handleSchoolPowerReset as EventListener);
-    };
-  }, [refreshTrigger]);
-
+  console.log('👁️ Componentes padrão visíveis:', componentsVisible);
+  console.log('🏗️ Estado atual do fluxo:', flowState);
 
   return (
     <div
@@ -216,8 +156,8 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
         </>
       )}
 
-      {/* Card de Construção unificado - aparece baseado no flowState e DESAPARECE quando idle */}
-      {flowState !== 'idle' && (flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
+      {/* Card de Construção unificado - aparece baseado no flowState e nunca some */}
+      {(flowState === 'contextualizing' || flowState === 'actionplan' || flowState === 'generating' || flowState === 'generatingActivities' || flowState === 'activities') && (
         <motion.div 
           className="absolute inset-0 flex items-center justify-center z-50"
           initial={{ opacity: 0 }}
@@ -252,7 +192,7 @@ export function SchoolPowerPage({ isQuizMode = false }: SchoolPowerPageProps) {
           </div>
         </motion.div>
       )}
-
+      
       {/* Debug Panel - apenas em desenvolvimento */}
       <DebugPanel />
 

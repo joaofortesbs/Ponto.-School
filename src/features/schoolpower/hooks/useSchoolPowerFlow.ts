@@ -1,4 +1,4 @@
-import React, { useState, useCallback, startTransition } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ContextualizationData } from '../contextualization/ContextualizationCard';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
 import { generatePersonalizedPlan } from '../services/generatePersonalizedPlan';
@@ -48,7 +48,7 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
   }, []);
 
   // Carrega dados do localStorage apenas na inicialização
-  const loadStoredData = (): SchoolPowerFlowData | null => {
+  const loadStoredData = useCallback((): SchoolPowerFlowData | null => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -68,52 +68,30 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
       localStorage.removeItem(STORAGE_KEY);
     }
     return null;
-  };
+  }, []);
 
-  // Inicializar com dados salvos se existirem - mas APENAS uma vez na montagem
+  // Inicializar com dados salvos se existirem
   React.useEffect(() => {
-    // Verificar se já foi resetado recentemente (últimos 2 segundos)
-    const resetTimestamp = localStorage.getItem('schoolpower_reset_timestamp');
-    const now = Date.now();
-    
-    if (resetTimestamp && (now - parseInt(resetTimestamp)) < 2000) {
-      console.log('🔄 Reset recente detectado - mantendo estado idle');
-      localStorage.removeItem('schoolpower_reset_timestamp');
-      setFlowState('idle');
-      return;
-    }
-
     const storedData = loadStoredData();
     if (storedData) {
-      console.log('📥 Carregando dados salvos:', storedData);
       setFlowData(storedData);
 
       // Definir estado baseado nos dados carregados
       if (storedData.initialMessage && !storedData.contextualizationData) {
-        console.log('🔄 Estado definido: contextualizing');
         setFlowState('contextualizing');
-      } else if (storedData.initialMessage && storedData.contextualizationData && (!storedData.actionPlan || storedData.actionPlan.length === 0)) {
-        console.log('🔄 Estado definido: actionplan');
+      } else if (storedData.initialMessage && storedData.contextualizationData && !storedData.actionPlan) {
         setFlowState('actionplan');
-      } else if (storedData.initialMessage && storedData.contextualizationData && storedData.actionPlan && storedData.actionPlan.length > 0) {
+      } else if (storedData.initialMessage && storedData.contextualizationData && storedData.actionPlan) {
         // Verificar se temos atividades aprovadas
         const hasApprovedActivities = storedData.actionPlan.some(item => item.approved);
         if (hasApprovedActivities) {
-          console.log('🔄 Estado definido: activities - atividades aprovadas encontradas');
           setFlowState('activities');
         } else {
-          console.log('🔄 Estado definido: actionplan - nenhuma atividade aprovada');
           setFlowState('actionplan');
         }
-      } else {
-        console.log('🔄 Estado definido: idle - dados incompletos');
-        setFlowState('idle');
       }
-    } else {
-      console.log('🔄 Nenhum dado salvo encontrado - mantendo idle');
-      setFlowState('idle');
     }
-  }, []);
+  }, [loadStoredData]);
 
   // Envia mensagem inicial e inicia processo de contextualização
   const sendInitialMessage = useCallback((message: string) => {
@@ -244,27 +222,30 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     try {
       setIsLoading(true);
 
-      // Garantir que temos uma mensagem inicial
-      const currentMessage = flowData.initialMessage || 'Atividades educacionais';
-
       const newFlowData = {
         ...flowData,
-        initialMessage: currentMessage, // Garantir que a mensagem está preservada
-        actionPlan: approvedItems.map(item => ({
-          ...item,
-          approved: true // Garantir que todas estão marcadas como aprovadas
-        })),
+        actionPlan: approvedItems,
         timestamp: Date.now()
       };
 
-      console.log('💾 Salvando dados do plano aprovado:', newFlowData);
-      
       setFlowData(newFlowData);
       saveData(newFlowData);
 
-      // Transição imediata para activities
+      // Transição imediata para activities sem geração automática
       console.log('🎯 Transitando imediatamente para interface de construção...');
       setFlowState('activities');
+      setIsLoading(false);
+
+      // Opcional: Se quiser manter a automação, pode fazer em background
+      // setTimeout(async () => {
+      //   try {
+      //     const AutomationController = (await import('../construction/automationController')).default;
+      //     const controller = AutomationController.getInstance();
+      //     // Processo de automação em background...
+      //   } catch (error) {
+      //     console.error('Erro na automação em background:', error);
+      //   }
+      // }, 100);
 
       console.log('✅ Plano aprovado com sucesso! Interface de construção ativa.');
 
@@ -276,172 +257,27 @@ export default function useSchoolPowerFlow(): UseSchoolPowerFlowReturn {
     }
   }, [flowData, saveData]);
 
-  // Função para resetar o fluxo - VERSÃO OTIMIZADA
+  // Função para resetar o fluxo
   const resetFlow = useCallback(() => {
-    console.log('🔄 [RESET INICIADO] School Power Flow Reset...');
-    console.log('📊 Estado ANTES do reset:', { 
-      flowState, 
-      hasInitialMessage: !!flowData.initialMessage,
-      hasContextualization: !!flowData.contextualizationData,
-      actionPlanLength: flowData.actionPlan?.length || 0,
-      timestamp: new Date().toISOString()
+    console.log('🔄 Resetando School Power Flow...');
+    setFlowState('idle');
+    setFlowData({
+      initialMessage: null,
+      contextualizationData: null,
+      actionPlan: [],
+      manualActivities: [],
+      timestamp: Date.now()
     });
-    
-    try {
-      console.log('🧹 Iniciando limpeza completa do localStorage...');
-      
-      // Lista COMPLETA de chaves para remover
-      const keysToRemove = [
-        STORAGE_KEY,
-        'schoolpower_activities',
-        'schoolpower_construction_data', 
-        'constructedActivities',
-        'schoolpower_action_plan',
-        'auto_activity_data_flash-cards',
-        'auto_activity_data_quiz-interativo',
-        'schoolpower_contextualization',
-        'schoolpower_initial_message',
-        'schoolpower_generated_plan'
-      ];
-      
-      // Remover todas as chaves com verificação
-      keysToRemove.forEach(key => {
-        try {
-          const existed = localStorage.getItem(key) !== null;
-          localStorage.removeItem(key);
-          console.log(`🗑️ ${existed ? 'REMOVIDO' : 'NÃO EXISTIA'}: ${key}`);
-        } catch (error) {
-          console.warn(`⚠️ Erro ao remover ${key}:`, error);
-        }
-      });
-      
-      // Marcar timestamp do reset
-      const resetTimestamp = Date.now().toString();
-      localStorage.setItem('schoolpower_reset_timestamp', resetTimestamp);
-      console.log(`⏰ Timestamp de reset definido: ${resetTimestamp}`);
-      
-      // Estado limpo
-      const cleanState: SchoolPowerFlowData = {
-        initialMessage: null,
-        contextualizationData: null,
-        actionPlan: [],
-        manualActivities: [],
-        timestamp: Date.now()
-      };
-      
-      console.log('🔄 Atualizando estados do React...');
-      
-      // Resetar loading primeiro
-      setIsLoading(false);
-      
-      // Usar startTransition para atualização prioritária e SÍNCRONA
-      startTransition(() => {
-        console.log('⚡ Executando transição de estado...');
-        setFlowState('idle');
-        setFlowData(cleanState);
-        console.log('✅ Estados React atualizados para idle + dados limpos');
-      });
+    setIsLoading(false);
 
-      // Verificação imediata
-      console.log('🎯 Verificação imediata pós-reset:');
-      console.log('   - flowState deve ser: idle');
-      console.log('   - flowData deve estar limpo');
-      
-      // Disparar eventos de notificação
-      const resetEvent = new CustomEvent('schoolpower-flow-reset', {
-        detail: { 
-          previousState: flowState, 
-          newState: 'idle',
-          timestamp: resetTimestamp,
-          source: 'resetFlow-function'
-        }
-      });
-      
-      window.dispatchEvent(resetEvent);
-      console.log('📡 Evento schoolpower-flow-reset disparado');
-      
-      // Múltiplas verificações para garantir sincronização completa
-      const verificationChecks = [50, 100, 200];
-      
-      verificationChecks.forEach((delay, index) => {
-        setTimeout(() => {
-          console.log(`🔍 Verificação pós-reset (${delay}ms):`, index + 1);
-          
-          // Remover timestamp de reset apenas na primeira verificação
-          if (index === 0) {
-            localStorage.removeItem('schoolpower_reset_timestamp');
-          }
-          
-          // Verificar se localStorage está realmente limpo
-          const remainingData = localStorage.getItem(STORAGE_KEY);
-          console.log('💾 Dados remanescentes no localStorage:', remainingData ? 'AINDA EXISTE' : 'LIMPO ✅');
-          
-          // Verificar estado atual
-          console.log('📊 Estado atual do hook:', {
-            currentFlowState: flowState,
-            shouldBeIdle: true,
-            dataEmpty: !flowData.initialMessage,
-            checkNumber: index + 1
-          });
-          
-          // Força adicional se necessário
-          if (flowState !== 'idle') {
-            console.log(`🔧 FORÇANDO estado idle - tentativa ${index + 1}`);
-            startTransition(() => {
-              setFlowState('idle');
-              setFlowData(cleanState);
-            });
-          }
-          
-          // Disparar evento de reset na verificação final
-          if (index === verificationChecks.length - 1) {
-            console.log('🎯 [RESET FINALIZADO] Estado deve estar em IDLE agora');
-            
-            // Evento final de confirmação com força máxima
-            window.dispatchEvent(new CustomEvent('schoolpower-reset-complete', {
-              detail: { 
-                finalState: 'idle',
-                timestamp: Date.now(),
-                success: true,
-                forceRefresh: true
-              }
-            }));
-            
-            // Evento adicional para forçar atualização da interface
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('schoolpower-interface-force-update', {
-                detail: { 
-                  action: 'reset-to-idle',
-                  timestamp: Date.now()
-                }
-              }));
-            }, 10);
-          }
-          
-        }, delay);
-      });
-      
-    } catch (error) {
-      console.error('❌ [ERRO CRÍTICO] Durante reset do School Power Flow:', error);
-      
-      // Fallback de emergência MÁS ROBUSTO
-      try {
-        console.log('🚨 Executando fallback de emergência...');
-        
-        // Limpar TODO o localStorage
-        const storageLength = localStorage.length;
-        console.log(`🧹 Limpando ${storageLength} itens do localStorage...`);
-        localStorage.clear();
-        
-        // Recarregar página
-        console.log('🔄 Recarregando página como último recurso...');
-        window.location.reload();
-        
-      } catch (fallbackError) {
-        console.error('❌ [ERRO FATAL] No fallback de reset:', fallbackError);
-      }
-    }
-  }, [flowState, flowData, setFlowState, setFlowData, setIsLoading]);
+    // Limpar dados do localStorage do fluxo atual
+    localStorage.removeItem(STORAGE_KEY);
+
+    // Manter apenas atividades que estão efetivamente construídas no histórico
+    // As atividades pendentes ou em progresso serão perdidas (comportamento desejado)
+
+    console.log('✅ School Power Flow resetado - atividades construídas preservadas no histórico');
+  }, []);
 
   return {
     flowState,

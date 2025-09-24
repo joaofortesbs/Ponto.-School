@@ -171,7 +171,7 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
               {selectedPlan === 'monthly' ? 'Por mês' : 'Por ano'}
             </div>
           </div>
-
+          
           {/* Checklist */}
           <div className="space-y-3 sm:space-y-4">
             {[
@@ -238,12 +238,12 @@ const AcessoVitalicioModal: React.FC<{ isOpen: boolean; onClose: () => void }> =
             <button
               onClick={() => {
                 console.log('🚀 Redirecionando para página de pagamento do plano:', selectedPlan);
-
+                
                 // Define o link baseado no plano selecionado
                 const paymentLink = selectedPlan === 'monthly' 
                   ? 'https://pay.kirvano.com/b52647c0-6c8d-4664-8a6f-3812c96258d5'
                   : 'https://pay.kirvano.com/64d2bc82-bf97-43c0-b5e5-498bd4e0bc64';
-
+                
                 // Redireciona para o link de pagamento
                 window.open(paymentLink, '_blank');
               }}
@@ -789,7 +789,6 @@ interface CardDeConstrucaoProps {
   onApproveActionPlan: (approvedItems: ActionPlanItem[]) => void;
   onResetFlow: () => void;
   isLoading?: boolean;
-  hideBackButton?: boolean; // Prop para esconder o botão de voltar
 }
 
 export function CardDeConstrucao({ 
@@ -799,8 +798,7 @@ export function CardDeConstrucao({
   onSubmitContextualization, 
   onApproveActionPlan, 
   onResetFlow,
-  isLoading,
-  hideBackButton // Recebe a nova prop
+  isLoading 
 }: CardDeConstrucaoProps) {
   const [localContextData, setLocalContextData] = useState<ContextualizationData>({
     materias: '',
@@ -1745,6 +1743,17 @@ export function CardDeConstrucao({
           className="relative z-10 h-full flex flex-col pt-16"
         >
           <div className="flex items-center justify-end mb-4">
+            {/* Back button - hidden in Quiz mode */}
+            {!isQuizMode && (
+              <div className="absolute top-4 right-4 z-20">
+                <button
+                  onClick={onResetFlow}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                >
+                  Voltar ao início
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Construction Interface */}

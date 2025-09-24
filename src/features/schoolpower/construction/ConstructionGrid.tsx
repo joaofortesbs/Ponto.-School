@@ -6,11 +6,10 @@ import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo moda
 import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
-import useSchoolPowerFlow from '../hooks/useSchoolPowerFlow'; // Hook para navegação interna
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft, Clock } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
@@ -23,7 +22,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
-  const { resetFlow } = useSchoolPowerFlow(); // Hook para navegação interna
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
@@ -71,92 +69,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('🔙 Voltando do histórico para construção');
     setShowHistorico(false);
   };
-
-  const handleBackToHome = React.useCallback((e?: React.MouseEvent<HTMLButtonElement>) => {
-    console.log('🏠 [BOTÃO CLICADO] Iniciando processo de voltar ao início');
-    
-    // Prevenir comportamento padrão e propagação
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('🔄 Evento de clique interceptado e controlado');
-    }
-    
-    console.log('📊 Estado atual antes do reset:', { 
-      flowState: 'activities', 
-      hasActivities: activities?.length || 0,
-      timestamp: new Date().toISOString()
-    });
-    
-    try {
-      console.log('⚡ Executando resetFlow...');
-      
-      // Executar reset do fluxo para voltar ao estado inicial
-      resetFlow();
-      
-      console.log('✅ resetFlow() executado com sucesso');
-      
-      // Forçar atualização da interface
-      setTimeout(() => {
-        console.log('🔄 Disparando evento de reset completo...');
-        window.dispatchEvent(new CustomEvent('schoolpower-reset-complete', {
-          detail: { 
-            source: 'construction-grid-back-button',
-            timestamp: Date.now()
-          }
-        }));
-      }, 150);
-      
-      // Verificação adicional e comunicação com interface principal
-      setTimeout(() => {
-        console.log('🔍 Verificação final do estado após reset');
-        const currentData = localStorage.getItem('schoolpower_flow_data');
-        console.log('💾 Dados no localStorage após reset:', currentData ? 'AINDA EXISTEM' : 'REMOVIDOS');
-        
-        // Força comunicação com a interface principal
-        window.dispatchEvent(new CustomEvent('construction-grid-reset-complete', {
-          detail: { 
-            component: 'ConstructionGrid',
-            action: 'back-to-home-completed',
-            timestamp: Date.now()
-          }
-        }));
-        
-        // Verificar se a interface principal está recebendo o reset
-        setTimeout(() => {
-          console.log('📡 Enviando sinal adicional para interface principal...');
-          window.dispatchEvent(new CustomEvent('schoolpower-force-refresh', {
-            detail: { 
-              reason: 'construction-grid-back-button',
-              timestamp: Date.now()
-            }
-          }));
-        }, 50);
-        
-      }, 300);
-      
-    } catch (error) {
-      console.error('❌ Erro crítico ao executar reset:', error);
-      
-      // Fallback mais robusto
-      try {
-        console.log('🔧 Executando fallback de emergência...');
-        
-        // Limpar todos os dados relacionados
-        ['schoolpower_flow_data', 'schoolpower_activities', 'constructedActivities'].forEach(key => {
-          localStorage.removeItem(key);
-          console.log(`🗑️ Removido: ${key}`);
-        });
-        
-        // Recarregar página como último recurso
-        console.log('🔄 Recarregando página...');
-        window.location.reload();
-        
-      } catch (fallbackError) {
-        console.error('❌ Erro no fallback de emergência:', fallbackError);
-      }
-    }
-  }, [resetFlow, activities]);
 
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
@@ -394,61 +306,15 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
         {/* Botões de Ação */}
         <div className="flex items-center gap-2">
-          {/* Botão de Voltar ao Início - GARANTIDAMENTE CLICÁVEL */}
-          <Button
-            type="button"
-            onClick={handleBackToHome}
-            onMouseDown={(e) => {
-              console.log('🖱️ MouseDown detectado no botão Voltar');
-              e.preventDefault();
-            }}
-            onMouseUp={(e) => {
-              console.log('🖱️ MouseUp detectado no botão Voltar');
-              e.preventDefault();
-            }}
-            variant="outline"
-            size="icon"
-            disabled={false}
-            className="w-12 h-12 border-2 border-gray-400 dark:border-gray-500 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-500 dark:hover:border-gray-400 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer select-none relative z-10"
-            title="Voltar ao Início do School Power"
-            aria-label="Voltar ao Início do School Power"
-            tabIndex={0}
-            role="button"
-            style={{
-              minWidth: '48px',
-              minHeight: '48px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              MozUserSelect: 'none',
-              msUserSelect: 'none',
-              pointerEvents: 'auto',
-              cursor: 'pointer',
-              position: 'relative',
-              zIndex: 10,
-              touchAction: 'manipulation'
-            }}
-          >
-            <ArrowLeft 
-              className="w-5 h-5" 
-              style={{ 
-                pointerEvents: 'none',
-                userSelect: 'none'
-              }} 
-            />
-          </Button>
-
-          {/* Botão de Histórico - apenas ícone */}
+          {/* Botão de Histórico */}
           <Button
             onClick={handleShowHistorico}
             variant="outline"
-            size="icon"
-            className="w-10 h-10 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-2 px-4 py-2 border-[#FF6B00]/30 text-[#FF6B00] hover:bg-[#FF6B00]/5 hover:border-[#FF6B00]/50 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
             title="Histórico de Atividades Criadas"
           >
-            <Clock className="w-4 h-4" />
+            <History className="w-4 h-4" />
+            Histórico
           </Button>
 
           {/* Botão Construir Todas */}
