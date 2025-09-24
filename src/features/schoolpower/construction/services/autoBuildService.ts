@@ -49,55 +49,49 @@ export class AutoBuildService {
 
       console.log('👤 [AUTO-SAVE] Usuário identificado:', profile.user_id);
 
-      // 2. Gerar código único para a atividade se não existir
-      const codigoUnico = activity.id || activitiesApi.generateUniqueCode();
-      console.log('🔑 [AUTO-SAVE] Código único:', codigoUnico);
+      // 2. Gerar código único REAL para a instância (não reusar template ID)
+      const codigoUnico = activitiesApi.generateUniqueCode();
+      console.log('🔑 [AUTO-SAVE] Código único gerado:', codigoUnico);
 
-      // 3. Preparar dados para salvamento
+      // 3. Preparar dados para salvamento usando syncActivity
       const activityData = {
-        user_id: profile.user_id,
-        codigo_unico: codigoUnico,
-        tipo: activity.id || 'atividade-geral',
-        titulo: activity.title,
-        descricao: activity.description,
-        conteudo: {
-          // Dados básicos da atividade
-          id: activity.id,
-          title: activity.title,
-          description: activity.description,
-          type: activity.id,
-          progress: 100, // Sempre 100% quando salva automaticamente (atividade concluída)
-          status: 'completed', // Sempre completed quando salva automaticamente
-          isBuilt: activity.isBuilt,
-          builtAt: activity.builtAt,
-          
-          // Campos customizados da construção
-          customFields: activity.customFields,
-          originalData: activity.originalData,
-          
-          // Dados do localStorage se existirem
-          generatedContent: this.getGeneratedContentFromStorage(activity.id),
-          constructedData: this.getConstructedDataFromStorage(activity.id),
-          
-          // Metadados do salvamento automático
-          autoSaved: true,
-          autoSavedAt: new Date().toISOString(),
-          autoSaveSource: 'construction-interface'
-        }
+        // Dados básicos da atividade
+        id: activity.id,
+        title: activity.title,
+        description: activity.description,
+        type: activity.id, // Template ID permanece no tipo
+        progress: 100, // Sempre 100% quando salva automaticamente (atividade concluída)
+        status: 'completed', // Sempre completed quando salva automaticamente
+        isBuilt: activity.isBuilt,
+        builtAt: activity.builtAt,
+        
+        // Campos customizados da construção
+        customFields: activity.customFields,
+        originalData: activity.originalData,
+        
+        // Dados do localStorage se existirem
+        generatedContent: this.getGeneratedContentFromStorage(activity.id),
+        constructedData: this.getConstructedDataFromStorage(activity.id),
+        
+        // Metadados do salvamento automático
+        autoSaved: true,
+        autoSavedAt: new Date().toISOString(),
+        autoSaveSource: 'construction-interface'
       };
 
-      console.log('📋 [AUTO-SAVE] Dados preparados para salvamento:', {
-        codigo_unico: activityData.codigo_unico,
-        tipo: activityData.tipo,
-        titulo: activityData.titulo,
-        hasContent: !!activityData.conteudo
+      console.log('📋 [AUTO-SAVE] Dados preparados para sincronização:', {
+        user_id: profile.user_id,
+        codigo_unico: codigoUnico,
+        tipo: activity.id, // Template ID
+        titulo: activity.title,
+        hasContent: !!activityData
       });
 
-      // 4. Tentar salvar no banco de dados
-      const response = await activitiesApi.createActivity(activityData);
+      // 4. Usar syncActivity para criar ou atualizar automaticamente
+      const response = await activitiesApi.syncActivity(profile.user_id, activityData, codigoUnico);
 
       if (response.success) {
-        console.log('✅ [AUTO-SAVE] Atividade salva com sucesso no banco:', response.data);
+        console.log('✅ [AUTO-SAVE] Atividade sincronizada com sucesso no banco:', response.data);
         
         // 5. Marcar que foi salva automaticamente
         localStorage.setItem(`auto_saved_${activity.id}`, JSON.stringify({
@@ -118,13 +112,14 @@ export class AutoBuildService {
         }));
 
       } else {
-        console.error('❌ [AUTO-SAVE] Falha ao salvar atividade:', response.error);
+        console.error('❌ [AUTO-SAVE] Falha ao sincronizar atividade:', response.error);
         
         // Marcar tentativa de salvamento falhada para retry posterior
         localStorage.setItem(`auto_save_failed_${activity.id}`, JSON.stringify({
           failed: true,
           failedAt: new Date().toISOString(),
           error: response.error,
+          codigo_unico: codigoUnico,
           activityData: activityData
         }));
       }
