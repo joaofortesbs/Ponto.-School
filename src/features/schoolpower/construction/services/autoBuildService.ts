@@ -87,8 +87,18 @@ export class AutoBuildService {
         hasContent: !!activityData
       });
 
-      // 4. Usar syncActivity para criar ou atualizar automaticamente
-      const response = await activitiesApi.syncActivity(profile.user_id, activityData, codigoUnico);
+      // 4. Preparar dados para criação da atividade no formato correto da API
+      const apiData = {
+        user_id: profile.user_id,
+        codigo_unico: codigoUnico,
+        tipo: activity.id, // Template ID 
+        titulo: activity.title,
+        descricao: activity.description,
+        conteudo: activityData
+      };
+
+      // 5. Criar nova instância da atividade no banco
+      const response = await activitiesApi.createActivity(apiData);
 
       if (response.success) {
         console.log('✅ [AUTO-SAVE] Atividade sincronizada com sucesso no banco:', response.data);
