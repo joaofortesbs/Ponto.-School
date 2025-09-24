@@ -20,7 +20,7 @@ export async function createUserProfile(userData: Partial<UserProfile>, uf: stri
 
     // Insere o perfil no banco de dados
     const { data, error } = await supabase
-      .from('profiles')
+      .from('perfis')
       .insert([userDataWithId])
       .select('*')
       .single();
@@ -48,7 +48,7 @@ export async function getUserProfileById(userId: string): Promise<UserProfile | 
 
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('perfis')
       .select('*')
       .eq('user_id', userId)
       .single();
@@ -98,7 +98,7 @@ class ProfileService {
       }
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('perfis')
         .select('*')
         .eq('id', session.session.user.id)
         .single();
@@ -148,7 +148,7 @@ class ProfileService {
         if (!session?.session?.user) return;
 
         const { data, error } = await supabase
-          .from('profiles')
+          .from('perfis')
           .select('*')
           .eq('id', session.session.user.id)
           .single();
@@ -177,7 +177,7 @@ class ProfileService {
     try {
       // Verificar se já existe um perfil para evitar duplicação
       const { data: existingProfile } = await supabase
-        .from('profiles')
+        .from('perfis')
         .select('*')
         .eq('email', email)
         .maybeSingle();
@@ -187,7 +187,7 @@ class ProfileService {
         if (!existingProfile.user_id) {
           const generatedId = await generateUserIdByPlan('lite', 'BR');
           const { data: updatedProfile, error: updateError } = await supabase
-            .from('profiles')
+            .from('perfis')
             .update({ user_id: generatedId, updated_at: new Date().toISOString() })
             .eq('id', existingProfile.id)
             .select()
@@ -217,7 +217,7 @@ class ProfileService {
       };
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('perfis')
         .insert([newProfile])
         .select()
         .single();
@@ -248,7 +248,7 @@ class ProfileService {
 
       // Obter o perfil atual para verificar se existe
       const { data: currentProfile } = await supabase
-        .from('profiles')
+        .from('perfis')
         .select('*')
         .eq('email', currentUser.user.email)
         .single();
@@ -265,7 +265,7 @@ class ProfileService {
       };
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('perfis')
         .update(updateData)
         .eq('id', currentProfile.id)
         .select()
@@ -350,7 +350,7 @@ class ProfileService {
 
             // Atualizar o perfil com o estado correto
             const { error: updateStateError } = await supabase
-              .from('profiles')
+              .from('perfis')
               .update({ 
                 state: uf,
                 updated_at: new Date().toISOString() 
@@ -378,7 +378,7 @@ class ProfileService {
 
             // Atualizar o perfil com o estado encontrado ou padrão
             const { error: updateStateError } = await supabase
-              .from('profiles')
+              .from('perfis')
               .update({ 
                 state: uf,
                 updated_at: new Date().toISOString() 
@@ -412,7 +412,7 @@ class ProfileService {
           // Atualizar o plano no perfil
           try {
             const { error: updatePlanError } = await supabase
-              .from('profiles')
+              .from('perfis')
               .update({ plan_type: planType })
               .eq('id', profile.id);
 
@@ -531,7 +531,7 @@ class ProfileService {
 
       // Atualizar o perfil com o novo ID
       const { error } = await supabase
-        .from('profiles')
+        .from('perfis')
         .update({ 
           user_id: generatedId,
           updated_at: new Date().toISOString()

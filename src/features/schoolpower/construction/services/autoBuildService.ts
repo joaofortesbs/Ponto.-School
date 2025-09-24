@@ -492,9 +492,21 @@ export class AutoBuildService {
         activity.progress = 100;
         activity.status = 'completed';
 
-        // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
-        console.log('💾 [AUTO-BUILD] Atividade concluída, iniciando salvamento automático...');
-        await this.saveActivityToDatabase(activity);
+          // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
+        console.log('💾 [AUTO-BUILD] ==========================================');
+        console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
+        console.log('💾 [AUTO-BUILD] Título:', activity.title);
+        console.log('💾 [AUTO-BUILD] ID:', activity.id);
+        console.log('💾 [AUTO-BUILD] Status:', activity.status);
+        console.log('💾 [AUTO-BUILD] Progress:', activity.progress);
+        console.log('💾 [AUTO-BUILD] isBuilt:', activity.isBuilt);
+        console.log('💾 [AUTO-BUILD] ==========================================');
+        
+        try {
+          await this.saveActivityToDatabase(activity);
+        } catch (saveError) {
+          console.error('💥 [AUTO-BUILD] Erro crítico no salvamento automático:', saveError);
+        }
 
         if (this.onActivityBuilt) {
           this.onActivityBuilt(activity.id);
