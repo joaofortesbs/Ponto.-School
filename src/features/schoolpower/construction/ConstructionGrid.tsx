@@ -82,7 +82,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       return;
     }
 
-    console.log('🚀 Iniciando construção automática com autoBuildService MELHORADO');
+    console.log('🚀 Iniciando construção automática com salvamento no banco Neon');
 
     // Filtrar atividades que precisam ser construídas
     const activitiesToBuild = activities.filter(activity => {
@@ -114,8 +114,15 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
         setBuildProgress(progress);
       });
 
-      autoBuildService.setOnActivityBuilt((activityId) => {
+      autoBuildService.setOnActivityBuilt(async (activityId) => {
         console.log(`🎯 Atividade construída automaticamente: ${activityId}`);
+
+        // NOVO: Salvar automaticamente no banco Neon após construção
+        try {
+          await saveActivityToNeonDatabase(activityId);
+        } catch (error) {
+          console.error(`❌ Erro ao salvar atividade ${activityId} no banco:`, error);
+        }
 
         // Forçar atualização da interface
         if (refreshActivities) {
@@ -158,6 +165,91 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           refreshActivities();
         }
       }, 3000);
+    }
+  };
+
+  // NOVA FUNÇÃO: Salvar atividade no banco Neon após construção
+  const saveActivityToNeonDatabase = async (activityId: string) => {
+    console.log('💾 [AUTO-SAVE] Iniciando salvamento automático no banco Neon para:', activityId);
+    
+    try {
+      // 1. Obter perfil do usuário atual
+      const { profileService } = await import('@/services/profileService');
+      const profile = await profileService.getCurrentUserProfile();
+      
+      if (!profile || !profile.id) {
+        console.error('❌ [AUTO-SAVE] Usuário não encontrado ou sem ID');
+        return;
+      }
+
+      // 2. Obter dados da atividade do localStorage
+      const activityData = localStorage.getItem(`activity_${activityId}`);
+      const constructedInfo = JSON.parse(localStorage.getItem('constructedActivities') || '{}')[activityId];
+      
+      if (!activityData || !constructedInfo?.isBuilt) {
+        console.warn('⚠️ [AUTO-SAVE] Atividade não encontrada ou não construída:', activityId);
+        return;
+      }
+
+      const parsedActivityData = JSON.parse(activityData);
+
+      // 3. Gerar código único para a atividade
+      const { default: activitiesApi } = await import('@/services/activitiesApiService');
+      const codigoUnico = activitiesApi.generateUniqueCode();
+
+      console.log('🎯 [AUTO-SAVE] Dados preparados:', {
+        userId: profile.id,
+        codigoUnico,
+        tipo: activityId,
+        titulo: parsedActivityData.title || `Atividade ${activityId}`,
+        hasContent: !!parsedActivityData
+      });
+
+      // 4. Preparar dados para criação da atividade no formato correto da API
+      const apiData = {
+        user_id: profile.id, // Usar profile.id que é o UUID da tabela perfis
+        codigo_unico: codigoUnico,
+        tipo: activityId, // Template ID 
+        titulo: parsedActivityData.title || `Atividade ${activityId}`,
+        descricao: parsedActivityData.description || 'Atividade criada automaticamente',
+        conteudo: {
+          ...parsedActivityData,
+          autoSaved: true,
+          autoSavedAt: new Date().toISOString(),
+          autoSaveSource: 'construction-interface',
+          buildAllFlow: true
+        }
+      };
+
+      // 5. Criar nova instância da atividade no banco
+      const response = await activitiesApi.createActivity(apiData);
+
+      if (response.success) {
+        console.log('🎉 [AUTO-SAVE] ==========================================');
+        console.log('🎉 [AUTO-SAVE] SUCESSO! ATIVIDADE SALVA NO BANCO!');
+        console.log('🎉 [AUTO-SAVE] ID do banco:', response.data?.id);
+        console.log('🎉 [AUTO-SAVE] Código único:', response.data?.codigo_unico);
+        console.log('🎉 [AUTO-SAVE] Tipo:', response.data?.tipo);
+        console.log('🎉 [AUTO-SAVE] Título:', response.data?.titulo);
+        console.log('🎉 [AUTO-SAVE] ==========================================');
+        
+        // 6. Marcar que foi salva automaticamente
+        localStorage.setItem(`auto_saved_${activityId}`, JSON.stringify({
+          saved: true,
+          savedAt: new Date().toISOString(),
+          codigoUnico: response.data?.codigo_unico,
+          databaseId: response.data?.id
+        }));
+
+        // 7. Remover do localStorage após salvar no banco (opcional)
+        // localStorage.removeItem(`activity_${activityId}`);
+        
+      } else {
+        console.error('❌ [AUTO-SAVE] Falha ao criar atividade no banco:', response.error);
+      }
+
+    } catch (error) {
+      console.error('❌ [AUTO-SAVE] Erro durante salvamento automático:', error);
     }
   };
 

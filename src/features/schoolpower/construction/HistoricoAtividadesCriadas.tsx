@@ -47,16 +47,17 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     setMigrationStatus('');
 
     try {
-      // 1. Obter perfil do usuário atual para pegar o user_id
+      // 1. Obter perfil do usuário atual para pegar o user_id correto
       const profile = await profileService.getCurrentUserProfile();
-      if (!profile || !profile.user_id) {
-        console.warn('⚠️ Usuário não encontrado ou sem user_id');
+      if (!profile || !profile.id) {
+        console.warn('⚠️ Usuário não encontrado ou sem ID');
         // Tentar carregar do localStorage como fallback
         await carregarDoLocalStorageFallback();
         return;
       }
 
-      const userId = profile.user_id;
+      // Usar profile.id (UUID da tabela perfis) em vez de user_id
+      const userId = profile.id;
       console.log('👤 Carregando atividades para usuário:', userId);
 
       // 2. Buscar atividades do banco de dados

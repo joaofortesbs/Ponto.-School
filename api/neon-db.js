@@ -168,8 +168,88 @@ class NeonDBManager {
       console.log('✅ Tabela "perfis" já existe');
     }
 
+    // Verificar se a tabela activities existe
+    const activitiesExists = await this.tableExists('activities');
+
+    if (!activitiesExists) {
+      console.log('📝 Tabela "activities" não existe, criando...');
+      await this.createActivitiesTable();
+    } else {
+      console.log('✅ Tabela "activities" já existe');
+    }
+
     console.log('🎉 Banco de dados inicializado com sucesso!');
     return true;
+  }
+
+  // Criar tabela de atividades
+  async createActivitiesTable() {
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS activities (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
+        codigo_unico VARCHAR(8) UNIQUE NOT NULL,
+        tipo VARCHAR(100) NOT NULL,
+        titulo VARCHAR(255),
+        descricao TEXT,
+        conteudo JSONB NOT NULL,
+        criado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `;
+
+    const result = await this.executeQuery(createTableQuery);
+
+    if (result.success) {
+      console.log('✅ Tabela "activities" criada com sucesso');
+
+      // Criar índices para melhor performance
+      await this.createActivitiesIndexes();
+
+      // Criar trigger para atualizar updated_at
+      await this.createActivitiesUpdateTrigger();
+
+      return true;
+    } else {
+      console.error('❌ Erro ao criar tabela "activities":', result.error);
+      return false;
+    }
+  }
+
+  // Criar índices para a tabela activities
+  async createActivitiesIndexes() {
+    const indexes = [
+      'CREATE INDEX IF NOT EXISTS idx_activities_user_id ON activities(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_activities_codigo_unico ON activities(codigo_unico);',
+      'CREATE INDEX IF NOT EXISTS idx_activities_tipo ON activities(tipo);',
+      'CREATE INDEX IF NOT EXISTS idx_activities_criado_em ON activities(criado_em);'
+    ];
+
+    for (const indexQuery of indexes) {
+      const result = await this.executeQuery(indexQuery);
+      if (!result.success) {
+        console.error('❌ Erro ao criar índice:', result.error);
+      }
+    }
+
+    console.log('✅ Índices da tabela "activities" criados com sucesso');
+  }
+
+  // Criar trigger para atualizar updated_at automaticamente na tabela activities
+  async createActivitiesUpdateTrigger() {
+    const triggerQuery = `
+      DROP TRIGGER IF EXISTS update_activities_updated_at ON activities;
+      CREATE TRIGGER update_activities_updated_at
+        BEFORE UPDATE ON activities
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    `;
+
+    const result = await this.executeQuery(triggerQuery);
+    if (result.success) {
+      console.log('✅ Trigger de atualização automática para activities criado com sucesso');
+    } else {
+      console.error('❌ Erro ao criar trigger para activities:', result.error);
+    }
   }
 
   // Buscar perfil por email

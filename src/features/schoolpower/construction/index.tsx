@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ConstructionGrid } from './ConstructionGrid';
 import { ActionPlanItem } from '../actionplan/ActionPlanCard';
+import autoSaveMonitor from './services/autoSaveMonitor';
 
 export interface ConstructionInterfaceProps {
   approvedActivities: any[];
@@ -19,6 +20,18 @@ export interface ConstructionActivity {
 
 export function ConstructionInterface({ approvedActivities, handleEditActivity, onResetFlow }: ConstructionInterfaceProps & { onResetFlow?: () => void }) {
   console.log('🏗️ ConstructionInterface renderizada com atividades:', approvedActivities);
+
+  // Inicializar monitoramento automático
+  useEffect(() => {
+    console.log('🔧 [CONSTRUCTION-INTERFACE] Inicializando monitoramento automático...');
+    autoSaveMonitor.startMonitoring();
+
+    // Cleanup ao desmontar
+    return () => {
+      console.log('🔧 [CONSTRUCTION-INTERFACE] Parando monitoramento automático...');
+      autoSaveMonitor.stopMonitoring();
+    };
+  }, []);
 
   return (
     <div className="w-full h-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 150px)', minHeight: '600px', backgroundColor: 'transparent' }}>
