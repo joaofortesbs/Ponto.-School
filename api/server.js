@@ -61,6 +61,211 @@ app.use((err, req, res, next) => {
 app.use('/api', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
 
+// =================
+// ROTAS PARA ATIVIDADES
+// =================
+
+// Criar nova atividade
+app.post('/api/atividades', async (req, res) => {
+  try {
+    console.log('📝 POST /api/atividades - Nova atividade:', req.body);
+    
+    const { user_id, codigo_unico, tipo, titulo, descricao, conteudo } = req.body;
+
+    // Validar campos obrigatórios
+    if (!user_id || !codigo_unico || !tipo || !conteudo) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campos obrigatórios: user_id, codigo_unico, tipo, conteudo'
+      });
+    }
+
+    // Verificar se código único já existe
+    const codeExists = await neonDB.checkCodeExists(codigo_unico);
+    if (codeExists) {
+      return res.status(409).json({
+        success: false,
+        error: 'Código único já existe'
+      });
+    }
+
+    // Criar atividade
+    const result = await neonDB.createActivity({
+      user_id,
+      codigo_unico,
+      tipo,
+      titulo: titulo || `Atividade ${tipo}`,
+      descricao: descricao || '',
+      conteudo
+    });
+
+    if (result.success) {
+      res.status(201).json({
+        success: true,
+        data: result.data[0]
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erro no endpoint POST /api/atividades:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
+  }
+});
+
+// Atualizar atividade existente
+app.put('/api/atividades/:codigo_unico', async (req, res) => {
+  try {
+    const { codigo_unico } = req.params;
+    const { titulo, descricao, conteudo } = req.body;
+
+    console.log(`🔄 PUT /api/atividades/${codigo_unico} - Atualizando atividade`);
+
+    // Validar campos obrigatórios
+    if (!conteudo) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: conteudo'
+      });
+    }
+
+    // Atualizar atividade
+    const result = await neonDB.updateActivity(codigo_unico, {
+      titulo,
+      descricao,
+      conteudo
+    });
+
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data[0]
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erro no endpoint PUT /api/atividades:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
+  }
+});
+
+// Buscar atividades do usuário (histórico)
+app.get('/api/atividades/usuario/:user_id', async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    console.log(`🔍 GET /api/atividades/usuario/${user_id} - Buscando atividades do usuário`);
+
+    // Buscar atividades do usuário
+    const result = await neonDB.getUserActivities(user_id);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erro no endpoint GET /api/atividades/usuario:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
+  }
+});
+
+// Buscar atividade por código único (para exibição pública)
+app.get('/api/atividades/:codigo_unico', async (req, res) => {
+  try {
+    const { codigo_unico } = req.params;
+
+    console.log(`🔍 GET /api/atividades/${codigo_unico} - Buscando atividade por código`);
+
+    // Buscar atividade por código
+    const result = await neonDB.getActivityByCode(codigo_unico);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        data: result.data[0]
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erro no endpoint GET /api/atividades:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
+  }
+});
+
+// Deletar atividade
+app.delete('/api/atividades/:codigo_unico', async (req, res) => {
+  try {
+    const { codigo_unico } = req.params;
+    const { user_id } = req.body;
+
+    console.log(`🗑️ DELETE /api/atividades/${codigo_unico} - Deletando atividade`);
+
+    // Validar user_id
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo obrigatório: user_id'
+      });
+    }
+
+    // Deletar atividade
+    const result = await neonDB.deleteActivity(codigo_unico, user_id);
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Atividade deletada com sucesso'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Erro no endpoint DELETE /api/atividades:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
+  }
+});
+
 // Rota raiz
 app.get('/', (req, res) => {
   res.send(`
@@ -90,6 +295,22 @@ app.get('/', (req, res) => {
         </div>
         <div class="endpoint">
           <p><strong>POST /api/perfis</strong> - Criar perfil</p>
+        </div>
+        <h3>Endpoints de Atividades:</h3>
+        <div class="endpoint">
+          <p><strong>POST /api/atividades</strong> - Criar nova atividade</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>PUT /api/atividades/:codigo_unico</strong> - Atualizar atividade</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>GET /api/atividades/usuario/:user_id</strong> - Buscar atividades do usuário</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>GET /api/atividades/:codigo_unico</strong> - Buscar atividade por código</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>DELETE /api/atividades/:codigo_unico</strong> - Deletar atividade</p>
         </div>
       </body>
     </html>

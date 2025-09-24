@@ -375,6 +375,170 @@ class NeonDBManager {
     const result = await this.executeQuery(query, values);
     return result.success ? parseInt(result.data[0].total) : 0;
   }
+
+  // =================
+  // MÉTODOS PARA ATIVIDADES
+  // =================
+
+  // Criar nova atividade
+  async createActivity(activityData) {
+    const {
+      user_id,
+      codigo_unico,
+      tipo,
+      titulo,
+      descricao,
+      conteudo
+    } = activityData;
+
+    const query = `
+      INSERT INTO activities (user_id, codigo_unico, tipo, titulo, descricao, conteudo)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
+    `;
+
+    const params = [user_id, codigo_unico, tipo, titulo, descricao, JSON.stringify(conteudo)];
+
+    try {
+      console.log('💾 Criando nova atividade:', { codigo_unico, tipo, titulo });
+      const result = await this.executeQuery(query, params);
+      
+      if (result.success) {
+        console.log('✅ Atividade criada com sucesso:', result.data[0]);
+        return result;
+      } else {
+        console.error('❌ Erro ao criar atividade:', result.error);
+        return result;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao criar atividade:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Atualizar atividade existente
+  async updateActivity(codigo_unico, updateData) {
+    const { titulo, descricao, conteudo } = updateData;
+
+    const query = `
+      UPDATE activities 
+      SET titulo = $2, descricao = $3, conteudo = $4, atualizado_em = NOW()
+      WHERE codigo_unico = $1
+      RETURNING id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
+    `;
+
+    const params = [codigo_unico, titulo, descricao, JSON.stringify(conteudo)];
+
+    try {
+      console.log('🔄 Atualizando atividade:', codigo_unico);
+      const result = await this.executeQuery(query, params);
+      
+      if (result.success && result.data.length > 0) {
+        console.log('✅ Atividade atualizada com sucesso');
+        return result;
+      } else {
+        console.log('⚠️ Nenhuma atividade encontrada para atualizar');
+        return { success: false, error: 'Atividade não encontrada' };
+      }
+    } catch (error) {
+      console.error('❌ Erro ao atualizar atividade:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Buscar atividades do usuário
+  async getUserActivities(user_id) {
+    const query = `
+      SELECT id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
+      FROM activities 
+      WHERE user_id = $1 
+      ORDER BY atualizado_em DESC
+    `;
+
+    try {
+      console.log('🔍 Buscando atividades do usuário:', user_id);
+      const result = await this.executeQuery(query, [user_id]);
+      
+      if (result.success) {
+        console.log('✅ Encontradas', result.data.length, 'atividades do usuário');
+        return result;
+      } else {
+        console.error('❌ Erro ao buscar atividades do usuário:', result.error);
+        return result;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar atividades do usuário:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Buscar atividade por código único
+  async getActivityByCode(codigo_unico) {
+    const query = `
+      SELECT id, user_id, codigo_unico, tipo, titulo, descricao, conteudo, criado_em, atualizado_em
+      FROM activities 
+      WHERE codigo_unico = $1
+    `;
+
+    try {
+      console.log('🔍 Buscando atividade por código:', codigo_unico);
+      const result = await this.executeQuery(query, [codigo_unico]);
+      
+      if (result.success) {
+        if (result.data.length > 0) {
+          console.log('✅ Atividade encontrada:', result.data[0].titulo);
+          return result;
+        } else {
+          console.log('⚠️ Nenhuma atividade encontrada com esse código');
+          return { success: false, error: 'Atividade não encontrada' };
+        }
+      } else {
+        console.error('❌ Erro ao buscar atividade:', result.error);
+        return result;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar atividade por código:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Deletar atividade
+  async deleteActivity(codigo_unico, user_id) {
+    const query = `
+      DELETE FROM activities 
+      WHERE codigo_unico = $1 AND user_id = $2
+      RETURNING id, titulo
+    `;
+
+    try {
+      console.log('🗑️ Deletando atividade:', codigo_unico);
+      const result = await this.executeQuery(query, [codigo_unico, user_id]);
+      
+      if (result.success && result.data.length > 0) {
+        console.log('✅ Atividade deletada com sucesso');
+        return result;
+      } else {
+        console.log('⚠️ Nenhuma atividade encontrada para deletar');
+        return { success: false, error: 'Atividade não encontrada ou usuário sem permissão' };
+      }
+    } catch (error) {
+      console.error('❌ Erro ao deletar atividade:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Verificar se código único já existe
+  async checkCodeExists(codigo_unico) {
+    const query = 'SELECT EXISTS(SELECT 1 FROM activities WHERE codigo_unico = $1)';
+    
+    try {
+      const result = await this.executeQuery(query, [codigo_unico]);
+      return result.success && result.data[0]?.exists;
+    } catch (error) {
+      console.error('❌ Erro ao verificar código único:', error);
+      return false;
+    }
+  }
 }
 
 // Instância singleton do gerenciador
