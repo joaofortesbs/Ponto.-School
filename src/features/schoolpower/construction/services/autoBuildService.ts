@@ -55,7 +55,7 @@ export class AutoBuildService {
         console.warn('⚠️ [AUTO-SAVE] Profile não encontrado, usando usuário de teste...');
         profile = {
           id: '1a0b75e2-d142-442d-b384-5fd42777775c',
-          user_id: 'USER-GOV-75E2',
+          user_id: '1a0b75e2-d142-442d-b384-5fd42777775c', // Usar UUID, não string personalizada
           email: 'joaomarcelofortesempresa@gmail.com',
           nome_completo: 'João Fortes',
           nome_usuario: 'joaofortes'
