@@ -1196,7 +1196,67 @@ const EditActivityModal = ({
         ...(flashCardsContent && { flashCardsContent })
       };
 
-      // Chamar função de callback para salvar
+      // NOVA FUNCIONALIDADE: Salvar diretamente no banco Neon
+      const profile = await profileService.getCurrentUserProfile();
+      if (profile?.id) {
+        console.log('🏦 Salvando atividade no banco Neon...');
+        
+        try {
+          // Verificar se já existe no banco
+          const existingActivities = await activitiesApi.getUserActivities(profile.id);
+          let saveResult;
+
+          if (existingActivities.success && existingActivities.data) {
+            const existingActivity = existingActivities.data.find(
+              act => act.tipo === activity.id
+            );
+
+            if (existingActivity) {
+              // Atualizar atividade existente
+              saveResult = await activitiesApi.updateActivity(existingActivity.codigo_unico, {
+                titulo: finalActivityData.title,
+                descricao: finalActivityData.description,
+                conteudo: finalActivityData
+              });
+            } else {
+              // Criar nova atividade
+              saveResult = await activitiesApi.migrateFromLocalStorage(
+                profile.id,
+                finalActivityData,
+                activity.id
+              );
+            }
+          } else {
+            // Criar nova atividade (primeira vez)
+            saveResult = await activitiesApi.migrateFromLocalStorage(
+              profile.id,
+              finalActivityData,
+              activity.id
+            );
+          }
+
+          if (saveResult && saveResult.success) {
+            console.log('✅ Atividade salva no banco Neon com sucesso');
+            
+            // Marcar como sincronizada no localStorage
+            const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+            constructedActivities[activity.id] = {
+              ...constructedActivities[activity.id],
+              syncedToNeon: true,
+              neonSyncAt: new Date().toISOString()
+            };
+            localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+            
+          } else {
+            console.warn('⚠️ Erro ao salvar no banco Neon, mantendo apenas no localStorage');
+          }
+        } catch (neonError) {
+          console.error('❌ Erro na sincronização com Neon:', neonError);
+          console.log('💾 Mantendo salvamento no localStorage como fallback');
+        }
+      }
+
+      // Chamar função de callback para salvar (localStorage)
       if (onSave) {
         await onSave(finalActivityData);
       }

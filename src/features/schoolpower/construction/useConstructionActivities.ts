@@ -69,6 +69,59 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
     };
   };
 
+  // Função para sincronizar atividade do localStorage para o banco Neon
+  const syncActivityToNeon = async (activityId: string, activityData: any) => {
+    try {
+      const profile = await profileService.getCurrentUserProfile();
+      if (!profile?.id) {
+        console.warn('⚠️ Perfil do usuário não encontrado para sincronização');
+        return false;
+      }
+
+      console.log('🔄 Sincronizando atividade com banco Neon:', activityId);
+
+      // Verificar se já existe no banco
+      const existingActivities = await activitiesApi.getUserActivities(profile.id);
+      
+      if (existingActivities.success && existingActivities.data) {
+        const existingActivity = existingActivities.data.find(
+          activity => activity.tipo === activityId
+        );
+
+        if (existingActivity) {
+          // Atualizar atividade existente
+          const updateResult = await activitiesApi.updateActivity(existingActivity.codigo_unico, {
+            titulo: activityData.title || activityData.titulo || `Atividade ${activityId}`,
+            descricao: activityData.description || activityData.descricao || 'Atividade criada na plataforma',
+            conteudo: activityData
+          });
+
+          if (updateResult.success) {
+            console.log('✅ Atividade atualizada no banco Neon:', activityId);
+            return true;
+          }
+        } else {
+          // Criar nova atividade
+          const createResult = await activitiesApi.migrateFromLocalStorage(
+            profile.id,
+            activityData,
+            activityId
+          );
+
+          if (createResult.success) {
+            console.log('✅ Atividade criada no banco Neon:', activityId);
+            return true;
+          }
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.error('❌ Erro ao sincronizar com banco Neon:', error);
+      return false;
+    }
+  };
+
   const loadActivities = async () => {
     console.log('📚 useConstructionActivities: Carregando atividades para construção...', approvedActivities);
 
@@ -88,6 +141,22 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
       const constructionActivities = await Promise.all(
         approvedActivities.map(activity => convertToConstructionActivity(activity))
       );
+
+      // Sincronizar atividades construídas com o banco Neon
+      for (const activity of constructionActivities) {
+        if (activity.isBuilt) {
+          // Buscar dados da atividade no localStorage
+          const activityData = localStorage.getItem(`activity_${activity.id}`);
+          if (activityData) {
+            try {
+              const parsedData = JSON.parse(activityData);
+              await syncActivityToNeon(activity.id, parsedData);
+            } catch (error) {
+              console.error('❌ Erro ao parsear dados da atividade:', error);
+            }
+          }
+        }
+      }
 
       console.log('✅ Atividades de construção convertidas:', constructionActivities);
       setActivities(constructionActivities);

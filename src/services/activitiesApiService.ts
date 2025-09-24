@@ -239,7 +239,7 @@ class ActivitiesApiService {
           activity => activity.tipo === activityId
         );
 
-        if (existingActivity) {
+        if (existingActivity && !forceUpdate) {
           // Atividade já existe - atualizar
           this.debugLog('📝 Atividade já existe, atualizando...');
           
@@ -251,7 +251,7 @@ class ActivitiesApiService {
         }
       }
 
-      // Atividade não existe - criar nova
+      // Atividade não existe ou forceUpdate é true - criar nova
       this.debugLog('📝 Criando nova atividade...');
       return this.migrateFromLocalStorage(user_id, activityData, activityId);
 
@@ -261,6 +261,60 @@ class ActivitiesApiService {
         success: false,
         error: error instanceof Error ? error.message : 'Erro durante sincronização',
       };
+    }
+  }
+
+  /**
+   * Sincronizar todas as atividades do localStorage para o banco
+   */
+  async syncAllLocalActivities(user_id: string): Promise<{ synced: number; errors: string[] }> {
+    const results = { synced: 0, errors: [] };
+    
+    try {
+      this.debugLog('🔄 Iniciando sincronização completa para usuário:', user_id);
+      
+      // Buscar todas as atividades construídas do localStorage
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      
+      for (const [activityId, activityInfo] of Object.entries(constructedActivities)) {
+        try {
+          if (activityInfo?.isBuilt) {
+            // Buscar dados completos da atividade
+            const activityData = localStorage.getItem(`activity_${activityId}`);
+            if (activityData) {
+              const parsedData = JSON.parse(activityData);
+              const syncResult = await this.syncActivity(user_id, parsedData, activityId);
+              
+              if (syncResult.success) {
+                results.synced++;
+                this.debugLog('✅ Atividade sincronizada:', activityId);
+                
+                // Marcar como sincronizada
+                constructedActivities[activityId] = {
+                  ...constructedActivities[activityId],
+                  syncedToNeon: true,
+                  neonSyncAt: new Date().toISOString()
+                };
+              } else {
+                results.errors.push(`${activityId}: ${syncResult.error}`);
+              }
+            }
+          }
+        } catch (error) {
+          results.errors.push(`${activityId}: Erro ao processar dados - ${error.message}`);
+        }
+      }
+      
+      // Atualizar o localStorage com as informações de sincronização
+      localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+      
+      this.debugLog('📊 Sincronização completa:', results);
+      return results;
+      
+    } catch (error) {
+      this.debugLog('❌ Erro na sincronização completa:', error);
+      results.errors.push(`Erro geral: ${error.message}`);
+      return results;
     }
   }
 }

@@ -6,6 +6,7 @@ import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo moda
 import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
+import { useAutoSync } from './hooks/useAutoSync'; // Novo hook
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +24,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
+  const { syncActivitiesToNeon } = useAutoSync(); // Hook de sincronização automática
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);

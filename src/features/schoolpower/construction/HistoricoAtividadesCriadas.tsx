@@ -105,7 +105,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     return {
       id: activity.codigo_unico, // Usar código único como ID para compatibilidade
       title: activity.titulo || getActivityNameById(activity.tipo),
-      description: activity.descricao || 'Atividade do banco de dados',
+      description: activity.descricao || 'Atividade criada na plataforma',
       type: activity.tipo,
       progress: 100,
       status: 'completed',
@@ -126,7 +126,9 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       originalData: activity.conteudo,
       // Adicionar dados específicos do banco
       codigoUnico: activity.codigo_unico,
-      userId: activity.user_id
+      userId: activity.user_id,
+      // Identificar origem
+      origem: 'banco_neon'
     };
   };
 
@@ -225,7 +227,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                 const atividadeHistorica: AtividadeHistorico = {
                   id: activityId,
                   title: parsedData.title || getActivityNameById(activityId),
-                  description: parsedData.description || 'Atividade criada (localStorage)',
+                  description: parsedData.description || 'Atividade pendente de sincronização',
                   type: activityId,
                   progress: 100,
                   status: 'completed',
@@ -242,7 +244,9 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                   tags: [],
                   difficulty: 'Médio',
                   estimatedTime: '30 min',
-                  originalData: parsedData
+                  originalData: parsedData,
+                  // Identificar origem e status de sincronização
+                  origem: constructedInfo?.syncedToNeon ? 'sincronizada' : 'localStorage'
                 };
                 
                 atividades.push(atividadeHistorica);

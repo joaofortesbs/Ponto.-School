@@ -208,7 +208,7 @@ class GeradorLinkAtividadesSchoolPower {
       if (!atividade.id) {
         throw new Error('ID da atividade é obrigatório');
       }
-      if (!atividade.titulo) {
+      if (!atividade.titulo || atividade.titulo.trim() === '') {
         throw new Error('Título da atividade é obrigatório');
       }
 

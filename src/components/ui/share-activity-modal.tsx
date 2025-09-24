@@ -105,9 +105,9 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       // Preparar dados da atividade com sincronização completa
       const dadosAtividade = {
         id: activityId,
-        titulo: activityTitle || 'Atividade sem título',
-        descricao: dadosCompletos?.descricao || dadosCompletos?.description || activityData?.descricao || '',
-        tipo: activityType || 'atividade',
+        titulo: (activityTitle || 'Atividade sem título').toString(),
+        descricao: ((dadosCompletos?.descricao || dadosCompletos?.description || activityData?.descricao) || '').toString(),
+        tipo: (activityType || 'atividade').toString(),
         dados: {
           ...activityData,
           ...dadosCompletos,
@@ -117,13 +117,13 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
           timestamp: new Date().toISOString()
         },
         customFields: dadosCompletos?.customFields || activityData?.customFields || {},
-        professorNome: userInfo.name || 'Professor',
+        professorNome: (userInfo.name || 'Professor').toString(),
         professorAvatar: userInfo.avatar,
         schoolPoints: dadosCompletos?.schoolPoints || 100,
-        disciplina: dadosCompletos?.disciplina || activityData?.disciplina,
-        nivel: dadosCompletos?.nivel || activityData?.nivel,
-        tempo_estimado: dadosCompletos?.tempo_estimado || activityData?.tempo_estimado,
-        criadoPor: userInfo.userId || userInfo.name || 'usuario-anonimo'
+        disciplina: ((dadosCompletos?.disciplina || activityData?.disciplina) || '').toString(),
+        nivel: ((dadosCompletos?.nivel || activityData?.nivel) || '').toString(),
+        tempo_estimado: ((dadosCompletos?.tempo_estimado || activityData?.tempo_estimado) || '').toString(),
+        criadoPor: (userInfo.userId || userInfo.name || 'usuario-anonimo').toString()
       };
 
       console.log('🚀 [MODAL] Enviando dados sincronizados para geração de link:', dadosAtividade);
