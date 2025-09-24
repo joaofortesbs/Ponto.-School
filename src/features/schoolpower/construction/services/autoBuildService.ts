@@ -37,21 +37,45 @@ export class AutoBuildService {
    * Salva automaticamente a atividade no banco de dados quando ela fica concluída
    */
   private async saveActivityToDatabase(activity: ConstructionActivity): Promise<void> {
-    console.log('💾 [AUTO-SAVE] Iniciando salvamento automático da atividade:', activity.title);
+    console.log('💾 [AUTO-SAVE] ==========================================');
+    console.log('💾 [AUTO-SAVE] INICIANDO SALVAMENTO AUTOMÁTICO');
+    console.log('💾 [AUTO-SAVE] Atividade:', activity.title);
+    console.log('💾 [AUTO-SAVE] Status:', activity.status);
+    console.log('💾 [AUTO-SAVE] Progress:', activity.progress);
+    console.log('💾 [AUTO-SAVE] ==========================================');
     
     try {
       // 1. Obter o perfil do usuário atual
+      console.log('🔍 [AUTO-SAVE] Tentando obter perfil do usuário...');
       const profile = await profileService.getCurrentUserProfile();
+      console.log('📋 [AUTO-SAVE] Perfil retornado:', profile);
+      
       if (!profile || !profile.user_id) {
-        console.warn('⚠️ [AUTO-SAVE] Usuário não encontrado ou sem user_id, pulando salvamento');
+        console.error('❌ [AUTO-SAVE] PROBLEMA CRÍTICO: Usuário não encontrado ou sem user_id');
+        console.error('❌ [AUTO-SAVE] Profile:', profile);
+        console.error('❌ [AUTO-SAVE] Profile.user_id:', profile?.user_id);
+        
+        // Salvar erro para debug
+        localStorage.setItem(`auto_save_error_${activity.id}`, JSON.stringify({
+          error: 'Usuário não autenticado ou sem user_id',
+          errorAt: new Date().toISOString(),
+          profile: profile,
+          activity: {
+            id: activity.id,
+            title: activity.title
+          }
+        }));
         return;
       }
 
-      console.log('👤 [AUTO-SAVE] Usuário identificado:', profile.user_id);
+      console.log('✅ [AUTO-SAVE] Usuário identificado:', profile.user_id);
+      console.log('✅ [AUTO-SAVE] Email do usuário:', profile.email);
 
       // 2. Gerar código único REAL para a instância (não reusar template ID)
+      console.log('🔑 [AUTO-SAVE] Gerando código único...');
       const codigoUnico = activitiesApi.generateUniqueCode();
-      console.log('🔑 [AUTO-SAVE] Código único gerado:', codigoUnico);
+      console.log('✅ [AUTO-SAVE] Código único gerado:', codigoUnico);
+      console.log('🏷️  [AUTO-SAVE] Tipo da atividade (template ID):', activity.id);
 
       // 3. Preparar dados para salvamento usando syncActivity
       const activityData = {
@@ -101,7 +125,13 @@ export class AutoBuildService {
       const response = await activitiesApi.createActivity(apiData);
 
       if (response.success) {
-        console.log('✅ [AUTO-SAVE] Atividade sincronizada com sucesso no banco:', response.data);
+        console.log('🎉 [AUTO-SAVE] ==========================================');
+        console.log('🎉 [AUTO-SAVE] SUCESSO! ATIVIDADE SALVA NO BANCO!');
+        console.log('🎉 [AUTO-SAVE] ID do banco:', response.data?.id);
+        console.log('🎉 [AUTO-SAVE] Código único:', response.data?.codigo_unico);
+        console.log('🎉 [AUTO-SAVE] Tipo:', response.data?.tipo);
+        console.log('🎉 [AUTO-SAVE] Título:', response.data?.titulo);
+        console.log('🎉 [AUTO-SAVE] ==========================================');
         
         // 5. Marcar que foi salva automaticamente
         localStorage.setItem(`auto_saved_${activity.id}`, JSON.stringify({
@@ -122,7 +152,11 @@ export class AutoBuildService {
         }));
 
       } else {
-        console.error('❌ [AUTO-SAVE] Falha ao sincronizar atividade:', response.error);
+        console.error('💥 [AUTO-SAVE] ==========================================');
+        console.error('💥 [AUTO-SAVE] FALHA NO SALVAMENTO!');
+        console.error('💥 [AUTO-SAVE] Erro:', response.error);
+        console.error('💥 [AUTO-SAVE] Response completo:', response);
+        console.error('💥 [AUTO-SAVE] ==========================================');
         
         // Marcar tentativa de salvamento falhada para retry posterior
         localStorage.setItem(`auto_save_failed_${activity.id}`, JSON.stringify({
