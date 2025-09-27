@@ -270,6 +270,99 @@ app.delete('/api/atividades/:codigo_unico', async (req, res) => {
   }
 });
 
+  // Rota para atualizar coluna de ligação entre perfis e atividades
+  app.post('/api/perfis/update-connection', async (req, res) => {
+    try {
+      console.log('🔗 POST /api/perfis/update-connection - Atualizando coluna de ligação');
+      const { user_id, activity_id, activity_code, activity_title, activity_type, timestamp } = req.body;
+      
+      console.log('📊 Dados recebidos:', {
+        user_id,
+        activity_id,
+        activity_code,
+        activity_title,
+        activity_type,
+        timestamp
+      });
+
+      if (!user_id || !activity_id) {
+        return res.status(400).json({
+          success: false,
+          error: 'user_id e activity_id são obrigatórios'
+        });
+      }
+
+      // Buscar o perfil atual para obter as conexões existentes
+      const currentProfileResult = await neonDB.executeQuery(
+        'SELECT activities_connection FROM perfis WHERE id = $1',
+        [user_id]
+      );
+
+      if (!currentProfileResult.success || currentProfileResult.data.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Perfil não encontrado'
+        });
+      }
+
+      // Obter conexões atuais ou inicializar array vazio
+      let currentConnections = currentProfileResult.data[0].activities_connection || [];
+      
+      // Adicionar nova conexão
+      const newConnection = {
+        activity_id,
+        activity_code,
+        activity_title,
+        activity_type,
+        created_at: timestamp,
+        auto_saved: true
+      };
+
+      // Verificar se já existe uma conexão para esta atividade (evitar duplicatas)
+      const existingIndex = currentConnections.findIndex(conn => conn.activity_id === activity_id);
+      
+      if (existingIndex >= 0) {
+        // Atualizar conexão existente
+        currentConnections[existingIndex] = newConnection;
+        console.log('✏️ Atualizando conexão existente para atividade:', activity_id);
+      } else {
+        // Adicionar nova conexão
+        currentConnections.push(newConnection);
+        console.log('➕ Adicionando nova conexão para atividade:', activity_id);
+      }
+
+      // Atualizar o perfil com as novas conexões
+      const updateResult = await neonDB.executeQuery(
+        'UPDATE perfis SET activities_connection = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+        [JSON.stringify(currentConnections), user_id]
+      );
+
+      if (updateResult.success && updateResult.data.length > 0) {
+        console.log('✅ Coluna de ligação atualizada com sucesso para perfil:', user_id);
+        console.log('📈 Total de conexões:', currentConnections.length);
+        
+        res.json({
+          success: true,
+          data: {
+            user_id,
+            total_connections: currentConnections.length,
+            updated_connection: newConnection
+          }
+        });
+      } else {
+        throw new Error('Falha ao atualizar o perfil');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao atualizar coluna de ligação:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor ao atualizar coluna de ligação',
+        details: error.message
+      });
+    }
+  });
+
 console.log('✅ Todas as rotas de atividades registradas com sucesso!');
 }
 

@@ -797,6 +797,19 @@ export class AutoBuildService {
       console.warn('⚠️ [AUTO-BUILD] Alguns erros ocorreram:', errors);
     }
   }
+
+  // Método público para salvamento de atividades já construídas (chamado do modal)
+  async saveConstructedActivityToDatabase(activity: ConstructionActivity): Promise<void> {
+    console.log('💾 [PUBLIC-SAVE] ==========================================');
+    console.log('💾 [PUBLIC-SAVE] SALVAMENTO DE ATIVIDADE JÁ CONSTRUÍDA');
+    console.log('💾 [PUBLIC-SAVE] Atividade:', activity.title);
+    console.log('💾 [PUBLIC-SAVE] Status:', activity.status);
+    console.log('💾 [PUBLIC-SAVE] Progress:', activity.progress);
+    console.log('💾 [PUBLIC-SAVE] ==========================================');
+    
+    // Delegar para o método privado de salvamento
+    await this.saveActivityToDatabase(activity);
+  }
 }
 
 export const autoBuildService = AutoBuildService.getInstance();
