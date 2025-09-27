@@ -4,6 +4,7 @@ import { ConstructionCard } from './ConstructionCard';
 import { EditActivityModal } from './EditActivityModal';
 import { ActivityViewModal } from './ActivityViewModal'; // Importar o novo modal
 import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Importar o novo componente
+import DebugPanel from './components/DebugPanel'; // Componente de debug
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { useAutoSync } from './hooks/useAutoSync'; // Novo hook
@@ -35,6 +36,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   // Estado para controlar a visualização do histórico
   const [showHistorico, setShowHistorico] = useState(false);
+  
+  // Estado para controlar o debug panel
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
@@ -463,6 +467,12 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
           </div>
         </div>
       )}
+      
+      {/* Debug Panel para rastreamento do fluxo */}
+      <DebugPanel 
+        isVisible={showDebugPanel} 
+        onToggle={() => setShowDebugPanel(!showDebugPanel)} 
+      />
     </motion.div>
   );
 }
