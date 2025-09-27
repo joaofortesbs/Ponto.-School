@@ -132,7 +132,32 @@ export class AutoBuildService {
         console.log('🎉 [AUTO-SAVE] Título:', response.data?.titulo);
         console.log('🎉 [AUTO-SAVE] ==========================================');
         
-        // 5. Marcar que foi salva automaticamente
+        // 5. Atualizar coluna de ligação na tabela perfis
+        try {
+          console.log('🔗 [AUTO-SAVE] Atualizando coluna de ligação no perfil...');
+          const connectionUpdate = await fetch('/api/perfis/update-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: profile.id,
+              activity_id: response.data?.id,
+              activity_code: response.data?.codigo_unico,
+              activity_title: response.data?.titulo,
+              activity_type: response.data?.tipo,
+              timestamp: new Date().toISOString()
+            })
+          });
+          
+          if (connectionUpdate.ok) {
+            console.log('✅ [AUTO-SAVE] Coluna de ligação atualizada com sucesso!');
+          } else {
+            console.warn('⚠️ [AUTO-SAVE] Falha ao atualizar coluna de ligação');
+          }
+        } catch (connectionError) {
+          console.error('❌ [AUTO-SAVE] Erro ao atualizar coluna de ligação:', connectionError);
+        }
+        
+        // 6. Marcar que foi salva automaticamente
         localStorage.setItem(`auto_saved_${activity.id}`, JSON.stringify({
           saved: true,
           savedAt: new Date().toISOString(),
@@ -140,7 +165,7 @@ export class AutoBuildService {
           databaseId: response.data?.id
         }));
 
-        // 6. Disparar evento de salvamento automático
+        // 7. Disparar evento de salvamento automático
         window.dispatchEvent(new CustomEvent('activity-auto-saved', {
           detail: {
             activityId: activity.id,
