@@ -111,10 +111,47 @@ class ActivitiesApiService {
   async createActivity(activityData: Omit<ActivityData, 'id' | 'criado_em' | 'atualizado_em'>): Promise<ApiResponse<ActivityData>> {
     this.debugLog('📝 Criando nova atividade:', activityData);
 
-    return this.makeRequest<ActivityData>('/atividades', {
+    // Validar dados obrigatórios
+    if (!activityData.user_id) {
+      return {
+        success: false,
+        error: 'user_id é obrigatório'
+      };
+    }
+
+    if (!activityData.codigo_unico) {
+      return {
+        success: false,
+        error: 'codigo_unico é obrigatório'
+      };
+    }
+
+    if (!activityData.tipo) {
+      return {
+        success: false,
+        error: 'tipo é obrigatório'
+      };
+    }
+
+    // Garantir que o conteúdo seja um objeto válido
+    if (!activityData.conteudo) {
+      activityData.conteudo = {};
+    }
+
+    this.debugLog('✅ Dados validados, enviando para API:', activityData);
+
+    const result = await this.makeRequest<ActivityData>('/atividades', {
       method: 'POST',
       body: JSON.stringify(activityData),
     });
+
+    if (result.success) {
+      this.debugLog('✅ Atividade criada com sucesso no banco Neon:', result.data);
+    } else {
+      this.debugLog('❌ Falha ao criar atividade no banco Neon:', result.error);
+    }
+
+    return result;
   }
 
   /**
