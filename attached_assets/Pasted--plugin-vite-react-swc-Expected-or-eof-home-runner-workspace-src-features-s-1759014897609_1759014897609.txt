@@ -1,0 +1,674 @@
+[plugin:vite:react-swc] × Expected ';', '}' or <eof>
+      ╭─[/home/runner/workspace/src/features/schoolpower/construction/EditActivityModal.tsx:3140:1]
+ 3140 │     
+ 3141 │     export default EditActivityModal;
+ 3142 │     export { EditActivityModal };
+ 3143 │ ╭─▶ ```// Analysis: The code now includes a robust system for automatically synchronizing activity data with the Neon database after saving, ensuring data integrity and persistence.
+ 3144 │ │   <replit_final_file>
+ 3145 │ │   import React, { useState, useEffect, useCallback } from 'react';
+ 3146 │ │   import { motion, AnimatePresence } from 'framer-motion';
+ 3147 │ │   import { X, Eye, Settings, FileText, Play, Download, Edit3, Copy, Save, BookOpen, GamepadIcon, PenTool, Calculator, Beaker, GraduationCap, Sparkles } from 'lucide-react';
+ 3148 │ │   import { Button } from '@/components/ui/button';
+ 3149 │ │   import { Input } from '@/components/ui/input';
+ 3150 │ │   import { Textarea } from '@/components/ui/textarea';
+ 3151 │ │   import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+ 3152 │ │   import { Label } from '@/components/ui/label';
+ 3153 │ │   import { Card, CardContent } from '@/components/ui/card';
+ 3154 │ │   import { Badge } from '@/components/ui/badge';
+ 3155 │ │   import { Separator } from '@/components/ui/separator';
+ 3156 │ │   import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+ 3157 │ │   import { useToast } from "@/hooks/use-toast";
+ 3158 │ │   import { ConstructionActivity } from './types';
+ 3159 │ │   import { ActivityFormData } from './types/ActivityTypes';
+ 3160 │ │   import { useGenerateActivity } from './hooks/useGenerateActivity';
+ 3161 │ │   import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
+ 3162 │ │   import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
+ 3163 │ │   import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';
+ 3164 │ │   import SequenciaDidaticaPreview from '@/features/schoolpower/activities/sequencia-didatica/SequenciaDidaticaPreview';
+ 3165 │ │   import QuadroInterativoPreview from '@/features/schoolpower/activities/quadro-interativo/QuadroInterativoPreview';
+ 3166 │ │   import QuizInterativoPreview from '@/features/schoolpower/activities/quiz-interativo/QuizInterativoPreview';
+ 3167 │ │   import FlashCardsPreview from '@/features/schoolpower/activities/flash-cards/FlashCardsPreview';
+ 3168 │ │   import { CheckCircle2 } from 'lucide-react';
+ 3169 │ │   
+ 3170 │ │   // --- Componentes de Edição Específicos ---
+ 3171 │ │   
+ 3172 │ │   // Componente genérico para campos comuns
+ 3173 │ │   const DefaultEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+ 3174 │ │     <>
+ 3175 │ │       <div>
+ 3176 │ │         <Label htmlFor="objectives" className="text-sm">Objetivos de Aprendizagem</Label>
+ 3177 │ │         <Textarea
+ 3178 │ │           id="objectives"
+ 3179 │ │           value={formData.objectives}
+ 3180 │ │           onChange={(e) => onFieldChange('objectives', e.target.value)}
+ 3181 │ │           placeholder="Descreva os objetivos que os alunos devem alcançar..."
+ 3182 │ │           className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3183 │ │         />
+ 3184 │ │       </div>
+ 3185 │ │   
+ 3186 │ │       <div>
+ 3187 │ │         <Label htmlFor="materials" className="text-sm">Materiais Necessários</Label>
+ 3188 │ │         <Textarea
+ 3189 │ │           id="materials"
+ 3190 │ │           value={formData.materials}
+ 3191 │ │           onChange={(e) => onFieldChange('materials', e.target.value)}
+ 3192 │ │           placeholder="Liste os materiais necessários (um por linha)..."
+ 3193 │ │           className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3194 │ │         />
+ 3195 │ │       </div>
+ 3196 │ │   
+ 3197 │ │       <div>
+ 3198 │ │         <Label htmlFor="instructions" className="text-sm">Instruções da Atividade</Label>
+ 3199 │ │         <Textarea
+ 3200 │ │           id="instructions"
+ 3201 │ │           value={formData.instructions}
+ 3202 │ │           onChange={(e) => onFieldChange('instructions', e.target.value)}
+ 3203 │ │           placeholder="Descreva como a atividade deve ser executada..."
+ 3204 │ │           className="mt-1 min-h-[80px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3205 │ │         />
+ 3206 │ │       </div>
+ 3207 │ │   
+ 3208 │ │       <div>
+ 3209 │ │         <Label htmlFor="evaluation" className="text-sm">Critérios de Avaliação</Label>
+ 3210 │ │         <Textarea
+ 3211 │ │           id="evaluation"
+ 3212 │ │           value={formData.evaluation}
+ 3213 │ │           onChange={(e) => onFieldChange('evaluation', e.target.value)}
+ 3214 │ │           placeholder="Como a atividade será avaliada..."
+ 3215 │ │           className="mt-1 min-h-[60px] text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3216 │ │         />
+ 3217 │ │       </div>
+ 3218 │ │     </>
+ 3219 │ │   );
+ 3220 │ │   
+ 3221 │ │   // Componente específico para Quiz Interativo
+ 3222 │ │   const QuizInterativoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+ 3223 │ │     <div className="space-y-4">
+ 3224 │ │       <div className="grid grid-cols-2 gap-4">
+ 3225 │ │         <div>
+ 3226 │ │           <Label htmlFor="numberOfQuestions">Número de Questões *</Label>
+ 3227 │ │           <Input
+ 3228 │ │             id="numberOfQuestions"
+ 3229 │ │             type="number"
+ 3230 │ │             value={formData.numberOfQuestions || ''}
+ 3231 │ │             onChange={(e) => onFieldChange('numberOfQuestions', e.target.value)}
+ 3232 │ │             placeholder="Ex: 10, 15, 20"
+ 3233 │ │             min="1"
+ 3234 │ │             max="50"
+ 3235 │ │             required
+ 3236 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3237 │ │           />
+ 3238 │ │         </div>
+ 3239 │ │         <div>
+ 3240 │ │           <Label htmlFor="theme">Tema *</Label>
+ 3241 │ │           <Input
+ 3242 │ │             id="theme"
+ 3243 │ │             value={formData.theme || ''}
+ 3244 │ │             onChange={(e) => onFieldChange('theme', e.target.value)}
+ 3245 │ │             placeholder="Ex: Teorema de Pitágoras, Revolução Francesa"
+ 3246 │ │             required
+ 3247 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3248 │ │           />
+ 3249 │ │         </div>
+ 3250 │ │       </div>
+ 3251 │ │   
+ 3252 │ │       <div className="grid grid-cols-2 gap-4">
+ 3253 │ │         <div>
+ 3254 │ │           <Label htmlFor="subject">Disciplina *</Label>
+ 3255 │ │           <Input
+ 3256 │ │             id="subject"
+ 3257 │ │             value={formData.subject || ''}
+ 3258 │ │             onChange={(e) => onFieldChange('subject', e.target.value)}
+ 3259 │ │             placeholder="Ex: Matemática, Português, História"
+ 3260 │ │             required
+ 3261 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3262 │ │           />
+ 3263 │ │         </div>
+ 3264 │ │         <div>
+ 3265 │ │           <Label htmlFor="schoolYear">Ano de Escolaridade *</Label>
+ 3266 │ │           <Input
+ 3267 │ │             id="schoolYear"
+ 3268 │ │             value={formData.schoolYear || ''}
+ 3269 │ │             onChange={(e) => onFieldChange('schoolYear', e.target.value)}
+ 3270 │ │             placeholder="Ex: 6º Ano - Ensino Fundamental"
+ 3271 │ │             required
+ 3272 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3273 │ │           />
+ 3274 │ │         </div>
+ 3275 │ │       </div>
+ 3276 │ │   
+ 3277 │ │       <div className="grid grid-cols-2 gap-4">
+ 3278 │ │         <div>
+ 3279 │ │           <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
+ 3280 │ │           <Input
+ 3281 │ │             id="difficultyLevel"
+ 3282 │ │             value={formData.difficultyLevel || ''}
+ 3283 │ │             onChange={(e) => onFieldChange('difficultyLevel', e.target.value)}
+ 3284 │ │             placeholder="Ex: Fácil, Médio, Difícil"
+ 3285 │ │             required
+ 3286 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3287 │ │           />
+ 3288 │ │         </div>
+ 3289 │ │         <div>
+ 3290 │ │           <Label htmlFor="questionModel">Formato *</Label>
+ 3291 │ │           <Input
+ 3292 │ │             id="questionModel"
+ 3293 │ │             value={formData.questionModel || ''}
+ 3294 │ │             onChange={(e) => onFieldChange('questionModel', e.target.value)}
+ 3295 │ │             placeholder="Ex: Múltipla Escolha, Verdadeiro ou Falso"
+ 3296 │ │             required
+ 3297 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3298 │ │           />
+ 3299 │ │         </div>
+ 3300 │ │       </div>
+ 3301 │ │     </div>
+ 3302 │ │   );
+ 3303 │ │   
+ 3304 │ │   // Componente específico para Quadro Interativo
+ 3305 │ │   const QuadroInterativoEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+ 3306 │ │     <div className="space-y-4">
+ 3307 │ │       <div className="grid grid-cols-2 gap-4">
+ 3308 │ │         <div>
+ 3309 │ │           <Label htmlFor="subject">Disciplina / Área de conhecimento *</Label>
+ 3310 │ │           <Input
+ 3311 │ │             id="subject"
+ 3312 │ │             value={formData.subject || ''}
+ 3313 │ │             onChange={(e) => onFieldChange('subject', e.target.value)}
+ 3314 │ │             placeholder="Ex: Matemática, Português, Ciências"
+ 3315 │ │             required
+ 3316 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3317 │ │           />
+ 3318 │ │         </div>
+ 3319 │ │         <div>
+ 3320 │ │           <Label htmlFor="schoolYear">Ano / Série *</Label>
+ 3321 │ │           <Input
+ 3322 │ │             id="schoolYear"
+ 3323 │ │             value={formData.schoolYear || ''}
+ 3324 │ │             onChange={(e) => onFieldChange('schoolYear', e.target.value)}
+ 3325 │ │             placeholder="Ex: 6º Ano, 7º Ano, 8º Ano"
+ 3326 │ │             required
+ 3327 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3328 │ │           />
+ 3329 │ │         </div>
+ 3330 │ │       </div>
+ 3331 │ │   
+ 3332 │ │       <div>
+ 3333 │ │         <Label htmlFor="theme">Tema ou Assunto da aula *</Label>
+ 3334 │ │         <Input
+ 3335 │ │           id="theme"
+ 3336 │ │           value={formData.theme || ''}
+ 3337 │ │           onChange={(e) => onFieldChange('theme', e.target.value)}
+ 3338 │ │           placeholder="Ex: Substantivos e Verbos, Frações, Sistema Solar"
+ 3339 │ │           required
+ 3340 │ │           className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3341 │ │         />
+ 3342 │ │       </div>
+ 3343 │ │   
+ 3344 │ │       <div>
+ 3345 │ │         <Label htmlFor="objectives">Objetivo de aprendizagem da aula *</Label>
+ 3346 │ │         <Textarea
+ 3347 │ │           id="objectives"
+ 3348 │ │           value={formData.objectives || ''}
+ 3349 │ │           onChange={(e) => onFieldChange('objectives', e.target.value)}
+ 3350 │ │           placeholder="Descreva os objetivos específicos que os alunos devem alcançar com esta atividade de quadro interativo..."
+ 3351 │ │           rows={3}
+ 3352 │ │           required
+ 3353 │ │           className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3354 │ │         />
+ 3355 │ │       </div>
+ 3356 │ │   
+ 3357 │ │       <div className="grid grid-cols-2 gap-4">
+ 3358 │ │         <div>
+ 3359 │ │           <Label htmlFor="difficultyLevel">Nível de Dificuldade *</Label>
+ 3360 │ │           <Input
+ 3361 │ │             id="difficultyLevel"
+ 3362 │ │             value={formData.difficultyLevel || ''}
+ 3363 │ │             onChange={(e) => onFieldChange('difficultyLevel', e.target.value)}
+ 3364 │ │             placeholder="Ex: Básico, Intermediário, Avançado"
+ 3365 │ │             required
+ 3366 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3367 │ │           />
+ 3368 │ │         </div>
+ 3369 │ │         <div>
+ 3370 │ │           <Label htmlFor="quadroInterativoCampoEspecifico">Atividade mostrada *</Label>
+ 3371 │ │           <Input
+ 3372 │ │             id="quadroInterativoCampoEspecifico"
+ 3373 │ │             value={formData.quadroInterativoCampoEspecifico || ''}
+ 3374 │ │             onChange={(e) => onFieldChange('quadroInterativoCampoEspecifico', e.target.value)}
+ 3375 │ │             placeholder="Ex: Jogo de arrastar e soltar, Quiz interativo, Mapa mental"
+ 3376 │ │             required
+ 3377 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3378 │ │           />
+ 3379 │ │         </div>
+ 3380 │ │       </div>
+ 3381 │ │     </div>
+ 3382 │ │   );
+ 3383 │ │   
+ 3384 │ │   // Componente específico para Sequência Didática
+ 3385 │ │   const SequenciaDidaticaEditActivity = ({formData, onFieldChange }: {formData: ActivityFormData, onFieldChange: (field: keyof ActivityFormData, value: string) => void }) => (
+ 3386 │ │     <div className="space-y-4">
+ 3387 │ │       <div className="grid grid-cols-2 gap-4">
+ 3388 │ │         <div>
+ 3389 │ │           <Label htmlFor="tituloTemaAssunto">Título do Tema / Assunto *</Label>
+ 3390 │ │           <Input
+ 3391 │ │             id="tituloTemaAssunto"
+ 3392 │ │             value={formData.tituloTemaAssunto || ''}
+ 3393 │ │             onChange={(e) => onFieldChange('tituloTemaAssunto', e.target.value)}
+ 3394 │ │             placeholder="Ex: Substantivos Próprios e Verbos"
+ 3395 │ │             required
+ 3396 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3397 │ │           />
+ 3398 │ │         </div>
+ 3399 │ │         <div>
+ 3400 │ │           <Label htmlFor="anoSerie">Ano / Série *</Label>
+ 3401 │ │           <Input
+ 3402 │ │             id="anoSerie"
+ 3403 │ │             value={formData.anoSerie || ''}
+ 3404 │ │             onChange={(e) => onFieldChange('anoSerie', e.target.value)}
+ 3405 │ │             placeholder="Ex: 6º Ano do Ensino Fundamental"
+ 3406 │ │             required
+ 3407 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3408 │ │           />
+ 3409 │ │         </div>
+ 3410 │ │       </div>
+ 3411 │ │   
+ 3412 │ │       <div className="grid grid-cols-2 gap-4">
+ 3413 │ │         <div>
+ 3414 │ │           <Label htmlFor="disciplina">Disciplina *</Label>
+ 3415 │ │           <Input
+ 3416 │ │             id="disciplina"
+ 3417 │ │             value={formData.disciplina || ''}
+ 3418 │ │             onChange={(e) => onFieldChange('disciplina', e.target.value)}
+ 3419 │ │             placeholder="Ex: Língua Portuguesa"
+ 3420 │ │             required
+ 3421 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3422 │ │           />
+ 3423 │ │         </div>
+ 3424 │ │         <div>
+ 3425 │ │           <Label htmlFor="bnccCompetencias">BNCC / Competências</Label>
+ 3426 │ │           <Input
+ 3427 │ │             id="bnccCompetencias"
+ 3428 │ │             value={formData.bnccCompetencias || ''}
+ 3429 │ │             onChange={(e) => onFieldChange('bnccCompetencias', e.target.value)}
+ 3430 │ │             placeholder="Ex: EF06LP01, EF06LP02"
+ 3431 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3432 │ │           />
+ 3433 │ │         </div>
+ 3434 │ │       </div>
+ 3435 │ │   
+ 3436 │ │       <div>
+ 3437 │ │         <Label htmlFor="publicoAlvo">Público-alvo *</Label>
+ 3438 │ │         <Textarea
+ 3439 │ │           id="publicoAlvo"
+ 3440 │ │           value={formData.publicoAlvo || ''}
+ 3441 │ │           onChange={(e) => onFieldChange('publicoAlvo', e.target.value)}
+ 3442 │ │           placeholder="Descrição detalhada do público-alvo..."
+ 3443 │ │           rows={2}
+ 3444 │ │           required
+ 3445 │ │           className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3446 │ │         />
+ 3447 │ │       </div>
+ 3448 │ │   
+ 3449 │ │       <div>
+ 3450 │ │         <Label htmlFor="objetivosAprendizagem">Objetivos de Aprendizagem *</Label>
+ 3451 │ │         <Textarea
+ 3452 │ │           id="objetivosAprendizagem"
+ 3453 │ │           value={formData.objetivosAprendizagem || ''}
+ 3454 │ │           onChange={(e) => onFieldChange('objetivosAprendizagem', e.target.value)}
+ 3455 │ │           placeholder="Objetivos específicos que os alunos devem alcançar..."
+ 3456 │ │           rows={3}
+ 3457 │ │           required
+ 3458 │ │           className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3459 │ │         />
+ 3460 │ │       </div>
+ 3461 │ │   
+ 3462 │ │       <div className="grid grid-cols-3 gap-4">
+ 3463 │ │         <div>
+ 3464 │ │           <Label htmlFor="quantidadeAulas">Quantidade de Aulas *</Label>
+ 3465 │ │           <Input
+ 3466 │ │             id="quantidadeAulas"
+ 3467 │ │             type="number"
+ 3468 │ │             value={formData.quantidadeAulas || ''}
+ 3469 │ │             onChange={(e) => onFieldChange('quantidadeAulas', e.target.value)}
+ 3470 │ │             placeholder="Ex: 4"
+ 3471 │ │             min="1"
+ 3472 │ │             required
+ 3473 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3474 │ │           />
+ 3475 │ │         </div>
+ 3476 │ │         <div>
+ 3477 │ │           <Label htmlFor="quantidadeDiagnosticos">Quantidade de Diagnósticos *</Label>
+ 3478 │ │           <Input
+ 3479 │ │             id="quantidadeDiagnosticos"
+ 3480 │ │             type="number"
+ 3481 │ │             value={formData.quantidadeDiagnosticos || ''}
+ 3482 │ │             onChange={(e) => onFieldChange('quantidadeDiagnosticos', e.target.value)}
+ 3483 │ │             placeholder="Ex: 1"
+ 3484 │ │             min="0"
+ 3485 │ │             required
+ 3486 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3487 │ │           />
+ 3488 │ │         </div>
+ 3489 │ │         <div>
+ 3490 │ │           <Label htmlFor="quantidadeAvaliacoes">Quantidade de Avaliações *</Label>
+ 3491 │ │           <Input
+ 3492 │ │             id="quantidadeAvaliacoes"
+ 3493 │ │             type="number"
+ 3494 │ │             value={formData.quantidadeAvaliacoes || ''}
+ 3495 │ │             onChange={(e) => onFieldChange('quantidadeAvaliacoes', e.target.value)}
+ 3496 │ │             placeholder="Ex: 2"
+ 3497 │ │             min="0"
+ 3498 │ │             required
+ 3499 │ │             className="mt-1 text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3500 │ │           />
+ 3501 │ │         </div>
+ 3502 │ │       </div>
+ 3503 │ │   
+ 3504 │ │       <div>
+ 3505 │ │         <Label htmlFor="cronograma">Cronograma</Label>
+ 3506 │ │         <Textarea
+ 3507 │ │           id="cronograma"
+ 3508 │ │           value={formData.cronograma || ''}
+ 3509 │ │           onChange={(e) => onFieldChange('cronograma', e.target.value)}
+ 3510 │ │           placeholder="Cronograma resumido da sequência didática..."
+ 3511 │ │           rows={3}
+ 3512 │ │           className="mt-1 text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+ 3513 │ │         />
+ 3514 │ │       </div>
+ 3515 │ │     </div>
+ 3516 │ │   );
+ 3517 │ │   
+ 3518 │ │   // Função para processar dados da lista de exercícios
+ 3519 │ │   const processExerciseListData = (formData: ActivityFormData, generatedContent: any) => {
+ 3520 │ │     return {
+ 3521 │ │       title: formData.title,
+ 3522 │ │       description: formData.description,
+ 3523 │ │       subject: formData.subject,
+ 3524 │ │       schoolYear: formData.schoolYear,
+ 3525 │ │       numberOfQuestions: formData.numberOfQuestions,
+ 3526 │ │       difficultyLevel: formData.difficultyLevel,
+ 3527 │ │       questionModel: formData.questionModel,
+ 3528 │ │       sources: formData.sources,
+ 3529 │ │       objectives: formData.objectives,
+ 3530 │ │       materials: formData.materials,
+ 3531 │ │       instructions: formData.instructions,
+ 3532 │ │       evaluation: formData.evaluation,
+ 3533 │ │       timeLimit: formData.timeLimit,
+ 3534 │ │       context: formData.context,
+ 3535 │ │       questions: generatedContent?.questions || [],
+ 3536 │ │       ...generatedContent
+ 3537 │ │     };
+ 3538 │ │   };
+ 3539 │ │   
+ 3540 │ │   interface EditActivityModalProps {
+ 3541 │ │     isOpen: boolean;
+ 3542 │ │     activity: ConstructionActivity | null;
+ 3543 │ │     onClose: () => void;
+ 3544 │ │     onSave: (activityData: any) => void;
+ 3545 │ │     onUpdateActivity?: (activity: any) => Promise<void>;
+ 3546 │ │   }
+ 3547 │ │   
+ 3548 │ │   interface ActivityFieldsProps {
+ 3549 │ │     formData: ActivityFormData;
+ 3550 │ │     onFieldChange: (field: keyof ActivityFormData, value: string) => void;
+ 3551 │ │   }
+ 3552 │ │   
+ 3553 │ │   // Função para obter ícone baseado no tipo de atividade
+ 3554 │ │   const getActivityIcon = (activityId: string) => {
+ 3555 │ │     if (activityId.includes('lista-exercicios')) return BookOpen;
+ 3556 │ │     if (activityId.includes('prova')) return FileText;
+ 3557 │ │     if (activityId.includes('jogo')) return GamepadIcon;
+ 3558 │ │     if (activityId.includes('apresentacao')) return Play;
+ 3559 │ │     if (activityId.includes('redacao')) return PenTool;
+ 3560 │ │     if (activityId.includes('matematica')) return Calculator;
+ 3561 │ │     if (activityId.includes('ciencias')) return Beaker;
+ 3562 │ │     if (activityId.includes('quadro-interativo')) return Settings;
+ 3563 │ │     return GraduationCap;
+ 3564 │ │   };
+ 3565 │ │   
+ 3566 │ │   /**
+ 3567 │ │    * Modal de Edição de Atividades com Agente Interno de Execução
+ 3568 │ │    */
+ 3569 │ │   const EditActivityModal = ({
+ 3570 │ │     isOpen,
+ 3571 │ │     activity,
+ 3572 │ │     onClose,
+ 3573 │ │     onSave,
+ 3574 │ │     onUpdateActivity
+ 3575 │ │   }: EditActivityModalProps) => {
+ 3576 │ │     // Estado para controlar qual aba está ativa
+ 3577 │ │     const [activeTab, setActiveTab] = useState<'editar' | 'preview'>('editar');
+ 3578 │ │   
+ 3579 │ │     // Estados do formulário
+ 3580 │ │     const [formData, setFormData] = useState<ActivityFormData>({
+ 3581 │ │       title: activity?.title || activity?.personalizedTitle || '',
+ 3582 │ │       description: activity?.description || activity?.personalizedDescription || '',
+ 3583 │ │       subject: activity?.customFields?.disciplina || '',
+ 3584 │ │       theme: activity?.customFields?.tema || activity?.personalizedTitle || activity?.title || '',
+ 3585 │ │       schoolYear: activity?.customFields?.anoEscolaridade || '',
+ 3586 │ │       numberOfQuestions: activity?.customFields?.nivelDificuldade?.toLowerCase() || 'medium',
+ 3587 │ │       difficultyLevel: activity?.customFields?.tempoLimite || '',
+ 3588 │ │       questionModel: '',
+ 3589 │ │       sources: '',
+ 3590 │ │       objectives: activity?.description || activity?.personalizedDescription || '',
+ 3591 │ │       materials: activity?.customFields?.fontes || '',
+ 3592 │ │       instructions: activity?.customFields?.contextoAplicacao || '',
+ 3593 │ │       evaluation: activity?.customFields?.modeloQuestoes || '',
+ 3594 │ │       timeLimit: '',
+ 3595 │ │       context: '',
+ 3596 │ │       textType: '',
+ 3597 │ │       textGenre: '',
+ 3598 │ │       textLength: '',
+ 3599 │ │       associatedQuestions: '',
+ 3600 │ │       competencies: '',
+ 3601 │ │       readingStrategies: '',
+ 3602 │ │       visualResources: '',
+ 3603 │ │       practicalActivities: '',
+ 3604 │ │       wordsIncluded: '',
+ 3605 │ │       gridFormat: '',
+ 3606 │ │       providedHints: '',
+ 3607 │ │       vocabularyContext: '',
+ 3608 │ │       language: '',
+ 3609 │ │       associatedExercises: '',
+ 3610 │ │       knowledgeArea: '',
+ 3611 │ │       complexityLevel: '',
+ 3612 │ │       // Campos específicos para sequencia-didatica
+ 3613 │ │       tituloTemaAssunto: '',
+ 3614 │ │       anoSerie: '',
+ 3615 │ │       disciplina: '',
+ 3616 │ │       bnccCompetencias: '',
+ 3617 │ │       publicoAlvo: '',
+ 3618 │ │       objetivosAprendizagem: '',
+ 3619 │ │       quantidadeAulas: '',
+ 3620 │ │       quantidadeDiagnosticos: '',
+ 3621 │ │       quantidadeAvaliacoes: '',
+ 3622 │ │       cronograma: '',
+ 3623 │ │       // Campos específicos para quadro-interativo
+ 3624 │ │       quadroInterativoCampoEspecifico: activity?.customFields?.quadroInterativoCampoEspecifico || '',
+ 3625 │ │       // Campos específicos para quiz-interativo
+ 3626 │ │       format: '',
+ 3627 │ │       timePerQuestion: '',
+ 3628 │ │       // Campos específicos para mapa-mental
+ 3629 │ │       centralTheme: '',
+ 3630 │ │       mainCategories: '',
+ 3631 │ │       generalObjective: '',
+ 3632 │ │       evaluationCriteria: '',
+ 3633 │ │       // Campos específicos para Flash Cards (novo)
+ 3634 │ │       topicos: '',
+ 3635 │ │       numberOfFlashcards: '10',
+ 3636 │ │     });
+ 3637 │ │   
+ 3638 │ │     // Estado para conteúdo gerado
+ 3639 │ │     const [generatedContent, setGeneratedContent] = useState<any>(null);
+ 3640 │ │     const [quizInterativoContent, setQuizInterativoContent] = useState<any>(null);
+ 3641 │ │     const [flashCardsContent, setFlashCardsContent] = useState<any>(null); // New state for Flash Cards content
+ 3642 │ │     const [isContentLoaded, setIsContentLoaded] = useState(false);
+ 3643 │ │     const [generationError, setGenerationError] = useState<string | null>(null);
+ 3644 │ │     const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+ 3645 │ │   
+ 3646 │ │     // Estado para controle de construção da atividade
+ 3647 │ │     const [buildingStatus, setBuildingStatus] = useState({
+ 3648 │ │       isBuilding: false,
+ 3649 │ │       progress: 0,
+ 3650 │ │       currentStep: ''
+ 3651 │ │     });
+ 3652 │ │   
+ 3653 │ │     // Estado para uso interno da função generateActivityContent
+ 3654 │ │     const [isBuilding, setIsBuilding] = useState(false);
+ 3655 │ │     const [buildProgress, setBuildProgress] = useState(0);
+ 3656 │ │     const [error, setError] = useState<string | null>(null);
+ 3657 │ │     const [builtContent, setBuiltContent] = useState<any>(null);
+ 3658 │ │   
+ 3659 │ │     const { toast } = useToast();
+ 3660 │ │   
+ 3661 │ │     // Hook para geração de atividades
+ 3662 │ │     const {
+ 3663 │ │       generateActivity,
+ 3664 │ │       loadSavedContent,
+ 3665 │ │       clearContent,
+ 3666 │ │       isGenerating: isGeneratingDefault, // Renomeado para evitar conflito
+ 3667 │ │     } = useGenerateActivity({
+ 3668 │ │       activityId: activity?.id || '',
+ 3669 │ │       activityType: activity?.id || ''
+ 3670 │ │     });
+ 3671 │ │   
+ 3672 │ │     // Use isGeneratingDefault for the generic generate activity call
+ 3673 │ │     const isGenerating = isGeneratingDefault;
+ 3674 │ │   
+ 3675 │ │     // Função para validar se o formulário está pronto para construção
+ 3676 │ │     const isFormValidForBuild = useCallback(() => {
+ 3677 │ │       const activityType = activity?.id || '';
+ 3678 │ │   
+ 3679 │ │       if (activityType === 'lista-exercicios') {
+ 3680 │ │         return formData.title.trim() &&
+ 3681 │ │                formData.description.trim() &&
+ 3682 │ │                formData.subject.trim() &&
+ 3683 │ │                formData.theme.trim() &&
+ 3684 │ │                formData.schoolYear.trim() &&
+ 3685 │ │                formData.numberOfQuestions.trim() &&
+ 3686 │ │                formData.difficultyLevel.trim() &&
+ 3687 │ │                formData.questionModel.trim();
+ 3688 │ │       } else if (activityType === 'plano-aula') {
+ 3689 │ │         return formData.title.trim() &&
+ 3690 │ │                formData.description.trim() &&
+ 3691 │ │                formData.theme.trim() &&
+ 3692 │ │                formData.schoolYear.trim() &&
+ 3693 │ │                formData.subject.trim() &&
+ 3694 │ │                formData.objectives.trim() &&
+ 3695 │ │                formData.materials.trim();
+ 3696 │ │       } else if (activityType === 'sequencia-didatica') {
+ 3697 │ │         return formData.tituloTemaAssunto?.trim() &&
+ 3698 │ │                formData.anoSerie?.trim() &&
+ 3699 │ │                formData.disciplina?.trim() &&
+ 3700 │ │                formData.publicoAlvo?.trim() &&
+ 3701 │ │                formData.objetivosAprendizagem?.trim() &&
+ 3702 │ │                formData.quantidadeAulas?.trim() &&
+ 3703 │ │                formData.quantidadeDiagnosticos?.trim() &&
+ 3704 │ │                formData.quantidadeAvaliacoes?.trim();
+ 3705 │ │       } else if (activityType === 'quiz-interativo') {
+ 3706 │ │         const isValid = formData.title.trim() &&
+ 3707 │ │                        formData.description.trim() &&
+ 3708 │ │                        formData.numberOfQuestions?.trim() &&
+ 3709 │ │                        formData.theme?.trim() &&
+ 3710 │ │                        formData.subject?.trim() &&
+ 3711 │ │                        formData.schoolYear?.trim() &&
+ 3712 │ │                        formData.difficultyLevel?.trim() &&
+ 3713 │ │                        formData.questionModel?.trim();
+ 3714 │ │   
+ 3715 │ │         console.log('🔍 Validação do Quiz Interativo:', {
+ 3716 │ │           title: !!formData.title.trim(),
+ 3717 │ │           description: !!formData.description.trim(),
+ 3718 │ │           numberOfQuestions: !!formData.numberOfQuestions?.trim(),
+ 3719 │ │           theme: !!formData.theme?.trim(),
+ 3720 │ │           subject: !!formData.subject?.trim(),
+ 3721 │ │           schoolYear: !!formData.schoolYear?.trim(),
+ 3722 │ │           difficultyLevel: !!formData.difficultyLevel?.trim(),
+ 3723 │ │           questionModel: !!formData.questionModel?.trim(),
+ 3724 │ │           isValid
+ 3725 │ │         });
+ 3726 │ │   
+ 3727 │ │         return isValid;
+ 3728 │ │       } else if (activityType === 'quadro-interativo') {
+ 3729 │ │         const isValid = formData.title.trim() &&
+ 3730 │ │                        formData.description.trim() &&
+ 3731 │ │                        formData.subject?.trim() &&
+ 3732 │ │                        formData.schoolYear?.trim() &&
+ 3733 │ │                        formData.theme?.trim() &&
+ 3734 │ │                        formData.objectives?.trim() &&
+ 3735 │ │                        formData.difficultyLevel?.trim() &&
+ 3736 │ │                        formData.quadroInterativoCampoEspecifico?.trim();
+ 3737 │ │   
+ 3738 │ │         console.log('🔍 Validação do Quadro Interativo:', {
+ 3739 │ │           title: !!formData.title.trim(),
+ 3740 │ │           description: !!formData.description.trim(),
+ 3741 │ │           subject: !!formData.subject?.trim(),
+ 3742 │ │           schoolYear: !!formData.schoolYear?.trim(),
+ 3743 │ │           theme: !!formData.theme?.trim(),
+ 3744 │ │           objectives: !!formData.objectives?.trim(),
+ 3745 │ │           difficultyLevel: !!formData.difficultyLevel?.trim(),
+ 3746 │ │           quadroInterativoCampoEspecifico: !!formData.quadroInterativoCampoEspecifico?.trim(),
+ 3747 │ │           isValid
+ 3748 │ │         });
+ 3749 │ │   
+ 3750 │ │         return isValid;
+ 3751 │ │       } else if (activityType === 'mapa-mental') { // Validar campos específicos do Mapa Mental
+ 3752 │ │         return formData.title.trim() &&
+ 3753 │ │                formData.centralTheme?.trim() &&
+ 3754 │ │                formData.mainCategories?.trim() &&
+ 3755 │ │                formData.generalObjective?.trim() &&
+ 3756 │ │                formData.evaluationCriteria?.trim();
+ 3757 │ │       } else if (activityType === 'flash-cards') { // Validar campos específicos do Flash Cards
+ 3758 │ │         return formData.title.trim() &&
+ 3759 │ │                formData.theme?.trim() &&
+ 3760 │ │                formData.topicos?.trim() &&
+ 3761 │ │                formData.numberOfFlashcards?.trim();
+ 3762 │ │       }
+ 3763 │ │       else {
+ 3764 │ │         return formData.title.trim() &&
+ 3765 │ │                formData.description.trim() &&
+ 3766 │ │                formData.objectives.trim();
+ 3767 │ │       }
+ 3768 │ │     }, [formData, activity?.id]);
+ 3769 │ │   
+ 3770 │ │     // --- Funções de Geração Específicas ---
+ 3771 │ │   
+ 3772 │ │     // Função para gerar conteúdo do Quiz Interativo
+ 3773 │ │     const handleGenerateQuizInterativo = async () => {
+ 3774 │ │       try {
+ 3775 │ │         setIsGeneratingQuiz(true);
+ 3776 │ │         setGenerationError(null);
+ 3777 │ │   
+ 3778 │ │         console.log('🎯 Iniciando geração real do Quiz Interativo');
+ 3779 │ │         console.log('📋 FormData completo:', formData);
+ 3780 │ │   
+ 3781 │ │         // Validar dados obrigatórios
+ 3782 │ │         if (!formData.title?.trim()) {
+ 3783 │ │           throw new Error('Título é obrigatório');
+ 3784 │ │         }
+ 3785 │ │         if (!formData.theme?.trim()) {
+ 3786 │ │           throw new Error('Tema é obrigatório');
+ 3787 │ │         }
+ 3788 │ │         if (!formData.subject?.trim()) {
+ 3789 │ │           throw new Error('Disciplina é obrigatória');
+ 3790 │ │         }
+ 3791 │ │   
+ 3792 │ │         // Importar o gerador do Quiz Interativo
+ 3793 │ │         const { QuizInterativoGenerator } = await import('@/features/schoolpower/activities/quiz-interativo/QuizInterativoGenerator');
+ 3794 │ │   
+ 3795 │ │         // Preparar dados estruturados para o gerador
+ 3796 │ │         const quizData = {
+ 3797 │ │           subject: formData.subject?.trim() || 'Matemática',
+ 3798 │ │           schoolYear: formData.schoolYear?.trim() || '6º Ano - Ensino Fundamental',
+ 3799 │ │           theme: formData.theme?.trim() || formData.title?.trim() || 'Tema Geral',
+ 3800 │ ├─▶         objectives: formData.objectives?.trim() || formData.description?.trim() || `Avaliar o conhecimento sobre ${formData.theme}`,
+      · ╰───                                                                                    ───────
+      · ╰──── This is the expression part of an expression statement
+ 3801 │             difficultyLevel: formData.difficultyLevel?.trim() || 'Médio',
+ 3802 │             format: formData.questionModel?.trim() || 'Múltipla Escolha',
+ 3803 │             numberOfQuestions: formData.numberOfQuestions?.trim() || '10',
+      ╰────
+
+
+Caused by:
+    Syntax Error
+/home/runner/workspace/src/features/schoolpower/construction/EditActivityModal.tsx:3140:1
