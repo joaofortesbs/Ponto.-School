@@ -7,7 +7,6 @@ import { HistoricoAtividadesCriadas } from './HistoricoAtividadesCriadas'; // Im
 import { useConstructionActivities } from './useConstructionActivities';
 import { useEditActivityModal } from './useEditActivityModal';
 import { useAutoSync } from './hooks/useAutoSync'; // Novo hook
-import activitySyncManager from './services/activitySyncManager';
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,7 +24,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
-  const { syncActivitiesToNeon, syncStats } = useAutoSync(); // Hook de sincronização automática
+  const { syncActivitiesToNeon } = useAutoSync(); // Hook de sincronização automática
   const [buildProgress, setBuildProgress] = useState<AutoBuildProgress | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
@@ -305,17 +304,6 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {activities.length} {activities.length === 1 ? 'atividade aprovada' : 'atividades aprovadas'} para construção
             </p>
-            {/* Indicador de sincronização */}
-            {syncStats.pending > 0 && (
-              <p className="text-xs text-blue-600 dark:text-blue-400">
-                🔄 {syncStats.pending} atividades aguardando sincronização
-              </p>
-            )}
-            {syncStats.synced > 0 && (
-              <p className="text-xs text-green-600 dark:text-green-400">
-                ✅ {syncStats.synced} atividades sincronizadas
-              </p>
-            )}
           </div>
         </div>
 
