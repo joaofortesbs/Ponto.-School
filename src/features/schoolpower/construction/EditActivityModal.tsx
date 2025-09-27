@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ConstructionActivity } from './types';
 import { ActivityFormData } from './types/ActivityTypes';
 import { useGenerateActivity } from './hooks/useGenerateActivity';
+import { profileService } from '@/services/profileService';
+import activitiesApi from '@/services/activitiesApiService';
 import ActivityPreview from '@/features/schoolpower/activities/default/ActivityPreview';
 import ExerciseListPreview from '@/features/schoolpower/activities/lista-exercicios/ExerciseListPreview';
 import PlanoAulaPreview from '@/features/schoolpower/activities/plano-aula/PlanoAulaPreview';

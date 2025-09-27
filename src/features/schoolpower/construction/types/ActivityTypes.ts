@@ -60,6 +60,11 @@ export interface ActivityFormData {
   mainCategories?: string;
   generalObjective?: string;
   evaluationCriteria?: string;
+  // Campos específicos para Quadro Interativo
+  quadroInterativoCampoEspecifico?: string;
+  // Campos específicos para Quiz Interativo
+  timePerQuestion?: string;
+  format?: string;
 }
 
 export interface GeneratedActivity {

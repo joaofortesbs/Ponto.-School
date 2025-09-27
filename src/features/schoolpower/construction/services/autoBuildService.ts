@@ -491,6 +491,17 @@ export class AutoBuildService {
         activity.progress = 100;
         activity.status = 'completed';
 
+        // DISPARO DO EVENTO DE ATIVIDADE CONSTRUÍDA
+        window.dispatchEvent(new CustomEvent('activity-built', {
+          detail: {
+            activityId: activity.id,
+            activityTitle: activity.title,
+            progress: activity.progress,
+            status: activity.status,
+            timestamp: new Date().toISOString()
+          }
+        }));
+
           // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
         console.log('💾 [AUTO-BUILD] ==========================================');
         console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
