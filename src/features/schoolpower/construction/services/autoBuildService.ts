@@ -1,6 +1,6 @@
 import { ConstructionActivity } from '../types';
 import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
-import { activitiesApi } from '../../../../services/activitiesApiService';
+import activitiesApi from '../../../../services/activitiesApiService';
 import { profileService } from '../../../../services/profileService';
 
 export interface AutoBuildProgress {
