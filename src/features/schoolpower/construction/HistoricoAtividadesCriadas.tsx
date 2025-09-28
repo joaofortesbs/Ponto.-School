@@ -110,8 +110,6 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       progress: 100,
       status: 'completed',
       customFields: {},
-      approved: true,
-      isTrilhasEligible: false,
       isBuilt: true,
       builtAt: activity.criado_em || new Date().toISOString(),
       criadaEm: activity.criado_em || new Date().toISOString(),
@@ -124,11 +122,8 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       difficulty: 'Médio',
       estimatedTime: '30 min',
       originalData: activity.conteudo,
-      // Adicionar dados específicos do banco
-      codigoUnico: activity.codigo_unico,
-      userId: activity.user_id,
-      // Identificar origem
-      origem: 'banco_neon'
+      // Adicionar dados específicos do banco como propriedades extras
+      userId: activity.user_id
     };
   };
 
@@ -232,8 +227,6 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                   progress: 100,
                   status: 'completed',
                   customFields: parsedData.customFields || {},
-                  approved: true,
-                  isTrilhasEligible: false,
                   isBuilt: true,
                   builtAt: constructedInfo?.builtAt || new Date().toISOString(),
                   criadaEm: constructedInfo?.builtAt || new Date().toISOString(),
@@ -244,9 +237,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                   tags: [],
                   difficulty: 'Médio',
                   estimatedTime: '30 min',
-                  originalData: parsedData,
-                  // Identificar origem e status de sincronização
-                  origem: constructedInfo?.syncedToNeon ? 'sincronizada' : 'localStorage'
+                  originalData: parsedData
                 };
                 
                 atividades.push(atividadeHistorica);

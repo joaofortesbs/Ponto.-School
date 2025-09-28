@@ -60,12 +60,17 @@ export function useConstructionActivities(approvedActivities: any[]): UseConstru
       description: activity.description,
       type: activity.id, // usar id como tipo para compatibilidade
       customFields: activity.customFields || {},
-      approved: activity.approved || false,
-      isTrilhasEligible: activity.isTrilhasEligible || false,
       isBuilt: isBuilt,
       builtAt: localStorageBuiltAt || new Date().toISOString(),
       progress: isBuilt ? 100 : 0,
-      status: isBuilt ? 'completed' : 'pending'
+      status: isBuilt ? 'completed' : 'pending',
+      // Propriedades obrigatórias adicionais
+      categoryId: activity.id,
+      categoryName: activity.title,
+      icon: activity.id,
+      tags: [],
+      difficulty: 'Médio',
+      estimatedTime: '30 min'
     };
   };
 
