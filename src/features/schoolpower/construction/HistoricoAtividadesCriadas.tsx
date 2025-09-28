@@ -47,16 +47,16 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     setMigrationStatus('');
 
     try {
-      // 1. Obter perfil do usuário atual para pegar o id (UUID)
+      // 1. Obter perfil do usuário atual para pegar o user_id
       const profile = await profileService.getCurrentUserProfile();
-      if (!profile || !profile.id) {
-        console.warn('⚠️ Usuário não encontrado ou sem id');
+      if (!profile || !profile.user_id) {
+        console.warn('⚠️ Usuário não encontrado ou sem user_id');
         // Tentar carregar do localStorage como fallback
         await carregarDoLocalStorageFallback();
         return;
       }
 
-      const userId = profile.id;
+      const userId = profile.user_id;
       console.log('👤 Carregando atividades para usuário:', userId);
 
       // 2. Buscar atividades do banco de dados
@@ -110,6 +110,8 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       progress: 100,
       status: 'completed',
       customFields: {},
+      approved: true,
+      isTrilhasEligible: false,
       isBuilt: true,
       builtAt: activity.criado_em || new Date().toISOString(),
       criadaEm: activity.criado_em || new Date().toISOString(),
@@ -121,7 +123,12 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       tags: [],
       difficulty: 'Médio',
       estimatedTime: '30 min',
-      originalData: activity.conteudo
+      originalData: activity.conteudo,
+      // Adicionar dados específicos do banco
+      codigoUnico: activity.codigo_unico,
+      userId: activity.user_id,
+      // Identificar origem
+      origem: 'banco_neon'
     };
   };
 
@@ -225,6 +232,8 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                   progress: 100,
                   status: 'completed',
                   customFields: parsedData.customFields || {},
+                  approved: true,
+                  isTrilhasEligible: false,
                   isBuilt: true,
                   builtAt: constructedInfo?.builtAt || new Date().toISOString(),
                   criadaEm: constructedInfo?.builtAt || new Date().toISOString(),
@@ -235,7 +244,9 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
                   tags: [],
                   difficulty: 'Médio',
                   estimatedTime: '30 min',
-                  originalData: parsedData
+                  originalData: parsedData,
+                  // Identificar origem e status de sincronização
+                  origem: constructedInfo?.syncedToNeon ? 'sincronizada' : 'localStorage'
                 };
                 
                 atividades.push(atividadeHistorica);

@@ -1,8 +1,7 @@
 import { ConstructionActivity } from '../types';
 import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
-import activitiesApi from '../../../../services/activitiesApiService';
+import { activitiesApi } from '../../../../services/activitiesApiService';
 import { profileService } from '../../../../services/profileService';
-import { supabase } from '@/lib/supabase';
 
 export interface AutoBuildProgress {
   current: number;
@@ -18,19 +17,6 @@ export class AutoBuildService {
   private onActivityBuilt?: (activityId: string) => void;
 
   private constructor() {}
-
-  /**
-   * Obtém o token de autenticação do Supabase
-   */
-  private async getAuthToken(): Promise<string | null> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || null;
-    } catch (error) {
-      console.error('❌ [AUTO-SAVE] Erro ao obter token de autenticação:', error);
-      return null;
-    }
-  }
 
   static getInstance(): AutoBuildService {
     if (!AutoBuildService.instance) {
@@ -146,47 +132,7 @@ export class AutoBuildService {
         console.log('🎉 [AUTO-SAVE] Título:', response.data?.titulo);
         console.log('🎉 [AUTO-SAVE] ==========================================');
         
-        // 5. Atualizar coluna de ligação na tabela perfis
-        try {
-          console.log('🔗 [AUTO-SAVE] Atualizando coluna de ligação no perfil...');
-          
-          // Obter token de autenticação
-          const authToken = await this.getAuthToken();
-          const headers: HeadersInit = {
-            'Content-Type': 'application/json'
-          };
-          
-          // Adicionar token se disponível
-          if (authToken) {
-            headers['Authorization'] = `Bearer ${authToken}`;
-            console.log('🔒 [AUTO-SAVE] Token de autenticação incluído na atualização de perfil');
-          } else {
-            console.warn('⚠️ [AUTO-SAVE] Nenhum token de autenticação disponível');
-          }
-          
-          const baseUrl = `https://${window.location.hostname}`;
-          const connectionUpdate = await fetch(`${baseUrl}/api/perfis/update-connection`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-              activity_id: response.data?.id,
-              activity_code: response.data?.codigo_unico,
-              activity_title: response.data?.titulo,
-              activity_type: response.data?.tipo,
-              timestamp: new Date().toISOString()
-            })
-          });
-          
-          if (connectionUpdate.ok) {
-            console.log('✅ [AUTO-SAVE] Coluna de ligação atualizada com sucesso!');
-          } else {
-            console.warn('⚠️ [AUTO-SAVE] Falha ao atualizar coluna de ligação');
-          }
-        } catch (connectionError) {
-          console.error('❌ [AUTO-SAVE] Erro ao atualizar coluna de ligação:', connectionError);
-        }
-        
-        // 6. Marcar que foi salva automaticamente
+        // 5. Marcar que foi salva automaticamente
         localStorage.setItem(`auto_saved_${activity.id}`, JSON.stringify({
           saved: true,
           savedAt: new Date().toISOString(),
@@ -194,7 +140,7 @@ export class AutoBuildService {
           databaseId: response.data?.id
         }));
 
-        // 7. Disparar evento de salvamento automático
+        // 6. Disparar evento de salvamento automático
         window.dispatchEvent(new CustomEvent('activity-auto-saved', {
           detail: {
             activityId: activity.id,
@@ -545,17 +491,6 @@ export class AutoBuildService {
         activity.progress = 100;
         activity.status = 'completed';
 
-        // DISPARO DO EVENTO DE ATIVIDADE CONSTRUÍDA
-        window.dispatchEvent(new CustomEvent('activity-built', {
-          detail: {
-            activityId: activity.id,
-            activityTitle: activity.title,
-            progress: activity.progress,
-            status: activity.status,
-            timestamp: new Date().toISOString()
-          }
-        }));
-
           // SALVAMENTO AUTOMÁTICO NO BANCO DE DADOS
         console.log('💾 [AUTO-BUILD] ==========================================');
         console.log('💾 [AUTO-BUILD] ATIVIDADE CONCLUÍDA - SALVAMENTO AUTOMÁTICO');
@@ -825,19 +760,6 @@ export class AutoBuildService {
     if (errors.length > 0) {
       console.warn('⚠️ [AUTO-BUILD] Alguns erros ocorreram:', errors);
     }
-  }
-
-  // Método público para salvamento de atividades já construídas (chamado do modal)
-  async saveConstructedActivityToDatabase(activity: ConstructionActivity): Promise<void> {
-    console.log('💾 [PUBLIC-SAVE] ==========================================');
-    console.log('💾 [PUBLIC-SAVE] SALVAMENTO DE ATIVIDADE JÁ CONSTRUÍDA');
-    console.log('💾 [PUBLIC-SAVE] Atividade:', activity.title);
-    console.log('💾 [PUBLIC-SAVE] Status:', activity.status);
-    console.log('💾 [PUBLIC-SAVE] Progress:', activity.progress);
-    console.log('💾 [PUBLIC-SAVE] ==========================================');
-    
-    // Delegar para o método privado de salvamento
-    await this.saveActivityToDatabase(activity);
   }
 }
 

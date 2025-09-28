@@ -3,8 +3,6 @@
  * Gerencia todas as operações CRUD de atividades no banco de dados Neon
  */
 
-import { supabase } from '@/lib/supabase';
-
 export interface ActivityData {
   id?: string;
   user_id: string;
@@ -41,8 +39,8 @@ class ActivitiesApiService {
       // Em produção, usar domínio público
       return `https://${window.location.hostname}/api`;
     } else {
-      // Em desenvolvimento, usar domínio do Replit
-      return `https://${window.location.hostname}/api`;
+      // Em desenvolvimento, usar localhost na porta 3001
+      return 'http://localhost:3001/api';
     }
   }
 
@@ -52,19 +50,6 @@ class ActivitiesApiService {
   private debugLog(message: string, data?: any): void {
     if (this.debug) {
       console.log(`💾 [ActivitiesAPI] ${message}`, data || '');
-    }
-  }
-
-  /**
-   * Obtém o token de autenticação do Supabase
-   */
-  private async getAuthToken(): Promise<string | null> {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || null;
-    } catch (error) {
-      this.debugLog('❌ Erro ao obter token de autenticação:', error);
-      return null;
     }
   }
 
@@ -79,25 +64,11 @@ class ActivitiesApiService {
       const url = `${this.baseUrl}${endpoint}`;
       this.debugLog(`📡 ${options.method || 'GET'} ${url}`);
 
-      // Obter token de autenticação
-      const authToken = await this.getAuthToken();
-      
-      // Preparar headers com autenticação
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      };
-
-      // Adicionar token de autenticação se disponível
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-        this.debugLog('🔒 Token de autenticação incluído na requisição');
-      } else {
-        this.debugLog('⚠️ Nenhum token de autenticação disponível');
-      }
-
       const response = await fetch(url, {
-        headers,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
         ...options,
       });
 
@@ -307,7 +278,7 @@ class ActivitiesApiService {
       
       for (const [activityId, activityInfo] of Object.entries(constructedActivities)) {
         try {
-          if ((activityInfo as any)?.isBuilt) {
+          if (activityInfo?.isBuilt) {
             // Buscar dados completos da atividade
             const activityData = localStorage.getItem(`activity_${activityId}`);
             if (activityData) {

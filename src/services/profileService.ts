@@ -2,7 +2,7 @@
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
-import { generateUserId, generateUserIdByPlan, isValidUserId } from '@/lib/generate-user-id';
+import { generateUserId, generateSimpleUserId, generateUserIdByPlan, isValidUserId } from '@/lib/generate-user-id';
 
 /**
  * Cria um perfil de usuário com ID automático baseado na UF e tipo de plano

@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
-import { createClient } from '@supabase/supabase-js';
 import emailRoutes from './enviar-email.js';
 import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
@@ -10,19 +8,6 @@ import perfilsHandler from './perfis.js';
 const { neonDB } = neonDBModule;
 
 dotenv.config();
-
-// Configuração do Supabase para verificação JWT
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
-
-// Cliente Supabase para verificação de tokens
-let supabase = null;
-if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-} else {
-  console.warn('⚠️ Configuração do Supabase não encontrada - autenticação desabilitada');
-}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -72,70 +57,6 @@ app.use((err, req, res, next) => {
   next();
 });
 
-// =================
-// MIDDLEWARE DE AUTENTICAÇÃO JWT
-// =================
-
-function authenticateSupabaseUser(req, res, next) {
-  // FAIL-CLOSED: Negar acesso se Supabase não estiver configurado
-  if (!supabase || !supabaseJwtSecret) {
-    console.error('❌ CONFIGURAÇÃO DE SEGURANÇA AUSENTE - ACESSO NEGADO');
-    return res.status(503).json({
-      success: false,
-      error: 'Serviço de autenticação indisponível'
-    });
-  }
-
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: 'Token de autenticação obrigatório'
-    });
-  }
-
-  const token = authHeader.substring(7); // Remove "Bearer "
-
-  try {
-    // Verificar a assinatura do token JWT do Supabase
-    if (!supabaseJwtSecret) {
-      console.error('❌ SUPABASE_JWT_SECRET não configurado - falha de segurança crítica');
-      return res.status(500).json({
-        success: false,
-        error: 'Configuração de segurança não encontrada'
-      });
-    }
-
-    // Verificar token com assinatura usando o secret do Supabase
-    const payload = jwt.verify(token, supabaseJwtSecret, { algorithms: ['HS256'] });
-    
-    if (!payload || !payload.sub) {
-      return res.status(401).json({
-        success: false,
-        error: 'Token sem informações de usuário'
-      });
-    }
-
-    // Adicionar informações do usuário à requisição
-    req.user = {
-      id: payload.sub,
-      email: payload.email || null,
-      aud: payload.aud || null
-    };
-
-    console.log(`🔒 Usuário autenticado: ${req.user.id} (${req.user.email || 'sem email'})`);
-    next();
-    
-  } catch (error) {
-    console.error('❌ Erro na verificação do token:', error);
-    return res.status(401).json({
-      success: false,
-      error: 'Erro na verificação do token'
-    });
-  }
-}
-
 // Rotas
 app.use('/api/email', emailRoutes);  // Mover para prefixo específico para não interferir com outras rotas
 app.use('/api/perfis', perfilsHandler);
@@ -148,16 +69,12 @@ function registerActivityRoutes() {
   console.log('🔧 Registrando rotas de atividades...');
 
 
-  // Criar nova atividade - ROTA PROTEGIDA
-  app.post('/api/atividades', authenticateSupabaseUser, async (req, res) => {
+  // Criar nova atividade
+  app.post('/api/atividades', async (req, res) => {
   try {
-    console.log('📝 POST /api/atividades - Nova atividade autenticada');
-    console.log('🔒 Usuário autenticado:', req.user?.id);
+    console.log('📝 POST /api/atividades - Nova atividade:', req.body);
     
-    const { codigo_unico, tipo, titulo, descricao, conteudo } = req.body;
-    
-    // user_id agora vem da autenticação, não do body
-    const user_id = req.user?.id;
+    const { user_id, codigo_unico, tipo, titulo, descricao, conteudo } = req.body;
 
     // Validar campos obrigatórios
     if (!user_id || !codigo_unico || !tipo || !conteudo) {
@@ -207,38 +124,19 @@ function registerActivityRoutes() {
   }
 });
 
-// Atualizar atividade existente - ROTA PROTEGIDA
-app.put('/api/atividades/:codigo_unico', authenticateSupabaseUser, async (req, res) => {
+// Atualizar atividade existente
+app.put('/api/atividades/:codigo_unico', async (req, res) => {
   try {
     const { codigo_unico } = req.params;
     const { titulo, descricao, conteudo } = req.body;
-    const user_id = req.user?.id;
 
-    console.log(`🔄 PUT /api/atividades/${codigo_unico} - Usuário autenticado: ${user_id}`);
+    console.log(`🔄 PUT /api/atividades/${codigo_unico} - Atualizando atividade`);
 
     // Validar campos obrigatórios
     if (!conteudo) {
       return res.status(400).json({
         success: false,
         error: 'Campo obrigatório: conteudo'
-      });
-    }
-
-    // VERIFICAÇÃO DE PROPRIEDADE: Primeiro verificar se a atividade pertence ao usuário
-    const existingActivity = await neonDB.getActivityByCode(codigo_unico);
-    
-    if (!existingActivity.success || !existingActivity.data || existingActivity.data.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Atividade não encontrada'
-      });
-    }
-
-    if (existingActivity.data[0].user_id !== user_id) {
-      console.warn(`🚫 Acesso negado: usuário ${user_id} tentou atualizar atividade de ${existingActivity.data[0].user_id}`);
-      return res.status(403).json({
-        success: false,
-        error: 'Acesso negado: você só pode atualizar suas próprias atividades'
       });
     }
 
@@ -270,22 +168,12 @@ app.put('/api/atividades/:codigo_unico', authenticateSupabaseUser, async (req, r
   }
 });
 
-// Buscar atividades do usuário (histórico) - ROTA PROTEGIDA
-app.get('/api/atividades/usuario/:user_id', authenticateSupabaseUser, async (req, res) => {
+// Buscar atividades do usuário (histórico)
+app.get('/api/atividades/usuario/:user_id', async (req, res) => {
   try {
-    // user_id agora vem da autenticação, não dos parâmetros
-    const user_id = req.user?.id;
-    const requested_user_id = req.params.user_id;
+    const { user_id } = req.params;
 
-    console.log(`🔍 GET /api/atividades/usuario/${requested_user_id} - Usuário autenticado: ${user_id}`);
-
-    // Verificar se o usuário pode acessar apenas suas próprias atividades
-    if (user_id !== requested_user_id) {
-      return res.status(403).json({
-        success: false,
-        error: 'Acesso negado: você só pode ver suas próprias atividades'
-      });
-    }
+    console.log(`🔍 GET /api/atividades/usuario/${user_id} - Buscando atividades do usuário`);
 
     // Buscar atividades do usuário
     const result = await neonDB.getUserActivities(user_id);
@@ -311,37 +199,25 @@ app.get('/api/atividades/usuario/:user_id', authenticateSupabaseUser, async (req
   }
 });
 
-// Buscar atividade por código único - ROTA PROTEGIDA
-app.get('/api/atividades/:codigo_unico', authenticateSupabaseUser, async (req, res) => {
+// Buscar atividade por código único (para exibição pública)
+app.get('/api/atividades/:codigo_unico', async (req, res) => {
   try {
     const { codigo_unico } = req.params;
-    const user_id = req.user?.id;
 
-    console.log(`🔍 GET /api/atividades/${codigo_unico} - Usuário autenticado: ${user_id}`);
+    console.log(`🔍 GET /api/atividades/${codigo_unico} - Buscando atividade por código`);
 
     // Buscar atividade por código
     const result = await neonDB.getActivityByCode(codigo_unico);
 
-    if (result.success && result.data && result.data.length > 0) {
-      const activity = result.data[0];
-      
-      // VERIFICAÇÃO DE PROPRIEDADE: Usuário só pode acessar suas próprias atividades
-      if (activity.user_id !== user_id) {
-        console.warn(`🚫 Acesso negado: usuário ${user_id} tentou acessar atividade de ${activity.user_id}`);
-        return res.status(403).json({
-          success: false,
-          error: 'Acesso negado: você só pode acessar suas próprias atividades'
-        });
-      }
-      
+    if (result.success) {
       res.json({
         success: true,
-        data: activity
+        data: result.data[0]
       });
     } else {
       res.status(404).json({
         success: false,
-        error: result.error || 'Atividade não encontrada'
+        error: result.error
       });
     }
 
@@ -354,19 +230,19 @@ app.get('/api/atividades/:codigo_unico', authenticateSupabaseUser, async (req, r
   }
 });
 
-// Deletar atividade - ROTA PROTEGIDA
-app.delete('/api/atividades/:codigo_unico', authenticateSupabaseUser, async (req, res) => {
+// Deletar atividade
+app.delete('/api/atividades/:codigo_unico', async (req, res) => {
   try {
     const { codigo_unico } = req.params;
-    // user_id agora vem da autenticação, não do body
-    const user_id = req.user?.id;
+    const { user_id } = req.body;
 
-    console.log(`🗑️ DELETE /api/atividades/${codigo_unico} - Usuário autenticado: ${user_id}`);
+    console.log(`🗑️ DELETE /api/atividades/${codigo_unico} - Deletando atividade`);
 
+    // Validar user_id
     if (!user_id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        error: 'Usuário não autenticado'
+        error: 'Campo obrigatório: user_id'
       });
     }
 
@@ -393,102 +269,6 @@ app.delete('/api/atividades/:codigo_unico', authenticateSupabaseUser, async (req
     });
   }
 });
-
-  // Rota para atualizar coluna de ligação entre perfis e atividades
-  app.post('/api/perfis/update-connection', authenticateSupabaseUser, async (req, res) => {
-    try {
-      console.log('🔗 POST /api/perfis/update-connection - Atualizando coluna de ligação');
-      const { activity_id, activity_code, activity_title, activity_type, timestamp } = req.body;
-      
-      // user_id agora vem da autenticação, não do body
-      const user_id = req.user?.id;
-      
-      console.log('📊 Dados recebidos:', {
-        user_id,
-        activity_id,
-        activity_code,
-        activity_title,
-        activity_type,
-        timestamp
-      });
-
-      if (!user_id || !activity_id) {
-        return res.status(400).json({
-          success: false,
-          error: 'user_id e activity_id são obrigatórios'
-        });
-      }
-
-      // Buscar o perfil atual para obter as conexões existentes
-      const currentProfileResult = await neonDB.executeQuery(
-        'SELECT activities_connection FROM perfis WHERE id = $1',
-        [user_id]
-      );
-
-      if (!currentProfileResult.success || currentProfileResult.data.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: 'Perfil não encontrado'
-        });
-      }
-
-      // Obter conexões atuais ou inicializar array vazio
-      let currentConnections = currentProfileResult.data[0].activities_connection || [];
-      
-      // Adicionar nova conexão
-      const newConnection = {
-        activity_id,
-        activity_code,
-        activity_title,
-        activity_type,
-        created_at: timestamp,
-        auto_saved: true
-      };
-
-      // Verificar se já existe uma conexão para esta atividade (evitar duplicatas)
-      const existingIndex = currentConnections.findIndex(conn => conn.activity_id === activity_id);
-      
-      if (existingIndex >= 0) {
-        // Atualizar conexão existente
-        currentConnections[existingIndex] = newConnection;
-        console.log('✏️ Atualizando conexão existente para atividade:', activity_id);
-      } else {
-        // Adicionar nova conexão
-        currentConnections.push(newConnection);
-        console.log('➕ Adicionando nova conexão para atividade:', activity_id);
-      }
-
-      // Atualizar o perfil com as novas conexões
-      const updateResult = await neonDB.executeQuery(
-        'UPDATE perfis SET activities_connection = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-        [JSON.stringify(currentConnections), user_id]
-      );
-
-      if (updateResult.success && updateResult.data.length > 0) {
-        console.log('✅ Coluna de ligação atualizada com sucesso para perfil:', user_id);
-        console.log('📈 Total de conexões:', currentConnections.length);
-        
-        res.json({
-          success: true,
-          data: {
-            user_id,
-            total_connections: currentConnections.length,
-            updated_connection: newConnection
-          }
-        });
-      } else {
-        throw new Error('Falha ao atualizar o perfil');
-      }
-
-    } catch (error) {
-      console.error('❌ Erro ao atualizar coluna de ligação:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Erro interno do servidor ao atualizar coluna de ligação',
-        details: error.message
-      });
-    }
-  });
 
 console.log('✅ Todas as rotas de atividades registradas com sucesso!');
 }
