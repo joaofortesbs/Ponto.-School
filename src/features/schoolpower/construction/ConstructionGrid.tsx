@@ -20,7 +20,13 @@ interface ConstructionGridProps {
 }
 
 export function ConstructionGrid({ approvedActivities, handleEditActivity: externalHandleEditActivity, onResetFlow }: ConstructionGridProps) {
-  console.log('🎯 ConstructionGrid renderizado com atividades aprovadas:', approvedActivities);
+  console.log('🎯 ==========================================');
+  console.log('🎯 CONSTRUÇÃO GRID - DEBUG INICIAL');
+  console.log('🎯 ==========================================');
+  console.log('🎯 ConstructionGrid renderizado');
+  console.log('🎯 Atividades aprovadas recebidas:', approvedActivities?.length || 0);
+  console.log('🎯 Atividades aprovadas:', approvedActivities);
+  console.log('🎯 ==========================================');
 
   const { activities, loading, refreshActivities } = useConstructionActivities(approvedActivities);
   const { isModalOpen, selectedActivity, openModal, closeModal, handleSaveActivity } = useEditActivityModal();
@@ -37,6 +43,59 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const [showHistorico, setShowHistorico] = useState(false);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
+
+  // DEBUG AUTOMÁTICO - Executar sempre que atividades mudarem
+  useEffect(() => {
+    console.log('🚀 ==========================================');
+    console.log('🚀 DEBUG AUTOMÁTICO - ESTADO DAS ATIVIDADES');
+    console.log('🚀 ==========================================');
+    console.log('🚀 Total de atividades processadas:', activities.length);
+    console.log('🚀 Loading:', loading);
+    
+    if (activities.length > 0) {
+      console.log('🔍 ANÁLISE DETALHADA DE CADA ATIVIDADE:');
+      activities.forEach((activity, index) => {
+        console.log(`📋 [${index + 1}] Atividade: ${activity.title}`);
+        console.log(`📋     ID: ${activity.id}`);
+        console.log(`📋     Status: ${activity.status}`);
+        console.log(`📋     isBuilt: ${activity.isBuilt}`);
+        console.log(`📋     Progress: ${activity.progress}%`);
+        console.log(`📋     Tem título: ${!!activity.title}`);
+        console.log(`📋     Tem descrição: ${!!activity.description}`);
+        
+        const precisa = !activity.isBuilt && 
+                       activity.status !== 'completed' && 
+                       !!activity.title && 
+                       !!activity.description && 
+                       activity.progress < 100;
+        
+        console.log(`📋     PRECISA CONSTRUIR: ${precisa ? '✅ SIM' : '❌ NÃO'}`);
+        console.log(`📋     -------------------`);
+      });
+      
+      const atividadesPrecisamConstruir = activities.filter(a => 
+        !a.isBuilt && 
+        a.status !== 'completed' && 
+        !!a.title && 
+        !!a.description && 
+        a.progress < 100
+      );
+      
+      console.log('🎯 RESUMO FINAL:');
+      console.log(`🎯 Total que PRECISAM construir: ${atividadesPrecisamConstruir.length}`);
+      console.log(`🎯 Total que JÁ ESTÃO construídas: ${activities.filter(a => a.isBuilt).length}`);
+      console.log(`🎯 Total com status "completed": ${activities.filter(a => a.status === 'completed').length}`);
+      console.log(`🎯 Total com progress = 100: ${activities.filter(a => a.progress === 100).length}`);
+    } else {
+      console.log('⚠️ NENHUMA ATIVIDADE ENCONTRADA!');
+      console.log('⚠️ Possíveis motivos:');
+      console.log('⚠️ - approvedActivities está vazio');
+      console.log('⚠️ - Erro na conversão das atividades');
+      console.log('⚠️ - Hook ainda está carregando');
+    }
+    
+    console.log('🚀 ==========================================');
+  }, [activities, loading]);
 
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
@@ -84,25 +143,69 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       return;
     }
 
-    console.log('🚀 Iniciando construção automática com autoBuildService MELHORADO');
+    console.log('🚀 ==========================================');
+    console.log('🚀 INICIANDO DEBUG COMPLETO DE CONSTRUÇÃO');
+    console.log('🚀 ==========================================');
+    console.log('🚀 Total de atividades recebidas:', activities.length);
+    console.log('🚀 Atividades:', activities.map(a => ({
+      id: a.id,
+      title: a.title,
+      status: a.status,
+      isBuilt: a.isBuilt,
+      progress: a.progress,
+      hasTitle: !!a.title,
+      hasDescription: !!a.description
+    })));
 
     // Filtrar atividades que precisam ser construídas
     const activitiesToBuild = activities.filter(activity => {
-      const needsBuild = !activity.isBuilt &&
-                        activity.status !== 'completed' &&
-                        activity.title &&
-                        activity.description &&
-                        activity.progress < 100;
+      const checks = {
+        notBuilt: !activity.isBuilt,
+        notCompleted: activity.status !== 'completed',
+        hasTitle: !!activity.title,
+        hasDescription: !!activity.description,
+        progressLessThan100: activity.progress < 100
+      };
+      
+      const needsBuild = checks.notBuilt && 
+                        checks.notCompleted && 
+                        checks.hasTitle && 
+                        checks.hasDescription && 
+                        checks.progressLessThan100;
 
-      console.log(`🔍 Atividade ${activity.title}: isBuilt=${activity.isBuilt}, status=${activity.status}, progress=${activity.progress}, needsBuild=${needsBuild}`);
+      console.log(`🔍 [DEBUG] Atividade: ${activity.title || 'SEM TÍTULO'}`);
+      console.log(`🔍 [DEBUG]   - ID: ${activity.id}`);
+      console.log(`🔍 [DEBUG]   - Status: ${activity.status}`);
+      console.log(`🔍 [DEBUG]   - isBuilt: ${activity.isBuilt}`);
+      console.log(`🔍 [DEBUG]   - Progress: ${activity.progress}`);
+      console.log(`🔍 [DEBUG]   - Checks:`, checks);
+      console.log(`🔍 [DEBUG]   - PRECISA CONSTRUIR: ${needsBuild}`);
+      console.log(`🔍 [DEBUG]   -------------------`);
+      
       return needsBuild;
     });
 
-    console.log('🎯 Atividades que precisam ser construídas:', activitiesToBuild.length);
+    console.log('🎯 ==========================================');
+    console.log('🎯 RESULTADO DO FILTRO DE CONSTRUÇÃO');
+    console.log('🎯 ==========================================');
+    console.log('🎯 Total que PRECISAM ser construídas:', activitiesToBuild.length);
+    console.log('🎯 Atividades selecionadas para construção:', activitiesToBuild.map(a => ({
+      id: a.id,
+      title: a.title,
+      status: a.status
+    })));
+    console.log('🎯 ==========================================');
 
     if (activitiesToBuild.length === 0) {
-      console.log('⚠️ Nenhuma atividade precisa ser construída');
-      alert('Todas as atividades já foram construídas ou não possuem dados suficientes para construção.');
+      console.log('⚠️ ==========================================');
+      console.log('⚠️ NENHUMA ATIVIDADE PRECISA SER CONSTRUÍDA!');
+      console.log('⚠️ Motivos possíveis:');
+      console.log('⚠️ - Todas já estão construídas (isBuilt: true)');
+      console.log('⚠️ - Todas já estão com status "completed"');
+      console.log('⚠️ - Todas já têm progress = 100');
+      console.log('⚠️ - Faltam títulos ou descrições');
+      console.log('⚠️ ==========================================');
+      alert('NENHUMA ATIVIDADE PRECISA SER CONSTRUÍDA!\n\nVerifique o console para detalhes do debug.');
       return;
     }
 
