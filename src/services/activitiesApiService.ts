@@ -41,8 +41,8 @@ class ActivitiesApiService {
       // Em produção, usar domínio público
       return `https://${window.location.hostname}/api`;
     } else {
-      // Em desenvolvimento, usar localhost na porta 3001
-      return 'http://localhost:3001/api';
+      // Em desenvolvimento, usar domínio do Replit
+      return `https://${window.location.hostname}/api`;
     }
   }
 

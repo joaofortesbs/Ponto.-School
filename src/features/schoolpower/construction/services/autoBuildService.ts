@@ -164,7 +164,8 @@ export class AutoBuildService {
             console.warn('⚠️ [AUTO-SAVE] Nenhum token de autenticação disponível');
           }
           
-          const connectionUpdate = await fetch('/api/perfis/update-connection', {
+          const baseUrl = `https://${window.location.hostname}`;
+          const connectionUpdate = await fetch(`${baseUrl}/api/perfis/update-connection`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
