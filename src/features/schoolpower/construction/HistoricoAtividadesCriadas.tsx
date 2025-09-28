@@ -121,9 +121,7 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       tags: [],
       difficulty: 'Médio',
       estimatedTime: '30 min',
-      originalData: activity.conteudo,
-      // Adicionar dados específicos do banco como propriedades extras
-      userId: activity.user_id
+      originalData: activity.conteudo
     };
   };
 
