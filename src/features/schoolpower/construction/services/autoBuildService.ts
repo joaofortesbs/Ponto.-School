@@ -2,6 +2,7 @@ import { ConstructionActivity } from '../types';
 import { quadroInterativoFieldMapping, prepareQuadroInterativoDataForModal } from '../../activities/quadro-interativo';
 import activitiesApi from '../../../../services/activitiesApiService';
 import { profileService } from '../../../../services/profileService';
+import { supabase } from '@/lib/supabase';
 
 export interface AutoBuildProgress {
   current: number;
@@ -17,6 +18,19 @@ export class AutoBuildService {
   private onActivityBuilt?: (activityId: string) => void;
 
   private constructor() {}
+
+  /**
+   * Obtém o token de autenticação do Supabase
+   */
+  private async getAuthToken(): Promise<string | null> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch (error) {
+      console.error('❌ [AUTO-SAVE] Erro ao obter token de autenticação:', error);
+      return null;
+    }
+  }
 
   static getInstance(): AutoBuildService {
     if (!AutoBuildService.instance) {
@@ -135,11 +149,25 @@ export class AutoBuildService {
         // 5. Atualizar coluna de ligação na tabela perfis
         try {
           console.log('🔗 [AUTO-SAVE] Atualizando coluna de ligação no perfil...');
+          
+          // Obter token de autenticação
+          const authToken = await this.getAuthToken();
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json'
+          };
+          
+          // Adicionar token se disponível
+          if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+            console.log('🔒 [AUTO-SAVE] Token de autenticação incluído na atualização de perfil');
+          } else {
+            console.warn('⚠️ [AUTO-SAVE] Nenhum token de autenticação disponível');
+          }
+          
           const connectionUpdate = await fetch('/api/perfis/update-connection', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({
-              user_id: profile.id,
               activity_id: response.data?.id,
               activity_code: response.data?.codigo_unico,
               activity_title: response.data?.titulo,
