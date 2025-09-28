@@ -42,33 +42,51 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
   }, []);
 
   const carregarHistoricoAtividades = async () => {
-    console.log('📚 Carregando histórico de atividades do banco de dados...');
+    console.log('📚 ==========================================');
+    console.log('📚 CARREGANDO HISTÓRICO DE ATIVIDADES - DEBUG');
+    console.log('📚 ==========================================');
     setLoading(true);
     setMigrationStatus('');
 
     try {
       // 1. Obter perfil do usuário atual para pegar o user_id
+      console.log('👤 Obtendo perfil do usuário...');
       const profile = await profileService.getCurrentUserProfile();
+      console.log('👤 Perfil obtido:', profile);
+      
       if (!profile || !profile.user_id) {
-        console.warn('⚠️ Usuário não encontrado ou sem user_id');
+        console.warn('⚠️ ==========================================');
+        console.warn('⚠️ USUÁRIO NÃO ENCONTRADO OU SEM USER_ID');
+        console.warn('⚠️ Profile:', profile);
+        console.warn('⚠️ ==========================================');
         // Tentar carregar do localStorage como fallback
         await carregarDoLocalStorageFallback();
         return;
       }
 
       const userId = profile.user_id;
-      console.log('👤 Carregando atividades para usuário:', userId);
+      console.log('👤 ==========================================');
+      console.log('👤 USUÁRIO IDENTIFICADO');
+      console.log('👤 User ID:', userId);
+      console.log('👤 ==========================================');
 
       // 2. Buscar atividades do banco de dados
+      console.log('🔍 Chamando activitiesApi.getUserActivities...');
       const apiResponse = await activitiesApi.getUserActivities(userId);
+      console.log('🔍 Resposta da API:', apiResponse);
       
       if (apiResponse.success && apiResponse.data) {
+        console.log('✅ ==========================================');
+        console.log('✅ ATIVIDADES CARREGADAS COM SUCESSO');
+        console.log('✅ Total de atividades:', apiResponse.data.length);
+        console.log('✅ ==========================================');
+        
         // Converter dados da API para formato do componente
         const atividadesDoBanco = apiResponse.data.map((activity: ActivityData) => 
           convertApiActivityToHistorico(activity)
         );
 
-        console.log('✅ Atividades carregadas do banco:', atividadesDoBanco.length);
+        console.log('✅ Atividades convertidas:', atividadesDoBanco.length);
         
         // 3. Verificar se há atividades no localStorage para migrar
         const localStorageActivities = await verificarEMigrarLocalStorage(userId);
@@ -85,7 +103,13 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
         setAtividadesHistorico(todasAtividades);
         
       } else {
-        console.log('⚠️ Erro ao carregar atividades da API:', apiResponse.error);
+        console.log('❌ ==========================================');
+        console.log('❌ ERRO AO CARREGAR ATIVIDADES DA API');
+        console.log('❌ Response success:', apiResponse.success);
+        console.log('❌ Response error:', apiResponse.error);
+        console.log('❌ ==========================================');
+        
+        // Fallback para localStorage
         console.log('🔄 Tentando carregar do localStorage como fallback...');
         await carregarDoLocalStorageFallback();
       }
@@ -110,8 +134,6 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       progress: 100,
       status: 'completed',
       customFields: {},
-      approved: true,
-      isTrilhasEligible: false,
       isBuilt: true,
       builtAt: activity.criado_em || new Date().toISOString(),
       criadaEm: activity.criado_em || new Date().toISOString(),

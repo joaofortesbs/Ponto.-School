@@ -97,6 +97,14 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
     console.log('🚀 ==========================================');
   }, [activities, loading]);
 
+  // DEBUG SEGURO - Verificar status do sistema quando necessário
+  useEffect(() => {
+    // Apenas logs seguros que não vazam dados
+    if (!loading && activities.length === 0) {
+      console.log('🔍 Sistema carregado mas sem atividades. Verifique se usuário está autenticado.');
+    }
+  }, [loading, activities]);
+
   const handleEditActivity = (activity: ConstructionActivity) => {
     console.log('🔧 Abrindo modal para editar atividade:', activity);
 
