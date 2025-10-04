@@ -5,8 +5,12 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ command }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 5000,
+    strictPort: true,
+    hmr: {
+      clientPort: 5000,
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -14,6 +18,11 @@ export default defineConfig(({ command }) => ({
         secure: false,
       }
     }
+  },
+  preview: {
+    host: "0.0.0.0",
+    port: 5000,
+    strictPort: true,
   },
   plugins: [react()],
   resolve: {
