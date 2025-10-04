@@ -17,6 +17,10 @@ dist-ssr
 .env.test.local
 .env.production.local
 
+# Vite temporary files
+*.timestamp-*.mjs
+undefined
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -23,10 +23,6 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 5175
-externalPort = 3001
-
-[[ports]]
 localPort = 5176
 externalPort = 3002
 
@@ -55,7 +51,7 @@ localPort = 8081
 externalPort = 8081
 
 [[ports]]
-localPort = 34255
+localPort = 39579
 externalPort = 3000
 
 [[ports]]
@@ -267,13 +263,13 @@ args = "App"
 name = "App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node api/server.js & npm run dev"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash start.sh"
+waitForPort = 5000
 
 [auth]
 pageEnabled = false

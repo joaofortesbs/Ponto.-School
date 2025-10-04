@@ -82,3 +82,49 @@ Preferred communication style: Simple, everyday language.
 - **Hosting**: Configured for deployment on various platforms
 - **Environment Management**: Support for multiple environments (development, production)
 - **API Server**: Express.js server for handling email services and API endpoints
+
+## Replit Environment Setup
+
+### Development Workflow
+- **Workflow Name**: App
+- **Command**: `node api/server.js & npm run dev`
+- **Port Configuration**: 
+  - Frontend: Port 5000 (0.0.0.0) - serves the React application
+  - Backend: Port 3001 (localhost) - serves the API endpoints
+- **Output Type**: Webview for live preview
+
+### Server Configuration
+- **Frontend Server**: Vite dev server configured to:
+  - Bind to 0.0.0.0:5000 for Replit proxy compatibility
+  - Proxy `/api` requests to backend on localhost:3001
+  - Enable HMR (Hot Module Replacement) on port 5000
+- **Backend Server**: Express.js configured to:
+  - Listen on localhost:3001 (internal only)
+  - Handle API routes: email, profiles, activities
+  - Initialize Neon database connection on startup
+
+### Deployment Configuration
+- **Type**: VM (stateful deployment)
+- **Build Command**: `npm run build`
+- **Run Command**: `node api/server.js & npm run preview`
+- **Reason for VM**: Maintains backend state and supports real-time database connections
+
+### Environment Variables Required
+Located in `.env` file:
+- `VITE_SUPABASE_URL`: Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Supabase anonymous/public key
+- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key (optional)
+- `PORT`: Backend server port (default: 3001)
+- `SENDGRID_API_KEY`: SendGrid API key for emails (optional)
+
+### Key Files
+- `vite.config.ts`: Vite configuration with proxy setup
+- `api/server.js`: Backend Express server
+- `package.json`: Scripts and dependencies
+- `.env`: Environment variables (not committed to git)
+
+### Recent Changes (October 2025)
+- Configured Vite to use 0.0.0.0:5000 for Replit compatibility
+- Updated backend to bind to localhost:3001
+- Set up combined workflow running both frontend and backend
+- Configured VM deployment for stateful application
