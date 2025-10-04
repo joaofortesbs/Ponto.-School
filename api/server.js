@@ -342,9 +342,9 @@ async function startServer() {
     registerActivityRoutes();
 
     // Iniciar servidor
-    app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, 'localhost', () => {
       console.log(`🚀 Servidor de API rodando na porta ${PORT}`);
-      console.log(`🌐 Acesse em: http://0.0.0.0:${PORT}/api/status`);
+      console.log(`🌐 Acesse em: http://localhost:${PORT}/api/status`);
     });
   } catch (error) {
     console.error('❌ Erro ao inicializar servidor:', error);
