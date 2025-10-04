@@ -5,8 +5,8 @@ run = "npm run dev"
 channel = "stable-25_05"
 
 [deployment]
-run = ["npm", "run", "start"]
-deploymentTarget = "autoscale"
+run = ["bash", "-c", "node api/server.js & npm run preview"]
+deploymentTarget = "vm"
 build = ["npm", "run", "build"]
 
 [[ports]]
@@ -53,6 +53,10 @@ externalPort = 8080
 [[ports]]
 localPort = 8081
 externalPort = 8081
+
+[[ports]]
+localPort = 34255
+externalPort = 3000
 
 [[ports]]
 localPort = 41579
