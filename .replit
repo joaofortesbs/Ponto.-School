@@ -12,6 +12,7 @@ build = ["npm", "run", "build"]
 [[ports]]
 localPort = 3001
 externalPort = 3001
+exposeLocalhost = true
 
 [[ports]]
 localPort = 3002
@@ -20,10 +21,6 @@ externalPort = 8000
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
 
 [[ports]]
 localPort = 5175
@@ -62,6 +59,7 @@ localPort = 41579
 externalPort = 6800
 
 [workflows]
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Run App"
@@ -251,6 +249,27 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/start-full-platform.js"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "App"
+
+[[workflows.workflow]]
+name = "App"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node api/server.js & npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [auth]
 pageEnabled = false
