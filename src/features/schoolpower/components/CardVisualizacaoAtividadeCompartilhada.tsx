@@ -505,9 +505,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             </Card>
           </div>
 
-        {/* Card de Pré-visualização da Atividade */}
+        {/* Card de Pré-visualização da Atividade - Com tema escuro forçado */}
         <div className="mb-8 flex-1 relative group">
-          <Card ref={cardRef} className="bg-white/95 dark:bg-gray-900/95 border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden h-full">
+          <Card ref={cardRef} className="border-slate-700 rounded-2xl shadow-lg overflow-hidden h-full" style={{ backgroundColor: '#1e293b' }}>
             <CardContent className="p-0 h-full flex flex-col">
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
                 <div className="flex items-center justify-center gap-2 text-white">
@@ -518,7 +518,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
 
               <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
                 {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
-                <div className="p-4 pointer-events-none overflow-hidden h-full">
+                <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ backgroundColor: '#f8f9fa' }}>
                   <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
                     {renderActivityPreview()}
                   </div>
