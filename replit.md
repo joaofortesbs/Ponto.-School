@@ -137,3 +137,8 @@ Replit Secrets (auto-configured):
 - Successfully imported 1 profile from JSON backup to native Replit database
 - Database schema: 9 columns (id, full_name, name_user, email, tipo_conta, avatar_url, created_at, updated_at, id_usuario)
 - All data verified with SELECT queries - backend connected successfully
+- **Implemented bidirectional database sync system**:
+  - Created `perfis_changelog` table with automatic triggers for INSERT/UPDATE/DELETE
+  - Python script for real-time bidirectional synchronization
+  - Workflow configured to sync every 5 minutes
+  - Pending: External Neon DB URL configuration (requires direct connection, not pooled)

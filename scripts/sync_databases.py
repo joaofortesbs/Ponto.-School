@@ -4,9 +4,18 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 import sys
+from dotenv import load_dotenv
+
+load_dotenv('.env.sync')
 
 REPLIT_DB_URL = os.environ.get('DATABASE_URL')
-EXTERNAL_DB_URL = "postgresql://neondb_owner:npg_1pxc2joPS@ep-spring-truth-a9girq-pgpooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+EXTERNAL_DB_URL = os.environ.get('EXTERNAL_DB_URL')
+
+if not EXTERNAL_DB_URL:
+    print("❌ ERRO: Variável EXTERNAL_DB_URL não configurada!")
+    print("   Configure a URL do banco externo no arquivo .env.sync")
+    print("   Use a URL DIRETA (sem -pooler) do painel Neon")
+    sys.exit(1)
 
 def get_connection(db_url):
     """Cria conexão com o banco de dados"""
