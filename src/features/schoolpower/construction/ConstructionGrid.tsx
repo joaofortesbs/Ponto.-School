@@ -10,7 +10,7 @@ import { useAutoSync } from './hooks/useAutoSync'; // Novo hook
 import { ConstructionActivity } from './types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft } from 'lucide-react';
+import { Zap, Loader2, CheckCircle, AlertCircle, Building2, History, ArrowLeft, Save } from 'lucide-react';
 import { autoBuildService, AutoBuildProgress } from './services/autoBuildService';
 
 interface ConstructionGridProps {
@@ -41,6 +41,9 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
   // Estado para controlar a visualização do histórico
   const [showHistorico, setShowHistorico] = useState(false);
+  
+  // Estado para controlar salvamento
+  const [isSaving, setIsSaving] = useState(false);
 
   console.log('🎯 Estado do modal:', { isModalOpen, selectedActivity: selectedActivity?.title });
 
@@ -143,6 +146,95 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
   const handleShare = (id: string) => {
     console.log('📤 Compartilhando atividade:', id);
     // TODO: Implementar funcionalidade de compartilhamento
+  };
+
+  const handleSaveActivitiesToNeon = async () => {
+    if (isSaving) {
+      console.log('⚠️ Salvamento já em andamento');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      console.log('💾 Iniciando salvamento de atividades criadas no Neon...');
+
+      // Importar serviços necessários
+      const { atividadesNeonService } = await import('@/services/atividadesNeonService');
+      const { profileService } = await import('@/services/profileService');
+
+      // Obter perfil do usuário
+      const profile = await profileService.getCurrentUserProfile();
+      
+      if (!profile?.id) {
+        alert('❌ Erro: Usuário não autenticado. Faça login para salvar as atividades.');
+        return;
+      }
+
+      console.log('👤 Usuário identificado:', profile.id);
+
+      // Buscar atividades construídas do localStorage
+      const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+      const activityIds = Object.keys(constructedActivities);
+
+      if (activityIds.length === 0) {
+        alert('ℹ️ Nenhuma atividade criada encontrada para salvar.');
+        return;
+      }
+
+      console.log(`📦 Encontradas ${activityIds.length} atividades criadas`);
+
+      let savedCount = 0;
+      let errorCount = 0;
+
+      // Salvar cada atividade no banco Neon
+      for (const activityId of activityIds) {
+        try {
+          // Buscar dados completos da atividade
+          const activityData = localStorage.getItem(`activity_${activityId}`);
+          
+          if (activityData) {
+            const parsedData = JSON.parse(activityData);
+            const tipo = constructedActivities[activityId]?.type || activityId;
+
+            console.log(`💾 Salvando atividade: ${activityId}`);
+
+            // Salvar no banco Neon
+            const result = await atividadesNeonService.salvarAtividade(
+              activityId,
+              profile.id,
+              tipo,
+              parsedData
+            );
+
+            if (result.success) {
+              savedCount++;
+              console.log(`✅ Atividade ${activityId} salva com sucesso`);
+            } else {
+              errorCount++;
+              console.error(`❌ Erro ao salvar ${activityId}:`, result.error);
+            }
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`❌ Erro ao processar atividade ${activityId}:`, error);
+        }
+      }
+
+      // Mostrar resultado
+      if (errorCount === 0) {
+        alert(`✅ Sucesso! ${savedCount} atividade(s) salva(s) no banco de dados!`);
+      } else {
+        alert(`⚠️ Salvamento concluído:\n\n✅ ${savedCount} atividade(s) salva(s)\n❌ ${errorCount} erro(s)`);
+      }
+
+      console.log(`📊 Resultado final: ${savedCount} salvas, ${errorCount} erros`);
+
+    } catch (error) {
+      console.error('❌ Erro ao salvar atividades:', error);
+      alert('❌ Erro ao salvar atividades. Verifique o console para mais detalhes.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleBuildAll = async () => {
@@ -427,6 +519,20 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             title="Voltar ao Início"
           >
             <ArrowLeft className="w-4 h-4" />
+          </button>
+
+          {/* Botão Salvar Atividades */}
+          <button
+            onClick={handleSaveActivitiesToNeon}
+            disabled={isSaving}
+            className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-green-500/30 text-green-600 hover:bg-green-500/5 hover:border-green-500/50 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Salvar Atividades Criadas no Banco de Dados"
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
           </button>
 
           {/* Botão de Histórico */}
