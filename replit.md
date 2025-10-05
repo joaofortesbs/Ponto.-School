@@ -137,8 +137,8 @@ Replit Secrets (auto-configured):
 - Successfully imported 1 profile from JSON backup to native Replit database
 - Database schema: 9 columns (id, full_name, name_user, email, tipo_conta, avatar_url, created_at, updated_at, id_usuario)
 - All data verified with SELECT queries - backend connected successfully
-- **Implemented bidirectional database sync system**:
-  - Created `perfis_changelog` table with automatic triggers for INSERT/UPDATE/DELETE
-  - Python script for real-time bidirectional synchronization
-  - Workflow configured to sync every 5 minutes
-  - Pending: External Neon DB URL configuration (requires direct connection, not pooled)
+- **Migrated to external Neon database** (ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech)
+  - App now uses external Neon database directly via DATABASE_URL
+  - Created table "Atividades" with columns: id, user_id, email, name_user, ID_JSON, created_at, updated_at
+  - Automatic triggers for updated_at column
+  - All data operations affect the real Neon database
