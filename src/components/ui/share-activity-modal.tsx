@@ -92,62 +92,116 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       // Importar serviço do banco Neon
       const { atividadesNeonService } = await import('@/services/atividadesNeonService');
       
-      // Buscar todas as atividades do usuário
-      const resultado = await atividadesNeonService.buscarAtividadesUsuario(userId);
+      // VERIFICAR SE O activityId JÁ É UM CÓDIGO ÚNICO (8 caracteres)
+      // Códigos únicos têm exatamente 8 caracteres e são Base62
+      const isCodigoUnico = activityId.length === 8 && /^[A-Za-z0-9]{8}$/.test(activityId);
       
-      if (!resultado.success || !resultado.data) {
-        console.error('❌ [MODAL] Erro ao buscar atividades do banco');
-        setError('Você precisa salvar a atividade primeiro! Clique no botão verde 💾 "Salvar Atividades"');
-        setLoading(false);
-        return;
+      if (isCodigoUnico) {
+        console.log('🔑 [MODAL] ActivityId já é um código único:', activityId);
+        
+        // Buscar diretamente pelo código único
+        const resultado = await atividadesNeonService.buscarAtividade(activityId);
+        
+        if (!resultado.success || !resultado.data) {
+          console.error('❌ [MODAL] Atividade não encontrada no banco com código:', activityId);
+          setError('Atividade não encontrada. Ela pode ter sido removida.');
+          setLoading(false);
+          return;
+        }
+        
+        const atividadeNoBanco = resultado.data;
+        const codigoUnico = atividadeNoBanco.id;
+        const linkPublico = `${window.location.origin}/atividade/${codigoUnico}`;
+        
+        console.log('✅ [MODAL] Atividade encontrada com código único:', codigoUnico);
+        console.log('🔗 [MODAL] Link gerado:', linkPublico);
+
+        // Criar objeto de atividade para o modal
+        const atividadeCompartilhavel: AtividadeCompartilhavel = {
+          id: codigoUnico,
+          titulo: activityTitle,
+          descricao: atividadeNoBanco.id_json?.description || '',
+          tipo: atividadeNoBanco.tipo,
+          dados: atividadeNoBanco.id_json,
+          customFields: atividadeNoBanco.id_json?.customFields || {},
+          professorNome: userInfo.name || 'Professor',
+          professorAvatar: userInfo.avatar,
+          schoolPoints: atividadeNoBanco.id_json?.schoolPoints || 100,
+          criadoPor: userId,
+          criadoEm: atividadeNoBanco.created_at || new Date().toISOString(),
+          codigoUnico: codigoUnico,
+          linkPublico: linkPublico,
+          ativo: true,
+          disciplina: atividadeNoBanco.id_json?.disciplina,
+          nivel: atividadeNoBanco.id_json?.nivel,
+          tempo_estimado: atividadeNoBanco.id_json?.tempo_estimado
+        };
+
+        setAtividade(atividadeCompartilhavel);
+        setError(null);
+        
+        console.log('✅ [MODAL] Link configurado com código do banco:', linkPublico);
+        
+      } else {
+        console.log('📝 [MODAL] ActivityId é um tipo de atividade, buscando pelo tipo:', activityId);
+        
+        // Buscar todas as atividades do usuário
+        const resultado = await atividadesNeonService.buscarAtividadesUsuario(userId);
+        
+        if (!resultado.success || !resultado.data) {
+          console.error('❌ [MODAL] Erro ao buscar atividades do banco');
+          setError('Você precisa salvar a atividade primeiro! Clique no botão verde 💾 "Salvar Atividades"');
+          setLoading(false);
+          return;
+        }
+
+        console.log('✅ [MODAL] Atividades encontradas no banco:', resultado.data.length);
+        
+        // Procurar a atividade atual pelo tipo
+        const atividadeNoBanco = resultado.data.find(ativ => ativ.tipo === activityId);
+        
+        if (!atividadeNoBanco) {
+          console.error('❌ [MODAL] Atividade não encontrada no banco');
+          console.log('📋 [MODAL] Atividades disponíveis:', resultado.data.map(a => a.tipo));
+          setError('Esta atividade ainda não foi salva! Clique no botão verde 💾 "Salvar Atividades" antes de compartilhar.');
+          setLoading(false);
+          return;
+        }
+
+        // Usar o código único do banco (que está na coluna ID)
+        const codigoUnico = atividadeNoBanco.id;
+        const linkPublico = `${window.location.origin}/atividade/${codigoUnico}`;
+        
+        console.log('✅ [MODAL] Código único encontrado no banco:', codigoUnico);
+        console.log('🔗 [MODAL] Link gerado:', linkPublico);
+
+        // Criar objeto de atividade para o modal
+        const atividadeCompartilhavel: AtividadeCompartilhavel = {
+          id: codigoUnico,
+          titulo: activityTitle,
+          descricao: atividadeNoBanco.id_json?.description || '',
+          tipo: atividadeNoBanco.tipo,
+          dados: atividadeNoBanco.id_json,
+          customFields: atividadeNoBanco.id_json?.customFields || {},
+          professorNome: userInfo.name || 'Professor',
+          professorAvatar: userInfo.avatar,
+          schoolPoints: atividadeNoBanco.id_json?.schoolPoints || 100,
+          criadoPor: userId,
+          criadoEm: atividadeNoBanco.created_at || new Date().toISOString(),
+          codigoUnico: codigoUnico,
+          linkPublico: linkPublico,
+          ativo: true,
+          disciplina: atividadeNoBanco.id_json?.disciplina,
+          nivel: atividadeNoBanco.id_json?.nivel,
+          tempo_estimado: atividadeNoBanco.id_json?.tempo_estimado
+        };
+
+        setAtividade(atividadeCompartilhavel);
+        setError(null);
+        
+        console.log('✅ [MODAL] Link configurado com código do banco:', linkPublico);
+        console.log('🔑 [MODAL] Código único usado:', codigoUnico);
       }
-
-      console.log('✅ [MODAL] Atividades encontradas no banco:', resultado.data.length);
-      
-      // Procurar a atividade atual pelo tipo
-      const atividadeNoBanco = resultado.data.find(ativ => ativ.tipo === activityId);
-      
-      if (!atividadeNoBanco) {
-        console.error('❌ [MODAL] Atividade não encontrada no banco');
-        console.log('📋 [MODAL] Atividades disponíveis:', resultado.data.map(a => a.tipo));
-        setError('Esta atividade ainda não foi salva! Clique no botão verde 💾 "Salvar Atividades" antes de compartilhar.');
-        setLoading(false);
-        return;
-      }
-
-      // 2. USAR O CÓDIGO ÚNICO DO BANCO (que está na coluna ID)
-      const codigoUnico = atividadeNoBanco.id;
-      const linkPublico = `${window.location.origin}/atividade/${codigoUnico}`;
-      
-      console.log('✅ [MODAL] Código único encontrado no banco:', codigoUnico);
-      console.log('🔗 [MODAL] Link gerado:', linkPublico);
-
-      // 3. CRIAR OBJETO DE ATIVIDADE PARA O MODAL
-      const atividadeCompartilhavel: AtividadeCompartilhavel = {
-        id: codigoUnico,
-        titulo: activityTitle,
-        descricao: atividadeNoBanco.id_json?.description || '',
-        tipo: atividadeNoBanco.tipo,
-        dados: atividadeNoBanco.id_json,
-        customFields: atividadeNoBanco.id_json?.customFields || {},
-        professorNome: userInfo.name || 'Professor',
-        professorAvatar: userInfo.avatar,
-        schoolPoints: atividadeNoBanco.id_json?.schoolPoints || 100,
-        criadoPor: userId,
-        criadoEm: atividadeNoBanco.created_at || new Date().toISOString(),
-        codigoUnico: codigoUnico,
-        linkPublico: linkPublico,
-        ativo: true,
-        disciplina: atividadeNoBanco.id_json?.disciplina,
-        nivel: atividadeNoBanco.id_json?.nivel,
-        tempo_estimado: atividadeNoBanco.id_json?.tempo_estimado
-      };
-
-      setAtividade(atividadeCompartilhavel);
-      setError(null);
-      
-      console.log('✅ [MODAL] Link configurado com código do banco:', linkPublico);
-      console.log('🔑 [MODAL] Código único usado:', codigoUnico);
       
     } catch (error) {
       console.error('❌ [MODAL] Erro completo ao buscar link:', error);
