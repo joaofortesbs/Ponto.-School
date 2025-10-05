@@ -132,5 +132,7 @@ Replit Secrets (auto-configured):
 - Updated backend to bind to localhost:3001
 - Set up combined workflow running both frontend and backend
 - Configured VM deployment for stateful application
-- Created and configured Replit PostgreSQL database for API data storage
-- Successfully initialized database schema with profiles table and indexes
+- **Migrated database to Neon PostgreSQL** (ep-spring-truth...sa-east-1.aws.neon.tech)
+- Successfully imported 1 profile from JSON backup
+- Database schema created with 9 columns: id, full_name, name_user, email, tipo_conta, avatar_url, created_at, updated_at, id_usuario
+- All data verified and tested with COUNT and SELECT queries

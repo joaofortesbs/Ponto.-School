@@ -2,8 +2,14 @@ import { Client } from 'pg';
 
 class NeonDBManager {
   constructor() {
+    // Limpar DATABASE_URL removendo prefixo 'psql' se existir
+    let connectionString = process.env.DATABASE_URL;
+    if (connectionString && connectionString.startsWith("psql '")) {
+      connectionString = connectionString.replace("psql '", "").replace(/'$/, "");
+    }
+    
     this.connectionConfig = {
-      connectionString: process.env.DATABASE_URL,
+      connectionString: connectionString,
       ssl: {
         rejectUnauthorized: false
       }
