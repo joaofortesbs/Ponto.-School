@@ -187,6 +187,16 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
       let savedCount = 0;
       let errorCount = 0;
 
+      // Função para gerar código único de 8 dígitos (mesmo sistema do compartilhamento)
+      const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      const gerarCodigoUnico = (tamanho: number = 8): string => {
+        let codigo = "";
+        for (let i = 0; i < tamanho; i++) {
+          codigo += CHARS.charAt(Math.floor(Math.random() * CHARS.length));
+        }
+        return codigo;
+      };
+
       // Salvar cada atividade no banco Neon
       for (const activityId of activityIds) {
         try {
@@ -197,11 +207,29 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
             const parsedData = JSON.parse(activityData);
             const tipo = constructedActivities[activityId]?.type || activityId;
 
-            console.log(`💾 Salvando atividade: ${activityId}`);
+            // Verificar se já existe um código único salvo para esta atividade
+            let codigoUnico = constructedActivities[activityId]?.codigoUnico;
+            
+            // Se não existe, gerar um novo código único de 8 dígitos
+            if (!codigoUnico) {
+              codigoUnico = gerarCodigoUnico(8);
+              console.log(`🔑 Código único gerado para ${activityId}:`, codigoUnico);
+              
+              // Salvar código único no localStorage para manter consistência
+              constructedActivities[activityId] = {
+                ...constructedActivities[activityId],
+                codigoUnico: codigoUnico
+              };
+              localStorage.setItem('constructedActivities', JSON.stringify(constructedActivities));
+            } else {
+              console.log(`🔑 Usando código único existente para ${activityId}:`, codigoUnico);
+            }
 
-            // Salvar no banco Neon
+            console.log(`💾 Salvando atividade com código único: ${codigoUnico}`);
+
+            // Salvar no banco Neon usando o código único como ID
             const result = await atividadesNeonService.salvarAtividade(
-              activityId,
+              codigoUnico, // Usar código único como ID
               userId,
               tipo,
               parsedData
@@ -209,7 +237,7 @@ export function ConstructionGrid({ approvedActivities, handleEditActivity: exter
 
             if (result.success) {
               savedCount++;
-              console.log(`✅ Atividade ${activityId} salva com sucesso`);
+              console.log(`✅ Atividade salva com código ${codigoUnico}`);
             } else {
               errorCount++;
               console.error(`❌ Erro ao salvar ${activityId}:`, result.error);

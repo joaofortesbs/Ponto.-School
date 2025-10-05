@@ -27,45 +27,71 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
 
   useEffect(() => {
     const carregarAtividade = async () => {
-      if (!finalActivityId || !finalUniqueCode) {
-        setErro('Link inválido: parâmetros faltando');
+      // O código único agora é o ID da atividade no banco
+      const codigoUnicoAtividade = finalUniqueCode || finalActivityId;
+      
+      if (!codigoUnicoAtividade) {
+        setErro('Link inválido: código único não encontrado');
         setCarregando(false);
         return;
       }
 
       try {
-        console.log('🔍 [PÚBLICO] Carregando atividade:', { finalActivityId, finalUniqueCode });
+        console.log('🔍 [PÚBLICO] Carregando atividade do banco Neon...');
+        console.log('🔑 [PÚBLICO] Código único:', codigoUnicoAtividade);
         console.log('🌐 [PÚBLICO] URL completa:', window.location.href);
         
-        const atividadeEncontrada = await buscarAtividadeCompartilhada(finalActivityId, finalUniqueCode);
+        // Buscar atividade do banco Neon usando o código único
+        const { atividadesNeonService } = await import('@/services/atividadesNeonService');
+        const resultado = await atividadesNeonService.buscarAtividade(codigoUnicoAtividade);
         
-        if (!atividadeEncontrada) {
-          console.error('❌ [PÚBLICO] Atividade não encontrada com parâmetros:', { finalActivityId, finalUniqueCode });
+        if (resultado.success && resultado.data) {
+          console.log('✅ [PÚBLICO] Atividade encontrada no banco Neon:', resultado.data);
           
-          // Tentar buscar no localStorage como fallback
-          const storageKey = 'ponto_school_atividades_compartilhaveis_v1.0';
-          const todasAtividades = JSON.parse(localStorage.getItem(storageKey) || '[]');
-          console.log('📋 [PÚBLICO] Atividades no localStorage:', todasAtividades);
+          // Converter dados do banco para formato da interface
+          const atividadeNeon = resultado.data;
+          const atividadeConvertida: AtividadeCompartilhavel = {
+            id: atividadeNeon.id,
+            titulo: atividadeNeon.id_json?.title || 'Atividade',
+            descricao: atividadeNeon.id_json?.description || '',
+            tipo: atividadeNeon.tipo,
+            dados: atividadeNeon.id_json,
+            customFields: atividadeNeon.id_json?.customFields || {},
+            professorNome: atividadeNeon.id_json?.professorNome || 'Professor',
+            professorAvatar: atividadeNeon.id_json?.professorAvatar,
+            schoolPoints: atividadeNeon.id_json?.schoolPoints || 100,
+            criadoPor: atividadeNeon.id_user,
+            criadoEm: atividadeNeon.created_at || new Date().toISOString(),
+            codigoUnico: atividadeNeon.id,
+            linkPublico: window.location.href,
+            ativo: true,
+            disciplina: atividadeNeon.id_json?.disciplina,
+            nivel: atividadeNeon.id_json?.nivel,
+            tempo_estimado: atividadeNeon.id_json?.tempo_estimado
+          };
           
-          // Buscar por ID da atividade
-          const atividadeFallback = todasAtividades.find((ativ: any) => 
-            ativ.id === finalActivityId && ativ.ativo === true
+          setAtividade(atividadeConvertida);
+          document.title = `${atividadeConvertida.titulo} - Ponto School`;
+          
+        } else {
+          console.log('⚠️ [PÚBLICO] Atividade não encontrada no banco Neon');
+          console.log('🔄 [PÚBLICO] Tentando buscar no localStorage como fallback...');
+          
+          // Fallback: buscar do localStorage
+          const atividadeEncontrada = await buscarAtividadeCompartilhada(
+            finalActivityId || codigoUnicoAtividade, 
+            codigoUnicoAtividade
           );
           
-          if (atividadeFallback) {
-            console.log('✅ [PÚBLICO] Atividade encontrada via fallback:', atividadeFallback);
-            setAtividade(atividadeFallback);
-            setCarregando(false);
-            return;
+          if (atividadeEncontrada) {
+            console.log('✅ [PÚBLICO] Atividade encontrada no localStorage:', atividadeEncontrada);
+            setAtividade(atividadeEncontrada);
+            document.title = `${atividadeEncontrada.titulo} - Ponto School`;
+          } else {
+            console.error('❌ [PÚBLICO] Atividade não encontrada em nenhum lugar');
+            setErro('Atividade não encontrada ou link inválido');
           }
-          
-          setErro('Atividade não encontrada ou link expirado');
-          setCarregando(false);
-          return;
         }
-
-        setAtividade(atividadeEncontrada);
-        document.title = `${atividadeEncontrada.titulo} - Ponto School`;
         
       } catch (error) {
         console.error('❌ [PÚBLICO] Erro ao carregar:', error);

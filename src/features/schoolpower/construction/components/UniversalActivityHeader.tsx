@@ -284,108 +284,72 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
     try {
       console.log('🔗 [HEADER] Iniciando geração de link para atividade:', activityId);
       
-      // Buscar dados da atividade compartilhada existente no localStorage
-      const storageKey = 'ponto_school_atividades_compartilhaveis_v1.0';
-      const atividadesCompartilhadas = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      
-      // Procurar atividade já compartilhada
-      const atividadeExistente = atividadesCompartilhadas.find((ativ: any) => 
-        ativ.id === activityId && ativ.ativo === true
-      );
-
+      // 1. Buscar o código único da atividade do banco Neon
+      const userId = localStorage.getItem('user_id');
+      let codigoUnico: string | null = null;
       let shareLink = '';
       
-      if (atividadeExistente) {
-        // Se já existe, usar o link existente
-        shareLink = atividadeExistente.linkPublico;
-        console.log('✅ [HEADER] Link existente encontrado:', shareLink);
-      } else {
-        // Se não existe, gerar novo link usando o serviço de geração
-        console.log('🆕 [HEADER] Gerando novo link para atividade...');
+      if (userId) {
+        console.log('🔍 [HEADER] Buscando código único do banco Neon...');
         
-        // Importar dinamicamente o serviço de geração
-        const { criarLinkAtividade } = await import('../../services/gerador-link-atividades-schoolpower');
-        
-        // Buscar dados da atividade do localStorage
-        const possiveisChaves = [
-          `constructedActivity_${activityId}`,
-          `activity_${activityId}`,
-          `schoolpower_activity_${activityId}`,
-          activityId
-        ];
-
-        let dadosAtividade = null;
-        for (const chave of possiveisChaves) {
-          try {
-            const dados = localStorage.getItem(chave);
-            if (dados) {
-              dadosAtividade = JSON.parse(dados);
-              console.log('📋 [HEADER] Dados encontrados em:', chave);
-              break;
-            }
-          } catch (e) {
-            console.log('⚠️ [HEADER] Erro ao buscar chave:', chave);
-          }
-        }
-
-        if (!dadosAtividade) {
-          console.error('❌ [HEADER] Dados da atividade não encontrados');
-          shareLink = `${window.location.origin}/atividade/${activityId}/compartilhada`;
-        } else {
-          // Preparar dados para criação do link
-          const dadosParaCompartilhamento = {
-            id: activityId,
-            titulo: activityTitle || dadosAtividade.titulo || dadosAtividade.title || 'Atividade',
-            descricao: dadosAtividade.descricao || dadosAtividade.description || '',
-            tipo: dadosAtividade.tipo || dadosAtividade.type || 'atividade',
-            dados: dadosAtividade.dados || dadosAtividade,
-            customFields: dadosAtividade.customFields || {},
-            professorNome: finalUserName || 'Professor',
-            professorAvatar: finalUserAvatar,
-            schoolPoints: currentSPs || 100,
-            criadoPor: userInfo.userId || userInfo.name || 'usuario-anonimo',
-            disciplina: dadosAtividade.disciplina,
-            nivel: dadosAtividade.nivel,
-            tempo_estimado: dadosAtividade.tempo_estimado
-          };
-
-          console.log('🚀 [HEADER] Criando link com dados:', dadosParaCompartilhamento);
-
-          try {
-            const novaAtividade = await criarLinkAtividade(dadosParaCompartilhamento);
-            if (novaAtividade && novaAtividade.linkPublico) {
-              shareLink = novaAtividade.linkPublico;
-              console.log('✅ [HEADER] Link criado com sucesso:', shareLink);
+        try {
+          // Importar serviço do banco Neon
+          const { atividadesNeonService } = await import('@/services/atividadesNeonService');
+          
+          // Buscar todas as atividades do usuário
+          const resultado = await atividadesNeonService.buscarAtividadesUsuario(userId);
+          
+          if (resultado.success && resultado.data) {
+            // Procurar a atividade atual pelo tipo
+            const atividadeNoBanco = resultado.data.find(ativ => ativ.tipo === activityId);
+            
+            if (atividadeNoBanco) {
+              // Encontrou no banco! Usar o código único (que está na coluna id)
+              codigoUnico = atividadeNoBanco.id;
+              console.log('✅ [HEADER] Código único encontrado no banco:', codigoUnico);
+              
+              // Gerar link com o código único
+              shareLink = `${window.location.origin}/atividade/${codigoUnico}`;
             } else {
-              console.error('❌ [HEADER] Falha na criação do link');
-              shareLink = `${window.location.origin}/atividade/${activityId}/erro`;
+              console.log('⚠️ [HEADER] Atividade não encontrada no banco. Usuário precisa salvar primeiro!');
             }
-          } catch (error) {
-            console.error('❌ [HEADER] Erro ao criar link:', error);
-            shareLink = `${window.location.origin}/atividade/${activityId}/erro`;
           }
+        } catch (error) {
+          console.error('❌ [HEADER] Erro ao buscar do banco:', error);
         }
       }
+      
+      // 2. Se não encontrou no banco, verificar localStorage como fallback
+      if (!codigoUnico) {
+        console.log('🔄 [HEADER] Tentando buscar do localStorage...');
+        
+        // Verificar se há código único salvo no localStorage
+        const constructedActivities = JSON.parse(localStorage.getItem('constructedActivities') || '{}');
+        if (constructedActivities[activityId]?.codigoUnico) {
+          codigoUnico = constructedActivities[activityId].codigoUnico;
+          shareLink = `${window.location.origin}/atividade/${codigoUnico}`;
+          console.log('✅ [HEADER] Código único encontrado no localStorage:', codigoUnico);
+        }
+      }
+      
+      // 3. Se ainda não tem código, informar que precisa salvar primeiro
+      if (!codigoUnico || !shareLink) {
+        console.warn('⚠️ [HEADER] Nenhum código único encontrado. Atividade precisa ser salva!');
+        alert('⚠️ Para compartilhar esta atividade, você precisa salvá-la primeiro!\n\nClique no botão verde 💾 "Salvar Atividades" antes de compartilhar.');
+        return;
+      }
 
-      // Copiar link para área de transferência
+      // 4. Copiar link para área de transferência
       await navigator.clipboard.writeText(shareLink);
       setShowCopySuccess(true);
       setTimeout(() => setShowCopySuccess(false), 2000);
       
       console.log('📋 [HEADER] Link copiado:', shareLink);
+      console.log('🔑 [HEADER] Código único usado:', codigoUnico);
       
     } catch (err) {
       console.error('❌ [HEADER] Erro ao copiar link:', err);
-      
-      // Fallback: copiar pelo menos a URL atual
-      const fallbackLink = window.location.href;
-      try {
-        await navigator.clipboard.writeText(fallbackLink);
-        setShowCopySuccess(true);
-        setTimeout(() => setShowCopySuccess(false), 2000);
-      } catch (fallbackError) {
-        console.error('❌ [HEADER] Erro no fallback:', fallbackError);
-      }
+      alert('❌ Erro ao gerar link de compartilhamento. Tente novamente.');
     }
   };
 
