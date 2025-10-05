@@ -49,69 +49,60 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     setMigrationStatus('');
 
     try {
-      // 1. Obter perfil do usuário atual para pegar o user_id
-      console.log('👤 Obtendo perfil do usuário...');
-      const profile = await profileService.getCurrentUserProfile();
-      console.log('👤 Perfil obtido:', profile);
+      // 1. Obter ID do usuário do localStorage (sistema de autenticação Neon)
+      const userId = localStorage.getItem('user_id');
+      const authToken = localStorage.getItem('auth_token');
       
-      if (!profile || !profile.user_id) {
+      if (!userId || !authToken) {
         console.warn('⚠️ ==========================================');
-        console.warn('⚠️ USUÁRIO NÃO ENCONTRADO OU SEM USER_ID');
-        console.warn('⚠️ Profile:', profile);
+        console.warn('⚠️ USUÁRIO NÃO AUTENTICADO');
+        console.warn('⚠️ userId:', !!userId, 'authToken:', !!authToken);
         console.warn('⚠️ ==========================================');
         // Tentar carregar do localStorage como fallback
         await carregarDoLocalStorageFallback();
         return;
       }
 
-      const userId = profile.user_id;
       console.log('👤 ==========================================');
       console.log('👤 USUÁRIO IDENTIFICADO');
       console.log('👤 User ID:', userId);
       console.log('👤 ==========================================');
 
-      // 2. Buscar atividades do banco de dados
-      console.log('🔍 Chamando activitiesApi.getUserActivities...');
-      const apiResponse = await activitiesApi.getUserActivities(userId);
+      // 2. Importar e usar o serviço do banco Neon
+      const { atividadesNeonService } = await import('@/services/atividadesNeonService');
+      
+      console.log('🔍 Buscando atividades do banco Neon...');
+      const apiResponse = await atividadesNeonService.buscarAtividadesUsuario(userId);
       console.log('🔍 Resposta da API:', apiResponse);
       
-      if (apiResponse.success && apiResponse.data) {
+      if (apiResponse.success && apiResponse.data && apiResponse.data.length > 0) {
         console.log('✅ ==========================================');
         console.log('✅ ATIVIDADES CARREGADAS COM SUCESSO');
         console.log('✅ Total de atividades:', apiResponse.data.length);
         console.log('✅ ==========================================');
         
-        // Converter dados da API para formato do componente
-        const atividadesDoBanco = apiResponse.data.map((activity: ActivityData) => 
-          convertApiActivityToHistorico(activity)
+        // Converter dados do banco Neon para formato do componente
+        const atividadesDoBanco = apiResponse.data.map((activity: any) => 
+          convertNeonActivityToHistorico(activity)
         );
 
         console.log('✅ Atividades convertidas:', atividadesDoBanco.length);
         
-        // 3. Verificar se há atividades no localStorage para migrar
-        const localStorageActivities = await verificarEMigrarLocalStorage(userId);
-        
-        // 4. Combinar atividades do banco com as migradas
-        const todasAtividades = [...atividadesDoBanco, ...localStorageActivities];
-        
         // Ordenar por data de atualização (mais recente primeiro)
-        todasAtividades.sort((a, b) => 
+        atividadesDoBanco.sort((a, b) => 
           new Date(b.atualizadaEm || b.criadaEm).getTime() - 
           new Date(a.atualizadaEm || a.criadaEm).getTime()
         );
         
-        setAtividadesHistorico(todasAtividades);
+        setAtividadesHistorico(atividadesDoBanco);
         
       } else {
-        console.log('❌ ==========================================');
-        console.log('❌ ERRO AO CARREGAR ATIVIDADES DA API');
-        console.log('❌ Response success:', apiResponse.success);
-        console.log('❌ Response error:', apiResponse.error);
-        console.log('❌ ==========================================');
+        console.log('ℹ️ ==========================================');
+        console.log('ℹ️ NENHUMA ATIVIDADE ENCONTRADA NO BANCO');
+        console.log('ℹ️ ==========================================');
         
-        // Fallback para localStorage
-        console.log('🔄 Tentando carregar do localStorage como fallback...');
-        await carregarDoLocalStorageFallback();
+        // Não há atividades no banco
+        setAtividadesHistorico([]);
       }
       
     } catch (error) {
@@ -124,20 +115,23 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
     }
   };
 
-  // Converter atividade da API para formato do histórico
-  const convertApiActivityToHistorico = (activity: ActivityData): AtividadeHistorico => {
+  // Converter atividade do banco Neon para formato do histórico
+  const convertNeonActivityToHistorico = (activity: any): AtividadeHistorico => {
+    // activity.id_json contém todos os dados da atividade
+    const activityData = activity.id_json;
+    
     return {
-      id: activity.codigo_unico, // Usar código único como ID para compatibilidade
-      title: activity.titulo || getActivityNameById(activity.tipo),
-      description: activity.descricao || 'Atividade criada na plataforma',
+      id: activity.id,
+      title: activityData?.title || getActivityNameById(activity.tipo),
+      description: activityData?.description || 'Atividade criada na plataforma',
       type: activity.tipo,
       progress: 100,
       status: 'completed',
-      customFields: {},
+      customFields: activityData?.customFields || {},
       isBuilt: true,
-      builtAt: activity.criado_em || new Date().toISOString(),
-      criadaEm: activity.criado_em || new Date().toISOString(),
-      atualizadaEm: activity.atualizado_em,
+      builtAt: activity.created_at || new Date().toISOString(),
+      criadaEm: activity.created_at || new Date().toISOString(),
+      atualizadaEm: activity.updated_at,
       // Campos adicionais necessários para ConstructionActivity
       categoryId: activity.tipo,
       categoryName: getActivityNameById(activity.tipo),
@@ -145,10 +139,9 @@ export function HistoricoAtividadesCriadas({ onBack }: HistoricoAtividadesCriada
       tags: [],
       difficulty: 'Médio',
       estimatedTime: '30 min',
-      originalData: activity.conteudo,
+      originalData: activityData,
       // Adicionar dados específicos do banco
-      codigoUnico: activity.codigo_unico,
-      userId: activity.user_id,
+      userId: activity.id_user,
       // Identificar origem
       origem: 'banco_neon'
     };
