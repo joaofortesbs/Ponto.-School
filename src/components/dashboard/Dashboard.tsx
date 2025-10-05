@@ -62,8 +62,26 @@ export default function Dashboard() {
       <div className="max-w-[1192px] mx-auto">
         <h1 className="text-3xl font-bold text-brand-black dark:text-white flex items-center gap-2">
           <span className="text-2xl">👋</span> {(() => {
-                  // Obter o primeiro nome do usuário com prioridade consistente
-                  const firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || localStorage.getItem('userFirstName') || "Usuário";
+                  // Buscar primeiro nome do Neon DB
+                  let firstName = "Usuário";
+                  const neonUser = localStorage.getItem("neon_user");
+                  if (neonUser) {
+                    try {
+                      const userData = JSON.parse(neonUser);
+                      const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
+                      if (fullName) {
+                        firstName = fullName.split(" ")[0].split("@")[0];
+                      }
+                    } catch (error) {
+                      console.error("Erro ao buscar nome do Neon:", error);
+                    }
+                  }
+
+                  // Fallback para outros métodos
+                  if (firstName === "Usuário") {
+                    firstName = userProfile?.full_name?.split(' ')[0] || userProfile?.display_name || localStorage.getItem('userFirstName') || "Usuário";
+                  }
+                  
                   // Salvar no localStorage para uso no sidebar e outros componentes
                   localStorage.setItem('userFirstName', firstName);
                   
