@@ -139,6 +139,9 @@ Replit Secrets (auto-configured):
 - All data verified with SELECT queries - backend connected successfully
 - **Migrated to external Neon database** (ep-spring-truth-ach9qir9-pooler.sa-east-1.aws.neon.tech)
   - App now uses external Neon database directly via DATABASE_URL
-  - Created table "Atividades" with columns: id, user_id, email, name_user, ID_JSON, created_at, updated_at
-  - Automatic triggers for updated_at column
+  - Created table "usuarios" with secure password hashing (bcrypt, 12 rounds)
+  - Complete user registration and login system integrated
+  - All passwords stored with irreversible bcrypt hashes
+  - Registration page fully connected to database
+  - Login system authenticates against real database
   - All data operations affect the real Neon database

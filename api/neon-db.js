@@ -58,10 +58,10 @@ class NeonDBManager {
     return result.success && result.data[0]?.exists;
   }
 
-  // Criar tabela de perfis
+  // Criar tabela de usuários
   async createPerfilsTable() {
     const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS perfis (
+      CREATE TABLE IF NOT EXISTS usuarios (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         nome_completo VARCHAR(255) NOT NULL,
         nome_usuario VARCHAR(100) UNIQUE NOT NULL,
@@ -79,7 +79,7 @@ class NeonDBManager {
     const result = await this.executeQuery(createTableQuery);
 
     if (result.success) {
-      console.log('✅ Tabela "perfis" criada com sucesso');
+      console.log('✅ Tabela "usuarios" criada com sucesso');
 
       // Criar índices para melhor performance
       await this.createPerfilsIndexes();
@@ -89,18 +89,18 @@ class NeonDBManager {
 
       return true;
     } else {
-      console.error('❌ Erro ao criar tabela "perfis":', result.error);
+      console.error('❌ Erro ao criar tabela "usuarios":', result.error);
       return false;
     }
   }
 
-  // Criar índices para a tabela perfis
+  // Criar índices para a tabela usuarios
   async createPerfilsIndexes() {
     const indexes = [
-      'CREATE INDEX IF NOT EXISTS idx_perfis_email ON perfis(email);',
-      'CREATE INDEX IF NOT EXISTS idx_perfis_nome_usuario ON perfis(nome_usuario);',
-      'CREATE INDEX IF NOT EXISTS idx_perfis_tipo_conta ON perfis(tipo_conta);',
-      'CREATE INDEX IF NOT EXISTS idx_perfis_created_at ON perfis(created_at);'
+      'CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);',
+      'CREATE INDEX IF NOT EXISTS idx_usuarios_nome_usuario ON usuarios(nome_usuario);',
+      'CREATE INDEX IF NOT EXISTS idx_usuarios_tipo_conta ON usuarios(tipo_conta);',
+      'CREATE INDEX IF NOT EXISTS idx_usuarios_created_at ON usuarios(created_at);'
     ];
 
     for (const indexQuery of indexes) {
@@ -124,9 +124,9 @@ class NeonDBManager {
       END;
       $$ language 'plpgsql';
 
-      DROP TRIGGER IF EXISTS update_perfis_updated_at ON perfis;
-      CREATE TRIGGER update_perfis_updated_at
-        BEFORE UPDATE ON perfis
+      DROP TRIGGER IF EXISTS update_usuarios_updated_at ON usuarios;
+      CREATE TRIGGER update_usuarios_updated_at
+        BEFORE UPDATE ON usuarios
         FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     `;
 
@@ -166,14 +166,14 @@ class NeonDBManager {
       throw new Error('Falha na conexão com o banco de dados');
     }
 
-    // Verificar se a tabela perfis existe
-    const perfilsExists = await this.tableExists('perfis');
+    // Verificar se a tabela usuarios existe
+    const usuariosExists = await this.tableExists('usuarios');
 
-    if (!perfilsExists) {
-      console.log('📝 Tabela "perfis" não existe, criando...');
+    if (!usuariosExists) {
+      console.log('📝 Tabela "usuarios" não existe, criando...');
       await this.createPerfilsTable();
     } else {
-      console.log('✅ Tabela "perfis" já existe');
+      console.log('✅ Tabela "usuarios" já existe');
     }
 
     console.log('🎉 Banco de dados inicializado com sucesso!');
@@ -184,7 +184,7 @@ class NeonDBManager {
   async findProfileByEmail(email) {
     try {
       console.log('🔍 Buscando perfil por email:', email);
-      const query = 'SELECT * FROM perfis WHERE email = $1';
+      const query = 'SELECT * FROM usuarios WHERE email = $1';
       const result = await this.executeQuery(query, [email]);
 
       console.log('📊 Resultado da busca:', result.data.length > 0 ? 'Encontrado' : 'Não encontrado');
@@ -207,7 +207,7 @@ class NeonDBManager {
   async findProfileByUsername(username) {
     try {
       console.log('🔍 Buscando perfil por nome de usuário:', username);
-      const query = 'SELECT * FROM perfis WHERE nome_usuario = $1';
+      const query = 'SELECT * FROM usuarios WHERE nome_usuario = $1';
       const result = await this.executeQuery(query, [username]);
 
       console.log('📊 Resultado da busca por username:', result.data.length > 0 ? 'Encontrado' : 'Não encontrado');
@@ -230,7 +230,7 @@ class NeonDBManager {
   async findProfileById(id) {
     try {
       console.log('🔍 Buscando perfil por ID:', id);
-      const query = 'SELECT * FROM perfis WHERE id = $1';
+      const query = 'SELECT * FROM usuarios WHERE id = $1';
       const result = await this.executeQuery(query, [id]);
 
       console.log('📊 Resultado da busca:', result.data.length > 0 ? 'Encontrado' : 'Não encontrado');
@@ -263,7 +263,7 @@ class NeonDBManager {
     } = profileData;
 
     const query = `
-      INSERT INTO perfis (
+      INSERT INTO usuarios (
         nome_completo, nome_usuario, email, senha_hash,
         tipo_conta, pais, estado, instituicao_ensino
       )
@@ -305,7 +305,7 @@ class NeonDBManager {
 
     values.push(id);
     const query = `
-      UPDATE perfis 
+      UPDATE usuarios 
       SET ${fields.join(', ')}
       WHERE id = $${paramCount}
       RETURNING id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, updated_at
@@ -316,13 +316,13 @@ class NeonDBManager {
 
   // Deletar perfil
   async deleteProfile(id) {
-    const query = 'DELETE FROM perfis WHERE id = $1 RETURNING id';
+    const query = 'DELETE FROM usuarios WHERE id = $1 RETURNING id';
     return await this.executeQuery(query, [id]);
   }
 
   // Listar perfis com filtros opcionais
   async listProfiles(filters = {}, limit = 50, offset = 0) {
-    let query = 'SELECT id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, created_at FROM perfis';
+    let query = 'SELECT id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, created_at FROM usuarios';
     const conditions = [];
     const values = [];
     let paramCount = 1;
@@ -358,7 +358,7 @@ class NeonDBManager {
 
   // Contar total de perfis
   async countProfiles(filters = {}) {
-    let query = 'SELECT COUNT(*) as total FROM perfis';
+    let query = 'SELECT COUNT(*) as total FROM usuarios';
     const conditions = [];
     const values = [];
     let paramCount = 1;
