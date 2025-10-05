@@ -36,7 +36,8 @@ Preferred communication style: Simple, everyday language.
 - **User Roles**: Support for students, teachers, and administrators with role-based access
 
 ### Data Architecture
-- **Database**: Replit PostgreSQL (Neon-backed) for API data storage and Supabase PostgreSQL for user authentication
+- **Database**: Replit PostgreSQL (Neon-backed) nativo - ep-rapid-mountain-ae49pxeq.c-2.us-east-2.aws.neon.tech
+- **Authentication**: Supabase PostgreSQL for user sessions and profile management
 - **Real-time Features**: Supabase Realtime for live chat, user presence, and collaborative features
 - **File Storage**: Supabase Storage for user-generated content, avatars, and educational materials
 - **Local Storage**: Browser storage for temporary data and user preferences
@@ -132,7 +133,7 @@ Replit Secrets (auto-configured):
 - Updated backend to bind to localhost:3001
 - Set up combined workflow running both frontend and backend
 - Configured VM deployment for stateful application
-- **Migrated database to Neon PostgreSQL** (ep-spring-truth...sa-east-1.aws.neon.tech)
-- Successfully imported 1 profile from JSON backup
-- Database schema created with 9 columns: id, full_name, name_user, email, tipo_conta, avatar_url, created_at, updated_at, id_usuario
-- All data verified and tested with COUNT and SELECT queries
+- **Created Replit PostgreSQL native database** (ep-rapid-mountain-ae49pxeq.c-2.us-east-2.aws.neon.tech)
+- Successfully imported 1 profile from JSON backup to native Replit database
+- Database schema: 9 columns (id, full_name, name_user, email, tipo_conta, avatar_url, created_at, updated_at, id_usuario)
+- All data verified with SELECT queries - backend connected successfully
