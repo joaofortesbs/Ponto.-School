@@ -2,16 +2,16 @@ import pg from 'pg';
 
 const { Pool } = pg;
 
-const neonConnectionString = 'postgresql://neondb_owner:npg_pbB26RKGeTmL@ep-floral-rice-afq0ee1h.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require';
+const neonSourceConnectionString = 'postgresql://neondb_owner:npg_XjKY4iUb0sIW@ep-proud-scene-a5buudsi.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const replitConnectionString = process.env.DATABASE_URL;
 
-console.log('🔑 Testando conexão com Neon...');
-console.log('📍 Host: ep-floral-rice-afq0ee1h.c-2.us-west-2.aws.neon.tech');
+console.log('🔑 Conectando ao banco Neon de origem...');
+console.log('📍 Host: ep-proud-scene-a5buudsi.us-east-2.aws.neon.tech');
 console.log('👤 User: neondb_owner');
 console.log('🗄️ Database: neondb\n');
 
 const neonPool = new Pool({
-  connectionString: neonConnectionString,
+  connectionString: neonSourceConnectionString,
   ssl: { 
     rejectUnauthorized: false,
     require: true
