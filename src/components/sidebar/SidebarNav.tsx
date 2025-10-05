@@ -50,6 +50,7 @@ import {
 import MentorAI from "@/components/mentor/MentorAI";
 import AgendaNav from "./AgendaNav";
 import TurmasNav from "./TurmasNav";
+import { useUserName } from "@/hooks/useUserName";
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLDivElement> {
   isCollapsed?: boolean;
@@ -65,6 +66,7 @@ export function SidebarNav({
   const navigate = useNavigate();
   const location = useLocation();
   const [showMentorAI, setShowMentorAI] = useState(false);
+  const { userName } = useUserName();
 
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -659,33 +661,7 @@ export function SidebarNav({
               {!isCollapsed && (
                 <div className="text-[#001427] dark:text-white text-center w-full">
                   <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                    <span className="mr-1">👋</span> Olá,{" "}
-                    {(() => {
-                      // Buscar primeiro nome do Neon DB
-                      const neonUser = localStorage.getItem("neon_user");
-                      if (neonUser) {
-                        try {
-                          const userData = JSON.parse(neonUser);
-                          const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
-                          if (fullName) {
-                            const firstName = fullName.split(" ")[0].split("@")[0];
-                            return firstName;
-                          }
-                        } catch (error) {
-                          console.error("Erro ao buscar nome do Neon:", error);
-                        }
-                      }
-
-                      // Fallback para outros métodos
-                      const firstName =
-                        userProfile?.full_name?.split(" ")[0] ||
-                        userProfile?.display_name ||
-                        localStorage.getItem("userFirstName") ||
-                        "Usuário";
-                      return firstName;
-                    })()}
-                    !
-                  </h3>
+                    <span className="mr-1">👋</span> Olá, {userName}</h3>
                   <div className="flex flex-col items-center mt-1">
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
@@ -874,33 +850,7 @@ export function SidebarNav({
               {!isCollapsed && (
                 <div className="text-[#001427] dark:text-white text-center w-full">
                   <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
-                    <span className="mr-1">👋</span> Olá,{" "}
-                    {(() => {
-                      // Buscar primeiro nome do Neon DB
-                      const neonUser = localStorage.getItem("neon_user");
-                      if (neonUser) {
-                        try {
-                          const userData = JSON.parse(neonUser);
-                          const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
-                          if (fullName) {
-                            const firstName = fullName.split(" ")[0].split("@")[0];
-                            return firstName;
-                          }
-                        } catch (error) {
-                          console.error("Erro ao buscar nome do Neon:", error);
-                        }
-                      }
-
-                      // Fallback para outros métodos
-                      const firstName =
-                        userProfile?.full_name?.split(" ")[0] ||
-                        userProfile?.display_name ||
-                        localStorage.getItem("userFirstName") ||
-                        "Usuário";
-                      return firstName;
-                    })()}
-                    !
-                  </h3>
+                    <span className="mr-1">👋</span> Olá, {userName}</h3>
                   <div className="flex flex-col items-center mt-1">
                     <p className="text-xs text-[#001427]/70 dark:text-white/70 mb-0.5">
                       Nível {userProfile?.level || 1}
@@ -1455,7 +1405,7 @@ export function SidebarNav({
         }
 
         /* Animações para o flip do menu */
-        .menu-animating .menu-item-wrapper {
+        .menu-animating .menu-navigation {
           animation: menuFlipCascade 1.5s ease-in-out;
           animation-delay: var(--cascade-delay, 0s);
         }

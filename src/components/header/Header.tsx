@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
 import {
   Search,
   ShoppingCart,
@@ -11,34 +10,10 @@ import {
   User,
   Menu,
 } from "lucide-react";
+import { useUserName } from "@/hooks/useUserName";
 
 export function Header() {
-  const [userName, setUserName] = useState<string>("Usuário");
-
-  useEffect(() => {
-    // Buscar primeiro nome do Neon DB
-    const neonUser = localStorage.getItem("neon_user");
-    if (neonUser) {
-      try {
-        const userData = JSON.parse(neonUser);
-        const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
-        if (fullName) {
-          const firstName = fullName.split(" ")[0].split("@")[0];
-          setUserName(firstName);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar nome do Neon:", error);
-      }
-    }
-
-    // Fallback para outros métodos
-    if (userName === "Usuário") {
-      const storedFirstName = localStorage.getItem("userFirstName");
-      if (storedFirstName && storedFirstName !== "Usuário") {
-        setUserName(storedFirstName);
-      }
-    }
-  }, []);
+  const { userName } = useUserName();
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white dark:bg-[#001427] px-4 md:px-6">
