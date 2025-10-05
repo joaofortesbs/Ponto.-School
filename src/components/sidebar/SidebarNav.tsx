@@ -591,9 +591,24 @@ export function SidebarNav({
                               isCollapsed ? "text-xs" : "text-lg",
                             )}
                           >
-                            {firstName
-                              ? firstName.charAt(0).toUpperCase()
-                              : "U"}
+                            {(() => {
+                              // Buscar primeiro nome do Neon DB para iniciais
+                              const neonUser = localStorage.getItem("neon_user");
+                              if (neonUser) {
+                                try {
+                                  const userData = JSON.parse(neonUser);
+                                  const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
+                                  if (fullName) {
+                                    const firstChar = fullName.charAt(0).toUpperCase();
+                                    return firstChar;
+                                  }
+                                } catch (error) {
+                                  console.error("Erro ao buscar iniciais do Neon:", error);
+                                }
+                              }
+
+                              return firstName ? firstName.charAt(0).toUpperCase() : "U";
+                            })()}
                           </span>
                         </div>
                       </div>
@@ -646,12 +661,27 @@ export function SidebarNav({
                   <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
                     <span className="mr-1">👋</span> Olá,{" "}
                     {(() => {
-                      // Obter o primeiro nome com a mesma lógica do Dashboard
+                      // Buscar primeiro nome do Neon DB
+                      const neonUser = localStorage.getItem("neon_user");
+                      if (neonUser) {
+                        try {
+                          const userData = JSON.parse(neonUser);
+                          const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
+                          if (fullName) {
+                            const firstName = fullName.split(" ")[0].split("@")[0];
+                            return firstName;
+                          }
+                        } catch (error) {
+                          console.error("Erro ao buscar nome do Neon:", error);
+                        }
+                      }
+
+                      // Fallback para outros métodos
                       const firstName =
                         userProfile?.full_name?.split(" ")[0] ||
                         userProfile?.display_name ||
                         localStorage.getItem("userFirstName") ||
-                        "Estudante";
+                        "Usuário";
                       return firstName;
                     })()}
                     !
@@ -794,9 +824,24 @@ export function SidebarNav({
                               isCollapsed ? "text-xs" : "text-lg",
                             )}
                           >
-                            {firstName
-                              ? firstName.charAt(0).toUpperCase()
-                              : "U"}
+                            {(() => {
+                              // Buscar primeiro nome do Neon DB para iniciais
+                              const neonUser = localStorage.getItem("neon_user");
+                              if (neonUser) {
+                                try {
+                                  const userData = JSON.parse(neonUser);
+                                  const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
+                                  if (fullName) {
+                                    const firstChar = fullName.charAt(0).toUpperCase();
+                                    return firstChar;
+                                  }
+                                } catch (error) {
+                                  console.error("Erro ao buscar iniciais do Neon:", error);
+                                }
+                              }
+
+                              return firstName ? firstName.charAt(0).toUpperCase() : "U";
+                            })()}
                           </span>
                         </div>
                       </div>
@@ -831,12 +876,27 @@ export function SidebarNav({
                   <h3 className="font-semibold text-base mb-2 flex items-center justify-center">
                     <span className="mr-1">👋</span> Olá,{" "}
                     {(() => {
-                      // Obter o primeiro nome com a mesma lógica do Dashboard
+                      // Buscar primeiro nome do Neon DB
+                      const neonUser = localStorage.getItem("neon_user");
+                      if (neonUser) {
+                        try {
+                          const userData = JSON.parse(neonUser);
+                          const fullName = userData.nome_completo || userData.nome_usuario || userData.email;
+                          if (fullName) {
+                            const firstName = fullName.split(" ")[0].split("@")[0];
+                            return firstName;
+                          }
+                        } catch (error) {
+                          console.error("Erro ao buscar nome do Neon:", error);
+                        }
+                      }
+
+                      // Fallback para outros métodos
                       const firstName =
                         userProfile?.full_name?.split(" ")[0] ||
                         userProfile?.display_name ||
                         localStorage.getItem("userFirstName") ||
-                        "Estudante";
+                        "Usuário";
                       return firstName;
                     })()}
                     !
