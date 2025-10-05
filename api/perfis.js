@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
       // Não retornar a senha
       delete newProfile.senha_hash;
       console.log('✅ Perfil criado com sucesso:', newProfile.id);
-      
+
       return res.status(201).json({ 
         success: true,
         message: 'Perfil criado com sucesso',
@@ -193,7 +193,7 @@ router.post('/login', async (req, res) => {
     // Login bem-sucedido
     delete profile.senha_hash;
     console.log('✅ Login realizado com sucesso para:', email);
-    
+
     res.json({ 
       success: true,
       message: 'Login realizado com sucesso',
@@ -208,5 +208,83 @@ router.post('/login', async (req, res) => {
     });
   }
 });
+
+// Atualizar avatar do usuário
+router.patch('/avatar', async (req, res) => {
+  try {
+    const { email, avatar_url } = req.body;
+
+    if (!email || !avatar_url) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email e URL do avatar são obrigatórios' 
+      });
+    }
+
+    console.log('🖼️ Atualizando avatar para:', email);
+
+    const query = `
+      UPDATE usuarios 
+      SET imagem_avatar = $1, updated_at = NOW()
+      WHERE email = $2
+      RETURNING id, nome_completo, nome_usuario, email, imagem_avatar
+    `;
+
+    const result = await neonDB.executeQuery(query, [avatar_url, email]);
+
+    if (result.success && result.data.length > 0) {
+      console.log('✅ Avatar atualizado com sucesso');
+      res.json({ 
+        success: true, 
+        data: result.data[0] 
+      });
+    } else {
+      res.status(404).json({ 
+        success: false, 
+        error: 'Perfil não encontrado' 
+      });
+    }
+  } catch (error) {
+    console.error('❌ Erro ao atualizar avatar:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    });
+  }
+});
+
+// Listar perfis com filtros opcionais
+router.get('/list', async (req, res) => {
+  try {
+    const { limit, offset, ...filters } = req.query;
+    const parsedLimit = parseInt(limit, 10) || 50;
+    const parsedOffset = parseInt(offset, 10) || 0;
+
+    const profiles = await neonDB.listProfiles(filters, parsedLimit, parsedOffset);
+
+    if (profiles.success) {
+      res.json({
+        success: true,
+        data: profiles.data,
+        count: profiles.count
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Erro ao listar perfis',
+        details: profiles.error
+      });
+    }
+  } catch (error) {
+    console.error('❌ Erro ao listar perfis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor',
+      details: error.message
+    });
+  }
+});
+
 
 export default router;

@@ -1,4 +1,3 @@
-
 // Serviço para gerenciamento de perfis de usuário
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types/user-profile';
@@ -101,7 +100,7 @@ class ProfileService {
       // Buscar perfil no banco Neon pela email do usuário logado
       const userEmail = session.session.user.email;
       console.log('🔍 [PROFILE] Buscando perfil no Neon para email:', userEmail);
-      
+
       try {
         const response = await fetch(`/api/perfis?email=${encodeURIComponent(userEmail)}`, {
           method: 'GET',
@@ -115,11 +114,11 @@ class ProfileService {
 
         if (result.success && result.data) {
           const neonProfile = result.data;
-          
+
           // Atualizar cache
           localStorage.setItem('userProfile', JSON.stringify(neonProfile));
           localStorage.setItem('userProfileCacheTime', Date.now().toString());
-          
+
           // Disparar evento para notificar componentes sobre a atualização
           document.dispatchEvent(new CustomEvent('profile-updated', {
             detail: { profile: neonProfile }
@@ -173,7 +172,7 @@ class ProfileService {
         if (data) {
           localStorage.setItem('userProfile', JSON.stringify(data));
           localStorage.setItem('userProfileCacheTime', Date.now().toString());
-          
+
           // Disparar evento para notificar componentes sobre a atualização
           document.dispatchEvent(new CustomEvent('profile-updated', {
             detail: { profile: data }

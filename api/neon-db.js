@@ -71,6 +71,7 @@ class NeonDBManager {
         pais VARCHAR(100) NOT NULL DEFAULT 'Brasil',
         estado VARCHAR(100) NOT NULL,
         instituicao_ensino VARCHAR(255) NOT NULL,
+        imagem_avatar TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
@@ -184,7 +185,7 @@ class NeonDBManager {
   async findProfileByEmail(email) {
     try {
       console.log('🔍 Buscando perfil por email:', email);
-      const query = 'SELECT * FROM usuarios WHERE email = $1';
+      const query = 'SELECT id, nome_completo, nome_usuario, email, tipo_conta, pais, estado, instituicao_ensino, imagem_avatar, created_at, updated_at FROM usuarios WHERE email = $1';
       const result = await this.executeQuery(query, [email]);
 
       console.log('📊 Resultado da busca:', result.data.length > 0 ? 'Encontrado' : 'Não encontrado');
