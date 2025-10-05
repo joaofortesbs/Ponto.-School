@@ -5,6 +5,7 @@ import emailRoutes from './enviar-email.js';
 import neonDBModule from './neon-db.js';
 import perfilsHandler from './perfis.js';
 import atividadesRoutes from './atividades.js';
+import uploadAvatarRoutes from './api/perfis/upload-avatar.js'; // Importar as novas rotas de upload
 
 const { neonDB } = neonDBModule;
 
@@ -36,19 +37,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware para adicionar headers CORS adicionais
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
 // Middleware para tratamento de erros JSON
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
@@ -59,9 +47,10 @@ app.use((err, req, res, next) => {
 });
 
 // Rotas
-app.use('/api/email', emailRoutes);  // Mover para prefixo específico para não interferir com outras rotas
+app.use('/api/enviar-email', emailRoutes);
 app.use('/api/perfis', perfilsHandler);
-app.use('/api/atividades-neon', atividadesRoutes); // Nova API de atividades no Neon
+app.use('/api/perfis/upload-avatar', uploadAvatarRoutes); // Rota para upload de avatar
+app.use('/api/atividades-neon', atividadesRoutes);
 
 // =================
 // FUNÇÃO PARA REGISTRAR ROTAS DE ATIVIDADES
@@ -75,7 +64,7 @@ function registerActivityRoutes() {
   app.post('/api/atividades', async (req, res) => {
   try {
     console.log('📝 POST /api/atividades - Nova atividade:', req.body);
-    
+
     const { user_id, codigo_unico, tipo, titulo, descricao, conteudo } = req.body;
 
     // Validar campos obrigatórios
@@ -304,6 +293,9 @@ app.get('/', (req, res) => {
         </div>
         <div class="endpoint">
           <p><strong>POST /api/perfis</strong> - Criar perfil</p>
+        </div>
+        <div class="endpoint">
+          <p><strong>POST /api/perfis/upload-avatar</strong> - Upload de avatar</p>
         </div>
         <h3>Endpoints de Atividades:</h3>
         <div class="endpoint">

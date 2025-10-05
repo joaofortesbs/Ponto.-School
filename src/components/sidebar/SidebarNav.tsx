@@ -154,77 +154,47 @@ export function SidebarNav({
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        // Primeiro tentar obter do localStorage para display rápido
-        const storedFirstName = localStorage.getItem("userFirstName");
-        const storedDisplayName = localStorage.getItem("userDisplayName");
+        // Carregar do localStorage primeiro (cache rápido)
         const storedAvatarUrl = localStorage.getItem("userAvatarUrl");
-
-        if (storedDisplayName) {
-          setFirstName(storedDisplayName);
-        } else if (storedFirstName) {
-          setFirstName(storedFirstName);
-        }
-
-        if (storedAvatarUrl) {
+        const tempPreview = localStorage.getItem("tempAvatarPreview");
+        
+        if (tempPreview) {
+          setProfileImage(tempPreview);
+        } else if (storedAvatarUrl) {
           setProfileImage(storedAvatarUrl);
         }
 
-        // Depois buscar do Supabase para dados atualizados
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        // Buscar do Neon para dados atualizados
+        const neonUser = localStorage.getItem("neon_user");
+        if (neonUser) {
+          const userData = JSON.parse(neonUser);
+          
+          // Buscar perfil atualizado do Neon
+          const response = await fetch(`/api/perfis?email=${encodeURIComponent(userData.email)}`);
+          const result = await response.json();
 
-        if (user) {
-          const { data, error } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-
-          if (error) {
-            console.error("Error fetching user profile:", error);
-            if (!firstName) setFirstName("Usuário"); // Fallback if profile fetch fails
-          } else if (data) {
-            setUserProfile(data as UserProfile);
-
-            // Se o perfil tiver um avatar_url, usar ele e atualizar localStorage
-            if (data.avatar_url) {
-              setProfileImage(data.avatar_url);
-              localStorage.setItem("userAvatarUrl", data.avatar_url);
+          if (result.success && result.data) {
+            const profile = result.data;
+            
+            // Atualizar avatar se existir no banco
+            if (profile.imagem_avatar) {
+              setProfileImage(profile.imagem_avatar);
+              localStorage.setItem("userAvatarUrl", profile.imagem_avatar);
+              localStorage.removeItem("tempAvatarPreview");
             }
 
-            // Determinar o primeiro nome com a mesma lógica do Dashboard
-            const firstName =
-              data.full_name?.split(" ")[0] ||
-              data.display_name ||
-              data.username ||
-              "";
-
+            // Atualizar nome
+            const firstName = profile.nome_completo?.split(" ")[0] || profile.nome_usuario || "Usuário";
             setFirstName(firstName);
             localStorage.setItem("userFirstName", firstName);
 
-            // Disparar evento para outros componentes
-            document.dispatchEvent(
-              new CustomEvent("userAvatarUpdated", {
-                detail: { url: data.avatar_url },
-              }),
-            );
-            document.dispatchEvent(
-              new CustomEvent("usernameUpdated", {
-                detail: {
-                  displayName: data.display_name,
-                  firstName: firstName,
-                  username: data.username,
-                },
-              }),
-            );
+            // Atualizar cache
+            localStorage.setItem("neon_user", JSON.stringify(profile));
           }
-        } else {
-          if (!firstName) setFirstName("Usuário"); // Fallback if user is not authenticated
         }
       } catch (error) {
-        console.error("Error:", error);
-        if (!firstName) setFirstName("Usuário"); // Fallback for any other error
+        console.error("Erro ao carregar perfil:", error);
+        setFirstName("Usuário");
       } finally {
         setLoading(false);
       }
@@ -248,111 +218,96 @@ export function SidebarNav({
     try {
       // Validar tipo de arquivo
       if (!file.type.startsWith("image/")) {
-        throw new Error("Por favor, selecione uma imagem válida");
+        alert("Por favor, selecione uma imagem válida");
+        return;
       }
 
       // Validar tamanho do arquivo (máx 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        throw new Error("A imagem deve ter no máximo 5MB");
+        alert("A imagem deve ter no máximo 5MB");
+        return;
       }
 
-      // Verificar se o usuário está autenticado
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-
-      if (!currentUser) {
-        throw new Error("Usuário não autenticado");
+      // Obter email do usuário do Neon
+      const neonUser = localStorage.getItem("neon_user");
+      if (!neonUser) {
+        alert("Usuário não autenticado");
+        return;
       }
 
-      let userEmail = currentUser.email;
+      const userData = JSON.parse(neonUser);
+      const userEmail = userData.email;
+
       if (!userEmail) {
-        throw new Error("Email do usuário não encontrado");
+        alert("Email do usuário não encontrado");
+        return;
       }
 
-      // Criar preview local IMEDIATAMENTE
+      console.log("🔄 Iniciando upload de avatar para:", userEmail);
+
+      // Criar preview local IMEDIATAMENTE e manter
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          setProfileImage(e.target.result as string);
+          const imageUrl = e.target.result as string;
+          setProfileImage(imageUrl);
+          // Salvar preview no localStorage temporariamente
+          localStorage.setItem("tempAvatarPreview", imageUrl);
         }
       };
       reader.readAsDataURL(file);
 
-      // Criar nome único para o arquivo
-      const fileExt = file.name.split(".").pop();
-      const fileName = `avatar-${currentUser.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      // Preparar FormData para upload
+      const formData = new FormData();
+      formData.append("avatar", file);
+      formData.append("email", userEmail);
 
-      // Fazer upload para o storage do Supabase
-      const { error: uploadError } = await supabase.storage
-        .from("profile-images")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.error("Erro ao fazer upload da imagem:", uploadError);
-        throw new Error(uploadError.message);
-      }
-
-      // Obter a URL pública da imagem
-      const { data: publicUrlData } = supabase.storage
-        .from("profile-images")
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData.publicUrl) {
-        throw new Error("Não foi possível obter a URL pública da imagem");
-      }
-
-      console.log("🖼️ URL da imagem gerada:", publicUrlData.publicUrl);
-
-      // Atualizar o perfil no banco NEON via API
-      const response = await fetch('/api/perfis/avatar', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: userEmail,
-          avatar_url: publicUrlData.publicUrl,
-        }),
+      // Upload para o servidor que salvará no Supabase Storage E no Neon
+      const uploadResponse = await fetch('/api/perfis/upload-avatar', {
+        method: 'POST',
+        body: formData,
       });
 
-      const result = await response.json();
+      const uploadResult = await uploadResponse.json();
 
-      if (!result.success) {
-        throw new Error(result.error || 'Erro ao atualizar avatar no banco de dados');
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Erro ao fazer upload da imagem');
       }
 
-      console.log("✅ Avatar atualizado no Neon:", result.data);
+      const avatarUrl = uploadResult.avatar_url;
+      console.log("✅ Upload concluído. URL:", avatarUrl);
 
-      // Atualizar o estado local
-      setProfileImage(publicUrlData.publicUrl);
-      localStorage.setItem("userAvatarUrl", publicUrlData.publicUrl);
+      // Atualizar estado com URL real
+      setProfileImage(avatarUrl);
+      localStorage.setItem("userAvatarUrl", avatarUrl);
+      localStorage.removeItem("tempAvatarPreview");
 
-      // Atualizar o cache do perfil
-      const cachedProfile = localStorage.getItem('userProfile');
+      // Atualizar cache do perfil
+      const cachedProfile = localStorage.getItem('neon_user');
       if (cachedProfile) {
         try {
           const profile = JSON.parse(cachedProfile);
-          profile.imagem_avatar = publicUrlData.publicUrl;
-          localStorage.setItem('userProfile', JSON.stringify(profile));
+          profile.imagem_avatar = avatarUrl;
+          localStorage.setItem('neon_user', JSON.stringify(profile));
         } catch (e) {
           console.error('Erro ao atualizar cache:', e);
         }
       }
 
-      // Disparar evento customizado para notificar outros componentes
-      const avatarEvent = new CustomEvent("userAvatarUpdated", {
-        detail: { avatarUrl: publicUrlData.publicUrl },
-      });
-      document.dispatchEvent(avatarEvent);
+      // Disparar evento para outros componentes
+      document.dispatchEvent(new CustomEvent("userAvatarUpdated", {
+        detail: { url: avatarUrl },
+      }));
 
       console.log("✅ Avatar atualizado com sucesso!");
+
     } catch (error) {
       console.error("❌ Erro ao atualizar avatar:", error);
+      // Restaurar preview se houver
+      const tempPreview = localStorage.getItem("tempAvatarPreview");
+      if (tempPreview) {
+        setProfileImage(tempPreview);
+      }
       alert(
         error instanceof Error
           ? error.message
