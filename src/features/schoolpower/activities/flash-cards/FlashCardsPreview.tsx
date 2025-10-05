@@ -58,13 +58,11 @@ interface FlashCardsPreviewProps {
     success?: boolean;
   } | null;
   isLoading?: boolean;
-  isShared?: boolean;
 }
 
 export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({ 
   content, 
-  isLoading = false,
-  isShared = false
+  isLoading = false
 }) => {
   // Estados para controle da sessão de estudo
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -113,8 +111,9 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
     // Se cards não é um array, tentar converter
     if (!Array.isArray(cards)) {
       if (typeof cards === 'object' && cards !== null) {
-        if (cards.front && cards.back) {
-          cards = [cards];
+        const cardObj = cards as any;
+        if (cardObj.front && cardObj.back) {
+          cards = [cardObj];
         } else {
           cards = [];
         }
@@ -408,13 +407,7 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
   }
 
   return (
-    <div 
-      className={isShared 
-        ? "min-h-screen flex items-start justify-center p-4 pt-8"
-        : "min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8"
-      }
-      style={isShared ? { backgroundColor: '#1e293b' } : {}}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 dark:from-gray-900 dark:via-gray-800 dark:to-orange-900/20 flex items-start justify-center p-4 pt-8">
       <div className="max-w-4xl w-full">
         {/* Barra de Progresso com Título */}
         <motion.div 
@@ -422,32 +415,13 @@ export const FlashCardsPreview: React.FC<FlashCardsPreviewProps> = ({
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <div 
-            className={isShared
-              ? "backdrop-blur-sm rounded-2xl p-6 border-2 shadow-xl"
-              : "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-200/50 dark:border-orange-700/30 shadow-xl"
-            }
-            style={isShared ? { 
-              backgroundColor: 'rgba(30, 41, 59, 0.8)',
-              borderColor: 'rgba(251, 146, 60, 0.3)'
-            } : {}}
-          >
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 border-2 border-orange-200/50 dark:border-orange-700/30 shadow-xl">
             {/* Título dentro do card */}
             <div className="text-center mb-6">
-              <h1 
-                className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2"
-                style={isShared ? { 
-                  backgroundImage: 'linear-gradient(to right, #fb923c, #f97316)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                } : {}}
-              >
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-700 dark:from-orange-400 dark:to-orange-500 bg-clip-text text-transparent mb-2">
                 {normalizedContent.title?.replace(/^Flash Cards:\s*/, '') || 'Flash Cards'}
               </h1>
-              <p 
-                className={isShared ? "text-sm" : "text-gray-600 dark:text-gray-300 text-sm"}
-                style={isShared ? { color: '#d1d5db' } : {}}
-              >
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
                 {normalizedContent.description || 'Pratique e aprenda com flash cards interativos'}
               </p>
             </div>

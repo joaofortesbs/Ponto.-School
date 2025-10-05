@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { buscarAtividadeCompartilhada, AtividadeCompartilhavel } from '../services/gerador-link-atividades-schoolpower';
 import ParticlesBackground from '@/sections/SchoolPower/components/ParticlesBackground';
 import CardVisualizacaoAtividadeCompartilhada from './CardVisualizacaoAtividadeCompartilhada';
+import { useTheme } from '@/hooks/useTheme';
 
 interface InterfaceCompartilharAtividadeProps {
   activityId?: string;
@@ -21,10 +22,29 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   const [atividade, setAtividade] = useState<AtividadeCompartilhavel | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [theme, setTheme] = useTheme();
 
   // O código único pode estar em params.uniqueCode ou params.activityId (se for rota curta)
   const finalUniqueCode = propUniqueCode || params.uniqueCode || params.activityId;
   const finalActivityId = propActivityId;
+
+  // Ativar dark mode NATIVO da plataforma para páginas compartilhadas
+  useEffect(() => {
+    const temaAnterior = localStorage.getItem('theme');
+    console.log('🌙 [TEMA] Ativando dark mode nativo para atividade compartilhada');
+    console.log('🌙 [TEMA] Tema anterior:', temaAnterior);
+    
+    // Forçar dark mode
+    setTheme('dark');
+    
+    // Cleanup: restaurar tema anterior quando sair da página
+    return () => {
+      if (temaAnterior === 'light') {
+        console.log('🌙 [TEMA] Restaurando tema anterior:', temaAnterior);
+        setTheme('light');
+      }
+    };
+  }, [setTheme]);
 
   useEffect(() => {
     const carregarAtividade = async () => {
@@ -71,8 +91,11 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
             tempo_estimado: atividadeNeon.id_json?.tempo_estimado
           };
           
+          console.log('🔄 [PÚBLICO] Setando atividade convertida:', atividadeConvertida);
           setAtividade(atividadeConvertida);
+          console.log('📝 [PÚBLICO] Mudando título do documento para:', `${atividadeConvertida.titulo} - Ponto School`);
           document.title = `${atividadeConvertida.titulo} - Ponto School`;
+          console.log('✅ [PÚBLICO] Atividade carregada, finalizando loading...');
           
         } else {
           console.log('⚠️ [PÚBLICO] Atividade não encontrada no banco Neon');
@@ -98,7 +121,9 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
         console.error('❌ [PÚBLICO] Erro ao carregar:', error);
         setErro('Erro ao carregar atividade');
       } finally {
+        console.log('🏁 [PÚBLICO] Finally block - setando carregando para false');
         setCarregando(false);
+        console.log('🏁 [PÚBLICO] Carregando setado para false');
       }
     };
 

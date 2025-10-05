@@ -43,9 +43,9 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         ...atividade,
         // Garantir que todos os campos essenciais estejam presentes
         id: atividade.id,
-        titulo: atividade.titulo || atividade.title,
-        tipo: atividade.tipo || atividade.type,
-        descricao: atividade.descricao || atividade.description || atividade.dados?.descricao || atividade.dados?.description,
+        titulo: atividade.titulo || (atividade as any).title,
+        tipo: atividade.tipo || (atividade as any).type,
+        descricao: atividade.descricao || (atividade as any).description || atividade.dados?.descricao || atividade.dados?.description,
         dados: atividade.dados || {},
         customFields: atividade.customFields || {}
       };
@@ -156,7 +156,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             <FlashCardsPreview
               content={activityData}
               isLoading={false}
-              isShared={true}
             />
           );
 
@@ -383,7 +382,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
           if (tipo.includes('mapa-mental')) return 'Mapa Mental';
           return 'Atividade';
         })()}
-        activityId={atividadeSincronizada?.id || 'atividade-compartilhada'}
         userName={atividade?.professorNome || 'Prof. João'}
         userAvatar={atividade?.professorAvatar}
         schoolPoints={atividade?.schoolPoints || 100}
@@ -408,7 +406,6 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
         onDelete={() => {
           console.log('Deletar atividade compartilhada');
         }}
-        showShareButton={true}
       />
 
       {/* Card principal com fundo escuro */}
@@ -524,10 +521,10 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative" style={{ backgroundColor: '#1e293b !important' }}>
+              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
                 {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
-                <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ backgroundColor: '#1e293b !important' }}>
-                  <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden" style={{ backgroundColor: '#1e293b !important' }}>
+                <div className="p-4 pointer-events-none overflow-hidden h-full">
+                  <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
                     {renderActivityPreview()}
                   </div>
                 </div>
