@@ -156,6 +156,7 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
             <FlashCardsPreview
               content={activityData}
               isLoading={false}
+              isShared={true}
             />
           );
 
@@ -523,10 +524,10 @@ export const CardVisualizacaoAtividadeCompartilhada: React.FC<CardVisualizacaoAt
                 </div>
               </div>
 
-              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative">
+              <div className="flex-1 overflow-hidden min-h-[350px] max-h-[350px] relative" style={{ backgroundColor: '#1e293b !important' }}>
                 {/* Conteúdo da pré-visualização com interação desabilitada - visualização fixa tipo captura */}
-                <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ backgroundColor: '#ffffff' }}>
-                  <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden">
+                <div className="p-4 pointer-events-none overflow-hidden h-full" style={{ backgroundColor: '#1e293b !important' }}>
+                  <div className="transform scale-75 origin-top-left w-[133%] h-[133%] overflow-hidden" style={{ backgroundColor: '#1e293b !important' }}>
                     {renderActivityPreview()}
                   </div>
                 </div>

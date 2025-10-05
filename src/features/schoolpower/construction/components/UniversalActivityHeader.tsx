@@ -363,14 +363,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
   return (
     <div 
-      className={`universal-activity-header w-full h-24 px-6 py-4 shadow-sm rounded-t-2xl ${
-        isSharedActivity 
-          ? 'border border-slate-700 border-b-0' 
-          : 'border-b-2 border-orange-200 dark:border-orange-800/50 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20'
-      }`}
+      className={isSharedActivity 
+        ? 'universal-activity-header w-full h-24 px-6 py-4 shadow-sm rounded-t-2xl border border-slate-700 border-b-0'
+        : 'universal-activity-header w-full h-24 px-6 py-4 shadow-sm rounded-t-2xl border-b-2 border-orange-200 dark:border-orange-800/50 bg-gradient-to-r from-orange-50 via-white to-orange-50 dark:from-orange-950/20 dark:via-gray-800 dark:to-orange-950/20'
+      }
       style={isSharedActivity ? {
         backgroundColor: '#021321',
-        color: '#ffffff'
+        backgroundImage: 'none'
       } : {}}
     >
       <div className="flex items-center justify-between h-full">
@@ -383,7 +382,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
 
           {/* Título e Professor */}
           <div className="flex flex-col justify-center">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
+            <h1 
+              className={isSharedActivity 
+                ? "text-xl font-bold line-clamp-1" 
+                : "text-xl font-bold text-gray-900 dark:text-white line-clamp-1"
+              }
+              style={isSharedActivity ? { color: '#ffffff' } : {}}
+            >
               {activityTitle}
             </h1>
 
@@ -395,7 +400,13 @@ export const UniversalActivityHeader: React.FC<UniversalActivityHeaderProps> = (
                   {getUserInitials(finalUserName)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-lg text-orange-700 dark:text-orange-300 font-medium">
+              <span 
+                className={isSharedActivity
+                  ? "text-lg font-medium"
+                  : "text-lg text-orange-700 dark:text-orange-300 font-medium"
+                }
+                style={isSharedActivity ? { color: '#fb923c' } : {}}
+              >
                 {userInfo.isLoading ? (
                   <div className="w-24 h-5 bg-orange-200 dark:bg-orange-800 animate-pulse rounded"></div>
                 ) : (
