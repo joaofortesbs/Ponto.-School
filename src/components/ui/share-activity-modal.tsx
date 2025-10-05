@@ -67,119 +67,91 @@ export const ShareActivityModal: React.FC<ShareActivityModalProps> = ({
       return;
     }
 
-    console.log('🔗 [MODAL] Iniciando criação de link compartilhável');
+    console.log('🔗 [MODAL] Iniciando busca do código único no banco Neon');
     console.log('📋 [MODAL] Dados da atividade:', {
       id: activityId,
       titulo: activityTitle,
-      tipo: activityType || 'atividade',
-      userId: userInfo.userId || 'usuario-anonimo',
-      activityData
+      tipo: activityType || 'atividade'
     });
 
     try {
-      // Buscar dados completos da atividade do localStorage
-      console.log('🔍 [MODAL] Buscando dados completos da atividade no localStorage');
+      // 1. BUSCAR O CÓDIGO ÚNICO DO BANCO NEON
+      const userId = localStorage.getItem('user_id');
       
-      let dadosCompletos = null;
-      
-      // Tentar buscar em diferentes locais do localStorage
-      const locaisParaBuscar = [
-        `constructedActivity_${activityId}`,
-        `activity_${activityId}`,
-        activityId
-      ];
-
-      for (const chave of locaisParaBuscar) {
-        try {
-          const dados = localStorage.getItem(chave);
-          if (dados) {
-            dadosCompletos = JSON.parse(dados);
-            console.log('✅ [MODAL] Dados encontrados em:', chave, dadosCompletos);
-            break;
-          }
-        } catch (e) {
-          console.log('⚠️ [MODAL] Erro ao buscar dados em:', chave, e);
-        }
+      if (!userId) {
+        console.error('❌ [MODAL] Usuário não autenticado');
+        setError('Você precisa estar logado para compartilhar atividades');
+        setLoading(false);
+        return;
       }
 
-      // Preparar dados da atividade com sincronização completa
-      const dadosAtividade = {
-        id: activityId,
-        titulo: (activityTitle || 'Atividade sem título').toString(),
-        descricao: ((dadosCompletos?.descricao || dadosCompletos?.description || activityData?.descricao) || '').toString(),
-        tipo: (activityType || 'atividade').toString(),
-        dados: {
-          ...activityData,
-          ...dadosCompletos,
-          // Garantir dados mínimos
-          title: activityTitle,
-          type: activityType || 'atividade',
-          timestamp: new Date().toISOString()
-        },
-        customFields: dadosCompletos?.customFields || activityData?.customFields || {},
-        professorNome: (userInfo.name || 'Professor').toString(),
+      console.log('🔍 [MODAL] Buscando código único do banco Neon...');
+      console.log('👤 [MODAL] User ID:', userId);
+      console.log('🎯 [MODAL] Activity ID:', activityId);
+      
+      // Importar serviço do banco Neon
+      const { atividadesNeonService } = await import('@/services/atividadesNeonService');
+      
+      // Buscar todas as atividades do usuário
+      const resultado = await atividadesNeonService.buscarAtividadesUsuario(userId);
+      
+      if (!resultado.success || !resultado.data) {
+        console.error('❌ [MODAL] Erro ao buscar atividades do banco');
+        setError('Você precisa salvar a atividade primeiro! Clique no botão verde 💾 "Salvar Atividades"');
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ [MODAL] Atividades encontradas no banco:', resultado.data.length);
+      
+      // Procurar a atividade atual pelo tipo
+      const atividadeNoBanco = resultado.data.find(ativ => ativ.tipo === activityId);
+      
+      if (!atividadeNoBanco) {
+        console.error('❌ [MODAL] Atividade não encontrada no banco');
+        console.log('📋 [MODAL] Atividades disponíveis:', resultado.data.map(a => a.tipo));
+        setError('Esta atividade ainda não foi salva! Clique no botão verde 💾 "Salvar Atividades" antes de compartilhar.');
+        setLoading(false);
+        return;
+      }
+
+      // 2. USAR O CÓDIGO ÚNICO DO BANCO (que está na coluna ID)
+      const codigoUnico = atividadeNoBanco.id;
+      const linkPublico = `${window.location.origin}/atividade/${codigoUnico}`;
+      
+      console.log('✅ [MODAL] Código único encontrado no banco:', codigoUnico);
+      console.log('🔗 [MODAL] Link gerado:', linkPublico);
+
+      // 3. CRIAR OBJETO DE ATIVIDADE PARA O MODAL
+      const atividadeCompartilhavel: AtividadeCompartilhavel = {
+        id: codigoUnico,
+        titulo: activityTitle,
+        descricao: atividadeNoBanco.id_json?.description || '',
+        tipo: atividadeNoBanco.tipo,
+        dados: atividadeNoBanco.id_json,
+        customFields: atividadeNoBanco.id_json?.customFields || {},
+        professorNome: userInfo.name || 'Professor',
         professorAvatar: userInfo.avatar,
-        schoolPoints: dadosCompletos?.schoolPoints || 100,
-        disciplina: ((dadosCompletos?.disciplina || activityData?.disciplina) || '').toString(),
-        nivel: ((dadosCompletos?.nivel || activityData?.nivel) || '').toString(),
-        tempo_estimado: ((dadosCompletos?.tempo_estimado || activityData?.tempo_estimado) || '').toString(),
-        criadoPor: (userInfo.userId || userInfo.name || 'usuario-anonimo').toString()
+        schoolPoints: atividadeNoBanco.id_json?.schoolPoints || 100,
+        criadoPor: userId,
+        criadoEm: atividadeNoBanco.created_at || new Date().toISOString(),
+        codigoUnico: codigoUnico,
+        linkPublico: linkPublico,
+        ativo: true,
+        disciplina: atividadeNoBanco.id_json?.disciplina,
+        nivel: atividadeNoBanco.id_json?.nivel,
+        tempo_estimado: atividadeNoBanco.id_json?.tempo_estimado
       };
 
-      console.log('🚀 [MODAL] Enviando dados sincronizados para geração de link:', dadosAtividade);
-
-      const novaAtividade = await criarLinkAtividade(dadosAtividade);
-
-      console.log('📨 [MODAL] Resposta do sistema:', novaAtividade);
-
-      if (novaAtividade && novaAtividade.linkPublico) {
-        setAtividade(novaAtividade);
-        console.log('✅ [MODAL] Link gerado com sucesso:', novaAtividade.linkPublico);
-        console.log('🔑 [MODAL] Código único:', novaAtividade.codigoUnico);
-        setError(null);
-        
-        // Salvar uma cópia adicional no localStorage como backup
-        try {
-          const backupKey = `share_backup_${activityId}`;
-          localStorage.setItem(backupKey, JSON.stringify(novaAtividade));
-          console.log('💾 [MODAL] Backup salvo em:', backupKey);
-        } catch (backupError) {
-          console.warn('⚠️ [MODAL] Erro ao salvar backup:', backupError);
-        }
-        
-      } else if (novaAtividade) {
-        console.error('❌ [MODAL] Link público ausente na resposta:', novaAtividade);
-        setError('Link não foi gerado corretamente');
-      } else {
-        console.error('❌ [MODAL] Resposta nula do sistema');
-        setError('Erro no sistema de compartilhamento');
-      }
+      setAtividade(atividadeCompartilhavel);
+      setError(null);
+      
+      console.log('✅ [MODAL] Link configurado com código do banco:', linkPublico);
+      console.log('🔑 [MODAL] Código único usado:', codigoUnico);
+      
     } catch (error) {
-      console.error('❌ [MODAL] Erro completo ao criar link:', error);
-      
-      // Tentar recovery com dados locais
-      try {
-        console.log('🔄 [MODAL] Tentando recovery com dados locais...');
-        const backupKey = `share_backup_${activityId}`;
-        const backup = localStorage.getItem(backupKey);
-        
-        if (backup) {
-          const backupData = JSON.parse(backup);
-          setAtividade(backupData);
-          console.log('✅ [MODAL] Recovery bem-sucedido:', backupData.linkPublico);
-          setError(null);
-          return;
-        }
-      } catch (recoveryError) {
-        console.error('❌ [MODAL] Falha no recovery:', recoveryError);
-      }
-      
-      // Se chegou até aqui, mostrar erro amigável
-      if (error.message && error.message.includes('quota')) {
-        setError('Armazenamento local cheio. Limpe o cache do navegador e tente novamente.');
-      } else {
-        setError(`Erro ao gerar link: ${error.message || 'Falha no sistema de compartilhamento'}`);
-      }
+      console.error('❌ [MODAL] Erro completo ao buscar link:', error);
+      setError('Erro ao gerar link de compartilhamento. Verifique se a atividade foi salva.');
     } finally {
       setLoading(false);
     }
