@@ -17,13 +17,14 @@ export const InterfaceCompartilharAtividade: React.FC<InterfaceCompartilharAtivi
   activityId: propActivityId,
   uniqueCode: propUniqueCode
 }) => {
-  const { activityId, uniqueCode } = useParams();
+  const params = useParams();
   const [atividade, setAtividade] = useState<AtividadeCompartilhavel | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const finalActivityId = propActivityId || activityId;
-  const finalUniqueCode = propUniqueCode || uniqueCode;
+  // O código único pode estar em params.uniqueCode ou params.activityId (se for rota curta)
+  const finalUniqueCode = propUniqueCode || params.uniqueCode || params.activityId;
+  const finalActivityId = propActivityId;
 
   useEffect(() => {
     const carregarAtividade = async () => {

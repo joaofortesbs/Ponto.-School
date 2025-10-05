@@ -59,6 +59,7 @@ import MentorIAPage from "./pages/mentor-ia";
 import QuizPage from '@/pages/quiz';
 
 // Public activity page (no authentication required)
+// Aceita apenas o código único como parâmetro
 const AtividadeCompartilhadaPage = lazy(() => import('@/pages/atividade/[activityId]/[uniqueCode]'));
 
 
@@ -273,6 +274,9 @@ function App() {
           </div>
         }>
           <Routes>
+            {/* Rota com apenas código único */}
+            <Route path="/atividade/:uniqueCode" element={<AtividadeCompartilhadaPage />} />
+            {/* Rota antiga para compatibilidade */}
             <Route path="/atividade/:activityId/:uniqueCode" element={<AtividadeCompartilhadaPage />} />
           </Routes>
         </Suspense>
